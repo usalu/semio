@@ -179,7 +179,7 @@ impl<'a,'c> Lexer<'a,'c> {
                     let group = if width == '2' { 4 } else { 8 };
                     self.advance(1);
                     if self.bump() != Some('\\') { return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("expected \\ after \\X{width}") }); }
-                    let mut high = None;
+                    let mut high: Option<u32> = None;
                     let mut count = 0usize;
                     loop {
                         self.skip_print_directives();

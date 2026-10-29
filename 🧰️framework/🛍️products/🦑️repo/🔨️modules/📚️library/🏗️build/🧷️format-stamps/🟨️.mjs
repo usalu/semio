@@ -6,7 +6,7 @@ import{join}from"node:path";
 import{fileURLToPath}from"node:url";
 import{abortLeaseRootV1,registerLeaseImplementationProviderV1,registerLeaseYieldHandlerV1}from"../../../../../../🔨️modules/🏃️process/🔒️leases/📈️standing/🟦️.ts";
 import{physicalSourceOriginV1}from"../📥️inputs/🔏️revision/🟨️.mjs";
-import{STALE_IMPLEMENTATION_CODE_V1,STALE_IMPLEMENTATION_CODES_V1,churnReasonTextV1,concurrentEditOfV1,installRestartableFailureHandlerV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import{STALE_IMPLEMENTATION_CODE_V1,STALE_IMPLEMENTATION_CODES_V1,churnReasonTextV1,concurrentEditOfV1,restartExpectedV1,installRestartableFailureHandlerV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 const protocol=JSON.parse(JSON.stringify(schemaContract.$defs.Protocol.const));
 const staleCode=STALE_IMPLEMENTATION_CODE_V1,tableCode="SEMIO_STAMP_TABLE_INVALID";
 /** 📖️ The closed protocol of the stamp table exactly as the schema declares it. */
@@ -121,7 +121,7 @@ export function exitIfStaleImplementationV1(error,{write=text=>{try{writeSync(2,
  else if(stale.origin!=="exit")write(stale.message+"\n");
  exit(protocol.exitCode);
 }
-installRestartableFailureHandlerV1(error=>exitIfStaleImplementationV1(error));
+installRestartableFailureHandlerV1(error=>{if(!restartExpectedV1())exitIfStaleImplementationV1(error);});
 const origin=physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL);
 /** 🏷️ The registry of this process, rooted at the live library tree; it guards the exclusive resources it has declared stamps for. */
 export const formatStampsV1=createFormatStampsV1({base:fileURLToPath(new URL("../../",origin))});

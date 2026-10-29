@@ -831,7 +831,8 @@
       "trees": [
         "🧪️tests/🎟️phase",
         "🧪️tests/🎯️source-roster",
-        "🧪️tests/🏗️native"
+        "🧪️tests/🏗️native",
+        "🧪️tests/🧬️policy-literals"
       ],
       "platforms": [
         "darwin",

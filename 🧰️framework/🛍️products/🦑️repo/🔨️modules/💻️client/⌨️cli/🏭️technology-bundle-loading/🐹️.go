@@ -331,7 +331,11 @@ func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions
 		if !matchesFilter(b.Name, options) {
 			continue
 		}
-		if !matchesQuery(b.Name+" "+string(b.Kind), options) {
+		queryMatches, queryErr := matchesQuery(ctx, b.Name+" "+string(b.Kind), options)
+		if queryErr != nil {
+			return queryErr
+		}
+		if !queryMatches {
 			continue
 		}
 
@@ -507,7 +511,11 @@ func StreamTechnologies(ctx context.Context, out chan<- Technology, opts ...Stre
 		if !matchesFilter(p.Name, options) {
 			continue
 		}
-		if !matchesQuery(p.Name+" "+string(p.Kind), options) {
+		queryMatches, queryErr := matchesQuery(ctx, p.Name+" "+string(p.Kind), options)
+		if queryErr != nil {
+			return queryErr
+		}
+		if !queryMatches {
 			continue
 		}
 		select {

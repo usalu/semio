@@ -640,3 +640,7 @@ nul
 
 # Machine-local native repository executable receipt
 /.🧬semio/🦑️repo/native-repo-path
+
+.p[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]/
+
+.d[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]

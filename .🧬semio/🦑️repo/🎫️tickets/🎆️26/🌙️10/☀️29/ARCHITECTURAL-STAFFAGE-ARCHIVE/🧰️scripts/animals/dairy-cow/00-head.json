@@ -1,0 +1,43 @@
+    {
+      "id": "dairy-cow",
+      "category": "animals",
+      "title": { "en": "Dairy Cow", "de": "Milchkuh" },
+      "summary": {
+        "en": "An adult Holstein-Friesian dairy cow of 650 kg with 1.45 m withers height: unguligrade cloven-hoofed skeleton with separate near and far limb chains, jointed neck, jaw, ears and tail with switch, a heavy barrel with rumen flank, a udder with its own skin region and a dewlap; four-beat walk, cud chewing, grazing, lying down and a lying pose resting on sternum, carpus and hocks, with a thermal model of a high-yielding cow.",
+        "de": "Eine erwachsene Holstein-Friesian-Milchkuh von 650 kg mit 1,45 m Widerristhöhe: zehenspitzengängiges Paarhufer-Skelett mit getrennten Gliedmaßenketten der nahen und fernen Seite, gegliedertem Hals, Unterkiefer, Ohren und Schwanz mit Quaste, schwerem Rumpf mit Pansenflanke, Euter mit eigener Hautregion und Triel; Schritt im Viertakt, Wiederkäuen, Weiden, Abliegen und eine Liegepose auf Brustbein, Vorderfußwurzel und Sprunggelenken, mit dem Wärmemodell einer Hochleistungskuh."
+      },
+      "tags": ["animal", "cattle", "cow", "dairy", "quadruped", "unguligrade", "cloven-hoof", "mammal", "ruminant", "gait", "lying"],
+      "provenance": {
+        "author": "Semio staffage content worker (animals)",
+        "method": "handcrafted",
+        "created": "2026-10-29",
+        "references": [
+          { "id": "dyce-2010", "citation": "Dyce, K. M., Sack, W. O., Wensing, C. J. G. (2010). Textbook of Veterinary Anatomy, 4th ed. Saunders Elsevier. Bone proportions and joint ranges here are authored estimates guided by the ruminant chapters." },
+          { "id": "hildebrand-1976", "citation": "Hildebrand, M. (1976). Analysis of tetrapod gaits: general considerations and symmetrical gaits. In: Herman, R. M. et al. (eds), Neural Control of Locomotion, Plenum Press, pp. 203-236." },
+          { "id": "krohn-1993", "citation": "Krohn, C. C., Munksgaard, L. (1993). Behaviour of dairy cows kept in extensive (loose housing/pasture) or intensive (tie stall) environments. II. Lying and lying-down behaviour. Applied Animal Behaviour Science 37, 1-16. The sequence of the lie-down clip follows this description; its timing is authored." },
+          { "id": "beauchemin-1991", "citation": "Beauchemin, K. A. (1991). Ingestion and mastication of feed by dairy cattle. Veterinary Clinics of North America: Food Animal Practice 7, 439-463. Chewing rate of about one cycle per second." },
+          { "id": "phillips-morris-2001", "citation": "Phillips, C. J. C., Morris, I. D. (2001). The locomotion of dairy cows on floor surfaces with different frictional properties. Journal of Dairy Science 84, 623-628. Hoof friction coefficients here are authored estimates in the reported range." },
+          { "id": "kleiber-1947", "citation": "Kleiber, M. (1947). Body size and metabolic rate. Physiological Reviews 27, 511-541; resting heat production about 3.4 W per kg^0.75." },
+          { "id": "nrc-2001", "citation": "National Research Council (2001). Nutrient Requirements of Dairy Cattle, 7th revised edition. National Academy Press. Maintenance and walking energy requirements." },
+          { "id": "cigr-2002", "citation": "CIGR (2002). 4th Report of Working Group on Climatization of Animal Houses: Heat and moisture production at animal and house levels. Research Centre Bygholm, Denmark; total heat production of dairy cows 5.6 W per kg^0.75 plus 22 W per kg of daily milk yield." },
+          { "id": "kadzere-2002", "citation": "Kadzere, C. T., Murphy, M. R., Silanikove, N., Maltz, E. (2002). Heat stress in lactating dairy cows: a review. Livestock Production Science 77, 59-91. Respiration, skin temperature and heat balance of lactating cows." },
+          { "id": "meeh-1879", "citation": "Meeh, K. (1879). Oberflächenmessungen des menschlichen Körpers. Zeitschrift für Biologie 15, 425-458; body surface A = k·M^(2/3)." },
+          { "id": "berman-2003", "citation": "Berman, A. (2003). Effects of body surface area estimates on predicted energy requirements and heat stress. Journal of Dairy Science 86, 3605-3610. The coefficient here is an authored estimate inside the range of area estimates discussed there." },
+          { "id": "scholander-1950", "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236." },
+          { "id": "cena-monteith-1975", "citation": "Cena, K., Monteith, J. L. (1975). Transfer processes in animal coats. I. Radiative transfer. Proceedings of the Royal Society B 188, 377-393." },
+          { "id": "gebremedhin-2001", "citation": "Gebremedhin, K. G., Wu, B. (2001). A model of evaporative cooling of wet skin surface and fur layer. Journal of Thermal Biology 26, 537-545." },
+          { "id": "hutchinson-1969", "citation": "Hutchinson, J. C. D., Brown, G. D. (1969). Penetration of cattle coats by radiation. Journal of Applied Physiology 26, 454-464. Solar absorptivities of white and black coats are authored estimates guided by it." },
+          { "id": "ashrae-2021", "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort, respiratory heat loss." }
+        ],
+        "notes": {
+          "en": "Side elevation drawn for the near (left) side of a cow facing right; the near flank is the rumen side. Far-side limbs and ear are separate bone chains drawn darker and behind. The cow is polled, so no horns are drawn. Bounds of the default pose include the head carried below the withers and the tail.",
+          "de": "Seitenansicht der nahen (linken) Seite einer nach rechts blickenden Kuh; die nahe Flanke ist die Pansenseite. Gliedmaßen und Ohr der fernen Seite sind eigene Knochenketten, dunkler und weiter hinten gezeichnet. Die Kuh ist hornlos, daher werden keine Hörner gezeichnet. Die Umgrenzung der Standardpose enthält den unter dem Widerrist getragenen Kopf und den Schwanz."
+        }
+      },
+      "dimensions": { "heightM": 1.47, "widthM": 2.57, "depthM": 0.72, "massKg": 650 },
+      "materials": [
+        { "id": "white-hair", "title": { "en": "White short coat", "de": "Weißes Kurzhaar" }, "emissivity": 0.96, "solarAbsorptivity": 0.4, "densityKgM3": 1100, "conductivityWmK": 0.045, "source": "authored-estimate", "reference": "hutchinson-1969" },
+        { "id": "black-hair", "title": { "en": "Black short coat", "de": "Schwarzes Kurzhaar" }, "emissivity": 0.97, "solarAbsorptivity": 0.88, "densityKgM3": 1100, "conductivityWmK": 0.045, "source": "authored-estimate", "reference": "hutchinson-1969" },
+        { "id": "bare-skin", "title": { "en": "Bare or thinly haired skin (muzzle, udder, lower legs, eyes)", "de": "Nackte oder dünn behaarte Haut (Flotzmaul, Euter, Unterbeine, Augen)" }, "emissivity": 0.98, "solarAbsorptivity": 0.65, "source": "literature", "reference": "ashrae-2021" },
+        { "id": "claw-horn", "title": { "en": "Hoof horn", "de": "Klauenhorn" }, "emissivity": 0.9, "solarAbsorptivity": 0.8, "source": "authored-estimate", "reference": "dyce-2010" }
+      ],

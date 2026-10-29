@@ -5034,33 +5034,33 @@
    }
   },
   {
-   "name": "grant-share-wins-on-a-small-host",
+   "name": "unqualified-grant-share-wins-on-a-small-host",
    "environment": {
     "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\": 1, \"fixedMegabytes\": 5120, \"memoryMegabytes\": 0}"
    },
    "hostMegabytes": 8192,
    "expect": {
-    "bytes": 2684354560
+    "bytes": 1073741824
    }
   },
   {
-   "name": "grant-adds-fixed-and-per-job-megabytes",
+   "name": "unqualified-grant-adds-fixed-and-per-job-megabytes",
    "environment": {
     "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\": 2, \"fixedMegabytes\": 3072, \"memoryMegabytes\": 3072}"
    },
    "hostMegabytes": 8192,
    "expect": {
-    "bytes": 3221225472
+    "bytes": 1073741824
    }
   },
   {
-   "name": "grant-bounds-the-budget-on-a-large-host",
+   "name": "unqualified-grant-bounds-the-budget-on-a-large-host",
    "environment": {
     "SEMIO_HOST_CAPACITY_PLAN": "{\"jobs\": 1, \"fixedMegabytes\": 5120, \"memoryMegabytes\": 0}"
    },
    "hostMegabytes": 32768,
    "expect": {
-    "bytes": 2684354560
+    "bytes": 1073741824
    }
   },
   {
@@ -5088,23 +5088,23 @@
    }
   },
   {
-   "name": "grant-not-json-uses-the-host",
+   "name": "unqualified-grant-not-json-uses-the-host",
    "environment": {
     "SEMIO_HOST_CAPACITY_PLAN": "{"
    },
    "hostMegabytes": 16384,
    "expect": {
-    "bytes": 4294967296
+    "bytes": 1073741824
    }
   },
   {
-   "name": "grant-with-negative-and-text-megabytes-is-ignored",
+   "name": "unqualified-grant-with-negative-and-text-megabytes-is-ignored",
    "environment": {
     "SEMIO_HOST_CAPACITY_PLAN": "{\"fixedMegabytes\": -5, \"memoryMegabytes\": \"lots\"}"
    },
    "hostMegabytes": 16384,
    "expect": {
-    "bytes": 4294967296
+    "bytes": 1073741824
    }
   },
   {
@@ -5158,14 +5158,14 @@
    }
   },
   {
-   "name": "explicit-beats-the-grant-and-the-host",
+   "name": "unqualified-explicit-beats-the-grant-and-the-host",
    "environment": {
     "SEMIO_GRAPH_MEMORY_MB": "4096",
     "SEMIO_HOST_CAPACITY_PLAN": "{\"memoryMegabytes\": 2048}"
    },
    "hostMegabytes": 32768,
    "expect": {
-    "bytes": 4294967296
+    "bytes": 1073741824
    }
   }
  ],
@@ -5331,7 +5331,7 @@
    "workers": 4,
    "budgetMegabytes": 400,
    "baseMegabytes": 100,
-   "garbageShare": 1.0,
+   "garbageShare": 1,
    "tasks": [
     {
      "memoryMegabytes": 50,
@@ -5388,7 +5388,7 @@
    "workers": 4,
    "budgetMegabytes": 300,
    "baseMegabytes": 400,
-   "garbageShare": 0.0,
+   "garbageShare": 0,
    "expectSerial": true,
    "expectWaits": true,
    "tasks": [
@@ -5419,7 +5419,7 @@
    "workers": 2,
    "budgetMegabytes": 300,
    "baseMegabytes": 100,
-   "garbageShare": 0.0,
+   "garbageShare": 0,
    "abortAtMilliseconds": 1000,
    "tasks": [
     {
@@ -5453,7 +5453,7 @@
    "workers": 3,
    "budgetMegabytes": 250,
    "baseMegabytes": 100,
-   "garbageShare": 0.0,
+   "garbageShare": 0,
    "expectWaits": true,
    "tasks": [
     {
@@ -5491,7 +5491,7 @@
    "workers": 3,
    "budgetMegabytes": 300,
    "baseMegabytes": 100,
-   "garbageShare": 0.0,
+   "garbageShare": 0,
    "expectWaits": true,
    "language": "de",
    "tasks": [
@@ -5518,7 +5518,7 @@
    "workers": 3,
    "budgetMegabytes": 300,
    "baseMegabytes": 100,
-   "garbageShare": 0.0,
+   "garbageShare": 0,
    "expectWaits": true,
    "language": "none",
    "tasks": [
@@ -5546,7 +5546,7 @@
    "budgetMegabytes": 300,
    "baseMegabytes": 4000,
    "baselineMegabytes": 4000,
-   "garbageShare": 0.0,
+   "garbageShare": 0,
    "expectParallel": 4,
    "expectWaits": false,
    "tasks": [
@@ -5590,7 +5590,7 @@
    "budgetMegabytes": 100,
    "baseMegabytes": 4000,
    "baselineMegabytes": 4000,
-   "garbageShare": 0.0,
+   "garbageShare": 0,
    "expectWaits": true,
    "tasks": [
     {

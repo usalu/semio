@@ -1,0 +1,360 @@
+{
+ "description": "A wheel spinning two turns per loop (closing key = first key + 720 degrees on an unlimited revolute joint): angle at t + duration differs by exactly 720 degrees, angular velocity is continuous at the seam, and the centre of mass moves on a circle with constant speed.",
+ "asset": {
+  "id": "spinning-wheel",
+  "category": "components",
+  "title": {
+   "en": "Spinning wheel",
+   "de": "Drehendes Rad"
+  },
+  "summary": {
+   "en": "A wheel on a stand that turns twice per loop: the closing key differs from the first by 720 degrees.",
+   "de": "Ein Rad auf einem Gestell, das sich pro Schleife zweimal dreht: der Schlusskey unterscheidet sich vom ersten um 720 Grad."
+  },
+  "tags": [
+   "wheel",
+   "fixture"
+  ],
+  "provenance": {
+   "author": "Semio staffage core engine",
+   "method": "handcrafted",
+   "created": "2026-10-29",
+   "references": []
+  },
+  "dimensions": {
+   "heightM": 1.0,
+   "widthM": 1.0,
+   "depthM": 0.1,
+   "massKg": 10
+  },
+  "materials": [
+   {
+    "id": "steel",
+    "title": {
+     "en": "Steel",
+     "de": "Stahl"
+    },
+    "emissivity": 0.8,
+    "source": "literature"
+   }
+  ],
+  "rig": {
+   "kind": "mechanical",
+   "root": "stand",
+   "bones": [
+    {
+     "id": "stand",
+     "parent": null,
+     "title": {
+      "en": "Stand",
+      "de": "Gestell"
+     },
+     "x": 0,
+     "y": 0,
+     "angleDeg": 0,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "fixed"
+     }
+    },
+    {
+     "id": "wheel",
+     "parent": "stand",
+     "title": {
+      "en": "Wheel",
+      "de": "Rad"
+     },
+     "x": 0,
+     "y": 0.5,
+     "angleDeg": 0,
+     "lengthM": 0.5,
+     "joint": {
+      "type": "revolute"
+     },
+     "mass": {
+      "kg": 10,
+      "comX": 0.1,
+      "comY": 0,
+      "distribution": "point",
+      "source": "illustrative"
+     }
+    }
+   ]
+  },
+  "anchors": [
+   {
+    "id": "foot",
+    "bone": "stand",
+    "x": 0,
+    "y": 0,
+    "kind": "contact",
+    "title": {
+     "en": "Stand foot",
+     "de": "Gestellfuß"
+    },
+    "support": "contact"
+   }
+  ],
+  "geometry": {
+   "elevation": [
+    {
+     "id": "stand",
+     "bone": "stand",
+     "role": "body",
+     "lod": 0,
+     "z": 0,
+     "filled": true,
+     "tone": 0.5,
+     "kind": "rect",
+     "x": -0.1,
+     "y": 0,
+     "w": 0.2,
+     "h": 0.05
+    },
+    {
+     "id": "rim",
+     "bone": "wheel",
+     "role": "body",
+     "lod": 0,
+     "z": 0,
+     "filled": false,
+     "tone": 0.5,
+     "kind": "ellipse",
+     "cx": 0,
+     "cy": 0,
+     "rx": 0.5,
+     "ry": 0.5
+    },
+    {
+     "id": "spoke",
+     "bone": "wheel",
+     "role": "detail",
+     "lod": 1,
+     "z": 0,
+     "filled": true,
+     "tone": 0.5,
+     "kind": "poly",
+     "points": [
+      [
+       0,
+       0
+      ],
+      [
+       0.5,
+       0
+      ]
+     ],
+     "closed": false
+    }
+   ]
+  },
+  "poses": [
+   {
+    "id": "rest",
+    "title": {
+     "en": "At rest",
+     "de": "In Ruhe"
+    },
+    "description": {
+     "en": "At rest",
+     "de": "In Ruhe"
+    },
+    "bones": {},
+    "ground": "authored",
+    "contacts": [
+     "foot"
+    ],
+    "thermal": {},
+    "loads": []
+   },
+   {
+    "id": "quarter",
+    "title": {
+     "en": "Quarter turn",
+     "de": "Vierteldrehung"
+    },
+    "description": {
+     "en": "Quarter turn",
+     "de": "Vierteldrehung"
+    },
+    "bones": {
+     "wheel": {
+      "angleDeg": 90
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "foot"
+    ],
+    "thermal": {},
+    "loads": []
+   },
+   {
+    "id": "half",
+    "title": {
+     "en": "Half turn",
+     "de": "Halbe Drehung"
+    },
+    "description": {
+     "en": "Half turn",
+     "de": "Halbe Drehung"
+    },
+    "bones": {
+     "wheel": {
+      "angleDeg": 180
+     }
+    },
+    "ground": "authored",
+    "contacts": [
+     "foot"
+    ],
+    "thermal": {},
+    "loads": []
+   }
+  ],
+  "clips": [
+   {
+    "id": "spin",
+    "title": {
+     "en": "Two turns",
+     "de": "Zwei Umdrehungen"
+    },
+    "description": {
+     "en": "Two turns",
+     "de": "Zwei Umdrehungen"
+    },
+    "durationS": 2,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "rest",
+      "ease": "smooth"
+     },
+     {
+      "t": 1,
+      "pose": "rest",
+      "ease": "smooth",
+      "bones": {
+       "wheel": {
+        "angleDeg": 360
+       }
+      }
+     },
+     {
+      "t": 2,
+      "pose": "rest",
+      "ease": "smooth",
+      "bones": {
+       "wheel": {
+        "angleDeg": 720
+       }
+      }
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "foot",
+      "fromS": 0,
+      "toS": 2
+     }
+    ],
+    "phases": [],
+    "events": [],
+    "tracks": []
+   },
+   {
+    "id": "idle",
+    "title": {
+     "en": "Standing still",
+     "de": "Stillstand"
+    },
+    "description": {
+     "en": "Standing still",
+     "de": "Stillstand"
+    },
+    "durationS": 1,
+    "fps": 30,
+    "loop": true,
+    "rootMotion": "none",
+    "keys": [
+     {
+      "t": 0,
+      "pose": "rest",
+      "ease": "smooth"
+     },
+     {
+      "t": 1,
+      "pose": "rest",
+      "ease": "smooth"
+     }
+    ],
+    "contacts": [
+     {
+      "anchor": "foot",
+      "fromS": 0,
+      "toS": 1
+     }
+    ],
+    "phases": [],
+    "events": [],
+    "tracks": []
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "relativeHumidity": 0.5,
+    "windMS": 0,
+    "solarWM2": 0,
+    "windDirectionDeg": 0,
+    "pressurePa": 101325
+   },
+   "regions": [],
+   "emitters": [],
+   "assumptions": []
+  },
+  "structure": {
+   "gravityMS2": 9.80665,
+   "dynamics": "inertial",
+   "supports": [
+    "foot"
+   ],
+   "assumptions": [
+    {
+     "en": "The wheel is a point mass 0.1 m from the hub.",
+     "de": "Das Rad ist eine Punktmasse 0,1 m von der Nabe."
+    }
+   ],
+   "clinical": false
+  },
+  "presentation": {
+   "defaultPose": "rest",
+   "defaultClip": "spin",
+   "viewpoints": [
+    "elevation"
+   ]
+  },
+  "exports": [
+   "svg"
+  ],
+  "completion": "authored"
+ },
+ "clip": "spin",
+ "bone": "wheel",
+ "turnsPerLoop": 2,
+ "durationS": 2,
+ "angularSpeedDegS": 360,
+ "comRadiusM": 0.1,
+ "velocityToleranceDegS": 0.05,
+ "epsilonS": 0.0001,
+ "noClosing": {
+  "keysToRemove": [
+   2
+  ],
+  "note": "without a closing key the loop wraps back to the first key (today's behaviour)"
+ }
+}

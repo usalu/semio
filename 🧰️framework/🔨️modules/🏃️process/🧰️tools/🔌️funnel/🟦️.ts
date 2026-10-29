@@ -15,8 +15,8 @@ export function routeRegisteredCommandV1(command: string, args: readonly string[
   const self = command === process.execPath, entry = self || !/[\\/]/u.test(command) ? toolForCommandV1(self ? runtimeCommandNameV1() : command, registry) : undefined;
   if (entry === undefined || entry.id === "repo") return unchanged;
   const name = self ? entry.commands[0]! : command, root = toolRootV1(cwd, environment), key = `${root}\0${entry.id}\0${name}`;
-  let resolution = resolved.get(key);
+  let resolution = entry.id === "cc" ? undefined : resolved.get(key);
   if (resolution === undefined) { resolution = resolveToolV1(entry, systemToolHostV1(root, environment), registry, 0, name); if (resolution.command !== null) resolved.set(key, resolution); }
   if (resolution.command === null) return unchanged;
-  return { command: resolution.command, arguments: [...resolution.prefix, ...args], environment: toolEnvironmentV1(entry, environment, {}, { root }, registry), tool: entry.id };
+  return { command: resolution.command, arguments: [...resolution.prefix, ...args, ...resolution.suffix ?? []], environment: toolEnvironmentV1(entry, environment, {}, { root }, registry), tool: entry.id };
 }

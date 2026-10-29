@@ -1,19 +1,21 @@
+import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 /** 🖼️ Contract: a bundle compiled with captured Source images answers its reads from those bytes, so a Source edited after the capture cannot refuse it; a Source without an image still refuses a changed byte. */
 import{expect,test}from"bun:test";
-import{copyFileSync,mkdirSync,mkdtempSync,readFileSync,realpathSync,rmSync,writeFileSync}from"node:fs";
-import{tmpdir}from"node:os";
-import{join}from"node:path";
+import{copyFileSync,mkdirSync,readFileSync,rmSync,writeFileSync}from"node:fs";
+
+import{join,parse,relative as pathRelative,sep}from"node:path";
 import{fileURLToPath,pathToFileURL}from"node:url";
 import{capturedSourceImagesV1}from"../../../../../⚡️caching/🚀️bootstrap/🛠️tools/🔏️authorizers/📦️snapshot/🟦️.ts";
 import {mirrorRevisionReaderDirectoryV1} from "../🪞️mirror/🟦️.ts";
 
 const module=fileURLToPath(new URL("../../🟨️.mjs",import.meta.url)),contract=fileURLToPath(new URL("../../🧬️schema/🔣️.json",import.meta.url));
 const oracle=(text:string)=>{const run=Bun.spawnSync(["python3","-I","-c","import hashlib,sys;print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest())"],{stdin:new TextEncoder().encode(text)});expect(run.exitCode).toBe(0);return run.stdout.toString().trim();};
-const relative=(path:string)=>path.slice(1);
+const physicalRoot=parse(module).root;
+const relative=(path:string)=>pathRelative(physicalRoot,path).split(sep).join("/");
 async function load(sources:(root:string)=>{path:string;sha256:string}[],images:(root:string)=>unknown){
- const root=realpathSync(mkdtempSync(join(realpathSync(tmpdir()),"captured-image-"))),own=[module,contract].map(path=>({path:relative(path),sha256:oracle(readFileSync(path,"utf8"))}));
+ const root=await(await privateRepositoryWorkspaceV1()).scratch("captured-image-"),own=[module,contract].map(path=>({path:relative(path),sha256:oracle(readFileSync(path,"utf8"))}));
  const rows=[...own,...sources(root)].sort((a,b)=>Buffer.compare(Buffer.from(a.path),Buffer.from(b.path))),file=join(mirrorRevisionReaderDirectoryV1(root),"🟨️.mjs");
- writeFileSync(file,new Bun.Transpiler({loader:"js",define:{"import.meta.semioPhysicalSourceURL":JSON.stringify(pathToFileURL(module).href),"import.meta.semioCapturedPhysicalSources":JSON.stringify({version:1,root:"/",sources:rows}),"import.meta.semioCapturedPhysicalSourceImages":JSON.stringify(images(root))??"undefined"}}).transformSync(readFileSync(module,"utf8").replace("from\"./","from\""+pathToFileURL(join(module,"..")).href+"/")));
+ writeFileSync(file,new Bun.Transpiler({loader:"js",define:{"import.meta.semioPhysicalSourceURL":JSON.stringify(pathToFileURL(module).href),"import.meta.semioCapturedPhysicalSources":JSON.stringify({version:1,root:physicalRoot,sources:rows}),"import.meta.semioCapturedPhysicalSourceImages":JSON.stringify(images(root))??"undefined"}}).transformSync(readFileSync(module,"utf8").replace("from\"./","from\""+pathToFileURL(join(module,"..")).href+"/")));
  return{root,loaded:await import(pathToFileURL(file).href+"?"+Math.random())};
 }
 const data="{\"captured\":true}\n";

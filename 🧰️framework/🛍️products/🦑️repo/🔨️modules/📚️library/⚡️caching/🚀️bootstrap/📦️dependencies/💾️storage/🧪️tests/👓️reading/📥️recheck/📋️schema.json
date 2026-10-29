@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "effect",
+    "phase",
+    "before",
+    "after",
+    "quote",
+    "accepted",
+    "reason",
+    "diagnostic",
+    "allocations"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "effect": {
+      "enum": [
+        "none",
+        "write",
+        "grow-race",
+        "type-race",
+        "vanish-race",
+        "open-race",
+        "io-race",
+        "pre-vanish"
+      ]
+    },
+    "phase": {
+      "enum": [
+        "capture",
+        "replay"
+      ]
+    },
+    "before": {
+      "type": "string"
+    },
+    "after": {
+      "type": "string"
+    },
+    "quote": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "accepted": {
+      "type": "boolean"
+    },
+    "reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "diagnostic": {
+      "type": "boolean"
+    },
+    "allocations": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

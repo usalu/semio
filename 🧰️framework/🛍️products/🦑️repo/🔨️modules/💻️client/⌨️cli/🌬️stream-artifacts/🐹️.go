@@ -10,6 +10,8 @@ package client
 
 import (
 	"context"
+	"fmt"
+	model "github.com/usalu/semio/repo/model"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,6 +26,17 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 		options = opts[0]
 	}
 
+	layout := options.Layout
+	if layout == nil {
+		boundaries := []model.ArtifactBoundary{}
+		for _, bundle := range GetTechnologies() {
+			boundaries = append(boundaries, model.ArtifactBoundary{Root: bundle.Root, ID: bundle.GetID()})
+		}
+		layout = model.NewArtifactLayout(rootDir, boundaries)
+	}
+	if layout.Root() != rootDir {
+		return fmt.Errorf("Exact invocation layout repository required")
+	}
 	root := rootDir
 	if bundleName, found := strings.CutPrefix(scope, "compose/"); found {
 		bundles := GetTechnologies()
@@ -41,9 +54,29 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 		}
 	}
 
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if isRepoExcludedPath(root) {
+		return nil
+	}
+	visited, phase := 0, "discovering-folders"
 	var folders []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
+		if cancelled := ctx.Err(); cancelled != nil {
+			return cancelled
+		}
+		visited++
+		if options.Progress != nil && visited%256 == 0 {
+			options.Progress(StreamProgress{Current: visited, Phase: phase})
+		}
+		if cancelled := ctx.Err(); cancelled != nil {
+			return cancelled
+		}
 		if err != nil {
+			return err
+		}
+		if info.Type()&os.ModeSymlink != 0 {
 			return nil
 		}
 		if !info.IsDir() {
@@ -66,11 +99,20 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 		return err
 	}
 
-	for _, folderPath := range folders {
+	for position, folderPath := range folders {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if options.Progress != nil && position%256 == 0 {
+			options.Progress(StreamProgress{Current: position, Phase: "resolving-folder-identities"})
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		ignored := isGitIgnored(folderPath)
 		relPath, _ := filepath.Rel(rootDir, folderPath)
 		generated := IsGenerated(folderPath) || IsGeneratedFolder(relPath)
-		folderKind := DeriveFolderKind(relPath)
+		folderKind := FolderKind(layout.FolderKind(relPath))
 
 		if ignored && !options.ShowIgnored {
 			continue
@@ -86,38 +128,41 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 		if !matchesFilter(filepath.Base(folderPath), options) {
 			continue
 		}
-		if !matchesQuery(folderPath, options) {
+		queryMatches, queryErr := matchesQuery(ctx, folderPath, options)
+		if queryErr != nil {
+			return queryErr
+		}
+		if !queryMatches {
 			continue
 		}
 
 		var bundleID *string
-		if b := GetBundleByPath(relPath); b != nil {
-			id := b.GetID()
+		if id, found := layout.BoundaryIDByPath(relPath); found {
 			bundleID = &id
 		}
 
 		parentPath := filepath.Dir(relPath)
 		var parentID *string
 		if parentPath != "." {
-			id := buildFolderID(parentPath, bundleID)
+			id := layout.BuildFolderID(parentPath, bundleID)
 			parentID = &id
 		}
 
+		resolvedID := layout.BuildFolderID(relPath, bundleID)
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		default:
-			out <- Folder{
-				ID:        buildFolderID(relPath, bundleID),
-				Path:      relPath,
-				URI:       buildFolderUriFromPath(relPath),
-				Name:      filepath.Base(relPath),
-				ParentID:  parentID,
-				BundleID:  bundleID,
-				Kind:      folderKind,
-				Ignored:   ignored,
-				Generated: generated,
-			}
+		case out <- Folder{
+			ID:        resolvedID,
+			Path:      relPath,
+			URI:       model.ArtifactURIForID("folder", resolvedID),
+			Name:      filepath.Base(relPath),
+			ParentID:  parentID,
+			BundleID:  bundleID,
+			Kind:      folderKind,
+			Ignored:   ignored,
+			Generated: generated,
+		}:
 		}
 	}
 	return nil
@@ -132,6 +177,17 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 		options = opts[0]
 	}
 
+	layout := options.Layout
+	if layout == nil {
+		boundaries := []model.ArtifactBoundary{}
+		for _, bundle := range GetTechnologies() {
+			boundaries = append(boundaries, model.ArtifactBoundary{Root: bundle.Root, ID: bundle.GetID()})
+		}
+		layout = model.NewArtifactLayout(rootDir, boundaries)
+	}
+	if layout.Root() != rootDir {
+		return fmt.Errorf("Exact invocation layout repository required")
+	}
 	root := rootDir
 	if scope != "" && scope != "compose" {
 		bundles := GetTechnologies()
@@ -166,23 +222,29 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 		}
 	}
 
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if isRepoExcludedPath(root) {
+		return nil
+	}
 	if info, err := os.Stat(root); err == nil && !info.IsDir() {
 		relPath, _ := filepath.Rel(rootDir, root)
 		var bundleID *string
-		if b := GetBundleByPath(relPath); b != nil {
-			id := b.GetID()
+		if id, found := layout.BoundaryIDByPath(relPath); found {
 			bundleID = &id
 		}
 		folderPath := filepath.Dir(relPath)
 		var folderID *string
 		if folderPath != "." {
-			id := buildFolderID(folderPath, bundleID)
+			id := layout.BuildFolderID(folderPath, bundleID)
 			folderID = &id
 		}
-		out <- File{
-			ID:        buildFileID(relPath, bundleID),
+		resolvedID := layout.BuildFileID(relPath, bundleID)
+		file := File{
+			ID:        resolvedID,
 			Path:      relPath,
-			URI:       buildFileUriFromPath(relPath),
+			URI:       model.ArtifactURIForID("file", resolvedID),
 			Name:      filepath.Base(relPath),
 			Extension: filepath.Ext(relPath),
 			FolderID:  folderID,
@@ -191,12 +253,31 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 			Ignored:   isGitIgnored(root),
 			Generated: IsGenerated(root),
 		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case out <- file:
+		}
 		return nil
 	}
 
+	visited, phase := 0, "discovering-files"
 	var files []string
-	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+	err := filepath.WalkDir(root, func(path string, info os.DirEntry, err error) error {
+		if cancelled := ctx.Err(); cancelled != nil {
+			return cancelled
+		}
+		visited++
+		if options.Progress != nil && visited%256 == 0 {
+			options.Progress(StreamProgress{Current: visited, Phase: phase})
+		}
+		if cancelled := ctx.Err(); cancelled != nil {
+			return cancelled
+		}
 		if err != nil {
+			return err
+		}
+		if info.Type()&os.ModeSymlink != 0 {
 			return nil
 		}
 		if info.IsDir() {
@@ -224,7 +305,16 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 		return err
 	}
 
-	for _, filePath := range files {
+	for position, filePath := range files {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		if options.Progress != nil && position%256 == 0 {
+			options.Progress(StreamProgress{Current: position, Phase: "resolving-file-identities"})
+		}
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		ignored := isGitIgnored(filePath)
 		generated := IsGenerated(filePath)
 		kind := DeriveFileKind(filepath.Base(filePath))
@@ -244,40 +334,43 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 		if !matchesFilter(name, options) {
 			continue
 		}
-		if !matchesQuery(filePath, options) {
+		queryMatches, queryErr := matchesQuery(ctx, filePath, options)
+		if queryErr != nil {
+			return queryErr
+		}
+		if !queryMatches {
 			continue
 		}
 
 		relPath, _ := filepath.Rel(rootDir, filePath)
 		var bundleID *string
-		if b := GetBundleByPath(relPath); b != nil {
-			id := b.GetID()
+		if id, found := layout.BoundaryIDByPath(relPath); found {
 			bundleID = &id
 		}
 
 		folderPath := filepath.Dir(relPath)
 		var folderID *string
 		if folderPath != "." {
-			id := buildFolderID(folderPath, bundleID)
+			id := layout.BuildFolderID(folderPath, bundleID)
 			folderID = &id
 		}
 
+		resolvedID := layout.BuildFileID(relPath, bundleID)
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
-		default:
-			out <- File{
-				ID:        buildFileID(relPath, bundleID),
-				Path:      relPath,
-				URI:       buildFileUriFromPath(relPath),
-				Name:      filepath.Base(relPath),
-				Extension: filepath.Ext(relPath),
-				FolderID:  folderID,
-				BundleID:  bundleID,
-				Kind:      kind,
-				Ignored:   ignored,
-				Generated: generated,
-			}
+		case out <- File{
+			ID:        resolvedID,
+			Path:      relPath,
+			URI:       model.ArtifactURIForID("file", resolvedID),
+			Name:      filepath.Base(relPath),
+			Extension: filepath.Ext(relPath),
+			FolderID:  folderID,
+			BundleID:  bundleID,
+			Kind:      kind,
+			Ignored:   ignored,
+			Generated: generated,
+		}:
 		}
 	}
 	return nil
@@ -328,6 +421,8 @@ func hydrateSectionMetadata(s *Section, filePath string, prefix string) {
 // ▪️StreamSections streams sections entries through the callback.
 func StreamSections(ctx context.Context, scope string, out chan<- Section, opts ...StreamOptions) error {
 	defer close(out)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	var options StreamOptions
 	if len(opts) > 0 {
 		options = opts[0]
@@ -338,9 +433,8 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 	filesOpts.Regex = false
 
 	fileChan := make(chan File)
-	go func() {
-		StreamFiles(ctx, scope, fileChan, filesOpts)
-	}()
+	streamErrors := make(chan error, 1)
+	go func() { streamErrors <- StreamFiles(ctx, scope, fileChan, filesOpts) }()
 
 	for f := range fileChan {
 		fullPath := f.Path
@@ -359,15 +453,18 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 				if !matchesFilter(s.Name, options) {
 					continue
 				}
-				if !matchesQuery(s.Name+" "+s.FilePath, options) {
+				queryMatches, queryErr := matchesQuery(ctx, s.Name+" "+s.FilePath, options)
+				if queryErr != nil {
+					return queryErr
+				}
+				if !queryMatches {
 					continue
 				}
 
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
-				default:
-					out <- s
+				case out <- s:
 				}
 			}
 		} else {
@@ -380,19 +477,20 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 				select {
 				case <-ctx.Done():
 					return ctx.Err()
-				default:
-					out <- sections[i]
+				case out <- sections[i]:
 				}
 			}
 		}
 	}
-	return nil
+	return <-streamErrors
 }
 
 // 🧡️StreamDefinitions MUST invoke the callback for each matching definitions entry.
 // ▶️StreamDefinitions streams definitions entries through the callback.
 func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition, opts ...StreamOptions) error {
 	defer close(out)
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
 	var options StreamOptions
 	if len(opts) > 0 {
 		options = opts[0]
@@ -403,9 +501,8 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 	filesOpts.Regex = false
 
 	fileChan := make(chan File)
-	go func() {
-		StreamFiles(ctx, scope, fileChan, filesOpts)
-	}()
+	streamErrors := make(chan error, 1)
+	go func() { streamErrors <- StreamFiles(ctx, scope, fileChan, filesOpts) }()
 
 	for f := range fileChan {
 		fullPath := f.Path
@@ -444,17 +541,20 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 			if !matchesFilter(def.Name, options) {
 				continue
 			}
-			if !matchesQuery(def.Name+" "+string(def.Kind)+" "+def.FilePath, options) {
+			queryMatches, queryErr := matchesQuery(ctx, def.Name+" "+string(def.Kind)+" "+def.FilePath, options)
+			if queryErr != nil {
+				return queryErr
+			}
+			if !queryMatches {
 				continue
 			}
 
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
-			default:
-				out <- def
+			case out <- def:
 			}
 		}
 	}
-	return nil
+	return <-streamErrors
 }

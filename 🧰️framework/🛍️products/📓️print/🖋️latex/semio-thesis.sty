@@ -1,0 +1,390 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-thesis}[2026/10/28 v0.2.0 semio academic thesis components]
+
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{semio-core}
+\RequirePackage{semio-components}
+
+
+\ExplSyntaxOn
+\bool_new:N \g_semio_thesis_frontmatter_bool
+\bool_new:N \g_semio_thesis_unnumbered_bool
+\int_new:N \g_semio_thesis_numbering_depth_int
+\cs_new_protected:Npn \semio_thesis_numbering_suspend: {
+  \bool_if:NF \g_semio_thesis_unnumbered_bool {
+    \int_gset:Nn \g_semio_thesis_numbering_depth_int { \value{secnumdepth} }
+    \bool_gset_true:N \g_semio_thesis_unnumbered_bool
+  }
+  \setcounter{secnumdepth}{-1}
+}
+\cs_new_protected:Npn \semio_thesis_numbering_restore: {
+  \bool_if:NT \g_semio_thesis_unnumbered_bool {
+    \setcounter{secnumdepth}{\int_use:N \g_semio_thesis_numbering_depth_int}
+    \bool_gset_false:N \g_semio_thesis_unnumbered_bool
+  }
+}
+\tl_new:N \l_semio_thesis_level_tl
+\tl_new:N \l_semio_thesis_type_tl
+\tl_new:N \l_semio_thesis_programme_tl
+\tl_new:N \l_semio_thesis_student_id_tl
+\tl_new:N \l_semio_thesis_keywords_tl
+\tl_new:N \l_semio_thesis_declaration_text_tl
+\tl_new:N \l_semio_thesis_declaration_title_tl
+\tl_new:N \l_semio_thesis_dedication_title_tl
+\tl_new:N \l_semio_thesis_abbreviations_title_tl
+
+\tl_new:N \l_semio_thesis_university_tl
+\tl_new:N \l_semio_thesis_faculty_tl
+\tl_new:N \l_semio_thesis_institute_tl
+\tl_new:N \l_semio_thesis_degree_tl
+\tl_new:N \l_semio_thesis_discipline_tl
+\tl_new:N \l_semio_thesis_supervisor_tl
+\tl_new:N \l_semio_thesis_reviewers_tl
+\tl_new:N \l_semio_thesis_submission_tl
+\tl_new:N \l_semio_thesis_defense_tl
+\tl_new:N \l_semio_thesis_place_tl
+\tl_new:N \l_semio_thesis_orcid_tl
+
+\keys_define:nn { semio / setup } {
+  thesis-level .choices:nn = { bachelor, master, doctoral, custom }
+    { \tl_set_eq:NN \l_semio_thesis_level_tl \l_keys_choice_tl },
+  thesis-type .tl_set:N = \l_semio_thesis_type_tl,
+  programme .tl_set:N = \l_semio_thesis_programme_tl,
+  student-id .tl_set:N = \l_semio_thesis_student_id_tl,
+  keywords .tl_set:N = \l_semio_thesis_keywords_tl,
+  declaration-text .tl_set:N = \l_semio_thesis_declaration_text_tl,
+  declaration-title .tl_set:N = \l_semio_thesis_declaration_title_tl,
+  dedication-title .tl_set:N = \l_semio_thesis_dedication_title_tl,
+  abbreviations-title .tl_set:N = \l_semio_thesis_abbreviations_title_tl,
+  university .tl_set:N = \l_semio_thesis_university_tl,
+  faculty .tl_set:N = \l_semio_thesis_faculty_tl,
+  institute .tl_set:N = \l_semio_thesis_institute_tl,
+  degree .tl_set:N = \l_semio_thesis_degree_tl,
+  discipline .tl_set:N = \l_semio_thesis_discipline_tl,
+  supervisor .tl_set:N = \l_semio_thesis_supervisor_tl,
+  reviewers .tl_set:N = \l_semio_thesis_reviewers_tl,
+  submission .tl_set:N = \l_semio_thesis_submission_tl,
+  defense .tl_set:N = \l_semio_thesis_defense_tl,
+  place .tl_set:N = \l_semio_thesis_place_tl,
+  orcid .tl_set:N = \l_semio_thesis_orcid_tl,
+}
+
+\NewDocumentCommand{\university}{+m}{\tl_set:Nn \l_semio_thesis_university_tl {#1}}
+\NewDocumentCommand{\faculty}{+m}{\tl_set:Nn \l_semio_thesis_faculty_tl {#1}}
+\NewDocumentCommand{\institute}{+m}{\tl_set:Nn \l_semio_thesis_institute_tl {#1}}
+\NewDocumentCommand{\degree}{+m}{\tl_set:Nn \l_semio_thesis_degree_tl {#1}}
+\NewDocumentCommand{\discipline}{+m}{\tl_set:Nn \l_semio_thesis_discipline_tl {#1}}
+\NewDocumentCommand{\supervisor}{+m}{\tl_set:Nn \l_semio_thesis_supervisor_tl {#1}}
+\NewDocumentCommand{\reviewers}{+m}{\tl_set:Nn \l_semio_thesis_reviewers_tl {#1}}
+\NewDocumentCommand{\submissiondate}{+m}{\tl_set:Nn \l_semio_thesis_submission_tl {#1}}
+\NewDocumentCommand{\defensedate}{+m}{\tl_set:Nn \l_semio_thesis_defense_tl {#1}}
+\NewDocumentCommand{\place}{+m}{\tl_set:Nn \l_semio_thesis_place_tl {#1}}
+\NewDocumentCommand{\orcid}{+m}{\tl_set:Nn \l_semio_thesis_orcid_tl {#1}}
+
+\cs_new:Npn \semio_thesis_label_dissertation: {
+  \tl_if_blank:VTF \l_semio_thesis_type_tl {
+    \str_case:VnF \l_semio_thesis_level_tl {
+      { bachelor } { \semio_thesis_label:nn { Bachelor's~Thesis } { Bachelorarbeit } }
+      { master } { \semio_thesis_label:nn { Master's~Thesis } { Masterarbeit } }
+      { doctoral } { Dissertation }
+    } { \semio_thesis_label:nn { Thesis } { Abschlussarbeit } }
+  } { \tl_use:N \l_semio_thesis_type_tl }
+}
+\cs_new:Npn \semio_thesis_label:nn #1#2 {
+  \str_if_eq:VnTF \l_semio_language_tl { de } {#2} {#1}
+}
+\NewExpandableDocumentCommand \SemioThesisTypeTitle {} { \semio_thesis_label_dissertation: }
+\cs_new_protected:Npn \semio_thesis_validate: {
+  \tl_if_blank:VT \l_semio_thesis_level_tl {
+    \PackageError{semio-thesis}{Thesis~level~is~required}{Set~thesis-level=bachelor,~master,~doctoral~or~custom.}
+  }
+  \str_if_eq:VnT \l_semio_thesis_level_tl { custom } {
+    \tl_if_blank:VT \l_semio_thesis_type_tl {
+      \PackageError{semio-thesis}{Custom~thesis~type~is~required}{Set~thesis-type~to~the~required~title.}
+    }
+  }
+}
+\AddToHook{begindocument}{
+  \clist_if_in:nVT { thesis, phd } \l_semio_type_tl {
+    \hypersetup{pdftitle={\@title},pdfauthor={\@author},pdfkeywords={\tl_use:N \l_semio_thesis_keywords_tl}}
+  }
+}
+\AddToHook{begindocument/before}{
+  \clist_if_in:nVT { thesis, phd } \l_semio_type_tl { \semio_thesis_validate: }
+}
+
+\cs_new:Npn \semio_thesis_label_title: {
+  \str_case:VnF \l_semio_language_tl { { de } { Titel } } { Title }
+}
+\cs_new:Npn \semio_thesis_label_author: {
+  \str_case:VnF \l_semio_language_tl { { de } { Verfasser } } { Author }
+}
+\cs_new:Npn \semio_thesis_label_supervisor: {
+  \str_case:VnF \l_semio_language_tl { { de } { Betreuung } } { Supervisor }
+}
+\cs_new:Npn \semio_thesis_label_reviewers: {
+  \str_case:VnF \l_semio_language_tl { { de } { Gutachten } } { Reviewers }
+}
+\cs_new:Npn \semio_thesis_label_submission: {
+  \str_case:VnF \l_semio_language_tl { { de } { Eingereicht } } { Submitted }
+}
+\cs_new:Npn \semio_thesis_label_defense: {
+  \str_case:VnF \l_semio_language_tl { { de } { Disputation } } { Defense }
+}
+\cs_new:Npn \semio_thesis_label_faculty: {
+  \str_case:VnF \l_semio_language_tl { { de } { Fakultät } } { Faculty }
+}
+\cs_new:Npn \semio_thesis_label_degree: {
+  \str_case:VnF \l_semio_language_tl { { de } { Grad } } { Degree }
+}
+\cs_new:Npn \semio_thesis_label_place: {
+  \str_case:VnF \l_semio_language_tl { { de } { Ort } } { Place }
+}
+\cs_new:Npn \semio_thesis_title_acknowledgements: {
+  \str_case:VnF \l_semio_language_tl { { de } { Danksagung } } { Acknowledgements }
+}
+\cs_new:Npn \semio_thesis_title_declaration: {
+  \tl_if_blank:VTF \l_semio_thesis_declaration_title_tl
+    { \semio_thesis_label:nn { Declaration~of~Authorship } { Selbstständigkeitserklärung } }
+    { \tl_use:N \l_semio_thesis_declaration_title_tl }
+}
+\cs_new:Npn \semio_thesis_title_abstract: { Abstract }
+\cs_new:Npn \semio_thesis_title_kurzfassung: { Kurzfassung }
+
+\NewExpandableDocumentCommand \SemioThesisAbstractTitle { } { \semio_thesis_title_abstract: }
+\NewExpandableDocumentCommand \SemioThesisKurzfassungTitle { } { \semio_thesis_title_kurzfassung: }
+\NewExpandableDocumentCommand \SemioThesisAcknowledgementsTitle { } { \semio_thesis_title_acknowledgements: }
+\NewExpandableDocumentCommand \SemioThesisDeclarationTitle { } { \semio_thesis_title_declaration: }
+
+\ExplSyntaxOff
+\newcommand{\semio@thesis@declaration@en}{%
+  I declare that this thesis is my own work, that I have used no sources or aids other than the ones named in it, and that every passage taken from another work, in letter or in substance, is marked as such. This thesis has not been submitted, in this or a similar form, to any other examination authority.%
+}
+\newcommand{\semio@thesis@declaration@de}{%
+  Hiermit erkläre ich, dass ich die vorliegende Arbeit selbstständig verfasst und keine anderen als die angegebenen Quellen und Hilfsmittel benutzt habe, und dass alle Stellen, die dem Wortlaut oder dem Sinn nach anderen Werken entnommen sind, als solche kenntlich gemacht wurden. Diese Arbeit wurde in gleicher oder ähnlicher Form noch keiner anderen Prüfungsbehörde vorgelegt.%
+}
+\ExplSyntaxOn
+
+\cs_new_protected:Npn \semio_thesis_declaration_text: {
+  \str_case:VnF \l_semio_language_tl
+    { { de } { \semio@thesis@declaration@de } }
+    { \semio@thesis@declaration@en }
+}
+
+\cs_new_protected:Npn \semio_thesis_address:n #1 {
+  \group_begin:
+  \ExplSyntaxOff
+  \SemioSans
+  \setlength{\parindent}{0pt}%
+  #1%
+  \group_end:
+}
+
+\cs_new_protected:Npn \semio_thesis_field_window:nN #1#2 {
+  \tl_if_empty:NF #2 {
+    \WindowItem{
+      \begin{Window}[title={#1}, anchor=center, text-size=fit]
+        \SemioSans \tl_use:N #2
+      \end{Window}
+    }
+  }
+}
+
+\cs_new_protected:Npn \semio_thesis_title_page: {
+  \semio_cover_geometry_restore:
+  \clearpage
+  \setcounter{page}{1}
+  \bool_gset_true:N \g_semio_thesis_frontmatter_bool
+  \semio_thesis_numbering_suspend:
+  \semio_frontmatter_begin:
+  \newgeometry{left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm}
+  \thispagestyle{empty}
+  \bool_gset_true:N \g_semio_cover_geometry_bool
+  \group_begin:
+  \semio_theme_apply:
+  \setlength{\parskip}{0pt}
+  \begin{WindowArrangement}[height=\textheight]
+    \begin{WindowColumn}
+      \bool_lazy_any:nT {
+        { ! \tl_if_blank_p:V \l_semio_thesis_university_tl }
+        { ! \tl_if_blank_p:V \l_semio_thesis_faculty_tl }
+        { ! \tl_if_blank_p:V \l_semio_thesis_institute_tl }
+      } {
+        \WindowItem[1.6]{
+          \begin{Window}[title={\semio_thesis_label_faculty:}, anchor=nw, text-size=fit]
+            \semio_thesis_address:n {
+              \tl_use:N \l_semio_thesis_university_tl
+              \tl_if_empty:NF \l_semio_thesis_faculty_tl { \par \tl_use:N \l_semio_thesis_faculty_tl }
+              \tl_if_empty:NF \l_semio_thesis_institute_tl { \par \tl_use:N \l_semio_thesis_institute_tl }
+            }
+          \end{Window}
+        }
+      }
+      \WindowItem[3]{
+        \begin{Window}[title={\semio_thesis_label_title:}, anchor=center, text-size=fit]
+          \SemioSans \@title
+          \tl_if_empty:NF \l_semio_subtitle_tl { \par \SemioSans \tl_use:N \l_semio_subtitle_tl }
+        \end{Window}
+      }
+      \WindowItem[1]{
+          \begin{Window}[title={\semio_thesis_label:nn { Academic~Work } { Abschlussarbeit }},anchor=center,text-size=fit]
+            \SemioSans \semio_thesis_label_dissertation:
+          \end{Window}
+        }
+      \bool_lazy_any:nT {
+        { ! \tl_if_blank_p:V \l_semio_thesis_degree_tl }
+        { ! \tl_if_blank_p:V \l_semio_thesis_discipline_tl }
+        { ! \tl_if_blank_p:V \l_semio_thesis_programme_tl }
+      } {
+        \WindowItem[1.6]{
+          \begin{Window}[title={\semio_thesis_label_degree:}, anchor=center, text-size=fit]
+            \SemioSans \tl_use:N \l_semio_thesis_degree_tl
+            \tl_if_empty:NF \l_semio_thesis_discipline_tl { \par \SemioSans \tl_use:N \l_semio_thesis_discipline_tl }
+            \tl_if_empty:NF \l_semio_thesis_programme_tl { \par \SemioSans \tl_use:N \l_semio_thesis_programme_tl }
+          \end{Window}
+        }
+      }
+      \WindowItem[1.4]{
+        \begin{Window}[title={\semio_thesis_label_author:}, anchor=center, text-size=fit]
+          \SemioSans \@author
+          \tl_if_empty:NF \l_semio_thesis_student_id_tl { \par \semio_thesis_label:nn { Student~ID } { Matrikelnummer }:~\tl_use:N \l_semio_thesis_student_id_tl }
+          \tl_if_empty:NF \l_semio_thesis_orcid_tl { \par \SemioMono ORCID~ \tl_use:N \l_semio_thesis_orcid_tl }
+        \end{Window}
+      }
+      \bool_lazy_or:nnT
+        { ! \tl_if_empty_p:N \l_semio_thesis_supervisor_tl }
+        { ! \tl_if_empty_p:N \l_semio_thesis_reviewers_tl }
+      {
+        \WindowItem[1.8]{
+          \begin{WindowRow}
+            \semio_thesis_field_window:nN { \semio_thesis_label_supervisor: } \l_semio_thesis_supervisor_tl
+            \semio_thesis_field_window:nN { \semio_thesis_label_reviewers: } \l_semio_thesis_reviewers_tl
+          \end{WindowRow}
+        }
+      }
+      \bool_lazy_any:nT
+        {
+          { ! \tl_if_empty_p:N \l_semio_thesis_place_tl }
+          { ! \tl_if_empty_p:N \l_semio_thesis_submission_tl }
+          { ! \tl_if_empty_p:N \l_semio_thesis_defense_tl }
+        }
+      {
+        \WindowItem[1.2]{
+          \begin{WindowRow}
+            \semio_thesis_field_window:nN { \semio_thesis_label_place: } \l_semio_thesis_place_tl
+            \semio_thesis_field_window:nN { \semio_thesis_label_submission: } \l_semio_thesis_submission_tl
+            \semio_thesis_field_window:nN { \semio_thesis_label_defense: } \l_semio_thesis_defense_tl
+          \end{WindowRow}
+        }
+      }
+    \end{WindowColumn}
+  \end{WindowArrangement}
+  \par
+  \group_end:
+  \semio_cover_geometry_restore:
+}
+
+\NewDocumentCommand{\makethesistitle}{}{\semio_thesis_title_page:}
+\str_if_eq:VnT \l_semio_type_tl { thesis } {
+  \RenewDocumentCommand{\maketitle}{}{\makethesistitle}
+}
+
+\cs_new_protected:Npn \semio_thesis_unnumbered_heading:n #1 {
+  \semio_clear_to_recto:
+  \@ifundefined { chapter } { \section* {#1} } { \chapter* {#1} }
+}
+\cs_generate_variant:Nn \semio_thesis_unnumbered_heading:n { e }
+
+\NewDocumentEnvironment{Abstract}{}{
+  \semio_thesis_unnumbered_heading:e { \semio_thesis_title_abstract: }
+  \begin{otherlanguage}{english}
+}{
+  \par
+  \tl_if_blank:VF \l_semio_thesis_keywords_tl {
+    \noindent\textbf{Keywords:}~\tl_use:N \l_semio_thesis_keywords_tl\par
+  }
+  \end{otherlanguage}
+}
+
+\NewDocumentEnvironment{Kurzfassung}{}{
+  \semio_thesis_unnumbered_heading:e { \semio_thesis_title_kurzfassung: }
+  \begin{otherlanguage}{ngerman}
+}{\par\end{otherlanguage}}
+
+\NewDocumentEnvironment{Acknowledgements}{}{
+  \semio_thesis_unnumbered_heading:e { \semio_thesis_title_acknowledgements: }
+}{ \par }
+
+\NewDocumentCommand{\makedeclaration}{+o}{
+  \semio_thesis_unnumbered_heading:e { \semio_thesis_title_declaration: }
+  \begin{Blockquote}
+    \IfNoValueTF{#1}{
+      \tl_if_blank:VTF \l_semio_thesis_declaration_text_tl
+        { \semio_thesis_declaration_text: }
+        { \tl_use:N \l_semio_thesis_declaration_text_tl }
+    }{#1}
+  \end{Blockquote}
+  \par
+  \semio_thesis_signature_line:
+}
+
+\cs_new_protected:Npn \semio_thesis_signature_line: {
+  \par
+  \group_begin:
+  \SemioSans
+  \tl_if_empty:NF \l_semio_thesis_place_tl {
+    \tl_use:N \l_semio_thesis_place_tl
+    \tl_if_empty:NF \l_semio_thesis_submission_tl { ,~ }
+  }
+  \tl_if_empty:NF \l_semio_thesis_submission_tl { \tl_use:N \l_semio_thesis_submission_tl }
+  \par
+  \vspace { \SemioSpacingDouble }
+  \rule { 6cm } { \semio@stroke@hairline }
+  \par
+  \@author
+  \par
+  \group_end:
+}
+
+\ExplSyntaxOff
+
+\ExplSyntaxOn
+\NewExpandableDocumentCommand \SemioThesisDedicationTitle {} {
+  \tl_if_blank:VTF \l_semio_thesis_dedication_title_tl
+    { \semio_thesis_label:nn { Dedication } { Widmung } }
+    { \tl_use:N \l_semio_thesis_dedication_title_tl }
+}
+\NewExpandableDocumentCommand \SemioThesisAbbreviationsTitle {} {
+  \tl_if_blank:VTF \l_semio_thesis_abbreviations_title_tl
+    { \semio_thesis_label:nn { Abbreviations } { Abk\"urzungsverzeichnis } }
+    { \tl_use:N \l_semio_thesis_abbreviations_title_tl }
+}
+\NewDocumentEnvironment{Dedication}{}{
+  \semio_thesis_unnumbered_heading:e { \SemioThesisDedicationTitle }
+}{\par}
+\NewDocumentCommand{\makededication}{+m}{\begin{Dedication}#1\end{Dedication}}
+\NewDocumentEnvironment{Abbreviations}{}{
+  \semio_thesis_unnumbered_heading:e { \SemioThesisAbbreviationsTitle }
+  \begin{description}
+}{\end{description}}
+\NewDocumentCommand{\makefrontmatter}{}{
+  \semio_cover_geometry_restore:
+  \semio_clear_to_recto:
+  \bool_if:NF \g_semio_thesis_frontmatter_bool { \setcounter{page}{1} }
+  \bool_gset_true:N \g_semio_thesis_frontmatter_bool
+  \semio_thesis_numbering_suspend:
+  \semio_frontmatter_begin:
+}
+\AddToHook{cmd/makemainmatter/before}{
+  \bool_gset_false:N \g_semio_thesis_frontmatter_bool
+  \semio_thesis_numbering_restore:
+}
+\NewDocumentCommand{\makebackmatter}{}{
+  \bool_gset_false:N \g_semio_thesis_frontmatter_bool
+  \semio_cover_geometry_restore:
+  \semio_clear_to_recto:
+  \semio_thesis_numbering_suspend:
+  \use:c { semio@chrome@heading@set } { }
+}
+\ExplSyntaxOff

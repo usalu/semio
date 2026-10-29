@@ -1,0 +1,79 @@
+{
+  "cases": [
+    {
+      "name": "Deleted Indexed Source Is Excluded",
+      "candidates": [
+        "tracked.ts",
+        "removed.ts"
+      ],
+      "present": [
+        "tracked.ts"
+      ],
+      "expected": [
+        "tracked.ts"
+      ]
+    },
+    {
+      "name": "New Authored Source Is Included",
+      "candidates": [
+        "tracked.ts",
+        "new.ts"
+      ],
+      "present": [
+        "tracked.ts",
+        "new.ts"
+      ],
+      "expected": [
+        "new.ts",
+        "tracked.ts"
+      ]
+    },
+    {
+      "name": "Duplicate Candidates Are Counted Once",
+      "candidates": [
+        "same.ts",
+        "same.ts"
+      ],
+      "present": [
+        "same.ts"
+      ],
+      "expected": [
+        "same.ts"
+      ]
+    },
+    {
+      "name": "Physical Symlink Is A Source Entry",
+      "candidates": [
+        "link.ts"
+      ],
+      "present": [
+        "link.ts"
+      ],
+      "expected": [
+        "link.ts"
+      ]
+    },
+    {
+      "name": "Missing New Candidate Is Excluded",
+      "candidates": [
+        "gone-new.ts"
+      ],
+      "present": [],
+      "expected": []
+    },
+    {
+      "name": "Wire Sentinels Are Excluded",
+      "candidates": [
+        "",
+        "ok.ts",
+        ""
+      ],
+      "present": [
+        "ok.ts"
+      ],
+      "expected": [
+        "ok.ts"
+      ]
+    }
+  ]
+}

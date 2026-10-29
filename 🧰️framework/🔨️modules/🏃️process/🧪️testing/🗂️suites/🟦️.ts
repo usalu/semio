@@ -1,6 +1,6 @@
 import{existsSync,lstatSync,readFileSync,readdirSync}from"node:fs";
 import{dirname,join,relative,resolve,sep}from"node:path";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import type{ProcessPlatformCauseV1}from"./🖥️platforms/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json"with{type:"json"};
 import table from"./🔣️.json"with{type:"json"};

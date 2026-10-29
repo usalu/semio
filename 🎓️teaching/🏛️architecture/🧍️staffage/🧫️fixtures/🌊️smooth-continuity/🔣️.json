@@ -1,0 +1,13 @@
+{
+  "description": "C1 continuity of smooth key interpolation: finite-difference velocities on both sides of a key agree; looping clips are seamless; non-looping clips start and end at rest. The sparse walk asset (4 keys, ease smooth) is in 🦶️sparse-smooth-walk.",
+  "epsilonS": 0.0001,
+  "angleVelocityToleranceDegS": 0.05,
+  "rootVelocityToleranceMS": 0.05,
+  "trackVelocityTolerance": 0.01,
+  "linearJumpMinimumDegS": 1,
+  "oracleToleranceDeg": 1e-9,
+  "bone": "thigh-l",
+  "sparseClip": "walk",
+  "tracks": { "clip": "idle-breathing", "target": "emitter:breath", "keyTimes": [2, 2.4, 3.6] },
+  "transition": { "from": "stand", "to": "carry-bag", "durationS": 1, "bone": "arm-l" }
+}

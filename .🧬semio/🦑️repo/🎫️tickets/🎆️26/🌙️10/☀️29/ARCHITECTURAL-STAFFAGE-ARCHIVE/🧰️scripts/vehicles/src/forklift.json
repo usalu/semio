@@ -1,0 +1,2359 @@
+{
+  "id": "forklift",
+  "category": "vehicles",
+  "title": {
+    "en": "Forklift",
+    "de": "Gabelstapler"
+  },
+  "summary": {
+    "en": "A battery-electric counterbalanced 2.5 t forklift: a tilting two-stage mast with a free-sliding carriage and forks, a tilt cylinder, overhead guard, drive and steer axles with rolling wheels, and a Euro pallet with 1 t of goods; the front and rear axle reactions shift with the load moment.",
+    "de": "Ein batterieelektrischer Gegengewichtsstapler mit 2,5 t Tragkraft: ein neigbarer Zweistufenmast mit Hubschlitten und Gabeln, Neigezylinder, Fahrerschutzdach, Antriebs- und Lenkachse mit rollenden Rädern und eine Europalette mit 1 t Ladegut; die Reaktionen von Vorder- und Hinterachse verschieben sich mit dem Lastmoment."
+  },
+  "tags": [
+    "machine",
+    "forklift",
+    "counterbalanced",
+    "battery-electric",
+    "warehouse",
+    "wheeled"
+  ],
+  "provenance": {
+    "author": "Semio staffage content worker (vehicles)",
+    "method": "handcrafted",
+    "created": "2026-10-29",
+    "references": [
+      {
+        "id": "iso-3691-1",
+        "citation": "ISO 3691-1:2011 Industrial trucks, safety requirements and verification, motorized industrial trucks other than driverless trucks; and ISO 5053-1 vocabulary (rated capacity, load centre, mast tilt)."
+      },
+      {
+        "id": "vdi-2198",
+        "citation": "VDI 2198 Typenblätter für Flurförderzeuge: standard data of industrial trucks, 500 mm load centre, Euro pallet 1200 x 800 mm."
+      },
+      {
+        "id": "wong-2008",
+        "citation": "Wong, J. Y. (2008). Theory of Ground Vehicles, 4th ed., Wiley. Tyre contact patch and longitudinal load transfer."
+      },
+      {
+        "id": "gillespie-1992",
+        "citation": "Gillespie, T. D. (1992). Fundamentals of Vehicle Dynamics, SAE International. Axle loads and moment equilibrium of a two-axle vehicle."
+      },
+      {
+        "id": "ashrae-2021",
+        "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer; emissivity and absorptivity of painted steel and rubber."
+      }
+    ],
+    "notes": {
+      "en": "The pallet is the work object of the asset: on the ground ahead of the forks it carries its own weight; when lifted its 1 t acts as an applied load at the fork load point (the pallet bones have no mass). Pallet position offsets and the tilt cylinder strokes were computed from the mast kinematics for each authored key. Wheels roll with theta = -x / r (0.29 m drive, 0.23 m steer). Steering is about a vertical axis and not an elevation joint. The class dimensions, masses and loads are authored typical values for this vehicle class (authored-estimate); they are not taken from a cited data sheet.",
+      "de": "Die Palette ist das Arbeitsobjekt des Assets: Auf dem Boden vor den Gabeln trägt sie ihr eigenes Gewicht; angehoben wirkt ihre Tonne als Last am Lastpunkt der Gabel (die Palettenknochen haben keine Masse). Palettenversatz und Neigezylinderhübe wurden aus der Mastkinematik für jeden Schlüssel berechnet. Die Räder rollen mit theta = -x / r (0,29 m Antrieb, 0,23 m Lenkung). Das Lenken erfolgt um eine senkrechte Achse und ist kein Gelenk der Ansicht. Abmessungen, Massen und Lasten sind selbst gesetzte typische Werte dieser Fahrzeugklasse (authored-estimate); sie stammen nicht aus einem zitierten Datenblatt."
+    }
+  },
+  "dimensions": {
+    "heightM": 2.26,
+    "widthM": 4.07,
+    "depthM": 1.2,
+    "massKg": 4161
+  },
+  "materials": [
+    {
+      "id": "paint",
+      "title": {
+        "en": "Painted sheet steel",
+        "de": "Lackiertes Stahlblech"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.5,
+      "densityKgM3": 7850,
+      "conductivityWmK": 50,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "steel",
+      "title": {
+        "en": "Mast and fork steel",
+        "de": "Mast- und Gabelstahl"
+      },
+      "emissivity": 0.7,
+      "solarAbsorptivity": 0.65,
+      "densityKgM3": 7850,
+      "conductivityWmK": 50,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "rubber",
+      "title": {
+        "en": "Superelastic tyre rubber",
+        "de": "Superelastik-Reifengummi"
+      },
+      "emissivity": 0.95,
+      "solarAbsorptivity": 0.92,
+      "densityKgM3": 1200,
+      "conductivityWmK": 0.25,
+      "source": "literature",
+      "reference": "wong-2008"
+    },
+    {
+      "id": "cast-iron",
+      "title": {
+        "en": "Cast iron counterweight and brake drum",
+        "de": "Gussgegengewicht und Bremstrommel"
+      },
+      "emissivity": 0.8,
+      "solarAbsorptivity": 0.7,
+      "densityKgM3": 7200,
+      "conductivityWmK": 46,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "battery-case",
+      "title": {
+        "en": "Battery steel case",
+        "de": "Batterie-Stahlkasten"
+      },
+      "emissivity": 0.88,
+      "solarAbsorptivity": 0.6,
+      "densityKgM3": 4500,
+      "conductivityWmK": 40,
+      "source": "authored-estimate"
+    },
+    {
+      "id": "drive-electronics",
+      "title": {
+        "en": "Drive unit and controller housing",
+        "de": "Antriebs- und Reglergehäuse"
+      },
+      "emissivity": 0.85,
+      "solarAbsorptivity": 0.6,
+      "densityKgM3": 3000,
+      "conductivityWmK": 100,
+      "source": "authored-estimate"
+    },
+    {
+      "id": "hydraulic",
+      "title": {
+        "en": "Hydraulic cylinders",
+        "de": "Hydraulikzylinder"
+      },
+      "emissivity": 0.85,
+      "solarAbsorptivity": 0.55,
+      "densityKgM3": 7850,
+      "conductivityWmK": 50,
+      "source": "authored-estimate"
+    },
+    {
+      "id": "wood",
+      "title": {
+        "en": "Pallet softwood",
+        "de": "Palettenholz (Nadelholz)"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.6,
+      "densityKgM3": 500,
+      "conductivityWmK": 0.13,
+      "source": "literature",
+      "reference": "vdi-2198"
+    },
+    {
+      "id": "goods",
+      "title": {
+        "en": "Wrapped goods",
+        "de": "Verpacktes Ladegut"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.5,
+      "densityKgM3": 1000,
+      "conductivityWmK": 0.2,
+      "source": "illustrative"
+    },
+    {
+      "id": "interior",
+      "title": {
+        "en": "Seat and controls",
+        "de": "Sitz und Bedienelemente"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.8,
+      "densityKgM3": 300,
+      "conductivityWmK": 0.1,
+      "source": "authored-estimate"
+    }
+  ],
+  "rig": {
+    "kind": "mechanical",
+    "root": "chassis",
+    "bones": [
+      {
+        "id": "chassis",
+        "parent": null,
+        "title": {
+          "en": "Frame, drive motor and overhead guard",
+          "de": "Rahmen, Fahrmotor und Fahrerschutzdach"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 2.15,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 1200,
+          "comX": -0.9,
+          "comY": 0.7,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "battery",
+        "parent": "chassis",
+        "title": {
+          "en": "Traction battery",
+          "de": "Traktionsbatterie"
+        },
+        "x": -1.15,
+        "y": 0.6,
+        "angleDeg": 0,
+        "lengthM": 1.0,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 1000,
+          "comX": 0,
+          "comY": 0.2,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "counterweight",
+        "parent": "chassis",
+        "title": {
+          "en": "Counterweight",
+          "de": "Gegengewicht"
+        },
+        "x": -1.95,
+        "y": 0.7,
+        "angleDeg": 0,
+        "lengthM": 0.75,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 700,
+          "comX": 0,
+          "comY": 0.1,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "axle-f",
+        "parent": "chassis",
+        "title": {
+          "en": "Drive axle",
+          "de": "Antriebsachse"
+        },
+        "x": 0,
+        "y": 0.29,
+        "angleDeg": 0,
+        "lengthM": 0.29,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 220,
+          "comX": 0,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "axle-r",
+        "parent": "chassis",
+        "title": {
+          "en": "Steer axle",
+          "de": "Lenkachse"
+        },
+        "x": -1.7,
+        "y": 0.23,
+        "angleDeg": 0,
+        "lengthM": 0.23,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 160,
+          "comX": 0,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "wheel-f",
+        "parent": "axle-f",
+        "title": {
+          "en": "Drive wheels",
+          "de": "Antriebsräder"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.29,
+        "joint": {
+          "type": "revolute"
+        },
+        "mass": {
+          "kg": 60,
+          "comX": 0,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "wheel-r",
+        "parent": "axle-r",
+        "title": {
+          "en": "Steer wheels",
+          "de": "Lenkräder"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.23,
+        "joint": {
+          "type": "revolute"
+        },
+        "mass": {
+          "kg": 36,
+          "comX": 0,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "tilt-cyl",
+        "parent": "chassis",
+        "title": {
+          "en": "Tilt cylinders, barrels",
+          "de": "Neigezylinder, Zylinderrohre"
+        },
+        "x": -0.55,
+        "y": 0.75,
+        "angleDeg": 48,
+        "lengthM": 0.45,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -10,
+          "maxDeg": 15
+        },
+        "mass": {
+          "kg": 40,
+          "comX": 0.22,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "tilt-rod",
+        "parent": "tilt-cyl",
+        "title": {
+          "en": "Tilt cylinders, rods",
+          "de": "Neigezylinder, Kolbenstangen"
+        },
+        "x": 0.15,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.45,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 0,
+          "minM": 0,
+          "maxM": 0.3
+        },
+        "mass": {
+          "kg": 25,
+          "comX": 0.22,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "mast-outer",
+        "parent": "chassis",
+        "title": {
+          "en": "Outer mast (tilts)",
+          "de": "Außenmast (neigbar)"
+        },
+        "x": 0.05,
+        "y": 0.3,
+        "angleDeg": 90,
+        "lengthM": 1.8,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -6,
+          "maxDeg": 10
+        },
+        "mass": {
+          "kg": 260,
+          "comX": 0.8,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "mast-inner",
+        "parent": "mast-outer",
+        "title": {
+          "en": "Inner mast stage",
+          "de": "Innenmast-Stufe"
+        },
+        "x": -0.2,
+        "y": -0.12,
+        "angleDeg": 0,
+        "lengthM": 1.6,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 0,
+          "minM": 0,
+          "maxM": 1.55
+        },
+        "mass": {
+          "kg": 200,
+          "comX": 0.8,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "carriage",
+        "parent": "mast-inner",
+        "title": {
+          "en": "Lift carriage",
+          "de": "Hubschlitten"
+        },
+        "x": -0.03,
+        "y": -0.12,
+        "angleDeg": 0,
+        "lengthM": 0.6,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 0,
+          "minM": 0,
+          "maxM": 1.55
+        },
+        "mass": {
+          "kg": 120,
+          "comX": 0.3,
+          "comY": 0,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "forks",
+        "parent": "carriage",
+        "title": {
+          "en": "Fork tines with backrest",
+          "de": "Gabelzinken mit Lastschutzgitter"
+        },
+        "x": 0,
+        "y": -0.04,
+        "angleDeg": 0,
+        "lengthM": 1.07,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 140,
+          "comX": 0.3,
+          "comY": -0.4,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "pallet-x",
+        "parent": "chassis",
+        "title": {
+          "en": "Pallet position, horizontal (no mass)",
+          "de": "Palettenlage horizontal (ohne Masse)"
+        },
+        "x": 1.4,
+        "y": 0.015,
+        "angleDeg": 0,
+        "lengthM": 1.2,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 0,
+          "minM": -1.2,
+          "maxM": 1.2
+        }
+      },
+      {
+        "id": "pallet-y",
+        "parent": "pallet-x",
+        "title": {
+          "en": "Pallet position, vertical (no mass)",
+          "de": "Palettenlage vertikal (ohne Masse)"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 1.2,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 3.2
+        }
+      },
+      {
+        "id": "pallet",
+        "parent": "pallet-y",
+        "title": {
+          "en": "Euro pallet with goods (no mass)",
+          "de": "Europalette mit Ladegut (ohne Masse)"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 1.2,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -8,
+          "maxDeg": 12
+        }
+      }
+    ]
+  },
+  "anchors": [
+    {
+      "id": "contact-f",
+      "bone": "axle-f",
+      "x": 0,
+      "y": -0.29,
+      "kind": "contact",
+      "title": {
+        "en": "Drive tyre patches",
+        "de": "Antriebsreifenaufstandsflächen"
+      },
+      "support": "contact",
+      "normalDeg": 90,
+      "footprintLengthM": 0.17,
+      "footprintWidthM": 0.46,
+      "frictionCoefficient": 0.7
+    },
+    {
+      "id": "contact-r",
+      "bone": "axle-r",
+      "x": 0,
+      "y": -0.23,
+      "kind": "contact",
+      "title": {
+        "en": "Steer tyre patches",
+        "de": "Lenkreifenaufstandsflächen"
+      },
+      "support": "contact",
+      "normalDeg": 90,
+      "footprintLengthM": 0.13,
+      "footprintWidthM": 0.36,
+      "frictionCoefficient": 0.7
+    },
+    {
+      "id": "motor-vent",
+      "bone": "counterweight",
+      "x": -0.5,
+      "y": 0.35,
+      "kind": "emitter",
+      "title": {
+        "en": "Motor cooling air outlet",
+        "de": "Motorkühlluftaustritt"
+      }
+    },
+    {
+      "id": "fork-load",
+      "bone": "forks",
+      "x": 0.55,
+      "y": -0.5,
+      "kind": "load",
+      "title": {
+        "en": "Pallet load centre, 500 mm from the fork face",
+        "de": "Lastschwerpunkt, 500 mm vor der Gabelfläche"
+      }
+    }
+  ],
+  "geometry": {
+    "elevation": [
+      {
+        "id": "chassis-body",
+        "bone": "chassis",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.55,
+        "kind": "path",
+        "d": "M -1.7,0.18 L 0.3,0.18 C 0.4,0.18 0.45,0.25 0.45,0.35 L 0.45,0.78 C 0.45,0.85 0.42,0.9 0.35,0.92 L 0.05,0.96 L -0.02,0.58 L -1.7,0.58 Z",
+        "region": "chassis-paint",
+        "material": "paint"
+      },
+      {
+        "id": "chassis-skirt",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 2,
+        "z": 2.1,
+        "filled": false,
+        "tone": 0.4,
+        "kind": "path",
+        "d": "M -1.7,0.33 L 0.42,0.33 M 0.05,0.7 L 0.43,0.7",
+        "material": "paint"
+      },
+      {
+        "id": "drive-cover",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 1,
+        "z": 2.2,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "rect",
+        "x": -0.3,
+        "y": 0.58,
+        "w": 0.5,
+        "h": 0.1,
+        "region": "drive-motor",
+        "material": "drive-electronics"
+      },
+      {
+        "id": "cowl-dash",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 1,
+        "z": 2.3,
+        "filled": true,
+        "tone": 0.25,
+        "kind": "path",
+        "d": "M 0.05,0.96 L -0.02,0.58 L -0.18,0.6 L -0.1,1.0 Z",
+        "region": "controller",
+        "material": "drive-electronics"
+      },
+      {
+        "id": "controls",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 2,
+        "z": 2.4,
+        "filled": true,
+        "tone": 0.2,
+        "kind": "poly",
+        "points": [
+          [
+            -0.02,
+            0.98
+          ],
+          [
+            -0.2,
+            1.3
+          ]
+        ],
+        "closed": false,
+        "material": "interior"
+      },
+      {
+        "id": "steering-wheel",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 2,
+        "z": 2.4,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "ellipse",
+        "cx": -0.22,
+        "cy": 1.35,
+        "rx": 0.03,
+        "ry": 0.17,
+        "rotationDeg": -20,
+        "material": "interior"
+      },
+      {
+        "id": "seat-cushion",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 1,
+        "z": 2.5,
+        "filled": true,
+        "tone": 0.22,
+        "kind": "rect",
+        "x": -0.95,
+        "y": 1.05,
+        "w": 0.5,
+        "h": 0.1,
+        "r": 0.03,
+        "material": "interior"
+      },
+      {
+        "id": "seat-back",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 1,
+        "z": 2.5,
+        "filled": true,
+        "tone": 0.22,
+        "kind": "capsule",
+        "x0": -0.92,
+        "y0": 1.1,
+        "x1": -1.0,
+        "y1": 1.6,
+        "r0": 0.07,
+        "r1": 0.06,
+        "material": "interior"
+      },
+      {
+        "id": "guard-post-rear",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 0,
+        "z": 2.6,
+        "filled": true,
+        "tone": 0.25,
+        "kind": "capsule",
+        "x0": -1.0,
+        "y0": 1.05,
+        "x1": -1.0,
+        "y1": 2.1,
+        "r0": 0.03,
+        "r1": 0.03,
+        "region": "guard",
+        "material": "paint"
+      },
+      {
+        "id": "guard-post-front",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 0,
+        "z": 2.6,
+        "filled": true,
+        "tone": 0.25,
+        "kind": "capsule",
+        "x0": -0.1,
+        "y0": 0.96,
+        "x1": -0.05,
+        "y1": 2.1,
+        "r0": 0.03,
+        "r1": 0.03,
+        "region": "guard",
+        "material": "paint"
+      },
+      {
+        "id": "guard-roof",
+        "bone": "chassis",
+        "role": "body",
+        "lod": 0,
+        "z": 2.6,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "rect",
+        "x": -1.2,
+        "y": 2.1,
+        "w": 1.35,
+        "h": 0.05,
+        "region": "guard",
+        "material": "paint"
+      },
+      {
+        "id": "guard-slats",
+        "bone": "chassis",
+        "role": "texture",
+        "lod": 2,
+        "z": 2.7,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M -1.1,2.1 L -1.1,2.15 M -0.9,2.1 L -0.9,2.15 M -0.7,2.1 L -0.7,2.15 M -0.5,2.1 L -0.5,2.15 M -0.3,2.1 L -0.3,2.15 M -0.1,2.1 L -0.1,2.15",
+        "material": "paint"
+      },
+      {
+        "id": "beacon",
+        "bone": "chassis",
+        "role": "detail",
+        "lod": 1,
+        "z": 2.7,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "ellipse",
+        "cx": -0.5,
+        "cy": 2.2,
+        "rx": 0.06,
+        "ry": 0.06,
+        "material": "interior"
+      },
+      {
+        "id": "battery-case",
+        "bone": "battery",
+        "role": "body",
+        "lod": 0,
+        "z": 2.2,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "rect",
+        "x": -0.55,
+        "y": -0.02,
+        "w": 1.0,
+        "h": 0.47,
+        "region": "battery-pack",
+        "material": "battery-case"
+      },
+      {
+        "id": "battery-lines",
+        "bone": "battery",
+        "role": "detail",
+        "lod": 2,
+        "z": 2.3,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M -0.55,0.15 L 0.45,0.15 M -0.05,-0.02 L -0.05,0.45",
+        "material": "battery-case"
+      },
+      {
+        "id": "counterweight-body",
+        "bone": "counterweight",
+        "role": "body",
+        "lod": 0,
+        "z": 2.1,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 0.25,-0.52 L -0.35,-0.52 C -0.45,-0.52 -0.5,-0.45 -0.5,-0.35 L -0.5,0.3 C -0.5,0.45 -0.45,0.5 -0.35,0.5 L 0.25,0.5 Z",
+        "region": "counterweight",
+        "material": "cast-iron"
+      },
+      {
+        "id": "counterweight-vent",
+        "bone": "counterweight",
+        "role": "detail",
+        "lod": 2,
+        "z": 2.2,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M -0.45,0.2 L -0.45,0.4 M -0.38,0.2 L -0.38,0.4 M -0.31,0.2 L -0.31,0.4",
+        "material": "cast-iron"
+      },
+      {
+        "id": "tilt-barrel",
+        "bone": "tilt-cyl",
+        "role": "detail",
+        "lod": 1,
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.45,
+        "y1": 0,
+        "r0": 0.04,
+        "r1": 0.04,
+        "region": "hydraulics",
+        "material": "hydraulic"
+      },
+      {
+        "id": "tilt-rod-shape",
+        "bone": "tilt-rod",
+        "role": "detail",
+        "lod": 1,
+        "z": 3.35,
+        "filled": true,
+        "tone": 0.8,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.45,
+        "y1": 0,
+        "r0": 0.025,
+        "r1": 0.025,
+        "region": "hydraulics",
+        "material": "hydraulic"
+      },
+      {
+        "id": "mast-outer-body",
+        "bone": "mast-outer",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "rect",
+        "x": -0.25,
+        "y": -0.07,
+        "w": 2.05,
+        "h": 0.14,
+        "region": "mast",
+        "material": "steel"
+      },
+      {
+        "id": "mast-pivot",
+        "bone": "mast-outer",
+        "role": "detail",
+        "lod": 2,
+        "z": 3.1,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.05,
+        "ry": 0.05,
+        "material": "steel"
+      },
+      {
+        "id": "mast-inner-body",
+        "bone": "mast-inner",
+        "role": "body",
+        "lod": 0,
+        "z": 3.1,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "rect",
+        "x": 0,
+        "y": -0.05,
+        "w": 1.6,
+        "h": 0.1,
+        "region": "mast",
+        "material": "steel"
+      },
+      {
+        "id": "carriage-plate",
+        "bone": "carriage",
+        "role": "body",
+        "lod": 0,
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "rect",
+        "x": 0,
+        "y": -0.05,
+        "w": 0.6,
+        "h": 0.1,
+        "region": "fork-gear",
+        "material": "steel"
+      },
+      {
+        "id": "fork-shank",
+        "bone": "forks",
+        "role": "body",
+        "lod": 0,
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "rect",
+        "x": 0,
+        "y": -0.09,
+        "w": 1.05,
+        "h": 0.09,
+        "region": "fork-gear",
+        "material": "steel"
+      },
+      {
+        "id": "fork-tine",
+        "bone": "forks",
+        "role": "body",
+        "lod": 0,
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "rect",
+        "x": 0,
+        "y": -1.07,
+        "w": 0.045,
+        "h": 0.98,
+        "region": "fork-gear",
+        "material": "steel"
+      },
+      {
+        "id": "fork-backrest-bars",
+        "bone": "forks",
+        "role": "texture",
+        "lod": 3,
+        "z": 3.4,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0.3,-0.09 L 0.3,0 M 0.5,-0.09 L 0.5,0 M 0.7,-0.09 L 0.7,0 M 0.9,-0.09 L 0.9,0",
+        "material": "steel"
+      },
+      {
+        "id": "pallet-feet",
+        "bone": "pallet",
+        "role": "body",
+        "lod": 0,
+        "z": 2.8,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M 0,0 L 0.1,0 L 0.1,0.1 L 0,0.1 Z M 0.55,0 L 0.65,0 L 0.65,0.1 L 0.55,0.1 Z M 1.1,0 L 1.2,0 L 1.2,0.1 L 1.1,0.1 Z",
+        "region": "pallet",
+        "material": "wood"
+      },
+      {
+        "id": "pallet-deck",
+        "bone": "pallet",
+        "role": "body",
+        "lod": 0,
+        "z": 2.8,
+        "filled": true,
+        "tone": 0.62,
+        "kind": "rect",
+        "x": 0,
+        "y": 0.1,
+        "w": 1.2,
+        "h": 0.044,
+        "region": "pallet",
+        "material": "wood"
+      },
+      {
+        "id": "pallet-goods",
+        "bone": "pallet",
+        "role": "body",
+        "lod": 0,
+        "z": 2.9,
+        "filled": true,
+        "tone": 0.78,
+        "kind": "rect",
+        "x": 0.02,
+        "y": 0.144,
+        "w": 1.16,
+        "h": 0.9,
+        "r": 0.02,
+        "region": "cargo",
+        "material": "goods"
+      },
+      {
+        "id": "goods-courses",
+        "bone": "pallet",
+        "role": "texture",
+        "lod": 2,
+        "z": 3.0,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M 0.02,0.3 L 1.18,0.3 M 0.02,0.45 L 1.18,0.45 M 0.02,0.6 L 1.18,0.6 M 0.02,0.75 L 1.18,0.75 M 0.02,0.9 L 1.18,0.9",
+        "material": "goods"
+      },
+      {
+        "id": "goods-strap",
+        "bone": "pallet",
+        "role": "detail",
+        "lod": 1,
+        "z": 3.0,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 0.4,0.144 L 0.4,1.044 M 0.8,0.144 L 0.8,1.044",
+        "material": "goods"
+      },
+      {
+        "id": "tyre-f",
+        "bone": "wheel-f",
+        "role": "body",
+        "lod": 0,
+        "z": 4,
+        "filled": true,
+        "tone": 0.1,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.29,
+        "ry": 0.29,
+        "region": "tyres",
+        "material": "rubber"
+      },
+      {
+        "id": "tread-f",
+        "bone": "wheel-f",
+        "role": "texture",
+        "lod": 2,
+        "z": 4.1,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M0.265,0.000 L0.290,0.000 M0.252,0.082 L0.276,0.090 M0.214,0.156 L0.235,0.170 M0.156,0.214 L0.170,0.235 M0.082,0.252 L0.090,0.276 M0.000,0.265 L0.000,0.290 M-0.082,0.252 L-0.090,0.276 M-0.156,0.214 L-0.170,0.235 M-0.214,0.156 L-0.235,0.170 M-0.252,0.082 L-0.276,0.090 M-0.265,0.000 L-0.290,0.000 M-0.252,-0.082 L-0.276,-0.090 M-0.214,-0.156 L-0.235,-0.170 M-0.156,-0.214 L-0.170,-0.235 M-0.082,-0.252 L-0.090,-0.276 M-0.000,-0.265 L-0.000,-0.290 M0.082,-0.252 L0.090,-0.276 M0.156,-0.214 L0.170,-0.235 M0.214,-0.156 L0.235,-0.170 M0.252,-0.082 L0.276,-0.090",
+        "material": "rubber"
+      },
+      {
+        "id": "rim-f",
+        "bone": "wheel-f",
+        "role": "detail",
+        "lod": 0,
+        "z": 4.3,
+        "filled": true,
+        "tone": 0.6,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.17,
+        "ry": 0.17,
+        "material": "paint"
+      },
+      {
+        "id": "holes-f",
+        "bone": "wheel-f",
+        "role": "detail",
+        "lod": 1,
+        "z": 4.5,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "path",
+        "d": "M0.135,0.000 L0.120,0.026 L0.090,0.026 L0.075,0.000 L0.090,-0.026 L0.120,-0.026 Z M0.068,0.117 L0.038,0.117 L0.023,0.091 L0.037,0.065 L0.067,0.065 L0.083,0.091 Z M-0.067,0.117 L-0.082,0.091 L-0.067,0.065 L-0.037,0.065 L-0.022,0.091 L-0.037,0.117 Z M-0.135,0.000 L-0.120,-0.026 L-0.090,-0.026 L-0.075,0.000 L-0.090,0.026 L-0.120,0.026 Z M-0.068,-0.117 L-0.038,-0.117 L-0.023,-0.091 L-0.038,-0.065 L-0.068,-0.065 L-0.083,-0.091 Z M0.068,-0.117 L0.083,-0.091 L0.068,-0.065 L0.037,-0.065 L0.023,-0.091 L0.038,-0.117 Z",
+        "region": "brakes",
+        "material": "cast-iron"
+      },
+      {
+        "id": "hub-f",
+        "bone": "wheel-f",
+        "role": "detail",
+        "lod": 1,
+        "z": 5,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.055,
+        "ry": 0.055,
+        "material": "paint"
+      },
+      {
+        "id": "tyre-r",
+        "bone": "wheel-r",
+        "role": "body",
+        "lod": 0,
+        "z": 4,
+        "filled": true,
+        "tone": 0.1,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.23,
+        "ry": 0.23,
+        "region": "tyres",
+        "material": "rubber"
+      },
+      {
+        "id": "tread-r",
+        "bone": "wheel-r",
+        "role": "texture",
+        "lod": 2,
+        "z": 4.1,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M0.210,0.000 L0.230,0.000 M0.194,0.080 L0.212,0.088 M0.148,0.148 L0.163,0.163 M0.080,0.194 L0.088,0.212 M0.000,0.210 L0.000,0.230 M-0.080,0.194 L-0.088,0.212 M-0.148,0.148 L-0.163,0.163 M-0.194,0.080 L-0.212,0.088 M-0.210,0.000 L-0.230,0.000 M-0.194,-0.080 L-0.212,-0.088 M-0.148,-0.148 L-0.163,-0.163 M-0.080,-0.194 L-0.088,-0.212 M-0.000,-0.210 L-0.000,-0.230 M0.080,-0.194 L0.088,-0.212 M0.148,-0.148 L0.163,-0.163 M0.194,-0.080 L0.212,-0.088",
+        "material": "rubber"
+      },
+      {
+        "id": "rim-r",
+        "bone": "wheel-r",
+        "role": "detail",
+        "lod": 0,
+        "z": 4.3,
+        "filled": true,
+        "tone": 0.6,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.13,
+        "ry": 0.13,
+        "material": "paint"
+      },
+      {
+        "id": "holes-r",
+        "bone": "wheel-r",
+        "role": "detail",
+        "lod": 1,
+        "z": 4.5,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "path",
+        "d": "M0.105,0.000 L0.092,0.022 L0.068,0.022 L0.055,0.000 L0.067,-0.022 L0.092,-0.022 Z M0.032,0.100 L0.008,0.095 L0.000,0.071 L0.017,0.052 L0.041,0.058 L0.049,0.081 Z M-0.085,0.062 L-0.088,0.037 L-0.067,0.022 L-0.044,0.032 L-0.042,0.057 L-0.062,0.072 Z M-0.085,-0.062 L-0.062,-0.072 L-0.042,-0.057 L-0.044,-0.032 L-0.067,-0.022 L-0.088,-0.037 Z M0.032,-0.100 L0.049,-0.081 L0.041,-0.058 L0.017,-0.052 L0.000,-0.071 L0.008,-0.095 Z",
+        "region": "brakes",
+        "material": "cast-iron"
+      },
+      {
+        "id": "hub-r",
+        "bone": "wheel-r",
+        "role": "detail",
+        "lod": 1,
+        "z": 5,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.04,
+        "ry": 0.04,
+        "material": "paint"
+      }
+    ]
+  },
+  "poses": [
+    {
+      "id": "lowered-forks",
+      "title": {
+        "en": "Forks lowered under the pallet",
+        "de": "Gabeln abgesenkt unter der Palette"
+      },
+      "description": {
+        "en": "Standing with the mast upright and the forks fully lowered and inserted into a pallet of 1 t that still rests on the ground; the pallet carries its own weight.",
+        "de": "Stillstand mit senkrechtem Mast und ganz abgesenkten, in eine Palette mit 1 t Ladegut eingefahrenen Gabeln; die Palette ruht noch auf dem Boden und trägt ihr eigenes Gewicht."
+      },
+      "bones": {
+        "tilt-cyl": {
+          "angleDeg": -0.27
+        },
+        "tilt-rod": {
+          "dx": 0.143
+        },
+        "pallet-x": {
+          "dx": -0.98
+        }
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-f",
+        "contact-r"
+      ],
+      "thermal": {
+        "operating": {
+          "traction": 0.05,
+          "rolling": 0,
+          "braking": 0.1,
+          "lift": 0
+        },
+        "emitters": {
+          "motor-vent": 0.1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "lifted-load",
+      "title": {
+        "en": "Pallet lifted to 2.4 m",
+        "de": "Palette auf 2,4 m gehoben"
+      },
+      "description": {
+        "en": "Both mast stages extended 1.2 m so the pallet with 1 t of goods stands 2.4 m above the ground, mast tilted 3 degrees back: the load moment lifts the rear axle reaction down and the front up.",
+        "de": "Beide Maststufen um 1,2 m ausgefahren, die Palette mit 1 t Ladegut steht 2,4 m über dem Boden, Mast 3 Grad zurückgeneigt: Das Lastmoment verringert die Hinterachsreaktion und erhöht die vordere."
+      },
+      "bones": {
+        "mast-outer": {
+          "angleDeg": 3
+        },
+        "mast-inner": {
+          "dx": 1.2
+        },
+        "carriage": {
+          "dx": 1.2
+        },
+        "tilt-cyl": {
+          "angleDeg": 2.51
+        },
+        "tilt-rod": {
+          "dx": 0.104
+        },
+        "pallet-x": {
+          "dx": -1.091
+        },
+        "pallet-y": {
+          "dy": 2.416
+        },
+        "pallet": {
+          "angleDeg": 3
+        }
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-f",
+        "contact-r"
+      ],
+      "thermal": {
+        "operating": {
+          "traction": 0.05,
+          "rolling": 0,
+          "braking": 0.1,
+          "lift": 0.8
+        },
+        "emitters": {
+          "motor-vent": 0.5
+        }
+      },
+      "loads": [
+        {
+          "id": "pallet-load",
+          "kind": "carried",
+          "title": {
+            "en": "Pallet with goods, 1 t",
+            "de": "Palette mit Ladegut, 1 t"
+          },
+          "anchor": "fork-load",
+          "fxN": 0,
+          "fyN": -9807,
+          "source": "authored-estimate",
+          "reference": "vdi-2198"
+        }
+      ]
+    },
+    {
+      "id": "tilted-mast",
+      "title": {
+        "en": "Travel position, mast tilted back",
+        "de": "Fahrstellung, Mast zurückgeneigt"
+      },
+      "description": {
+        "en": "Pallet of 1 t carried 0.38 m above the ground with the mast tilted 10 degrees back for stability while driving.",
+        "de": "Palette mit 1 t in 0,38 m Höhe getragen, Mast zur Stabilität bei der Fahrt um 10 Grad zurückgeneigt."
+      },
+      "bones": {
+        "mast-outer": {
+          "angleDeg": 10
+        },
+        "mast-inner": {
+          "dx": 0.15
+        },
+        "carriage": {
+          "dx": 0.15
+        },
+        "tilt-cyl": {
+          "angleDeg": 9.64
+        },
+        "tilt-rod": {
+          "dx": 0.013
+        },
+        "pallet-x": {
+          "dx": -0.988
+        },
+        "pallet-y": {
+          "dy": 0.364
+        },
+        "pallet": {
+          "angleDeg": 10
+        }
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-f",
+        "contact-r"
+      ],
+      "thermal": {
+        "operating": {
+          "traction": 0.4,
+          "rolling": 0.5,
+          "braking": 0,
+          "lift": 0.1
+        },
+        "emitters": {
+          "motor-vent": 0.4
+        }
+      },
+      "loads": [
+        {
+          "id": "pallet-load",
+          "kind": "carried",
+          "title": {
+            "en": "Pallet with goods, 1 t",
+            "de": "Palette mit Ladegut, 1 t"
+          },
+          "anchor": "fork-load",
+          "fxN": 0,
+          "fyN": -9807,
+          "source": "authored-estimate",
+          "reference": "vdi-2198"
+        }
+      ]
+    },
+    {
+      "id": "approach",
+      "key": true,
+      "title": {
+        "en": "Approaching the pallet",
+        "de": "Anfahrt an die Palette"
+      },
+      "description": {
+        "en": "Technical key of lift-pallet: the truck stands 0.97 m before its pick-up position at 0.65 m/s; the pallet is fixed in the world.",
+        "de": "Technische Schlüsselstellung von Palette-heben: Der Stapler steht 0,97 m vor seiner Aufnahmeposition mit 0,65 m/s; die Palette ist ortsfest."
+      },
+      "bones": {
+        "tilt-cyl": {
+          "angleDeg": -0.27
+        },
+        "tilt-rod": {
+          "dx": 0.143
+        },
+        "pallet-x": {
+          "dx": 0
+        },
+        "wheel-f": {
+          "angleDeg": 191.62
+        },
+        "wheel-r": {
+          "angleDeg": 241.64
+        }
+      },
+      "root": {
+        "x": -0.97,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-f",
+        "contact-r"
+      ],
+      "thermal": {
+        "operating": {
+          "traction": 0.3,
+          "rolling": 0.4,
+          "braking": 0.3,
+          "lift": 0
+        },
+        "emitters": {
+          "motor-vent": 0.3
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "travel-accelerated",
+      "key": true,
+      "title": {
+        "en": "Travel, end of acceleration",
+        "de": "Fahrt, Ende der Beschleunigung"
+      },
+      "description": {
+        "en": "Technical key of drive-with-load: 1.2 m from the start at 1.2 m/s.",
+        "de": "Technische Schlüsselstellung von Fahrt-mit-Last: 1,2 m nach dem Start mit 1,2 m/s."
+      },
+      "bones": {
+        "mast-outer": {
+          "angleDeg": 10
+        },
+        "mast-inner": {
+          "dx": 0.15
+        },
+        "carriage": {
+          "dx": 0.15
+        },
+        "tilt-cyl": {
+          "angleDeg": 9.64
+        },
+        "tilt-rod": {
+          "dx": 0.013
+        },
+        "pallet-x": {
+          "dx": -0.988
+        },
+        "pallet-y": {
+          "dy": 0.364
+        },
+        "pallet": {
+          "angleDeg": 10
+        },
+        "wheel-f": {
+          "angleDeg": -237.09
+        },
+        "wheel-r": {
+          "angleDeg": -298.93
+        }
+      },
+      "root": {
+        "x": 1.2,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-f",
+        "contact-r"
+      ],
+      "thermal": {
+        "operating": {
+          "traction": 0.7,
+          "rolling": 0.8,
+          "braking": 0,
+          "lift": 0.1
+        },
+        "emitters": {
+          "motor-vent": 0.7
+        }
+      },
+      "loads": [
+        {
+          "id": "pallet-load",
+          "kind": "carried",
+          "title": {
+            "en": "Pallet with goods, 1 t",
+            "de": "Palette mit Ladegut, 1 t"
+          },
+          "anchor": "fork-load",
+          "fxN": 0,
+          "fyN": -9807,
+          "source": "authored-estimate",
+          "reference": "vdi-2198"
+        }
+      ]
+    },
+    {
+      "id": "travel-cruised",
+      "key": true,
+      "title": {
+        "en": "Travel, end of cruise",
+        "de": "Fahrt, Ende der Reisefahrt"
+      },
+      "description": {
+        "en": "Technical key of drive-with-load: 4.8 m from the start at 1.2 m/s.",
+        "de": "Technische Schlüsselstellung von Fahrt-mit-Last: 4,8 m nach dem Start mit 1,2 m/s."
+      },
+      "bones": {
+        "mast-outer": {
+          "angleDeg": 10
+        },
+        "mast-inner": {
+          "dx": 0.15
+        },
+        "carriage": {
+          "dx": 0.15
+        },
+        "tilt-cyl": {
+          "angleDeg": 9.64
+        },
+        "tilt-rod": {
+          "dx": 0.013
+        },
+        "pallet-x": {
+          "dx": -0.988
+        },
+        "pallet-y": {
+          "dy": 0.364
+        },
+        "pallet": {
+          "angleDeg": 10
+        },
+        "wheel-f": {
+          "angleDeg": -948.34
+        },
+        "wheel-r": {
+          "angleDeg": -1195.74
+        }
+      },
+      "root": {
+        "x": 4.8,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-f",
+        "contact-r"
+      ],
+      "thermal": {
+        "operating": {
+          "traction": 0.5,
+          "rolling": 0.8,
+          "braking": 0,
+          "lift": 0.1
+        },
+        "emitters": {
+          "motor-vent": 0.5
+        }
+      },
+      "loads": [
+        {
+          "id": "pallet-load",
+          "kind": "carried",
+          "title": {
+            "en": "Pallet with goods, 1 t",
+            "de": "Palette mit Ladegut, 1 t"
+          },
+          "anchor": "fork-load",
+          "fxN": 0,
+          "fyN": -9807,
+          "source": "authored-estimate",
+          "reference": "vdi-2198"
+        }
+      ]
+    },
+    {
+      "id": "travel-stopped",
+      "key": true,
+      "title": {
+        "en": "Travel, stopped",
+        "de": "Fahrt, angehalten"
+      },
+      "description": {
+        "en": "Technical key of drive-with-load: 6.0 m from the start, at rest after braking.",
+        "de": "Technische Schlüsselstellung von Fahrt-mit-Last: 6,0 m nach dem Start, nach dem Bremsen im Stillstand."
+      },
+      "bones": {
+        "mast-outer": {
+          "angleDeg": 10
+        },
+        "mast-inner": {
+          "dx": 0.15
+        },
+        "carriage": {
+          "dx": 0.15
+        },
+        "tilt-cyl": {
+          "angleDeg": 9.64
+        },
+        "tilt-rod": {
+          "dx": 0.013
+        },
+        "pallet-x": {
+          "dx": -0.988
+        },
+        "pallet-y": {
+          "dy": 0.364
+        },
+        "pallet": {
+          "angleDeg": 10
+        },
+        "wheel-f": {
+          "angleDeg": -1185.43
+        },
+        "wheel-r": {
+          "angleDeg": -1494.67
+        }
+      },
+      "root": {
+        "x": 6,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-f",
+        "contact-r"
+      ],
+      "thermal": {
+        "operating": {
+          "traction": 0.05,
+          "rolling": 0.2,
+          "braking": 0.9,
+          "lift": 0
+        },
+        "emitters": {
+          "motor-vent": 0.1
+        }
+      },
+      "loads": [
+        {
+          "id": "pallet-load",
+          "kind": "carried",
+          "title": {
+            "en": "Pallet with goods, 1 t",
+            "de": "Palette mit Ladegut, 1 t"
+          },
+          "anchor": "fork-load",
+          "fxN": 0,
+          "fyN": -9807,
+          "source": "authored-estimate",
+          "reference": "vdi-2198"
+        }
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "id": "lift-pallet",
+      "title": {
+        "en": "Pick up and lift a pallet",
+        "de": "Palette aufnehmen und heben"
+      },
+      "description": {
+        "en": "The truck brakes uniformly over 0.97 m into the pallet, stops, and lifts it 2.4 m while tilting the mast back 3 degrees; the 1 t acts at the fork load point once the pallet leaves the ground.",
+        "de": "Der Stapler bremst gleichmäßig auf 0,97 m in die Palette hinein, hält an und hebt sie um 2,4 m, während der Mast 3 Grad zurückgeneigt wird; die Tonne wirkt am Lastpunkt, sobald die Palette den Boden verlässt."
+      },
+      "durationS": 10,
+      "fps": 30,
+      "loop": false,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "approach",
+          "ease": "out"
+        },
+        {
+          "t": 3,
+          "pose": "lowered-forks",
+          "ease": "linear"
+        },
+        {
+          "t": 4,
+          "pose": "lowered-forks",
+          "ease": "smooth"
+        },
+        {
+          "t": 8,
+          "pose": "lifted-load",
+          "ease": "linear"
+        },
+        {
+          "t": 10,
+          "pose": "lifted-load",
+          "ease": "linear"
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-f",
+          "fromS": 0,
+          "toS": 10
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 10
+        }
+      ],
+      "phases": [
+        {
+          "id": "approach",
+          "fromS": 0,
+          "toS": 3,
+          "title": {
+            "en": "Driving in, braking",
+            "de": "Einfahren, Bremsen"
+          }
+        },
+        {
+          "id": "lift",
+          "fromS": 4,
+          "toS": 8,
+          "title": {
+            "en": "Lifting",
+            "de": "Heben"
+          }
+        },
+        {
+          "id": "hold",
+          "fromS": 8,
+          "toS": 10,
+          "title": {
+            "en": "Holding at 2.4 m",
+            "de": "Halten auf 2,4 m"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 3,
+          "kind": "motion",
+          "title": {
+            "en": "Standstill at the pallet",
+            "de": "Stillstand an der Palette"
+          }
+        },
+        {
+          "t": 4.3,
+          "kind": "load-on",
+          "title": {
+            "en": "Pallet leaves the ground",
+            "de": "Palette hebt vom Boden ab"
+          },
+          "target": "pallet-load"
+        }
+      ],
+      "tracks": [
+        {
+          "target": "load:pallet-load",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 4.2,
+              "v": 0
+            },
+            {
+              "t": 4.8,
+              "v": 1
+            },
+            {
+              "t": 10,
+              "v": 1
+            }
+          ]
+        },
+        {
+          "target": "operating:lift",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 4,
+              "v": 0.1
+            },
+            {
+              "t": 5,
+              "v": 0.9
+            },
+            {
+              "t": 8,
+              "v": 0.9
+            },
+            {
+              "t": 9,
+              "v": 0.2
+            }
+          ]
+        },
+        {
+          "target": "operating:traction",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.3
+            },
+            {
+              "t": 3,
+              "v": 0.05
+            },
+            {
+              "t": 5,
+              "v": 0.2
+            },
+            {
+              "t": 10,
+              "v": 0.05
+            }
+          ]
+        },
+        {
+          "target": "emitter:motor-vent",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.3
+            },
+            {
+              "t": 3,
+              "v": 0.1
+            },
+            {
+              "t": 5,
+              "v": 0.7
+            },
+            {
+              "t": 8,
+              "v": 0.7
+            },
+            {
+              "t": 10,
+              "v": 0.3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "drive-with-load",
+      "title": {
+        "en": "Drive with a load",
+        "de": "Fahrt mit Last"
+      },
+      "description": {
+        "en": "With the 1 t pallet low and the mast tilted back, the truck accelerates uniformly to 1.2 m/s over 1.2 m, cruises 3.6 m and brakes uniformly to rest over 1.2 m; the wheels roll with theta = -x / r and the axle reactions follow the d'Alembert forces.",
+        "de": "Mit der tiefen 1-t-Palette und zurückgeneigtem Mast beschleunigt der Stapler gleichmäßig auf 1,2 m Strecke auf 1,2 m/s, fährt 3,6 m konstant und bremst gleichmäßig auf 1,2 m bis zum Stillstand; die Räder rollen mit theta = -x / r und die Achsreaktionen folgen den d'Alembert-Kräften."
+      },
+      "durationS": 7.5,
+      "fps": 30,
+      "loop": false,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "tilted-mast",
+          "ease": "linear"
+        },
+        {
+          "t": 0.5,
+          "pose": "tilted-mast",
+          "ease": "in"
+        },
+        {
+          "t": 2.5,
+          "pose": "travel-accelerated",
+          "ease": "linear"
+        },
+        {
+          "t": 5.5,
+          "pose": "travel-cruised",
+          "ease": "out"
+        },
+        {
+          "t": 7.5,
+          "pose": "travel-stopped",
+          "ease": "linear"
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-f",
+          "fromS": 0,
+          "toS": 7.5
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 7.5
+        }
+      ],
+      "phases": [
+        {
+          "id": "accelerate",
+          "fromS": 0.5,
+          "toS": 2.5,
+          "title": {
+            "en": "Uniform acceleration",
+            "de": "Gleichmäßige Beschleunigung"
+          }
+        },
+        {
+          "id": "cruise",
+          "fromS": 2.5,
+          "toS": 5.5,
+          "title": {
+            "en": "Cruise at 1.2 m/s",
+            "de": "Fahrt mit 1,2 m/s"
+          }
+        },
+        {
+          "id": "brake",
+          "fromS": 5.5,
+          "toS": 7.5,
+          "title": {
+            "en": "Braking to rest",
+            "de": "Bremsen bis zum Stillstand"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0.5,
+          "kind": "motion",
+          "title": {
+            "en": "Starts moving",
+            "de": "Setzt sich in Bewegung"
+          }
+        },
+        {
+          "t": 5.5,
+          "kind": "motion",
+          "title": {
+            "en": "Starts braking",
+            "de": "Beginnt zu bremsen"
+          }
+        }
+      ],
+      "tracks": [
+        {
+          "target": "operating:traction",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.2
+            },
+            {
+              "t": 1.5,
+              "v": 0.85
+            },
+            {
+              "t": 2.5,
+              "v": 0.55
+            },
+            {
+              "t": 5.5,
+              "v": 0.5
+            },
+            {
+              "t": 6.5,
+              "v": 0.1
+            },
+            {
+              "t": 7.5,
+              "v": 0.05
+            }
+          ]
+        },
+        {
+          "target": "operating:braking",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 5.5,
+              "v": 0
+            },
+            {
+              "t": 6.5,
+              "v": 0.7
+            },
+            {
+              "t": 7.5,
+              "v": 0.9
+            }
+          ]
+        },
+        {
+          "target": "operating:rolling",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.1
+            },
+            {
+              "t": 2.5,
+              "v": 0.8
+            },
+            {
+              "t": 5.5,
+              "v": 0.8
+            },
+            {
+              "t": 7.5,
+              "v": 0.3
+            }
+          ]
+        },
+        {
+          "target": "emitter:motor-vent",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.2
+            },
+            {
+              "t": 1.5,
+              "v": 0.85
+            },
+            {
+              "t": 2.5,
+              "v": 0.55
+            },
+            {
+              "t": 5.5,
+              "v": 0.5
+            },
+            {
+              "t": 7.5,
+              "v": 0.1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "thermal": {
+    "environment": {
+      "airTempC": 20,
+      "meanRadiantTempC": 20,
+      "relativeHumidity": 0.5,
+      "windMS": 0.2,
+      "windDirectionDeg": 180,
+      "solarWM2": 0,
+      "pressurePa": 101325
+    },
+    "regions": [
+      {
+        "id": "chassis-paint",
+        "title": {
+          "en": "Painted frame and hood",
+          "de": "Lackierter Rahmen und Haube"
+        },
+        "kind": "surface",
+        "material": "paint",
+        "model": "passive",
+        "areaM2": 8,
+        "characteristicLengthM": 1.2,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "guard",
+        "title": {
+          "en": "Overhead guard",
+          "de": "Fahrerschutzdach"
+        },
+        "kind": "surface",
+        "material": "paint",
+        "model": "passive",
+        "areaM2": 4,
+        "characteristicLengthM": 0.05,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "battery-pack",
+        "title": {
+          "en": "Battery case",
+          "de": "Batteriekasten"
+        },
+        "kind": "surface",
+        "material": "battery-case",
+        "model": "operating",
+        "areaM2": 4.5,
+        "characteristicLengthM": 1,
+        "operatingKey": "traction",
+        "riseK": 12,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "counterweight",
+        "title": {
+          "en": "Counterweight",
+          "de": "Gegengewicht"
+        },
+        "kind": "surface",
+        "material": "cast-iron",
+        "model": "passive",
+        "areaM2": 3.5,
+        "characteristicLengthM": 1,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "drive-motor",
+        "title": {
+          "en": "Traction motor housing",
+          "de": "Fahrmotorgehäuse"
+        },
+        "kind": "engine",
+        "material": "drive-electronics",
+        "model": "operating",
+        "areaM2": 0.9,
+        "characteristicLengthM": 0.4,
+        "operatingKey": "traction",
+        "riseK": 40,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "controller",
+        "title": {
+          "en": "Power electronics housing",
+          "de": "Leistungselektronikgehäuse"
+        },
+        "kind": "engine",
+        "material": "drive-electronics",
+        "model": "operating",
+        "areaM2": 0.5,
+        "characteristicLengthM": 0.3,
+        "operatingKey": "traction",
+        "riseK": 30,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "hydraulics",
+        "title": {
+          "en": "Tilt cylinders",
+          "de": "Neigezylinder"
+        },
+        "kind": "surface",
+        "material": "hydraulic",
+        "model": "operating",
+        "areaM2": 0.4,
+        "characteristicLengthM": 0.1,
+        "operatingKey": "lift",
+        "riseK": 25,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "mast",
+        "title": {
+          "en": "Mast channels",
+          "de": "Maststufen"
+        },
+        "kind": "surface",
+        "material": "steel",
+        "model": "passive",
+        "areaM2": 5,
+        "characteristicLengthM": 0.15,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "fork-gear",
+        "title": {
+          "en": "Carriage and forks",
+          "de": "Schlitten und Gabeln"
+        },
+        "kind": "surface",
+        "material": "steel",
+        "model": "passive",
+        "areaM2": 1.6,
+        "characteristicLengthM": 0.5,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "tyres",
+        "title": {
+          "en": "Tyre treads and sidewalls",
+          "de": "Reifenlaufflächen und -flanken"
+        },
+        "kind": "tyre",
+        "material": "rubber",
+        "model": "operating",
+        "areaM2": 1.6,
+        "characteristicLengthM": 0.5,
+        "operatingKey": "rolling",
+        "riseK": 20,
+        "source": "authored-estimate",
+        "reference": "wong-2008"
+      },
+      {
+        "id": "brakes",
+        "title": {
+          "en": "Brake drums seen through the rim holes",
+          "de": "Bremstrommeln im Blick durch die Felgenöffnungen"
+        },
+        "kind": "surface",
+        "material": "cast-iron",
+        "model": "operating",
+        "areaM2": 0.4,
+        "characteristicLengthM": 0.3,
+        "operatingKey": "braking",
+        "riseK": 90,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "pallet",
+        "title": {
+          "en": "Pallet timber",
+          "de": "Palettenholz"
+        },
+        "kind": "surface",
+        "material": "wood",
+        "model": "passive",
+        "areaM2": 2,
+        "characteristicLengthM": 1.2,
+        "source": "authored-estimate",
+        "reference": "vdi-2198"
+      },
+      {
+        "id": "cargo",
+        "title": {
+          "en": "Wrapped goods",
+          "de": "Verpacktes Ladegut"
+        },
+        "kind": "surface",
+        "material": "goods",
+        "model": "passive",
+        "areaM2": 5,
+        "characteristicLengthM": 1,
+        "source": "illustrative"
+      }
+    ],
+    "emitters": [
+      {
+        "id": "motor-vent",
+        "kind": "vent",
+        "title": {
+          "en": "Motor cooling air outlet",
+          "de": "Motorkühlluftaustritt"
+        },
+        "anchor": "motor-vent",
+        "directionDeg": 180,
+        "carries": "airflow",
+        "temperatureC": 40,
+        "velocityMS": 2.5,
+        "diameterM": 0.25,
+        "source": "authored-estimate"
+      }
+    ],
+    "assumptions": [
+      {
+        "en": "The truck is battery-electric: there is no exhaust. The only air source is the motor cooling outlet in the counterweight (40 C and 2.5 m/s at full strength), blowing to the rear.",
+        "de": "Der Stapler ist batterieelektrisch: Es gibt kein Abgas. Die einzige Luftquelle ist der Motorkühlluftaustritt im Gegengewicht (40 C und 2,5 m/s bei voller Stärke) nach hinten."
+      },
+      {
+        "en": "Rises above air at operating level 1: battery case 12 K, traction motor 40 K, controller 30 K, tilt cylinders 25 K, tyres 20 K, brake drums 90 K. Indoor reference case without sun.",
+        "de": "Erhöhungen über die Luft bei Betriebsstufe 1: Batteriekasten 12 K, Fahrmotor 40 K, Regler 30 K, Neigezylinder 25 K, Reifen 20 K, Bremstrommeln 90 K. Innenraum-Referenzfall ohne Sonne."
+      }
+    ]
+  },
+  "structure": {
+    "gravityMS2": 9.80665,
+    "dynamics": "inertial",
+    "supports": [],
+    "assumptions": [
+      {
+        "en": "Two equally stiff tyre patches carry the truck, so the axle reactions follow moment equilibrium: a 1 t pallet at the 0.5 m load centre moves about a third of the load weight from the steer axle to the drive axle; lifting and tilting change the lever arm.",
+        "de": "Zwei gleich steife Reifenaufstandsflächen tragen den Stapler, die Achsreaktionen folgen dem Momentengleichgewicht: Eine 1-t-Palette im 0,5-m-Lastschwerpunkt verlagert etwa ein Drittel ihres Gewichts von der Lenk- auf die Antriebsachse; Heben und Neigen ändern den Hebelarm."
+      },
+      {
+        "en": "The pallet bones have no mass: the 1 t acts as an applied load only while the pallet is lifted. d'Alembert forces of the evaluated clip motion add the braking and acceleration load transfer.",
+        "de": "Die Palettenknochen haben keine Masse: Die Tonne wirkt nur als Last, solange die Palette gehoben ist. Die d'Alembert-Kräfte der ausgewerteten Clipbewegung fügen die Lastverlagerung beim Bremsen und Beschleunigen hinzu."
+      }
+    ],
+    "clinical": false
+  },
+  "presentation": {
+    "defaultPose": "lowered-forks",
+    "defaultClip": "lift-pallet",
+    "viewpoints": [
+      "elevation"
+    ]
+  },
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component"
+  ],
+  "completion": "authored"
+}

@@ -1,0 +1,87 @@
+[
+  {
+    "name": "relocated origin",
+    "modulePath": "derivative/source.js",
+    "physicalSourcePath": "original/storage/fixed/module.ts",
+    "specifier": "../directory/script.ts",
+    "expectedPath": "original/storage/directory/script.ts"
+  },
+  {
+    "name": "native origin",
+    "modulePath": "original/storage/fixed/module.ts",
+    "specifier": "../directory/script.ts",
+    "expectedPath": "original/storage/directory/script.ts"
+  },
+  {
+    "name": "Unicode origin",
+    "modulePath": "derivative/source.js",
+    "physicalSourcePath": "original/房间/📁️fixed/module.ts",
+    "specifier": "../directory/📜️entry.ts",
+    "expectedPath": "original/房间/directory/📜️entry.ts"
+  },
+  {
+    "name": "non-file physical origin",
+    "modulePath": "bundle/source.js",
+    "physicalOrigin": "https://example.invalid/source.ts",
+    "specifier": "../script.ts",
+    "expectedPath": null
+  },
+  {
+    "name": "external specifier",
+    "modulePath": "module.ts",
+    "specifier": "https://example.invalid/script.ts",
+    "expectedPath": null
+  },
+  {
+    "name": "network escape",
+    "modulePath": "module.ts",
+    "specifier": "//foreign.invalid/script.ts",
+    "expectedPath": null
+  },
+  {
+    "name": "encoded separator escape",
+    "modulePath": "module.ts",
+    "specifier": "./%2Fescape.ts",
+    "expectedPath": null
+  },
+  {
+    "name": "query substitution",
+    "modulePath": "module.ts",
+    "specifier": "./entry.ts?unowned=1",
+    "expectedPath": null
+  },
+  {
+    "name": "fragment substitution",
+    "modulePath": "module.ts",
+    "specifier": "./entry.ts#unowned",
+    "expectedPath": null
+  },
+  {
+    "name": "exact path bound",
+    "modulePath": "bounded/module.ts",
+    "specifier": "./entry.ts",
+    "entryUnits": 256,
+    "expectedPath": "bounded"
+  },
+  {
+    "name": "path bound exceeded",
+    "modulePath": "bounded/module.ts",
+    "specifier": "./entry.ts",
+    "entryUnits": 257,
+    "expectedPath": null
+  },
+  {
+    "name": "specifier bound exceeded",
+    "modulePath": "module.ts",
+    "specifier": "./entry.ts",
+    "specifierUnits": 257,
+    "expectedPath": null
+  },
+  {
+    "name": "origin bound exceeded",
+    "modulePath": "module.ts",
+    "specifier": "./entry.ts",
+    "originUnits": 4097,
+    "expectedPath": null
+  }
+]

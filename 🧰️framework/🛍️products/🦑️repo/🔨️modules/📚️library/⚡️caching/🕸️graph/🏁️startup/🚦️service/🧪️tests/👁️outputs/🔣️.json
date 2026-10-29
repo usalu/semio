@@ -1,0 +1,38 @@
+{
+  "unrelatedDirectories": 128,
+  "maximumInitialWatches": 32,
+  "maximumRegisteredWatches": 48,
+  "initialEnvironment": "before",
+  "changedEnvironment": "after",
+  "output": "dist/output",
+  "routes": [
+    {
+      "arguments": [
+        "cache",
+        "daemon-output-observation"
+      ],
+      "accepted": true
+    },
+    {
+      "arguments": [
+        "cache",
+        "unknown-observation"
+      ],
+      "accepted": false
+    },
+    {
+      "arguments": [
+        "cache"
+      ],
+      "accepted": false
+    },
+    {
+      "arguments": [
+        "cache",
+        "daemon-output-observation",
+        "extra"
+      ],
+      "accepted": false
+    }
+  ]
+}

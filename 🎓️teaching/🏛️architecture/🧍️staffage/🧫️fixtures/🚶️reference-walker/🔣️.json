@@ -1,0 +1,4464 @@
+{
+  "id": "reference-walker",
+  "category": "humans",
+  "title": {
+    "en": "Reference walker",
+    "de": "Referenz-Fußgänger"
+  },
+  "summary": {
+    "en": "A two-legged adult walker with planted-foot root motion, used as the engine reference fixture.",
+    "de": "Ein zweibeiniger erwachsener Fußgänger mit Standfuß-Wurzelbewegung als Referenz-Fixture der Engine."
+  },
+  "tags": [
+    "human",
+    "walker",
+    "fixture"
+  ],
+  "provenance": {
+    "author": "Semio staffage core engine",
+    "method": "handcrafted",
+    "created": "2026-10-29",
+    "references": [
+      {
+        "id": "winter-2009",
+        "citation": "Winter, D. A. (2009). Biomechanics and Motor Control of Human Movement, 4th ed., Wiley. Table 4.1, segment masses and centres of mass, scaled to 75 kg."
+      },
+      {
+        "id": "ashrae-2021",
+        "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort."
+      },
+      {
+        "id": "iso-9920-2007",
+        "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+      },
+      {
+        "id": "dubois-1916",
+        "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+      },
+      {
+        "id": "iso-8996-2021",
+        "citation": "ISO 8996:2021 Ergonomics of the thermal environment, determination of metabolic rate."
+      }
+    ],
+    "notes": {
+      "en": "A minimal but complete fixture; poses are authored estimates of gait key frames.",
+      "de": "Eine minimale, aber vollständige Fixture; die Posen sind Schätzungen von Gang-Schlüsselbildern."
+    }
+  },
+  "dimensions": {
+    "heightM": 1.73,
+    "widthM": 0.37,
+    "depthM": 0.46,
+    "massKg": 75.1
+  },
+  "materials": [
+    {
+      "id": "skin",
+      "title": {
+        "en": "Skin",
+        "de": "Haut"
+      },
+      "emissivity": 0.98,
+      "solarAbsorptivity": 0.6,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "cotton-clothing",
+      "title": {
+        "en": "Cotton clothing",
+        "de": "Baumwollkleidung"
+      },
+      "emissivity": 0.95,
+      "solarAbsorptivity": 0.5,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "leather-shoe",
+      "title": {
+        "en": "Leather shoe",
+        "de": "Lederschuh"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.7,
+      "source": "authored-estimate"
+    }
+  ],
+  "rig": {
+    "kind": "anatomical",
+    "root": "pelvis",
+    "bones": [
+      {
+        "id": "pelvis",
+        "parent": null,
+        "title": {
+          "en": "Pelvis",
+          "de": "Becken"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": 90,
+        "lengthM": 0.1,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -20,
+          "maxDeg": 20
+        },
+        "mass": {
+          "kg": 10,
+          "comX": 0.05,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "torso",
+        "parent": "pelvis",
+        "title": {
+          "en": "Torso",
+          "de": "Rumpf"
+        },
+        "x": 0.1,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.45,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -30,
+          "maxDeg": 45
+        },
+        "mass": {
+          "kg": 27.3,
+          "comX": 0.225,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "head",
+        "parent": "torso",
+        "title": {
+          "en": "Head and neck",
+          "de": "Kopf und Hals"
+        },
+        "x": 0.45,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.22,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -45,
+          "maxDeg": 45
+        },
+        "mass": {
+          "kg": 6.1,
+          "comX": 0.11,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "arm-l",
+        "parent": "torso",
+        "title": {
+          "en": "Left arm",
+          "de": "Linker Arm"
+        },
+        "x": 0.42,
+        "y": 0,
+        "angleDeg": -180,
+        "lengthM": 0.6,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -60,
+          "maxDeg": 170
+        },
+        "mass": {
+          "kg": 3.75,
+          "comX": 0.27,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "thigh-l",
+        "parent": "pelvis",
+        "title": {
+          "en": "Left thigh",
+          "de": "Linker Oberschenkel"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": -180,
+        "lengthM": 0.45,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -30,
+          "maxDeg": 100
+        },
+        "mass": {
+          "kg": 7.5,
+          "comX": 0.1949,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "shank-l",
+        "parent": "thigh-l",
+        "title": {
+          "en": "Left shank",
+          "de": "Linker Unterschenkel"
+        },
+        "x": 0.45,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.43,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -140,
+          "maxDeg": 0
+        },
+        "mass": {
+          "kg": 3.5,
+          "comX": 0.1862,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "foot-l",
+        "parent": "shank-l",
+        "title": {
+          "en": "Left foot",
+          "de": "Linker Fuß"
+        },
+        "x": 0.43,
+        "y": 0,
+        "angleDeg": 90,
+        "lengthM": 0.22,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -50,
+          "maxDeg": 40
+        },
+        "mass": {
+          "kg": 1.1,
+          "comX": 0.11,
+          "comY": -0.04,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "arm-r",
+        "parent": "torso",
+        "title": {
+          "en": "Right arm",
+          "de": "Rechter Arm"
+        },
+        "x": 0.42,
+        "y": 0,
+        "angleDeg": -180,
+        "lengthM": 0.6,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -60,
+          "maxDeg": 170
+        },
+        "mass": {
+          "kg": 3.75,
+          "comX": 0.27,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "thigh-r",
+        "parent": "pelvis",
+        "title": {
+          "en": "Right thigh",
+          "de": "Rechter Oberschenkel"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": -180,
+        "lengthM": 0.45,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -30,
+          "maxDeg": 100
+        },
+        "mass": {
+          "kg": 7.5,
+          "comX": 0.1949,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "shank-r",
+        "parent": "thigh-r",
+        "title": {
+          "en": "Right shank",
+          "de": "Rechter Unterschenkel"
+        },
+        "x": 0.45,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.43,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -140,
+          "maxDeg": 0
+        },
+        "mass": {
+          "kg": 3.5,
+          "comX": 0.1862,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "foot-r",
+        "parent": "shank-r",
+        "title": {
+          "en": "Right foot",
+          "de": "Rechter Fuß"
+        },
+        "x": 0.43,
+        "y": 0,
+        "angleDeg": 90,
+        "lengthM": 0.22,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -50,
+          "maxDeg": 40
+        },
+        "mass": {
+          "kg": 1.1,
+          "comX": 0.11,
+          "comY": -0.04,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      }
+    ]
+  },
+  "anchors": [
+    {
+      "id": "contact-l",
+      "bone": "foot-l",
+      "x": 0.19,
+      "y": -0.08,
+      "kind": "contact",
+      "title": {
+        "en": "Left sole",
+        "de": "Linker Sohle"
+      },
+      "support": "contact",
+      "normalDeg": 90,
+      "footprintLengthM": 0.12,
+      "footprintWidthM": 0.09,
+      "frictionCoefficient": 0.6
+    },
+    {
+      "id": "contact-r",
+      "bone": "foot-r",
+      "x": 0.19,
+      "y": -0.08,
+      "kind": "contact",
+      "title": {
+        "en": "Right sole",
+        "de": "Rechter Sohle"
+      },
+      "support": "contact",
+      "normalDeg": 90,
+      "footprintLengthM": 0.12,
+      "footprintWidthM": 0.09,
+      "frictionCoefficient": 0.6
+    },
+    {
+      "id": "mouth",
+      "bone": "head",
+      "x": 0.07,
+      "y": -0.09,
+      "kind": "emitter",
+      "title": {
+        "en": "Mouth and nose",
+        "de": "Mund und Nase"
+      }
+    },
+    {
+      "id": "bag-strap",
+      "bone": "torso",
+      "x": 0.4,
+      "y": 0.1,
+      "kind": "load",
+      "title": {
+        "en": "Shoulder bag strap",
+        "de": "Riemen der Umhängetasche"
+      }
+    }
+  ],
+  "geometry": {
+    "elevation": [
+      {
+        "id": "head",
+        "bone": "head",
+        "role": "body",
+        "lod": 0,
+        "z": 5,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "ellipse",
+        "cx": 0.1,
+        "cy": 0,
+        "rx": 0.12,
+        "ry": 0.095,
+        "region": "head-skin",
+        "material": "skin"
+      },
+      {
+        "id": "neck",
+        "bone": "head",
+        "role": "body",
+        "lod": 1,
+        "z": 4,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "capsule",
+        "x0": -0.06,
+        "y0": 0,
+        "x1": 0.06,
+        "y1": 0,
+        "r0": 0.05,
+        "r1": 0.05,
+        "region": "head-skin",
+        "material": "skin"
+      },
+      {
+        "id": "hair",
+        "bone": "head",
+        "role": "detail",
+        "lod": 2,
+        "z": 6,
+        "filled": true,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0.03 0.09 C 0.10 0.15 0.215 0.10 0.215 0 C 0.215 0.06 0.12 0.08 0.03 0.09 Z"
+      },
+      {
+        "id": "torso",
+        "bone": "torso",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.45,
+        "y1": 0,
+        "r0": 0.13,
+        "r1": 0.16,
+        "region": "torso-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "torso-weave",
+        "bone": "torso",
+        "role": "texture",
+        "lod": 3,
+        "z": 3.1,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            0.1,
+            -0.05
+          ],
+          [
+            0.35,
+            -0.05
+          ]
+        ],
+        "closed": false,
+        "region": "torso-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "pelvis",
+        "bone": "pelvis",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.1,
+        "y1": 0,
+        "r0": 0.14,
+        "r1": 0.14,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "arm-l",
+        "bone": "arm-l",
+        "role": "body",
+        "lod": 0,
+        "z": 0.5,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.6,
+        "y1": 0,
+        "r0": 0.045,
+        "r1": 0.035,
+        "region": "arm-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "thigh-l",
+        "bone": "thigh-l",
+        "role": "body",
+        "lod": 0,
+        "z": 1,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.45,
+        "y1": 0,
+        "r0": 0.085,
+        "r1": 0.065,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "shank-l",
+        "bone": "shank-l",
+        "role": "body",
+        "lod": 0,
+        "z": 1,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.43,
+        "y1": 0,
+        "r0": 0.06,
+        "r1": 0.04,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "foot-l",
+        "bone": "foot-l",
+        "role": "body",
+        "lod": 0,
+        "z": 1,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "rect",
+        "x": -0.06,
+        "y": -0.08,
+        "w": 0.27,
+        "h": 0.07,
+        "r": 0.02,
+        "region": "shoes",
+        "material": "leather-shoe"
+      },
+      {
+        "id": "arm-r",
+        "bone": "arm-r",
+        "role": "body",
+        "lod": 0,
+        "z": 6,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.6,
+        "y1": 0,
+        "r0": 0.045,
+        "r1": 0.035,
+        "region": "arm-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "thigh-r",
+        "bone": "thigh-r",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.45,
+        "y1": 0,
+        "r0": 0.085,
+        "r1": 0.065,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "shank-r",
+        "bone": "shank-r",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.43,
+        "y1": 0,
+        "r0": 0.06,
+        "r1": 0.04,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "foot-r",
+        "bone": "foot-r",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "rect",
+        "x": -0.06,
+        "y": -0.08,
+        "w": 0.27,
+        "h": 0.07,
+        "r": 0.02,
+        "region": "shoes",
+        "material": "leather-shoe"
+      }
+    ],
+    "plan": [
+      {
+        "id": "plan-shoulders",
+        "bone": "torso",
+        "role": "body",
+        "lod": 0,
+        "z": 1,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.12,
+        "ry": 0.23
+      },
+      {
+        "id": "plan-head",
+        "bone": "head",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.1,
+        "ry": 0.09
+      }
+    ]
+  },
+  "poses": [
+    {
+      "id": "stand",
+      "title": {
+        "en": "Standing",
+        "de": "Stehend"
+      },
+      "description": {
+        "en": "Relaxed upright standing on both feet.",
+        "de": "Entspanntes aufrechtes Stehen auf beiden Füßen."
+      },
+      "bones": {},
+      "ground": "auto",
+      "contacts": [
+        "contact-l",
+        "contact-r"
+      ],
+      "thermal": {
+        "activityMet": 1.2,
+        "emitters": {
+          "breath": 0.5
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "stride-left-forward",
+      "title": {
+        "en": "Stride, left foot forward",
+        "de": "Schritt, linker Fuß vorn"
+      },
+      "description": {
+        "en": "Left heel strike, right foot at toe-off, contralateral arm swing.",
+        "de": "Linker Fersenkontakt, rechter Fuß beim Abdruck, gegenläufiger Armschwung."
+      },
+      "bones": {
+        "thigh-l": {
+          "angleDeg": 22
+        },
+        "shank-l": {
+          "angleDeg": -3
+        },
+        "foot-l": {
+          "angleDeg": -19
+        },
+        "thigh-r": {
+          "angleDeg": -18
+        },
+        "shank-r": {
+          "angleDeg": -15
+        },
+        "foot-r": {
+          "angleDeg": -2
+        },
+        "arm-r": {
+          "angleDeg": 25
+        },
+        "arm-l": {
+          "angleDeg": -25
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-l"
+      ],
+      "thermal": {
+        "activityMet": 2.4,
+        "emitters": {
+          "breath": 1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "passing-left-stance",
+      "title": {
+        "en": "Passing, left stance",
+        "de": "Durchschwingen, linkes Standbein"
+      },
+      "description": {
+        "en": "Left foot carries, right leg swings through.",
+        "de": "Linker Fuß trägt, rechtes Bein schwingt durch."
+      },
+      "bones": {
+        "thigh-l": {
+          "angleDeg": 4
+        },
+        "shank-l": {
+          "angleDeg": -10
+        },
+        "foot-l": {
+          "angleDeg": 6
+        },
+        "thigh-r": {
+          "angleDeg": 20
+        },
+        "shank-r": {
+          "angleDeg": -55
+        },
+        "foot-r": {
+          "angleDeg": 20
+        },
+        "arm-r": {
+          "angleDeg": 5
+        },
+        "arm-l": {
+          "angleDeg": -5
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-l"
+      ],
+      "thermal": {
+        "activityMet": 2.4,
+        "emitters": {
+          "breath": 1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "stride-right-forward",
+      "title": {
+        "en": "Stride, right foot forward",
+        "de": "Schritt, rechter Fuß vorn"
+      },
+      "description": {
+        "en": "Right heel strike, left foot at toe-off.",
+        "de": "Rechter Fersenkontakt, linker Fuß beim Abdruck."
+      },
+      "bones": {
+        "thigh-r": {
+          "angleDeg": 22
+        },
+        "shank-r": {
+          "angleDeg": -3
+        },
+        "foot-r": {
+          "angleDeg": -19
+        },
+        "thigh-l": {
+          "angleDeg": -18
+        },
+        "shank-l": {
+          "angleDeg": -15
+        },
+        "foot-l": {
+          "angleDeg": -2
+        },
+        "arm-l": {
+          "angleDeg": 25
+        },
+        "arm-r": {
+          "angleDeg": -25
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-r"
+      ],
+      "thermal": {
+        "activityMet": 2.4,
+        "emitters": {
+          "breath": 1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "passing-right-stance",
+      "title": {
+        "en": "Passing, right stance",
+        "de": "Durchschwingen, rechtes Standbein"
+      },
+      "description": {
+        "en": "Right foot carries, left leg swings through.",
+        "de": "Rechter Fuß trägt, linkes Bein schwingt durch."
+      },
+      "bones": {
+        "thigh-r": {
+          "angleDeg": 4
+        },
+        "shank-r": {
+          "angleDeg": -10
+        },
+        "foot-r": {
+          "angleDeg": 6
+        },
+        "thigh-l": {
+          "angleDeg": 20
+        },
+        "shank-l": {
+          "angleDeg": -55
+        },
+        "foot-l": {
+          "angleDeg": 20
+        },
+        "arm-l": {
+          "angleDeg": 5
+        },
+        "arm-r": {
+          "angleDeg": -5
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-r"
+      ],
+      "thermal": {
+        "activityMet": 2.4,
+        "emitters": {
+          "breath": 1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "carry-bag",
+      "title": {
+        "en": "Standing with shoulder bag",
+        "de": "Stehend mit Umhängetasche"
+      },
+      "description": {
+        "en": "Upright with a 5 kg bag hanging from the left shoulder.",
+        "de": "Aufrecht mit einer 5-kg-Tasche an der linken Schulter."
+      },
+      "bones": {
+        "pelvis": {
+          "angleDeg": 2
+        },
+        "torso": {
+          "angleDeg": -3
+        },
+        "arm-l": {
+          "angleDeg": 6
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-l",
+        "contact-r"
+      ],
+      "thermal": {
+        "activityMet": 1.4,
+        "emitters": {
+          "breath": 0.6
+        }
+      },
+      "loads": [
+        {
+          "id": "shoulder-bag",
+          "kind": "carried",
+          "title": {
+            "en": "Shoulder bag",
+            "de": "Umhängetasche"
+          },
+          "anchor": "bag-strap",
+          "fxN": 0,
+          "fyN": -49.03,
+          "source": "authored-estimate"
+        }
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "id": "walk",
+      "title": {
+        "en": "Walking",
+        "de": "Gehen"
+      },
+      "description": {
+        "en": "Level walking at about 1.0 m/s, one stride per second, feet planted without sliding; joint angles from two-link inverse kinematics of smooth foot paths, sampled at 96 keys.",
+        "de": "Gehen in der Ebene mit etwa 1,0 m/s, ein Doppelschritt pro Sekunde, Füße gleiten nicht; Gelenkwinkel aus zweigliedriger inverser Kinematik glatter Fußbahnen in 96 Schlüsseln."
+      },
+      "durationS": 1,
+      "fps": 30,
+      "loop": true,
+      "rootMotion": "plant",
+      "advanceM": 0.999857,
+      "keys": [
+        {
+          "t": 0,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.3843
+            },
+            "shank-l": {
+              "angleDeg": -47.7262
+            },
+            "foot-l": {
+              "angleDeg": 6.3419
+            },
+            "thigh-r": {
+              "angleDeg": 21.2488
+            },
+            "shank-r": {
+              "angleDeg": -74.312
+            },
+            "foot-r": {
+              "angleDeg": 21.7032
+            },
+            "arm-l": {
+              "angleDeg": -25
+            },
+            "arm-r": {
+              "angleDeg": 25
+            }
+          }
+        },
+        {
+          "t": 0.010416666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.1546
+            },
+            "shank-l": {
+              "angleDeg": -48.7127
+            },
+            "foot-l": {
+              "angleDeg": 7.5581
+            },
+            "thigh-r": {
+              "angleDeg": 20.7479
+            },
+            "shank-r": {
+              "angleDeg": -74.4731
+            },
+            "foot-r": {
+              "angleDeg": 21.0797
+            },
+            "arm-l": {
+              "angleDeg": -25.2735
+            },
+            "arm-r": {
+              "angleDeg": 25.2735
+            }
+          }
+        },
+        {
+          "t": 0.020833333333333332,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 40.8637
+            },
+            "shank-l": {
+              "angleDeg": -49.5919
+            },
+            "foot-l": {
+              "angleDeg": 8.7282
+            },
+            "thigh-r": {
+              "angleDeg": 20.1065
+            },
+            "shank-r": {
+              "angleDeg": -74.4226
+            },
+            "foot-r": {
+              "angleDeg": 20.6341
+            },
+            "arm-l": {
+              "angleDeg": -25.4388
+            },
+            "arm-r": {
+              "angleDeg": 25.4388
+            }
+          }
+        },
+        {
+          "t": 0.03125,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 40.5151
+            },
+            "shank-l": {
+              "angleDeg": -50.3695
+            },
+            "foot-l": {
+              "angleDeg": 9.8544
+            },
+            "thigh-r": {
+              "angleDeg": 19.3115
+            },
+            "shank-r": {
+              "angleDeg": -74.1463
+            },
+            "foot-r": {
+              "angleDeg": 20.396
+            },
+            "arm-l": {
+              "angleDeg": -25.4951
+            },
+            "arm-r": {
+              "angleDeg": 25.4951
+            }
+          }
+        },
+        {
+          "t": 0.041666666666666664,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 40.1123
+            },
+            "shank-l": {
+              "angleDeg": -51.051
+            },
+            "foot-l": {
+              "angleDeg": 10.9387
+            },
+            "thigh-r": {
+              "angleDeg": 18.3489
+            },
+            "shank-r": {
+              "angleDeg": -73.6268
+            },
+            "foot-r": {
+              "angleDeg": 20.392
+            },
+            "arm-l": {
+              "angleDeg": -25.4422
+            },
+            "arm-r": {
+              "angleDeg": 25.4422
+            }
+          }
+        },
+        {
+          "t": 0.052083333333333336,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 39.6587
+            },
+            "shank-l": {
+              "angleDeg": -51.642
+            },
+            "foot-l": {
+              "angleDeg": 11.9833
+            },
+            "thigh-r": {
+              "angleDeg": 17.2164
+            },
+            "shank-r": {
+              "angleDeg": -72.8533
+            },
+            "foot-r": {
+              "angleDeg": 20.6398
+            },
+            "arm-l": {
+              "angleDeg": -25.2805
+            },
+            "arm-r": {
+              "angleDeg": 25.2805
+            }
+          }
+        },
+        {
+          "t": 0.0625,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 39.158
+            },
+            "shank-l": {
+              "angleDeg": -52.1483
+            },
+            "foot-l": {
+              "angleDeg": 12.9902
+            },
+            "thigh-r": {
+              "angleDeg": 16.305
+            },
+            "shank-r": {
+              "angleDeg": -72.1958
+            },
+            "foot-r": {
+              "angleDeg": 20.9912
+            },
+            "arm-l": {
+              "angleDeg": -25.0104
+            },
+            "arm-r": {
+              "angleDeg": 25.0104
+            }
+          }
+        },
+        {
+          "t": 0.07291666666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 38.6139
+            },
+            "shank-l": {
+              "angleDeg": -52.5757
+            },
+            "foot-l": {
+              "angleDeg": 13.9618
+            },
+            "thigh-r": {
+              "angleDeg": 15.7977
+            },
+            "shank-r": {
+              "angleDeg": -71.8524
+            },
+            "foot-r": {
+              "angleDeg": 21.3861
+            },
+            "arm-l": {
+              "angleDeg": -24.6333
+            },
+            "arm-r": {
+              "angleDeg": 24.6333
+            }
+          }
+        },
+        {
+          "t": 0.08333333333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 38.0302
+            },
+            "shank-l": {
+              "angleDeg": -52.9304
+            },
+            "foot-l": {
+              "angleDeg": 14.9001
+            },
+            "thigh-r": {
+              "angleDeg": 15.6774
+            },
+            "shank-r": {
+              "angleDeg": -71.8238
+            },
+            "foot-r": {
+              "angleDeg": 21.835
+            },
+            "arm-l": {
+              "angleDeg": -24.1506
+            },
+            "arm-r": {
+              "angleDeg": 24.1506
+            }
+          }
+        },
+        {
+          "t": 0.09375,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 37.4108
+            },
+            "shank-l": {
+              "angleDeg": -53.2185
+            },
+            "foot-l": {
+              "angleDeg": 15.8077
+            },
+            "thigh-r": {
+              "angleDeg": 15.9224
+            },
+            "shank-r": {
+              "angleDeg": -72.0942
+            },
+            "foot-r": {
+              "angleDeg": 22.3363
+            },
+            "arm-l": {
+              "angleDeg": -23.5646
+            },
+            "arm-r": {
+              "angleDeg": 23.5646
+            }
+          }
+        },
+        {
+          "t": 0.10416666666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 36.7594
+            },
+            "shank-l": {
+              "angleDeg": -53.4464
+            },
+            "foot-l": {
+              "angleDeg": 16.687
+            },
+            "thigh-r": {
+              "angleDeg": 16.5072
+            },
+            "shank-r": {
+              "angleDeg": -72.6339
+            },
+            "foot-r": {
+              "angleDeg": 22.8783
+            },
+            "arm-l": {
+              "angleDeg": -22.8776
+            },
+            "arm-r": {
+              "angleDeg": 22.8776
+            }
+          }
+        },
+        {
+          "t": 0.11458333333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 36.0799
+            },
+            "shank-l": {
+              "angleDeg": -53.6206
+            },
+            "foot-l": {
+              "angleDeg": 17.5406
+            },
+            "thigh-r": {
+              "angleDeg": 17.4036
+            },
+            "shank-r": {
+              "angleDeg": -73.4022
+            },
+            "foot-r": {
+              "angleDeg": 23.4412
+            },
+            "arm-l": {
+              "angleDeg": -22.0927
+            },
+            "arm-r": {
+              "angleDeg": 22.0927
+            }
+          }
+        },
+        {
+          "t": 0.125,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 35.3763
+            },
+            "shank-l": {
+              "angleDeg": -53.7476
+            },
+            "foot-l": {
+              "angleDeg": 18.3713
+            },
+            "thigh-r": {
+              "angleDeg": 18.5809
+            },
+            "shank-r": {
+              "angleDeg": -74.3502
+            },
+            "foot-r": {
+              "angleDeg": 23.9993
+            },
+            "arm-l": {
+              "angleDeg": -21.2132
+            },
+            "arm-r": {
+              "angleDeg": 21.2132
+            }
+          }
+        },
+        {
+          "t": 0.13541666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 34.6522
+            },
+            "shank-l": {
+              "angleDeg": -53.834
+            },
+            "foot-l": {
+              "angleDeg": 19.1818
+            },
+            "thigh-r": {
+              "angleDeg": 20.007
+            },
+            "shank-r": {
+              "angleDeg": -75.4236
+            },
+            "foot-r": {
+              "angleDeg": 24.523
+            },
+            "arm-l": {
+              "angleDeg": -20.2428
+            },
+            "arm-r": {
+              "angleDeg": 20.2428
+            }
+          }
+        },
+        {
+          "t": 0.14583333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 33.9113
+            },
+            "shank-l": {
+              "angleDeg": -53.8862
+            },
+            "foot-l": {
+              "angleDeg": 19.975
+            },
+            "thigh-r": {
+              "angleDeg": 21.6485
+            },
+            "shank-r": {
+              "angleDeg": -76.5653
+            },
+            "foot-r": {
+              "angleDeg": 24.9811
+            },
+            "arm-l": {
+              "angleDeg": -19.1858
+            },
+            "arm-r": {
+              "angleDeg": 19.1858
+            }
+          }
+        },
+        {
+          "t": 0.15625,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 33.1571
+            },
+            "shank-l": {
+              "angleDeg": -53.9108
+            },
+            "foot-l": {
+              "angleDeg": 20.7537
+            },
+            "thigh-r": {
+              "angleDeg": 23.4713
+            },
+            "shank-r": {
+              "angleDeg": -77.7174
+            },
+            "foot-r": {
+              "angleDeg": 25.3426
+            },
+            "arm-l": {
+              "angleDeg": -18.0466
+            },
+            "arm-r": {
+              "angleDeg": 18.0466
+            }
+          }
+        },
+        {
+          "t": 0.16666666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 32.3928
+            },
+            "shank-l": {
+              "angleDeg": -53.9137
+            },
+            "foot-l": {
+              "angleDeg": 21.5208
+            },
+            "thigh-r": {
+              "angleDeg": 25.4402
+            },
+            "shank-r": {
+              "angleDeg": -78.8231
+            },
+            "foot-r": {
+              "angleDeg": 25.5783
+            },
+            "arm-l": {
+              "angleDeg": -16.8301
+            },
+            "arm-r": {
+              "angleDeg": 16.8301
+            }
+          }
+        },
+        {
+          "t": 0.17708333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 31.6216
+            },
+            "shank-l": {
+              "angleDeg": -53.9008
+            },
+            "foot-l": {
+              "angleDeg": 22.2792
+            },
+            "thigh-r": {
+              "angleDeg": 27.5189
+            },
+            "shank-r": {
+              "angleDeg": -79.8275
+            },
+            "foot-r": {
+              "angleDeg": 25.6624
+            },
+            "arm-l": {
+              "angleDeg": -15.5416
+            },
+            "arm-r": {
+              "angleDeg": 15.5416
+            }
+          }
+        },
+        {
+          "t": 0.1875,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 30.8462
+            },
+            "shank-l": {
+              "angleDeg": -53.8776
+            },
+            "foot-l": {
+              "angleDeg": 23.0314
+            },
+            "thigh-r": {
+              "angleDeg": 29.6699
+            },
+            "shank-r": {
+              "angleDeg": -80.6795
+            },
+            "foot-r": {
+              "angleDeg": 25.5735
+            },
+            "arm-l": {
+              "angleDeg": -14.1865
+            },
+            "arm-r": {
+              "angleDeg": 14.1865
+            }
+          }
+        },
+        {
+          "t": 0.19791666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 30.0691
+            },
+            "shank-l": {
+              "angleDeg": -53.8489
+            },
+            "foot-l": {
+              "angleDeg": 23.7799
+            },
+            "thigh-r": {
+              "angleDeg": 31.8545
+            },
+            "shank-r": {
+              "angleDeg": -81.3321
+            },
+            "foot-r": {
+              "angleDeg": 25.2962
+            },
+            "arm-l": {
+              "angleDeg": -12.7706
+            },
+            "arm-r": {
+              "angleDeg": 12.7706
+            }
+          }
+        },
+        {
+          "t": 0.20833333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 29.2923
+            },
+            "shank-l": {
+              "angleDeg": -53.8192
+            },
+            "foot-l": {
+              "angleDeg": 24.527
+            },
+            "thigh-r": {
+              "angleDeg": 34.033
+            },
+            "shank-r": {
+              "angleDeg": -81.7438
+            },
+            "foot-r": {
+              "angleDeg": 24.8212
+            },
+            "arm-l": {
+              "angleDeg": -11.3001
+            },
+            "arm-r": {
+              "angleDeg": 11.3001
+            }
+          }
+        },
+        {
+          "t": 0.21875,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 28.5175
+            },
+            "shank-l": {
+              "angleDeg": -53.7922
+            },
+            "foot-l": {
+              "angleDeg": 25.2747
+            },
+            "thigh-r": {
+              "angleDeg": 36.165
+            },
+            "shank-r": {
+              "angleDeg": -81.8791
+            },
+            "foot-r": {
+              "angleDeg": 24.146
+            },
+            "arm-l": {
+              "angleDeg": -9.7812
+            },
+            "arm-r": {
+              "angleDeg": 9.7812
+            }
+          }
+        },
+        {
+          "t": 0.22916666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 27.746
+            },
+            "shank-l": {
+              "angleDeg": -53.7707
+            },
+            "foot-l": {
+              "angleDeg": 26.0246
+            },
+            "thigh-r": {
+              "angleDeg": 38.2105
+            },
+            "shank-r": {
+              "angleDeg": -81.7095
+            },
+            "foot-r": {
+              "angleDeg": 23.2745
+            },
+            "arm-l": {
+              "angleDeg": -8.2204
+            },
+            "arm-r": {
+              "angleDeg": 8.2204
+            }
+          }
+        },
+        {
+          "t": 0.23958333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 26.9788
+            },
+            "shank-l": {
+              "angleDeg": -53.7569
+            },
+            "foot-l": {
+              "angleDeg": 26.7781
+            },
+            "thigh-r": {
+              "angleDeg": 40.1307
+            },
+            "shank-r": {
+              "angleDeg": -81.2137
+            },
+            "foot-r": {
+              "angleDeg": 22.217
+            },
+            "arm-l": {
+              "angleDeg": -6.6244
+            },
+            "arm-r": {
+              "angleDeg": 6.6244
+            }
+          }
+        },
+        {
+          "t": 0.25,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 26.2162
+            },
+            "shank-l": {
+              "angleDeg": -53.7522
+            },
+            "foot-l": {
+              "angleDeg": 27.536
+            },
+            "thigh-r": {
+              "angleDeg": 41.8898
+            },
+            "shank-r": {
+              "angleDeg": -80.3784
+            },
+            "foot-r": {
+              "angleDeg": 20.9886
+            },
+            "arm-l": {
+              "angleDeg": -5
+            },
+            "arm-r": {
+              "angleDeg": 5
+            }
+          }
+        },
+        {
+          "t": 0.2604166666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 25.4581
+            },
+            "shank-l": {
+              "angleDeg": -53.7569
+            },
+            "foot-l": {
+              "angleDeg": 28.2988
+            },
+            "thigh-r": {
+              "angleDeg": 43.4556
+            },
+            "shank-r": {
+              "angleDeg": -79.1982
+            },
+            "foot-r": {
+              "angleDeg": 19.6085
+            },
+            "arm-l": {
+              "angleDeg": -3.3542
+            },
+            "arm-r": {
+              "angleDeg": 3.3542
+            }
+          }
+        },
+        {
+          "t": 0.2708333333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 24.7043
+            },
+            "shank-l": {
+              "angleDeg": -53.7707
+            },
+            "foot-l": {
+              "angleDeg": 29.0664
+            },
+            "thigh-r": {
+              "angleDeg": 44.8017
+            },
+            "shank-r": {
+              "angleDeg": -77.6755
+            },
+            "foot-r": {
+              "angleDeg": 18.0983
+            },
+            "arm-l": {
+              "angleDeg": -1.6941
+            },
+            "arm-r": {
+              "angleDeg": 1.6941
+            }
+          }
+        },
+        {
+          "t": 0.28125,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 23.9537
+            },
+            "shank-l": {
+              "angleDeg": -53.7922
+            },
+            "foot-l": {
+              "angleDeg": 29.8385
+            },
+            "thigh-r": {
+              "angleDeg": 45.9076
+            },
+            "shank-r": {
+              "angleDeg": -75.8206
+            },
+            "foot-r": {
+              "angleDeg": 16.4812
+            },
+            "arm-l": {
+              "angleDeg": -0.0267
+            },
+            "arm-r": {
+              "angleDeg": 0.0267
+            }
+          }
+        },
+        {
+          "t": 0.2916666666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 23.2052
+            },
+            "shank-l": {
+              "angleDeg": -53.8192
+            },
+            "foot-l": {
+              "angleDeg": 30.614
+            },
+            "thigh-r": {
+              "angleDeg": 46.76
+            },
+            "shank-r": {
+              "angleDeg": -73.6509
+            },
+            "foot-r": {
+              "angleDeg": 14.7805
+            },
+            "arm-l": {
+              "angleDeg": 1.6408
+            },
+            "arm-r": {
+              "angleDeg": -1.6408
+            }
+          }
+        },
+        {
+          "t": 0.3020833333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 22.4613
+            },
+            "shank-l": {
+              "angleDeg": -53.856
+            },
+            "foot-l": {
+              "angleDeg": 31.3874
+            },
+            "thigh-r": {
+              "angleDeg": 47.3528
+            },
+            "shank-r": {
+              "angleDeg": -71.1908
+            },
+            "foot-r": {
+              "angleDeg": 13.0194
+            },
+            "arm-l": {
+              "angleDeg": 3.3013
+            },
+            "arm-r": {
+              "angleDeg": -3.3013
+            }
+          }
+        },
+        {
+          "t": 0.3125,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.8497
+            },
+            "shank-l": {
+              "angleDeg": -54.1262
+            },
+            "foot-l": {
+              "angleDeg": 32.0227
+            },
+            "thigh-r": {
+              "angleDeg": 47.687
+            },
+            "shank-r": {
+              "angleDeg": -68.4714
+            },
+            "foot-r": {
+              "angleDeg": 11.2205
+            },
+            "arm-l": {
+              "angleDeg": 4.9477
+            },
+            "arm-r": {
+              "angleDeg": -4.9477
+            }
+          }
+        },
+        {
+          "t": 0.3229166666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.4154
+            },
+            "shank-l": {
+              "angleDeg": -54.7103
+            },
+            "foot-l": {
+              "angleDeg": 32.4665
+            },
+            "thigh-r": {
+              "angleDeg": 47.7708
+            },
+            "shank-r": {
+              "angleDeg": -65.5309
+            },
+            "foot-r": {
+              "angleDeg": 9.4064
+            },
+            "arm-l": {
+              "angleDeg": 6.5729
+            },
+            "arm-r": {
+              "angleDeg": -6.5729
+            }
+          }
+        },
+        {
+          "t": 0.3333333333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.1349
+            },
+            "shank-l": {
+              "angleDeg": -55.5662
+            },
+            "foot-l": {
+              "angleDeg": 32.7306
+            },
+            "thigh-r": {
+              "angleDeg": 47.6193
+            },
+            "shank-r": {
+              "angleDeg": -62.4147
+            },
+            "foot-r": {
+              "angleDeg": 7.5999
+            },
+            "arm-l": {
+              "angleDeg": 8.1699
+            },
+            "arm-r": {
+              "angleDeg": -8.1699
+            }
+          }
+        },
+        {
+          "t": 0.34375,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 20.9843
+            },
+            "shank-l": {
+              "angleDeg": -56.6481
+            },
+            "foot-l": {
+              "angleDeg": 32.8234
+            },
+            "thigh-r": {
+              "angleDeg": 47.2542
+            },
+            "shank-r": {
+              "angleDeg": -59.1768
+            },
+            "foot-r": {
+              "angleDeg": 5.826
+            },
+            "arm-l": {
+              "angleDeg": 9.7319
+            },
+            "arm-r": {
+              "angleDeg": -9.7319
+            }
+          }
+        },
+        {
+          "t": 0.3541666666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 20.94
+            },
+            "shank-l": {
+              "angleDeg": -57.9091
+            },
+            "foot-l": {
+              "angleDeg": 32.7519
+            },
+            "thigh-r": {
+              "angleDeg": 46.7042
+            },
+            "shank-r": {
+              "angleDeg": -55.8813
+            },
+            "foot-r": {
+              "angleDeg": 4.1128
+            },
+            "arm-l": {
+              "angleDeg": 11.2523
+            },
+            "arm-r": {
+              "angleDeg": -11.2523
+            }
+          }
+        },
+        {
+          "t": 0.3645833333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 20.9798
+            },
+            "shank-l": {
+              "angleDeg": -59.3033
+            },
+            "foot-l": {
+              "angleDeg": 32.523
+            },
+            "thigh-r": {
+              "angleDeg": 46.0052
+            },
+            "shank-r": {
+              "angleDeg": -52.6052
+            },
+            "foot-r": {
+              "angleDeg": 2.4936
+            },
+            "arm-l": {
+              "angleDeg": 12.7244
+            },
+            "arm-r": {
+              "angleDeg": -12.7244
+            }
+          }
+        },
+        {
+          "t": 0.375,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.0828
+            },
+            "shank-l": {
+              "angleDeg": -60.7873
+            },
+            "foot-l": {
+              "angleDeg": 32.1445
+            },
+            "thigh-r": {
+              "angleDeg": 45.2012
+            },
+            "shank-r": {
+              "angleDeg": -49.4408
+            },
+            "foot-r": {
+              "angleDeg": 1.0097
+            },
+            "arm-l": {
+              "angleDeg": 14.1421
+            },
+            "arm-r": {
+              "angleDeg": -14.1421
+            }
+          }
+        },
+        {
+          "t": 0.3854166666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.2295
+            },
+            "shank-l": {
+              "angleDeg": -62.3206
+            },
+            "foot-l": {
+              "angleDeg": 31.6257
+            },
+            "thigh-r": {
+              "angleDeg": 44.3448
+            },
+            "shank-r": {
+              "angleDeg": -46.4988
+            },
+            "foot-r": {
+              "angleDeg": -0.2886
+            },
+            "arm-l": {
+              "angleDeg": 15.4993
+            },
+            "arm-r": {
+              "angleDeg": -15.4993
+            }
+          }
+        },
+        {
+          "t": 0.3958333333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.402
+            },
+            "shank-l": {
+              "angleDeg": -63.8664
+            },
+            "foot-l": {
+              "angleDeg": 30.9783
+            },
+            "thigh-r": {
+              "angleDeg": 43.4973
+            },
+            "shank-r": {
+              "angleDeg": -43.9091
+            },
+            "foot-r": {
+              "angleDeg": -1.3399
+            },
+            "arm-l": {
+              "angleDeg": 16.79
+            },
+            "arm-r": {
+              "angleDeg": -16.79
+            }
+          }
+        },
+        {
+          "t": 0.40625,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.5836
+            },
+            "shank-l": {
+              "angleDeg": -65.3916
+            },
+            "foot-l": {
+              "angleDeg": 30.2159
+            },
+            "thigh-r": {
+              "angleDeg": 42.7261
+            },
+            "shank-r": {
+              "angleDeg": -41.8172
+            },
+            "foot-r": {
+              "angleDeg": -2.0734
+            },
+            "arm-l": {
+              "angleDeg": 18.0089
+            },
+            "arm-r": {
+              "angleDeg": -18.0089
+            }
+          }
+        },
+        {
+          "t": 0.4166666666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.7588
+            },
+            "shank-l": {
+              "angleDeg": -66.8665
+            },
+            "foot-l": {
+              "angleDeg": 29.3551
+            },
+            "thigh-r": {
+              "angleDeg": 42.0983
+            },
+            "shank-r": {
+              "angleDeg": -40.3725
+            },
+            "foot-r": {
+              "angleDeg": -2.4145
+            },
+            "arm-l": {
+              "angleDeg": 19.1506
+            },
+            "arm-r": {
+              "angleDeg": -19.1506
+            }
+          }
+        },
+        {
+          "t": 0.4270833333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.9127
+            },
+            "shank-l": {
+              "angleDeg": -68.2649
+            },
+            "foot-l": {
+              "angleDeg": 28.4148
+            },
+            "thigh-r": {
+              "angleDeg": 41.6699
+            },
+            "shank-r": {
+              "angleDeg": -39.7063
+            },
+            "foot-r": {
+              "angleDeg": -2.2952
+            },
+            "arm-l": {
+              "angleDeg": 20.2104
+            },
+            "arm-r": {
+              "angleDeg": -20.2104
+            }
+          }
+        },
+        {
+          "t": 0.4375,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 22.0312
+            },
+            "shank-l": {
+              "angleDeg": -69.564
+            },
+            "foot-l": {
+              "angleDeg": 27.4165
+            },
+            "thigh-r": {
+              "angleDeg": 41.4711
+            },
+            "shank-r": {
+              "angleDeg": -39.9035
+            },
+            "foot-r": {
+              "angleDeg": -1.668
+            },
+            "arm-l": {
+              "angleDeg": 21.1836
+            },
+            "arm-r": {
+              "angleDeg": -21.1836
+            }
+          }
+        },
+        {
+          "t": 0.4479166666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 22.1006
+            },
+            "shank-l": {
+              "angleDeg": -70.7436
+            },
+            "foot-l": {
+              "angleDeg": 26.3844
+            },
+            "thigh-r": {
+              "angleDeg": 41.4946
+            },
+            "shank-r": {
+              "angleDeg": -40.9804
+            },
+            "foot-r": {
+              "angleDeg": -0.5171
+            },
+            "arm-l": {
+              "angleDeg": 22.0661
+            },
+            "arm-r": {
+              "angleDeg": -22.0661
+            }
+          }
+        },
+        {
+          "t": 0.4583333333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 22.1075
+            },
+            "shank-l": {
+              "angleDeg": -71.7864
+            },
+            "foot-l": {
+              "angleDeg": 25.3448
+            },
+            "thigh-r": {
+              "angleDeg": 41.6208
+            },
+            "shank-r": {
+              "angleDeg": -42.5833
+            },
+            "foot-r": {
+              "angleDeg": 0.9624
+            },
+            "arm-l": {
+              "angleDeg": 22.8541
+            },
+            "arm-r": {
+              "angleDeg": -22.8541
+            }
+          }
+        },
+        {
+          "t": 0.46875,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 22.0388
+            },
+            "shank-l": {
+              "angleDeg": -72.6772
+            },
+            "foot-l": {
+              "angleDeg": 24.3261
+            },
+            "thigh-r": {
+              "angleDeg": 41.6716
+            },
+            "shank-r": {
+              "angleDeg": -44.0624
+            },
+            "foot-r": {
+              "angleDeg": 2.3907
+            },
+            "arm-l": {
+              "angleDeg": 23.5442
+            },
+            "arm-r": {
+              "angleDeg": -23.5442
+            }
+          }
+        },
+        {
+          "t": 0.4791666666666667,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.8813
+            },
+            "shank-l": {
+              "angleDeg": -73.4029
+            },
+            "foot-l": {
+              "angleDeg": 23.3586
+            },
+            "thigh-r": {
+              "angleDeg": 41.6464
+            },
+            "shank-r": {
+              "angleDeg": -45.4075
+            },
+            "foot-r": {
+              "angleDeg": 3.7611
+            },
+            "arm-l": {
+              "angleDeg": 24.1335
+            },
+            "arm-r": {
+              "angleDeg": -24.1335
+            }
+          }
+        },
+        {
+          "t": 0.4895833333333333,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.6223
+            },
+            "shank-l": {
+              "angleDeg": -73.9516
+            },
+            "foot-l": {
+              "angleDeg": 22.4736
+            },
+            "thigh-r": {
+              "angleDeg": 41.5494
+            },
+            "shank-r": {
+              "angleDeg": -46.6265
+            },
+            "foot-r": {
+              "angleDeg": 5.0771
+            },
+            "arm-l": {
+              "angleDeg": 24.6195
+            },
+            "arm-r": {
+              "angleDeg": -24.6195
+            }
+          }
+        },
+        {
+          "t": 0.5,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.2488
+            },
+            "shank-l": {
+              "angleDeg": -74.312
+            },
+            "foot-l": {
+              "angleDeg": 21.7032
+            },
+            "thigh-r": {
+              "angleDeg": 41.3843
+            },
+            "shank-r": {
+              "angleDeg": -47.7262
+            },
+            "foot-r": {
+              "angleDeg": 6.3419
+            },
+            "arm-l": {
+              "angleDeg": 25
+            },
+            "arm-r": {
+              "angleDeg": -25
+            }
+          }
+        },
+        {
+          "t": 0.5104166666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 20.7479
+            },
+            "shank-l": {
+              "angleDeg": -74.4731
+            },
+            "foot-l": {
+              "angleDeg": 21.0797
+            },
+            "thigh-r": {
+              "angleDeg": 41.1546
+            },
+            "shank-r": {
+              "angleDeg": -48.7127
+            },
+            "foot-r": {
+              "angleDeg": 7.5581
+            },
+            "arm-l": {
+              "angleDeg": 25.2735
+            },
+            "arm-r": {
+              "angleDeg": -25.2735
+            }
+          }
+        },
+        {
+          "t": 0.5208333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 20.1065
+            },
+            "shank-l": {
+              "angleDeg": -74.4226
+            },
+            "foot-l": {
+              "angleDeg": 20.6341
+            },
+            "thigh-r": {
+              "angleDeg": 40.8637
+            },
+            "shank-r": {
+              "angleDeg": -49.5919
+            },
+            "foot-r": {
+              "angleDeg": 8.7282
+            },
+            "arm-l": {
+              "angleDeg": 25.4388
+            },
+            "arm-r": {
+              "angleDeg": -25.4388
+            }
+          }
+        },
+        {
+          "t": 0.53125,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 19.3115
+            },
+            "shank-l": {
+              "angleDeg": -74.1463
+            },
+            "foot-l": {
+              "angleDeg": 20.396
+            },
+            "thigh-r": {
+              "angleDeg": 40.5151
+            },
+            "shank-r": {
+              "angleDeg": -50.3695
+            },
+            "foot-r": {
+              "angleDeg": 9.8544
+            },
+            "arm-l": {
+              "angleDeg": 25.4951
+            },
+            "arm-r": {
+              "angleDeg": -25.4951
+            }
+          }
+        },
+        {
+          "t": 0.5416666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 18.3489
+            },
+            "shank-l": {
+              "angleDeg": -73.6268
+            },
+            "foot-l": {
+              "angleDeg": 20.392
+            },
+            "thigh-r": {
+              "angleDeg": 40.1123
+            },
+            "shank-r": {
+              "angleDeg": -51.051
+            },
+            "foot-r": {
+              "angleDeg": 10.9387
+            },
+            "arm-l": {
+              "angleDeg": 25.4422
+            },
+            "arm-r": {
+              "angleDeg": -25.4422
+            }
+          }
+        },
+        {
+          "t": 0.5520833333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 17.2164
+            },
+            "shank-l": {
+              "angleDeg": -72.8533
+            },
+            "foot-l": {
+              "angleDeg": 20.6398
+            },
+            "thigh-r": {
+              "angleDeg": 39.6587
+            },
+            "shank-r": {
+              "angleDeg": -51.642
+            },
+            "foot-r": {
+              "angleDeg": 11.9833
+            },
+            "arm-l": {
+              "angleDeg": 25.2805
+            },
+            "arm-r": {
+              "angleDeg": -25.2805
+            }
+          }
+        },
+        {
+          "t": 0.5625,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 16.305
+            },
+            "shank-l": {
+              "angleDeg": -72.1958
+            },
+            "foot-l": {
+              "angleDeg": 20.9912
+            },
+            "thigh-r": {
+              "angleDeg": 39.158
+            },
+            "shank-r": {
+              "angleDeg": -52.1483
+            },
+            "foot-r": {
+              "angleDeg": 12.9902
+            },
+            "arm-l": {
+              "angleDeg": 25.0104
+            },
+            "arm-r": {
+              "angleDeg": -25.0104
+            }
+          }
+        },
+        {
+          "t": 0.5729166666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 15.7977
+            },
+            "shank-l": {
+              "angleDeg": -71.8524
+            },
+            "foot-l": {
+              "angleDeg": 21.3861
+            },
+            "thigh-r": {
+              "angleDeg": 38.6139
+            },
+            "shank-r": {
+              "angleDeg": -52.5757
+            },
+            "foot-r": {
+              "angleDeg": 13.9618
+            },
+            "arm-l": {
+              "angleDeg": 24.6333
+            },
+            "arm-r": {
+              "angleDeg": -24.6333
+            }
+          }
+        },
+        {
+          "t": 0.5833333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 15.6774
+            },
+            "shank-l": {
+              "angleDeg": -71.8238
+            },
+            "foot-l": {
+              "angleDeg": 21.835
+            },
+            "thigh-r": {
+              "angleDeg": 38.0302
+            },
+            "shank-r": {
+              "angleDeg": -52.9304
+            },
+            "foot-r": {
+              "angleDeg": 14.9001
+            },
+            "arm-l": {
+              "angleDeg": 24.1506
+            },
+            "arm-r": {
+              "angleDeg": -24.1506
+            }
+          }
+        },
+        {
+          "t": 0.59375,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 15.9224
+            },
+            "shank-l": {
+              "angleDeg": -72.0942
+            },
+            "foot-l": {
+              "angleDeg": 22.3363
+            },
+            "thigh-r": {
+              "angleDeg": 37.4108
+            },
+            "shank-r": {
+              "angleDeg": -53.2185
+            },
+            "foot-r": {
+              "angleDeg": 15.8077
+            },
+            "arm-l": {
+              "angleDeg": 23.5646
+            },
+            "arm-r": {
+              "angleDeg": -23.5646
+            }
+          }
+        },
+        {
+          "t": 0.6041666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 16.5072
+            },
+            "shank-l": {
+              "angleDeg": -72.6339
+            },
+            "foot-l": {
+              "angleDeg": 22.8783
+            },
+            "thigh-r": {
+              "angleDeg": 36.7594
+            },
+            "shank-r": {
+              "angleDeg": -53.4464
+            },
+            "foot-r": {
+              "angleDeg": 16.687
+            },
+            "arm-l": {
+              "angleDeg": 22.8776
+            },
+            "arm-r": {
+              "angleDeg": -22.8776
+            }
+          }
+        },
+        {
+          "t": 0.6145833333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 17.4036
+            },
+            "shank-l": {
+              "angleDeg": -73.4022
+            },
+            "foot-l": {
+              "angleDeg": 23.4412
+            },
+            "thigh-r": {
+              "angleDeg": 36.0799
+            },
+            "shank-r": {
+              "angleDeg": -53.6206
+            },
+            "foot-r": {
+              "angleDeg": 17.5406
+            },
+            "arm-l": {
+              "angleDeg": 22.0927
+            },
+            "arm-r": {
+              "angleDeg": -22.0927
+            }
+          }
+        },
+        {
+          "t": 0.625,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 18.5809
+            },
+            "shank-l": {
+              "angleDeg": -74.3502
+            },
+            "foot-l": {
+              "angleDeg": 23.9993
+            },
+            "thigh-r": {
+              "angleDeg": 35.3763
+            },
+            "shank-r": {
+              "angleDeg": -53.7476
+            },
+            "foot-r": {
+              "angleDeg": 18.3713
+            },
+            "arm-l": {
+              "angleDeg": 21.2132
+            },
+            "arm-r": {
+              "angleDeg": -21.2132
+            }
+          }
+        },
+        {
+          "t": 0.6354166666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 20.007
+            },
+            "shank-l": {
+              "angleDeg": -75.4236
+            },
+            "foot-l": {
+              "angleDeg": 24.523
+            },
+            "thigh-r": {
+              "angleDeg": 34.6522
+            },
+            "shank-r": {
+              "angleDeg": -53.834
+            },
+            "foot-r": {
+              "angleDeg": 19.1818
+            },
+            "arm-l": {
+              "angleDeg": 20.2428
+            },
+            "arm-r": {
+              "angleDeg": -20.2428
+            }
+          }
+        },
+        {
+          "t": 0.6458333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 21.6485
+            },
+            "shank-l": {
+              "angleDeg": -76.5653
+            },
+            "foot-l": {
+              "angleDeg": 24.9811
+            },
+            "thigh-r": {
+              "angleDeg": 33.9113
+            },
+            "shank-r": {
+              "angleDeg": -53.8862
+            },
+            "foot-r": {
+              "angleDeg": 19.975
+            },
+            "arm-l": {
+              "angleDeg": 19.1858
+            },
+            "arm-r": {
+              "angleDeg": -19.1858
+            }
+          }
+        },
+        {
+          "t": 0.65625,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 23.4713
+            },
+            "shank-l": {
+              "angleDeg": -77.7174
+            },
+            "foot-l": {
+              "angleDeg": 25.3426
+            },
+            "thigh-r": {
+              "angleDeg": 33.1571
+            },
+            "shank-r": {
+              "angleDeg": -53.9108
+            },
+            "foot-r": {
+              "angleDeg": 20.7537
+            },
+            "arm-l": {
+              "angleDeg": 18.0466
+            },
+            "arm-r": {
+              "angleDeg": -18.0466
+            }
+          }
+        },
+        {
+          "t": 0.6666666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 25.4402
+            },
+            "shank-l": {
+              "angleDeg": -78.8231
+            },
+            "foot-l": {
+              "angleDeg": 25.5783
+            },
+            "thigh-r": {
+              "angleDeg": 32.3928
+            },
+            "shank-r": {
+              "angleDeg": -53.9137
+            },
+            "foot-r": {
+              "angleDeg": 21.5208
+            },
+            "arm-l": {
+              "angleDeg": 16.8301
+            },
+            "arm-r": {
+              "angleDeg": -16.8301
+            }
+          }
+        },
+        {
+          "t": 0.6770833333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 27.5189
+            },
+            "shank-l": {
+              "angleDeg": -79.8275
+            },
+            "foot-l": {
+              "angleDeg": 25.6624
+            },
+            "thigh-r": {
+              "angleDeg": 31.6216
+            },
+            "shank-r": {
+              "angleDeg": -53.9008
+            },
+            "foot-r": {
+              "angleDeg": 22.2792
+            },
+            "arm-l": {
+              "angleDeg": 15.5416
+            },
+            "arm-r": {
+              "angleDeg": -15.5416
+            }
+          }
+        },
+        {
+          "t": 0.6875,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 29.6699
+            },
+            "shank-l": {
+              "angleDeg": -80.6795
+            },
+            "foot-l": {
+              "angleDeg": 25.5735
+            },
+            "thigh-r": {
+              "angleDeg": 30.8462
+            },
+            "shank-r": {
+              "angleDeg": -53.8776
+            },
+            "foot-r": {
+              "angleDeg": 23.0314
+            },
+            "arm-l": {
+              "angleDeg": 14.1865
+            },
+            "arm-r": {
+              "angleDeg": -14.1865
+            }
+          }
+        },
+        {
+          "t": 0.6979166666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 31.8545
+            },
+            "shank-l": {
+              "angleDeg": -81.3321
+            },
+            "foot-l": {
+              "angleDeg": 25.2962
+            },
+            "thigh-r": {
+              "angleDeg": 30.0691
+            },
+            "shank-r": {
+              "angleDeg": -53.8489
+            },
+            "foot-r": {
+              "angleDeg": 23.7799
+            },
+            "arm-l": {
+              "angleDeg": 12.7706
+            },
+            "arm-r": {
+              "angleDeg": -12.7706
+            }
+          }
+        },
+        {
+          "t": 0.7083333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 34.033
+            },
+            "shank-l": {
+              "angleDeg": -81.7438
+            },
+            "foot-l": {
+              "angleDeg": 24.8212
+            },
+            "thigh-r": {
+              "angleDeg": 29.2923
+            },
+            "shank-r": {
+              "angleDeg": -53.8192
+            },
+            "foot-r": {
+              "angleDeg": 24.527
+            },
+            "arm-l": {
+              "angleDeg": 11.3001
+            },
+            "arm-r": {
+              "angleDeg": -11.3001
+            }
+          }
+        },
+        {
+          "t": 0.71875,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 36.165
+            },
+            "shank-l": {
+              "angleDeg": -81.8791
+            },
+            "foot-l": {
+              "angleDeg": 24.146
+            },
+            "thigh-r": {
+              "angleDeg": 28.5175
+            },
+            "shank-r": {
+              "angleDeg": -53.7922
+            },
+            "foot-r": {
+              "angleDeg": 25.2747
+            },
+            "arm-l": {
+              "angleDeg": 9.7812
+            },
+            "arm-r": {
+              "angleDeg": -9.7812
+            }
+          }
+        },
+        {
+          "t": 0.7291666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 38.2105
+            },
+            "shank-l": {
+              "angleDeg": -81.7095
+            },
+            "foot-l": {
+              "angleDeg": 23.2745
+            },
+            "thigh-r": {
+              "angleDeg": 27.746
+            },
+            "shank-r": {
+              "angleDeg": -53.7707
+            },
+            "foot-r": {
+              "angleDeg": 26.0246
+            },
+            "arm-l": {
+              "angleDeg": 8.2204
+            },
+            "arm-r": {
+              "angleDeg": -8.2204
+            }
+          }
+        },
+        {
+          "t": 0.7395833333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 40.1307
+            },
+            "shank-l": {
+              "angleDeg": -81.2137
+            },
+            "foot-l": {
+              "angleDeg": 22.217
+            },
+            "thigh-r": {
+              "angleDeg": 26.9788
+            },
+            "shank-r": {
+              "angleDeg": -53.7569
+            },
+            "foot-r": {
+              "angleDeg": 26.7781
+            },
+            "arm-l": {
+              "angleDeg": 6.6244
+            },
+            "arm-r": {
+              "angleDeg": -6.6244
+            }
+          }
+        },
+        {
+          "t": 0.75,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.8898
+            },
+            "shank-l": {
+              "angleDeg": -80.3784
+            },
+            "foot-l": {
+              "angleDeg": 20.9886
+            },
+            "thigh-r": {
+              "angleDeg": 26.2162
+            },
+            "shank-r": {
+              "angleDeg": -53.7522
+            },
+            "foot-r": {
+              "angleDeg": 27.536
+            },
+            "arm-l": {
+              "angleDeg": 5
+            },
+            "arm-r": {
+              "angleDeg": -5
+            }
+          }
+        },
+        {
+          "t": 0.7604166666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 43.4556
+            },
+            "shank-l": {
+              "angleDeg": -79.1982
+            },
+            "foot-l": {
+              "angleDeg": 19.6085
+            },
+            "thigh-r": {
+              "angleDeg": 25.4581
+            },
+            "shank-r": {
+              "angleDeg": -53.7569
+            },
+            "foot-r": {
+              "angleDeg": 28.2988
+            },
+            "arm-l": {
+              "angleDeg": 3.3542
+            },
+            "arm-r": {
+              "angleDeg": -3.3542
+            }
+          }
+        },
+        {
+          "t": 0.7708333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 44.8017
+            },
+            "shank-l": {
+              "angleDeg": -77.6755
+            },
+            "foot-l": {
+              "angleDeg": 18.0983
+            },
+            "thigh-r": {
+              "angleDeg": 24.7043
+            },
+            "shank-r": {
+              "angleDeg": -53.7707
+            },
+            "foot-r": {
+              "angleDeg": 29.0664
+            },
+            "arm-l": {
+              "angleDeg": 1.6941
+            },
+            "arm-r": {
+              "angleDeg": -1.6941
+            }
+          }
+        },
+        {
+          "t": 0.78125,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 45.9076
+            },
+            "shank-l": {
+              "angleDeg": -75.8206
+            },
+            "foot-l": {
+              "angleDeg": 16.4812
+            },
+            "thigh-r": {
+              "angleDeg": 23.9537
+            },
+            "shank-r": {
+              "angleDeg": -53.7922
+            },
+            "foot-r": {
+              "angleDeg": 29.8385
+            },
+            "arm-l": {
+              "angleDeg": 0.0267
+            },
+            "arm-r": {
+              "angleDeg": -0.0267
+            }
+          }
+        },
+        {
+          "t": 0.7916666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 46.76
+            },
+            "shank-l": {
+              "angleDeg": -73.6509
+            },
+            "foot-l": {
+              "angleDeg": 14.7805
+            },
+            "thigh-r": {
+              "angleDeg": 23.2052
+            },
+            "shank-r": {
+              "angleDeg": -53.8192
+            },
+            "foot-r": {
+              "angleDeg": 30.614
+            },
+            "arm-l": {
+              "angleDeg": -1.6408
+            },
+            "arm-r": {
+              "angleDeg": 1.6408
+            }
+          }
+        },
+        {
+          "t": 0.8020833333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 47.3528
+            },
+            "shank-l": {
+              "angleDeg": -71.1908
+            },
+            "foot-l": {
+              "angleDeg": 13.0194
+            },
+            "thigh-r": {
+              "angleDeg": 22.4613
+            },
+            "shank-r": {
+              "angleDeg": -53.856
+            },
+            "foot-r": {
+              "angleDeg": 31.3874
+            },
+            "arm-l": {
+              "angleDeg": -3.3013
+            },
+            "arm-r": {
+              "angleDeg": 3.3013
+            }
+          }
+        },
+        {
+          "t": 0.8125,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 47.687
+            },
+            "shank-l": {
+              "angleDeg": -68.4714
+            },
+            "foot-l": {
+              "angleDeg": 11.2205
+            },
+            "thigh-r": {
+              "angleDeg": 21.8497
+            },
+            "shank-r": {
+              "angleDeg": -54.1262
+            },
+            "foot-r": {
+              "angleDeg": 32.0227
+            },
+            "arm-l": {
+              "angleDeg": -4.9477
+            },
+            "arm-r": {
+              "angleDeg": 4.9477
+            }
+          }
+        },
+        {
+          "t": 0.8229166666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 47.7708
+            },
+            "shank-l": {
+              "angleDeg": -65.5309
+            },
+            "foot-l": {
+              "angleDeg": 9.4064
+            },
+            "thigh-r": {
+              "angleDeg": 21.4154
+            },
+            "shank-r": {
+              "angleDeg": -54.7103
+            },
+            "foot-r": {
+              "angleDeg": 32.4665
+            },
+            "arm-l": {
+              "angleDeg": -6.5729
+            },
+            "arm-r": {
+              "angleDeg": 6.5729
+            }
+          }
+        },
+        {
+          "t": 0.8333333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 47.6193
+            },
+            "shank-l": {
+              "angleDeg": -62.4147
+            },
+            "foot-l": {
+              "angleDeg": 7.5999
+            },
+            "thigh-r": {
+              "angleDeg": 21.1349
+            },
+            "shank-r": {
+              "angleDeg": -55.5662
+            },
+            "foot-r": {
+              "angleDeg": 32.7306
+            },
+            "arm-l": {
+              "angleDeg": -8.1699
+            },
+            "arm-r": {
+              "angleDeg": 8.1699
+            }
+          }
+        },
+        {
+          "t": 0.84375,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 47.2542
+            },
+            "shank-l": {
+              "angleDeg": -59.1768
+            },
+            "foot-l": {
+              "angleDeg": 5.826
+            },
+            "thigh-r": {
+              "angleDeg": 20.9843
+            },
+            "shank-r": {
+              "angleDeg": -56.6481
+            },
+            "foot-r": {
+              "angleDeg": 32.8234
+            },
+            "arm-l": {
+              "angleDeg": -9.7319
+            },
+            "arm-r": {
+              "angleDeg": 9.7319
+            }
+          }
+        },
+        {
+          "t": 0.8541666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 46.7042
+            },
+            "shank-l": {
+              "angleDeg": -55.8813
+            },
+            "foot-l": {
+              "angleDeg": 4.1128
+            },
+            "thigh-r": {
+              "angleDeg": 20.94
+            },
+            "shank-r": {
+              "angleDeg": -57.9091
+            },
+            "foot-r": {
+              "angleDeg": 32.7519
+            },
+            "arm-l": {
+              "angleDeg": -11.2523
+            },
+            "arm-r": {
+              "angleDeg": 11.2523
+            }
+          }
+        },
+        {
+          "t": 0.8645833333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 46.0052
+            },
+            "shank-l": {
+              "angleDeg": -52.6052
+            },
+            "foot-l": {
+              "angleDeg": 2.4936
+            },
+            "thigh-r": {
+              "angleDeg": 20.9798
+            },
+            "shank-r": {
+              "angleDeg": -59.3033
+            },
+            "foot-r": {
+              "angleDeg": 32.523
+            },
+            "arm-l": {
+              "angleDeg": -12.7244
+            },
+            "arm-r": {
+              "angleDeg": 12.7244
+            }
+          }
+        },
+        {
+          "t": 0.875,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 45.2012
+            },
+            "shank-l": {
+              "angleDeg": -49.4408
+            },
+            "foot-l": {
+              "angleDeg": 1.0097
+            },
+            "thigh-r": {
+              "angleDeg": 21.0828
+            },
+            "shank-r": {
+              "angleDeg": -60.7873
+            },
+            "foot-r": {
+              "angleDeg": 32.1445
+            },
+            "arm-l": {
+              "angleDeg": -14.1421
+            },
+            "arm-r": {
+              "angleDeg": 14.1421
+            }
+          }
+        },
+        {
+          "t": 0.8854166666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 44.3448
+            },
+            "shank-l": {
+              "angleDeg": -46.4988
+            },
+            "foot-l": {
+              "angleDeg": -0.2886
+            },
+            "thigh-r": {
+              "angleDeg": 21.2295
+            },
+            "shank-r": {
+              "angleDeg": -62.3206
+            },
+            "foot-r": {
+              "angleDeg": 31.6257
+            },
+            "arm-l": {
+              "angleDeg": -15.4993
+            },
+            "arm-r": {
+              "angleDeg": 15.4993
+            }
+          }
+        },
+        {
+          "t": 0.8958333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 43.4973
+            },
+            "shank-l": {
+              "angleDeg": -43.9091
+            },
+            "foot-l": {
+              "angleDeg": -1.3399
+            },
+            "thigh-r": {
+              "angleDeg": 21.402
+            },
+            "shank-r": {
+              "angleDeg": -63.8664
+            },
+            "foot-r": {
+              "angleDeg": 30.9783
+            },
+            "arm-l": {
+              "angleDeg": -16.79
+            },
+            "arm-r": {
+              "angleDeg": 16.79
+            }
+          }
+        },
+        {
+          "t": 0.90625,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 42.7261
+            },
+            "shank-l": {
+              "angleDeg": -41.8172
+            },
+            "foot-l": {
+              "angleDeg": -2.0734
+            },
+            "thigh-r": {
+              "angleDeg": 21.5836
+            },
+            "shank-r": {
+              "angleDeg": -65.3916
+            },
+            "foot-r": {
+              "angleDeg": 30.2159
+            },
+            "arm-l": {
+              "angleDeg": -18.0089
+            },
+            "arm-r": {
+              "angleDeg": 18.0089
+            }
+          }
+        },
+        {
+          "t": 0.9166666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 42.0983
+            },
+            "shank-l": {
+              "angleDeg": -40.3725
+            },
+            "foot-l": {
+              "angleDeg": -2.4145
+            },
+            "thigh-r": {
+              "angleDeg": 21.7588
+            },
+            "shank-r": {
+              "angleDeg": -66.8665
+            },
+            "foot-r": {
+              "angleDeg": 29.3551
+            },
+            "arm-l": {
+              "angleDeg": -19.1506
+            },
+            "arm-r": {
+              "angleDeg": 19.1506
+            }
+          }
+        },
+        {
+          "t": 0.9270833333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.6699
+            },
+            "shank-l": {
+              "angleDeg": -39.7063
+            },
+            "foot-l": {
+              "angleDeg": -2.2952
+            },
+            "thigh-r": {
+              "angleDeg": 21.9127
+            },
+            "shank-r": {
+              "angleDeg": -68.2649
+            },
+            "foot-r": {
+              "angleDeg": 28.4148
+            },
+            "arm-l": {
+              "angleDeg": -20.2104
+            },
+            "arm-r": {
+              "angleDeg": 20.2104
+            }
+          }
+        },
+        {
+          "t": 0.9375,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.4711
+            },
+            "shank-l": {
+              "angleDeg": -39.9035
+            },
+            "foot-l": {
+              "angleDeg": -1.668
+            },
+            "thigh-r": {
+              "angleDeg": 22.0312
+            },
+            "shank-r": {
+              "angleDeg": -69.564
+            },
+            "foot-r": {
+              "angleDeg": 27.4165
+            },
+            "arm-l": {
+              "angleDeg": -21.1836
+            },
+            "arm-r": {
+              "angleDeg": 21.1836
+            }
+          }
+        },
+        {
+          "t": 0.9479166666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.4946
+            },
+            "shank-l": {
+              "angleDeg": -40.9804
+            },
+            "foot-l": {
+              "angleDeg": -0.5171
+            },
+            "thigh-r": {
+              "angleDeg": 22.1006
+            },
+            "shank-r": {
+              "angleDeg": -70.7436
+            },
+            "foot-r": {
+              "angleDeg": 26.3844
+            },
+            "arm-l": {
+              "angleDeg": -22.0661
+            },
+            "arm-r": {
+              "angleDeg": 22.0661
+            }
+          }
+        },
+        {
+          "t": 0.9583333333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.6208
+            },
+            "shank-l": {
+              "angleDeg": -42.5833
+            },
+            "foot-l": {
+              "angleDeg": 0.9624
+            },
+            "thigh-r": {
+              "angleDeg": 22.1075
+            },
+            "shank-r": {
+              "angleDeg": -71.7864
+            },
+            "foot-r": {
+              "angleDeg": 25.3448
+            },
+            "arm-l": {
+              "angleDeg": -22.8541
+            },
+            "arm-r": {
+              "angleDeg": 22.8541
+            }
+          }
+        },
+        {
+          "t": 0.96875,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.6716
+            },
+            "shank-l": {
+              "angleDeg": -44.0624
+            },
+            "foot-l": {
+              "angleDeg": 2.3907
+            },
+            "thigh-r": {
+              "angleDeg": 22.0388
+            },
+            "shank-r": {
+              "angleDeg": -72.6772
+            },
+            "foot-r": {
+              "angleDeg": 24.3261
+            },
+            "arm-l": {
+              "angleDeg": -23.5442
+            },
+            "arm-r": {
+              "angleDeg": 23.5442
+            }
+          }
+        },
+        {
+          "t": 0.9791666666666666,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.6464
+            },
+            "shank-l": {
+              "angleDeg": -45.4075
+            },
+            "foot-l": {
+              "angleDeg": 3.7611
+            },
+            "thigh-r": {
+              "angleDeg": 21.8813
+            },
+            "shank-r": {
+              "angleDeg": -73.4029
+            },
+            "foot-r": {
+              "angleDeg": 23.3586
+            },
+            "arm-l": {
+              "angleDeg": -24.1335
+            },
+            "arm-r": {
+              "angleDeg": 24.1335
+            }
+          }
+        },
+        {
+          "t": 0.9895833333333334,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.5494
+            },
+            "shank-l": {
+              "angleDeg": -46.6265
+            },
+            "foot-l": {
+              "angleDeg": 5.0771
+            },
+            "thigh-r": {
+              "angleDeg": 21.6223
+            },
+            "shank-r": {
+              "angleDeg": -73.9516
+            },
+            "foot-r": {
+              "angleDeg": 22.4736
+            },
+            "arm-l": {
+              "angleDeg": -24.6195
+            },
+            "arm-r": {
+              "angleDeg": 24.6195
+            }
+          }
+        },
+        {
+          "t": 1,
+          "pose": "stride-left-forward",
+          "ease": "linear",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 41.3843
+            },
+            "shank-l": {
+              "angleDeg": -47.7262
+            },
+            "foot-l": {
+              "angleDeg": 6.3419
+            },
+            "thigh-r": {
+              "angleDeg": 21.2488
+            },
+            "shank-r": {
+              "angleDeg": -74.312
+            },
+            "foot-r": {
+              "angleDeg": 21.7032
+            },
+            "arm-l": {
+              "angleDeg": -25
+            },
+            "arm-r": {
+              "angleDeg": 25
+            }
+          }
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-l",
+          "fromS": 0,
+          "toS": 0.55
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 0.05
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0.45,
+          "toS": 1
+        },
+        {
+          "anchor": "contact-l",
+          "fromS": 0.95,
+          "toS": 1
+        }
+      ],
+      "phases": [
+        {
+          "id": "left-stance",
+          "fromS": 0,
+          "toS": 0.5,
+          "title": {
+            "en": "Left stance",
+            "de": "Linkes Standbein"
+          }
+        },
+        {
+          "id": "right-stance",
+          "fromS": 0.5,
+          "toS": 1,
+          "title": {
+            "en": "Right stance",
+            "de": "Rechtes Standbein"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0,
+          "kind": "contact-on",
+          "title": {
+            "en": "Left heel strike",
+            "de": "Linker Fersenkontakt"
+          },
+          "target": "contact-l"
+        },
+        {
+          "t": 0.05,
+          "kind": "contact-off",
+          "title": {
+            "en": "Right toe-off",
+            "de": "Rechter Abdruck"
+          },
+          "target": "contact-r"
+        },
+        {
+          "t": 0.45,
+          "kind": "contact-on",
+          "title": {
+            "en": "Right heel strike",
+            "de": "Rechter Fersenkontakt"
+          },
+          "target": "contact-r"
+        },
+        {
+          "t": 0.55,
+          "kind": "contact-off",
+          "title": {
+            "en": "Left toe-off",
+            "de": "Linker Abdruck"
+          },
+          "target": "contact-l"
+        }
+      ],
+      "tracks": [
+        {
+          "target": "emitter:breath",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.7
+            },
+            {
+              "t": 0.5,
+              "v": 1
+            },
+            {
+              "t": 1,
+              "v": 0.7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "idle-breathing",
+      "title": {
+        "en": "Breathing at rest",
+        "de": "Ruhiges Atmen"
+      },
+      "description": {
+        "en": "Standing still with a 4 s breathing cycle and a slight chest and head motion.",
+        "de": "Ruhiges Stehen mit 4-s-Atemzyklus und leichter Brust- und Kopfbewegung."
+      },
+      "durationS": 4,
+      "fps": 30,
+      "loop": true,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "stand",
+          "ease": "smooth"
+        },
+        {
+          "t": 2,
+          "pose": "stand",
+          "ease": "smooth",
+          "bones": {
+            "torso": {
+              "angleDeg": 1
+            },
+            "head": {
+              "angleDeg": -1
+            }
+          }
+        },
+        {
+          "t": 4,
+          "pose": "stand",
+          "ease": "smooth"
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-l",
+          "fromS": 0,
+          "toS": 4
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 4
+        }
+      ],
+      "phases": [
+        {
+          "id": "inhale",
+          "fromS": 0,
+          "toS": 2,
+          "title": {
+            "en": "Inhale",
+            "de": "Einatmen"
+          }
+        },
+        {
+          "id": "exhale",
+          "fromS": 2,
+          "toS": 4,
+          "title": {
+            "en": "Exhale",
+            "de": "Ausatmen"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0,
+          "kind": "inhale",
+          "title": {
+            "en": "Start of inhalation",
+            "de": "Beginn des Einatmens"
+          }
+        },
+        {
+          "t": 2,
+          "kind": "exhale",
+          "title": {
+            "en": "Start of exhalation",
+            "de": "Beginn des Ausatmens"
+          }
+        }
+      ],
+      "tracks": [
+        {
+          "target": "emitter:breath",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 2,
+              "v": 0
+            },
+            {
+              "t": 2.4,
+              "v": 1
+            },
+            {
+              "t": 3.6,
+              "v": 0.4
+            },
+            {
+              "t": 4,
+              "v": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bag-swing",
+      "title": {
+        "en": "Swinging bag",
+        "de": "Schwingende Tasche"
+      },
+      "description": {
+        "en": "Standing with the shoulder bag; the bag load rises by 30 % at the swing maximum.",
+        "de": "Stehen mit Umhängetasche; die Taschenlast steigt am Schwingungsmaximum um 30 %."
+      },
+      "durationS": 2,
+      "fps": 30,
+      "loop": true,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "carry-bag",
+          "ease": "smooth"
+        },
+        {
+          "t": 1,
+          "pose": "carry-bag",
+          "ease": "smooth",
+          "bones": {
+            "torso": {
+              "angleDeg": -5
+            }
+          }
+        },
+        {
+          "t": 2,
+          "pose": "carry-bag",
+          "ease": "smooth"
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-l",
+          "fromS": 0,
+          "toS": 2
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 2
+        }
+      ],
+      "phases": [
+        {
+          "id": "swing",
+          "fromS": 0,
+          "toS": 2,
+          "title": {
+            "en": "Swing",
+            "de": "Schwingen"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 1,
+          "kind": "motion",
+          "title": {
+            "en": "Swing maximum",
+            "de": "Schwingungsmaximum"
+          }
+        }
+      ],
+      "tracks": [
+        {
+          "target": "load:shoulder-bag",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 1
+            },
+            {
+              "t": 1,
+              "v": 1.3
+            },
+            {
+              "t": 2,
+              "v": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "thermal": {
+    "environment": {
+      "airTempC": 20,
+      "meanRadiantTempC": 20,
+      "relativeHumidity": 0.5,
+      "windMS": 0.2,
+      "windDirectionDeg": 180,
+      "solarWM2": 0,
+      "pressurePa": 101325
+    },
+    "baseMet": 1.2,
+    "regions": [
+      {
+        "id": "head-skin",
+        "title": {
+          "en": "Head and neck skin",
+          "de": "Haut von Kopf und Hals"
+        },
+        "kind": "skin",
+        "material": "skin",
+        "model": "core-resistance",
+        "areaM2": 0.1,
+        "characteristicLengthM": 0.2,
+        "coreTempC": 36.8,
+        "insulationM2KW": 0.05,
+        "metabolicShare": 0.1,
+        "source": "literature",
+        "reference": "dubois-1916"
+      },
+      {
+        "id": "torso-clothing",
+        "title": {
+          "en": "Torso clothing",
+          "de": "Rumpfbekleidung"
+        },
+        "kind": "clothing",
+        "material": "cotton-clothing",
+        "model": "core-resistance",
+        "areaM2": 0.58,
+        "characteristicLengthM": 0.3,
+        "coreTempC": 36.8,
+        "insulationM2KW": 0.14,
+        "metabolicShare": 0.4,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "arm-clothing",
+        "title": {
+          "en": "Arm clothing",
+          "de": "Armbekleidung"
+        },
+        "kind": "clothing",
+        "material": "cotton-clothing",
+        "model": "core-resistance",
+        "areaM2": 0.28,
+        "characteristicLengthM": 0.08,
+        "coreTempC": 36.8,
+        "insulationM2KW": 0.12,
+        "metabolicShare": 0.15,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "leg-clothing",
+        "title": {
+          "en": "Leg clothing",
+          "de": "Beinbekleidung"
+        },
+        "kind": "clothing",
+        "material": "cotton-clothing",
+        "model": "core-resistance",
+        "areaM2": 0.82,
+        "characteristicLengthM": 0.13,
+        "coreTempC": 36.8,
+        "insulationM2KW": 0.14,
+        "metabolicShare": 0.35,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "shoes",
+        "title": {
+          "en": "Shoes",
+          "de": "Schuhe"
+        },
+        "kind": "surface",
+        "material": "leather-shoe",
+        "model": "passive",
+        "areaM2": 0.12,
+        "characteristicLengthM": 0.1,
+        "metabolicShare": 0,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      }
+    ],
+    "emitters": [
+      {
+        "id": "breath",
+        "kind": "breath",
+        "title": {
+          "en": "Exhaled breath",
+          "de": "Ausgeatmete Luft"
+        },
+        "anchor": "mouth",
+        "directionDeg": 0,
+        "carries": "vapour",
+        "temperatureC": 34,
+        "velocityMS": 1.5,
+        "diameterM": 0.03,
+        "vapourKgPerKg": 0.034,
+        "periodS": 4,
+        "dutyFrom": 0.5,
+        "dutyTo": 1,
+        "source": "authored-estimate"
+      }
+    ],
+    "assumptions": [
+      {
+        "en": "Metabolic shares follow the surface-area weighting of the clothed regions.",
+        "de": "Die Stoffwechselanteile folgen der flächengewichteten Verteilung der bekleideten Regionen."
+      },
+      {
+        "en": "Insulation values run from core to outer surface.",
+        "de": "Die Dämmwerte gelten vom Körperkern bis zur Außenoberfläche."
+      }
+    ]
+  },
+  "structure": {
+    "gravityMS2": 9.80665,
+    "dynamics": "inertial",
+    "supports": [],
+    "assumptions": [
+      {
+        "en": "Segments are point masses at the centres of Winter's anthropometric table.",
+        "de": "Segmente sind Punktmassen in den Schwerpunkten der Anthropometrie-Tabelle von Winter."
+      }
+    ],
+    "clinical": false
+  },
+  "presentation": {
+    "defaultPose": "stand",
+    "defaultClip": "walk",
+    "viewpoints": [
+      "elevation",
+      "plan"
+    ]
+  },
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component"
+  ],
+  "completion": "authored"
+}

@@ -1,0 +1,1 @@
+export default { root: "/home/deck/semio/🎓️teaching/🏛️architecture/🧍️staffage", test: { include: ["🧪️tests/🌡️*/🟦️.ts", "🧪️tests/💧️*/🟦️.ts", "🧪️tests/🧍️clothed-human/🟦️.ts", "🧪️tests/🍃️*/🟦️.ts", "🧪️tests/🫁️*/🟦️.ts", "🧪️tests/🚗️*/🟦️.ts", "🧪️tests/🎨️thermal-legend/🟦️.ts"] } };

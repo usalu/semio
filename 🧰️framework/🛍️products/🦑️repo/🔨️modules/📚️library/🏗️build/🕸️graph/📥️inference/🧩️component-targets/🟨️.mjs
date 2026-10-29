@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 /** 🧩️ Projects Cargo, component, release-pipeline, print and root-command targets. */
 import {createRequire} from "node:module";
 const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
@@ -97,7 +98,7 @@ export function componentBuildTargets(root, workspaceRoot) {
 
 /** 🧩️ The crate roots of every plugin and extension component, the crates a release orchestrator's driver compiles. */
 export function componentCrateRoots(configFiles, workspaceRoot) {
-  return configFiles.filter((path) => path.endsWith("Cargo.toml") && !path.includes("\uFFFD") && !path.includes(".🧬semio") && !path.startsWith("compose/") && !path.startsWith("temp/compose/") && !POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))).flatMap((path) => {
+  return configFiles.filter((path) => !isOpaqueSourcePathV1(path) && path.endsWith("Cargo.toml") && !path.includes("\uFFFD") && !path.includes(".🧬semio") && !path.startsWith("compose/") && !path.startsWith("temp/compose/") && !POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))).flatMap((path) => {
     const metadata = readToml(join(workspaceRoot, path)).package?.metadata;
     return metadata?.component?.package && ["plugin", "extension"].includes(metadata.semio?.["component-kind"]) ? [buildPath(dirname(path))] : [];
   }).sort();

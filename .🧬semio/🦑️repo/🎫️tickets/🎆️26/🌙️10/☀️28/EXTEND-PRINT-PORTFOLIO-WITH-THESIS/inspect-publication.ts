@@ -1,0 +1,37 @@
+import { test } from "bun:test";
+import assert from "node:assert/strict";
+import { readFile } from "node:fs/promises";
+import { createHash } from "node:crypto";
+import { dirname, join, resolve } from "node:path";
+const checkout = process.cwd(), product = join(checkout, "🧰️framework/🛍️products/📓️print"), artifacts = resolve(checkout, process.env.SEMIO_TEST_ARTIFACT_DIR!);
+await import("./pdf-oracle.ts");
+const { privateRepositoryWorkspaceV1 } = await import(join(checkout, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️testing/🧫️private-repository/🟦️.ts"));
+const { declareThesisTestBirth } = await import(join(product, "🧪️tests/🎓️thesis/🎟️birth/🟦️.ts"));
+const { withBuildTestInvocationV1 } = await import("@semio-tech/process/testing/invocation");
+const { createIssuedResourceControlV1 } = await import("@semio-tech/process/routing");
+const { readNativeCallerAuthorityV1 } = await import("@semio-tech/repo-lib/artifacts/native-orchestration/invocation");
+const { withPrintExecutionV1 } = await import(join(product, "📦️artifacts/🎛️operation/🟦️.ts"));
+const { verifyThesisPublication } = await import(join(product, "🧪️tests/🎓️thesis/📤️publication/🟦️.ts"));
+const fixture = (await import(join(product, "🧪️tests/🎓️thesis/🔣️.json"))).default;
+const repository = await privateRepositoryWorkspaceV1();
+assert.equal(repository.owned, false);
+assert.equal(repository.root, resolve(checkout, ".cache/test-sandbox/rIlIoQ1"));
+await repository.within(async () => declareThesisTestBirth(fixture.runners.publication));
+const hash = (bytes: Uint8Array) => createHash("sha256").update(bytes).digest("hex");
+const snapshot = JSON.parse(await readFile(join(dirname(import.meta.path), "🗑️generated/publication/source-snapshot.json"), "utf8"));
+const recheck = async () => {
+  for (const [path, expected] of Object.entries(snapshot.sourceSha256)) assert.equal(hash(await readFile(join(checkout, path))), expected);
+  for (const [path, expected] of Object.entries(snapshot.consumedSha256)) assert.equal(hash(await readFile(join(repository.root, path))), expected);
+};
+test("inspect already compiled private thesis publications through owned readers", () => repository.within(() => withBuildTestInvocationV1(async invocation => {
+  assert.equal(readNativeCallerAuthorityV1(invocation.capabilities).repositoryRoot, repository.root);
+  const recovered = JSON.parse(await readFile(join(dirname(import.meta.path), "🗑️generated/recovery/recovery-proof.json"), "utf8"));
+  assert.equal(recovered.canonicalWorkspaceProduct, false);
+  assert.equal(recovered.privateRoot, repository.root);
+  assert.equal(recovered.files.length, 4);
+  for (const row of recovered.files) assert.equal(hash(await readFile(join(dirname(import.meta.path), "🗑️generated/recovery", row.file))), row.sha256);
+  await recheck();
+  const phaseControl = createIssuedResourceControlV1(invocation, "print:thesis:publication:inspection-replay", 0);
+  await withPrintExecutionV1({ workspace: repository.root, invocation, phaseControl, kind: "document" }, verifyThesisPublication);
+  await recheck();
+})), fixture.runners.publication.maximumElapsedMilliseconds);

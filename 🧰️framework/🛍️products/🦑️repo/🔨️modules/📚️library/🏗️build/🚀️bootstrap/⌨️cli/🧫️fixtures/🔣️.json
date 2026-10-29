@@ -265,7 +265,7 @@
       "name": "preview",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "none",
       "target": "preview"
@@ -274,7 +274,7 @@
       "name": "retire",
       "args": [
         "run",
-        "repo:cache-retire-inactive",
+        "repo-cache-retirement:cache-retire-inactive",
         "--skip-cache",
         "--output=stream"
       ],
@@ -285,7 +285,7 @@
       "name": "output-pair",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--output",
         "stream"
       ],
@@ -296,7 +296,7 @@
       "name": "--dry-run",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--dry-run"
       ],
       "fault": "none",
@@ -306,7 +306,7 @@
       "name": "--help",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--help"
       ],
       "fault": "none",
@@ -316,7 +316,7 @@
       "name": "--graph",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--graph"
       ],
       "fault": "none",
@@ -326,7 +326,7 @@
       "name": "--exclude-dependencies",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--exclude-dependencies"
       ],
       "fault": "none",
@@ -336,7 +336,7 @@
       "name": "--skip-cache=false",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--skip-cache=false"
       ],
       "fault": "none",
@@ -346,7 +346,7 @@
       "name": "--unknown",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--unknown"
       ],
       "fault": "none",
@@ -356,7 +356,7 @@
       "name": "--force",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--force"
       ],
       "fault": "none",
@@ -366,7 +366,7 @@
       "name": "tail",
       "args": [
         "run",
-        "repo:cache-retire-inactive",
+        "repo-cache-retirement:cache-retire-inactive",
         "--",
         "retire-historical"
       ],
@@ -377,7 +377,7 @@
       "name": "configuration",
       "args": [
         "run",
-        "repo:cache-retire-inactive:prototype"
+        "repo-cache-retirement:cache-retire-inactive:prototype"
       ],
       "fault": "none",
       "target": null
@@ -386,7 +386,7 @@
       "name": "historical",
       "args": [
         "run",
-        "repo:cache-retire-inactive-historical"
+        "repo-cache-retirement:cache-retire-inactive-historical"
       ],
       "fault": "none",
       "target": null
@@ -414,7 +414,7 @@
       "name": "refuse-owner",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "owner",
       "target": "preview"
@@ -423,7 +423,7 @@
       "name": "refuse-command",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "command",
       "target": "preview"
@@ -432,7 +432,7 @@
       "name": "refuse-dependencies",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "dependencies",
       "target": "preview"
@@ -441,7 +441,7 @@
       "name": "refuse-cwd",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "cwd",
       "target": "preview"
@@ -450,7 +450,7 @@
       "name": "refuse-forward",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "forward",
       "target": "preview"
@@ -459,7 +459,7 @@
       "name": "refuse-source",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "source",
       "target": "preview"
@@ -468,7 +468,7 @@
       "name": "refuse-capture",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "capture",
       "target": "preview"
@@ -477,7 +477,7 @@
       "name": "refuse-spread",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "spread",
       "target": "preview"
@@ -486,7 +486,7 @@
       "name": "refuse-abort",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "abort",
       "target": "preview"
@@ -495,7 +495,7 @@
       "name": "refuse-reject",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview"
+        "repo-cache-retirement:cache-retire-inactive-preview"
       ],
       "fault": "reject",
       "target": "preview"
@@ -506,7 +506,7 @@
       "name": "fixed-owner",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "none",
       "target": "nx"
@@ -515,7 +515,7 @@
       "name": "stream-and-skip",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--skip-cache",
         "--output=stream"
       ],
@@ -526,7 +526,7 @@
       "name": "split-output",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--output",
         "stream"
       ],
@@ -537,7 +537,7 @@
       "name": "reject---force",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--force"
       ],
       "fault": "none",
@@ -547,7 +547,7 @@
       "name": "reject---exclude-dependencies",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--exclude-dependencies"
       ],
       "fault": "none",
@@ -557,7 +557,7 @@
       "name": "reject---skip-cache=false",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--skip-cache=false"
       ],
       "fault": "none",
@@ -567,7 +567,7 @@
       "name": "reject---unknown",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--unknown"
       ],
       "fault": "none",
@@ -577,7 +577,7 @@
       "name": "no-arguments",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--",
         "reset"
       ],
@@ -588,7 +588,7 @@
       "name": "no-configuration",
       "args": [
         "run",
-        "repo:cache-reset-nx:prototype"
+        "repo-cache-reset:cache-reset-nx:prototype"
       ],
       "fault": "none",
       "target": null
@@ -616,7 +616,7 @@
       "name": "refuse-owner",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "owner",
       "target": "nx"
@@ -625,7 +625,7 @@
       "name": "refuse-command",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "command",
       "target": "nx"
@@ -634,7 +634,7 @@
       "name": "refuse-dependencies",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "dependencies",
       "target": "nx"
@@ -643,7 +643,7 @@
       "name": "refuse-outputs",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "outputs",
       "target": "nx"
@@ -652,7 +652,7 @@
       "name": "refuse-cache",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "cache",
       "target": "nx"
@@ -661,7 +661,7 @@
       "name": "refuse-cwd",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "cwd",
       "target": "nx"
@@ -670,7 +670,7 @@
       "name": "refuse-forward",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "forward",
       "target": "nx"
@@ -679,7 +679,7 @@
       "name": "refuse-source",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "source",
       "target": "nx"
@@ -688,7 +688,7 @@
       "name": "refuse-capture",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "capture",
       "target": "nx"
@@ -697,7 +697,7 @@
       "name": "refuse-spread",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "spread",
       "target": "nx"
@@ -706,7 +706,7 @@
       "name": "refuse-abort",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "abort",
       "target": "nx"
@@ -715,7 +715,7 @@
       "name": "refuse-reject",
       "args": [
         "run",
-        "repo:cache-reset-nx"
+        "repo-cache-reset:cache-reset-nx"
       ],
       "fault": "reject",
       "target": "nx"
@@ -724,7 +724,7 @@
       "name": "graph-fixed-owner",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "none",
       "target": "graph"
@@ -733,7 +733,7 @@
       "name": "graph-stream-and-skip",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--skip-cache",
         "--output=stream"
       ],
@@ -744,7 +744,7 @@
       "name": "graph-split-output",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--output",
         "stream"
       ],
@@ -755,7 +755,7 @@
       "name": "graph-reject---force",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--force"
       ],
       "fault": "none",
@@ -765,7 +765,7 @@
       "name": "graph-reject---exclude-dependencies",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--exclude-dependencies"
       ],
       "fault": "none",
@@ -775,7 +775,7 @@
       "name": "graph-reject---skip-cache=false",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--skip-cache=false"
       ],
       "fault": "none",
@@ -785,7 +785,7 @@
       "name": "graph-reject---unknown",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--unknown"
       ],
       "fault": "none",
@@ -795,7 +795,7 @@
       "name": "graph-no-arguments",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--",
         "reset"
       ],
@@ -806,7 +806,7 @@
       "name": "graph-no-configuration",
       "args": [
         "run",
-        "repo:cache-reset-graph:prototype"
+        "repo-cache-reset:cache-reset-graph:prototype"
       ],
       "fault": "none",
       "target": null
@@ -834,7 +834,7 @@
       "name": "graph-refuse-owner",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "owner",
       "target": "graph"
@@ -843,7 +843,7 @@
       "name": "graph-refuse-command",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "command",
       "target": "graph"
@@ -852,7 +852,7 @@
       "name": "graph-refuse-dependencies",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "dependencies",
       "target": "graph"
@@ -861,7 +861,7 @@
       "name": "graph-refuse-outputs",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "outputs",
       "target": "graph"
@@ -870,7 +870,7 @@
       "name": "graph-refuse-cache",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "cache",
       "target": "graph"
@@ -879,7 +879,7 @@
       "name": "graph-refuse-cwd",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "cwd",
       "target": "graph"
@@ -888,7 +888,7 @@
       "name": "graph-refuse-forward",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "forward",
       "target": "graph"
@@ -897,7 +897,7 @@
       "name": "graph-refuse-source",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "source",
       "target": "graph"
@@ -906,7 +906,7 @@
       "name": "graph-refuse-capture",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "capture",
       "target": "graph"
@@ -915,7 +915,7 @@
       "name": "graph-refuse-spread",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "spread",
       "target": "graph"
@@ -924,7 +924,7 @@
       "name": "graph-refuse-abort",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "abort",
       "target": "graph"
@@ -933,7 +933,7 @@
       "name": "graph-refuse-reject",
       "args": [
         "run",
-        "repo:cache-reset-graph"
+        "repo-cache-reset:cache-reset-graph"
       ],
       "fault": "reject",
       "target": "graph"
@@ -942,7 +942,7 @@
       "name": "graph-no-path-input",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--path",
         "../g"
       ],
@@ -953,7 +953,7 @@
       "name": "graph-no-profile-override",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--partition=nx"
       ],
       "fault": "none",
@@ -963,10 +963,28 @@
       "name": "closed-partition-roster",
       "args": [
         "run",
-        "repo:cache-reset-dependencies"
+        "repo-cache-reset:cache-reset-dependencies"
       ],
       "fault": "none",
       "target": null
+    },
+    {
+      "name": "inactive rust reset",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-rust"
+      ],
+      "fault": "none",
+      "target": "rust"
+    },
+    {
+      "name": "inactive products reset",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-products"
+      ],
+      "fault": "none",
+      "target": "products"
     }
   ],
   "resetArguments": [
@@ -1041,6 +1059,20 @@
         "../g"
       ],
       "profile": null
+    },
+    {
+      "name": "the rust profile",
+      "args": [
+        "rust"
+      ],
+      "profile": "rust"
+    },
+    {
+      "name": "the products profile",
+      "args": [
+        "products"
+      ],
+      "profile": "products"
     }
   ],
   "capacity": [
@@ -1085,80 +1117,80 @@
       "target": "install"
     },
     {
-      "name": "repo:cache-retire-inactive-preview granted 1",
+      "name": "repo-cache-retirement:cache-retire-inactive-preview granted 1",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--output=stream"
       ],
       "grant": 1,
       "target": "preview"
     },
     {
-      "name": "repo:cache-retire-inactive-preview granted 8",
+      "name": "repo-cache-retirement:cache-retire-inactive-preview granted 8",
       "args": [
         "run",
-        "repo:cache-retire-inactive-preview",
+        "repo-cache-retirement:cache-retire-inactive-preview",
         "--output=stream"
       ],
       "grant": 8,
       "target": "preview"
     },
     {
-      "name": "repo:cache-retire-inactive granted 1",
+      "name": "repo-cache-retirement:cache-retire-inactive granted 1",
       "args": [
         "run",
-        "repo:cache-retire-inactive",
+        "repo-cache-retirement:cache-retire-inactive",
         "--output=stream"
       ],
       "grant": 1,
       "target": "retire"
     },
     {
-      "name": "repo:cache-retire-inactive granted 8",
+      "name": "repo-cache-retirement:cache-retire-inactive granted 8",
       "args": [
         "run",
-        "repo:cache-retire-inactive",
+        "repo-cache-retirement:cache-retire-inactive",
         "--output=stream"
       ],
       "grant": 8,
       "target": "retire"
     },
     {
-      "name": "repo:cache-reset-graph granted 1",
+      "name": "repo-cache-reset:cache-reset-graph granted 1",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--output=stream"
       ],
       "grant": 1,
       "target": "graph"
     },
     {
-      "name": "repo:cache-reset-graph granted 8",
+      "name": "repo-cache-reset:cache-reset-graph granted 8",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--output=stream"
       ],
       "grant": 8,
       "target": "graph"
     },
     {
-      "name": "repo:cache-reset-nx granted 1",
+      "name": "repo-cache-reset:cache-reset-nx granted 1",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--output=stream"
       ],
       "grant": 1,
       "target": "nx"
     },
     {
-      "name": "repo:cache-reset-nx granted 8",
+      "name": "repo-cache-reset:cache-reset-nx granted 8",
       "args": [
         "run",
-        "repo:cache-reset-nx",
+        "repo-cache-reset:cache-reset-nx",
         "--output=stream"
       ],
       "grant": 8,
@@ -1168,7 +1200,7 @@
       "name": "closed scheduler --parallel=1",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=1"
       ],
       "grant": null,
@@ -1178,7 +1210,7 @@
       "name": "closed scheduler --parallel=9007199254740991",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=9007199254740991"
       ],
       "grant": null,
@@ -1188,7 +1220,7 @@
       "name": "closed scheduler --parallel=0",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=0"
       ],
       "grant": null,
@@ -1198,7 +1230,7 @@
       "name": "closed scheduler --parallel=-1",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=-1"
       ],
       "grant": null,
@@ -1208,7 +1240,7 @@
       "name": "closed scheduler --parallel=01",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=01"
       ],
       "grant": null,
@@ -1218,7 +1250,7 @@
       "name": "closed scheduler --parallel=1.5",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=1.5"
       ],
       "grant": null,
@@ -1228,7 +1260,7 @@
       "name": "closed scheduler --parallel=1e2",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=1e2"
       ],
       "grant": null,
@@ -1238,7 +1270,7 @@
       "name": "closed scheduler --parallel=Infinity",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=Infinity"
       ],
       "grant": null,
@@ -1248,7 +1280,7 @@
       "name": "closed scheduler --parallel=NaN",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=NaN"
       ],
       "grant": null,
@@ -1258,7 +1290,7 @@
       "name": "closed scheduler --parallel=9007199254740992",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=9007199254740992"
       ],
       "grant": null,
@@ -1268,7 +1300,7 @@
       "name": "closed scheduler --parallel=",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel="
       ],
       "grant": null,
@@ -1278,7 +1310,7 @@
       "name": "closed scheduler --parallel 1",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel",
         "1"
       ],
@@ -1289,7 +1321,7 @@
       "name": "closed scheduler --parallel=1 --parallel=2",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=1",
         "--parallel=2"
       ],
@@ -1300,7 +1332,7 @@
       "name": "closed scheduler --parallel=1 --force",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=1",
         "--force"
       ],
@@ -1311,7 +1343,7 @@
       "name": "closed scheduler --parallel=1 -- --force",
       "args": [
         "run",
-        "repo:cache-reset-graph",
+        "repo-cache-reset:cache-reset-graph",
         "--parallel=1",
         "--",
         "--force"
@@ -1328,6 +1360,46 @@
       ],
       "grant": null,
       "target": null
+    },
+    {
+      "name": "rust granted 1",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-rust",
+        "--output=stream"
+      ],
+      "grant": 1,
+      "target": "rust"
+    },
+    {
+      "name": "rust granted 8",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-rust",
+        "--output=stream"
+      ],
+      "grant": 8,
+      "target": "rust"
+    },
+    {
+      "name": "products granted 1",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-products",
+        "--output=stream"
+      ],
+      "grant": 1,
+      "target": "products"
+    },
+    {
+      "name": "products granted 8",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-products",
+        "--output=stream"
+      ],
+      "grant": 8,
+      "target": "products"
     }
   ],
   "capture": {
@@ -1335,8 +1407,8 @@
     "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🟦️.ts",
     "documents": [
       {
-        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
-        "request": "repo:cache-reset-graph",
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/📋️project.json",
+        "request": "repo-cache-reset:cache-reset-graph",
         "kind": "cache-reset",
         "target": "graph"
       },
@@ -1345,10 +1417,16 @@
         "request": "repo-mcp:build",
         "kind": "frontend",
         "target": "build"
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📋️project.json",
+        "request": "repo-cache-retirement:cache-retire-inactive-preview",
+        "kind": "maintenance",
+        "target": "preview"
       }
     ],
     "foreign": [
-      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧫️fixtures/🔣️.json"
+      "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json"
     ]
   }
 }

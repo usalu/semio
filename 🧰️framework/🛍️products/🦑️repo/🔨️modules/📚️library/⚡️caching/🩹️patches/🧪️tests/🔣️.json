@@ -1,0 +1,20 @@
+[
+  {
+    "name": "unchanged baseline",
+    "elapsed": 0,
+    "change": false,
+    "matches": true
+  },
+  {
+    "name": "immediate output edit",
+    "elapsed": 0,
+    "change": true,
+    "matches": false
+  },
+  {
+    "name": "later output edit",
+    "elapsed": 3000,
+    "change": true,
+    "matches": false
+  }
+]

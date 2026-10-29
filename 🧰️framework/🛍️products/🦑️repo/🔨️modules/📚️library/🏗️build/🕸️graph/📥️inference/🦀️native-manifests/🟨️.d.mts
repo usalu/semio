@@ -1,7 +1,8 @@
 /** 🦀️ Declares the native-manifest inference component: Cargo and Go manifests, source files and native dependency closures. */
 export const component: "native-manifests";
 export function wire(registry: Record<string, any>): void;
-export function rustSourceFiles(entries: readonly any[], manifestRoot: string, cache?: Map<string, any>, snapshots?: Map<string, any>, compiled?: boolean): any;
+export function rustSourceFiles(entries: readonly any[], manifestRoot: string, cache?: Map<string, any>, snapshots?: Map<string, any>, compiled?: boolean, allowedFiles?:ReadonlySet<string>): any;
+export function assertedCargoBuildScriptInputsV1(cargo:unknown,script:string,workspaceRoot:string,operations:Readonly<{stat(path:string):Readonly<{isFile():boolean;isSymbolicLink():boolean;size:number}>;read(path:string):Uint8Array;sources(script:string,allowed:ReadonlySet<string>):string[]}>):string[]|undefined;
 export function cargoSourceInputs(root: string, workspaceRoot: string, facts: any, includeTests?: boolean, compiled?: boolean): any;
 export function readToml(path: string): any;
 export function nativeDependencies(manifest: any, workspace: any): any;

@@ -29,7 +29,8 @@
     "./testing/render-scene": "./🧪️testing/🎬️render-scene/🟦️.ts",
     "./testing/render-scene/legend": "./🧪️testing/🎬️render-scene/🧭️legend/🟦️.ts",
     "./artifacts": "./📦️artifacts/🟦️.ts",
-    "./template/assignment": "./🧾️template/📝️assignment/🟦️.ts"
+    "./template/assignment": "./🧾️template/📝️assignment/🟦️.ts",
+    "./template/thesis": "./🧾️template/🎓️thesis/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "semio": {

@@ -3,6 +3,8 @@ import {createHash} from "node:crypto";
 import {validateJsonSchemaSubset} from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import {buildModesV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
 import targetCacheSchema from "../🏃️execution/🧬️schema/💾️cache.json" with {type:"json"};
+import projectSchema from "../🧬️schema/📋️project/🔣️.json" with {type:"json"};
+import {refuseBuildV1} from "../📖️texts/🟦️.ts";
 import { resolveBuildTargetV1 } from "../🕸️graph/🟦️.ts"; import type { BuildGraphV1, BuildTargetV1 } from "../🕸️graph/📋️model/🟦️.ts";
 
 /** 📋️ One planned task: the build target resolved for a project and configuration, with the ids of the tasks it depends on. */
@@ -51,6 +53,11 @@ export function planBuildTasksV1(graph:BuildGraphV1,request:BuildTaskRequestV1):
   if(explicit.has(id))args=request.args??[];
   visiting.add(id);
   const owner=graph.projects[project]!,definition=buildTargetForConfigurationV1(owner.targets[target]!,found.configuration),dependencies=new Set<string>();
+  const argumentPolicy=(definition.metadata as {semio?:{arguments?:unknown}}|undefined)?.semio?.arguments;
+  if(argumentPolicy!==undefined){
+   if(validateJsonSchemaSubset({$defs:projectSchema.$defs,$ref:"#/$defs/TaskArgumentPolicy"},argumentPolicy).length)throw refuseBuildV1("invalid","task.arguments-policy",{task:id});
+   if(args.length)throw refuseBuildV1("invalid","task.arguments-refused",{task:id});
+  }
   for(const dependency of definition.dependsOn??[]){
    const specification=typeof dependency==="string"?{target:dependency}:dependency,pattern=specification.target,fromDependencies=pattern.startsWith("^")||specification.projects==="dependencies"||specification.dependencies===true,operation=pattern.replace(/^\^/u,""),forwarded=specification.params==="forward"?args:[];
    const add=(name:string)=>{

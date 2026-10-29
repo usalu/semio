@@ -1,0 +1,49 @@
+{
+  "description": "Two-link arm: shoulder (length 1) and elbow (length 0.5) placed at (1, 2) with the root rotated 90 degrees; expected world origins, tips and angles authored by hand.",
+  "rig": {
+    "kind": "mechanical",
+    "root": "shoulder",
+    "bones": [
+      { "id": "shoulder", "parent": null, "title": { "en": "Shoulder", "de": "Schulter" }, "x": 0, "y": 0, "angleDeg": 0, "lengthM": 1, "joint": { "type": "revolute", "minDeg": -90, "maxDeg": 90 } },
+      { "id": "elbow", "parent": "shoulder", "title": { "en": "Elbow", "de": "Ellbogen" }, "x": 1, "y": 0, "angleDeg": 0, "lengthM": 0.5, "joint": { "type": "revolute", "minDeg": 0, "maxDeg": 120 } },
+      { "id": "slider", "parent": "elbow", "title": { "en": "Slider", "de": "Schieber" }, "x": 0.5, "y": 0, "angleDeg": 0, "lengthM": 0.1, "joint": { "type": "prismatic", "axisDeg": 0, "minM": 0, "maxM": 0.2 } },
+      { "id": "plate", "parent": "slider", "title": { "en": "Plate", "de": "Platte" }, "x": 0, "y": 0, "angleDeg": 45, "lengthM": 0.1, "joint": { "type": "fixed" } }
+    ]
+  },
+  "cases": [
+    {
+      "name": "rest at the origin",
+      "root": { "x": 0, "y": 0, "angleDeg": 0 },
+      "offsets": {},
+      "expected": { "shoulder": { "origin": [0, 0], "tip": [1, 0], "angleDeg": 0 }, "elbow": { "origin": [1, 0], "tip": [1.5, 0], "angleDeg": 0 }, "slider": { "origin": [1.5, 0], "tip": [1.6, 0], "angleDeg": 0 }, "plate": { "origin": [1.5, 0], "tip": [1.5707106781186548, 0.07071067811865475], "angleDeg": 45 } }
+    },
+    {
+      "name": "root rotated 90 degrees at (1, 2) and elbow bent 90 degrees",
+      "root": { "x": 1, "y": 2, "angleDeg": 90 },
+      "offsets": { "elbow": { "angleDeg": 90 } },
+      "expected": { "shoulder": { "origin": [1, 2], "tip": [1, 3], "angleDeg": 90 }, "elbow": { "origin": [1, 3], "tip": [0.5, 3], "angleDeg": 180 }, "slider": { "origin": [0.5, 3], "tip": [0.4, 3], "angleDeg": 180 } }
+    },
+    {
+      "name": "revolute offsets clamp to the joint limits",
+      "root": { "x": 0, "y": 0, "angleDeg": 0 },
+      "offsets": { "shoulder": { "angleDeg": 200 }, "elbow": { "angleDeg": -30 } },
+      "expected": { "shoulder": { "origin": [0, 0], "tip": [0, 1], "angleDeg": 90 }, "elbow": { "origin": [0, 1], "tip": [0, 1.5], "angleDeg": 90 } }
+    },
+    {
+      "name": "prismatic travel clamps to its range and projects on the axis; fixed joints ignore offsets",
+      "root": { "x": 0, "y": 0, "angleDeg": 0 },
+      "offsets": { "slider": { "dx": 0.5, "dy": 3 }, "plate": { "angleDeg": 80, "dx": 9 } },
+      "expected": { "slider": { "origin": [1.7, 0], "tip": [1.8, 0], "angleDeg": 0 }, "plate": { "origin": [1.7, 0], "tip": [1.7707106781186548, 0.07071067811865475], "angleDeg": 45 } }
+    }
+  ],
+  "affine": {
+    "a": [1, 0, 0, 1, 2, 3],
+    "b": [0, 1, -1, 0, 0, 0],
+    "composeAB": [0, 1, -1, 0, 2, 3],
+    "applyPoint": { "matrix": [0, 1, -1, 0, 2, 3], "point": [1, 0], "result": [2, 4] }
+  },
+  "errors": [
+    { "name": "missing parent", "patch": { "bone": "elbow", "parent": "nowhere" }, "message": "missing parent" },
+    { "name": "cycle", "patch": { "bone": "shoulder", "parent": "plate" }, "message": "no parent|cycle|must not have a parent" }
+  ]
+}

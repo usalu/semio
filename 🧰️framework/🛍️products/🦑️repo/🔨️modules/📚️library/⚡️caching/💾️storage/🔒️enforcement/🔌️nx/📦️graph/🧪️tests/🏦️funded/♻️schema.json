@@ -1,0 +1,68 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "birth"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "phase",
+          "present",
+          "platformCalls"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "phase": {
+            "enum": [
+              null,
+              "reserved",
+              "committed",
+              "retiring"
+            ]
+          },
+          "present": {
+            "type": "boolean"
+          },
+          "retire": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          },
+          "platformCalls": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "copies": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2
+          }
+        }
+      }
+    },
+    "birth": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/framework/process/artifacts/native-build/storage/birth/claim/component.json#/definitions/Record"
+      }
+    }
+  }
+}

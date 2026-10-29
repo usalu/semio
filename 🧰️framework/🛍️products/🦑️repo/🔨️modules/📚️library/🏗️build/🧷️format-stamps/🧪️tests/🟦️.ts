@@ -106,11 +106,11 @@ test("the wiring stays in place: lease admission and wait hook, owner declaratio
  const format=text("⚡️caching","💾️storage","🔒️enforcement","📦️budget","📥️opening","🏪️store","📇️format","🟦️.ts");
 const opening=text("⚡️caching","💾️storage","🔒️enforcement","📦️budget","📥️opening","🟦️.ts");expect(opening).toContain('declareFormatStampV1("native.publication",nativeStorageSchema)');expect(opening).toContain('export async function openRepositoryCachePartitionAttemptV1(');const recovering=text("⚡️caching","💾️storage","🔒️enforcement","📦️budget","📥️opening","♻️reset","🟦️.ts");expect(recovering).toContain('openRepositoryCachePartitionAttemptV1(workspace,id,control,()=>openRepositoryCachePartitionV1(workspace,"leases",control))');
  expect(format).toContain('declareFormatStampV1("cache.graph-image",schema)');expect(format).toContain('requireCurrentFormatStampsV1(["cache.graph-image"],"graph cache image","refuse")');
- expect(text("🏗️build","⌨️command","📥️entry","🟦️.ts")).toContain("catch(error){exitIfStaleImplementationV1(error);throw error;}");
+ expect(text("🏗️build","⌨️command","📥️entry","🟦️.ts")).toContain("exitIfStaleImplementationV1(error);throw error;}");
  const script=text("🏗️build","📜️script.ts");
  expect(text("🏗️build","🚪️door","🔄️restart","🟦️.ts")).toContain("outermost=environment[invocationEnvironmentV1]===undefined");expect(script).toContain("if(isMainModuleV1(import.meta.url)){");expect(script).toContain("runBuildMainV1(findWorkspaceRoot(import.meta.dirname)");
  expect(text("🏗️build","🕸️graph","📥️inference","🔖️stamps","🧬️schema","🔣️.json")).toContain('"🏗️build/🧷️format-stamps/"');
-  const door=text("🏗️build","🚪️door","📜️script.ts"),restart=text("🏗️build","🚪️door","🔄️restart","🟦️.ts");expect(door).toContain("runBuildWithRestartV1(async()=>{const{runBuildCliV1}=await import(\"../📜️script.ts\");");expect(restart).toContain("useProcessWideImplementationPinV1()");expect(restart).toContain("runWithStaleReexecV1(run,{environment,outermost,yielded:");expect(script).toContain("runBuildWithRestartV1(()=>runBuildCliV1(root,argv,environment),argv,environment)");expect(script).toContain("export async function runBuildCliWithRestartV1(");
+  const door=text("🏗️build","🚪️door","🏃️main","🟦️.ts"),restart=text("🏗️build","🚪️door","🔄️restart","🟦️.ts");expect(door).toContain("runBuildWithRestartV1(async()=>{const{runBuildCliV1}=await import(\"../../📜️script.ts\");");expect(restart).toContain("useProcessWideImplementationPinV1()");expect(restart).toContain("runWithStaleReexecV1(run,{environment,outermost,yielded:");expect(script).toContain("runBuildWithRestartV1(()=>runBuildCliV1(root,argv,environment),argv,environment)");expect(script).toContain("export async function runBuildCliWithRestartV1(");
 
 });
 

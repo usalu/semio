@@ -117,7 +117,7 @@ export function createClaimRegistryV1({root,fs,lease,now=()=>Date.now(),token=()
    let slot;
    for(let at=0;at<slots&&!slot;at++)slot=await lease.tryHold(resource.slot(at));
    if(!slot)return{kind:"slots",...found};
-   const name=token(),hold=await lease.tryHold(resource.claim(name));
+   const name=token(),hold=await lease.tryHold(resource.claim(name),{fresh:true});
    if(!hold){slot.release();throw fail("A fresh claim lease is free","CLAIM_LEASE_TAKEN");}
    try{
     const taken=stamps?Object.fromEntries(found.take.filter(owner=>stamps[owner]!==undefined).map(owner=>[owner,stamps[owner]])):undefined,claim=readClaimV1({version:1,token:name,base,implementation,owners:found.take,state:"running",startedMs:now(),...taken&&Object.keys(taken).length?{stamps:taken}:{}});
@@ -189,10 +189,11 @@ export async function waitAnyLeaseV1(lease,resources,{signal,timeoutMs}){
 }
 
 /**
- * 🔗️ The lease port of the registry over the queued lease acquisition of the process module (`acquire` is `acquireQueuedResourceLease`, injected so this leaf imports nothing of the repository): `tryHold` takes an exclusive lease at once or answers undefined, `hold` queues for it, `wait` answers true when no exclusive holder is left and false after its `timeoutMs`; with a control every acquisition carries the control's own signal, the only one the kernel admits. Shared acquisitions are cohort tickets: a plain shared ticket would wait for every earlier ticket, held ones included, and the waiters of one claim would be served one after the other.
+ * 🔗️ The injected kernel ports keep queued holds, nonwaiting liveness probes and fresh claims separate. `tryHold({fresh:true})` allows bounded directory admission, refuses an occupied resource immediately and retains admission or unrelated failures; ordinary `tryHold` never waits. With a control every acquisition carries its original signal. Shared waits are cohort tickets, so claim waiters do not serialize behind held shared tickets.
  */
-export function createQueuedClaimLeasePortV1({acquire,directory,control}){
- const request=(resource,mode,signal,timeoutMs)=>acquire({directory,resource,mode,...(mode==="shared"?{sharedCohort:true}:{}),owner:randomBytes(16).toString("base64url"),...(control?{control}:{}),signal:control?control.signal:signal??new AbortController().signal,...(timeoutMs!==undefined?{timeoutMs}:{})});
+export function createQueuedClaimLeasePortV1({acquire,tryAcquire,acquireFresh,directory,control}){
+ if(typeof acquire!=="function"||typeof tryAcquire!=="function"||typeof acquireFresh!=="function")throw fail("Queued acquisition, nonwaiting probe and fresh claim admission required");
+ const request=(resource,mode,signal,timeoutMs,operation=acquire)=>operation({directory,resource,mode,...(mode==="shared"?{sharedCohort:true}:{}),owner:randomBytes(16).toString("base64url"),...(control?{control}:{}),signal:control?control.signal:signal??new AbortController().signal,...(timeoutMs!==undefined?{timeoutMs}:{})});
  const follow=(held,signal)=>{
   if(!control||!signal||signal===control.signal)return held;
   return new Promise((resolve,reject)=>{
@@ -205,7 +206,7 @@ export function createQueuedClaimLeasePortV1({acquire,directory,control}){
  const waiting=new Map();
  const shared=(resource,signal,timeoutMs)=>request(resource,"shared",signal,timeoutMs).then(lease=>{lease.release();return true;},error=>{if(timeoutMs!==undefined&&/timed out/iu.test(String(error?.message)))return false;throw error;});
  return Object.freeze({
-  async tryHold(resource){try{return await request(resource,"exclusive",undefined,0);}catch(error){if(/timed out/iu.test(String(error?.message)))return undefined;throw error;}},
+  async tryHold(resource,options){const fresh=options?.fresh===true;try{return await request(resource,"exclusive",undefined,0,fresh?acquireFresh:tryAcquire);}catch(error){if(fresh?error?.message==="Resource lease timed out: "+resource&&error?.resourceLeaseAdmission===undefined:/timed out/iu.test(String(error?.message)))return undefined;throw error;}},
   hold:(resource,options)=>follow(request(resource,"exclusive",options?.signal),options?.signal),
   async wait(resource,options){
    if(!control)return shared(resource,options?.signal,options?.timeoutMs);

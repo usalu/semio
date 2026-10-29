@@ -1,0 +1,13 @@
+# First Actual Compiler Run
+
+Full private publication77983 reached a real terminal result: exit1 after52.79seconds of admitted test execution. The private store smoke passed in8.13seconds. Actual pinned Tectonic, the500-file TeX bundle and tracked fonts were all prepared successfully through normal owned stores. The genuine child ran the actual compilation script with build thesis, opened the private prepared materials and launched Tectonic. Tectonic returned status1 without a signal after roughly3seconds. No successful PDF publication is established.
+
+The production compiler discards the separated stdout/stderr already returned by captureOwnedCommandResultV1. Its ordinary primary is a generic OwnedCommandFailure. The specialized negative-probe refusal hook captures a log into a WeakMap, but ordinary publication does not expose that map. Managed cleanup then retires the private scratch and repeats the preserved primary alongside OriginalAdmissionClosed cleanup diagnostics. The current run log therefore lacks the TeX root cause.
+
+Core owns a narrow schema-first bounded terminal-diagnostic fix before rerun. It must preserve the exact primary, existing inspector protocol, cancellation and admission semantics. This is a reporting defect discovered by actual execution; no source-level TeX cause is being guessed. No heavy thesis job is currently live.
+
+The first focused diagnostic tests passed10 tests/107 assertions. Independent review then requested asynchronous stream-error handling through the existing owned writer, and exact child-failure preservation when test log sinks fail. These refinements are being verified before the next full publication; no compiler result has changed.
+
+Second full publication24563 completed exit1 after48.69seconds of admitted execution (store smoke8.12seconds, full publication39.02seconds). Materials again prepared successfully. Bounded child transcript actual-thesis-entry.log preserved the exact error: semio-thesis.sty line366 attempts to define dedication, which KOMA-Script already owns. Core is renaming the new convenience command to makededication, retaining the Dedication environment, and updating all authored consumers without a compatibility alias. The designed fresh-process reaper removed the previous failed root r1bEEdD (confirmed ENOENT); no raw partition removal occurred.
+
+The KOMA collision fix is complete: the new convenience command is makededication, while the Dedication environment remains. All live style/template/README/customization-probe consumers were updated; no compatibility alias or KOMA override was added. A neutral command-ownership vector first reproduced the defect; the full thesis unit suite now passes37 tests/121 assertions.

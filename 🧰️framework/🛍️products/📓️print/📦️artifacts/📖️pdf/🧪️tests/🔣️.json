@@ -268,5 +268,90 @@
         3
       ]
     }
+  ],
+  "operatorNormalization": [
+    {
+      "operation": "showText",
+      "arguments": [
+        [
+          {
+            "unicode": "A",
+            "width": 500,
+            "isSpace": false
+          }
+        ]
+      ],
+      "undefinedGlyphFields": [
+        "vmetric",
+        "operatorListId"
+      ],
+      "expected": [
+        [
+          {
+            "unicode": "A",
+            "width": 500,
+            "isSpace": false
+          }
+        ]
+      ]
+    },
+    {
+      "operation": "showText",
+      "arguments": [
+        [
+          {
+            "unicode": "縦",
+            "width": 1000,
+            "vmetric": [
+              880,
+              -1000,
+              500
+            ],
+            "operatorListId": "glyph42"
+          },
+          -120
+        ]
+      ],
+      "undefinedGlyphFields": [],
+      "expected": [
+        [
+          {
+            "unicode": "縦",
+            "width": 1000,
+            "vmetric": [
+              880,
+              -1000,
+              500
+            ],
+            "operatorListId": "glyph42"
+          },
+          -120
+        ]
+      ]
+    },
+    {
+      "operation": "save",
+      "arguments": null,
+      "undefinedGlyphFields": [],
+      "expected": []
+    }
+  ],
+  "oraclePdf": "%PDF-1.4\n1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>\nendobj\n4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n5 0 obj\n<< /Length 45 >>\nstream\nBT /F1 12 Tf 20 100 Td (Academic proof) Tj ET\nendstream\nendobj\nxref\n0 6\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000241 00000 n \n0000000311 00000 n \ntrailer\n<< /Size 6 /Root 1 0 R >>\nstartxref\n406\n%%EOF\n",
+  "operatorNormalizationInvalid": [
+    {
+      "operation": "showText",
+      "arguments": null
+    },
+    {
+      "operation": "showText",
+      "arguments": []
+    },
+    {
+      "operation": "showText",
+      "arguments": [
+        [],
+        []
+      ]
+    }
   ]
 }

@@ -1,0 +1,89 @@
+/* 🧍️ The staffage archive's own layout rules on top of the semio design system: the card layer over the layered overview's glass, visible focus, and the in-app motion switch. */
+
+.staffage-app :focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* 🏠️ The overview's cards stand on a grid above the glass: the card layer takes its track lists from the level (`--staffage-columns`, `--staffage-rows`) and each card fills its cell,
+   keeping the spacing inside the cell. A card taller than its cell scrolls inside it and never lies over the card below. */
+.staffage-grid {
+  display: grid;
+  grid-template-columns: var(--staffage-columns);
+  grid-template-rows: var(--staffage-rows);
+}
+
+.staffage-cell {
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  align-items: stretch;
+  justify-content: stretch;
+  padding: var(--spacing-double);
+  overflow-y: auto;
+}
+
+.staffage-card {
+  position: relative;
+  inline-size: 100%;
+  min-block-size: 0;
+}
+
+.staffage-cell > .staffage-card {
+  block-size: 100%;
+}
+
+.staffage-card [data-overview-card] {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.staffage-card [data-overview-card-stack],
+.staffage-card [data-slot="staffage-card-stack"] {
+  block-size: 100%;
+}
+
+/* 👆️ A card the reader swipes to (phones, short windows, large text) is as wide as the screen leaves it, up to a width that keeps its lines readable; it is as tall as its content needs and at least a comfortable preview. */
+.staffage-entry {
+  inline-size: min(100%, 40rem);
+}
+
+.staffage-entry [data-slot="staffage-card-content"] {
+  min-block-size: 14rem;
+}
+
+/* 🏷️ A card's title is read in full: it wraps inside its chip instead of ending in an ellipsis. */
+.staffage-app [data-slot="staffage-card-title-chip"] {
+  height: auto;
+  max-height: none;
+  white-space: normal;
+}
+
+.staffage-app [data-slot="staffage-card-title-chip"] > :is(h1, h2, h3) {
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  line-height: 1.25;
+}
+
+/* 🎞️ The reader's own "reduce motion" choice, besides the device's: no transition or animation anywhere in the app. */
+.staffage-app[data-motion="reduced"] *,
+.staffage-app[data-motion="reduced"] *::before,
+.staffage-app[data-motion="reduced"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+}
+
+/* 🧪️ Checker behind a transparent export, so transparency is visible and never mistaken for white. */
+.staffage-checker {
+  background-color: #ffffff;
+  background-image: conic-gradient(#c9c9c9 25%, transparent 0 50%, #c9c9c9 0 75%, transparent 0);
+  background-size: 16px 16px;
+}
+
+@media (prefers-contrast: more) {
+  .staffage-app [data-overview-card] {
+    outline: 1px solid currentColor;
+  }
+}

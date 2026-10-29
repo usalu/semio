@@ -202,5 +202,5 @@ IFS=: read -r -a path_entries <<<"$PATH"
 for entry in "${path_entries[@]}"; do
   [ -n "$entry" ] && [ -x "$entry/repo" ] || continue
   [ "$(physical "$entry/repo")" = "$installed" ] && continue
-  printf '[semio] Another repo on PATH shadows or duplicates the launcher: %s/repo. Keep one copy: ln -sf "%s" "%s/repo"\n[semio] Ein anderes repo im PATH verdeckt oder dupliziert den Launcher: %s/repo. Nur eine Kopie behalten: ln -sf "%s" "%s/repo"\n' "$entry" "$installed" "$entry" "$entry" "$installed" "$entry" >&2
+  printf '[semio] Another repository frontend is on PATH: %s/repo. Installed launcher: %s\n[semio] Ein weiteres Repository-Frontend liegt im PATH: %s/repo. Installierter Launcher: %s\n' "$entry" "$installed" "$entry" "$installed" >&2
 done

@@ -2,5 +2,6 @@
   "keys": 273,
   "multiplier": 7,
   "minimumDepth": 3,
-  "maximumDepth": 5
+  "maximumDepth": 5,
+  "pageItems": 16
 }

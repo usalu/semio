@@ -28,3 +28,4 @@ semio-framework-value.workspace = true
 serde = { version = "1.0.219", features = ["derive"] }
 
 [dev-dependencies]
+serde_json.workspace = true

@@ -790,6 +790,82 @@
           }
         }
       }
+    },
+    "DependencyReadmissionProtocol": {
+      "const": {
+        "exitCode": 76,
+        "publication": "closed-source-owner-producer",
+        "original": "unchanged",
+        "snapshot": "fresh-compiler-admission",
+        "restart": "existing-external-reexecution"
+      }
+    },
+    "DependencyReadmissionCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "statuses",
+        "launches",
+        "accepted"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "statuses": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          }
+        },
+        "launches": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        },
+        "accepted": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DependencyColdCaptureCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry",
+        "files",
+        "installed",
+        "specifier",
+        "target",
+        "output"
+      ],
+      "properties": {
+        "entry": {
+          "type": "string"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "installed": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "specifier": {
+          "type": "string"
+        },
+        "target": {
+          "type": "string"
+        },
+        "output": {
+          "type": "string"
+        }
+      }
     }
   }
 }

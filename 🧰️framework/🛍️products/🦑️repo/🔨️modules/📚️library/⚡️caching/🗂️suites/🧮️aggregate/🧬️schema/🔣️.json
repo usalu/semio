@@ -1,0 +1,116 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio:repo/canonical-test-aggregate/v1",
+  "title": "Canonical Test Aggregate",
+  "$defs": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "owner": "repo",
+        "root": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+        "manifest": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📋️project.json",
+        "target": "test",
+        "contracts": "test-contracts",
+        "cacheEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts",
+        "buildEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/📜️script.ts",
+        "publicEntry": "📜️script.ts",
+        "cacheTable": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🔣️.json",
+        "buildTable": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🗂️suites/🔣️.json",
+        "implementation": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🗂️suites/🧮️aggregate"
+      }
+    },
+    "Route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "commands"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "entry",
+              "arguments"
+            ],
+            "properties": {
+              "entry": {
+                "type": "string",
+                "minLength": 1
+              },
+              "arguments": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "project",
+        "routes",
+        "candidates",
+        "expected"
+      ],
+      "properties": {
+        "project": {
+          "type": "object"
+        },
+        "routes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Route"
+          }
+        },
+        "candidates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target",
+              "entry",
+              "arguments"
+            ],
+            "properties": {
+              "target": {
+                "type": "string"
+              },
+              "entry": {
+                "type": "string"
+              },
+              "arguments": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "expected": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

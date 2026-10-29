@@ -47,6 +47,9 @@ function captureOnce(path,maximumBytes,retainText){
  const expected=capturedSources?.sources.get(path);if(capturedSources&&!expected)throw Error("Undeclared compiler-captured physical Source read refused: "+JSON.stringify(capturedReadRefusalV1(capturedSources,path)));
  const image=capturedSources?.images.get(path);if(image&&(!retainText||image.text!==undefined)){if(image.byteLength>maximumBytes)throw Error("Compiler-captured admitted Source image identity required");return Object.freeze({sha256:expected,byteLength:image.byteLength,text:retainText?image.text:null});}
  if(capturedSources){const bytes=readFileSync(path);if(bytes.length>maximumBytes||createHash("sha256").update(bytes).digest("hex")!==expected)throw Error("Compiler-captured admitted Source image identity required");return Object.freeze({sha256:expected,byteLength:bytes.length,text:retainText?new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(bytes):null});}
+ return capturePhysicalOnce(path,maximumBytes,retainText);
+}
+function capturePhysicalOnce(path,maximumBytes,retainText){
  const base=parse(path).root,parts=relative(base,path).split(sep).filter(Boolean),parents=[];let current=base;
  if(parts.length>maximumAncestors)throw Error("Source revision ancestry capacity exceeded");
  for(const part of["",...parts.slice(0,-1)]){if(part)current=join(current,part);const row=lstatSync(current,{bigint:true});if(!row.isDirectory()||row.isSymbolicLink())throw filesystemShapeErrorV1(row,current,"Physical Source revision ancestry required","ENOTDIR");parents.push({path:current,dev:row.dev,ino:row.ino,mode:row.mode});}
@@ -60,7 +63,7 @@ function captureOnce(path,maximumBytes,retainText){
  verify();if(readSync(file,window,0,1,offset)!==0)throw concurrentEditV1("length",path,"Source revision grew beyond admitted EOF");verify();value=Object.freeze({sha256:hash.digest("hex"),byteLength:size,text:retained===undefined?null:new TextDecoder("utf-8",{fatal:true,ignoreBOM:true}).decode(retained)});
  }catch(error){failed=true;primary=error;}
  try{closeSync(file);}catch(error){if(!failed){failed=true;primary=error;}}finally{window?.fill(0);retained?.fill(0);}
- if(failed)throw primary;if(expected!==undefined&&value.sha256!==expected)throw Error("Compiler-captured physical Source byte identity changed");return value;
+ if(failed)throw primary;return value;
 }
 const ownSourceURL=physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL),ownPath=fileURLToPath(ownSourceURL),ownSchemaPath=fileURLToPath(new URL("./🧬️schema/🔣️.json",ownSourceURL));
 function ownRow(path){try{const row=lstatSync(path,{bigint:true});return row.isFile()&&!row.isSymbolicLink()?{stamp:stamp(row),settled:Number(row.ctimeNs/1000000n)<Date.now()-settleMilliseconds&&Number(row.mtimeNs/1000000n)<Date.now()-settleMilliseconds}:undefined;}catch{return undefined;}}
@@ -85,10 +88,19 @@ function unchanged(path,row){try{return capture(path,row.byteLength,false).sha25
 function current(){if(implementationPinnedV1())return;if(ownUnchanged())return;if(!unchanged(ownPath,loaded)||loadedSchema&&!unchanged(ownSchemaPath,loadedSchema))throw staleImplementationV1("Stale loaded Source revision reader; restart required");}
 /** 🔏️ Streams one finite ordinary Source revision; returned DATA grants no physical resource custody. */
 export function captureBoundedSourceRevisionV1(path,maximumBytes,retainText=false){
- if(typeof path!=="string"||!isAbsolute(path)||resolve(path)!==path||path.length>maximumPathUnits||path.includes("\0")||!Number.isSafeInteger(maximumBytes)||maximumBytes<0||maximumBytes>maximumSourceBytes||typeof retainText!=="boolean"||retainText&&maximumBytes>maximumTextBytes)throw Error("Reducing finite Source revision request required");
+ requireSourceRevisionRequestV1(path,maximumBytes,retainText);
  const cached=capturedSources?undefined:settledRevisions.get(path);
  if(cached&&cached.maximumBytes===maximumBytes&&cached.retainText===retainText){try{const row=lstatSync(path,{bigint:true});if(row.isFile()&&!row.isSymbolicLink()&&stamp(row)===cached.identity)return cached.value;}catch{}}
  current();const value=capture(path,maximumBytes,retainText),taken=Date.now();current();
  try{const row=lstatSync(path,{bigint:true});if(row.isFile()&&!row.isSymbolicLink()&&Number(row.ctimeNs/1000000n)<taken-settleMilliseconds&&Number(row.mtimeNs/1000000n)<taken-settleMilliseconds){if(settledRevisions.size>=maximumSettledRevisions)settledRevisions.clear();settledRevisions.set(path,{maximumBytes,retainText,identity:stamp(row),value});}}catch{}
  return value;
+}
+
+function requireSourceRevisionRequestV1(path,maximumBytes,retainText){
+ if(typeof path!=="string"||!isAbsolute(path)||resolve(path)!==path||path.length>maximumPathUnits||path.includes("\0")||!Number.isSafeInteger(maximumBytes)||maximumBytes<0||maximumBytes>maximumSourceBytes||typeof retainText!=="boolean"||retainText&&maximumBytes>maximumTextBytes)throw Error("Reducing finite Source revision request required");
+}
+/** 👁️ Observes current physical revision DATA for an admitted Source path without substituting bytes into the executing captured image. */
+export function observeCurrentSourceRevisionV1(path,maximumBytes){
+ requireSourceRevisionRequestV1(path,maximumBytes,false);if(capturedSources&&!capturedSources.sources.has(path))throw Error("Undeclared compiler-captured physical Source observation refused: "+JSON.stringify(capturedReadRefusalV1(capturedSources,path)));
+ current();const value=retryOnConcurrentEditSyncV1("read",()=>capturePhysicalOnce(path,maximumBytes,false));current();return value;
 }

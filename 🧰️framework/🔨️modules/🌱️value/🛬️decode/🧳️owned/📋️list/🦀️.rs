@@ -11,8 +11,8 @@ impl NativeListSource for DslValue{type Row=Self;fn row_count(&self)->Result<usi
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Bind,Count,Initialize,RowBirth,RowAdvance,RowTake,RowClose,RowSeal,RowAdopt,Build,Finish,FinalTake,Ready,Spent}
 /// 🌳️ One required child receiver and a fixed-height page builder retain every original partial owner.
-pub struct NativePersistentListReceiver<I:NativeListSource,T:NativeReceive<I::Row>+Sync>{
- binding:Option<RetainedCloneBinding>,builder:ManuallyDrop<Option<Box<PersistentListBuilder<T>>>>,child:ManuallyDrop<Option<Box<T::Receiver>>>,raw:ManuallyDrop<Option<T>>,sealed:ManuallyDrop<Option<SealedShared<T>>>,output:ManuallyDrop<Option<PersistentList<T>>>,retirement:RetainedCloneClose,count:usize,index:usize,phase:Phase,closing:bool,input:std::marker::PhantomData<fn()->I>,
+pub struct NativePersistentListReceiver<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync>{
+ binding:Option<RetainedCloneBinding>,builder:ManuallyDrop<Option<Box<PersistentListBuilder<T>>>>,child:ManuallyDrop<Option<Box<T::Receiver>>>,raw:ManuallyDrop<Option<T>>,sealed:ManuallyDrop<Option<SealedShared<T>>>,output:ManuallyDrop<Option<PersistentList<T>>>,retirement:RetainedCloneClose,count:usize,index:usize,phase:Phase,closing:bool,input:std::marker::PhantomData<fn(&I)>,
 }
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}

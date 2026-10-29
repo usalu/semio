@@ -17,6 +17,11 @@ export{canonicalJsonV1,compareCodePointsV1};
 export const GENERATION_POLICY_V1=Object.freeze({...schema.definitions.Policy.const,policies:Object.freeze([...schema.definitions.Policy.const.policies])});
 const P=GENERATION_POLICY_V1,HEX=/^[a-f0-9]{64}$/u,sha256=bytes=>createHash("sha256").update(bytes).digest("hex"),isObject=value=>value!==null&&typeof value==="object"&&!Array.isArray(value);
 
+/** 🔌️ Admits bounded consumer external roots without changing their sealed package identity. */
+export function readGenerationExternalInputsV1(value){const rule=schema.definitions.ExternalInputs;if(!Array.isArray(value)||value.length>rule.maxItems||value.some(name=>{if(typeof name!=="string"||!name.length)return true;let length=0;for(const point of name)if(++length>rule.items.maxLength)return true;return false;}))throw fail("Bounded external input references required","GENERATION_EXTERNAL_INPUTS");return Object.freeze([...new Set(value)].sort(compareCodePointsV1));}
+/** 🏷️ Resolves exact external keys before root npm package references, including scoped names. */
+export function resolveGenerationExternalInputV1(nodes,name){if(Object.hasOwn(nodes??{},name))return name;const canonical="npm:"+name;return Object.hasOwn(nodes??{},canonical)?canonical:undefined;}
+
 /** 📦️ Refuses canonical UTF8 and compressed documents beyond the same finite reader byte ceiling before publication. */
 export function packGenerationDocumentV1(value,maximumBytes){
  if(!Number.isSafeInteger(maximumBytes)||maximumBytes<1||maximumBytes>P.maximumIndexBytes)throw fail("Finite generation document byte limit required");
@@ -572,16 +577,17 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
  /**
   * 🌊️ Streams the graph of exactly the owners in `names` (every owner without it) fragment by fragment: `nodes()` yields `[name, node]` in code point order while at most `readConcurrency` fragments are resident, so a consumer that drops what it was given keeps the resident state independent of the number of owners; `finish()` answers the rest (dependencies, external nodes, unavailable projects, generation, membership) once the nodes were consumed. Nodes and edges come from fragments only, so unrelated owners are never read; the external nodes are those the selected owners' edges reach plus those their inputs (target inputs and named input groups) name in `externalDependencies` (a task hash needs the node of every external dependency it lists, edge or not).
   */
- function assembleStream(current,{names,compare=(a,b)=>a<b?-1:a>b?1:0,signal,progress}={}){
+ function assembleStream(current,{names,externalInputs=[],compare=(a,b)=>a<b?-1:a>b?1:0,signal,progress}={}){
   const manifest=current.manifest;if(!manifest)throw fail("A sealed generation is required","GENERATION_EMPTY");
   const wanted=(names?[...new Set(names)]:Object.keys(manifest.owners)).sort(compareCodePointsV1),keep=names?new Set(wanted):undefined;
   for(const name of wanted)if(!manifest.owners[name])throw fail("Unknown project in the closure: "+name,"GENERATION_UNKNOWN_OWNER");
-  const unavailable=[],edges=new Map(),roots=[],referenced=new Set();let global,drained=false,started=false;
+  const inputRoots=readGenerationExternalInputsV1(externalInputs),unavailable=[],edges=new Map(),roots=[],referenced=new Set(inputRoots);let global,drained=false,started=false;
   const referenceExternalInputs=value=>{if(Array.isArray(value)){for(const item of value)referenceExternalInputs(item);}else if(value&&typeof value==="object"){for(const[key,item]of Object.entries(value)){if(key==="externalDependencies"&&Array.isArray(item)){for(const name of item)if(typeof name==="string")referenced.add(name);}else referenceExternalInputs(item);}}};
   async function*nodes(){
    if(started)throw fail("The node stream of an assembly is read once","GENERATION_STREAM_USED");started=true;
    const globalBytes=await fs.read(fragmentPath(manifest.global));if(!globalBytes||sha256(globalBytes)!==manifest.global)throw fail("Global fragment is missing","GENERATION_INCOMPLETE");
    global=unpack(globalBytes,P.maximumFragmentBytes).value??{};
+   for(const name of inputRoots)if(resolveGenerationExternalInputV1(global.externalNodes,name)===undefined)throw fail("Unknown external input in the sealed generation: "+name,"GENERATION_UNKNOWN_EXTERNAL");
    await progress?.({phase:"assembly",done:0,total:wanted.length});
    const pending=[];let next=0,done=0;
    const launch=()=>{while(pending.length<P.readConcurrency&&next<wanted.length){const name=wanted[next++],job=readFragment(manifest.owners[name]).then(fragment=>{if(!fragment)throw fail("Fragment of "+name+" is missing","GENERATION_INCOMPLETE");return fragment;});job.catch(()=>{});pending.push(job);}};
@@ -600,7 +606,7 @@ export function createGenerationStoreV1({root,fs=createNodeFilePortV1(),lease,ho
    const external=new Set();
    if(keep){
     for(const edge of edges.values())if(global.externalNodes?.[edge.target]!==undefined)external.add(edge.target);
-    for(const name of referenced)if(global.externalNodes?.[name]!==undefined)external.add(name);
+    for(const name of referenced){const canonical=resolveGenerationExternalInputV1(global.externalNodes,name);if(canonical!==undefined)external.add(canonical);}
     let grown=true;
     while(grown){grown=false;for(const edge of global.edges??[])if((keep.has(edge.source)||external.has(edge.source))&&(keep.has(edge.target)||global.externalNodes?.[edge.target]!==undefined)){edges.set(JSON.stringify(edge),edge);if(global.externalNodes?.[edge.target]!==undefined&&!external.has(edge.target)){external.add(edge.target);grown=true;}}}
    }else for(const edge of global.edges??[])edges.set(JSON.stringify(edge),edge);

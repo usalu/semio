@@ -5394,6 +5394,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-io-control-testing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-framework-io-ports"
 version = "0.1.0"
 dependencies = [
@@ -5401,6 +5411,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
+ "serde_json",
 ]
 
 [[package]]
@@ -6921,6 +6932,7 @@ dependencies = [
  "semio-framework-pack-record-retained",
  "semio-framework-pack-record-schema",
  "semio-framework-replication-codec",
+ "semio-framework-replication-wire-core",
  "semio-framework-trace",
  "semio-framework-trace-memory-testing",
  "semio-framework-value",
@@ -7432,6 +7444,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -8313,6 +8326,7 @@ dependencies = [
  "semio-framework-ui-render-shader-contract",
  "semio-framework-ui-render-text",
  "semio-framework-ui-styling",
+ "semio-framework-value",
  "taffy",
 ]
 
@@ -9578,6 +9592,7 @@ version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
+ "serde_json",
  "syn 2.0.119",
 ]
 
@@ -9600,6 +9615,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "serde",
  "serde_json",
 ]

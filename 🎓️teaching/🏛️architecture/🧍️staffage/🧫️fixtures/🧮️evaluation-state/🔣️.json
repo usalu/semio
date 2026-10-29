@@ -1,0 +1,13 @@
+{
+  "description": "Properties of the evaluated state of the reference walker: determinism, shape rings, distributed loads, load scales, bounds and kinematics.",
+  "ringMinimums": { "capsule": 24, "ellipse": 32 },
+  "distributedLoad": {
+    "pose": "stand",
+    "load": { "id": "rain", "kind": "snow", "title": { "en": "Distributed test load", "de": "Verteilte Testlast" }, "bone": "torso", "fxN": 0, "fyN": 0, "distributed": { "bone": "torso", "fromM": 0.05, "toM": 0.45, "wxNPerM": 10, "wyNPerM": -100 }, "source": "illustrative" },
+    "expected": { "count": 8, "totalFxN": 4, "totalFyN": -40, "centroidAlongBoneM": 0.25 }
+  },
+  "loadScale": { "clip": "bag-swing", "timeS": 1, "load": "shoulder-bag", "fyN": -63.739 },
+  "periodicMeanVelocity": { "clip": "walk", "tolerance": 0.01 },
+  "boundsPose": "stand",
+  "unknown": { "pose": "ghost", "clip": "ghost" }
+}

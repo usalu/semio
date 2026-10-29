@@ -1,0 +1,10 @@
+curt-w1 curt-w1 -1.56 4.15 1.15 1.8 1 4.5 curtain
+curt-e1 curt-e1 1.37 4.15 1.15 1.8 -1 4.51 curtain
+curt-w2 curt-w2 -3.97 5.1 1.15 2.375 -1 4.6 curtain
+curt-e2 curt-e2 3.79 5.1 1.15 2.375 1 4.61 curtain
+curt-w3 curt-w3 -5.47 5.08 1.15 2.4 1 4.62 curtain
+curt-e3 curt-e3 5.29 5.08 1.15 2.4 -1 4.63 curtain
+curt-w4 curt-w4 -6.97 5.05 1.15 2.425 -1 4.64 curtain
+curt-e4 curt-e4 6.79 5.05 1.15 2.425 1 4.65 curtain
+cap-w cap-w -3.0 9.6 1.4 1.3 1 4.7 plate
+cap-e cap-e 3.0 9.6 1.4 1.3 -1 4.71 plate

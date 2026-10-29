@@ -37,7 +37,7 @@ test("maintenance command vectors agree with the closed schema and independent S
 });
 
 test("declared native maintenance controls retain the genuine Original through actual dispatcher and summary",async()=>{
- const root=resolve(import.meta.dir,"../../../../../../../../.."),project=JSON.parse(readFileSync(new URL("../../../📋️project.json",import.meta.url),"utf8")),source=readFileSync(new URL("../📜️script.ts",import.meta.url),"utf8"),start=source.indexOf("export class InactiveCargoRetirementScript");
+ const root=resolve(import.meta.dir,"../../../../../../../../.."),project=JSON.parse(readFileSync(new URL("../📋️project.json",import.meta.url),"utf8")),source=readFileSync(new URL("../📜️script.ts",import.meta.url),"utf8"),start=source.indexOf("export class InactiveCargoRetirementScript");
  expect(start).toBeGreaterThan(0);
  const compiled=ts.transpileModule(source.slice(start,source.indexOf("\n/** 🪪️",start)).replace("export class","class"),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText,summaryValidator=new Ajv({strict:true}).compile({$schema:schema.$schema,definitions:schema.definitions,$ref:"#/definitions/Summary"});
  for(const row of fixture.targets){
@@ -54,7 +54,7 @@ test("declared native maintenance controls retain the genuine Original through a
    for(const refused of fixture.commands.filter(item=>!item.accepted)){events.length=0;await expect(new Script(root,root,original).run(refused.args)).rejects.toThrow("Expected cache-retire-inactive");expect(events).toEqual([]);}
   });
  }
- const testTarget=project.targets["test-cargo-retirement"];expect(testTarget.options.command).toBe("repo ./📜️script.ts test cargo-retirement");expect(testTarget.metadata.semio.execution).toEqual({version:1,kind:"source"});
+ const testTarget=JSON.parse(readFileSync(new URL("../../../📋️project.json",import.meta.url),"utf8")).targets["test-cargo-retirement"];expect(testTarget.options.command).toBe("repo ./📜️script.ts test cargo-retirement");expect(testTarget.metadata.semio.execution).toEqual({version:1,kind:"source"});
 });
 
 test("actual maintenance result distinguishes admitted plans from completed retirement with SQLite totals",async()=>{

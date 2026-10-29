@@ -209,14 +209,64 @@ test("captures bounded child output and terminates a timed-out process tree", as
   expect(readFileSync(resolve(domainRoot, "📦️artifacts/🏃️contract-capture/🟦️.ts"), "utf8")).toContain('["taskkill", "/pid", String(child.pid), "/t", "/f"]');
 }, { timeout: 10_000 });
 
-test("keeps policy, bootstrap and prune executable coordinates source-relative", async () => {
+test("keeps policy and bootstrap coordinates and invokes the direct prune owner", async () => {
   const { CACHE_BOOTSTRAP_EXECUTABLE } = await import("../../📇️inventory/🧮️composition/🟦️.ts");
   const source = await import("../../🔍️discovery/📂️source/🟦️.ts");
   expect(resolve(domainRoot, fixture.coordinates.policy)).toBe(source.CACHE_POLICY_PATH);
   expect(resolve(domainRoot, fixture.coordinates.bootstrap)).toBe(CACHE_BOOTSTRAP_EXECUTABLE);
-  const rootConsumer = readFileSync(resolve(repoRoot, fixture.coordinates.rootPruneConsumer), "utf8");
-  expect(rootConsumer).toContain("⚡️caching/📜️script.ts");
-  expect(rootConsumer).toContain("cache-prune");
+  const path = resolve(repoRoot, fixture.coordinates.rootPruneConsumer), syntax = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true);
+  const imports = syntax.statements.filter(ts.isImportDeclaration), owner = resolve(domainRoot, "🧹️pruning/📋️orchestration/🟦️.ts");
+  const bindings = imports.flatMap(row => {
+    const { importClause, moduleSpecifier } = row;
+    if (!importClause || importClause.isTypeOnly || !importClause.namedBindings || !ts.isNamedImports(importClause.namedBindings) || !ts.isStringLiteral(moduleSpecifier)) return [];
+    return importClause.namedBindings.elements.filter(binding => !binding.isTypeOnly && (binding.propertyName ?? binding.name).text === "CachePruneScript").map(binding => ({ name: binding.name.text, path: resolve(dirname(path), moduleSpecifier.text) }));
+  });
+  expect(bindings).toHaveLength(1);
+  expect(bindings[0]!.path).toBe(owner);
+  for (const row of imports) if (ts.isStringLiteral(row.moduleSpecifier) && row.moduleSpecifier.text.startsWith(".")) expect(resolve(dirname(path), row.moduleSpecifier.text)).not.toBe(resolve(domainRoot, "📜️script.ts"));
+  const clean = syntax.statements.find((node): node is ts.ClassDeclaration => ts.isClassDeclaration(node) && node.name?.text === "CleanScript");
+  const method = clean?.members.find((node): node is ts.MethodDeclaration => ts.isMethodDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === "runCachePrune");
+  expect(method?.body).toBeDefined();
+  const body = method!.body!, nodes: ts.Node[] = [];
+  const visit = (node: ts.Node): void => { nodes.push(node); ts.forEachChild(node, visit); };
+  visit(body);
+  const unwrap = (node: ts.Expression): ts.Expression => ts.isParenthesizedExpression(node) ? unwrap(node.expression) : node;
+  const thisField = (node: ts.Expression | undefined, name: string): boolean => !!node && ts.isPropertyAccessExpression(node) && node.expression.kind === ts.SyntaxKind.ThisKeyword && node.name.text === name;
+  const calls = nodes.filter((node): node is ts.CallExpression => ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "run" && ts.isNewExpression(unwrap(node.expression.expression)));
+  expect(calls).toHaveLength(1);
+  const call = calls[0]!, construct = unwrap((call.expression as ts.PropertyAccessExpression).expression) as ts.NewExpression;
+  expect(ts.isIdentifier(construct.expression) && construct.expression.text).toBe(bindings[0]!.name);
+  expect(construct.arguments).toHaveLength(3);
+  expect(ts.isIdentifier(construct.arguments![0]!) && (construct.arguments![0] as ts.Identifier).text).toBe("cachingRoot");
+  expect(thisField(construct.arguments![1], "repoRoot")).toBe(true);
+  expect(thisField(construct.arguments![2], "invocation")).toBe(true);
+  expect(ts.isAwaitExpression(call.parent)).toBe(true);
+  const coordinate = nodes.find((node): node is ts.VariableDeclaration => ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.name.text === "cachingRoot")?.initializer;
+  expect(coordinate && ts.isCallExpression(coordinate)).toBe(true);
+  const join = coordinate as ts.CallExpression;
+  expect(ts.isIdentifier(join.expression) && join.expression.text).toBe("join");
+  expect(join.arguments).toHaveLength(2);
+  expect(thisField(join.arguments[0], "root")).toBe(true);
+  expect(ts.isStringLiteralLike(join.arguments[1]!) && (join.arguments[1] as ts.StringLiteralLike).text).toBe(relative(repoRoot, domainRoot).replaceAll("\\", "/"));
+  expect(method!.parameters).toHaveLength(1);
+  expect(ts.isIdentifier(method!.parameters[0]!.name) && method!.parameters[0]!.name.text).toBe("dry");
+  expect(method!.parameters[0]!.type?.kind).toBe(ts.SyntaxKind.BooleanKeyword);
+  expect(call.arguments).toHaveLength(1);
+  const dry = call.arguments[0]!;
+  expect(ts.isConditionalExpression(dry)).toBe(true);
+  if (!ts.isConditionalExpression(dry)) return;
+  expect(ts.isIdentifier(dry.condition) && dry.condition.text).toBe("dry");
+  expect(ts.isArrayLiteralExpression(dry.whenTrue) && dry.whenTrue.elements.map(node => ts.isStringLiteralLike(node) ? node.text : null)).toEqual(["--dry-run"]);
+  expect(ts.isArrayLiteralExpression(dry.whenFalse) && dry.whenFalse.elements.length).toBe(0);
+  const guards = body.statements.filter(ts.isIfStatement);
+  const unreadable = guards.find(node => ts.isPrefixUnaryExpression(node.expression) && node.expression.operator === ts.SyntaxKind.ExclamationToken && ts.isIdentifier(node.expression.operand) && node.expression.operand.text === "processes");
+  const active = guards.find(node => ts.isCallExpression(node.expression) && ts.isPropertyAccessExpression(node.expression.expression) && ts.isIdentifier(node.expression.expression.expression) && node.expression.expression.expression.text === "processes" && node.expression.expression.name.text === "some");
+  for (const guard of [unreadable, active]) {
+    expect(guard).toBeDefined();
+    expect(guard!.end).toBeLessThan(call.getStart(syntax));
+    expect(ts.isBlock(guard!.thenStatement) && guard!.thenStatement.statements.some(ts.isReturnStatement)).toBe(true);
+  }
+  expect(method!.getText(syntax)).toContain("cache-prune");
 });
 
 test("registers the exact Bun and Nx source closure", () => {
@@ -225,6 +275,7 @@ test("registers the exact Bun and Nx source closure", () => {
   expect(project.targets[fixture.route.target]?.inputs).toEqual([fixture.route.namedInput]);
   const inputs = new Set(project.namedInputs?.[fixture.route.namedInput] ?? []);
   for(const input of inputs){const path=String(input).replace("{projectRoot}",domainRoot).replace("{workspaceRoot}",repoRoot);if(!/[?*\[\]{}]/u.test(path))expect(existsSync(path),String(input)).toBe(true);}
+  expect(inputs.has(`{workspaceRoot}/${fixture.coordinates.rootPruneConsumer}`), fixture.coordinates.rootPruneConsumer).toBe(true);
   for (const owner of fixture.owners) expect(inputs.has(`{projectRoot}/${relative(domainRoot, resolve(repoRoot, owner.path)).replaceAll("\\", "/")}`), owner.path).toBe(true);
   for (const path of [
     "{projectRoot}/📋️project.json",

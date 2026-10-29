@@ -1,0 +1,37 @@
+# Custom Receiver Erased-Source Audit
+
+Read-only source review following actual proctor build 81996 E0277; no compilation or runtime claim.
+
+Replication IDs receiving (🧰️framework/🔨️modules/📡️replication/🆔️ids/🛬️receiving/🦀️.rs:5,12) implement NativeReceive with implicit Sized I. Canonical NativeReceive accepts I:?Sized (native-owned/🦀️.rs:31), and generated child projections borrow dyn NativeValueSource. Both ID implementations therefore need their actual mapped-receiver dependency to admit the same original. NativeMappedReceiver (native-owned/🔄️map/🦀️.rs:8,11,17) also has implicit Sized bounds; its fn()->(I,U) marker cannot represent unsized I in that first tuple position. Changing the two ID impl bounds alone cannot resolve this dependency.
+
+The existing mapped ownership/funding law must remain: birth adds wrapper ancestor depth (9–15), advance checks complete five-axis quote before invoking child (18–19), take includes actual wrapper transfer bytes and invokes infallible from_native only after child completion (21–22), close delegates funded child custody (23–26). Existing mounted test 🔄️map/🧪️tests/🦀️.rs:11–21 exercises cancellation prefixes, actual allocator receipts, five-axis refusal with stable quote, and completed-output transfer. It currently instantiates DslValue; that test does not itself establish erased-source coverage.
+
+Specialized flat-record port is distinct: NativeRecordSource (record/🦀️.rs:12–17) exposes borrowed String and Number, whereas NativeValueSource exposes heterogeneous child views. native_flat_record_receive macro line37 and receiver bounds (record/🧳️receiver/🦀️.rs:7,11,17,41) require that specialized port. Merely adding ?Sized does not make dyn NativeValueSource implement NativeRecordSource. Known macro callers are DSL receive tests, named-list index receiving tests, native-owned list tests, and original tests; no production macro call appeared in the bounded framework scan. Owners were notified; this is an explicit trait-port distinction, not evidence that an unobserved path already failed.
+
+Strict smoke identity property confirmed independently: server contract ServerInstanceDefinition (🧰️framework/🛍️products/🖥️server/🔨️modules/🧬️contract/🦀️.rs:399–402) serializes id; public()420–422 preserves it. The exact assertion is body.id equal to teaching-proctor.
+
+## Authored Repair Review
+
+Read-only current-tree follow-up: IDs receiving now uses NativeValueSource+?Sized for both implementations. Common NativeMappedReceiver struct8 and impls11/17 now consistently admit ?Sized; PhantomData<fn(&I)->U> uses a borrowed input parameter rather than an unsized tuple member. Existing ownership/funding methods remain unchanged in the reviewed source. No new by-value I method requirement found.
+
+UI axis_value macro (ui/🌐️locale/🧾️value/🦀️.rs:12–20) consistently changes both NativeScalarValue and NativeReceive input bounds; reads remain borrowed original.text(). LocalizedLabel receiving13 delegates to the same mapped receiver, with derived terminology/language structs and completed-owned String adoption unchanged. Energy EntityId and ScheduleId scalar implementations likewise admit ?Sized on both scalar/receive sides (energy model ids-and-fixed-table:35–42; schedule:53–60), delegating borrowed u32 reads. Part21 receiving struct15 and impls19/24 consistently admit erased sources and retain the existing binding, funding, output and close phases.
+
+No concrete remaining Sized method requirement, invalid unsized tuple marker, or duplicate impl conflict found in these reviewed authored implementations. This is source consistency only; it does not certify compilation or plugin test execution. Specialized NativeRecordSource flat-record and specialized list ports were not broadened or replaced in these reviewed changes, preserving the distinct contracts documented above.
+
+## Actual UI Locale Named Law: Coverage Boundary
+
+Root reports25385 authoritative terminal0. Independently inspected actual ui-erased-source.log: named value::locale_terminology_value_round_trip_tests::declared_axes_and_labels_receive_actual_erased_sources ... ok;1passed/0failed/16filtered, followed by repo stagecomplete. This is actual nonzero Rust execution, not compilation-only evidence.
+
+Current mounted test is locale/🧪️tests/🌐️axis-value/🦀️.rs:27, mounted from locale/🧾️value/🦀️.rs:39–41 under the package library. It statically requires NativeReceive<dyn NativeValueSource> for Locale, Terminology AND LocalizedLabel. Its RUNTIME loops borrow each declared fixture locale/terminology string as &dyn NativeValueSource, invoke NativeScalarValue<dyn NativeValueSource>::read, compare as_str and independently compare serde_json serialization to the authored fixture value. This confirms erased scalar source reading and concrete declared-axis wire parity.
+
+Important exact limit: despite its broad name, this filter does NOT construct or receive a LocalizedLabel, begin/advance/take a NativeReceive cursor, issue/fund receive/retirement grants, assert physical heap receipts or drain funded closure. LocalizedLabel coverage here is compile-time trait availability only. The other16tests are filtered; any existing localized label/funded retirement tests must remain separate evidence and must not be inferred from this pass. The production macro supports ?Sized source bounds, but Source capability is not execution of every cursor branch.
+
+Ledger may now mark this exact named law executed1/0 while describing it as erased scalar axes runtime plus axes/label trait compatibility. Do not claim actual funded LocalizedLabel receive/closure from25385. No test added/launched, Source edited or root handle polled by this audit.
+
+## PagedMap Facade Law: Exact Pre-Run Scope
+
+Read-only current named law shared_original_paged_map_supports_erased_receiving_and_funded_default at value/📦️paged/🛬️receive/🗂️map/🧪️tests/🦀️.rs:8. The already resolved owning semio-framework-value package mounts value→paged→native_receive→maps→cfg(test) tests. This review launches nothing and claims no execution result.
+
+STATIC coverage: supported<T:Sync+NativeReceive<dyn NativeValueSource>+NativeDefault>() instantiates PagedMap<u32,4096>, so actual type compatibility with Sync/erased-source receiving/default is compiler-checked. RUNTIME coverage: native_default_demand is quoted, funded helper provides items1/copy>=4096/capacity exact/release exact/depth>=1; native_default returns the actual empty map/progress, progress.fits(grant) and len0 are asserted, then drain(map) constructs ControlledRetirement and repeatedly funds actual next_demand until terminal, with10000turn ceiling. This is real default construction and funded EMPTY-owner closure when executed, beyond a compile-only trait check.
+
+Limit: no actual erased source is borrowed/read by THIS law; it does not begin/advance/take a receive cursor, receive nonempty entries, test a non-Sync rejection, deny each grant axis or observe physical heap/receipt equality. The adjacent original_map_keys_receive_in_authored_order_and_reject_duplicates has nonempty concrete DslValue receive, denied grants/heap assertions and prefix cancellation but is a DIFFERENT test filter. Do not promote its Source assertions to coverage of this named filter. Existing portable5case oracle remains distinct. The name supports broad static erasure capability but narrower runtime default/empty closure. No concrete issue blocks the planned exact test; retain precise evidence wording after actual log result.

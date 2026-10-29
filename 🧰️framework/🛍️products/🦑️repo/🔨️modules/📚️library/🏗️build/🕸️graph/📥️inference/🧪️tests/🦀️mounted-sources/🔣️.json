@@ -197,6 +197,32 @@
    "resolved": false,
    "reason": "no-entries",
    "outside": []
+  },
+  {
+   "name": "dimensional-macro-values-with-static-test-mounts",
+   "mechanism": "macro declares values, invocation modules statically mount shared tests",
+   "crate": "nodes/crate",
+   "files": {
+    "nodes/crate/Cargo.toml": "[package]\nname = \"nodes\"\nversion = \"0.1.0\"\nedition = \"2021\"\n[lib]\npath = \"../owner.rs\"\n",
+    "nodes/owner.rs": "macro_rules! node { ($dimension:literal) => { #[cfg(test)] const DIMENSION: usize = $dimension; }; }\n#[path = \"schema/planar.rs\"] mod planar;\n#[path = \"schema/volumetric.rs\"] mod volumetric;\n",
+    "nodes/schema/planar.rs": "node!(2);\n#[cfg(test)] #[path = \"../tests.rs\"] mod tests;\n",
+    "nodes/schema/volumetric.rs": "node!(3);\n#[cfg(test)] #[path = \"../tests.rs\"] mod tests;\n",
+    "nodes/tests.rs": "#[test] fn dimensional_owner() { assert!([2, 3].contains(&super::DIMENSION)); }\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "nodes/owner.rs",
+    "nodes/schema/planar.rs",
+    "nodes/schema/volumetric.rs",
+    "nodes/tests.rs"
+   ],
+   "outside": [
+    "nodes/owner.rs",
+    "nodes/schema/planar.rs",
+    "nodes/schema/volumetric.rs",
+    "nodes/tests.rs"
+   ]
   }
  ]
 }

@@ -1,0 +1,34 @@
+cargo-features = ["trim-paths"]
+
+[package]
+name = "staffage-dwg"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.95"
+description = "Staffage archive DWG export: ModelScene JSON to a genuine AC1024 drawing through the in-repo Rust writer; CLI and raw C-ABI wasm."
+
+[lib]
+name = "staffage_dwg"
+path = "🦀️.rs"
+crate-type = ["rlib", "cdylib"]
+
+[[bin]]
+name = "staffage-dwg"
+path = "🚀️cli/🦀️.rs"
+
+[[test]]
+name = "dwg_reopen"
+path = "../../../../../🧪️tests/🖊️dwg-reopen/🦀️.rs"
+
+[dependencies]
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
+semio-s-artifact-stdio-dwg-geometry = { path = "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/🧮️geometry/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg-snapshot = { path = "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg-snapshot-objects = { path = "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️objects/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg-write = { path = "../../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+acadrust = { version = "0.5.5", default-features = false }
+
+[workspace]

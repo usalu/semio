@@ -1,0 +1,7 @@
+# Authored Cargo Build Script Inventory
+
+Read-only physical authored Source traversal inspected 3597 Cargo manifests, excluding symlinks, hidden infrastructure, generated directories from cache policy and reserved preservation/retirement capsules. No compilation or graph run. A second independent textual scan checked every build assignment and every ASCII build.rs filename in that same Source universe.
+
+Found exactly one existing build script and one explicit enabled build assignment (19 other manifests explicitly disable build scripts): renderer engine/wgpu Cargo.toml declares build.rs. Its literal include closure is build.rs plus ../../🏗️builder/🦀️.rs, combined 717 UTF-8 bytes. No missing includes and no ordinary or target-specific build-dependencies were found in its manifest. Manual effect review confirms only Windows target OS/environment selection and bin stack linker argument emission. No authored generator or external-build-dependency script was found in this traversal.
+
+The detailed generated inventory is generated/authored-build-scripts.json (temporary, contains only paths, sizes and digests; no source copies). Existing effect assertion contract was absent at audit time; root is adding closed hash-bound metadata for this sole current link-only case. Generic unknown scripts must continue to refuse. This count concerns actual authored Source, not third-party dependency sources or ticket fixture copies.

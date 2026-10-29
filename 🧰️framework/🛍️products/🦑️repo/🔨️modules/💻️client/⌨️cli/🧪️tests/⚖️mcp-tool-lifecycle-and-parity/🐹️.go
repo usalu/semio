@@ -10,6 +10,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -441,7 +442,7 @@ func TestExhaustiveParityTechnologyTree(t *testing.T) {
 		if err != nil {
 			t.Fatalf("CLI technology tree failed: %v", err)
 		}
-		toolResult := ToolTechnologyTree()
+		toolResult := ToolTechnologyTree(context.Background())
 		if toolResult.Error != "" {
 			t.Fatalf("ToolTechnologyTree returned error: %s", toolResult.Error)
 		}
@@ -452,7 +453,7 @@ func TestExhaustiveParityTechnologyTree(t *testing.T) {
 	})
 
 	t.Run("technologies are sorted alphabetically", func(t *testing.T) {
-		mcpOut := toolOutputText(ToolTechnologyTree())
+		mcpOut := toolOutputText(ToolTechnologyTree(context.Background()))
 		lines := strings.Split(strings.TrimSpace(mcpOut), "\n")
 		var technologyNames []string
 		for _, line := range lines {

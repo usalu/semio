@@ -1,0 +1,13 @@
+{
+  "extends": "../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun", "react", "react-dom", "vite/client"],
+    "paths": {
+      "@teaching/staffage-react/app": ["../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/📚️app/🟦️.tsx"],
+      "@teaching/staffage-react": ["../../../🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"],
+      "@teaching/staffage": ["../../../📦️packages/🟦️typescript/🟦️.ts"]
+    }
+  },
+  "include": ["./📜️script.ts", "../../🟦️.ts", "../../🏗️builder/**/*.ts", "../../🧪️tests/**/*.ts"],
+  "exclude": ["**/node_modules/**"]
+}

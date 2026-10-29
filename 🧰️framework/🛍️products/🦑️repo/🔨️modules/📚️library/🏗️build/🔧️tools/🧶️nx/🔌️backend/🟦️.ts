@@ -9,6 +9,7 @@ import type {BackendContextV1,BackendExecutionContextV1,BuildBackendV1} from "..
 /** 🔌️ nx behind the neutral interface: its setup, reset, storage, cache tools and execution, moved here from the neutral CLI so that neutral code never names it. */
 export const backend:BuildBackendV1=Object.freeze({
  id:"nx",
+ async graphExternalInputs(){return(await import("../../../../🟨️.mjs")).nxBuildEngineExternalInputsV1();},
  bootstrapArguments(args:readonly string[]){const command=args[0];if(command==="tools")return ["--version"];if(command==="reset")return ["reset"];return command==="watch"||buildOperationHasNeutralBootstrapV1(command??"")?undefined:nxOperationArgumentsV1(args);},
  async setup(context:BackendContextV1){const {root,invocation,phase:phaseControl}=context;
   const adapter=await import("../../../../⚡️caching/🚀️bootstrap/📜️script.ts");await adapter.runOwnedNxInvocationV1(root,["--version"],invocation,phaseControl);

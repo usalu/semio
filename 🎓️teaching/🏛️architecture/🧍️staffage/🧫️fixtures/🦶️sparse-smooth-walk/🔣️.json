@@ -1,0 +1,1581 @@
+{
+  "id": "sparse-smooth-walk",
+  "category": "humans",
+  "title": {
+    "en": "Sparse smooth walker",
+    "de": "Spärlicher glatter Fußgänger"
+  },
+  "summary": {
+    "en": "A two-legged adult walker with planted-foot root motion, used as the engine reference fixture.",
+    "de": "Ein zweibeiniger erwachsener Fußgänger mit Standfuß-Wurzelbewegung als Referenz-Fixture der Engine."
+  },
+  "tags": [
+    "human",
+    "walker",
+    "fixture"
+  ],
+  "provenance": {
+    "author": "Semio staffage core engine",
+    "method": "handcrafted",
+    "created": "2026-10-29",
+    "references": [
+      {
+        "id": "winter-2009",
+        "citation": "Winter, D. A. (2009). Biomechanics and Motor Control of Human Movement, 4th ed., Wiley. Table 4.1, segment masses and centres of mass, scaled to 75 kg."
+      },
+      {
+        "id": "ashrae-2021",
+        "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort."
+      },
+      {
+        "id": "iso-9920-2007",
+        "citation": "ISO 9920:2007 Ergonomics of the thermal environment, estimation of thermal insulation and water vapour resistance of a clothing ensemble."
+      },
+      {
+        "id": "dubois-1916",
+        "citation": "DuBois, D. and DuBois, E. F. (1916). A formula to estimate the approximate surface area if height and weight be known. Archives of Internal Medicine 17, 863-871."
+      },
+      {
+        "id": "iso-8996-2021",
+        "citation": "ISO 8996:2021 Ergonomics of the thermal environment, determination of metabolic rate."
+      }
+    ],
+    "notes": {
+      "en": "A minimal but complete fixture; poses are authored estimates of gait key frames.",
+      "de": "Eine minimale, aber vollständige Fixture; die Posen sind Schätzungen von Gang-Schlüsselbildern."
+    }
+  },
+  "dimensions": {
+    "heightM": 1.73,
+    "widthM": 0.37,
+    "depthM": 0.46,
+    "massKg": 75.1
+  },
+  "materials": [
+    {
+      "id": "skin",
+      "title": {
+        "en": "Skin",
+        "de": "Haut"
+      },
+      "emissivity": 0.98,
+      "solarAbsorptivity": 0.6,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "cotton-clothing",
+      "title": {
+        "en": "Cotton clothing",
+        "de": "Baumwollkleidung"
+      },
+      "emissivity": 0.95,
+      "solarAbsorptivity": 0.5,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "leather-shoe",
+      "title": {
+        "en": "Leather shoe",
+        "de": "Lederschuh"
+      },
+      "emissivity": 0.9,
+      "solarAbsorptivity": 0.7,
+      "source": "authored-estimate"
+    }
+  ],
+  "rig": {
+    "kind": "anatomical",
+    "root": "pelvis",
+    "bones": [
+      {
+        "id": "pelvis",
+        "parent": null,
+        "title": {
+          "en": "Pelvis",
+          "de": "Becken"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": 90,
+        "lengthM": 0.1,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -20,
+          "maxDeg": 20
+        },
+        "mass": {
+          "kg": 10,
+          "comX": 0.05,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "torso",
+        "parent": "pelvis",
+        "title": {
+          "en": "Torso",
+          "de": "Rumpf"
+        },
+        "x": 0.1,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.45,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -30,
+          "maxDeg": 45
+        },
+        "mass": {
+          "kg": 27.3,
+          "comX": 0.225,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "head",
+        "parent": "torso",
+        "title": {
+          "en": "Head and neck",
+          "de": "Kopf und Hals"
+        },
+        "x": 0.45,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.22,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -45,
+          "maxDeg": 45
+        },
+        "mass": {
+          "kg": 6.1,
+          "comX": 0.11,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "arm-l",
+        "parent": "torso",
+        "title": {
+          "en": "Left arm",
+          "de": "Linker Arm"
+        },
+        "x": 0.42,
+        "y": 0,
+        "angleDeg": -180,
+        "lengthM": 0.6,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -60,
+          "maxDeg": 170
+        },
+        "mass": {
+          "kg": 3.75,
+          "comX": 0.27,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "thigh-l",
+        "parent": "pelvis",
+        "title": {
+          "en": "Left thigh",
+          "de": "Linker Oberschenkel"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": -180,
+        "lengthM": 0.45,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -30,
+          "maxDeg": 100
+        },
+        "mass": {
+          "kg": 7.5,
+          "comX": 0.1949,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "shank-l",
+        "parent": "thigh-l",
+        "title": {
+          "en": "Left shank",
+          "de": "Linker Unterschenkel"
+        },
+        "x": 0.45,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.43,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -140,
+          "maxDeg": 0
+        },
+        "mass": {
+          "kg": 3.5,
+          "comX": 0.1862,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "foot-l",
+        "parent": "shank-l",
+        "title": {
+          "en": "Left foot",
+          "de": "Linker Fuß"
+        },
+        "x": 0.43,
+        "y": 0,
+        "angleDeg": 90,
+        "lengthM": 0.22,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -50,
+          "maxDeg": 40
+        },
+        "mass": {
+          "kg": 1.1,
+          "comX": 0.11,
+          "comY": -0.04,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "arm-r",
+        "parent": "torso",
+        "title": {
+          "en": "Right arm",
+          "de": "Rechter Arm"
+        },
+        "x": 0.42,
+        "y": 0,
+        "angleDeg": -180,
+        "lengthM": 0.6,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -60,
+          "maxDeg": 170
+        },
+        "mass": {
+          "kg": 3.75,
+          "comX": 0.27,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "thigh-r",
+        "parent": "pelvis",
+        "title": {
+          "en": "Right thigh",
+          "de": "Rechter Oberschenkel"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": -180,
+        "lengthM": 0.45,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -30,
+          "maxDeg": 100
+        },
+        "mass": {
+          "kg": 7.5,
+          "comX": 0.1949,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "shank-r",
+        "parent": "thigh-r",
+        "title": {
+          "en": "Right shank",
+          "de": "Rechter Unterschenkel"
+        },
+        "x": 0.45,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 0.43,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -140,
+          "maxDeg": 0
+        },
+        "mass": {
+          "kg": 3.5,
+          "comX": 0.1862,
+          "comY": 0,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      },
+      {
+        "id": "foot-r",
+        "parent": "shank-r",
+        "title": {
+          "en": "Right foot",
+          "de": "Rechter Fuß"
+        },
+        "x": 0.43,
+        "y": 0,
+        "angleDeg": 90,
+        "lengthM": 0.22,
+        "joint": {
+          "type": "revolute",
+          "minDeg": -50,
+          "maxDeg": 40
+        },
+        "mass": {
+          "kg": 1.1,
+          "comX": 0.11,
+          "comY": -0.04,
+          "distribution": "point",
+          "source": "literature",
+          "reference": "winter-2009"
+        }
+      }
+    ]
+  },
+  "anchors": [
+    {
+      "id": "contact-l",
+      "bone": "foot-l",
+      "x": 0.19,
+      "y": -0.08,
+      "kind": "contact",
+      "title": {
+        "en": "Left sole",
+        "de": "Linker Sohle"
+      },
+      "support": "contact",
+      "normalDeg": 90,
+      "footprintLengthM": 0.12,
+      "footprintWidthM": 0.09,
+      "frictionCoefficient": 0.6
+    },
+    {
+      "id": "contact-r",
+      "bone": "foot-r",
+      "x": 0.19,
+      "y": -0.08,
+      "kind": "contact",
+      "title": {
+        "en": "Right sole",
+        "de": "Rechter Sohle"
+      },
+      "support": "contact",
+      "normalDeg": 90,
+      "footprintLengthM": 0.12,
+      "footprintWidthM": 0.09,
+      "frictionCoefficient": 0.6
+    },
+    {
+      "id": "mouth",
+      "bone": "head",
+      "x": 0.07,
+      "y": -0.09,
+      "kind": "emitter",
+      "title": {
+        "en": "Mouth and nose",
+        "de": "Mund und Nase"
+      }
+    },
+    {
+      "id": "bag-strap",
+      "bone": "torso",
+      "x": 0.4,
+      "y": 0.1,
+      "kind": "load",
+      "title": {
+        "en": "Shoulder bag strap",
+        "de": "Riemen der Umhängetasche"
+      }
+    }
+  ],
+  "geometry": {
+    "elevation": [
+      {
+        "id": "head",
+        "bone": "head",
+        "role": "body",
+        "lod": 0,
+        "z": 5,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "ellipse",
+        "cx": 0.1,
+        "cy": 0,
+        "rx": 0.12,
+        "ry": 0.095,
+        "region": "head-skin",
+        "material": "skin"
+      },
+      {
+        "id": "neck",
+        "bone": "head",
+        "role": "body",
+        "lod": 1,
+        "z": 4,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "capsule",
+        "x0": -0.06,
+        "y0": 0,
+        "x1": 0.06,
+        "y1": 0,
+        "r0": 0.05,
+        "r1": 0.05,
+        "region": "head-skin",
+        "material": "skin"
+      },
+      {
+        "id": "hair",
+        "bone": "head",
+        "role": "detail",
+        "lod": 2,
+        "z": 6,
+        "filled": true,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0.03 0.09 C 0.10 0.15 0.215 0.10 0.215 0 C 0.215 0.06 0.12 0.08 0.03 0.09 Z"
+      },
+      {
+        "id": "torso",
+        "bone": "torso",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.45,
+        "y1": 0,
+        "r0": 0.13,
+        "r1": 0.16,
+        "region": "torso-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "torso-weave",
+        "bone": "torso",
+        "role": "texture",
+        "lod": 3,
+        "z": 3.1,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            0.1,
+            -0.05
+          ],
+          [
+            0.35,
+            -0.05
+          ]
+        ],
+        "closed": false,
+        "region": "torso-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "pelvis",
+        "bone": "pelvis",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.1,
+        "y1": 0,
+        "r0": 0.14,
+        "r1": 0.14,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "arm-l",
+        "bone": "arm-l",
+        "role": "body",
+        "lod": 0,
+        "z": 0.5,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.6,
+        "y1": 0,
+        "r0": 0.045,
+        "r1": 0.035,
+        "region": "arm-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "thigh-l",
+        "bone": "thigh-l",
+        "role": "body",
+        "lod": 0,
+        "z": 1,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.45,
+        "y1": 0,
+        "r0": 0.085,
+        "r1": 0.065,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "shank-l",
+        "bone": "shank-l",
+        "role": "body",
+        "lod": 0,
+        "z": 1,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.43,
+        "y1": 0,
+        "r0": 0.06,
+        "r1": 0.04,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "foot-l",
+        "bone": "foot-l",
+        "role": "body",
+        "lod": 0,
+        "z": 1,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "rect",
+        "x": -0.06,
+        "y": -0.08,
+        "w": 0.27,
+        "h": 0.07,
+        "r": 0.02,
+        "region": "shoes",
+        "material": "leather-shoe"
+      },
+      {
+        "id": "arm-r",
+        "bone": "arm-r",
+        "role": "body",
+        "lod": 0,
+        "z": 6,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.6,
+        "y1": 0,
+        "r0": 0.045,
+        "r1": 0.035,
+        "region": "arm-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "thigh-r",
+        "bone": "thigh-r",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.45,
+        "y1": 0,
+        "r0": 0.085,
+        "r1": 0.065,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "shank-r",
+        "bone": "shank-r",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": 0,
+        "x1": 0.43,
+        "y1": 0,
+        "r0": 0.06,
+        "r1": 0.04,
+        "region": "leg-clothing",
+        "material": "cotton-clothing"
+      },
+      {
+        "id": "foot-r",
+        "bone": "foot-r",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "rect",
+        "x": -0.06,
+        "y": -0.08,
+        "w": 0.27,
+        "h": 0.07,
+        "r": 0.02,
+        "region": "shoes",
+        "material": "leather-shoe"
+      }
+    ],
+    "plan": [
+      {
+        "id": "plan-shoulders",
+        "bone": "torso",
+        "role": "body",
+        "lod": 0,
+        "z": 1,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.12,
+        "ry": 0.23
+      },
+      {
+        "id": "plan-head",
+        "bone": "head",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 0,
+        "rx": 0.1,
+        "ry": 0.09
+      }
+    ]
+  },
+  "poses": [
+    {
+      "id": "stand",
+      "title": {
+        "en": "Standing",
+        "de": "Stehend"
+      },
+      "description": {
+        "en": "Relaxed upright standing on both feet.",
+        "de": "Entspanntes aufrechtes Stehen auf beiden Füßen."
+      },
+      "bones": {},
+      "ground": "auto",
+      "contacts": [
+        "contact-l",
+        "contact-r"
+      ],
+      "thermal": {
+        "activityMet": 1.2,
+        "emitters": {
+          "breath": 0.5
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "stride-left-forward",
+      "title": {
+        "en": "Stride, left foot forward",
+        "de": "Schritt, linker Fuß vorn"
+      },
+      "description": {
+        "en": "Left heel strike, right foot at toe-off, contralateral arm swing.",
+        "de": "Linker Fersenkontakt, rechter Fuß beim Abdruck, gegenläufiger Armschwung."
+      },
+      "bones": {
+        "thigh-l": {
+          "angleDeg": 22
+        },
+        "shank-l": {
+          "angleDeg": -3
+        },
+        "foot-l": {
+          "angleDeg": -19
+        },
+        "thigh-r": {
+          "angleDeg": -18
+        },
+        "shank-r": {
+          "angleDeg": -15
+        },
+        "foot-r": {
+          "angleDeg": -2
+        },
+        "arm-r": {
+          "angleDeg": 25
+        },
+        "arm-l": {
+          "angleDeg": -25
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-l"
+      ],
+      "thermal": {
+        "activityMet": 2.4,
+        "emitters": {
+          "breath": 1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "passing-left-stance",
+      "title": {
+        "en": "Passing, left stance",
+        "de": "Durchschwingen, linkes Standbein"
+      },
+      "description": {
+        "en": "Left foot carries, right leg swings through.",
+        "de": "Linker Fuß trägt, rechtes Bein schwingt durch."
+      },
+      "bones": {
+        "thigh-l": {
+          "angleDeg": 4
+        },
+        "shank-l": {
+          "angleDeg": -10
+        },
+        "foot-l": {
+          "angleDeg": 6
+        },
+        "thigh-r": {
+          "angleDeg": 20
+        },
+        "shank-r": {
+          "angleDeg": -55
+        },
+        "foot-r": {
+          "angleDeg": 20
+        },
+        "arm-r": {
+          "angleDeg": 5
+        },
+        "arm-l": {
+          "angleDeg": -5
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-l"
+      ],
+      "thermal": {
+        "activityMet": 2.4,
+        "emitters": {
+          "breath": 1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "stride-right-forward",
+      "title": {
+        "en": "Stride, right foot forward",
+        "de": "Schritt, rechter Fuß vorn"
+      },
+      "description": {
+        "en": "Right heel strike, left foot at toe-off.",
+        "de": "Rechter Fersenkontakt, linker Fuß beim Abdruck."
+      },
+      "bones": {
+        "thigh-r": {
+          "angleDeg": 22
+        },
+        "shank-r": {
+          "angleDeg": -3
+        },
+        "foot-r": {
+          "angleDeg": -19
+        },
+        "thigh-l": {
+          "angleDeg": -18
+        },
+        "shank-l": {
+          "angleDeg": -15
+        },
+        "foot-l": {
+          "angleDeg": -2
+        },
+        "arm-l": {
+          "angleDeg": 25
+        },
+        "arm-r": {
+          "angleDeg": -25
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-r"
+      ],
+      "thermal": {
+        "activityMet": 2.4,
+        "emitters": {
+          "breath": 1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "passing-right-stance",
+      "title": {
+        "en": "Passing, right stance",
+        "de": "Durchschwingen, rechtes Standbein"
+      },
+      "description": {
+        "en": "Right foot carries, left leg swings through.",
+        "de": "Rechter Fuß trägt, linkes Bein schwingt durch."
+      },
+      "bones": {
+        "thigh-r": {
+          "angleDeg": 4
+        },
+        "shank-r": {
+          "angleDeg": -10
+        },
+        "foot-r": {
+          "angleDeg": 6
+        },
+        "thigh-l": {
+          "angleDeg": 20
+        },
+        "shank-l": {
+          "angleDeg": -55
+        },
+        "foot-l": {
+          "angleDeg": 20
+        },
+        "arm-l": {
+          "angleDeg": 5
+        },
+        "arm-r": {
+          "angleDeg": -5
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-r"
+      ],
+      "thermal": {
+        "activityMet": 2.4,
+        "emitters": {
+          "breath": 1
+        }
+      },
+      "loads": []
+    },
+    {
+      "id": "carry-bag",
+      "title": {
+        "en": "Standing with shoulder bag",
+        "de": "Stehend mit Umhängetasche"
+      },
+      "description": {
+        "en": "Upright with a 5 kg bag hanging from the left shoulder.",
+        "de": "Aufrecht mit einer 5-kg-Tasche an der linken Schulter."
+      },
+      "bones": {
+        "pelvis": {
+          "angleDeg": 2
+        },
+        "torso": {
+          "angleDeg": -3
+        },
+        "arm-l": {
+          "angleDeg": 6
+        }
+      },
+      "ground": "auto",
+      "contacts": [
+        "contact-l",
+        "contact-r"
+      ],
+      "thermal": {
+        "activityMet": 1.4,
+        "emitters": {
+          "breath": 0.6
+        }
+      },
+      "loads": [
+        {
+          "id": "shoulder-bag",
+          "kind": "carried",
+          "title": {
+            "en": "Shoulder bag",
+            "de": "Umhängetasche"
+          },
+          "anchor": "bag-strap",
+          "fxN": 0,
+          "fyN": -49.03,
+          "source": "authored-estimate"
+        }
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "id": "walk",
+      "title": {
+        "en": "Walking",
+        "de": "Gehen"
+      },
+      "description": {
+        "en": "Walking from 4 key poses sampled from the dense gait, joined by C1 smooth interpolation.",
+        "de": "Gehen aus 4 Schlüsselposen des dichten Gangs, verbunden durch glatte C1-Interpolation."
+      },
+      "durationS": 4,
+      "fps": 30,
+      "loop": true,
+      "rootMotion": "plant",
+      "advanceM": 0.921333,
+      "keys": [
+        {
+          "t": 0,
+          "pose": "stride-left-forward",
+          "ease": "smooth",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 34.3205
+            },
+            "shank-l": {
+              "angleDeg": -58.1489
+            },
+            "foot-l": {
+              "angleDeg": 23.8284
+            },
+            "thigh-r": {
+              "angleDeg": 1.7765
+            },
+            "shank-r": {
+              "angleDeg": -59.7515
+            },
+            "foot-r": {
+              "angleDeg": 26.615
+            },
+            "arm-l": {
+              "angleDeg": -25
+            },
+            "arm-r": {
+              "angleDeg": 25
+            }
+          }
+        },
+        {
+          "t": 1,
+          "pose": "stride-left-forward",
+          "ease": "smooth",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 11.3198
+            },
+            "shank-l": {
+              "angleDeg": -48.2443
+            },
+            "foot-l": {
+              "angleDeg": 36.9245
+            },
+            "thigh-r": {
+              "angleDeg": 26.2609
+            },
+            "shank-r": {
+              "angleDeg": -77.7043
+            },
+            "foot-r": {
+              "angleDeg": 33.9434
+            },
+            "arm-l": {
+              "angleDeg": -5
+            },
+            "arm-r": {
+              "angleDeg": 5
+            }
+          }
+        },
+        {
+          "t": 2,
+          "pose": "stride-left-forward",
+          "ease": "smooth",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 1.7765
+            },
+            "shank-l": {
+              "angleDeg": -59.7515
+            },
+            "foot-l": {
+              "angleDeg": 26.615
+            },
+            "thigh-r": {
+              "angleDeg": 34.3205
+            },
+            "shank-r": {
+              "angleDeg": -58.1489
+            },
+            "foot-r": {
+              "angleDeg": 23.8284
+            },
+            "arm-l": {
+              "angleDeg": 25
+            },
+            "arm-r": {
+              "angleDeg": -25
+            }
+          }
+        },
+        {
+          "t": 3,
+          "pose": "stride-left-forward",
+          "ease": "smooth",
+          "bones": {
+            "thigh-l": {
+              "angleDeg": 26.2609
+            },
+            "shank-l": {
+              "angleDeg": -77.7043
+            },
+            "foot-l": {
+              "angleDeg": 33.9434
+            },
+            "thigh-r": {
+              "angleDeg": 11.3198
+            },
+            "shank-r": {
+              "angleDeg": -48.2443
+            },
+            "foot-r": {
+              "angleDeg": 36.9245
+            },
+            "arm-l": {
+              "angleDeg": 5
+            },
+            "arm-r": {
+              "angleDeg": -5
+            }
+          }
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-l",
+          "fromS": 0,
+          "toS": 2.2
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 0.2
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 1.8,
+          "toS": 4
+        },
+        {
+          "anchor": "contact-l",
+          "fromS": 3.8,
+          "toS": 4
+        }
+      ],
+      "phases": [
+        {
+          "id": "left-stance",
+          "fromS": 0,
+          "toS": 2,
+          "title": {
+            "en": "Left stance",
+            "de": "Linkes Standbein"
+          }
+        },
+        {
+          "id": "right-stance",
+          "fromS": 2,
+          "toS": 4,
+          "title": {
+            "en": "Right stance",
+            "de": "Rechtes Standbein"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0,
+          "kind": "contact-on",
+          "title": {
+            "en": "Left heel strike",
+            "de": "Linker Fersenkontakt"
+          },
+          "target": "contact-l"
+        },
+        {
+          "t": 0.2,
+          "kind": "contact-off",
+          "title": {
+            "en": "Right toe-off",
+            "de": "Rechter Abdruck"
+          },
+          "target": "contact-r"
+        },
+        {
+          "t": 1.8,
+          "kind": "contact-on",
+          "title": {
+            "en": "Right heel strike",
+            "de": "Rechter Fersenkontakt"
+          },
+          "target": "contact-r"
+        },
+        {
+          "t": 2.2,
+          "kind": "contact-off",
+          "title": {
+            "en": "Left toe-off",
+            "de": "Linker Abdruck"
+          },
+          "target": "contact-l"
+        }
+      ],
+      "tracks": [
+        {
+          "target": "emitter:breath",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.7
+            },
+            {
+              "t": 2,
+              "v": 1
+            },
+            {
+              "t": 4,
+              "v": 0.7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "idle-breathing",
+      "title": {
+        "en": "Breathing at rest",
+        "de": "Ruhiges Atmen"
+      },
+      "description": {
+        "en": "Standing still with a 4 s breathing cycle and a slight chest and head motion.",
+        "de": "Ruhiges Stehen mit 4-s-Atemzyklus und leichter Brust- und Kopfbewegung."
+      },
+      "durationS": 4,
+      "fps": 30,
+      "loop": true,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "stand",
+          "ease": "smooth"
+        },
+        {
+          "t": 2,
+          "pose": "stand",
+          "ease": "smooth",
+          "bones": {
+            "torso": {
+              "angleDeg": 1
+            },
+            "head": {
+              "angleDeg": -1
+            }
+          }
+        },
+        {
+          "t": 4,
+          "pose": "stand",
+          "ease": "smooth"
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-l",
+          "fromS": 0,
+          "toS": 4
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 4
+        }
+      ],
+      "phases": [
+        {
+          "id": "inhale",
+          "fromS": 0,
+          "toS": 2,
+          "title": {
+            "en": "Inhale",
+            "de": "Einatmen"
+          }
+        },
+        {
+          "id": "exhale",
+          "fromS": 2,
+          "toS": 4,
+          "title": {
+            "en": "Exhale",
+            "de": "Ausatmen"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 0,
+          "kind": "inhale",
+          "title": {
+            "en": "Start of inhalation",
+            "de": "Beginn des Einatmens"
+          }
+        },
+        {
+          "t": 2,
+          "kind": "exhale",
+          "title": {
+            "en": "Start of exhalation",
+            "de": "Beginn des Ausatmens"
+          }
+        }
+      ],
+      "tracks": [
+        {
+          "target": "emitter:breath",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 2,
+              "v": 0
+            },
+            {
+              "t": 2.4,
+              "v": 1
+            },
+            {
+              "t": 3.6,
+              "v": 0.4
+            },
+            {
+              "t": 4,
+              "v": 0
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bag-swing",
+      "title": {
+        "en": "Swinging bag",
+        "de": "Schwingende Tasche"
+      },
+      "description": {
+        "en": "Standing with the shoulder bag; the bag load rises by 30 % at the swing maximum.",
+        "de": "Stehen mit Umhängetasche; die Taschenlast steigt am Schwingungsmaximum um 30 %."
+      },
+      "durationS": 2,
+      "fps": 30,
+      "loop": true,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "carry-bag",
+          "ease": "smooth"
+        },
+        {
+          "t": 1,
+          "pose": "carry-bag",
+          "ease": "smooth",
+          "bones": {
+            "torso": {
+              "angleDeg": -5
+            }
+          }
+        },
+        {
+          "t": 2,
+          "pose": "carry-bag",
+          "ease": "smooth"
+        }
+      ],
+      "contacts": [
+        {
+          "anchor": "contact-l",
+          "fromS": 0,
+          "toS": 2
+        },
+        {
+          "anchor": "contact-r",
+          "fromS": 0,
+          "toS": 2
+        }
+      ],
+      "phases": [
+        {
+          "id": "swing",
+          "fromS": 0,
+          "toS": 2,
+          "title": {
+            "en": "Swing",
+            "de": "Schwingen"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 1,
+          "kind": "motion",
+          "title": {
+            "en": "Swing maximum",
+            "de": "Schwingungsmaximum"
+          }
+        }
+      ],
+      "tracks": [
+        {
+          "target": "load:shoulder-bag",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 1
+            },
+            {
+              "t": 1,
+              "v": 1.3
+            },
+            {
+              "t": 2,
+              "v": 1
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "thermal": {
+    "environment": {
+      "airTempC": 20,
+      "meanRadiantTempC": 20,
+      "relativeHumidity": 0.5,
+      "windMS": 0.2,
+      "windDirectionDeg": 180,
+      "solarWM2": 0,
+      "pressurePa": 101325
+    },
+    "baseMet": 1.2,
+    "regions": [
+      {
+        "id": "head-skin",
+        "title": {
+          "en": "Head and neck skin",
+          "de": "Haut von Kopf und Hals"
+        },
+        "kind": "skin",
+        "material": "skin",
+        "model": "core-resistance",
+        "areaM2": 0.1,
+        "characteristicLengthM": 0.2,
+        "coreTempC": 36.8,
+        "insulationM2KW": 0.05,
+        "metabolicShare": 0.1,
+        "source": "literature",
+        "reference": "dubois-1916"
+      },
+      {
+        "id": "torso-clothing",
+        "title": {
+          "en": "Torso clothing",
+          "de": "Rumpfbekleidung"
+        },
+        "kind": "clothing",
+        "material": "cotton-clothing",
+        "model": "core-resistance",
+        "areaM2": 0.58,
+        "characteristicLengthM": 0.3,
+        "coreTempC": 36.8,
+        "insulationM2KW": 0.14,
+        "metabolicShare": 0.4,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "arm-clothing",
+        "title": {
+          "en": "Arm clothing",
+          "de": "Armbekleidung"
+        },
+        "kind": "clothing",
+        "material": "cotton-clothing",
+        "model": "core-resistance",
+        "areaM2": 0.28,
+        "characteristicLengthM": 0.08,
+        "coreTempC": 36.8,
+        "insulationM2KW": 0.12,
+        "metabolicShare": 0.15,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "leg-clothing",
+        "title": {
+          "en": "Leg clothing",
+          "de": "Beinbekleidung"
+        },
+        "kind": "clothing",
+        "material": "cotton-clothing",
+        "model": "core-resistance",
+        "areaM2": 0.82,
+        "characteristicLengthM": 0.13,
+        "coreTempC": 36.8,
+        "insulationM2KW": 0.14,
+        "metabolicShare": 0.35,
+        "source": "literature",
+        "reference": "iso-9920-2007"
+      },
+      {
+        "id": "shoes",
+        "title": {
+          "en": "Shoes",
+          "de": "Schuhe"
+        },
+        "kind": "surface",
+        "material": "leather-shoe",
+        "model": "passive",
+        "areaM2": 0.12,
+        "characteristicLengthM": 0.1,
+        "metabolicShare": 0,
+        "source": "authored-estimate",
+        "reference": "iso-9920-2007"
+      }
+    ],
+    "emitters": [
+      {
+        "id": "breath",
+        "kind": "breath",
+        "title": {
+          "en": "Exhaled breath",
+          "de": "Ausgeatmete Luft"
+        },
+        "anchor": "mouth",
+        "directionDeg": 0,
+        "carries": "vapour",
+        "temperatureC": 34,
+        "velocityMS": 1.5,
+        "diameterM": 0.03,
+        "vapourKgPerKg": 0.034,
+        "periodS": 4,
+        "dutyFrom": 0.5,
+        "dutyTo": 1,
+        "source": "authored-estimate"
+      }
+    ],
+    "assumptions": [
+      {
+        "en": "Metabolic shares follow the surface-area weighting of the clothed regions.",
+        "de": "Die Stoffwechselanteile folgen der flächengewichteten Verteilung der bekleideten Regionen."
+      },
+      {
+        "en": "Insulation values run from core to outer surface.",
+        "de": "Die Dämmwerte gelten vom Körperkern bis zur Außenoberfläche."
+      }
+    ]
+  },
+  "structure": {
+    "gravityMS2": 9.80665,
+    "dynamics": "inertial",
+    "supports": [],
+    "assumptions": [
+      {
+        "en": "Segments are point masses at the centres of Winter's anthropometric table.",
+        "de": "Segmente sind Punktmassen in den Schwerpunkten der Anthropometrie-Tabelle von Winter."
+      }
+    ],
+    "clinical": false
+  },
+  "presentation": {
+    "defaultPose": "stand",
+    "defaultClip": "walk",
+    "viewpoints": [
+      "elevation",
+      "plan"
+    ]
+  },
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component"
+  ],
+  "completion": "authored"
+}

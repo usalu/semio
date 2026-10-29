@@ -20,6 +20,7 @@
   {"op": "hold", "toolchain": "t1", "holds": false}
  ],
  "environment": [
+    {"name":"configuration custody changes invalidate the binary","left":{"SEMIO_CARGO_CONFIGURATION_DIGESTS":"[old]"},"right":{"SEMIO_CARGO_CONFIGURATION_DIGESTS":"[new]"},"equal":false},
   {"name": "unrelated variables do not change the identity", "left": {"HOME": "/a", "CARGO_TARGET_DIR": "/t"}, "right": {"HOME": "/b", "CARGO_TARGET_DIR": "/t"}, "equal": true},
   {"name": "rustflags change the identity", "left": {"RUSTFLAGS": "-C a"}, "right": {"RUSTFLAGS": "-C b"}, "equal": false},
   {"name": "cargo variables change the identity", "left": {"CARGO_BUILD_JOBS": "2"}, "right": {"CARGO_BUILD_JOBS": "3"}, "equal": false},

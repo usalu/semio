@@ -9,6 +9,7 @@
 package client
 
 import (
+	"context"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -46,13 +47,17 @@ func initTestGitRepo(t *testing.T, branch string) string {
 	return tmpDir
 }
 
-func TestComputeCompositeFingerprintIgnoresUntrackedFiles(t *testing.T) {
+func TestComputeCompositeFingerprintIncludesAuthoredUntrackedFiles(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow real-git-subprocess fingerprint test in short mode")
 	}
 	tmpDir := initTestGitRepo(t, "main")
 
-	firstFingerprint, firstMeta := computeCompositeFingerprint(tmpDir)
+	firstFingerprint, firstMeta, fingerprintErr := computeCompositeFingerprintContext(context.Background(), tmpDir, nil)
+
+	if fingerprintErr != nil {
+		t.Fatal(fingerprintErr)
+	}
 	if firstFingerprint == "" || firstMeta == nil {
 		t.Fatalf("expected first fingerprint and meta to be set, got %q / %+v", firstFingerprint, firstMeta)
 	}
@@ -61,12 +66,16 @@ func TestComputeCompositeFingerprintIgnoresUntrackedFiles(t *testing.T) {
 		t.Fatalf("failed to create untracked file: %v", err)
 	}
 
-	secondFingerprint, secondMeta := computeCompositeFingerprint(tmpDir)
+	secondFingerprint, secondMeta, secondErr := computeCompositeFingerprintContext(context.Background(), tmpDir, nil)
+
+	if secondErr != nil {
+		t.Fatal(secondErr)
+	}
 	if secondFingerprint == "" || secondMeta == nil {
 		t.Fatalf("expected second fingerprint and meta to be set, got %q / %+v", secondFingerprint, secondMeta)
 	}
-	if firstFingerprint != secondFingerprint {
-		t.Fatalf("expected untracked files to be ignored, fingerprint changed from %q to %q", firstFingerprint, secondFingerprint)
+	if firstFingerprint == secondFingerprint {
+		t.Fatalf("expected authored untracked files to change fingerprint, got %q and %q", firstFingerprint, secondFingerprint)
 	}
 }
 
@@ -101,7 +110,11 @@ func TestComputeCompositeFingerprintFallsBackWhenRecursiveSubmoduleStatusFails(t
 		t.Fatalf("failed to remove nested gitdir: %v", err)
 	}
 
-	_, meta := computeCompositeFingerprint(tmpDir)
+	_, meta, fingerprintErr := computeCompositeFingerprintContext(context.Background(), tmpDir, nil)
+
+	if fingerprintErr != nil {
+		t.Fatal(fingerprintErr)
+	}
 	if _, ok := meta.SubmodulePointers["child"]; !ok {
 		t.Fatalf("expected fallback submodule status to include child pointer, got %+v", meta.SubmodulePointers)
 	}

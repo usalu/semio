@@ -1,0 +1,160 @@
+{
+  "cases": [
+    {
+      "name": "qualified completed generated directory",
+      "facts": {
+        "owner": true,
+        "binding": true,
+        "ready": true,
+        "completed": true,
+        "identity": true,
+        "sameDevice": true,
+        "directory": true,
+        "live": false,
+        "fixture": false
+      },
+      "retire": true
+    },
+    {
+      "name": "refuse owner",
+      "facts": {
+        "owner": false,
+        "binding": true,
+        "ready": true,
+        "completed": true,
+        "identity": true,
+        "sameDevice": true,
+        "directory": true,
+        "live": false,
+        "fixture": false
+      },
+      "retire": false
+    },
+    {
+      "name": "refuse binding",
+      "facts": {
+        "owner": true,
+        "binding": false,
+        "ready": true,
+        "completed": true,
+        "identity": true,
+        "sameDevice": true,
+        "directory": true,
+        "live": false,
+        "fixture": false
+      },
+      "retire": false
+    },
+    {
+      "name": "refuse ready",
+      "facts": {
+        "owner": true,
+        "binding": true,
+        "ready": false,
+        "completed": true,
+        "identity": true,
+        "sameDevice": true,
+        "directory": true,
+        "live": false,
+        "fixture": false
+      },
+      "retire": false
+    },
+    {
+      "name": "refuse completed",
+      "facts": {
+        "owner": true,
+        "binding": true,
+        "ready": true,
+        "completed": false,
+        "identity": true,
+        "sameDevice": true,
+        "directory": true,
+        "live": false,
+        "fixture": false
+      },
+      "retire": false
+    },
+    {
+      "name": "refuse identity",
+      "facts": {
+        "owner": true,
+        "binding": true,
+        "ready": true,
+        "completed": true,
+        "identity": false,
+        "sameDevice": true,
+        "directory": true,
+        "live": false,
+        "fixture": false
+      },
+      "retire": false
+    },
+    {
+      "name": "refuse sameDevice",
+      "facts": {
+        "owner": true,
+        "binding": true,
+        "ready": true,
+        "completed": true,
+        "identity": true,
+        "sameDevice": false,
+        "directory": true,
+        "live": false,
+        "fixture": false
+      },
+      "retire": false
+    },
+    {
+      "name": "refuse directory",
+      "facts": {
+        "owner": true,
+        "binding": true,
+        "ready": true,
+        "completed": true,
+        "identity": true,
+        "sameDevice": true,
+        "directory": false,
+        "live": false,
+        "fixture": false
+      },
+      "retire": false
+    },
+    {
+      "name": "refuse live",
+      "facts": {
+        "owner": true,
+        "binding": true,
+        "ready": true,
+        "completed": true,
+        "identity": true,
+        "sameDevice": true,
+        "directory": true,
+        "live": true,
+        "fixture": false
+      },
+      "retire": false
+    },
+    {
+      "name": "refuse fixture",
+      "facts": {
+        "owner": true,
+        "binding": true,
+        "ready": true,
+        "completed": true,
+        "identity": true,
+        "sameDevice": true,
+        "directory": true,
+        "live": false,
+        "fixture": true
+      },
+      "retire": false
+    }
+  ],
+  "cancellationBoundaries": [
+    "payload-empty",
+    "intent-removed",
+    "receipt-removed",
+    "capsule-removed"
+  ]
+}

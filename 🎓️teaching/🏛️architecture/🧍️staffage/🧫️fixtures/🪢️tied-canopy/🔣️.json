@@ -1,0 +1,91 @@
+{
+ "case": "🪢️tied-canopy",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "structural",
+ "materials": [
+  {
+   "id": "steel",
+   "elasticModulusPa": 210000000000.0
+  }
+ ],
+ "root": {
+  "x": 0,
+  "y": 0,
+  "angleDeg": 0
+ },
+ "bones": [
+  {
+   "id": "canopy",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 2.0,
+   "mass": {
+    "kg": 163.09887869520895,
+    "comX": 1.0,
+    "comY": 0,
+    "distribution": "uniform"
+   },
+   "section": {
+    "areaM2": 0.00285,
+    "secondMomentM4": 1.943e-05,
+    "extremeFibreM": 0.1,
+    "material": "steel"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "wall-pin",
+   "bone": "canopy",
+   "x": 0,
+   "y": 0,
+   "kind": "support",
+   "support": "pin"
+  },
+  {
+   "id": "tie-rod",
+   "bone": "canopy",
+   "x": 2.0,
+   "y": 0,
+   "kind": "support",
+   "support": "roller",
+   "normalDeg": -26.56505117707799
+  }
+ ],
+ "contacts": [],
+ "supports": [
+  "wall-pin",
+  "tie-rod"
+ ],
+ "loads": [
+  {
+   "id": "snow",
+   "bone": "canopy",
+   "at": {
+    "x": 1.0,
+    "y": 0
+   },
+   "fxN": 0,
+   "fyN": -500.0
+  }
+ ],
+ "scenarios": [],
+ "oracle": {
+  "tool": "anastruct",
+  "version": "1.7.0",
+  "values": {
+   "rodAxialAnastructN": 2347.871376374776,
+   "rodTensionN": 2347.871376374776,
+   "analyticRodTensionN": 2347.871376374779,
+   "pinFxN": 2099.999999999997,
+   "pinFyN": 1050.0,
+   "wallPullFxN": -2099.999999999997,
+   "wallPullFyN": 1049.999999999999,
+   "beamAxialN": -2099.999999999997,
+   "rodDeg": -26.56505117707799
+  }
+ }
+}

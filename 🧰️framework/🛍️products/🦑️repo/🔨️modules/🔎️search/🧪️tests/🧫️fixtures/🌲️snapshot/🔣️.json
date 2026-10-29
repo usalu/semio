@@ -1,0 +1,74 @@
+{
+  "value": {
+    "message": "bounded snapshot",
+    "children": [
+      "first",
+      "second"
+    ]
+  },
+  "nodeGzip": "H4sIAAAAAAAAA6tWyk0tLk5MT1WyUkrKL81LSU1RKM5LLCjOyC9R0lFKzsjMSSlKzVOyilZKyywqBokVpybn56UoxdZyAQBvIdKVPQAAAA==",
+  "cases": [
+    {
+      "fingerprint": "one",
+      "builds": 1
+    },
+    {
+      "fingerprint": "one",
+      "builds": 1
+    },
+    {
+      "fingerprint": "two",
+      "builds": 2
+    }
+  ],
+  "sourceCases": [
+    {
+      "name": "authored baseline",
+      "files": {
+        "main.txt": "first"
+      },
+      "excluded": [],
+      "sha256": "e887713828121ffd089d25ded084dd4a3ea3f9f946d73facbfb1e764a9d3d75e"
+    },
+    {
+      "name": "same path changed bytes",
+      "files": {
+        "main.txt": "second"
+      },
+      "excluded": [],
+      "sha256": "3775098e527a5bb2d58a07debbe29f8526e9188576518bd7c9db8845abf4b3e6"
+    },
+    {
+      "name": "authored untracked member",
+      "files": {
+        "main.txt": "second",
+        "new.txt": "new"
+      },
+      "excluded": [],
+      "sha256": "e1fb9607da59a4fb1c26c3c64b2af8b2962353d429ea76e83721f33dc41eb683"
+    }
+  ],
+  "domainRefresh": {
+    "titles": [
+      "first title",
+      "second title"
+    ],
+    "cachedProjection": "authored-codebase",
+    "domainProjection": "fresh-per-request"
+  },
+  "projectionText": {
+    "data": {
+      "zeta": "fourth",
+      "middle": [
+        "second",
+        "third"
+      ],
+      "alpha": "first",
+      "ignored": 7,
+      "null": null
+    },
+    "expected": "first 7 second third  fourth",
+    "alias": "typed-text",
+    "repeats": 256
+  }
+}

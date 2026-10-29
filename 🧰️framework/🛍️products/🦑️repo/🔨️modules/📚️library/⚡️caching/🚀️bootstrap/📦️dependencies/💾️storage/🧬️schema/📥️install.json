@@ -5936,6 +5936,89 @@
       "const": {
         "$manager": "managerProtocol"
       }
+    },
+    "InputReadDiagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "phase",
+        "reason",
+        "path",
+        "pathTruncated",
+        "maximumBytes",
+        "expectedBytes",
+        "actualBytes",
+        "actualKind"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "javascript-dependency-input-refusal"
+        },
+        "phase": {
+          "enum": [
+            "capture",
+            "replay"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "bytes",
+            "identity",
+            "descriptor",
+            "vanished"
+          ]
+        },
+        "path": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "pathTruncated": {
+          "type": "boolean"
+        },
+        "maximumBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 8388608
+        },
+        "expectedBytes": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 8388608
+        },
+        "actualBytes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9]{1,32}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "actualKind": {
+          "enum": [
+            "file",
+            "directory",
+            "symlink",
+            "other",
+            "missing"
+          ]
+        }
+      }
+    },
+    "InputReadDiagnosticPolicy": {
+      "const": {
+        "maximumPathUnits": 256
+      }
     }
   }
 }

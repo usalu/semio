@@ -136,20 +136,21 @@ test("both installers hold the same lock around the toolchain install: wait at m
   expect(windows.indexOf("$held = $mutex.WaitOne")).toBeLessThan(windows.indexOf("Test-PinnedGo -Path (Join-Path $Target"));
 });
 
-test.skipIf(!supported)("the installer names every other repo on the PATH that is not the installed launcher, in both languages, and stays silent for links to it",async()=>{
+test.skipIf(!supported)("the installer reports coexisting frontends without destructive replacement advice, in both languages, and stays silent for launcher links",async()=>{
   const root=mkdtempSync(join(tmpdir(),"semio-install-"));
   try{
     const{bytes,sha256}=synthetic(root),script=scaffold(root,sha256);
     const server=Bun.serve({port:0,hostname:"127.0.0.1",fetch:()=>new Response(bytes)});
     try{
       const stale=join(root,"stale"),linked=join(root,"linked");mkdirSync(stale,{recursive:true});mkdirSync(linked,{recursive:true});
-      writeFileSync(join(stale,"repo"),"#!/bin/sh\n");chmodSync(join(stale,"repo"),0o755);
+      const frontend=Buffer.from([0x7f,0x45,0x4c,0x46,2,1,1,0]);writeFileSync(join(stale,"repo"),frontend);chmodSync(join(stale,"repo"),0o755);
       const mirror=`http://127.0.0.1:${server.port}`;
       await install(script,root,mirror);
       symlinkSync(join(root,"bin/repo"),join(linked,"repo"));
       const run=await install(script,root,mirror,{PATH:`${linked}:${stale}:/usr/bin:/bin`});
       expect(run.status).toBe(0);
-      expect(run.stderr).toContain(`Another repo on PATH shadows or duplicates the launcher: ${stale}/repo`);expect(run.stderr).toContain(`Ein anderes repo im PATH verdeckt oder dupliziert den Launcher: ${stale}/repo`);
+      expect(run.stderr).toContain(`Another repository frontend is on PATH: ${stale}/repo`);expect(run.stderr).toContain(`Ein weiteres Repository-Frontend liegt im PATH: ${stale}/repo`);
+      expect(run.stderr).not.toContain("ln -sf");expect(run.stderr).not.toContain("Keep one copy");expect(readFileSync(join(stale,"repo"))).toEqual(frontend);
       expect(run.stderr).not.toContain(`launcher: ${linked}/repo`);
     }finally{server.stop(true);}
   }finally{rmSync(root,{recursive:true,force:true});}

@@ -1421,26 +1421,18 @@
  "pools": {
   "own": [
    {
-    "name": "builder-grant-of-one-job-2048-mb",
+    "name": "unqualified-builder-grant-of-one-job-2048-mb",
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 1, \"cpu\": 1, \"memoryMegabytes\": 2048, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
     },
-    "expect": {
-     "source": "own",
-     "workers": 1,
-     "megabytes": 2048
-    }
+    "expect": null
    },
    {
-    "name": "grant-of-four-jobs-still-one-own-worker-with-one-job-memory",
+    "name": "unqualified-grant-of-four-jobs-still-one-own-worker-with-one-job-memory",
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 4, \"cpu\": 4, \"memoryMegabytes\": 8192, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
     },
-    "expect": {
-     "source": "own",
-     "workers": 1,
-     "megabytes": 2048
-    }
+    "expect": null
    },
    {
     "name": "no-plan-means-no-own-worker",
@@ -1497,15 +1489,11 @@
     "expect": null
    },
    {
-    "name": "odd-memory-is-floored-per-job",
+    "name": "unqualified-odd-memory-is-floored-per-job",
     "environment": {
      "SEMIO_HOST_CAPACITY_PLAN": "{\"version\": 1, \"id\": \"x\", \"jobs\": 3, \"cpu\": 3, \"memoryMegabytes\": 7000, \"fixedMegabytes\": 1536, \"floorMegabytes\": 6553}"
     },
-    "expect": {
-     "source": "own",
-     "workers": 1,
-     "megabytes": 2333
-    }
+    "expect": null
    }
   ],
   "granted": [

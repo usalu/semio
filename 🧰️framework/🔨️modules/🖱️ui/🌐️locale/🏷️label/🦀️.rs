@@ -334,3 +334,6 @@ pub trait AppLabels: Sized + 'static {
 
 #[path="🛬️receiving/🦀️.rs"]
 pub mod receiving;
+
+#[cfg(test)]
+pub(crate) use retirement::observed as observe_locale_test_allocations;

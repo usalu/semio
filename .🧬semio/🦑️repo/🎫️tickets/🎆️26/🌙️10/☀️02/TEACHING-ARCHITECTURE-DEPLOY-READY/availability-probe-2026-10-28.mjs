@@ -1,0 +1,10 @@
+import {writeFileSync,mkdirSync} from "node:fs";
+import {dirname,join} from "node:path";
+import {fileURLToPath} from "node:url";
+const ticket=dirname(fileURLToPath(import.meta.url));
+const endpoints=["https://architektur-und-technologie.de/","https://semio.iek.uni-hannover.de/instance","http://127.0.0.1:6061/","http://127.0.0.1:8791/instance"];
+const results=await Promise.all(endpoints.map(async url=>{const started=new Date().toISOString(),t=performance.now();try{const response=await fetch(url,{signal:AbortSignal.timeout(10000),redirect:"follow"});const reader=response.body?.getReader();const first=reader?await reader.read():undefined;await reader?.cancel();const prefix=first?.value?new TextDecoder().decode(first.value.subarray(0,4096)):"";let identity;try{identity=JSON.parse(prefix).id;}catch{}return {url,started,elapsedMs:Math.round(performance.now()-t),status:response.status,finalUrl:response.url,contentType:response.headers.get("content-type"),identity:identity??null,prefix,truncated:first?.done===false};}catch(error){return {url,started,elapsedMs:Math.round(performance.now()-t),error:error.name,message:error.message,cause:error.cause?.code??null};}}));
+mkdirSync(join(ticket,"🗑️generated"),{recursive:true});
+const result={finished:new Date().toISOString(),method:"parallel GET; 10000ms total per-request abort; first body chunk at most4096 bytes retained; no mutation",results};
+writeFileSync(join(ticket,"🗑️generated/availability-probe-current.json"),JSON.stringify(result,null,2)+"\n");
+console.log(JSON.stringify(result,null,2));

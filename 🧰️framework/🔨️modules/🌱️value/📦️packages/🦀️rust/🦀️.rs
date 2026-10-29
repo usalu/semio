@@ -55,3 +55,6 @@ pub use retained_utf8::{RetainedUtf8Cursor,RetainedUtf8CursorStep,RetainedUtf8Bu
 pub mod sort;
 
 pub use semio_framework_value_control_contract::OriginalRetirementCloseLoan;
+
+#[cfg(test)]
+use semio_framework_value_testing_allocator as _;

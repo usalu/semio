@@ -27,8 +27,8 @@
         ],
         "maximumOwnerBytes": 65536,
         "maintenance": {
-          "project": "repo",
-          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+          "project": "repo-cache-retirement",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
           "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
           "targets": {
             "cache-retire-inactive-preview": "preview",
@@ -36,8 +36,8 @@
           }
         },
         "reset": {
-          "project": "repo",
-          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching",
+          "project": "repo-cache-reset",
+          "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
           "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
           "targets": {
             "cache-reset-graph": "graph",
@@ -186,7 +186,7 @@
       ],
       "properties": {
         "name": {
-          "const": "repo"
+          "const": "repo-cache-retirement"
         },
         "targets": {
           "type": "object",
@@ -385,100 +385,17 @@
       ],
       "properties": {
         "name": {
-          "const": "repo"
+          "const": "repo-cache-reset"
         },
         "targets": {
           "type": "object",
           "required": [
             "cache-reset-graph",
-            "cache-reset-nx"
+            "cache-reset-nx",
+            "cache-reset-rust",
+            "cache-reset-products"
           ],
           "properties": {
-            "cache-reset-nx": {
-              "type": "object",
-              "required": [
-                "executor",
-                "cache",
-                "dependsOn",
-                "outputs",
-                "options",
-                "metadata",
-                "inputs"
-              ],
-              "properties": {
-                "executor": {
-                  "const": "repo:script"
-                },
-                "cache": {
-                  "const": false
-                },
-                "dependsOn": {
-                  "const": []
-                },
-                "outputs": {
-                  "const": []
-                },
-                "options": {
-                  "type": "object",
-                  "additionalProperties": false,
-                  "required": [
-                    "command",
-                    "cwd",
-                    "forwardAllArgs"
-                  ],
-                  "properties": {
-                    "command": {
-                      "const": "repo ./📜️script.ts reset nx"
-                    },
-                    "cwd": {
-                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
-                    },
-                    "forwardAllArgs": {
-                      "const": false
-                    }
-                  }
-                },
-                "metadata": {
-                  "type": "object",
-                  "required": [
-                    "semio"
-                  ],
-                  "properties": {
-                    "semio": {
-                      "type": "object",
-                      "required": [
-                        "execution",
-                        "sourceInputObservation",
-                        "cache"
-                      ],
-                      "properties": {
-                        "execution": {
-                          "const": {
-                            "version": 1,
-                            "kind": "source"
-                          }
-                        },
-                        "sourceInputObservation": {
-                          "const": "freshness"
-                        },
-                        "cache": {
-                          "const": {
-                            "version": 1,
-                            "class": "live",
-                            "reason": "exercises-host-resources"
-                          }
-                        }
-                      }
-                    }
-                  }
-                },
-                "inputs": {
-                  "const": [
-                    "{projectRoot}/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/**/*"
-                  ]
-                }
-              }
-            },
             "cache-reset-graph": {
               "type": "object",
               "required": [
@@ -559,7 +476,262 @@
                 },
                 "inputs": {
                   "const": [
-                    "{projectRoot}/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset/**/*"
+                    "{projectRoot}/**/*"
+                  ]
+                }
+              }
+            },
+            "cache-reset-nx": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata",
+                "inputs"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts reset nx"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution",
+                        "sourceInputObservation",
+                        "cache"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        },
+                        "sourceInputObservation": {
+                          "const": "freshness"
+                        },
+                        "cache": {
+                          "const": {
+                            "version": 1,
+                            "class": "live",
+                            "reason": "exercises-host-resources"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "inputs": {
+                  "const": [
+                    "{projectRoot}/**/*"
+                  ]
+                }
+              }
+            },
+            "cache-reset-rust": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata",
+                "inputs"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts reset rust"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution",
+                        "sourceInputObservation",
+                        "cache"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        },
+                        "sourceInputObservation": {
+                          "const": "freshness"
+                        },
+                        "cache": {
+                          "const": {
+                            "version": 1,
+                            "class": "live",
+                            "reason": "exercises-host-resources"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "inputs": {
+                  "const": [
+                    "{projectRoot}/**/*"
+                  ]
+                }
+              }
+            },
+            "cache-reset-products": {
+              "type": "object",
+              "required": [
+                "executor",
+                "cache",
+                "dependsOn",
+                "outputs",
+                "options",
+                "metadata",
+                "inputs"
+              ],
+              "properties": {
+                "executor": {
+                  "const": "repo:script"
+                },
+                "cache": {
+                  "const": false
+                },
+                "dependsOn": {
+                  "const": []
+                },
+                "outputs": {
+                  "const": []
+                },
+                "options": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "command",
+                    "cwd",
+                    "forwardAllArgs"
+                  ],
+                  "properties": {
+                    "command": {
+                      "const": "repo ./📜️script.ts reset products"
+                    },
+                    "cwd": {
+                      "const": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset"
+                    },
+                    "forwardAllArgs": {
+                      "const": false
+                    }
+                  }
+                },
+                "metadata": {
+                  "type": "object",
+                  "required": [
+                    "semio"
+                  ],
+                  "properties": {
+                    "semio": {
+                      "type": "object",
+                      "required": [
+                        "execution",
+                        "sourceInputObservation",
+                        "cache"
+                      ],
+                      "properties": {
+                        "execution": {
+                          "const": {
+                            "version": 1,
+                            "kind": "source"
+                          }
+                        },
+                        "sourceInputObservation": {
+                          "const": "freshness"
+                        },
+                        "cache": {
+                          "const": {
+                            "version": 1,
+                            "class": "live",
+                            "reason": "exercises-host-resources"
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "inputs": {
+                  "const": [
+                    "{projectRoot}/**/*"
                   ]
                 }
               }
@@ -609,6 +781,8 @@
           "enum": [
             "graph",
             "nx",
+            "rust",
+            "products",
             null
           ]
         }
@@ -637,6 +811,8 @@
           "enum": [
             "graph",
             "nx",
+            "rust",
+            "products",
             null
           ]
         }
@@ -686,6 +862,8 @@
             "retire",
             "graph",
             "nx",
+            "rust",
+            "products",
             null
           ]
         }
@@ -713,8 +891,8 @@
         },
         "documents": {
           "type": "array",
-          "minItems": 2,
-          "maxItems": 2,
+          "minItems": 3,
+          "maxItems": 3,
           "items": {
             "type": "object",
             "additionalProperties": false,
@@ -732,20 +910,23 @@
               },
               "request": {
                 "enum": [
-                  "repo:cache-reset-graph",
+                  "repo-cache-reset:cache-reset-graph",
+                  "repo-cache-retirement:cache-retire-inactive-preview",
                   "repo-mcp:build"
                 ]
               },
               "kind": {
                 "enum": [
                   "cache-reset",
-                  "frontend"
+                  "frontend",
+                  "maintenance"
                 ]
               },
               "target": {
                 "enum": [
                   "graph",
-                  "build"
+                  "build",
+                  "preview"
                 ]
               }
             }

@@ -9,6 +9,7 @@
 package client
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	repopkg "github.com/usalu/semio/repo/go"
@@ -412,6 +413,6 @@ func ToolBundleList() ToolResult {
 }
 
 // 🔖️ToolTechnologyTree MUST complete the operation successfully.
-func ToolTechnologyTree() ToolResult {
-	return toolResultFromTreeRender(TreeNodeTechnology)
+func ToolTechnologyTree(ctx context.Context) ToolResult {
+	return toolResultFromTreeRender(ctx, TreeNodeTechnology)
 }

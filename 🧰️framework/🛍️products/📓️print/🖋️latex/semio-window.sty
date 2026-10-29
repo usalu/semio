@@ -344,7 +344,6 @@
 }
 
 \cs_new_protected:Npn \semio_window_toc_append:nnn #1#2#3 {
-  \tl_if_blank:nTF {#2} { } {
     \tl_if_in:nnTF {#3} { Hy@SectionAnchorHref } { } {
       \semio_window_toc_title_plain:n {#3}
       \tl_if_empty:NF \l_tmpa_tl {
@@ -374,7 +373,6 @@
         }
       }
     }
-  }
 }
 
 \cs_new_protected:Npn \semio_window_toc_append:nn #1#2 {
@@ -2801,13 +2799,13 @@
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#1}{#2}{#5}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#1}{#2}{\semio@heading@number{\csname the#4\endcsname}{#2}}}%
   \semio@heading@pair@sync@height
   % Open chips box to titleh−hairline (baseline is the pair row below); sync
   % measured that shorter box, so lift the floor back to full titleh.
   \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#1}{#2}{#5}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#1}{#2}{\semio@heading@kind@number{#3}{#4}}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#1}{#2}{\semio@heading@number{\csname the#4\endcsname}{#2}}}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
   \semio@heading@pair@row{#1}%
 }
@@ -2816,13 +2814,13 @@
   \semio@hierarchy@path@set{\csname the#4\endcsname}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#5}{#2}{#1}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@number{\csname the#4\endcsname}{#2}}{#2}{#1}}%
   \semio@heading@pair@sync@height
   % Open chips box to titleh−hairline (baseline is the pair row below); sync
   % measured that shorter box, so lift the floor back to full titleh.
   \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#5}{#2}{#1}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@kind@number{#3}{#4}}{#2}{#1}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@number{\csname the#4\endcsname}{#2}}{#2}{#1}}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
   \semio@heading@pair@row{#1}%
 }
@@ -2835,11 +2833,11 @@
   \semio@hierarchy@path@set{#1}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#4}{#3}{#2}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#4}{#3}{\semio@kind@number@bare{#1}}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#4}{#3}{\semio@heading@number{#1}{#3}}}%
   \semio@heading@pair@sync@height
   \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
   \sbox{\semio@window@tab@box}{\semio@heading@chip@open{#4}{#3}{#2}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#4}{#3}{\semio@kind@number@bare{#1}}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@chip@open{#4}{#3}{\semio@heading@number{#1}{#3}}}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
   \semio@heading@pair@row{#4}%
 }
@@ -2848,11 +2846,11 @@
   \semio@hierarchy@path@set{#1}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#2}{#3}{#4}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@kind@number@bare{#1}}{#3}{#4}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@number{#1}{#3}}{#3}{#4}}%
   \semio@heading@pair@sync@height
   \addtolength{\semio@window@cap@min@titleh}{\dimexpr\semio@stroke@hairline\relax}%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@nofill@open{#2}{#3}{#4}}%
-  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@kind@number@bare{#1}}{#3}{#4}}%
+  \sbox{\semio@window@ctrl@box}{\semio@heading@cap@nofill@open{\semio@heading@number{#1}{#3}}{#3}{#4}}%
   \setlength{\semio@window@cap@min@titleh}{\z@}%
   \semio@heading@pair@row{#4}%
 }
@@ -2923,7 +2921,11 @@
   % foot above a table that migrated to the next page.
   \Needspace*{\dimexpr\semio@chrome@titlebar@height+3\baselineskip+\semio@chrome@titlebar@height\relax}%
   \ifnum\numexpr\semio@toc@level{#1}\relax>\value{tocdepth}\else
-    \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
+    \if\relax\detokenize{#4}\relax
+      \semio@toc@track@num{#1}{}{#3}%
+    \else
+      \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
+    \fi
   \fi
   \semio@chrome@heading@track{#1}{#3}%
   \semio@if@heading@chips
@@ -3001,6 +3003,16 @@
   \fi
 }
 
+\newcommand{\semio@heading@ladder@textcolor}[1]{%
+  \ifcase#1 semio-chrome-accent-foreground%
+  \or semio-chrome-foreground%
+  \or semio-chrome-accent-foreground%
+  \or semio-chrome-foreground%
+  \or semio-chrome-accent-foreground%
+  \else semio-chrome-foreground%
+  \fi
+}
+
 \newcommand{\semio@heading@ladder@step}[1]{%
   \expandafter\edef\csname semio@heading@rung@#1\endcsname{\number\@tempcnta}%
   \expandafter\edef\csname semio@heading@color@#1\endcsname{%
@@ -3009,7 +3021,9 @@
   \expandafter\edef\csname semio@heading@style@#1\endcsname{%
     \semio@heading@ladder@style{\number\@tempcnta}%
   }%
-  \expandafter\def\csname semio@heading@textcolor@#1\endcsname{semio-chrome-foreground}%
+  \expandafter\edef\csname semio@heading@textcolor@#1\endcsname{%
+    \semio@heading@ladder@textcolor{\number\@tempcnta}%
+  }%
   \advance\@tempcnta\@ne
 }
 
@@ -3167,7 +3181,7 @@
   \ifx\semio@nest@style\semio@heading@style@outline@marker
     \semio@heading@pair@nofill@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@color}%
   \else
-    \semio@heading@pair@num{\semio@nest@num}{#1}{semio-chrome-foreground}{\semio@nest@color}%
+    \semio@heading@pair@num{\semio@nest@num}{#1}{\semio@heading@ladder@textcolor{\semio@nest@rung}}{\semio@nest@color}%
   \fi
   \vspace{\semio@heading@bottomskip}% LR-bottomskip: space below nested-paragraph headings
   \semio@block@after

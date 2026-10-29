@@ -1,0 +1,29 @@
+{
+  "type": "array",
+  "minItems": 3,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "name",
+      "elapsed",
+      "change",
+      "matches"
+    ],
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "elapsed": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "change": {
+        "type": "boolean"
+      },
+      "matches": {
+        "type": "boolean"
+      }
+    }
+  }
+}

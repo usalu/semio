@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "unchanged",
+      "changes": [
+        [],
+        []
+      ],
+      "environment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "readmitted": false,
+      "identityCalls": 1,
+      "guardAccepted": true
+    },
+    {
+      "name": "changed-before-preparation",
+      "changes": [
+        [
+          "plugin.mjs"
+        ]
+      ],
+      "environment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "readmitted": true,
+      "identityCalls": 0,
+      "guardAccepted": false
+    },
+    {
+      "name": "changed-before-launch",
+      "changes": [
+        [],
+        [
+          "plugin.mjs"
+        ]
+      ],
+      "environment": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "readmitted": true,
+      "identityCalls": 1,
+      "guardAccepted": false
+    },
+    {
+      "name": "forged-stable-binding",
+      "changes": [
+        [],
+        []
+      ],
+      "environment": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "readmitted": false,
+      "identityCalls": 1,
+      "guardAccepted": false
+    }
+  ]
+}

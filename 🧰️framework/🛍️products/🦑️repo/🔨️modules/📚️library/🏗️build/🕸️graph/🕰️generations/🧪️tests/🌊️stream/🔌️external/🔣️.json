@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "reference": "nx",
+      "canonical": "npm:nx"
+    },
+    {
+      "reference": "npm:nx",
+      "canonical": "npm:nx"
+    },
+    {
+      "reference": "@scope/tool",
+      "canonical": "npm:@scope/tool"
+    },
+    {
+      "reference": "npm:@scope/tool",
+      "canonical": "npm:@scope/tool"
+    },
+    {
+      "reference": "custom:tool",
+      "canonical": "custom:tool"
+    }
+  ],
+  "edges": [
+    {
+      "source": "npm:nx",
+      "target": "npm:leaf",
+      "type": "static"
+    }
+  ],
+  "unrelated": "npm:unrelated",
+  "invocations": [
+    {
+      "project": "@teaching/proctor",
+      "target": "serve-release",
+      "prerequisite": "build"
+    },
+    {
+      "project": "@teaching/architecture-course",
+      "target": "typecheck",
+      "prerequisite": "generate",
+      "dependencyProject": "@semio-tech/ui-rs"
+    }
+  ]
+}

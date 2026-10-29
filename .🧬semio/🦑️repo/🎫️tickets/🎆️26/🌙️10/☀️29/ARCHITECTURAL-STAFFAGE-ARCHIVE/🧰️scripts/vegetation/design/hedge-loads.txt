@@ -1,0 +1,4 @@
+calm|wind|en-1991-1-4|block-1:0.73:0.1,block-2:0.73:0.1,block-3:0.73:0.1,block-4:0.73:0.1,block-5:0.73:0.1,block-6:0.73:0.1
+windy|wind|en-1991-1-4|block-1:0.73:10,block-2:0.73:10,block-3:0.73:10,block-4:0.73:10,block-5:0.73:10,block-6:0.73:10
+storm|wind|vogel-1989|block-1:0.73:56,block-2:0.73:56,block-3:0.73:56,block-4:0.73:56,block-5:0.73:56,block-6:0.73:56
+snow|snow|en-1991-1-3|block-1:1.45:150,block-2:1.45:150,block-3:1.45:150,block-4:1.45:150,block-5:1.45:150,block-6:1.45:150

@@ -1,0 +1,9 @@
+fol-l-b fol-l-b -2.54 5.79 1 1 1 4.6 pend
+fol-r-b fol-r-b 2.55 5.88 1 1 -1 4.61 pend
+fol-l-a fol-l-a -3.0 8.98 1 1 -1 4.62 pend
+fol-r-a fol-r-a 3.12 8.93 1 1 1 4.63 pend
+fol-c-a fol-c-a -2.35 9.4 1 1 1 4.64 pend
+fol-l-top fol-l-top -1.81 10.8 1 1.1 -1 4.65 pend
+fol-r-top fol-r-top 1.98 10.77 1 1.1 1 4.66 pend
+fol-c-b fol-c-b 1.7 11.15 1 1 -1 4.67 pend
+fol-c-top fol-c-top -0.42 11.8 1.1 1.1 1 4.7 pend

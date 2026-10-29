@@ -32,7 +32,6 @@ macro_rules! native_node{
    fn number_field(&self,index:usize)->Result<semio_framework_value::Number,semio_framework_value::ValueError>{match index{$($ordinal=>Ok(semio_framework_value::Number::Float(self.$field)),)+_=>Err($crate::invalid())}}
   }
   #[cfg(test)]const DIMENSION:usize=$count;
-  #[cfg(test)]#[path="../../🧪️tests/🦀️.rs"]mod tests;
  };
 }
 #[path="🧬️schema/◻️2d/🦀️.rs"]pub mod planar;

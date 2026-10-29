@@ -158,5 +158,10 @@
       2048
     ],
     "maximumTurns": 2048
-  }
+  },
+  "postCustody": [
+    "original-read",
+    "mutable-handback",
+    "original-intermediate"
+  ]
 }

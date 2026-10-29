@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "guard": "!child||reservation.allocation.phase!==\"committed\"||reservation.allocation.kind!==\"compiler-state\"||reservation.backing.root!==parent.root||policy.root!==parent.root",
+  "cases": [
+    {
+      "name": "complete",
+      "child": true,
+      "phase": "committed",
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": []
+    },
+    {
+      "name": "child",
+      "child": false,
+      "phase": "committed",
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": [
+        "child"
+      ]
+    },
+    {
+      "name": "committed",
+      "child": true,
+      "phase": "reserved",
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": [
+        "committed"
+      ]
+    },
+    {
+      "name": "compilerState",
+      "child": true,
+      "phase": "committed",
+      "kind": "artifact-publication",
+      "backingRoot": "/parent",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": [
+        "compilerState"
+      ]
+    },
+    {
+      "name": "backingRoot",
+      "child": true,
+      "phase": "committed",
+      "kind": "compiler-state",
+      "backingRoot": "/foreign",
+      "policyRoot": "/parent",
+      "parentRoot": "/parent",
+      "failed": [
+        "backingRoot"
+      ]
+    },
+    {
+      "name": "policyRoot",
+      "child": true,
+      "phase": "committed",
+      "kind": "compiler-state",
+      "backingRoot": "/parent",
+      "policyRoot": "/foreign",
+      "parentRoot": "/parent",
+      "failed": [
+        "policyRoot"
+      ]
+    }
+  ]
+}

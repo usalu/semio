@@ -1,0 +1,9 @@
+      "anchors": [
+        { "id": "contact-hn", "bone": "paw-hn", "x": 0.026, "y": -0.011, "kind": "contact", "title": { "en": "Near hind paw pad", "de": "Ballen der nahen Hinterpfote" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.04, "footprintWidthM": 0.03, "frictionCoefficient": 0.7 },
+        { "id": "contact-hf", "bone": "paw-hf", "x": 0.026, "y": -0.011, "kind": "contact", "title": { "en": "Far hind paw pad", "de": "Ballen der fernen Hinterpfote" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.04, "footprintWidthM": 0.03, "frictionCoefficient": 0.7 },
+        { "id": "contact-fn", "bone": "paw-fn", "x": 0.024, "y": -0.011, "kind": "contact", "title": { "en": "Near forepaw pad", "de": "Ballen der nahen Vorderpfote" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.042, "footprintWidthM": 0.034, "frictionCoefficient": 0.7 },
+        { "id": "contact-ff", "bone": "paw-ff", "x": 0.024, "y": -0.011, "kind": "contact", "title": { "en": "Far forepaw pad", "de": "Ballen der fernen Vorderpfote" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.042, "footprintWidthM": 0.034, "frictionCoefficient": 0.7 },
+        { "id": "contact-rump", "bone": "pelvis", "x": -0.035, "y": -0.075, "kind": "contact", "title": { "en": "Sitting bones (ischial tuberosities)", "de": "Sitzbeinhöcker" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.06, "footprintWidthM": 0.05, "frictionCoefficient": 0.6 },
+        { "id": "nose", "bone": "head", "x": 0.106, "y": 0.01, "kind": "emitter", "title": { "en": "Nostrils", "de": "Nasenlöcher" } },
+        { "id": "mouth", "bone": "jaw", "x": 0.05, "y": 0.005, "kind": "emitter", "title": { "en": "Open mouth (yawn)", "de": "Offenes Maul (Gähnen)" } }
+      ],

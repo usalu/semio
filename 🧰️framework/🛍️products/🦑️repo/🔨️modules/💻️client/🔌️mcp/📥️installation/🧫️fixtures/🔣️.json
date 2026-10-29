@@ -230,5 +230,31 @@
       "destination": "symlink",
       "rejected": true
     }
+  ],
+  "receiptCases": [
+    {
+      "platform": "linux",
+      "home": "/home/deck",
+      "localAppData": "",
+      "expected": "/home/deck/.local/share/semio/repo/installed.json"
+    },
+    {
+      "platform": "linux",
+      "home": "/home/vscode",
+      "localAppData": "",
+      "expected": "/home/vscode/.local/share/semio/repo/installed.json"
+    },
+    {
+      "platform": "darwin",
+      "home": "/Users/dev",
+      "localAppData": "",
+      "expected": "/Users/dev/.local/share/semio/repo/installed.json"
+    },
+    {
+      "platform": "win32",
+      "home": "C:\\Users\\dev",
+      "localAppData": "C:\\Users\\dev\\AppData\\Local",
+      "expected": "C:\\Users\\dev\\AppData\\Local\\Semio\\repo\\installed.json"
+    }
   ]
 }

@@ -33,7 +33,6 @@ impl Record{fn new(key:String,source:DslValue)->Self{Self{key:Some(key),source:S
 #[derive(semio_framework_value_derive::RetireOwned)]
 #[value(send_only)]
 struct State{source:Option<DslValue>,mesh:Option<MeshData>,origin:(u64,u64),scan:usize,seen:u16,field:Option<usize>,index:usize,reserved:bool,row:usize,record:Option<Record>,record_close:Option<ControlledRetirement<Record>>,record_done:bool,attributes:Option<HistoryFoldIndexInsert<String,MeshAttribute>>,materials:Option<HistoryFoldIndexInsert<String,DslValue>>,textures:Option<HistoryFoldIndexInsert<String,MeshTexture>>,references:Vec<(String,Vec<String>)>,references_reserved:bool,validate_domain:usize,validate_index:usize,finished:bool}
-semio_framework_value::artifact_retire_struct!(State {source,mesh,origin,scan,seen,field,index,reserved,row,record,record_close,record_done,attributes,materials,textures,references,references_reserved,validate_domain,validate_index,finished});
 /// 🧳️ The original parsed source and every partial native field remain owned through denial, failure and cancellation.
 pub enum MeshCanonicalIntakeSource{Value(DslValue),Decoder(MeshCanonicalDecoder)}
 /// 🧵️ One decoder keeps the complete original parsed source until its funded close reaches terminal.

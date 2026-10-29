@@ -1,0 +1,5 @@
+{ "shots": [
+ { "name": "settings-open", "hash": "#/humans", "wait": 9000, "steps": [ { "click": "button[aria-controls=staffage-settings]", "wait": 800 } ] },
+ { "name": "search-oak", "hash": "#/all?q=eiche", "wait": 20000, "locale": "de-DE" },
+ { "name": "zoom-print", "hash": "#/objects/park-bench?zoom=1&view=light-solid&scale=50", "wait": 9000 }
+] }

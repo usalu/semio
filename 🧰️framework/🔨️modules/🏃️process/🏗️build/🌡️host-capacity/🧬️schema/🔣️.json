@@ -1960,6 +1960,35 @@
           "quickQuantileBasisPoints": "Das Quantil der aktiven Zeit in Basispunkten, das entscheidet, ob eine Laufklasse als schnell gilt (der Median)."
         }
       }
+    },
+    "Reservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "jobs",
+        "cpu",
+        "reservedMegabytes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{8,32}$"
+        },
+        "jobs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1024
+        },
+        "cpu": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "reservedMegabytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
     }
   }
 }

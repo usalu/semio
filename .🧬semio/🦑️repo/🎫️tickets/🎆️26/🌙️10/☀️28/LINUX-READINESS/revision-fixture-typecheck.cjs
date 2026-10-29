@@ -1,0 +1,10 @@
+const fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
+const base='🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/';
+const windows='🧰️framework/🔨️modules/📁️filesystem/📂️paths/🪟️windows/';
+const files=["🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🪞️mirror/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🖼️captured-image/🟦️.ts","🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🔏️revision/🧪️tests/🧊️own-stamp/🟦️.ts"];
+const config=ts.readConfigFile('tsconfig.json',ts.sys.readFile);if(config.error)throw Error(ts.flattenDiagnosticMessageText(config.error.messageText,' '));
+const options=ts.convertCompilerOptionsFromJson(config.config.compilerOptions,process.cwd());if(options.errors.length)throw Error('Actual TypeScript options required');
+const program=ts.createProgram(files,options.options),all=ts.getPreEmitDiagnostics(program),owned=new Set(files.map(f=>path.resolve(f))),selected=all.filter(d=>d.file&&owned.has(path.resolve(d.file.fileName)));
+const show=d=>({file:d.file?.fileName,line:d.file&&d.start!==undefined?d.file.getLineAndCharacterOfPosition(d.start).line+1:null,code:d.code,message:ts.flattenDiagnosticMessageText(d.messageText,' ')});
+fs.writeFileSync(path.join(__dirname,'🗑️generated/revision-fixture-types-green.json'),JSON.stringify({all:all.map(show),owned:selected.map(show)},null,2));
+console.log(JSON.stringify({allDiagnostics:all.length,ownedDiagnostics:selected.map(show)}));if(selected.length)process.exitCode=1;

@@ -6,7 +6,7 @@ The refactor preserves the standard, subset, editor and window hierarchy and sho
 
 The physical changes move 202 files. All 141 moved fixture payloads retain their original SHA-256 bytes. 15 moved schema descriptors name their exact current owner directory. 1172 literal Rust include/module references in the affected source files resolve. All 132 declared oracle fixture references resolve and match their recorded SHA-256 and byte count. The audit found and corrected pre-existing direct oracle-base/case-label mistakes and stale digest metadata in these same affected manifests; fixture content was not altered to make those records pass.
 
-The original tracked-index Windows law was captured red before editing. It remains unchanged: unstaged deleted paths still exist in the Git index and the separately audited historical ticket copies remain outside this product refactor. A second law measures the actual current product worktree (existing tracked paths plus untracked replacements, excluding ticket artifacts) with the same limits and the same independent iconv-lite UTF-16 oracle. That law was captured red, then green: 1 test, 7 assertions, about 5 seconds.
+The original tracked-index Windows law was captured red before editing. Its exact numeric, component and independent UTF-16 assertions remain unchanged. Its observation was then corrected to current checkout Source: existing cached paths plus nonignored new authored files, excluding deleted indexed names through physical lstat presence. No Git index update is needed or performed. Neutral schema-authored deleted/new/duplicate/symlink-presence vectors agree with an independent SQLite oracle; the complete current checkout agrees with Git's actual read-only deleted-path oracle. The original global law and the additional product law now both pass: four tests and 28 assertions, including the two observation regressions, in 13.06 seconds.
 
 Validation of source references and payload preservation reports no errors. The registered production Rust fixture suites have not yet run: the parent task is repairing the isolated container's generated dependency mounts before its authenticated gates. Static reference and byte-preservation checks are not presented as execution of those Rust suites.
 
@@ -279,6 +279,8 @@ Every row is an old path removed from the worktree and its replacement path. Thi
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📓️schema-catalog.md`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️schema-catalog.json`
 - `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🥾️cross-platform-bootstrap/🟦️.ts`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/🧫️fixtures/🥾️cross-platform-bootstrap/📁️source-paths/🔣️.json`
+- `🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧬️schema/🥾️cross-platform-bootstrap/📁️source-paths/🔣️.json`
 
 ## Integration Evidence
 

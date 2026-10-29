@@ -1,0 +1,40 @@
+    {
+      "id": "roe-deer",
+      "category": "animals",
+      "title": { "en": "Roe Deer", "de": "Reh" },
+      "summary": {
+        "en": "An adult roe buck (Capreolus capreolus) of 25 kg with 0.75 m withers height in its short red summer coat: unguligrade skeleton with long slender cannon bones, separate near and far limb chains, flexing spine, a long neck, jaw, large ears, a small antler pair and the white rump patch; four-beat walk, a slow bounding clip, an alarm freeze with a head snap and a raised fore hoof, grazing, and a summer-coat thermal model.",
+        "de": "Ein erwachsener Rehbock (Capreolus capreolus) von 25 kg mit 0,75 m Widerristhöhe im kurzen roten Sommerhaar: zehenspitzengängiges Skelett mit langen schlanken Mittelfußknochen, getrennten Gliedmaßenketten der nahen und fernen Seite, biegsamer Wirbelsäule, langem Hals, Unterkiefer, großen Lauschern, kleinem Gehörn und weißem Spiegel; Schritt im Viertakt, ein langsamer Sprung-Clip, eine Schreckstarre mit Kopfruck und angehobenem Vorderlauf, Äsen und ein Wärmemodell für das Sommerhaar."
+      },
+      "tags": ["animal", "deer", "roe-deer", "ungulate", "quadruped", "unguligrade", "mammal", "wildlife", "gait", "alarm"],
+      "provenance": {
+        "author": "Semio staffage content worker (animals)",
+        "method": "handcrafted",
+        "created": "2026-10-29",
+        "references": [
+          { "id": "andersen-1998", "citation": "Andersen, R., Duncan, P., Linnell, J. D. C. (eds) (1998). The European Roe Deer: The Biology of Success. Scandinavian University Press, Oslo. Body size and mass ranges; segment masses, proportions and joint limits here are authored estimates guided by it." },
+          { "id": "weiner-1977", "citation": "Weiner, J. (1977). Energy metabolism of the roe deer. Acta Theriologica 22, 3-24. Activity levels here are authored estimates guided by it." },
+          { "id": "muybridge-1887", "citation": "Muybridge, E. (1887). Animal Locomotion: An Electro-Photographic Investigation of Consecutive Phases of Animal Movements. University of Pennsylvania, plates of walking, trotting and galloping hoofed animals." },
+          { "id": "hildebrand-1976", "citation": "Hildebrand, M. (1976). Analysis of tetrapod gaits: general considerations and symmetrical gaits. In: Herman, R. M. et al. (eds), Neural Control of Locomotion, Plenum Press, pp. 203-236." },
+          { "id": "dagg-1973", "citation": "Dagg, A. I. (1973). Gaits in mammals. Mammal Review 3, 135-154." },
+          { "id": "taylor-1970", "citation": "Taylor, C. R., Schmidt-Nielsen, K., Raab, J. L. (1970). Scaling of energetic cost of running to body size in mammals. American Journal of Physiology 219, 1104-1107." },
+          { "id": "kleiber-1947", "citation": "Kleiber, M. (1947). Body size and metabolic rate. Physiological Reviews 27, 511-541; resting heat production 3.4 W per kg^0.75." },
+          { "id": "spector-1956", "citation": "Spector, W. S. (ed.) (1956). Handbook of Biological Data. Saunders, surface area of mammals by Meeh's formula A = k·M^(2/3); k = 0.1135 m²/kg^(2/3) is chosen here at the upper end of the ruminant range for a slender deer." },
+          { "id": "scholander-1950", "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236." },
+          { "id": "cena-monteith-1975", "citation": "Cena, K., Monteith, J. L. (1975). Transfer processes in animal coats. I. Radiative transfer. Proceedings of the Royal Society B 188, 377-393." },
+          { "id": "gebremedhin-2001", "citation": "Gebremedhin, K. G., Wu, B. (2001). A model of evaporative cooling of wet skin surface and fur layer. Journal of Thermal Biology 26, 537-545." },
+          { "id": "ashrae-2021", "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort, respiratory heat loss." }
+        ],
+        "notes": {
+          "en": "Side elevation drawn for the near (left) side of a buck walking to the right. Far-side limbs, ear and antler are separate chains and shapes drawn darker and behind. The bounding clip is a slow, overlapping stotting-like bound with continuous support; real roe bounds contain flight phases that the staffage solver cannot support. Bounds include the raised head and antlers, so the nominal height is larger than the withers height.",
+          "de": "Seitenansicht der nahen (linken) Seite eines nach rechts gehenden Bocks. Gliedmaßen, Ohr und Geweih der fernen Seite sind eigene Ketten und Formen, dunkler und weiter hinten gezeichnet. Der Sprung-Clip ist ein langsamer, überlappender Sprung mit durchgehender Abstützung; echte Rehsprünge enthalten Flugphasen, die das Staffage-Modell nicht tragen kann. Die Umgrenzung enthält den erhobenen Kopf und das Gehörn, die Nennhöhe ist daher größer als die Widerristhöhe."
+        }
+      },
+      "dimensions": { "heightM": 1.08, "widthM": 1.46, "depthM": 0.2, "massKg": 25 },
+      "materials": [
+        { "id": "summer-coat", "title": { "en": "Short red summer coat", "de": "Kurzes rotes Sommerhaar" }, "emissivity": 0.96, "solarAbsorptivity": 0.72, "densityKgM3": 1100, "conductivityWmK": 0.04, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+        { "id": "white-coat", "title": { "en": "White coat (rump patch, chin)", "de": "Weißes Haar (Spiegel, Kinn)" }, "emissivity": 0.96, "solarAbsorptivity": 0.4, "densityKgM3": 1100, "conductivityWmK": 0.04, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+        { "id": "bare-skin", "title": { "en": "Bare skin (nose, eye)", "de": "Nackte Haut (Nase, Auge)" }, "emissivity": 0.98, "solarAbsorptivity": 0.8, "source": "literature", "reference": "ashrae-2021" },
+        { "id": "hoof-horn", "title": { "en": "Hoof horn", "de": "Hufhorn" }, "emissivity": 0.9, "solarAbsorptivity": 0.85, "densityKgM3": 1300, "source": "authored-estimate" },
+        { "id": "antler-bone", "title": { "en": "Antler bone", "de": "Geweihknochen" }, "emissivity": 0.9, "solarAbsorptivity": 0.6, "densityKgM3": 1900, "source": "authored-estimate" }
+      ],

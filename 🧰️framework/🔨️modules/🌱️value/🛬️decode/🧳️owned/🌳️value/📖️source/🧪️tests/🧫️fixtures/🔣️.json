@@ -1,0 +1,74 @@
+{
+  "cases": [
+    {
+      "kind": "sequence",
+      "input": [
+        1,
+        2
+      ],
+      "expected": [
+        1,
+        2
+      ]
+    },
+    {
+      "kind": "record",
+      "input": {
+        "alpha": 1,
+        "beta": 2
+      },
+      "expected": [
+        [
+          "alpha",
+          1
+        ],
+        [
+          "beta",
+          2
+        ]
+      ]
+    }
+  ],
+  "storage": [
+    {
+      "kind": "vector",
+      "capacity": 0,
+      "index": 0,
+      "occupied": false,
+      "value": 7,
+      "accepted": false
+    },
+    {
+      "kind": "vector",
+      "capacity": 1,
+      "index": 0,
+      "occupied": false,
+      "value": 7,
+      "accepted": true
+    },
+    {
+      "kind": "array",
+      "capacity": 2,
+      "index": 0,
+      "occupied": true,
+      "value": 7,
+      "accepted": false
+    },
+    {
+      "kind": "array",
+      "capacity": 2,
+      "index": 2,
+      "occupied": false,
+      "value": 7,
+      "accepted": false
+    },
+    {
+      "kind": "array",
+      "capacity": 2,
+      "index": 1,
+      "occupied": false,
+      "value": 7,
+      "accepted": true
+    }
+  ]
+}

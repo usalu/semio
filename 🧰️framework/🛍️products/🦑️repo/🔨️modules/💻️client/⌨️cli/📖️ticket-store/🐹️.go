@@ -296,7 +296,11 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 					if !matchesFilter(ticket.GetID(), options) && !matchesFilter(ticket.Slug, options) && !matchesFilter(ticket.Title, options) {
 						return filepath.SkipDir
 					}
-					if !matchesQuery(ticket.GetID()+" "+ticket.Slug+" "+ticket.Title+" "+ticket.Description+" "+string(ticket.Status), options) {
+					queryMatches, queryErr := matchesQuery(ctx, ticket.GetID()+" "+ticket.Slug+" "+ticket.Title+" "+ticket.Description+" "+string(ticket.Status), options)
+					if queryErr != nil {
+						return queryErr
+					}
+					if !queryMatches {
 						return filepath.SkipDir
 					}
 					if !ticketMatchesKinds(ticket, options) {

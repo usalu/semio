@@ -1,0 +1,64 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "unrelatedDirectories",
+    "maximumInitialWatches",
+    "maximumRegisteredWatches",
+    "initialEnvironment",
+    "changedEnvironment",
+    "output",
+    "routes"
+  ],
+  "properties": {
+    "unrelatedDirectories": {
+      "type": "integer",
+      "minimum": 64,
+      "maximum": 256
+    },
+    "maximumInitialWatches": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 63
+    },
+    "maximumRegisteredWatches": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 63
+    },
+    "initialEnvironment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "changedEnvironment": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output": {
+      "const": "dist/output"
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "arguments",
+          "accepted"
+        ],
+        "properties": {
+          "arguments": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

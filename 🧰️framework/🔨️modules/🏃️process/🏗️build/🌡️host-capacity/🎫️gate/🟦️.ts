@@ -47,6 +47,9 @@ export function readLiveHostCapacityPlanV1(environment:Readonly<Record<string,st
  return isHostCapacityV1("Grant",row)?followHostGrantPlanV1(plan,row as HostGrantV1):plan;
 }
 
+/** 🧾️ Reads actual same-id ledger reservation DATA; the larger tool envelope never attests resident capacity. */
+export function readLiveHostCapacityReservationV1(environment:Readonly<Record<string,string|undefined>>,policy:HostCapacityPolicyV1):Readonly<Pick<HostGrantV1,"id"|"jobs"|"cpu"|"reservedMegabytes">>|undefined{const plan=readHostCapacityPlanV1(environment);if(!plan)return undefined;const directory=hostCapacityDirectoryV1(environment),path=grantPath(directory,plan.id);let row:unknown;try{row=readJson(path);}catch{return undefined;}if(!isHostCapacityV1("Grant",row))return undefined;const grant=row as HostGrantV1,at=Date.now(),anchor=readBootAnchor(readJson(join(directory,protocol.bootFile)))??bootAnchors.get(directory),boot=hostBootAnchorV1(anchor,at,uptime()*1000).bootAtMs;if(!isCurrentHostGrantV1({grant,expectedId:plan.id,pidAlive:alive(grant.pid),nowMs:at,bootAtMs:boot,modifiedAtMs:modified(path)},policy))return undefined;return requireHostCapacityV1("Reservation",Object.freeze({id:grant.id,jobs:grant.jobs,cpu:grant.cpu,reservedMegabytes:grant.quiet?0:grant.reservedMegabytes}));}
+
 const bootAnchors=new Map<string,HostBootAnchorV1>();
 const readBootAnchor=(value:unknown):HostBootAnchorV1|undefined=>{const row=value as Partial<HostBootAnchorV1>|undefined;return Number.isSafeInteger(row?.bootAtMs)&&Number.isSafeInteger(row?.uptimeMs)?{bootAtMs:row!.bootAtMs!,uptimeMs:row!.uptimeMs!}:undefined;};
 /** ⚓️ The boot instant of the grants in `directory`: read from the anchor of the boot (see `hostBootAnchorV1`), written when this is the first process of the boot, and kept for the life of this process, so the wall clock is read once and never moves it. */

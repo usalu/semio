@@ -1,0 +1,11 @@
+import ts from"typescript";
+import{readFileSync}from"node:fs";
+import{createHash}from"node:crypto";
+const print="🧰️framework/🛍️products/📓️print",reader="🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/👓️reading",ticket=".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️28/EXTEND-PRINT-PORTFOLIO-WITH-THESIS";
+const roots=[...['🟦️.ts','📥️settlement/🟦️.ts','📥️settlement/🧪️tests/🟦️.ts'].map(path=>reader+'/'+path),...['🧪️tests/🎓️thesis/🟦️.ts','🧪️tests/🎓️thesis/🖨️rendering/🚪️entry/🟦️.ts','🧪️tests/🎓️thesis/📤️publication/🚪️entry/🟦️.ts','🧪️tests/🎓️thesis/📤️publication/🟦️.ts','🧪️tests/🎓️thesis/📤️publication/🎨️paint/🟦️.ts','🧪️tests/🎓️thesis/📤️publication/🎨️paint/🧪️tests/🟦️.ts','📦️artifacts/📖️pdf/🟦️.ts','📦️artifacts/📖️pdf/📜️script.ts','📦️artifacts/📖️pdf/🧪️tests/🟦️.ts','🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🟦️.ts','🔨️modules/🖨️tectonic-template-compilation/📥️refusal/📜️script.ts','🔨️modules/🖨️tectonic-template-compilation/📥️refusal/🧪️tests/🟦️.ts','🔨️modules/🎨print-design-token-paints/🧪️tests/🟦️.ts','🧪️tests/🔬️script-commands/🟦️.ts'].map(path=>print+'/'+path),ticket+'/verify.ts'];
+const hash=(path:string)=>createHash('sha256').update(readFileSync(path)).digest('hex'),latex=Object.fromEntries(['semio-core.sty','semio-window.sty'].map(name=>[print+'/🖋️latex/'+name,hash(print+'/🖋️latex/'+name)]));
+const program=ts.createProgram(roots,{noEmit:true,strict:true,skipLibCheck:true,resolveJsonModule:true,allowImportingTsExtensions:true,module:ts.ModuleKind.Preserve,moduleResolution:ts.ModuleResolutionKind.Bundler,target:ts.ScriptTarget.ES2023,types:['bun']}),diagnostics=ts.getPreEmitDiagnostics(program);
+for(const[path,sha]of Object.entries(latex))if(hash(path)!==sha)throw Error('LaTeX Source changed during strict validation');
+console.log('[DEBUG] '+JSON.stringify({kind:'heading-number-final-strict',roots:roots.length,sourceFiles:program.getSourceFiles().length,diagnostics:diagnostics.length,latexSha256:latex,latexSyntaxChecked:false}));
+for(const row of diagnostics.slice(0,50))console.log('[DEBUG] '+JSON.stringify({file:row.file?.fileName,code:row.code,start:row.start,message:ts.flattenDiagnosticMessageText(row.messageText,' ')}));
+process.exitCode=diagnostics.length?1:0;

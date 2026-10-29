@@ -1,0 +1,7 @@
+# Public First-Party Capture Import Audit — 2026-10-29
+
+Parsed1777current TS/TSX/MJS files under repo library/build and library/caching with the installed TypeScript AST. Selected actual ImportDeclaration, ExportDeclaration and literal import() references to @semio-tech/repo-coordinator or @semio-tech/ui-styling. Fixture strings/comments were excluded.
+
+One remaining actual import was found: library/⚡️caching/🧪️tests/🐍️styling-python-outputs/🟦️.ts line6 imports @semio-tech/ui-styling/builder/python/contract. Canonical existing public facade is 🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🐍️python/📋️contract/🟦️.ts. It explicitly reexports both requested members, stylingPythonOutputV1 and STYLING_PYTHON_POLICY_V1, from the owning module. Styling package exports declare this exact subpath; private is absent. Root workspace explicitly lists this package. Resolve through this existing facade with a relative Source import; no new shim or policy exemption is required.
+
+No remaining actual coordinator bare imports appeared in these current trees. This does not prove reachability of all1777files from any single command; it intentionally includes caching tests that canonical Source capture may collect. Nonliteral constructed imports, other package namespaces and files outside these trees were not scanned. Existing peer corrections may already have removed earlier reported coordinator references. Root was notified immediately with the exact remaining line. No Source edit, build or capture policy change was performed.

@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "entries": [
+    {
+      "path": "entry.ts",
+      "kind": "file"
+    },
+    {
+      "path": "nested",
+      "kind": "directory"
+    },
+    {
+      "path": "nested/value.rs",
+      "kind": "file"
+    },
+    {
+      "path": "node_modules",
+      "kind": "directory"
+    },
+    {
+      "path": "node_modules/pkg.js",
+      "kind": "file"
+    },
+    {
+      "path": ".cache",
+      "kind": "directory"
+    },
+    {
+      "path": ".cache/value.json",
+      "kind": "file"
+    },
+    {
+      "path": "linked",
+      "kind": "symlink"
+    }
+  ],
+  "expected": [
+    "entry.ts",
+    "nested/value.rs"
+  ]
+}

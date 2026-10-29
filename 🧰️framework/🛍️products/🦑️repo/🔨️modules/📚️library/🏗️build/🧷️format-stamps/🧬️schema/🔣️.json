@@ -73,12 +73,29 @@
         "maximumReexecutions": 6,
         "progressMilliseconds": 600000,
         "loadFailure": {
-          "names": ["BuildMessage", "ResolveMessage"],
+          "names": [
+            "BuildMessage",
+            "ResolveMessage"
+          ],
           "syntaxErrorPrefix": "Export named ",
-          "backoffMs": [250, 1000, 4000, 12000, 30000, 30000]
+          "backoffMs": [
+            250,
+            1000,
+            4000,
+            12000,
+            30000,
+            30000
+          ]
         },
         "editFailure": {
-          "backoffMs": [250, 1000, 4000, 12000, 30000, 30000]
+          "backoffMs": [
+            250,
+            1000,
+            4000,
+            12000,
+            30000,
+            30000
+          ]
         },
         "reexecutionEnvironment": "SEMIO_STALE_REEXEC",
         "admissionGuardRegistry": "semio.resourceLeaseAdmissionGuards.v1",
@@ -196,6 +213,35 @@
             "missing": "Der deklarierte Stempel {id} fehlt bei {pointer} in {path}.",
             "unknown": "In der Stempeltabelle ist kein Stempel {id} deklariert."
           }
+        }
+      }
+    },
+    "RestartBirthCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "owner",
+        "stale",
+        "status"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "owner": {
+          "type": "boolean"
+        },
+        "stale": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            0,
+            75
+          ]
         }
       }
     }

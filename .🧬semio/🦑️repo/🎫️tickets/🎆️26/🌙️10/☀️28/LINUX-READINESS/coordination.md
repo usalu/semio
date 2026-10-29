@@ -49,3 +49,11 @@ All6 authored JavaScript lock scopes independently check with0 drift after succe
 Provisioned Ubuntu container repo preflight passes and real Vulkan VkInstance creation/physical device enumeration reports llvmpipe software ICD. Native Go integration is rerunning after raw tools were archived, byte-compared and retired with no /proc executable/file-descriptor references.
 
 Full workspace build, tests and full-monorepo readiness remain unproven.
+
+## Isolation and Current Source Gates
+
+Removed devcontainer node_modules endpoint volume after real producer same-filesystem preservation refusal; two owned cache volumes retain immutable package generations. Source overlay verification preserves all320 host endpoint identities while privately resetting inherited generated links, allowing unprivileged full setup alongside active host jobs. One bootstrap handle retained until actual terminal state.
+
+Per-user native discovery contract7tests1584assertions passes (authenticated POSIX shell test still pending full route). Native cache backend law now uses schema/capability-specific backing rather than macOS-only assertions; pure corpus1test9assertions passes. Current Source Windows path gates4tests28assertions pass with unchanged213file/201directory budgets; historical staged-copy candidates are already absent and were not removed by this ticket.
+
+Broad workspace contract session57947 remains live, waiting on progressing external graph peer160792 (verified via owned lease/status interface, no deadlock cycles). Search readiness Source cap failure is assigned for bounded sharded implementation and full-tree query verification; no cap raising permitted.

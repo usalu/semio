@@ -1,0 +1,39 @@
+      "thermal": {
+        "environment": { "airTempC": 20, "meanRadiantTempC": 20, "relativeHumidity": 0.5, "windMS": 0.2, "windDirectionDeg": 180, "solarWM2": 0, "pressurePa": 101325 },
+        "baseMet": 0.95,
+        "regions": [
+          { "id": "coat-trunk", "title": { "en": "Trunk coat", "de": "Rumpffell" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.58, "characteristicLengthM": 0.35, "coreTempC": 38.5, "insulationM2KW": 0.17, "metabolicShare": 0.52, "source": "authored-estimate", "reference": "scholander-1950" },
+          { "id": "coat-head-neck", "title": { "en": "Head and neck coat", "de": "Fell von Kopf und Hals" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.1, "characteristicLengthM": 0.15, "coreTempC": 38.5, "insulationM2KW": 0.13, "metabolicShare": 0.09, "source": "authored-estimate", "reference": "scholander-1950" },
+          { "id": "coat-limbs", "title": { "en": "Limb coat", "de": "Fell der Gliedmaßen" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.29, "characteristicLengthM": 0.07, "coreTempC": 38.5, "insulationM2KW": 0.12, "metabolicShare": 0.28, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "coat-tail", "title": { "en": "Tail coat", "de": "Rutenfell" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.04, "characteristicLengthM": 0.06, "coreTempC": 38.5, "insulationM2KW": 0.11, "metabolicShare": 0.02, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "ears", "title": { "en": "Ears", "de": "Ohren" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.03, "characteristicLengthM": 0.08, "coreTempC": 38.5, "insulationM2KW": 0.07, "metabolicShare": 0.02, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "nose-skin", "title": { "en": "Nose leather", "de": "Nasenspiegel" }, "kind": "skin", "material": "bare-skin", "model": "core-resistance", "areaM2": 0.004, "characteristicLengthM": 0.03, "coreTempC": 38.5, "insulationM2KW": 0.06, "wettedness": 0.5, "metabolicShare": 0.01, "source": "authored-estimate", "reference": "ashrae-2021" },
+          { "id": "tongue", "title": { "en": "Tongue", "de": "Zunge" }, "kind": "skin", "material": "tongue-mucosa", "model": "core-resistance", "areaM2": 0.012, "characteristicLengthM": 0.05, "coreTempC": 38.5, "insulationM2KW": 0.01, "wettedness": 0.9, "metabolicShare": 0.03, "source": "authored-estimate", "reference": "goldberg-1981" },
+          { "id": "pads", "title": { "en": "Paw pads", "de": "Pfotenballen" }, "kind": "skin", "material": "bare-skin", "model": "core-resistance", "areaM2": 0.02, "characteristicLengthM": 0.05, "coreTempC": 38.5, "insulationM2KW": 0.09, "metabolicShare": 0.03, "source": "authored-estimate", "reference": "ashrae-2021" }
+        ],
+        "emitters": [
+          { "id": "breath-nose", "kind": "breath", "title": { "en": "Nasal breathing", "de": "Nasenatmung" }, "anchor": "nose", "directionDeg": -10, "carries": "vapour", "temperatureC": 31, "velocityMS": 1.6, "diameterM": 0.016, "vapourKgPerKg": 0.028, "periodS": 3, "dutyFrom": 0.5, "dutyTo": 1, "source": "authored-estimate", "reference": "goldberg-1981" },
+          { "id": "sniff", "kind": "breath", "title": { "en": "Sniffing bursts", "de": "Schnüffelstöße" }, "anchor": "nose", "directionDeg": -60, "carries": "airflow", "temperatureC": 28, "velocityMS": 3, "diameterM": 0.01, "periodS": 0.2, "dutyFrom": 0.5, "dutyTo": 1, "source": "authored-estimate", "reference": "goldberg-1981" },
+          { "id": "pant-mouth", "kind": "breath", "title": { "en": "Panting through the mouth", "de": "Hecheln durch das Maul" }, "anchor": "mouth", "directionDeg": -15, "carries": "vapour", "temperatureC": 35, "velocityMS": 3.5, "diameterM": 0.03, "vapourKgPerKg": 0.036, "periodS": 0.4, "dutyFrom": 0.5, "dutyTo": 1, "source": "authored-estimate", "reference": "goldberg-1981" }
+        ],
+        "assumptions": [
+          { "en": "Total coat area follows Meeh's law A = 0.112·M^(2/3) = 1.08 m² for 30 kg; the regions sum to 1.08 m².", "de": "Die gesamte Fellfläche folgt dem Meeh-Gesetz A = 0,112·M^(2/3) = 1,08 m² für 30 kg; die Regionen summieren sich zu 1,08 m²." },
+          { "en": "Insulation values run from the core (38.5 °C) to the outer coat surface and include tissue, coat and are authored estimates guided by Scholander et al. (1950) and Cena and Monteith (1975); a short Labrador coat is a thin insulator.", "de": "Dämmwerte laufen vom Körperkern (38,5 °C) zur Felloberfläche und umfassen Gewebe und Fell; sie sind Schätzwerte nach Scholander et al. (1950) und Cena und Monteith (1975); das kurze Labradorfell dämmt wenig." },
+          { "en": "Activity is expressed in the engine's 58.15 W/m² unit: 0.95 met is resting heat production (Kleiber, 3.4 W/kg^0.75 times 1.2), 2.0 walking and 3.6 trotting (Taylor et al. 1970); all are authored estimates.", "de": "Die Aktivität wird in der 58,15-W/m²-Einheit der Engine angegeben: 0,95 met entsprechen der Ruhewärmeproduktion (Kleiber, 3,4 W/kg^0,75 mal 1,2), 2,0 Gehen und 3,6 Traben (Taylor et al. 1970); alles Schätzwerte." },
+          { "en": "Heat loss through panting is carried by the moist tongue region (exposed only with an open jaw) and the pant emitter at 2.5 breaths per second; resting nasal breath is 20 per minute.", "de": "Der Wärmeverlust durch Hecheln wird von der feuchten Zungenregion (nur bei offenem Kiefer sichtbar) und dem Hecheln-Emitter mit 2,5 Atemzügen pro Sekunde getragen; die Ruheatmung durch die Nase beträgt 20 pro Minute." }
+        ]
+      },
+      "structure": {
+        "gravityMS2": 9.80665,
+        "dynamics": "quasi-static",
+        "supports": [],
+        "assumptions": [
+          { "en": "Segments are rigid with authored masses summing to 30 kg; contacts come only from pose contacts and clip spans: the paw pads carry the load in stance and share it by position, the sitting bones add a fifth support in the sitting pose.", "de": "Segmente sind starr mit Massen von zusammen 30 kg; Kontakte kommen nur aus Posenkontakten und Clip-Spannen: die Pfotenballen tragen im Stand und teilen die Last nach Lage, die Sitzbeinhöcker bilden in der Sitzpose ein fünftes Auflager." },
+          { "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle model is assumed.", "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; ein Muskelmodell wird nicht angenommen." }
+        ],
+        "clinical": false
+      },
+      "presentation": { "defaultPose": "standing-alert", "defaultClip": "walk-cycle", "viewpoints": ["elevation"] },
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "completion": "authored"
+    }

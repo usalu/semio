@@ -1,0 +1,94 @@
+{
+ "case": "🌉️simply-supported",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "structural",
+ "materials": [
+  {
+   "id": "steel",
+   "elasticModulusPa": 210000000000.0
+  }
+ ],
+ "root": {
+  "x": 0,
+  "y": 0,
+  "angleDeg": 0
+ },
+ "bones": [
+  {
+   "id": "beam",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 4.0,
+   "mass": {
+    "kg": 407.7471967380224,
+    "comX": 2.0,
+    "comY": 0,
+    "distribution": "uniform"
+   },
+   "section": {
+    "areaM2": 0.00285,
+    "secondMomentM4": 1.943e-05,
+    "extremeFibreM": 0.1,
+    "material": "steel"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "pin",
+   "bone": "beam",
+   "x": 0,
+   "y": 0,
+   "kind": "support",
+   "support": "pin"
+  },
+  {
+   "id": "roller",
+   "bone": "beam",
+   "x": 4.0,
+   "y": 0,
+   "kind": "support",
+   "support": "roller",
+   "normalDeg": 90
+  }
+ ],
+ "contacts": [],
+ "supports": [
+  "pin",
+  "roller"
+ ],
+ "loads": [
+  {
+   "id": "mid",
+   "bone": "beam",
+   "at": {
+    "x": 2.0,
+    "y": 0
+   },
+   "fxN": 0,
+   "fyN": -5000.0
+  }
+ ],
+ "scenarios": [],
+ "oracle": {
+  "tool": "anastruct",
+  "version": "1.7.0",
+  "values": {
+   "reactionLeftFyN": 4499.999999999998,
+   "reactionRightFyN": 4499.999999999999,
+   "maxMomentNm": -6999.999999999999,
+   "midDeflectionM": -0.0024508001045675147,
+   "analyticMaxMomentNm": -7000.0,
+   "analyticMidDeflectionM": -0.002450800186260814,
+   "stationMomentNm": {
+    "0.5": -2125.0,
+    "1.0": -4000.0,
+    "2.0": -7000.0,
+    "3.0": -4000.0
+   }
+  }
+ }
+}

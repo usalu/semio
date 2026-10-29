@@ -1,0 +1,261 @@
+{
+ "case": "🏃️inertial-consistency",
+ "gravityMS2": 9.81,
+ "dynamics": "inertial",
+ "kind": "anatomical",
+ "materials": [],
+ "root": {
+  "x": 0,
+  "y": 0.95,
+  "angleDeg": 0
+ },
+ "bones": [
+  {
+   "id": "pelvis",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 0.0,
+   "mass": {
+    "kg": 14,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "point"
+   }
+  },
+  {
+   "id": "leg-left",
+   "parent": "pelvis",
+   "x": -0.3,
+   "y": 0,
+   "angleDeg": -90,
+   "lengthM": 0.95,
+   "mass": {
+    "kg": 10,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "uniform"
+   }
+  },
+  {
+   "id": "leg-right",
+   "parent": "pelvis",
+   "x": 0.3,
+   "y": 0,
+   "angleDeg": -90,
+   "lengthM": 0.95,
+   "mass": {
+    "kg": 10,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "uniform"
+   }
+  },
+  {
+   "id": "torso",
+   "parent": "pelvis",
+   "x": 0,
+   "y": 0,
+   "angleDeg": 75,
+   "lengthM": 0.7,
+   "mass": {
+    "kg": 35,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "uniform"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "foot-left",
+   "bone": "leg-left",
+   "x": 0.95,
+   "y": 0,
+   "kind": "contact",
+   "support": "contact",
+   "normalDeg": 90,
+   "frictionCoefficient": 0.2
+  },
+  {
+   "id": "foot-right",
+   "bone": "leg-right",
+   "x": 0.95,
+   "y": 0,
+   "kind": "contact",
+   "support": "contact",
+   "normalDeg": 90,
+   "frictionCoefficient": 0.2
+  }
+ ],
+ "contacts": [
+  "foot-left",
+  "foot-right"
+ ],
+ "supports": [],
+ "loads": [],
+ "scenarios": [
+  {
+   "id": "moving",
+   "accelerations": {
+    "pelvis": {
+     "x": 0.3002291198512008,
+     "y": 1.588855203878302
+    },
+    "leg-left": {
+     "x": 0.6616456565884643,
+     "y": -1.0991712400376326
+    },
+    "leg-right": {
+     "x": -0.4796009162130589,
+     "y": 1.4942137815850476
+    },
+    "torso": {
+     "x": -1.1873632690426206,
+     "y": 1.2849136735310651
+    }
+   }
+  },
+  {
+   "id": "friction-saturated",
+   "accelerations": {
+    "pelvis": {
+     "x": 2.6,
+     "y": 0.0
+    },
+    "leg-left": {
+     "x": 2.6,
+     "y": 0.0
+    },
+    "leg-right": {
+     "x": 2.6,
+     "y": 0.0
+    },
+    "torso": {
+     "x": 2.6,
+     "y": 0.0
+    }
+   }
+  },
+  {
+   "id": "flight",
+   "contacts": [],
+   "accelerations": {
+    "pelvis": {
+     "x": 0.0,
+     "y": -9.81
+    },
+    "leg-left": {
+     "x": 0.0,
+     "y": -9.81
+    },
+    "leg-right": {
+     "x": 0.0,
+     "y": -9.81
+    },
+    "torso": {
+     "x": 0.0,
+     "y": -9.81
+    }
+   }
+  },
+  {
+   "id": "pulled-down",
+   "accelerations": {
+    "pelvis": {
+     "x": 0.0,
+     "y": -19.62
+    },
+    "leg-left": {
+     "x": 0.0,
+     "y": -19.62
+    },
+    "leg-right": {
+     "x": 0.0,
+     "y": -19.62
+    },
+    "torso": {
+     "x": 0.0,
+     "y": -19.62
+    }
+   }
+  },
+  {
+   "id": "quasi-static",
+   "dynamics": "quasi-static",
+   "accelerations": {
+    "pelvis": {
+     "x": 0.3002291198512008,
+     "y": 1.588855203878302
+    },
+    "leg-left": {
+     "x": 0.6616456565884643,
+     "y": -1.0991712400376326
+    },
+    "leg-right": {
+     "x": -0.4796009162130589,
+     "y": 1.4942137815850476
+    },
+    "torso": {
+     "x": -1.1873632690426206,
+     "y": 1.2849136735310651
+    }
+   }
+  }
+ ],
+ "oracle": {
+  "tool": "numpy",
+  "version": "2.5.0",
+  "values": {
+   "moving": {
+    "normalLeftN": 221.31385240027657,
+    "normalRightN": 526.742524443081,
+    "tangentLeftN": -17.767029667410426,
+    "tangentRightN": -17.767029667410426,
+    "sumReactionFxN": -35.53405933482085,
+    "sumReactionFyN": 748.0563768433576,
+    "expectedSumFxN": -35.53405933482085,
+    "expectedSumFyN": 748.0563768433576,
+    "residualFxN": 0.0,
+    "residualFyN": 0.0
+   },
+   "friction-saturated": {
+    "normalLeftN": 580.7646764495403,
+    "normalRightN": 96.12532355045984,
+    "tangentLeftN": 116.15293528990806,
+    "tangentRightN": 19.22506471009197,
+    "sumReactionFxN": 135.37800000000004,
+    "sumReactionFyN": 676.8900000000001,
+    "expectedSumFxN": 179.4,
+    "expectedSumFyN": 676.8900000000001,
+    "residualFxN": -44.02199999999996,
+    "residualFyN": 0.0
+   },
+   "flight": {
+    "sumReactionFxN": 0.0,
+    "sumReactionFyN": 0.0,
+    "residualFxN": -0.0,
+    "residualFyN": -0.0,
+    "expectedSumFyN": 0.0,
+    "expectedSumFxN": 0.0
+   },
+   "pulled-down": {
+    "keptFoot": "foot-right",
+    "comX": 0.045949758007331594
+   },
+   "quasi-static": {
+    "normalLeftN": 286.6067805040289,
+    "normalRightN": 390.2832194959712,
+    "tangentLeftN": 0.0,
+    "tangentRightN": 0.0,
+    "sumReactionFxN": 0.0,
+    "sumReactionFyN": 676.8900000000001,
+    "expectedSumFxN": 0.0,
+    "expectedSumFyN": 676.8900000000001,
+    "residualFxN": 0.0,
+    "residualFyN": 0.0
+   }
+  }
+ }
+}

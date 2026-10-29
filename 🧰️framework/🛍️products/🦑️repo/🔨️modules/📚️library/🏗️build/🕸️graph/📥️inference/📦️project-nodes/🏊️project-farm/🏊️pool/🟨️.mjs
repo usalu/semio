@@ -1,3 +1,4 @@
+import{graphMemoryAllocationV1,GRAPH_MEMORY_POLICY_V1}from"../../../../../🧠️memory/🟨️.mjs";
 import {noticeLanguagesV1} from "../../../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import { spawn } from "node:child_process";
 import { closeSync, constants, mkdtempSync, openSync, readdirSync, realpathSync, rmSync, writeFileSync } from "node:fs";
@@ -46,13 +47,10 @@ export function planGraphFarmV1({ projects, environment = {}, cores, policy = P 
 }
 
 /** 🏠️ The worker pool the capacity grant this process already holds pays for: the declared number of workers (at most the jobs of the grant) with the megabytes of one job, or undefined when the process holds no grant (the capacity gate is off or this is no graph plan child). The host is still asked for more; this pool is what keeps a saturated host from leaving every project to the parent. */
-export function ownGrantPoolV1(environment, policy = P) {
-  let plan;
-  try { plan = JSON.parse(environment[policy.planEnvironment] ?? "null"); } catch { return undefined; }
-  const jobs = plan?.jobs, megabytes = plan?.memoryMegabytes;
-  if (!Number.isSafeInteger(jobs) || jobs < 1 || typeof megabytes !== "number" || !Number.isFinite(megabytes) || megabytes <= 0) return undefined;
-  return { source: "own", workers: Math.min(policy.ownWorkers, jobs), megabytes: Math.floor(megabytes / jobs) };
-}
+export function ownGrantPoolV1(environment,policy=P){const allocation=graphMemoryAllocationV1(environment);if(!allocation.qualified||allocation.jobs<1)return undefined;const workers=Math.min(policy.ownWorkers,allocation.jobs),megabytes=Math.floor(allocation.workerMegabytes/workers);if(workers<1||megabytes<GRAPH_MEMORY_POLICY_V1.minimumBudgetMegabytes)return undefined;return{source:"own",workers,megabytes};}
+
+/** 🪢️ Stops future ownership admission, drains accepted work and its adoption, then releases a shrunken pool. */
+export async function retireOwnedGraphPoolV1(pool,next){if(next!==undefined&&next.workers>=pool.workers&&next.megabytes>=pool.megabytes)return false;pool.ready=false;const settled=await Promise.allSettled([...pool.work]);let failure;try{await pool.farm.close();}catch(error){failure=error;}finally{try{pool.release();}catch(error){failure??=error;}}const rejected=settled.find(row=>row.status==="rejected");if(rejected)throw rejected.reason;if(failure)throw failure;return true;}
 
 /** 🎟️ The worker pool a host answer admits: any grant of at least the declared minimum starts a pool of the granted jobs; a smaller or missing answer starts none. */
 export function grantedPoolV1(granted, policy = P) {

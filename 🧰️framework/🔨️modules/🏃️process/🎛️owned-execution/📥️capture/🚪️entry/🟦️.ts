@@ -1,0 +1,42 @@
+import{types}from"node:util";
+import{readScriptProcessJsonV1}from"../../../🧭️routing/📥️invocation/🏃️process/📥️json/🟦️.ts";
+import{AsyncLocalStorage}from"node:async_hooks";
+import{createHash}from"node:crypto";
+import{fileURLToPath}from"node:url";
+import{isAbsolute}from"node:path";
+import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import{requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,requireAcceptedPhysicalCleanupDescendantV1,checkAcceptedPhysicalCleanupV1,withIssuedResourceOperationV1}from"../../../🧭️routing/📥️invocation/🏃️process/🟦️.ts";
+import type{AcceptedPhysicalCleanupV1}from"../../../🧭️routing/📥️invocation/🏃️process/🧹️cleanup/🟦️.ts";
+import type{ResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
+import schema from"./🧬️schema/🔣️.json"with{type:"json"};
+const policy=schema.definitions.Policy.const,hash=(value:string)=>createHash("sha256").update(value).digest("hex");
+/** 🚪️ Declares one executable sibling of the exact module captured by its compiler. */
+export interface RuntimeEntryDeclarationV1{readonly version:1;readonly moduleURL:string;readonly physicalSourceURL?:string;readonly specifier:string}
+/** 📦️ Carries a closed immutable entry image through the existing owned command input. */
+export interface CapturedRuntimeEntryCommandV1{readonly version:1;readonly program:string;readonly arguments:readonly string[];readonly input:string;readonly implementation:string;readonly loader:string;readonly environment:Readonly<{BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"}>}
+/** 🔌️ Admits the entry through its caller's source compiler and existing issued control. */
+export interface CapturedRuntimeEntryProviderV1{capture(entry:RuntimeEntryDeclarationV1,control:ResourceLeaseControl):Promise<CapturedRuntimeEntryCommandV1>}
+/** 🎟️ Names a privately retained command rather than a replayable command object. */
+export interface CapturedRuntimeEntryV1{readonly __capturedRuntimeEntry:unique symbol}
+type RecordV1={control:ResourceLeaseControl;command:CapturedRuntimeEntryCommandV1};
+type CleanupRecordV1={cleanup:AcceptedPhysicalCleanupV1;command:CapturedRuntimeEntryCommandV1};
+/** 🛟️ Retains one immutable entry under an already accepted cleanup enrollment. */
+export interface CapturedRuntimeCleanupEntryV1{readonly __capturedRuntimeCleanupEntry:unique symbol}
+type StateV1={cleanupEntries:WeakMap<CapturedRuntimeCleanupEntryV1,CleanupRecordV1>;providers:AsyncLocalStorage<CapturedRuntimeEntryProviderV1>;entries:WeakMap<CapturedRuntimeEntryV1,RecordV1>};
+const key=Symbol.for("semio.process.capturedRuntimeEntry.v1"),holder=globalThis as unknown as Record<symbol,StateV1|undefined>,state=holder[key]??=({cleanupEntries:new WeakMap(),providers:new AsyncLocalStorage<CapturedRuntimeEntryProviderV1>(),entries:new WeakMap()});
+/** 🧭️ Resolves the declared entry from compiler-authored physical origin, independent of bundle relocation. */
+export function runtimeEntrySourcePathV1(value:RuntimeEntryDeclarationV1):string{if(!value||value.version!==1||Object.keys(value).some(key=>!["version","moduleURL","physicalSourceURL","specifier"].includes(key))||typeof value.moduleURL!=="string"||typeof value.specifier!=="string"||!value.specifier.startsWith(".")||value.specifier.length>policy.maximumPathUnits)throw Error("Closed runtime Source entry declaration required");const origin=value.physicalSourceURL??value.moduleURL;if(typeof origin!=="string"||origin.length>policy.maximumURLUnits||!origin.startsWith("file:"))throw Error("Physical runtime Source origin required");const url=new URL(value.specifier,origin);if(url.protocol!=="file:"||url.search||url.hash)throw Error("Physical runtime Source entry required");const entry=fileURLToPath(url);if(!isAbsolute(entry)||entry.length>policy.maximumPathUnits)throw Error("Bounded physical runtime Source entry required");return entry;}
+/** 🔐️ Copies only a hash-bound stdin loader publication under fixed finite transport limits. */
+export function readCapturedRuntimeEntryCommandV1(value:unknown):CapturedRuntimeEntryCommandV1{if(!value||typeof value!=="object"||types.isProxy(value)||![Object.prototype,null].includes(Object.getPrototypeOf(value)))throw Error("Own runtime entry DATA required");const keys=Reflect.ownKeys(value),expected=["version","program","arguments","input","implementation","loader","environment"],copy:Record<string,unknown>={};if(keys.length!==expected.length||keys.some(key=>typeof key!=="string"||!expected.includes(key)))throw Error("Closed own runtime entry DATA required");for(const key of expected){const descriptor=Object.getOwnPropertyDescriptor(value,key);if(!descriptor?.enumerable||!("value"in descriptor))throw Error("Own runtime entry DATA properties required");copy[key]=descriptor.value;}const input=copy.input;if(typeof input!=="string"||input.length>policy.maximumSnapshotBytes||Buffer.byteLength(input)>policy.maximumSnapshotBytes||Buffer.from(input).toString("utf8")!==input)throw Error("Bounded runtime entry image required");const envelope=readScriptProcessJsonV1({command:{...copy,input:""}}).command as Readonly<Record<string,unknown>>,captured={...envelope,input};if(validateJsonSchemaSubset(schema.definitions.Command,captured,schema).length)throw Error("Closed captured runtime entry command required");const row=captured as unknown as CapturedRuntimeEntryCommandV1,[flag,loader,separator,digest]=row.arguments;if(row.program!==process.execPath||flag!=="--eval"||separator!=="--"||digest!==row.implementation||Buffer.byteLength(row.input)>policy.maximumSnapshotBytes||Buffer.byteLength(loader!)>policy.maximumLoaderBytes||hash(row.input)!==row.implementation||hash(loader!)!==row.loader)throw Error("Exact immutable runtime entry publication required");return Object.freeze({...row,arguments:Object.freeze([...row.arguments]),environment:Object.freeze({...row.environment})});}
+/** 🪢️ Shares an Original-bound compiler port across the bundles of one live process. */
+export function withCapturedRuntimeEntryProviderV1<T>(provider:CapturedRuntimeEntryProviderV1,body:()=>T):T{if(!provider||typeof provider.capture!=="function")throw Error("Captured runtime entry provider required");return state.providers.run(provider,body);}
+/** 📥️ Captures before ordinary admission ends and retains that exact image for later cleanup. */
+export function captureRuntimeEntryV1(entry:RuntimeEntryDeclarationV1,control:ResourceLeaseControl):Promise<CapturedRuntimeEntryV1>{requireIssuedResourceControlV1(control);runtimeEntrySourcePathV1(entry);const provider=state.providers.getStore();if(!provider)throw Error("Original captured runtime entry provider required");const declaration=Object.freeze({...entry});return withIssuedResourceOperationV1(control,async()=>{const command=readCapturedRuntimeEntryCommandV1(await provider.capture(declaration,control));requireIssuedResourceControlV1(control);const token=Object.freeze({})as CapturedRuntimeEntryV1;state.entries.set(token,{control,command});return token;});}
+function retained(entry:CapturedRuntimeEntryV1):RecordV1{const row=state.entries.get(entry);if(!row)throw Error("Original captured runtime entry required");return row;}
+/** ▶️ Loans the captured command only to a genuine ordinary descendant. */
+export function capturedRuntimeEntryCommandV1(entry:CapturedRuntimeEntryV1,control:ResourceLeaseControl):CapturedRuntimeEntryCommandV1{const row=retained(entry);requireIssuedResourceControlRefinementV1(row.control,control);requireIssuedResourceControlV1(control);return row.command;}
+/** 🛟️ Keeps the immutable entry usable under its original accepted reserved cleanup. */
+export function retainRuntimeEntryCleanupV1(entry:CapturedRuntimeEntryV1,cleanup:AcceptedPhysicalCleanupV1,body:ResourceLeaseControl):CapturedRuntimeCleanupEntryV1{const command=capturedRuntimeEntryCommandV1(entry,body);requireAcceptedPhysicalCleanupDescendantV1(cleanup,body);const token=Object.freeze({})as CapturedRuntimeCleanupEntryV1;state.cleanupEntries.set(token,{cleanup,command});return token;}
+/** 🛟️ Loans only the immutable command retained for this exact live accepted cleanup. */
+export function capturedRuntimeEntryCleanupCommandV1(entry:CapturedRuntimeCleanupEntryV1,cleanup:AcceptedPhysicalCleanupV1):CapturedRuntimeEntryCommandV1{const row=state.cleanupEntries.get(entry);if(!row||row.cleanup!==cleanup)throw Error("Original enrolled runtime entry required");checkAcceptedPhysicalCleanupV1(cleanup);return row.command;}
+export{requireCapturedRuntimeEntryProofV1}from"./🔏️proof/🟦️.ts";

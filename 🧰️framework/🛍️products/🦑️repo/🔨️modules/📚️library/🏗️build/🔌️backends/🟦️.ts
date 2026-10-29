@@ -65,6 +65,7 @@ export type BackendExecutionContextV1=BackendContextV1&Readonly<{graph:BuildGrap
 /** 🔌️ Everything neutral code needs from a build backend; neutral code reaches a backend only through the registry and this interface. */
 export interface BuildBackendV1{
  readonly id:BuildBackendIdV1;
+ graphExternalInputs?():Promise<readonly string[]>;
  setup(context:BackendContextV1):Promise<void>;
  reset(context:BackendContextV1):Promise<void>;
  prepareStorage(context:BackendContextV1,snapshotBytes:number):Promise<void>;

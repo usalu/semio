@@ -1,0 +1,189 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "package",
+    "manifest",
+    "caps",
+    "baseline",
+    "expected",
+    "owners",
+    "cfg",
+    "validation",
+    "fixtureCoordinate"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "package": {
+      "const": "semio-framework-value"
+    },
+    "manifest": {
+      "const": "📦️packages/🦀️rust/Cargo.toml"
+    },
+    "caps": {
+      "const": {
+        "maxSourceFiles": 32,
+        "maxSourceBytes": 262144,
+        "maxActiveLines": 4000
+      }
+    },
+    "baseline": {
+      "const": {
+        "productionFiles": 28,
+        "libraryTestFiles": 44,
+        "individualTests": 15
+      }
+    },
+    "expected": {
+      "const": {
+        "productionFiles": 28,
+        "libraryTestFiles": 30,
+        "individualTests": 15,
+        "integrationTargets": 7
+      }
+    },
+    "owners": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "entry",
+          "sources"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "entry": {
+            "type": "string"
+          },
+          "sources": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "path",
+                "tests",
+                "assertionTokens",
+                "bodySha256",
+                "fixtureLiterals"
+              ],
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "tests": {
+                  "type": "array",
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "assertionTokens": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "bodySha256": {
+                  "type": "string",
+                  "pattern": "^[a-f0-9]{64}$"
+                },
+                "fixtureLiterals": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "revisions": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "reason",
+                      "previousBodySha256",
+                      "previousAssertionTokens",
+                      "previousFixtureLiterals"
+                    ],
+                    "properties": {
+                      "reason": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "previousBodySha256": {
+                        "type": "string",
+                        "pattern": "^[a-f0-9]{64}$"
+                      },
+                      "previousAssertionTokens": {
+                        "type": "integer",
+                        "minimum": 1
+                      },
+                      "previousFixtureLiterals": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "cfg": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "validation": {
+      "const": {
+        "source": "📦️packages/🦀️rust/📜️script.ts",
+        "packages": [
+          "semio-framework-value",
+          "semio-framework-value-tests"
+        ],
+        "utf8Group": {
+          "package": "semio-framework-value",
+          "target": {
+            "kind": "test",
+            "name": "value-utf8"
+          },
+          "cargoArgs": [
+            "--locked"
+          ],
+          "laws": [
+            "original_utf8_cursor_pages_match_portable_scalar_offsets_without_allocations",
+            "original_utf8_buffer_funds_transfer_and_every_cancellation_frontier"
+          ]
+        }
+      }
+    },
+    "fixtureCoordinate": {
+      "const": {
+        "literal": "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🧫️fixtures/🔣️.json",
+        "path": "📶️sort/🧪️tests/🧫️fixtures/🔣️.json",
+        "manifests": [
+          "📦️packages/🦀️rust/Cargo.toml",
+          "🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml"
+        ],
+        "sha256": "08761982a94bd50bcc3a10a90a367105767e5ead94c7f32d268fd2d603ddc31f"
+      }
+    }
+  }
+}

@@ -1,0 +1,132 @@
+      "clips": [
+        {
+          "id": "walk-cycle",
+          "title": { "en": "Walking, four-beat", "de": "Schritt im Viertakt" },
+          "description": { "en": "Lateral-sequence walk after Muybridge: near hind, near fore, far hind, far fore touch down at quarter-cycle intervals; each paw is on the ground 65 % of the cycle, so three or four paws always carry.", "de": "Schritt in Seitenfolge nach Muybridge: nahes Hinterbein, nahes Vorderbein, fernes Hinterbein, fernes Vorderbein setzen im Viertelzyklus auf; jede Pfote steht 65 % des Zyklus am Boden, sodass stets drei oder vier Pfoten tragen." },
+          "durationS": 0.7, "fps": 30, "loop": true, "rootMotion": "plant", "advanceM": 0.5235,
+          "keys": [
+            { "t": 0, "pose": "walk-phase-0", "ease": "smooth" }, { "t": 0.0875, "pose": "walk-phase-1", "ease": "smooth" }, { "t": 0.175, "pose": "walk-phase-2", "ease": "smooth" }, { "t": 0.2625, "pose": "walk-phase-3", "ease": "smooth" },
+            { "t": 0.35, "pose": "walk-phase-4", "ease": "smooth" }, { "t": 0.4375, "pose": "walk-phase-5", "ease": "smooth" }, { "t": 0.525, "pose": "walk-phase-6", "ease": "smooth" }, { "t": 0.6125, "pose": "walk-phase-7", "ease": "smooth" }
+          ],
+          "contacts": [
+            { "anchor": "contact-hn", "fromS": 0, "toS": 0.455 }, { "anchor": "contact-fn", "fromS": 0.175, "toS": 0.63 },
+            { "anchor": "contact-hf", "fromS": 0.35, "toS": 0.7 }, { "anchor": "contact-hf", "fromS": 0, "toS": 0.105 },
+            { "anchor": "contact-ff", "fromS": 0.525, "toS": 0.7 }, { "anchor": "contact-ff", "fromS": 0, "toS": 0.28 }
+          ],
+          "phases": [
+            { "id": "near-hind-strike", "fromS": 0, "toS": 0.175, "title": { "en": "Near hind strikes first", "de": "Nahes Hinterbein setzt zuerst auf" } },
+            { "id": "near-fore-strike", "fromS": 0.175, "toS": 0.35, "title": { "en": "Near fore follows", "de": "Nahes Vorderbein folgt" } },
+            { "id": "far-hind-strike", "fromS": 0.35, "toS": 0.525, "title": { "en": "Far hind strikes", "de": "Fernes Hinterbein setzt auf" } },
+            { "id": "far-fore-strike", "fromS": 0.525, "toS": 0.7, "title": { "en": "Far fore closes the sequence", "de": "Fernes Vorderbein schließt die Folge" } }
+          ],
+          "events": [
+            { "t": 0, "kind": "contact-on", "title": { "en": "Near hind paw touches down", "de": "Nahe Hinterpfote setzt auf" }, "target": "contact-hn" },
+            { "t": 0.175, "kind": "contact-on", "title": { "en": "Near fore paw touches down", "de": "Nahe Vorderpfote setzt auf" }, "target": "contact-fn" },
+            { "t": 0.35, "kind": "contact-on", "title": { "en": "Far hind paw touches down", "de": "Ferne Hinterpfote setzt auf" }, "target": "contact-hf" },
+            { "t": 0.525, "kind": "contact-on", "title": { "en": "Far fore paw touches down", "de": "Ferne Vorderpfote setzt auf" }, "target": "contact-ff" },
+            { "t": 0.455, "kind": "contact-off", "title": { "en": "Near hind paw lifts", "de": "Nahe Hinterpfote hebt ab" }, "target": "contact-hn" },
+            { "t": 0.63, "kind": "contact-off", "title": { "en": "Near fore paw lifts", "de": "Nahe Vorderpfote hebt ab" }, "target": "contact-fn" },
+            { "t": 0.105, "kind": "contact-off", "title": { "en": "Far hind paw lifts", "de": "Ferne Hinterpfote hebt ab" }, "target": "contact-hf" },
+            { "t": 0.28, "kind": "contact-off", "title": { "en": "Far fore paw lifts", "de": "Ferne Vorderpfote hebt ab" }, "target": "contact-ff" },
+            { "t": 0, "kind": "inhale", "title": { "en": "Inhalation", "de": "Einatmen" } },
+            { "t": 0.35, "kind": "exhale", "title": { "en": "Exhalation", "de": "Ausatmen" } }
+          ],
+          "tracks": [
+            { "target": "emitter:breath-nose", "ease": "smooth", "keys": [{ "t": 0, "v": 0.6 }, { "t": 0.35, "v": 0.9 }, { "t": 0.7, "v": 0.6 }] }
+          ]
+        },
+        {
+          "id": "trot-cycle",
+          "title": { "en": "Trotting with panting", "de": "Traben mit Hecheln" },
+          "description": { "en": "Two-beat trot: the diagonal pairs near hind with far fore and far hind with near fore move together and swap every half cycle; each pair stands 55 % of the cycle so the pairs overlap and the dog never leaves the ground. The jaw is open and the dog pants.", "de": "Zweitakt-Trab: die diagonalen Paare nahes Hinterbein mit fernem Vorderbein und fernes Hinterbein mit nahem Vorderbein bewegen sich gemeinsam und wechseln jeden halben Zyklus; jedes Paar steht 55 % des Zyklus, die Paare überlappen und der Hund verlässt den Boden nie. Der Kiefer ist offen und der Hund hechelt." },
+          "durationS": 0.45, "fps": 30, "loop": true, "rootMotion": "plant", "advanceM": 0.6523,
+          "keys": [
+            { "t": 0, "pose": "trot-phase-0", "ease": "smooth" }, { "t": 0.05625, "pose": "trot-phase-1", "ease": "smooth" }, { "t": 0.1125, "pose": "trot-phase-2", "ease": "smooth" }, { "t": 0.16875, "pose": "trot-phase-3", "ease": "smooth" },
+            { "t": 0.225, "pose": "trot-phase-4", "ease": "smooth" }, { "t": 0.28125, "pose": "trot-phase-5", "ease": "smooth" }, { "t": 0.3375, "pose": "trot-phase-6", "ease": "smooth" }, { "t": 0.39375, "pose": "trot-phase-7", "ease": "smooth" }
+          ],
+          "contacts": [
+            { "anchor": "contact-hn", "fromS": 0, "toS": 0.2475 }, { "anchor": "contact-ff", "fromS": 0, "toS": 0.2475 },
+            { "anchor": "contact-hf", "fromS": 0.225, "toS": 0.45 }, { "anchor": "contact-hf", "fromS": 0, "toS": 0.0225 },
+            { "anchor": "contact-fn", "fromS": 0.225, "toS": 0.45 }, { "anchor": "contact-fn", "fromS": 0, "toS": 0.0225 }
+          ],
+          "phases": [
+            { "id": "diagonal-a", "fromS": 0, "toS": 0.225, "title": { "en": "Near hind and far fore diagonal", "de": "Diagonale nahes Hinterbein und fernes Vorderbein" } },
+            { "id": "diagonal-b", "fromS": 0.225, "toS": 0.45, "title": { "en": "Far hind and near fore diagonal", "de": "Diagonale fernes Hinterbein und nahes Vorderbein" } }
+          ],
+          "events": [
+            { "t": 0, "kind": "contact-on", "title": { "en": "Near hind paw touches down", "de": "Nahe Hinterpfote setzt auf" }, "target": "contact-hn" },
+            { "t": 0, "kind": "contact-on", "title": { "en": "Far fore paw touches down", "de": "Ferne Vorderpfote setzt auf" }, "target": "contact-ff" },
+            { "t": 0.2475, "kind": "contact-off", "title": { "en": "Near hind paw lifts", "de": "Nahe Hinterpfote hebt ab" }, "target": "contact-hn" },
+            { "t": 0.2475, "kind": "contact-off", "title": { "en": "Far fore paw lifts", "de": "Ferne Vorderpfote hebt ab" }, "target": "contact-ff" },
+            { "t": 0.225, "kind": "contact-on", "title": { "en": "Far hind paw touches down", "de": "Ferne Hinterpfote setzt auf" }, "target": "contact-hf" },
+            { "t": 0.225, "kind": "contact-on", "title": { "en": "Near fore paw touches down", "de": "Nahe Vorderpfote setzt auf" }, "target": "contact-fn" },
+            { "t": 0.0225, "kind": "contact-off", "title": { "en": "Far hind paw lifts", "de": "Ferne Hinterpfote hebt ab" }, "target": "contact-hf" },
+            { "t": 0.0225, "kind": "contact-off", "title": { "en": "Near fore paw lifts", "de": "Nahe Vorderpfote hebt ab" }, "target": "contact-fn" },
+            { "t": 0, "kind": "exhale", "title": { "en": "Pant exhalation", "de": "Hecheln, Ausatmen" } }
+          ],
+          "tracks": [
+            { "target": "emitter:pant-mouth", "ease": "smooth", "keys": [{ "t": 0, "v": 0.9 }, { "t": 0.225, "v": 1 }, { "t": 0.45, "v": 0.9 }] }
+          ]
+        },
+        {
+          "id": "sniff-ground",
+          "title": { "en": "Sniffing the ground", "de": "Bodenschnüffeln" },
+          "description": { "en": "The dog lowers its front, nods the head along the ground while taking rapid sniffs at five per second, then lifts the head again. All four paws stay planted.", "de": "Der Hund senkt den Vorderkörper, nickt mit dem Kopf über dem Boden und schnüffelt mit fünf Stößen pro Sekunde, dann hebt er den Kopf wieder. Alle vier Pfoten bleiben stehen." },
+          "durationS": 4, "fps": 30, "loop": false, "rootMotion": "none",
+          "keys": [
+            { "t": 0, "pose": "standing-alert", "ease": "smooth" }, { "t": 1, "pose": "sniffing-head-down", "ease": "smooth" },
+            { "t": 2, "pose": "sniffing-head-down", "ease": "smooth", "bones": { "head": { "angleDeg": -30 }, "neck": { "angleDeg": -42 } } },
+            { "t": 3, "pose": "sniffing-head-down", "ease": "smooth" }, { "t": 4, "pose": "standing-alert", "ease": "smooth" }
+          ],
+          "contacts": [
+            { "anchor": "contact-hn", "fromS": 0, "toS": 4 }, { "anchor": "contact-hf", "fromS": 0, "toS": 4 },
+            { "anchor": "contact-fn", "fromS": 0, "toS": 4 }, { "anchor": "contact-ff", "fromS": 0, "toS": 4 }
+          ],
+          "phases": [
+            { "id": "lower", "fromS": 0, "toS": 1, "title": { "en": "Lowering the head", "de": "Kopf senken" } },
+            { "id": "sniff", "fromS": 1, "toS": 3, "title": { "en": "Sniffing", "de": "Schnüffeln" } },
+            { "id": "raise", "fromS": 3, "toS": 4, "title": { "en": "Raising the head", "de": "Kopf heben" } }
+          ],
+          "events": [
+            { "t": 1, "kind": "motion", "title": { "en": "Nose reaches the ground", "de": "Nase erreicht den Boden" } },
+            { "t": 1, "kind": "inhale", "title": { "en": "Sniff burst begins", "de": "Schnüffelserie beginnt" } },
+            { "t": 3, "kind": "exhale", "title": { "en": "Sniff burst ends", "de": "Schnüffelserie endet" } }
+          ],
+          "tracks": [
+            { "target": "emitter:sniff", "ease": "smooth", "keys": [{ "t": 0, "v": 0 }, { "t": 0.9, "v": 0 }, { "t": 1.2, "v": 1 }, { "t": 2.8, "v": 1 }, { "t": 3.1, "v": 0 }, { "t": 4, "v": 0 }] },
+            { "target": "emitter:breath-nose", "ease": "smooth", "keys": [{ "t": 0, "v": 0.5 }, { "t": 1.2, "v": 0.2 }, { "t": 2.8, "v": 0.2 }, { "t": 4, "v": 0.5 }] },
+            { "target": "activityMet", "ease": "smooth", "keys": [{ "t": 0, "v": 1.1 }, { "t": 1.5, "v": 1.4 }, { "t": 4, "v": 1.1 }] }
+          ]
+        },
+        {
+          "id": "sit-and-pant",
+          "title": { "en": "Sitting down and panting", "de": "Hinsetzen und Hecheln" },
+          "description": { "en": "The dog sits down on its haunches, then opens its jaw and pants: the tongue becomes exposed and moist, the pant emitter ramps up to 2.5 breaths per second, and the sitting bones take part of the load.", "de": "Der Hund setzt sich auf die Hinterhand, öffnet dann den Kiefer und hechelt: die Zunge wird sichtbar und feucht, der Hechel-Emitter steigt auf 2,5 Atemzüge pro Sekunde, und die Sitzbeinhöcker übernehmen einen Teil der Last." },
+          "durationS": 6, "fps": 30, "loop": false, "rootMotion": "none",
+          "keys": [
+            { "t": 0, "pose": "standing-alert", "ease": "smooth" }, { "t": 1.5, "pose": "sitting-waiting", "ease": "smooth" },
+            { "t": 3.2, "pose": "sitting-waiting", "ease": "smooth", "bones": { "jaw": { "angleDeg": -24 } } },
+            { "t": 5, "pose": "sitting-waiting", "ease": "smooth", "bones": { "jaw": { "angleDeg": -24 }, "head": { "angleDeg": -26 } } },
+            { "t": 6, "pose": "sitting-waiting", "ease": "smooth", "bones": { "jaw": { "angleDeg": -10 } } }
+          ],
+          "contacts": [
+            { "anchor": "contact-hn", "fromS": 0, "toS": 6 }, { "anchor": "contact-hf", "fromS": 0, "toS": 6 },
+            { "anchor": "contact-fn", "fromS": 0, "toS": 6 }, { "anchor": "contact-ff", "fromS": 0, "toS": 6 },
+            { "anchor": "contact-rump", "fromS": 1.5, "toS": 6 }
+          ],
+          "phases": [
+            { "id": "sit-down", "fromS": 0, "toS": 1.5, "title": { "en": "Sitting down", "de": "Hinsetzen" } },
+            { "id": "pant", "fromS": 1.5, "toS": 6, "title": { "en": "Panting", "de": "Hecheln" } }
+          ],
+          "events": [
+            { "t": 1.5, "kind": "contact-on", "title": { "en": "Sitting bones touch the ground", "de": "Sitzbeinhöcker berühren den Boden" }, "target": "contact-rump" },
+            { "t": 3.2, "kind": "thermal", "title": { "en": "Panting begins, tongue exposed", "de": "Hecheln beginnt, Zunge frei" } }
+          ],
+          "tracks": [
+            { "target": "emitter:pant-mouth", "ease": "smooth", "keys": [{ "t": 0, "v": 0 }, { "t": 3, "v": 0 }, { "t": 3.6, "v": 1 }, { "t": 5, "v": 1 }, { "t": 6, "v": 0.5 }] },
+            { "target": "region:tongue:exposedFraction", "ease": "smooth", "keys": [{ "t": 0, "v": 0.05 }, { "t": 3, "v": 0.05 }, { "t": 3.6, "v": 1 }, { "t": 5, "v": 1 }, { "t": 6, "v": 0.6 }] },
+            { "target": "emitter:breath-nose", "ease": "smooth", "keys": [{ "t": 0, "v": 0.5 }, { "t": 1.5, "v": 0.4 }, { "t": 3.6, "v": 0.1 }, { "t": 6, "v": 0.2 }] },
+            { "target": "activityMet", "ease": "smooth", "keys": [{ "t": 0, "v": 1.1 }, { "t": 1.5, "v": 0.95 }, { "t": 3.6, "v": 1.5 }, { "t": 5, "v": 1.5 }, { "t": 6, "v": 1.2 }] }
+          ]
+        }
+      ],

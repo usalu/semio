@@ -9,6 +9,8 @@ const argumentSourceIdentity=(captured=false)=>createHash("sha256").update(JSON.
 
 /** 🔏️ Binds the evaluated argument owner to its own unchanged physical implementation and contracts. */
 export function ownerArgumentsSourceIdentityV1(){if(!loadedArgumentSourceIdentity)throw Error("Live private Nx argument Source identity required");if(argumentSourceIdentity()!==loadedArgumentSourceIdentity)throw Error("Loaded private Nx argument Source changed");return loadedArgumentSourceIdentity;}
+/** 🧾️ Returns only the physical Source revisions already evaluated by this private argument owner. */
+export function ownerArgumentsSourceRevisionsV1(){ownerArgumentsSourceIdentityV1();const own=physicalSourceOriginV1(import.meta.url,import.meta.semioPhysicalSourceURL),paths=[fileURLToPath(own),fileURLToPath(new URL("./🧬️schema/🔣️.json",own)),fileURLToPath(new URL("../../⚡️caching/📦️artifacts/📋️native-orchestration/📥️invocation/🧬️schema/🔣️.json",own))],hashes=[captureBoundedSourceRevisionV1(paths[0],REVISION_POLICY_V1.maximumSourceBytes).sha256,...[schemaSource,nativeSchemaSource].map(bytes=>createHash("sha256").update(bytes).digest("hex"))];return Object.freeze(paths.map((path,index)=>Object.freeze({path,sha256:hashes[index]})));}
 
 
 const canonicalOwnerValueV1=value=>JSON.stringify(value,(_,item)=>item!==null&&typeof item==="object"&&!Array.isArray(item)?Object.fromEntries(Object.entries(item).sort(([left],[right])=>left<right?-1:left>right?1:0)):item);

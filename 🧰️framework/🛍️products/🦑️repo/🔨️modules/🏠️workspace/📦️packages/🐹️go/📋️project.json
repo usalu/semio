@@ -4,9 +4,15 @@
   "projectType": "library",
   "namedInputs": {
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ],
     "goToolchain": [
       "{workspaceRoot}/go.work",
@@ -23,10 +29,48 @@
         "testEnv",
         "goToolchain"
       ],
-      "outputs": ["{workspaceRoot}/.cache/b/o/m/tests/results/_semio-tech_repo-workspace-go-a36015c2/test/test.xml"],
+      "outputs": [
+        "{workspaceRoot}/.cache/b/o/m/tests/results/_semio-tech_repo-workspace-go-a36015c2/test/test.xml"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go",
         "command": "repo ./📜️script.ts test"
+      },
+      "dependsOn": [
+        "generate-source-policy"
+      ]
+    },
+    "generate-source-policy": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🙈️source-opacity/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"
+      ],
+      "outputs": [
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🗂️runtime-registry/🐹️.go"
+      ],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go",
+        "command": "repo ./📜️script.ts generate-source-policy"
+      },
+      "metadata": {
+        "semio": {
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/🙈️source-opacity/🟦️.ts"
+          ],
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔣️policy.json"
+            ]
+          }
+        }
       }
     }
   }

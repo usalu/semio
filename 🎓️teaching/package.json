@@ -136,7 +136,10 @@
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🟦️typescript",
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/📚️library",
     "../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript",
-    "🏛️architecture/📚️course/📦️packages/🟦️typescript"
+    "🏛️architecture/📚️course/📦️packages/🟦️typescript",
+    "🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
+    "🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript",
+    "🏛️architecture/🧍️staffage/📦️packages/🟦️typescript"
   ],
   "semio": {
     "workspace": {

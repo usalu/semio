@@ -1,0 +1,12 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "$id":"semio:nx:output-observation:v1",
+ "title":"Output Observation",
+ "$defs":{
+  "Policy":{"const":{"version":1,"maximumExpressions":4096,"maximumWatchers":8192,"maximumAliases":8192,"maximumPathUnits":256,"maximumLinkDepth":32,"maximumAttempts":4,"maximumEvents":200000,"deliveryYieldInterval":256}},
+  "Alias":{"type":"object","additionalProperties":false,"required":["physical","logical","mode"],"properties":{"physical":{"type":"string","minLength":1,"maxLength":256},"logical":{"type":"string","minLength":1,"maxLength":256},"mode":{"enum":["membership","content"]}}},
+  "Observation":{"type":"object","additionalProperties":false,"required":["kind","identity"],"properties":{"kind":{"enum":["directory","file","link","missing"]},"identity":{"type":"string"},"target":{"type":"string"}}},
+  "Scope":{"type":"object","additionalProperties":false,"required":["path","mode","identity"],"properties":{"path":{"type":"string","minLength":1,"maxLength":256},"mode":{"enum":["directory","recursive"]},"identity":{"type":"string"}}},
+  "Case":{"type":"object","additionalProperties":false,"required":["name","root","expressions","entries","scopes","refused"],"properties":{"name":{"type":"string","minLength":1},"root":{"type":"string","minLength":1,"maxLength":256},"expressions":{"type":"array","items":{"type":"string"}},"entries":{"type":"object","additionalProperties":{"$ref":"#/$defs/Observation"}},"scopes":{"type":"array","items":{"$ref":"#/$defs/Scope"}},"refused":{"type":"boolean"}}}
+ }
+}

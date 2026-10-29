@@ -1,3 +1,4 @@
+import {probeDaemonWatcherStartupV1} from "./🧰️watcher-startup/🟦️.ts";
 import {selectedGraphJournalScopeV1} from "../../🕸️graph/🔏️seal/🎯️selection/🔌️sdk/🟦️.ts";
 import {test,expect} from "bun:test";
 import {createRequire} from "node:module";
@@ -67,4 +68,12 @@ test("actual Node lock reader reuses parsing only for exact original lock bytes"
 test("owned watch daemon startup settles under original control without marker deletion",async()=>{
  expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Original artifacts required");const root=mkdtempSync(join(artifacts,"ws-")),marker=join(root,"d/disabled"),proof=join(root,"proof"),cli=join(root,"📜️script.ts");
  try{mkdirSync(join(root,"d"));writeFileSync(marker,"original namespace failure");writeFileSync(cli,`import {writeFileSync} from 'node:fs';if(process.env.SEMIO_WATCH_BLOCK==='true')await new Promise(resolve=>setTimeout(resolve,10000));else writeFileSync(process.env.SEMIO_WATCH_PROOF,'ready');`);const {NxScript}=await import("../../🚀️bootstrap/📜️script.ts");await withBuildTestInvocationV1(async original=>{const env={...scriptInvocationEnvironment(original,process.env),NX_WORKSPACE_DATA_DIRECTORY:root,SEMIO_WATCH_PROOF:proof};await NxScript.ensureDaemon(process.execPath,cli,root,env,scriptCompilerAdmissionControlV1(original,"nx:watch-start-ready",0));const ready=readFileSync(proof,"utf8");let deadlineRefused=false,cancelRefused=false;try{await NxScript.ensureDaemon(process.execPath,cli,root,{...env,SEMIO_WATCH_BLOCK:"true"},scriptCompilerAdmissionControlV1(original,"nx:watch-start-expiry",100))}catch(error){if(!String(error).includes("deadline"))throw error;deadlineRefused=true}const cancelled=new AbortController(),reason=Error("Original watch startup cancellation"),timer=setTimeout(()=>cancelled.abort(reason),100);try{await NxScript.ensureDaemon(process.execPath,cli,root,{...env,SEMIO_WATCH_BLOCK:"true"},scriptCompilerAdmissionControlV1(original,"nx:watch-start-cancel",0,cancelled.signal))}catch(error){if(error!==reason)throw error;cancelRefused=true}finally{clearTimeout(timer)}expect({ready,deadlineRefused,cancelRefused,markerPreserved:readFileSync(marker,"utf8")==="original namespace failure"}).toEqual(fixture.watchStartup);});}finally{rmSync(root,{recursive:true,force:true});}
+});
+
+/** 🛟️ Native watcher startup failures settle requests already queued behind actual service readiness. */
+test("actual SDK watcher startup rejects pending readiness instead of hanging", async () => {
+ const identity=process.env.SEMIO_NX_TOOLING_IDENTITY;if(!identity)throw Error("Original immutable SDK required");
+ const sdk=createRequire(join(testNxToolkitDirectoryV1(identity),"package.json")),source=readFileSync(sdk.resolve("nx/src/daemon/server/server"),"utf8");
+ expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);
+ expect(await probeDaemonWatcherStartupV1(source,fixture.daemonWatcherFailure)).toEqual(fixture.daemonWatcherFailure.expected);
 });

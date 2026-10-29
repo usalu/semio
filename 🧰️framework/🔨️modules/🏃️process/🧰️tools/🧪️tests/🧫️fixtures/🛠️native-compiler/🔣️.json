@@ -1,0 +1,196 @@
+{
+ "version": 1,
+ "selections": [
+  {
+   "name": "Linux Uses Its Existing Compiler",
+   "platform": "linux",
+   "architecture": "x64",
+   "home": "/home/u",
+   "path": "/usr/bin",
+   "present": [
+    "/usr/bin/cc"
+   ],
+   "branches": [
+    "25.08"
+   ],
+   "expected": null
+  },
+  {
+   "name": "Linux Selects Newest Installed SDK",
+   "platform": "linux",
+   "architecture": "x64",
+   "home": "/home/u",
+   "path": "/usr/bin",
+   "present": [
+    "/home/u/.local/share/flatpak/runtime/org.freedesktop.Sdk/x86_64/24.08/active/files/bin/gcc",
+    "/home/u/.local/share/flatpak/runtime/org.freedesktop.Sdk/x86_64/25.08/active/files/bin/gcc"
+   ],
+   "branches": [
+    "24.08",
+    "25.08"
+   ],
+   "expected": "/home/u/.local/share/flatpak/runtime/org.freedesktop.Sdk/x86_64/25.08/active/files/bin/gcc"
+  },
+  {
+   "name": "SDK Discovery Preserves Spaces",
+   "platform": "linux",
+   "architecture": "arm64",
+   "home": "/home/Example User",
+   "path": "/usr/bin",
+   "present": [
+    "/home/Example User/.local/share/flatpak/runtime/org.freedesktop.Sdk/aarch64/25.08/active/files/bin/gcc"
+   ],
+   "branches": [
+    "25.08"
+   ],
+   "expected": "/home/Example User/.local/share/flatpak/runtime/org.freedesktop.Sdk/aarch64/25.08/active/files/bin/gcc"
+  },
+  {
+   "name": "Absent SDK Leaves Environment Untouched",
+   "platform": "linux",
+   "architecture": "x64",
+   "home": "/home/u",
+   "path": "/usr/bin",
+   "present": [],
+   "branches": [],
+   "expected": null
+  },
+  {
+   "name": "Windows Keeps Its Native Setup",
+   "platform": "win32",
+   "architecture": "x64",
+   "home": "C:/Users/u",
+   "path": "C:/Windows",
+   "present": [],
+   "branches": [
+    "25.08"
+   ],
+   "expected": null
+  },
+  {
+   "name": "MacOS Keeps Its Native Setup",
+   "platform": "darwin",
+   "architecture": "arm64",
+   "home": "/Users/u",
+   "path": "/usr/bin",
+   "present": [],
+   "branches": [
+    "25.08"
+   ],
+   "expected": null
+  }
+ ],
+ "precedence": [
+  {
+   "name": "Explicit C Compiler",
+   "environment": {
+    "CC": "/custom/compiler"
+   },
+   "configuredLinker": false,
+   "keepC": true,
+   "keepRust": false
+  },
+  {
+   "name": "Explicit Target Linker",
+   "environment": {
+    "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER": "/custom/linker"
+   },
+   "configuredLinker": false,
+   "keepC": false,
+   "keepRust": true
+  },
+  {
+   "name": "Effective Cargo Linker Configuration",
+   "environment": {},
+   "configuredLinker": true,
+   "keepC": false,
+   "keepRust": true
+  },
+  {
+   "name": "Explicit Compiler Search Paths",
+   "environment": {
+    "COMPILER_PATH": "/custom/bin",
+    "LIBRARY_PATH": "/custom/lib",
+    "C_INCLUDE_PATH": "/custom/include"
+   },
+   "configuredLinker": false,
+   "keepC": true,
+   "keepRust": true
+  }
+ ],
+ "crossCompilation": [
+  {
+   "name": "Target Linker and Compiler Stay Explicit",
+   "environment": {
+    "PATH": "/user/bin",
+    "TARGET_CC": "target-cc",
+    "CARGO_TARGET_WASM32_WASIP2_LINKER": "target-linker",
+    "RUSTFLAGS": "-C linker=target-linker"
+   },
+   "configuredLinker": true,
+   "configuredHostLinker": false,
+   "expected": {
+    "HOST_CC": "__NATIVE_CC__",
+    "CC": null,
+    "PATH": "__NATIVE_PATH__"
+   }
+  },
+  {
+   "name": "Host Compiler and Linker Stay Explicit",
+   "environment": {
+    "PATH": "/user/bin",
+    "HOST_CC": "host-compiler"
+   },
+   "configuredLinker": false,
+   "configuredHostLinker": true,
+   "expected": {
+    "HOST_CC": "host-compiler",
+    "CC": null,
+    "PATH": "/user/bin"
+   }
+  },
+  {
+   "name": "Per Host Compiler Stays Explicit",
+   "environment": {
+    "PATH": "/user/bin",
+    "CC_x86_64_unknown_linux_gnu": "host-compiler"
+   },
+   "configuredLinker": false,
+   "configuredHostLinker": false,
+   "expected": {
+    "HOST_CC": null,
+    "CC": null,
+    "PATH": "__NATIVE_PATH__"
+   }
+  },
+  {
+   "name": "Host Environment Linker Stays Explicit",
+   "environment": {
+    "PATH": "/user/bin",
+    "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER": "host-linker"
+   },
+   "configuredLinker": false,
+   "configuredHostLinker": false,
+   "expected": {
+    "HOST_CC": "__NATIVE_CC__",
+    "CC": null,
+    "PATH": "/user/bin"
+   }
+  }
+ ],
+ "executedTools": [
+  "/bin/sh",
+  "/usr/bin/ld",
+  "/usr/bin/as"
+ ],
+ "explicitRoots": [
+  "SEMIO_TOOL_CC",
+  "COMPILER_PATH",
+  "GCC_EXEC_PREFIX",
+  "LIBRARY_PATH",
+  "CPATH",
+  "C_INCLUDE_PATH",
+  "CPLUS_INCLUDE_PATH",
+  "OBJC_INCLUDE_PATH"
+ ]
+}

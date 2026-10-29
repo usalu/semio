@@ -38,7 +38,6 @@
     "sudo",
     "chown",
     "vscode:vscode",
-    "/workspaces/semio/node_modules",
     "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache",
     "/workspaces/semio/.cache"
   ],
@@ -142,7 +141,6 @@
     }
   },
   "mounts": [
-    "source=semio-node-modules-${devcontainerId},target=${containerWorkspaceFolder}/node_modules,type=volume",
     "source=${localWorkspaceFolderBasename}-claude,target=/home/vscode/.claude,type=volume",
     "source=${localWorkspaceFolderBasename}-codex,target=/home/vscode/.codex,type=volume",
     "source=${localWorkspaceFolderBasename}-config-gh,target=/home/vscode/.config/gh,type=volume",

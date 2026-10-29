@@ -1,0 +1,2149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio.staffage/v1",
+  "title": "Staffage",
+  "description": "Handcrafted architectural staffage with real dimensions, rigs, poses, clips, thermal and structural models. A document is a category file or the manifest.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/CategoryDocument"
+    },
+    {
+      "$ref": "#/$defs/Manifest"
+    }
+  ],
+  "$defs": {
+    "Slug": {
+      "description": "A kebab-case identifier, unique within its scope.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "Text": {
+      "description": "A human-readable text in every supported language; there is no default language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Category": {
+      "description": "One of the six archive categories.",
+      "enum": [
+        "humans",
+        "vegetation",
+        "animals",
+        "objects",
+        "vehicles",
+        "components"
+      ]
+    },
+    "ParameterSource": {
+      "description": "How a physical parameter is known.",
+      "enum": [
+        "measured",
+        "literature",
+        "authored-estimate",
+        "illustrative"
+      ]
+    },
+    "Viewpoint": {
+      "description": "The projection an authored geometry set is drawn in.",
+      "enum": [
+        "elevation",
+        "plan"
+      ]
+    },
+    "ExportFormat": {
+      "description": "The output kinds an asset can be exported to.",
+      "enum": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ]
+    },
+    "Completion": {
+      "description": "How far an asset has come.",
+      "enum": [
+        "planned",
+        "authored",
+        "verified"
+      ]
+    },
+    "Reference": {
+      "description": "A source a parameter or a shape relies on.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "citation"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "citation": {
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Provenance": {
+      "description": "Who made an asset and how.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "author",
+        "method",
+        "created",
+        "references"
+      ],
+      "properties": {
+        "author": {
+          "type": "string",
+          "minLength": 1
+        },
+        "method": {
+          "const": "handcrafted"
+        },
+        "created": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "references": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Reference"
+          }
+        },
+        "notes": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "Material": {
+      "description": "A material with the properties the thermal and structural models read.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "emissivity",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "emissivity": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 1
+        },
+        "solarAbsorptivity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "densityKgM3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "conductivityWmK": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "elasticModulusPa": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "strengthPa": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "JointType": {
+      "description": "How a bone may move relative to its parent.",
+      "enum": [
+        "fixed",
+        "revolute",
+        "prismatic"
+      ]
+    },
+    "Joint": {
+      "description": "A joint and its limits; revolute limits are angle offsets from rest, prismatic limits are offsets along axisDeg.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/JointType"
+        },
+        "minDeg": {
+          "type": "number"
+        },
+        "maxDeg": {
+          "type": "number"
+        },
+        "axisDeg": {
+          "type": "number"
+        },
+        "minM": {
+          "type": "number"
+        },
+        "maxM": {
+          "type": "number"
+        }
+      }
+    },
+    "SegmentMass": {
+      "description": "A segment mass: point mass at the local centre, or spread uniformly along the bone.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kg",
+        "comX",
+        "comY",
+        "distribution",
+        "source"
+      ],
+      "properties": {
+        "kg": {
+          "type": "number",
+          "minimum": 0
+        },
+        "comX": {
+          "type": "number"
+        },
+        "comY": {
+          "type": "number"
+        },
+        "distribution": {
+          "enum": [
+            "point",
+            "uniform"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "Section": {
+      "description": "A member cross-section for stress.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "areaM2",
+        "secondMomentM4",
+        "extremeFibreM",
+        "material"
+      ],
+      "properties": {
+        "areaM2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "secondMomentM4": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "extremeFibreM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "Bone": {
+      "description": "A rigid frame placed at (x, y) and rotated by angleDeg in its parent's frame at rest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parent",
+        "title",
+        "x",
+        "y",
+        "angleDeg",
+        "lengthM",
+        "joint"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "parent": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Slug"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "angleDeg": {
+          "type": "number"
+        },
+        "lengthM": {
+          "type": "number",
+          "minimum": 0
+        },
+        "joint": {
+          "$ref": "#/$defs/Joint"
+        },
+        "mass": {
+          "$ref": "#/$defs/SegmentMass"
+        },
+        "section": {
+          "$ref": "#/$defs/Section"
+        }
+      }
+    },
+    "Rig": {
+      "description": "A transform hierarchy with exactly one root.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "root",
+        "bones"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "anatomical",
+            "botanical",
+            "mechanical",
+            "structural"
+          ]
+        },
+        "root": {
+          "$ref": "#/$defs/Slug"
+        },
+        "bones": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Bone"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "AnchorKind": {
+      "description": "What an anchor is for.",
+      "enum": [
+        "contact",
+        "support",
+        "attachment",
+        "emitter",
+        "load"
+      ]
+    },
+    "SupportType": {
+      "description": "How a support restrains.",
+      "enum": [
+        "contact",
+        "pin",
+        "roller",
+        "fixed"
+      ]
+    },
+    "Anchor": {
+      "description": "A point fixed on a bone (local coordinates).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "bone",
+        "x",
+        "y",
+        "kind",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "bone": {
+          "$ref": "#/$defs/Slug"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "kind": {
+          "$ref": "#/$defs/AnchorKind"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "support": {
+          "$ref": "#/$defs/SupportType"
+        },
+        "normalDeg": {
+          "type": "number"
+        },
+        "footprintLengthM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "footprintWidthM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "frictionCoefficient": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "ShapeRole": {
+      "description": "The line-hierarchy role of a shape.",
+      "enum": [
+        "body",
+        "detail",
+        "texture",
+        "glazing",
+        "ground"
+      ]
+    },
+    "Lod": {
+      "description": "The level of detail a shape needs.",
+      "type": "integer",
+      "enum": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "CapsuleShape": {
+      "description": "A stadium between two local points with radii r0 and r1 (tangent hull of two circles).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "x0",
+        "y0",
+        "x1",
+        "y1",
+        "r0",
+        "r1"
+      ],
+      "properties": {
+        "kind": {
+          "const": "capsule"
+        },
+        "x0": {
+          "type": "number"
+        },
+        "y0": {
+          "type": "number"
+        },
+        "x1": {
+          "type": "number"
+        },
+        "y1": {
+          "type": "number"
+        },
+        "r0": {
+          "type": "number",
+          "minimum": 0
+        },
+        "r1": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "EllipseShape": {
+      "description": "An ellipse in local coordinates.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "cx",
+        "cy",
+        "rx",
+        "ry"
+      ],
+      "properties": {
+        "kind": {
+          "const": "ellipse"
+        },
+        "cx": {
+          "type": "number"
+        },
+        "cy": {
+          "type": "number"
+        },
+        "rx": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "ry": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rotationDeg": {
+          "type": "number"
+        }
+      }
+    },
+    "RectShape": {
+      "description": "A rectangle with optional corner radius, lower-left at (x, y).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "x",
+        "y",
+        "w",
+        "h"
+      ],
+      "properties": {
+        "kind": {
+          "const": "rect"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "w": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "h": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "r": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "PolyShape": {
+      "description": "A polygon or polyline through local points.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "points",
+        "closed"
+      ],
+      "properties": {
+        "kind": {
+          "const": "poly"
+        },
+        "points": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 2
+        },
+        "closed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PathShape": {
+      "description": "An SVG-style path (M L H V C S Q T A Z, absolute or relative) in local metres, y up.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "d"
+      ],
+      "properties": {
+        "kind": {
+          "const": "path"
+        },
+        "d": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "ShapeGeometry": {
+      "description": "One of the shape primitives.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/CapsuleShape"
+        },
+        {
+          "$ref": "#/$defs/EllipseShape"
+        },
+        {
+          "$ref": "#/$defs/RectShape"
+        },
+        {
+          "$ref": "#/$defs/PolyShape"
+        },
+        {
+          "$ref": "#/$defs/PathShape"
+        }
+      ]
+    },
+    "Shape": {
+      "description": "An authored shape bound to a bone: one geometry plus the common fields.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "bone",
+            "role",
+            "lod",
+            "z",
+            "filled",
+            "tone",
+            "x0",
+            "y0",
+            "x1",
+            "y1",
+            "r0",
+            "r1"
+          ],
+          "properties": {
+            "kind": {
+              "const": "capsule"
+            },
+            "id": {
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "lod": {
+              "$ref": "#/$defs/Lod"
+            },
+            "z": {
+              "type": "number"
+            },
+            "filled": {
+              "type": "boolean"
+            },
+            "tone": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "region": {
+              "$ref": "#/$defs/Slug"
+            },
+            "material": {
+              "$ref": "#/$defs/Slug"
+            },
+            "x0": {
+              "type": "number"
+            },
+            "y0": {
+              "type": "number"
+            },
+            "x1": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            },
+            "r0": {
+              "type": "number",
+              "minimum": 0
+            },
+            "r1": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "bone",
+            "role",
+            "lod",
+            "z",
+            "filled",
+            "tone",
+            "cx",
+            "cy",
+            "rx",
+            "ry"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ellipse"
+            },
+            "id": {
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "lod": {
+              "$ref": "#/$defs/Lod"
+            },
+            "z": {
+              "type": "number"
+            },
+            "filled": {
+              "type": "boolean"
+            },
+            "tone": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "region": {
+              "$ref": "#/$defs/Slug"
+            },
+            "material": {
+              "$ref": "#/$defs/Slug"
+            },
+            "cx": {
+              "type": "number"
+            },
+            "cy": {
+              "type": "number"
+            },
+            "rx": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "ry": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "rotationDeg": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "bone",
+            "role",
+            "lod",
+            "z",
+            "filled",
+            "tone",
+            "x",
+            "y",
+            "w",
+            "h"
+          ],
+          "properties": {
+            "kind": {
+              "const": "rect"
+            },
+            "id": {
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "lod": {
+              "$ref": "#/$defs/Lod"
+            },
+            "z": {
+              "type": "number"
+            },
+            "filled": {
+              "type": "boolean"
+            },
+            "tone": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "region": {
+              "$ref": "#/$defs/Slug"
+            },
+            "material": {
+              "$ref": "#/$defs/Slug"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "w": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "h": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "r": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "bone",
+            "role",
+            "lod",
+            "z",
+            "filled",
+            "tone",
+            "points",
+            "closed"
+          ],
+          "properties": {
+            "kind": {
+              "const": "poly"
+            },
+            "id": {
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "lod": {
+              "$ref": "#/$defs/Lod"
+            },
+            "z": {
+              "type": "number"
+            },
+            "filled": {
+              "type": "boolean"
+            },
+            "tone": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "region": {
+              "$ref": "#/$defs/Slug"
+            },
+            "material": {
+              "$ref": "#/$defs/Slug"
+            },
+            "points": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "minItems": 2
+            },
+            "closed": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "id",
+            "bone",
+            "role",
+            "lod",
+            "z",
+            "filled",
+            "tone",
+            "d"
+          ],
+          "properties": {
+            "kind": {
+              "const": "path"
+            },
+            "id": {
+              "$ref": "#/$defs/Slug"
+            },
+            "bone": {
+              "$ref": "#/$defs/Slug"
+            },
+            "role": {
+              "$ref": "#/$defs/ShapeRole"
+            },
+            "lod": {
+              "$ref": "#/$defs/Lod"
+            },
+            "z": {
+              "type": "number"
+            },
+            "filled": {
+              "type": "boolean"
+            },
+            "tone": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "region": {
+              "$ref": "#/$defs/Slug"
+            },
+            "material": {
+              "$ref": "#/$defs/Slug"
+            },
+            "d": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "BoneOffset": {
+      "description": "An offset from rest for one bone.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "angleDeg": {
+          "type": "number"
+        },
+        "dx": {
+          "type": "number"
+        },
+        "dy": {
+          "type": "number"
+        }
+      }
+    },
+    "AppliedLoad": {
+      "description": "A load applied at an anchor or a bone point, in world newtons.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "fxN",
+        "fyN",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "kind": {
+          "enum": [
+            "carried",
+            "imposed",
+            "live",
+            "wind",
+            "snow",
+            "occupant",
+            "equipment"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "anchor": {
+          "$ref": "#/$defs/Slug"
+        },
+        "bone": {
+          "$ref": "#/$defs/Slug"
+        },
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "fxN": {
+          "type": "number"
+        },
+        "fyN": {
+          "type": "number"
+        },
+        "momentNm": {
+          "type": "number"
+        },
+        "distributed": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "bone",
+            "fromM",
+            "toM",
+            "wxNPerM",
+            "wyNPerM"
+          ],
+          "properties": {
+            "bone": {
+              "$ref": "#/$defs/Slug"
+            },
+            "fromM": {
+              "type": "number"
+            },
+            "toM": {
+              "type": "number"
+            },
+            "wxNPerM": {
+              "type": "number"
+            },
+            "wyNPerM": {
+              "type": "number"
+            }
+          }
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "ThermalBinding": {
+      "description": "The thermal state a pose binds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [],
+      "properties": {
+        "activityMet": {
+          "type": "number",
+          "minimum": 0
+        },
+        "operating": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Slug"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        },
+        "regions": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Slug"
+          },
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [],
+            "properties": {
+              "exposedFraction": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "surfaceTempC": {
+                "type": "number"
+              },
+              "coreTempC": {
+                "type": "number"
+              },
+              "wettedness": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        },
+        "emitters": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Slug"
+          },
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "Pose": {
+      "description": "A named configuration.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "bones",
+        "ground",
+        "contacts",
+        "thermal",
+        "loads"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "key": {
+          "type": "boolean",
+          "description": "In-between key pose of a clip: evaluable and validated like any pose, but not offered as a named pose. Named poses (key absent or false) must number at least three."
+        },
+        "bones": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Slug"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/BoneOffset"
+          }
+        },
+        "root": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            },
+            "angleDeg": {
+              "type": "number"
+            }
+          }
+        },
+        "ground": {
+          "enum": [
+            "auto",
+            "authored"
+          ]
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          }
+        },
+        "thermal": {
+          "$ref": "#/$defs/ThermalBinding"
+        },
+        "loads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AppliedLoad"
+          }
+        }
+      }
+    },
+    "Ease": {
+      "description": "How a key eases into the next one. linear, in (t^2), out (1-(1-t)^2) and step blend the two key states by the eased weight; smooth is a C1 cubic Hermite (Catmull-Rom) segment through the neighbouring keys: tangents are the finite differences across the previous and next key (wrapping for looping clips, zero at the ends of non-looping clips), angles in degrees on bone offsets, translations linear in value space, so velocity is continuous across keys. Scalar tracks follow the same rule. Looping clips drop a last key at or beyond the duration that repeats the first.",
+      "enum": [
+        "linear",
+        "smooth",
+        "in",
+        "out",
+        "step"
+      ]
+    },
+    "ClipKey": {
+      "description": "A clip key.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "t",
+        "pose",
+        "ease"
+      ],
+      "properties": {
+        "t": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pose": {
+          "$ref": "#/$defs/Slug"
+        },
+        "ease": {
+          "$ref": "#/$defs/Ease"
+        },
+        "bones": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/$defs/Slug"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/BoneOffset"
+          }
+        }
+      }
+    },
+    "ContactSpan": {
+      "description": "A time span during which an anchor is in contact.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "anchor",
+        "fromS",
+        "toS"
+      ],
+      "properties": {
+        "anchor": {
+          "$ref": "#/$defs/Slug"
+        },
+        "fromS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "toS": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "Phase": {
+      "description": "A named action phase.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fromS",
+        "toS",
+        "title"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "fromS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "toS": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "ballistic": {
+          "type": "boolean",
+          "description": "The body is airborne during this phase (running flight, jump, take-off): instants without any active contact are legitimate and structurally unsupported (ballistic)."
+        }
+      }
+    },
+    "ClipEvent": {
+      "description": "A point event on the clip timeline.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "t",
+        "kind",
+        "title"
+      ],
+      "properties": {
+        "t": {
+          "type": "number",
+          "minimum": 0
+        },
+        "kind": {
+          "enum": [
+            "contact-on",
+            "contact-off",
+            "inhale",
+            "exhale",
+            "ignition",
+            "shutdown",
+            "load-on",
+            "load-off",
+            "thermal",
+            "motion"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "target": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "ScalarTrack": {
+      "description": "A scalar track of a clip.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "target",
+        "ease",
+        "keys"
+      ],
+      "properties": {
+        "target": {
+          "type": "string",
+          "pattern": "^(activityMet|emitter:[a-z0-9-]+|operating:[a-z0-9-]+|load:[a-z0-9-]+|region:[a-z0-9-]+:(exposedFraction|surfaceTempC|coreTempC|wettedness))$"
+        },
+        "ease": {
+          "$ref": "#/$defs/Ease"
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "t",
+              "v"
+            ],
+            "properties": {
+              "t": {
+                "type": "number",
+                "minimum": 0
+              },
+              "v": {
+                "type": "number"
+              }
+            }
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "Clip": {
+      "description": "A deterministic clip over named poses.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "description",
+        "durationS",
+        "fps",
+        "loop",
+        "rootMotion",
+        "keys",
+        "contacts",
+        "phases",
+        "events",
+        "tracks"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "durationS": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fps": {
+          "type": "number",
+          "minimum": 1
+        },
+        "loop": {
+          "type": "boolean"
+        },
+        "rootMotion": {
+          "enum": [
+            "none",
+            "plant"
+          ]
+        },
+        "advanceM": {
+          "type": "number"
+        },
+        "keys": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ClipKey"
+          },
+          "minItems": 1
+        },
+        "contacts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ContactSpan"
+          }
+        },
+        "phases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Phase"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ClipEvent"
+          }
+        },
+        "tracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ScalarTrack"
+          }
+        }
+      }
+    },
+    "Environment": {
+      "description": "Ambient conditions.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "airTempC",
+        "meanRadiantTempC",
+        "relativeHumidity",
+        "windMS",
+        "windDirectionDeg",
+        "solarWM2",
+        "pressurePa"
+      ],
+      "properties": {
+        "airTempC": {
+          "type": "number"
+        },
+        "meanRadiantTempC": {
+          "type": "number"
+        },
+        "relativeHumidity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "windMS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "windDirectionDeg": {
+          "type": "number"
+        },
+        "solarWM2": {
+          "type": "number",
+          "minimum": 0
+        },
+        "pressurePa": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "ThermalModelKind": {
+      "description": "How a region's surface temperature is obtained.",
+      "enum": [
+        "fixed",
+        "core-resistance",
+        "leaf",
+        "passive",
+        "operating"
+      ]
+    },
+    "ThermalRegion": {
+      "description": "A thermal region: one surface patch with its material, area and model parameters.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "title",
+        "kind",
+        "material",
+        "model",
+        "areaM2",
+        "characteristicLengthM",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "kind": {
+          "enum": [
+            "skin",
+            "clothing",
+            "hair",
+            "fur",
+            "feather",
+            "foliage",
+            "bark",
+            "surface",
+            "engine",
+            "exhaust",
+            "glazing",
+            "tyre",
+            "wall"
+          ]
+        },
+        "material": {
+          "$ref": "#/$defs/Slug"
+        },
+        "model": {
+          "$ref": "#/$defs/ThermalModelKind"
+        },
+        "areaM2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "characteristicLengthM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "surfaceTempC": {
+          "type": "number"
+        },
+        "coreTempC": {
+          "type": "number"
+        },
+        "insulationM2KW": {
+          "type": "number",
+          "minimum": 0
+        },
+        "wettedness": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "stomatalConductanceMS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "operatingKey": {
+          "$ref": "#/$defs/Slug"
+        },
+        "riseK": {
+          "type": "number"
+        },
+        "metabolicShare": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "Emitter": {
+      "description": "A rig-attached source of air or vapour.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "kind",
+        "title",
+        "anchor",
+        "directionDeg",
+        "carries",
+        "temperatureC",
+        "velocityMS",
+        "diameterM",
+        "source"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "kind": {
+          "enum": [
+            "breath",
+            "exhaust",
+            "transpiration",
+            "vent",
+            "plume"
+          ]
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "anchor": {
+          "$ref": "#/$defs/Slug"
+        },
+        "directionDeg": {
+          "type": "number"
+        },
+        "carries": {
+          "enum": [
+            "airflow",
+            "vapour"
+          ]
+        },
+        "temperatureC": {
+          "type": "number"
+        },
+        "velocityMS": {
+          "type": "number",
+          "minimum": 0
+        },
+        "diameterM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "vapourKgPerKg": {
+          "type": "number",
+          "minimum": 0
+        },
+        "periodS": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "dutyFrom": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "dutyTo": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "source": {
+          "$ref": "#/$defs/ParameterSource"
+        },
+        "reference": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "ThermalModel": {
+      "description": "The thermal model of an asset.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "environment",
+        "regions",
+        "emitters",
+        "assumptions"
+      ],
+      "properties": {
+        "environment": {
+          "$ref": "#/$defs/Environment"
+        },
+        "baseMet": {
+          "type": "number",
+          "minimum": 0
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ThermalRegion"
+          }
+        },
+        "emitters": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Emitter"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        }
+      }
+    },
+    "StructuralModel": {
+      "description": "The structural model.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "gravityMS2",
+        "dynamics",
+        "supports",
+        "assumptions",
+        "clinical"
+      ],
+      "properties": {
+        "gravityMS2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "dynamics": {
+          "enum": [
+            "quasi-static",
+            "inertial"
+          ]
+        },
+        "supports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "clinical": {
+          "const": false
+        }
+      }
+    },
+    "Dimensions": {
+      "description": "Nominal overall real dimensions and total mass.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "heightM",
+        "widthM",
+        "depthM",
+        "massKg"
+      ],
+      "properties": {
+        "heightM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "widthM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "depthM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "massKg": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "Presentation": {
+      "description": "Presentation defaults.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "defaultPose",
+        "defaultClip",
+        "viewpoints"
+      ],
+      "properties": {
+        "defaultPose": {
+          "$ref": "#/$defs/Slug"
+        },
+        "defaultClip": {
+          "$ref": "#/$defs/Slug"
+        },
+        "viewpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Viewpoint"
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "Asset": {
+      "description": "One handcrafted staffage asset.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "title",
+        "summary",
+        "tags",
+        "provenance",
+        "dimensions",
+        "materials",
+        "rig",
+        "anchors",
+        "geometry",
+        "poses",
+        "clips",
+        "thermal",
+        "structure",
+        "presentation",
+        "exports",
+        "completion"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "category": {
+          "$ref": "#/$defs/Category"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "summary": {
+          "$ref": "#/$defs/Text"
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          }
+        },
+        "provenance": {
+          "$ref": "#/$defs/Provenance"
+        },
+        "dimensions": {
+          "$ref": "#/$defs/Dimensions"
+        },
+        "materials": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Material"
+          }
+        },
+        "rig": {
+          "$ref": "#/$defs/Rig"
+        },
+        "anchors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Anchor"
+          }
+        },
+        "geometry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "elevation"
+          ],
+          "properties": {
+            "elevation": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Shape"
+              },
+              "minItems": 1
+            },
+            "plan": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Shape"
+              }
+            }
+          }
+        },
+        "poses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Pose"
+          },
+          "minItems": 3
+        },
+        "clips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Clip"
+          },
+          "minItems": 2
+        },
+        "thermal": {
+          "$ref": "#/$defs/ThermalModel"
+        },
+        "structure": {
+          "$ref": "#/$defs/StructuralModel"
+        },
+        "presentation": {
+          "$ref": "#/$defs/Presentation"
+        },
+        "exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExportFormat"
+          }
+        },
+        "completion": {
+          "$ref": "#/$defs/Completion"
+        }
+      }
+    },
+    "CategoryDocument": {
+      "description": "One category file.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "version",
+        "category",
+        "assets"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "version": {
+          "const": "semio.staffage/v1"
+        },
+        "category": {
+          "$ref": "#/$defs/Category"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Asset"
+          }
+        }
+      }
+    },
+    "ManifestEntry": {
+      "description": "A manifest row.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "category",
+        "title",
+        "heightM",
+        "widthM",
+        "poses",
+        "clips",
+        "analytics",
+        "viewpoints",
+        "exports",
+        "distinction",
+        "completion"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "category": {
+          "$ref": "#/$defs/Category"
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "heightM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "widthM": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "poses": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          }
+        },
+        "clips": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Slug"
+          }
+        },
+        "analytics": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "thermal",
+              "structural"
+            ]
+          }
+        },
+        "viewpoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Viewpoint"
+          }
+        },
+        "exports": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExportFormat"
+          }
+        },
+        "distinction": {
+          "$ref": "#/$defs/Text"
+        },
+        "completion": {
+          "$ref": "#/$defs/Completion"
+        }
+      }
+    },
+    "CategoryEntry": {
+      "description": "A category of the archive with its file.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "emoji",
+        "title",
+        "description",
+        "file"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Category"
+        },
+        "emoji": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "file": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Manifest": {
+      "description": "The archive manifest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "$schema",
+        "version",
+        "categories",
+        "collections",
+        "entries"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "version": {
+          "const": "semio.staffage/v1"
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CategoryEntry"
+          }
+        },
+        "collections": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "title",
+              "description",
+              "assets"
+            ],
+            "properties": {
+              "id": {
+                "$ref": "#/$defs/Slug"
+              },
+              "title": {
+                "$ref": "#/$defs/Text"
+              },
+              "description": {
+                "$ref": "#/$defs/Text"
+              },
+              "assets": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/Slug"
+                }
+              }
+            }
+          }
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ManifestEntry"
+          }
+        }
+      }
+    }
+  }
+}

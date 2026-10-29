@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "outcome": "held",
+      "result": "held"
+    },
+    {
+      "outcome": "busy",
+      "result": "unavailable"
+    },
+    {
+      "outcome": "failure",
+      "result": "error"
+    }
+  ]
+}

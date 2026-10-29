@@ -1,0 +1,3 @@
+[{"id":"base-support","bone":"root-plate","x":0,"y":0,"kind":"support","title":{"en":"Root plate anchorage","de":"Verankerung des Wurzeltellers"},"support":"fixed","normalDeg":90,"footprintLengthM":1.8,"footprintWidthM":1.8,"frictionCoefficient":0.6},
+{"id":"crown-top","bone":"pl-top","x":0.6,"y":0.5,"kind":"emitter","title":{"en":"Transpiration above the crown top","de":"Transpiration über dem Wipfel"}},
+{"id":"crown-w","bone":"pl-w1","x":0.5,"y":0.5,"kind":"emitter","title":{"en":"Transpiration above the west crown","de":"Transpiration über der Westkrone"}}]

@@ -1,3 +1,4 @@
+import{withDependencyReadmissionV1}from"../../📥️source/🔏️closure/🔁️dependencies/🟦️.ts";
 import{executeCapturedBuildSourceV1}from"../../📥️source/🔏️closure/🚪️command/🟦️.ts";
 import closureSchema from"../../📥️source/🔏️closure/🧬️schema/🔣️.json"with{type:"json"};
 import{profileMarkV1}from"../../⏱️profile/🟨️.mjs";
@@ -10,7 +11,7 @@ import{implementationModeV1,readSealedLoaderV1,readSealedPointerV1,readSealedSna
 
 /** 🚦️ Runs one command of the build tool from the implementation its mode selects: `live` captures the live tree for this command exactly as before (the opt-in of the agent that edits the tool), anything else runs the stored snapshot the front-door trampoline promoted (the same snapshot, digest and loader the front door itself runs from). A store without a readable snapshot says so in both languages and runs the live tree, so the sealed layer is never the reason a command does not run.
  * @see ../🚦️trampoline/🟦️.ts who promotes, ../🟦️.ts the policy and the store */
-export async function executeImplementationV1(workspace:string,entry:string,args:readonly string[],original:ScriptInvocation,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
+async function executeImplementationOnceV1(workspace:string,entry:string,args:readonly string[],original:ScriptInvocation,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{
  requireIssuedScriptInvocationV1(original);requireIssuedResourceControlInvocationV1(control,original);
  if(implementationModeV1(environment)==="live")return executeCapturedBuildSourceV1(workspace,entry,args,original,control,environment);
  const store=sealedEntryOfV1(workspace,relative(workspace,fileURLToPath(new URL("../🚪️entry/🟦️.ts",import.meta.url))).split("\\").join("/")),pointer=readSealedPointerV1(store),text=pointer&&readSealedSnapshotV1(store,pointer),loader=pointer&&readSealedLoaderV1(store,pointer);
@@ -22,3 +23,6 @@ export async function executeImplementationV1(workspace:string,entry:string,args
  await withIssuedResourceOperationV1(control,()=>runOwnedCommand(process.execPath,argv,process.cwd(),"repository:command",scriptInvocationBudget(original,0),{control,signal:control.signal,env:{...scriptResourceProcessEnvironmentV1(control,environment),BUN_RUNTIME_TRANSPILER_CACHE_PATH:"0"},auxiliaryInput:{version:1,text},outputStyle:"stream-without-prefixes",onProgress:line=>writeOwnedCommandOutputV1(process.stderr,line+"\n",control)}));
  requireIssuedResourceControlInvocationV1(control,original);
 }
+
+/** 🌱️ Yields dependency publication to the existing external restart boundary after this Original and its phase retire. */
+export async function executeImplementationV1(workspace:string,entry:string,args:readonly string[],original:ScriptInvocation,control:ResourceLeaseControl,environment:Readonly<Record<string,string|undefined>>=process.env):Promise<void>{await withDependencyReadmissionV1(()=>executeImplementationOnceV1(workspace,entry,args,original,control,environment));}

@@ -99,6 +99,16 @@
         "nextEnabled": true,
         "fallbackCalls": 1
       }
+    },
+    {
+      "id": "initial-native-watch-limit",
+      "message": "failed to register initial watches: OS file watch limit reached",
+      "expected": {
+        "persistent": false,
+        "localDisabled": true,
+        "nextEnabled": true,
+        "fallbackCalls": 1
+      }
     }
   ],
   "lockReuse": {
@@ -166,5 +176,14 @@
     "clients": 2,
     "starts": 1,
     "accepted": 2
+  },
+  "daemonWatcherFailure": {
+    "message": "failed to register initial watches: OS file watch limit reached",
+    "maximumMilliseconds": 250,
+    "expected": {
+      "startupRejected": true,
+      "pendingRejected": true,
+      "reported": 1
+    }
   }
 }

@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "parent",
+    "child",
+    "expected"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "parent": {
+      "$ref": "#/definitions/geometry"
+    },
+    "child": {
+      "$ref": "#/definitions/geometry"
+    },
+    "expected": {
+      "const": {
+        "childAttached": true,
+        "childRemoved": true,
+        "parentRetired": true
+      }
+    }
+  },
+  "definitions": {
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "filesystemBytes",
+        "maximumPhysicalBytes"
+      ],
+      "properties": {
+        "filesystemBytes": {
+          "type": "integer",
+          "minimum": 33554432,
+          "multipleOf": 1048576
+        },
+        "maximumPhysicalBytes": {
+          "type": "integer",
+          "minimum": 34603008,
+          "multipleOf": 1048576
+        }
+      }
+    }
+  }
+}

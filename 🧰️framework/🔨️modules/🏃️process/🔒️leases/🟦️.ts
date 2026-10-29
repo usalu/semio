@@ -293,6 +293,8 @@ function releaseUnderAdmission(lease:ResourceLease|undefined,gate:ResourceLease)
 
 /** 🔑️ Fences every opener until actual identity SELECT or failed connection close settles. */
 export function acquireResourceLease(options:LeaseOptions):Promise<ResourceLease>{return traceLeaseV1(options,()=>acquireOrderedResourceLeaseV1(options));}
+/** 🆕️ Tries a fresh claim without waiting for a holder, allowing only the declared bounded directory admission under its original control. */
+export function acquireFreshResourceLeaseV1(options:Omit<LeaseOptions,"timeoutMs"|"admissionPatienceMs">):Promise<ResourceLease>{return acquireResourceLease({...options,timeoutMs:0,admissionPatienceMs:leaseOrderPolicyV1().gate.admissionPatienceMilliseconds});}
 const trackedAcquisition=new AsyncLocalStorage<{readonly guard:LeaseOrderGuardV1;readonly directory:string;readonly resource:string}>();
 const untrackedTask:object={};
 const internalLeaseResource=(resource:string):boolean=>resource===admissionResource||resource===retentionSchema.properties.resource.const||resource.startsWith(custodySchema.properties.resourcePrefix.const)||resource==="resource-retirement";

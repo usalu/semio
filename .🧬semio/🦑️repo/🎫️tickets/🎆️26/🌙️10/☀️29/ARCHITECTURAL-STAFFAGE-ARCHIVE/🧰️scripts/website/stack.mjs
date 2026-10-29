@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch();
+const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "en-US" });
+await ctx.addInitScript(() => { const orig = console.error; window.__s = []; console.error = (...a) => { if (/Maximum update/.test(String(a[0]))) window.__s.push(new Error().stack); orig.apply(console, a); }; });
+const page = await ctx.newPage();
+await page.goto("http://localhost:6071/" + process.argv[2], { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(8000);
+const stacks = await page.evaluate(() => window.__s);
+console.log(stacks.length, (stacks[0] ?? "").split("\n").slice(0, 14).map((l) => l.replace(/http:\/\/localhost:6071\/@fs\/home\/deck\/semio\/[^ ]*\//, "").slice(0, 150)).join("\n"));
+await browser.close();

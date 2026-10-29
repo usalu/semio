@@ -93,3 +93,10 @@ test.skipIf(!existsSync(join(workspace,retained,"Cargo.toml")))("the retained mu
   for(const mounted of ["✂️span","🔎️key","🔺️diff","🩹️patch","⚠️diagnostic"])expect(derived.has(`🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/${mounted}/🦀️.rs`),mounted).toBe(true);
  }finally{rmSync(out,{force:true});}
 });
+
+const femNode="✏️s/🔌️plugins/🏗️fem/⚙️engine/📍node";
+test("dimensional FEM node source mounts resolve without macro expansion",()=>{
+ const set=cacheInternals.cargoSourceSetV1(femNode+"/📦️packages/🦀️rust",workspace,new Map(),true,false);
+ expect(set.resolved,JSON.stringify(set)).toBe(true);
+ for(const path of ["🧬️schema/◻️2d/🦀️.rs","🧬️schema/🧊️3d/🦀️.rs","🧪️tests/🦀️.rs","🧪️tests/🧫️fixtures/🔣️.json"])expect(set.files).toContain(prefix+femNode+"/"+path);
+});

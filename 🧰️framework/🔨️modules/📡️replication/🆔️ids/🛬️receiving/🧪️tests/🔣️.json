@@ -1,0 +1,102 @@
+{
+  "cases": [
+    {
+      "name": "original schema text",
+      "kind": "schema",
+      "input": "schema:architecture-🧬️",
+      "expected": "schema:architecture-🧬️",
+      "accepted": true
+    },
+    {
+      "name": "original 32 octets",
+      "kind": "hash",
+      "input": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "expected": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24,
+        25,
+        26,
+        27,
+        28,
+        29,
+        30,
+        31
+      ],
+      "accepted": true
+    },
+    {
+      "name": "schema refuses numeric source",
+      "kind": "schema",
+      "input": 7,
+      "expected": null,
+      "accepted": false
+    },
+    {
+      "name": "hash refuses short original",
+      "kind": "hash",
+      "input": [
+        0,
+        1,
+        2
+      ],
+      "expected": null,
+      "accepted": false
+    }
+  ]
+}

@@ -1,0 +1,893 @@
+{
+  "cases": [
+    {
+      "name": "en bachelor thesis",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "bachelor"
+      },
+      "valid": true
+    },
+    {
+      "name": "de bachelor thesis",
+      "value": {
+        "language": "de",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "bachelor"
+      },
+      "valid": true
+    },
+    {
+      "name": "en master thesis",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master"
+      },
+      "valid": true
+    },
+    {
+      "name": "de master thesis",
+      "value": {
+        "language": "de",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master"
+      },
+      "valid": true
+    },
+    {
+      "name": "en doctoral thesis",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "doctoral"
+      },
+      "valid": true
+    },
+    {
+      "name": "de doctoral thesis",
+      "value": {
+        "language": "de",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "doctoral"
+      },
+      "valid": true
+    },
+    {
+      "name": "Custom thesis heading",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "custom",
+        "thesisType": "Habilitation"
+      },
+      "valid": true
+    },
+    {
+      "name": "Required language",
+      "value": {
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master"
+      },
+      "valid": false
+    },
+    {
+      "name": "Required theme",
+      "value": {
+        "language": "en",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master"
+      },
+      "valid": false
+    },
+    {
+      "name": "Required title",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "author": "Ada Example",
+        "degree": "master"
+      },
+      "valid": false
+    },
+    {
+      "name": "Required author",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "degree": "master"
+      },
+      "valid": false
+    },
+    {
+      "name": "Required degree",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example"
+      },
+      "valid": false
+    },
+    {
+      "name": "Unsupported language",
+      "value": {
+        "language": "fr",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master"
+      },
+      "valid": false
+    },
+    {
+      "name": "Unsupported degree",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "phd"
+      },
+      "valid": false
+    },
+    {
+      "name": "Unknown metadata",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master",
+        "deadline": "today"
+      },
+      "valid": false
+    },
+    {
+      "name": "Typed metadata",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master",
+        "supervisor": 17
+      },
+      "valid": false
+    },
+    {
+      "name": "Empty title",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "",
+        "author": "Ada Example",
+        "degree": "master"
+      },
+      "valid": false
+    },
+    {
+      "name": "Empty author",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "",
+        "degree": "master"
+      },
+      "valid": false
+    },
+    {
+      "name": "Custom heading required",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "custom"
+      },
+      "valid": false
+    },
+    {
+      "name": "Empty custom heading",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "custom",
+        "thesisType": ""
+      },
+      "valid": false
+    },
+    {
+      "name": "Prototype metadata",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master",
+        "toString": "invalid"
+      },
+      "valid": false
+    },
+    {
+      "name": "Academic metadata",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master",
+        "subtitle": "A Study",
+        "date": "2026",
+        "university": "Example University",
+        "faculty": "Design",
+        "institute": "Building Systems",
+        "discipline": "Architecture",
+        "programme": "MSc Architecture",
+        "supervisor": "Prof. Example",
+        "reviewers": "A; B",
+        "submission": "2026-10-28",
+        "defense": "2026-12-01",
+        "place": "Berlin",
+        "orcid": "0000-0000-0000-0000",
+        "studentId": "42",
+        "keywords": "local-first; design",
+        "declarationText": "I authored this work.",
+        "declarationTitle": "Declaration",
+        "dedicationTitle": "Dedication",
+        "abbreviationsTitle": "Abbreviations",
+        "awardedDegree": "Master of Science"
+      },
+      "valid": true
+    },
+    {
+      "name": "Null declaration",
+      "value": null,
+      "valid": false
+    },
+    {
+      "name": "Array declaration",
+      "value": [],
+      "valid": false
+    },
+    {
+      "name": "Unicode scalar title",
+      "value": {
+        "language": "en",
+        "theme": "dark",
+        "title": "🎓",
+        "author": "Ada",
+        "degree": "doctoral"
+      },
+      "valid": true
+    },
+    {
+      "name": "Empty awarded degree",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master",
+        "subtitle": "A Study",
+        "date": "2026",
+        "university": "Example University",
+        "faculty": "Design",
+        "institute": "Building Systems",
+        "discipline": "Architecture",
+        "programme": "MSc Architecture",
+        "supervisor": "Prof. Example",
+        "reviewers": "A; B",
+        "submission": "2026-10-28",
+        "defense": "2026-12-01",
+        "place": "Berlin",
+        "orcid": "0000-0000-0000-0000",
+        "studentId": "42",
+        "keywords": "local-first; design",
+        "declarationText": "I authored this work.",
+        "declarationTitle": "Declaration",
+        "dedicationTitle": "Dedication",
+        "abbreviationsTitle": "Abbreviations",
+        "awardedDegree": ""
+      },
+      "valid": false
+    },
+    {
+      "name": "Blank custom heading",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research",
+        "author": "Ada",
+        "degree": "custom",
+        "thesisType": " \t "
+      },
+      "valid": false
+    }
+  ],
+  "escaping": {
+    "input": "A & B_50% {x} #1 $y$ ~ ^ \\",
+    "expected": "A \\& B\\_50\\% \\{x\\} \\#1 \\$y\\$ \\textasciitilde{} \\textasciicircum{} \\textbackslash{}"
+  },
+  "preambles": [
+    {
+      "name": "English bachelor",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "A & B",
+        "author": "Ada Example",
+        "degree": "bachelor",
+        "university": "Example University",
+        "studentId": "42_7"
+      },
+      "expected": "\\documentclass[type=thesis,theme=light,language=en]{semio}\n\\title{A \\& B}\n\\author{Ada Example}\n\\SemioSetup{thesis-level={bachelor},university={Example University},student-id={42\\_7}}\n"
+    },
+    {
+      "name": "German custom degree",
+      "value": {
+        "language": "de",
+        "theme": "dark",
+        "title": "Eine Studie",
+        "author": "Ada Example",
+        "degree": "custom",
+        "thesisType": "Habilitation",
+        "declarationText": "Eigene Arbeit & Forschung."
+      },
+      "expected": "\\documentclass[type=thesis,theme=dark,language=de]{semio}\n\\title{Eine Studie}\n\\author{Ada Example}\n\\SemioSetup{thesis-level={custom},thesis-type={Habilitation},declaration-text={Eigene Arbeit \\& Forschung.}}\n"
+    },
+    {
+      "name": "All academic metadata",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Research & Design",
+        "author": "Ada Example",
+        "degree": "master",
+        "subtitle": "A Study",
+        "date": "2026",
+        "university": "Example University",
+        "faculty": "Design",
+        "institute": "Building Systems",
+        "discipline": "Architecture",
+        "programme": "MSc Architecture",
+        "supervisor": "Prof. Example",
+        "reviewers": "A; B",
+        "submission": "2026-10-28",
+        "defense": "2026-12-01",
+        "place": "Berlin",
+        "orcid": "0000-0000-0000-0000",
+        "studentId": "42",
+        "keywords": "local-first; design",
+        "declarationText": "I authored this work.",
+        "declarationTitle": "Declaration",
+        "dedicationTitle": "Dedication",
+        "abbreviationsTitle": "Abbreviations",
+        "awardedDegree": "Master of Science"
+      },
+      "expected": "\\documentclass[type=thesis,theme=light,language=en]{semio}\n\\title{Research \\& Design}\n\\subtitle{A Study}\n\\author{Ada Example}\n\\date{2026}\n\\SemioSetup{thesis-level={master},degree={Master of Science},university={Example University},faculty={Design},institute={Building Systems},discipline={Architecture},supervisor={Prof. Example},reviewers={A; B},submission={2026-10-28},defense={2026-12-01},place={Berlin},orcid={0000-0000-0000-0000},programme={MSc Architecture},student-id={42},keywords={local-first; design},declaration-text={I authored this work.},declaration-title={Declaration},dedication-title={Dedication},abbreviations-title={Abbreviations}}\n"
+    }
+  ],
+  "rendering": {
+    "cases": [
+      {
+        "language": "en",
+        "theme": "light",
+        "degree": "bachelor",
+        "heading": "Bachelor’s Thesis",
+        "declarationHeading": "Declaration of Authorship",
+        "dedicationHeading": "Dedication",
+        "abbreviationsHeading": "Abbreviations"
+      },
+      {
+        "language": "en",
+        "theme": "light",
+        "degree": "master",
+        "heading": "Master’s Thesis",
+        "declarationHeading": "Declaration of Authorship",
+        "dedicationHeading": "Dedication",
+        "abbreviationsHeading": "Abbreviations"
+      },
+      {
+        "language": "en",
+        "theme": "light",
+        "degree": "doctoral",
+        "heading": "Dissertation",
+        "declarationHeading": "Declaration of Authorship",
+        "dedicationHeading": "Dedication",
+        "abbreviationsHeading": "Abbreviations"
+      },
+      {
+        "language": "en",
+        "theme": "light",
+        "degree": "custom",
+        "heading": "Independent Study",
+        "declarationHeading": "Declaration of Authorship",
+        "dedicationHeading": "Dedication",
+        "abbreviationsHeading": "Abbreviations"
+      },
+      {
+        "language": "en",
+        "theme": "dark",
+        "degree": "bachelor",
+        "heading": "Bachelor’s Thesis",
+        "declarationHeading": "Declaration of Authorship",
+        "dedicationHeading": "Dedication",
+        "abbreviationsHeading": "Abbreviations"
+      },
+      {
+        "language": "en",
+        "theme": "dark",
+        "degree": "master",
+        "heading": "Master’s Thesis",
+        "declarationHeading": "Declaration of Authorship",
+        "dedicationHeading": "Dedication",
+        "abbreviationsHeading": "Abbreviations"
+      },
+      {
+        "language": "en",
+        "theme": "dark",
+        "degree": "doctoral",
+        "heading": "Dissertation",
+        "declarationHeading": "Declaration of Authorship",
+        "dedicationHeading": "Dedication",
+        "abbreviationsHeading": "Abbreviations"
+      },
+      {
+        "language": "en",
+        "theme": "dark",
+        "degree": "custom",
+        "heading": "Independent Study",
+        "declarationHeading": "Declaration of Authorship",
+        "dedicationHeading": "Dedication",
+        "abbreviationsHeading": "Abbreviations"
+      },
+      {
+        "language": "de",
+        "theme": "light",
+        "degree": "bachelor",
+        "heading": "Bachelorarbeit",
+        "declarationHeading": "Selbstständigkeitserklärung",
+        "dedicationHeading": "Widmung",
+        "abbreviationsHeading": "Abkürzungsverzeichnis"
+      },
+      {
+        "language": "de",
+        "theme": "light",
+        "degree": "master",
+        "heading": "Masterarbeit",
+        "declarationHeading": "Selbstständigkeitserklärung",
+        "dedicationHeading": "Widmung",
+        "abbreviationsHeading": "Abkürzungsverzeichnis"
+      },
+      {
+        "language": "de",
+        "theme": "light",
+        "degree": "doctoral",
+        "heading": "Dissertation",
+        "declarationHeading": "Selbstständigkeitserklärung",
+        "dedicationHeading": "Widmung",
+        "abbreviationsHeading": "Abkürzungsverzeichnis"
+      },
+      {
+        "language": "de",
+        "theme": "light",
+        "degree": "custom",
+        "heading": "Independent Study",
+        "declarationHeading": "Selbstständigkeitserklärung",
+        "dedicationHeading": "Widmung",
+        "abbreviationsHeading": "Abkürzungsverzeichnis"
+      },
+      {
+        "language": "de",
+        "theme": "dark",
+        "degree": "bachelor",
+        "heading": "Bachelorarbeit",
+        "declarationHeading": "Selbstständigkeitserklärung",
+        "dedicationHeading": "Widmung",
+        "abbreviationsHeading": "Abkürzungsverzeichnis"
+      },
+      {
+        "language": "de",
+        "theme": "dark",
+        "degree": "master",
+        "heading": "Masterarbeit",
+        "declarationHeading": "Selbstständigkeitserklärung",
+        "dedicationHeading": "Widmung",
+        "abbreviationsHeading": "Abkürzungsverzeichnis"
+      },
+      {
+        "language": "de",
+        "theme": "dark",
+        "degree": "doctoral",
+        "heading": "Dissertation",
+        "declarationHeading": "Selbstständigkeitserklärung",
+        "dedicationHeading": "Widmung",
+        "abbreviationsHeading": "Abkürzungsverzeichnis"
+      },
+      {
+        "language": "de",
+        "theme": "dark",
+        "degree": "custom",
+        "heading": "Independent Study",
+        "declarationHeading": "Selbstständigkeitserklärung",
+        "dedicationHeading": "Widmung",
+        "abbreviationsHeading": "Abkürzungsverzeichnis"
+      }
+    ],
+    "invalid": [
+      {
+        "id": "missing-language",
+        "remove": ",language=en",
+        "message": "Document language is required"
+      },
+      {
+        "id": "missing-level",
+        "remove": "thesis-level={master},",
+        "message": "Thesis level is required"
+      },
+      {
+        "id": "custom-heading",
+        "replace": [
+          "thesis-level={master}",
+          "thesis-level={custom}"
+        ],
+        "message": "Custom thesis type is required"
+      },
+      {
+        "id": "invalid-level",
+        "replace": [
+          "thesis-level={master}",
+          "thesis-level={unknown}"
+        ],
+        "message": "thesis-level"
+      },
+      {
+        "id": "phd-custom-heading",
+        "documentType": "phd",
+        "replace": [
+          "thesis-level={master}",
+          "thesis-level={custom}"
+        ],
+        "message": "Custom thesis type is required"
+      },
+      {
+        "id": "blank-custom-heading",
+        "replace": [
+          "thesis-level={master}",
+          "thesis-level={custom},thesis-type={ }"
+        ],
+        "message": "Custom thesis type is required"
+      }
+    ],
+    "doctoralSpecialization": {
+      "language": "de",
+      "theme": "light",
+      "degree": "doctoral",
+      "heading": "Dissertation",
+      "declarationHeading": "Selbstständigkeitserklärung",
+      "dedicationHeading": "Widmung",
+      "abbreviationsHeading": "Abkürzungsverzeichnis"
+    },
+    "numbering": {
+      "frontDepth": -1,
+      "frontChapters": 0,
+      "mainDepth": 3,
+      "mainChapters": 1,
+      "backDepth": -1,
+      "backChapters": 1
+    },
+    "contents": [
+      {
+        "title": "Front Research",
+        "number": ""
+      },
+      {
+        "title": "Abstract",
+        "number": ""
+      },
+      {
+        "title": "Kurzfassung",
+        "number": ""
+      },
+      {
+        "title": "Research Body",
+        "number": "1"
+      },
+      {
+        "title": "Research Appendix",
+        "number": ""
+      }
+    ],
+    "customization": [
+      {
+        "language": "en",
+        "defaultDeclaration": "I declare that this thesis is my own work",
+        "defaultHeading": "Declaration of Authorship",
+        "declarationTitle": "Custom Authorship",
+        "declarationBody": "Setup declaration evidence.",
+        "optionalBody": "Optional declaration evidence.",
+        "dedicationTitle": "Custom Dedication",
+        "abbreviationsTitle": "Custom Abbreviations",
+        "acknowledgementsTitle": "Acknowledgements"
+      },
+      {
+        "language": "de",
+        "defaultDeclaration": "Hiermit erkläre ich",
+        "defaultHeading": "Selbstständigkeitserklärung",
+        "declarationTitle": "Eigene Erklärung",
+        "declarationBody": "Eigener Erklärungstext.",
+        "optionalBody": "Optionaler Erklärungstext.",
+        "dedicationTitle": "Eigene Widmung",
+        "abbreviationsTitle": "Eigene Abkürzungen",
+        "acknowledgementsTitle": "Danksagung"
+      }
+    ],
+    "minimal": [
+      {
+        "language": "en",
+        "theme": "light",
+        "degree": "master",
+        "title": "Minimal Thesis",
+        "author": "Minimal Author",
+        "heading": "Master’s Thesis",
+        "absentLabels": [
+          "Faculty",
+          "Degree",
+          "Supervisor",
+          "Reviewers",
+          "Place",
+          "Submitted",
+          "Defense",
+          "Student ID",
+          "ORCID"
+        ]
+      },
+      {
+        "language": "de",
+        "theme": "dark",
+        "degree": "doctoral",
+        "title": "Minimale Arbeit",
+        "author": "Minimale Autorin",
+        "heading": "Dissertation",
+        "absentLabels": [
+          "Fakultät",
+          "Grad",
+          "Betreuung",
+          "Gutachten",
+          "Ort",
+          "Eingereicht",
+          "Disputation",
+          "Matrikelnummer",
+          "ORCID"
+        ]
+      }
+    ],
+    "languageScopes": [
+      {
+        "language": "en",
+        "abstract": "english",
+        "afterAbstract": "english",
+        "kurzfassung": "ngerman",
+        "afterKurzfassung": "english"
+      },
+      {
+        "language": "de",
+        "abstract": "english",
+        "afterAbstract": "ngerman",
+        "kurzfassung": "ngerman",
+        "afterKurzfassung": "ngerman"
+      }
+    ]
+  },
+  "runners": {
+    "rendering": {
+      "owner": "test:print-thesis-rendering",
+      "maximumElapsedMilliseconds": 3600000,
+      "capabilities": {
+        "grant": {
+          "kind": "native-build-caller",
+          "arguments": [
+            "run",
+            "@semio-tech/print:test-thesis-render"
+          ],
+          "scratch": "sandbox"
+        }
+      }
+    },
+    "publication": {
+      "owner": "test:print-thesis-publication",
+      "maximumElapsedMilliseconds": 3600000,
+      "capabilities": {
+        "grant": {
+          "kind": "native-build-caller",
+          "arguments": [
+            "run-many",
+            "--targets=build-thesis,build-phd",
+            "--projects=@semio-tech/print",
+            "--parallel=1"
+          ],
+          "scratch": "sandbox"
+        }
+      }
+    }
+  },
+  "publications": [
+    {
+      "id": "thesis",
+      "expected": [
+        "Master’s Thesis",
+        "Reproducible Research Through Explicit Design Models",
+        "Alex Example",
+        "Master of Science",
+        "Architecture and Technology",
+        "Abstract",
+        "Kurzfassung",
+        "Introduction",
+        "Background and Related Work",
+        "Research Method",
+        "Results",
+        "Discussion",
+        "Conclusion and Future Work",
+        "Evaluation Protocol",
+        "Data Availability"
+      ],
+      "bibliography": [
+        "Literate Programming",
+        "Best Practices for Scientific Computing"
+      ],
+      "citationKeys": [
+        "knuth1984",
+        "wilson2014"
+      ],
+      "firstBodyMarker": "Research findings can only be checked",
+      "filledHeadings": [
+        {
+          "title": "Research Question",
+          "number": "1.1"
+        },
+        {
+          "title": "Contributions",
+          "number": "1.2"
+        }
+      ]
+    },
+    {
+      "id": "phd",
+      "expected": [
+        "Dissertation",
+        "Semio Dissertation Template",
+        "Semio Research",
+        "Doctor of Engineering",
+        "Abstract",
+        "Kurzfassung",
+        "Introduction",
+        "Method",
+        "Results",
+        "Conclusion",
+        "Supplementary Data"
+      ],
+      "bibliography": [
+        "Print Framework Architecture",
+        "The expl3 Programming Language",
+        "Port-Based Assemblies as a Design Representation"
+      ],
+      "citationKeys": [
+        "semio2026",
+        "expl32024",
+        "dissertation2026"
+      ],
+      "firstBodyMarker": "A dissertation is a",
+      "filledHeadings": [
+        {
+          "title": "Scope",
+          "number": "1.1"
+        }
+      ]
+    }
+  ],
+  "privateWorkspace": {
+    "name": "print-thesis-fixture",
+    "maximumFiles": 2048,
+    "maximumFileBytes": 67108864,
+    "maximumBytes": 536870912,
+    "maximumPathLength": 256,
+    "package": {
+      "name": "print-thesis-fixture",
+      "private": true,
+      "type": "module",
+      "workspaces": [
+        "packages/*"
+      ],
+      "semio": {
+        "workspace": {
+          "schemaVersion": 1,
+          "members": [
+            "packages/*"
+          ],
+          "owners": []
+        }
+      }
+    },
+    "project": {
+      "name": "print-thesis-fixture",
+      "targets": {}
+    },
+    "lock": {
+      "lockfileVersion": 2,
+      "configVersion": 1,
+      "workspaces": {
+        "": {
+          "name": "print-thesis-fixture"
+        },
+        "packages/input": {
+          "name": "print-thesis-input",
+          "version": "0.0.0"
+        }
+      },
+      "packages": {
+        "print-thesis-input": [
+          "print-thesis-input@workspace:packages/input"
+        ]
+      }
+    },
+    "module": "module(name = \"print_thesis_fixture\")\n",
+    "inputPackage": {
+      "name": "print-thesis-input",
+      "version": "0.0.0",
+      "private": true
+    },
+    "ownerInputs": {
+      "files": [
+        "📋️build-owners.json",
+        "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript/📋️project.json"
+      ],
+      "arguments": [
+        "run",
+        "@semio-tech/print:test-thesis-render"
+      ],
+      "expected": [
+        {
+          "project": "@semio-tech/print",
+          "target": "test-thesis-render"
+        }
+      ]
+    }
+  },
+  "publicationProof": {
+    "version": 2,
+    "previewScale": 2,
+    "maximumTextBytes": 4194304
+  },
+  "latexCommands": [
+    {
+      "command": "makededication",
+      "environment": "Dedication",
+      "reserved": [
+        "dedication"
+      ]
+    }
+  ]
+}

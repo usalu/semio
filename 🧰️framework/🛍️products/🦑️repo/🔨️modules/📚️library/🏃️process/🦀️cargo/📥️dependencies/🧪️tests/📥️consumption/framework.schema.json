@@ -1,0 +1,35 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "offline",
+      "cached",
+      "compileFails",
+      "events"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "offline": {
+        "type": "boolean"
+      },
+      "cached": {
+        "type": "boolean"
+      },
+      "compileFails": {
+        "type": "boolean"
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

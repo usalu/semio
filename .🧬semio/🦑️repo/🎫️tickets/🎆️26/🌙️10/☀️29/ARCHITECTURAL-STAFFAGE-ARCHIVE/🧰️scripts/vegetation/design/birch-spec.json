@@ -1,0 +1,5 @@
+{"pose":"windy","period":2.8,"step":0.35,
+"windy":{"stem-l-1":-1.2,"stem-l-2":-2.4,"stem-c-1":-1.2,"stem-c-2":-2.4,"stem-r-1":-1.2,"stem-r-2":-2.4,"br-l-a":-3,"br-l-b":-3,"br-c-a":-3,"br-c-b":-3,"br-r-a":-3,"br-r-b":-3,"fol-l-a":-8,"fol-l-b":-8,"fol-c-a":-8,"fol-c-b":-8,"fol-r-a":-8,"fol-r-b":-8,"fol-l-top":-8,"fol-c-top":-8,"fol-r-top":-8},
+"storm":{"stem-l-1":-2.2,"stem-l-2":-3.2,"stem-c-1":-2.2,"stem-c-2":-3.2,"stem-r-1":-2.2,"stem-r-2":-3.2,"br-l-a":-6,"br-l-b":-6,"br-c-a":-6,"br-c-b":-6,"br-r-a":-6,"br-r-b":-6,"fol-l-a":-12,"fol-l-b":-12,"fol-c-a":-12,"fol-c-b":-12,"fol-r-a":-12,"fol-r-b":-12,"fol-l-top":-12,"fol-c-top":-12,"fol-r-top":-12},
+"amp":{"stem-l-1":[0.6,0],"stem-l-2":[1,0.08],"stem-c-1":[0.6,0.02],"stem-c-2":[1,0.1],"stem-r-1":[0.6,0.04],"stem-r-2":[1,0.12],"br-l-a":[1.6,0.16],"br-l-b":[1.4,0.14],"br-c-a":[1.6,0.18],"br-c-b":[1.6,0.2],"br-r-a":[1.6,0.22],"br-r-b":[1.4,0.18],"fol-l-a":[3.5,0.26],"fol-l-b":[3.5,0.22],"fol-c-a":[3.5,0.28],"fol-c-b":[3.5,0.3],"fol-r-a":[3.5,0.32],"fol-r-b":[3.5,0.26],"fol-l-top":[3.5,0.3],"fol-c-top":[3.8,0.34],"fol-r-top":[3.5,0.36]},
+"gustFrac":[[0,0.05],[1.2,0.3],[2.5,0.7],[3.6,0.45],[5,0.2],[8,0.05]]}

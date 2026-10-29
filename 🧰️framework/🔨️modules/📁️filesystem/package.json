@@ -6,6 +6,7 @@
   "type": "module",
   "private": true,
   "exports": {
+    "./paths/windows": "./📂️paths/🪟️windows/🟦️.ts",
     "./observation": "./🧾️observation/🟦️.ts",
     "./observation/churn": "./🧾️observation/🔁️churn/🟦️.ts",
     "./observation/current": "./🧾️observation/📁️current/🟦️.ts",

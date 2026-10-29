@@ -1,0 +1,2531 @@
+{
+  "id": "tower-crane",
+  "category": "vehicles",
+  "title": {
+    "en": "Tower Crane",
+    "de": "Turmdrehkran"
+  },
+  "summary": {
+    "en": "A freestanding 40 m lattice tower crane with a 55 m jib and a 16.5 m counter-jib: the trolley runs along the jib, the hook block hangs on a telescoping rope and carries a concrete skip; the base moment varies with the trolley position and the fixed foundation is the only support.",
+    "de": "Ein freistehender 40-m-Gitterturmdrehkran mit 55 m Ausleger und 16,5 m Gegenausleger: Die Laufkatze fährt am Ausleger, der Hakenflaschenzug hängt an einem teleskopierenden Seil und trägt einen Betonkübel; das Fußmoment ändert sich mit der Katzposition, das feste Fundament ist das einzige Lager."
+  },
+  "tags": [
+    "machine",
+    "crane",
+    "tower-crane",
+    "lattice",
+    "electric",
+    "construction"
+  ],
+  "provenance": {
+    "author": "Semio staffage content worker (vehicles)",
+    "method": "handcrafted",
+    "created": "2026-10-29",
+    "references": [
+      {
+        "id": "en-14439",
+        "citation": "EN 14439:2006+A2:2009 Cranes, safety, tower cranes; and EN 13001-2 Crane safety, general design, load actions: dead load, hoist load, out-of-service wind."
+      },
+      {
+        "id": "en-1991-1-4",
+        "citation": "EN 1991-1-4:2005 Eurocode 1, wind actions: peak velocity pressure q = 0.613 v^2 for v = 28 m/s, force coefficients of lattice towers."
+      },
+      {
+        "id": "en-1993-1-1",
+        "citation": "EN 1993-1-1:2005 Eurocode 3, design of steel structures: S355 steel, E = 210 GPa, f_y = 355 MPa, density 7850 kg/m3."
+      },
+      {
+        "id": "concrete-density",
+        "citation": "EN 206 / EN 1991-1-1 Annex A: normal-weight fresh concrete about 2400 kg/m3, hardened reinforced concrete 2500 kg/m3."
+      },
+      {
+        "id": "ashrae-2021",
+        "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 4 Heat Transfer; emissivity and absorptivity of painted steel and concrete."
+      }
+    ],
+    "notes": {
+      "en": "The tower, jib and counter-jib are rigid members whose lattice chords give the section properties (area, second moment about the bending axis). The pendant ties are drawn but not modelled as members: the jib is treated as a cantilever from the slewing unit, which does not change the base reactions. Slewing is about a vertical axis and therefore not an elevation joint. The hoist rope is eight overlapping 5.75 m pieces that slide up behind the rope above them so that exactly the needed length is visible. The class dimensions, masses and loads are authored typical values for this vehicle class (authored-estimate); they are not taken from a cited data sheet.",
+      "de": "Turm, Ausleger und Gegenausleger sind starre Stäbe, deren Gitterstäbe die Querschnittswerte (Fläche, Flächenmoment um die Biegeachse) liefern. Die Abspannungen sind gezeichnet, aber nicht als Stäbe modelliert: Der Ausleger wird als Kragarm am Drehwerk behandelt, was die Fußreaktionen nicht ändert. Das Drehen erfolgt um die senkrechte Achse und ist daher kein Gelenk der Ansicht. Das Hubseil besteht aus acht überlappenden 5,75-m-Stücken, die hinter das darüberliegende Seil gleiten, sodass genau die benötigte Länge sichtbar ist. Abmessungen, Massen und Lasten sind selbst gesetzte typische Werte dieser Fahrzeugklasse (authored-estimate); sie stammen nicht aus einem zitierten Datenblatt."
+    }
+  },
+  "dimensions": {
+    "heightM": 48.85,
+    "widthM": 71.8,
+    "depthM": 2,
+    "massKg": 108110
+  },
+  "materials": [
+    {
+      "id": "steel-s355",
+      "title": {
+        "en": "Painted S355 structural steel",
+        "de": "Lackierter Baustahl S355"
+      },
+      "emissivity": 0.88,
+      "solarAbsorptivity": 0.5,
+      "densityKgM3": 7850,
+      "conductivityWmK": 50,
+      "elasticModulusPa": 210000000000,
+      "strengthPa": 355000000,
+      "source": "literature",
+      "reference": "en-1993-1-1"
+    },
+    {
+      "id": "concrete",
+      "title": {
+        "en": "Concrete ballast and counterweight",
+        "de": "Betonballast und Gegengewicht"
+      },
+      "emissivity": 0.93,
+      "solarAbsorptivity": 0.65,
+      "densityKgM3": 2500,
+      "conductivityWmK": 1.8,
+      "source": "literature",
+      "reference": "concrete-density"
+    },
+    {
+      "id": "glass",
+      "title": {
+        "en": "Cab glass",
+        "de": "Kabinenglas"
+      },
+      "emissivity": 0.84,
+      "solarAbsorptivity": 0.2,
+      "densityKgM3": 2500,
+      "conductivityWmK": 1.0,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "wire-rope",
+      "title": {
+        "en": "Steel wire rope",
+        "de": "Stahldrahtseil"
+      },
+      "emissivity": 0.4,
+      "solarAbsorptivity": 0.6,
+      "densityKgM3": 7850,
+      "conductivityWmK": 40,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    },
+    {
+      "id": "machinery",
+      "title": {
+        "en": "Winch house and drives",
+        "de": "Windenhaus und Antriebe"
+      },
+      "emissivity": 0.88,
+      "solarAbsorptivity": 0.5,
+      "densityKgM3": 3000,
+      "conductivityWmK": 50,
+      "source": "authored-estimate"
+    },
+    {
+      "id": "skip-steel",
+      "title": {
+        "en": "Concrete skip and hook block",
+        "de": "Betonkübel und Hakenflasche"
+      },
+      "emissivity": 0.8,
+      "solarAbsorptivity": 0.6,
+      "densityKgM3": 7850,
+      "conductivityWmK": 50,
+      "source": "literature",
+      "reference": "ashrae-2021"
+    }
+  ],
+  "rig": {
+    "kind": "mechanical",
+    "root": "base",
+    "bones": [
+      {
+        "id": "base",
+        "parent": null,
+        "title": {
+          "en": "Ballasted foundation",
+          "de": "Ballastiertes Fundament"
+        },
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0,
+        "lengthM": 7,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 45000,
+          "comX": 0,
+          "comY": 0.5,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "mast",
+        "parent": "base",
+        "title": {
+          "en": "Lattice tower",
+          "de": "Gitterturm"
+        },
+        "x": 0,
+        "y": 1.0,
+        "angleDeg": 90,
+        "lengthM": 39,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 15000,
+          "comX": 0,
+          "comY": 0,
+          "distribution": "uniform",
+          "source": "authored-estimate"
+        },
+        "section": {
+          "areaM2": 0.022,
+          "secondMomentM4": 0.022,
+          "extremeFibreM": 1.08,
+          "material": "steel-s355",
+          "title": {
+            "en": "Four 150 mm chords at 2.0 m spacing",
+            "de": "Vier 150-mm-Gurte im Abstand von 2,0 m"
+          }
+        }
+      },
+      {
+        "id": "slewing",
+        "parent": "mast",
+        "title": {
+          "en": "Slewing unit with cab and tower head",
+          "de": "Drehbühne mit Kabine und Turmspitze"
+        },
+        "x": 39,
+        "y": 0,
+        "angleDeg": -90,
+        "lengthM": 8.6,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 8000,
+          "comX": 0,
+          "comY": 0.6,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "jib",
+        "parent": "slewing",
+        "title": {
+          "en": "Jib",
+          "de": "Ausleger"
+        },
+        "x": 0,
+        "y": 4.4,
+        "angleDeg": 0,
+        "lengthM": 55,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 9000,
+          "comX": 0,
+          "comY": 0,
+          "distribution": "uniform",
+          "source": "authored-estimate"
+        },
+        "section": {
+          "areaM2": 0.01,
+          "secondMomentM4": 0.0064,
+          "extremeFibreM": 0.85,
+          "material": "steel-s355",
+          "title": {
+            "en": "Triangular lattice, depth 1.6 m",
+            "de": "Dreiecksgitter, Höhe 1,6 m"
+          }
+        }
+      },
+      {
+        "id": "counter-jib",
+        "parent": "slewing",
+        "title": {
+          "en": "Counter-jib",
+          "de": "Gegenausleger"
+        },
+        "x": 0,
+        "y": 4.4,
+        "angleDeg": 180,
+        "lengthM": 16.5,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 3500,
+          "comX": 0,
+          "comY": 0,
+          "distribution": "uniform",
+          "source": "authored-estimate"
+        },
+        "section": {
+          "areaM2": 0.0075,
+          "secondMomentM4": 0.0035,
+          "extremeFibreM": 0.75,
+          "material": "steel-s355",
+          "title": {
+            "en": "Lattice, depth 1.4 m",
+            "de": "Gitter, Höhe 1,4 m"
+          }
+        }
+      },
+      {
+        "id": "counterweight",
+        "parent": "slewing",
+        "title": {
+          "en": "Concrete counterweight",
+          "de": "Betongegengewicht"
+        },
+        "x": -14.9,
+        "y": 1.5,
+        "angleDeg": 0,
+        "lengthM": 2.4,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 20000,
+          "comX": 0,
+          "comY": 1.1,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "winch",
+        "parent": "slewing",
+        "title": {
+          "en": "Hoist winch house",
+          "de": "Hubwindenhaus"
+        },
+        "x": -8,
+        "y": 5.15,
+        "angleDeg": 0,
+        "lengthM": 4,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 4500,
+          "comX": 0,
+          "comY": 0.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "trolley",
+        "parent": "jib",
+        "title": {
+          "en": "Trolley",
+          "de": "Laufkatze"
+        },
+        "x": 3,
+        "y": -0.8,
+        "angleDeg": 0,
+        "lengthM": 1.4,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 0,
+          "minM": 0,
+          "maxM": 50
+        },
+        "mass": {
+          "kg": 1000,
+          "comX": 0,
+          "comY": -0.3,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "hoist-block",
+        "parent": "trolley",
+        "title": {
+          "en": "Hook block",
+          "de": "Hakenflasche"
+        },
+        "x": 0,
+        "y": -6.3,
+        "angleDeg": 0,
+        "lengthM": 1.2,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": -90,
+          "minM": 0,
+          "maxM": 34.5
+        },
+        "mass": {
+          "kg": 1500,
+          "comX": 0,
+          "comY": -0.5,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "skip",
+        "parent": "hoist-block",
+        "title": {
+          "en": "Concrete skip",
+          "de": "Betonkübel"
+        },
+        "x": 0,
+        "y": -1.5,
+        "angleDeg": 0,
+        "lengthM": 1.15,
+        "joint": {
+          "type": "fixed"
+        },
+        "mass": {
+          "kg": 450,
+          "comX": 0,
+          "comY": -0.6,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "rope-1",
+        "parent": "trolley",
+        "title": {
+          "en": "Hoist rope, piece 1",
+          "de": "Hubseil, Stück 1"
+        },
+        "x": 0,
+        "y": -0.55,
+        "angleDeg": 0,
+        "lengthM": 5.75,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 35
+        },
+        "mass": {
+          "kg": 20,
+          "comX": 0,
+          "comY": -2.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "rope-2",
+        "parent": "trolley",
+        "title": {
+          "en": "Hoist rope, piece 2",
+          "de": "Hubseil, Stück 2"
+        },
+        "x": 0,
+        "y": -5.55,
+        "angleDeg": 0,
+        "lengthM": 5.75,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 35
+        },
+        "mass": {
+          "kg": 20,
+          "comX": 0,
+          "comY": -2.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "rope-3",
+        "parent": "trolley",
+        "title": {
+          "en": "Hoist rope, piece 3",
+          "de": "Hubseil, Stück 3"
+        },
+        "x": 0,
+        "y": -10.55,
+        "angleDeg": 0,
+        "lengthM": 5.75,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 35
+        },
+        "mass": {
+          "kg": 20,
+          "comX": 0,
+          "comY": -2.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "rope-4",
+        "parent": "trolley",
+        "title": {
+          "en": "Hoist rope, piece 4",
+          "de": "Hubseil, Stück 4"
+        },
+        "x": 0,
+        "y": -15.55,
+        "angleDeg": 0,
+        "lengthM": 5.75,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 35
+        },
+        "mass": {
+          "kg": 20,
+          "comX": 0,
+          "comY": -2.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "rope-5",
+        "parent": "trolley",
+        "title": {
+          "en": "Hoist rope, piece 5",
+          "de": "Hubseil, Stück 5"
+        },
+        "x": 0,
+        "y": -20.55,
+        "angleDeg": 0,
+        "lengthM": 5.75,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 35
+        },
+        "mass": {
+          "kg": 20,
+          "comX": 0,
+          "comY": -2.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "rope-6",
+        "parent": "trolley",
+        "title": {
+          "en": "Hoist rope, piece 6",
+          "de": "Hubseil, Stück 6"
+        },
+        "x": 0,
+        "y": -25.55,
+        "angleDeg": 0,
+        "lengthM": 5.75,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 35
+        },
+        "mass": {
+          "kg": 20,
+          "comX": 0,
+          "comY": -2.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "rope-7",
+        "parent": "trolley",
+        "title": {
+          "en": "Hoist rope, piece 7",
+          "de": "Hubseil, Stück 7"
+        },
+        "x": 0,
+        "y": -30.55,
+        "angleDeg": 0,
+        "lengthM": 5.75,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 35
+        },
+        "mass": {
+          "kg": 20,
+          "comX": 0,
+          "comY": -2.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      },
+      {
+        "id": "rope-8",
+        "parent": "trolley",
+        "title": {
+          "en": "Hoist rope, piece 8",
+          "de": "Hubseil, Stück 8"
+        },
+        "x": 0,
+        "y": -35.55,
+        "angleDeg": 0,
+        "lengthM": 5.75,
+        "joint": {
+          "type": "prismatic",
+          "axisDeg": 90,
+          "minM": 0,
+          "maxM": 35
+        },
+        "mass": {
+          "kg": 20,
+          "comX": 0,
+          "comY": -2.9,
+          "distribution": "point",
+          "source": "authored-estimate"
+        }
+      }
+    ]
+  },
+  "anchors": [
+    {
+      "id": "base-fixed",
+      "bone": "base",
+      "x": 0,
+      "y": 0,
+      "kind": "support",
+      "title": {
+        "en": "Foundation, fully fixed",
+        "de": "Fundament, voll eingespannt"
+      },
+      "support": "fixed",
+      "normalDeg": 90,
+      "footprintLengthM": 7,
+      "footprintWidthM": 7,
+      "frictionCoefficient": 0.6
+    },
+    {
+      "id": "winch-vent",
+      "bone": "winch",
+      "x": 0,
+      "y": 1.8,
+      "kind": "emitter",
+      "title": {
+        "en": "Winch house vent",
+        "de": "Entlüftung des Windenhauses"
+      }
+    },
+    {
+      "id": "skip-cog",
+      "bone": "skip",
+      "x": 0,
+      "y": -0.6,
+      "kind": "load",
+      "title": {
+        "en": "Concrete content centre",
+        "de": "Schwerpunkt des Betoninhalts"
+      }
+    }
+  ],
+  "geometry": {
+    "elevation": [
+      {
+        "id": "ballast-slab",
+        "bone": "base",
+        "role": "body",
+        "lod": 0,
+        "z": 2,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "rect",
+        "x": -3.5,
+        "y": 0,
+        "w": 7,
+        "h": 1,
+        "region": "ballast",
+        "material": "concrete"
+      },
+      {
+        "id": "ballast-joints",
+        "bone": "base",
+        "role": "detail",
+        "lod": 2,
+        "z": 2.1,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M -1.75,0 L -1.75,1 M 0,0 L 0,1 M 1.75,0 L 1.75,1",
+        "material": "concrete"
+      },
+      {
+        "id": "mast-foot",
+        "bone": "base",
+        "role": "detail",
+        "lod": 1,
+        "z": 2.2,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            -1.5,
+            1
+          ],
+          [
+            1.5,
+            1
+          ],
+          [
+            1.15,
+            1.5
+          ],
+          [
+            -1.15,
+            1.5
+          ]
+        ],
+        "closed": true,
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "mast-chords",
+        "bone": "mast",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "rect",
+        "x": 0,
+        "y": -1,
+        "w": 39,
+        "h": 2,
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "mast-diagonals",
+        "bone": "mast",
+        "role": "detail",
+        "lod": 1,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M 0,-1 L 2,1 L 4,-1 L 6,1 L 8,-1 L 10,1 L 12,-1 L 14,1 L 16,-1 L 18,1 L 20,-1 L 22,1 L 24,-1 L 26,1 L 28,-1 L 30,1 L 32,-1 L 34,1 L 36,-1 L 38,1",
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "mast-horizontals",
+        "bone": "mast",
+        "role": "detail",
+        "lod": 2,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M 0,-1 L 0,1 M 2,-1 L 2,1 M 4,-1 L 4,1 M 6,-1 L 6,1 M 8,-1 L 8,1 M 10,-1 L 10,1 M 12,-1 L 12,1 M 14,-1 L 14,1 M 16,-1 L 16,1 M 18,-1 L 18,1 M 20,-1 L 20,1 M 22,-1 L 22,1 M 24,-1 L 24,1 M 26,-1 L 26,1 M 28,-1 L 28,1 M 30,-1 L 30,1 M 32,-1 L 32,1 M 34,-1 L 34,1 M 36,-1 L 36,1 M 38,-1 L 38,1",
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "mast-ladder",
+        "bone": "mast",
+        "role": "texture",
+        "lod": 3,
+        "z": 3,
+        "filled": false,
+        "tone": 0.4,
+        "kind": "path",
+        "d": "M 0,0.55 L 39,0.55",
+        "material": "steel-s355"
+      },
+      {
+        "id": "slew-ring",
+        "bone": "slewing",
+        "role": "detail",
+        "lod": 1,
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M -1.4,0 L 1.4,0 L 1.4,0.5 L -1.4,0.5 Z",
+        "region": "house",
+        "material": "machinery"
+      },
+      {
+        "id": "slew-platform",
+        "bone": "slewing",
+        "role": "body",
+        "lod": 0,
+        "z": 3.2,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M -2.4,0.5 L 3.4,0.5 L 3.4,1.2 L -2.4,1.2 Z",
+        "region": "house",
+        "material": "machinery"
+      },
+      {
+        "id": "tower-head",
+        "bone": "slewing",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "poly",
+        "points": [
+          [
+            -1.2,
+            1.2
+          ],
+          [
+            0,
+            8.6
+          ],
+          [
+            1.2,
+            1.2
+          ]
+        ],
+        "closed": true,
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "tower-head-diagonals",
+        "bone": "slewing",
+        "role": "detail",
+        "lod": 1,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M -1.200,1.20 L 0.973,2.60 L -0.746,4.00 L 0.519,5.40 L -0.292,6.80",
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "tower-head-ties",
+        "bone": "slewing",
+        "role": "detail",
+        "lod": 2,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M -0.973,2.60 L 0.973,2.60 M -0.746,4.00 L 0.746,4.00 M -0.519,5.40 L 0.519,5.40 M -0.292,6.80 L 0.292,6.80",
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "head-sheave",
+        "bone": "slewing",
+        "role": "detail",
+        "lod": 2,
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": 8.6,
+        "rx": 0.25,
+        "ry": 0.25,
+        "material": "steel-s355"
+      },
+      {
+        "id": "cab",
+        "bone": "slewing",
+        "role": "body",
+        "lod": 0,
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.6,
+        "kind": "rect",
+        "x": 1.4,
+        "y": 1.2,
+        "w": 1.9,
+        "h": 2.2,
+        "r": 0.1,
+        "region": "cab",
+        "material": "machinery"
+      },
+      {
+        "id": "cab-glass",
+        "bone": "slewing",
+        "role": "glazing",
+        "lod": 0,
+        "z": 6,
+        "filled": true,
+        "tone": 0.85,
+        "kind": "path",
+        "d": "M 2.0,1.7 L 3.2,1.7 L 3.2,3.2 L 2.0,3.2 Z",
+        "region": "cab-glazing",
+        "material": "glass"
+      },
+      {
+        "id": "pendant-back",
+        "bone": "slewing",
+        "role": "detail",
+        "lod": 1,
+        "z": 3,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 0,8.6 L -15.6,5.1",
+        "region": "pendants",
+        "material": "wire-rope"
+      },
+      {
+        "id": "pendant-fore-1",
+        "bone": "slewing",
+        "role": "detail",
+        "lod": 1,
+        "z": 3,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 0,8.6 L 22,5.2",
+        "region": "pendants",
+        "material": "wire-rope"
+      },
+      {
+        "id": "pendant-fore-2",
+        "bone": "slewing",
+        "role": "detail",
+        "lod": 1,
+        "z": 3,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 0,8.6 L 50,5.2",
+        "region": "pendants",
+        "material": "wire-rope"
+      },
+      {
+        "id": "jib-outline",
+        "bone": "jib",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "rect",
+        "x": 0,
+        "y": -0.8,
+        "w": 55,
+        "h": 1.6,
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "jib-diagonals",
+        "bone": "jib",
+        "role": "detail",
+        "lod": 1,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M 0,-0.8 L 1.8,0.8 L 3.6,-0.8 L 5.4,0.8 L 7.2,-0.8 L 9,0.8 L 10.8,-0.8 L 12.6,0.8 L 14.4,-0.8 L 16.2,0.8 L 18,-0.8 L 19.8,0.8 L 21.6,-0.8 L 23.4,0.8 L 25.2,-0.8 L 27,0.8 L 28.8,-0.8 L 30.6,0.8 L 32.4,-0.8 L 34.2,0.8 L 36,-0.8 L 37.8,0.8 L 39.6,-0.8 L 41.4,0.8 L 43.2,-0.8 L 45,0.8 L 46.8,-0.8 L 48.6,0.8 L 50.4,-0.8 L 52.2,0.8 L 54,-0.8",
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "jib-rail",
+        "bone": "jib",
+        "role": "detail",
+        "lod": 2,
+        "z": 3.1,
+        "filled": true,
+        "tone": 0.35,
+        "kind": "capsule",
+        "x0": 0,
+        "y0": -0.8,
+        "x1": 55,
+        "y1": -0.8,
+        "r0": 0.06,
+        "r1": 0.06,
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "jib-tip-sheave",
+        "bone": "jib",
+        "role": "detail",
+        "lod": 2,
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "ellipse",
+        "cx": 55,
+        "cy": 0,
+        "rx": 0.3,
+        "ry": 0.3,
+        "material": "steel-s355"
+      },
+      {
+        "id": "counter-outline",
+        "bone": "counter-jib",
+        "role": "body",
+        "lod": 0,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "rect",
+        "x": 0,
+        "y": -0.7,
+        "w": 16.5,
+        "h": 1.4,
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "counter-diagonals",
+        "bone": "counter-jib",
+        "role": "detail",
+        "lod": 1,
+        "z": 3,
+        "filled": false,
+        "tone": 0.5,
+        "kind": "path",
+        "d": "M 0,-0.7 L 1.65,0.7 L 3.3,-0.7 L 4.95,0.7 L 6.6,-0.7 L 8.25,0.7 L 9.9,-0.7 L 11.55,0.7 L 13.2,-0.7 L 14.85,0.7 L 16.5,-0.7",
+        "region": "lattice",
+        "material": "steel-s355"
+      },
+      {
+        "id": "counterweight-slabs",
+        "bone": "counterweight",
+        "role": "body",
+        "lod": 0,
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "rect",
+        "x": -1.2,
+        "y": 0,
+        "w": 2.4,
+        "h": 2.2,
+        "region": "counterweight",
+        "material": "concrete"
+      },
+      {
+        "id": "counterweight-joints",
+        "bone": "counterweight",
+        "role": "texture",
+        "lod": 2,
+        "z": 3.4,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M -1.2,0.73 L 1.2,0.73 M -1.2,1.47 L 1.2,1.47",
+        "material": "concrete"
+      },
+      {
+        "id": "winch-house",
+        "bone": "winch",
+        "role": "body",
+        "lod": 0,
+        "z": 3.3,
+        "filled": true,
+        "tone": 0.55,
+        "kind": "rect",
+        "x": -2,
+        "y": 0,
+        "w": 4,
+        "h": 1.8,
+        "region": "winch-house",
+        "material": "machinery"
+      },
+      {
+        "id": "winch-motor-grille",
+        "bone": "winch",
+        "role": "detail",
+        "lod": 1,
+        "z": 3.4,
+        "filled": true,
+        "tone": 0.15,
+        "kind": "rect",
+        "x": -1.6,
+        "y": 0.4,
+        "w": 1.2,
+        "h": 0.8,
+        "region": "hoist-motor",
+        "material": "machinery"
+      },
+      {
+        "id": "winch-louvres",
+        "bone": "winch",
+        "role": "texture",
+        "lod": 2,
+        "z": 3.5,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M -1.5,0.6 L -0.5,0.6 M -1.5,0.8 L -0.5,0.8 M -1.5,1.0 L -0.5,1.0",
+        "material": "machinery"
+      },
+      {
+        "id": "trolley-frame",
+        "bone": "trolley",
+        "role": "body",
+        "lod": 0,
+        "z": 4,
+        "filled": true,
+        "tone": 0.4,
+        "kind": "rect",
+        "x": -0.7,
+        "y": -0.55,
+        "w": 1.4,
+        "h": 0.55,
+        "region": "trolley",
+        "material": "machinery"
+      },
+      {
+        "id": "trolley-wheels",
+        "bone": "trolley",
+        "role": "detail",
+        "lod": 2,
+        "z": 4.1,
+        "filled": true,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M -0.5,0 L -0.3,0 L -0.3,-0.12 L -0.5,-0.12 Z M 0.3,0 L 0.5,0 L 0.5,-0.12 L 0.3,-0.12 Z",
+        "material": "machinery"
+      },
+      {
+        "id": "trolley-sheave",
+        "bone": "trolley",
+        "role": "detail",
+        "lod": 2,
+        "z": 4.2,
+        "filled": true,
+        "tone": 0.25,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": -0.32,
+        "rx": 0.18,
+        "ry": 0.18,
+        "material": "steel-s355"
+      },
+      {
+        "id": "block-body",
+        "bone": "hoist-block",
+        "role": "body",
+        "lod": 0,
+        "z": 4.5,
+        "filled": true,
+        "tone": 0.3,
+        "kind": "rect",
+        "x": -0.28,
+        "y": -0.5,
+        "w": 0.56,
+        "h": 0.5,
+        "region": "skip",
+        "material": "skip-steel"
+      },
+      {
+        "id": "block-sheave",
+        "bone": "hoist-block",
+        "role": "detail",
+        "lod": 2,
+        "z": 4.6,
+        "filled": true,
+        "tone": 0.5,
+        "kind": "ellipse",
+        "cx": 0,
+        "cy": -0.25,
+        "rx": 0.18,
+        "ry": 0.18,
+        "material": "skip-steel"
+      },
+      {
+        "id": "hook",
+        "bone": "hoist-block",
+        "role": "detail",
+        "lod": 1,
+        "z": 4.5,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,-0.5 L 0,-0.8 C 0.3,-0.8 0.35,-1.15 0.05,-1.2 C -0.1,-1.22 -0.16,-1.1 -0.1,-1.02",
+        "region": "skip",
+        "material": "skip-steel"
+      },
+      {
+        "id": "slings",
+        "bone": "skip",
+        "role": "detail",
+        "lod": 1,
+        "z": 4.4,
+        "filled": false,
+        "tone": 0.3,
+        "kind": "path",
+        "d": "M 0,1.0 L -0.7,0 M 0,1.0 L 0.7,0",
+        "region": "pendants",
+        "material": "wire-rope"
+      },
+      {
+        "id": "skip-body",
+        "bone": "skip",
+        "role": "body",
+        "lod": 0,
+        "z": 4.4,
+        "filled": true,
+        "tone": 0.45,
+        "kind": "path",
+        "d": "M -0.7,0 L 0.7,0 L 0.45,-1.0 L -0.45,-1.0 Z",
+        "region": "skip",
+        "material": "skip-steel"
+      },
+      {
+        "id": "skip-gate",
+        "bone": "skip",
+        "role": "detail",
+        "lod": 2,
+        "z": 4.5,
+        "filled": true,
+        "tone": 0.25,
+        "kind": "rect",
+        "x": -0.2,
+        "y": -1.15,
+        "w": 0.4,
+        "h": 0.15,
+        "region": "skip",
+        "material": "skip-steel"
+      },
+      {
+        "id": "rope-1-line",
+        "bone": "rope-1",
+        "role": "detail",
+        "lod": 0,
+        "z": 3.8,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,0 L 0,-5.75",
+        "region": "rope",
+        "material": "wire-rope"
+      },
+      {
+        "id": "rope-2-line",
+        "bone": "rope-2",
+        "role": "detail",
+        "lod": 0,
+        "z": 3.8,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,0 L 0,-5.75",
+        "region": "rope",
+        "material": "wire-rope"
+      },
+      {
+        "id": "rope-3-line",
+        "bone": "rope-3",
+        "role": "detail",
+        "lod": 0,
+        "z": 3.8,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,0 L 0,-5.75",
+        "region": "rope",
+        "material": "wire-rope"
+      },
+      {
+        "id": "rope-4-line",
+        "bone": "rope-4",
+        "role": "detail",
+        "lod": 0,
+        "z": 3.8,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,0 L 0,-5.75",
+        "region": "rope",
+        "material": "wire-rope"
+      },
+      {
+        "id": "rope-5-line",
+        "bone": "rope-5",
+        "role": "detail",
+        "lod": 0,
+        "z": 3.8,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,0 L 0,-5.75",
+        "region": "rope",
+        "material": "wire-rope"
+      },
+      {
+        "id": "rope-6-line",
+        "bone": "rope-6",
+        "role": "detail",
+        "lod": 0,
+        "z": 3.8,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,0 L 0,-5.75",
+        "region": "rope",
+        "material": "wire-rope"
+      },
+      {
+        "id": "rope-7-line",
+        "bone": "rope-7",
+        "role": "detail",
+        "lod": 0,
+        "z": 3.8,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,0 L 0,-5.75",
+        "region": "rope",
+        "material": "wire-rope"
+      },
+      {
+        "id": "rope-8-line",
+        "bone": "rope-8",
+        "role": "detail",
+        "lod": 0,
+        "z": 3.8,
+        "filled": false,
+        "tone": 0.2,
+        "kind": "path",
+        "d": "M 0,0 L 0,-5.75",
+        "region": "rope",
+        "material": "wire-rope"
+      }
+    ]
+  },
+  "poses": [
+    {
+      "id": "parked-weathervane",
+      "title": {
+        "en": "Out of service, weathervaning",
+        "de": "Außer Betrieb, Windfahne"
+      },
+      "description": {
+        "en": "Trolley at the tower, hook block raised to the top, no load; the jib is free to turn into the wind and the tower carries the out-of-service wind load (28 m/s).",
+        "de": "Laufkatze am Turm, Hakenflasche ganz oben, keine Last; der Ausleger darf sich in den Wind drehen und der Turm trägt die Windlast außer Betrieb (28 m/s)."
+      },
+      "bones": {
+        "hoist-block": {
+          "dy": 0
+        },
+        "rope-1": {
+          "dy": 0
+        },
+        "rope-2": {
+          "dy": 5
+        },
+        "rope-3": {
+          "dy": 10
+        },
+        "rope-4": {
+          "dy": 15
+        },
+        "rope-5": {
+          "dy": 20
+        },
+        "rope-6": {
+          "dy": 25
+        },
+        "rope-7": {
+          "dy": 30
+        },
+        "rope-8": {
+          "dy": 35
+        }
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [],
+      "thermal": {
+        "operating": {
+          "hoist": 0
+        },
+        "emitters": {
+          "winch-vent": 0
+        }
+      },
+      "loads": [
+        {
+          "id": "wind-mast",
+          "kind": "wind",
+          "title": {
+            "en": "Out-of-service wind on the tower",
+            "de": "Windlast außer Betrieb auf dem Turm"
+          },
+          "bone": "mast",
+          "fxN": 0,
+          "fyN": 0,
+          "distributed": {
+            "bone": "mast",
+            "fromM": 0,
+            "toM": 39,
+            "wxNPerM": 700,
+            "wyNPerM": 0
+          },
+          "source": "literature",
+          "reference": "en-1991-1-4"
+        }
+      ]
+    },
+    {
+      "id": "lifting-load",
+      "title": {
+        "en": "Lifting a skip of concrete",
+        "de": "Heben eines Betonkübels"
+      },
+      "description": {
+        "en": "Trolley 25 m from the tower axis, hook block 20 m below its top position, 3 t of fresh concrete in the skip.",
+        "de": "Laufkatze 25 m von der Turmachse, Hakenflasche 20 m unter ihrer oberen Stellung, 3 t Frischbeton im Kübel."
+      },
+      "bones": {
+        "trolley": {
+          "dx": 22
+        },
+        "hoist-block": {
+          "dy": -20
+        },
+        "rope-1": {
+          "dy": 0
+        },
+        "rope-2": {
+          "dy": 0
+        },
+        "rope-3": {
+          "dy": 0
+        },
+        "rope-4": {
+          "dy": 0
+        },
+        "rope-5": {
+          "dy": 0
+        },
+        "rope-6": {
+          "dy": 5
+        },
+        "rope-7": {
+          "dy": 10
+        },
+        "rope-8": {
+          "dy": 15
+        }
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [],
+      "thermal": {
+        "operating": {
+          "hoist": 0.8
+        },
+        "emitters": {
+          "winch-vent": 0.8
+        }
+      },
+      "loads": [
+        {
+          "id": "concrete",
+          "kind": "carried",
+          "title": {
+            "en": "Fresh concrete in the skip",
+            "de": "Frischbeton im Kübel"
+          },
+          "anchor": "skip-cog",
+          "fxN": 0,
+          "fyN": -29420,
+          "source": "authored-estimate",
+          "reference": "concrete-density"
+        }
+      ]
+    },
+    {
+      "id": "max-reach",
+      "title": {
+        "en": "Maximum radius with a light load",
+        "de": "Größte Ausladung mit leichter Last"
+      },
+      "description": {
+        "en": "Trolley at the jib tip, 53 m from the axis, with 1.2 t in the skip: the largest overturning moment at the foundation.",
+        "de": "Laufkatze an der Auslegerspitze, 53 m von der Achse, mit 1,2 t im Kübel: das größte Kippmoment am Fundament."
+      },
+      "bones": {
+        "trolley": {
+          "dx": 50
+        },
+        "hoist-block": {
+          "dy": -15
+        },
+        "rope-1": {
+          "dy": 0
+        },
+        "rope-2": {
+          "dy": 0
+        },
+        "rope-3": {
+          "dy": 0
+        },
+        "rope-4": {
+          "dy": 0
+        },
+        "rope-5": {
+          "dy": 5
+        },
+        "rope-6": {
+          "dy": 10
+        },
+        "rope-7": {
+          "dy": 15
+        },
+        "rope-8": {
+          "dy": 20
+        }
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [],
+      "thermal": {
+        "operating": {
+          "hoist": 0.6
+        },
+        "emitters": {
+          "winch-vent": 0.6
+        }
+      },
+      "loads": [
+        {
+          "id": "concrete",
+          "kind": "carried",
+          "title": {
+            "en": "Fresh concrete in the skip",
+            "de": "Frischbeton im Kübel"
+          },
+          "anchor": "skip-cog",
+          "fxN": 0,
+          "fyN": -11768,
+          "source": "authored-estimate",
+          "reference": "concrete-density"
+        }
+      ]
+    },
+    {
+      "id": "skip-at-ground",
+      "title": {
+        "en": "Skip on the ground, being filled",
+        "de": "Kübel am Boden, wird befüllt"
+      },
+      "description": {
+        "en": "Trolley 10 m from the axis, hook block fully lowered so the skip stands 0.15 m above the ground, 3 t of concrete just filled in.",
+        "de": "Laufkatze 10 m von der Achse, Hakenflasche ganz abgesenkt, der Kübel steht 0,15 m über dem Boden, soeben 3 t Beton eingefüllt."
+      },
+      "bones": {
+        "trolley": {
+          "dx": 7
+        },
+        "hoist-block": {
+          "dy": -34.5
+        },
+        "rope-1": {
+          "dy": 0
+        },
+        "rope-2": {
+          "dy": 0
+        },
+        "rope-3": {
+          "dy": 0
+        },
+        "rope-4": {
+          "dy": 0
+        },
+        "rope-5": {
+          "dy": 0
+        },
+        "rope-6": {
+          "dy": 0
+        },
+        "rope-7": {
+          "dy": 0
+        },
+        "rope-8": {
+          "dy": 0.5
+        }
+      },
+      "root": {
+        "x": 0,
+        "y": 0,
+        "angleDeg": 0
+      },
+      "ground": "auto",
+      "contacts": [],
+      "thermal": {
+        "operating": {
+          "hoist": 0.2
+        },
+        "emitters": {
+          "winch-vent": 0.2
+        }
+      },
+      "loads": [
+        {
+          "id": "concrete",
+          "kind": "carried",
+          "title": {
+            "en": "Fresh concrete in the skip",
+            "de": "Frischbeton im Kübel"
+          },
+          "anchor": "skip-cog",
+          "fxN": 0,
+          "fyN": -29420,
+          "source": "authored-estimate",
+          "reference": "concrete-density"
+        }
+      ]
+    }
+  ],
+  "clips": [
+    {
+      "id": "lift-and-traverse",
+      "title": {
+        "en": "Lift and traverse",
+        "de": "Heben und Verfahren"
+      },
+      "description": {
+        "en": "The skip is hooked on at the ground (load picked up at 2 s), hoisted 16.5 m, carried out by the trolley from 8 m to 38 m, and lowered 8 m; the base moment grows with the radius.",
+        "de": "Der Kübel wird am Boden angeschlagen (Last ab 2 s), 16,5 m gehoben, von der Laufkatze von 8 m auf 38 m hinausgefahren und 8 m abgesenkt; das Fußmoment wächst mit der Ausladung."
+      },
+      "durationS": 22,
+      "fps": 30,
+      "loop": false,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 5
+            },
+            "hoist-block": {
+              "dy": -34.5
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 0
+            },
+            "rope-5": {
+              "dy": 0
+            },
+            "rope-6": {
+              "dy": 0
+            },
+            "rope-7": {
+              "dy": 0
+            },
+            "rope-8": {
+              "dy": 0.5
+            }
+          }
+        },
+        {
+          "t": 3,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 5
+            },
+            "hoist-block": {
+              "dy": -34.5
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 0
+            },
+            "rope-5": {
+              "dy": 0
+            },
+            "rope-6": {
+              "dy": 0
+            },
+            "rope-7": {
+              "dy": 0
+            },
+            "rope-8": {
+              "dy": 0.5
+            }
+          }
+        },
+        {
+          "t": 9,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 5
+            },
+            "hoist-block": {
+              "dy": -18
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 0
+            },
+            "rope-5": {
+              "dy": 2
+            },
+            "rope-6": {
+              "dy": 7
+            },
+            "rope-7": {
+              "dy": 12
+            },
+            "rope-8": {
+              "dy": 17
+            }
+          }
+        },
+        {
+          "t": 17,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 35
+            },
+            "hoist-block": {
+              "dy": -18
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 0
+            },
+            "rope-5": {
+              "dy": 2
+            },
+            "rope-6": {
+              "dy": 7
+            },
+            "rope-7": {
+              "dy": 12
+            },
+            "rope-8": {
+              "dy": 17
+            }
+          }
+        },
+        {
+          "t": 22,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 35
+            },
+            "hoist-block": {
+              "dy": -26
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 0
+            },
+            "rope-5": {
+              "dy": 0
+            },
+            "rope-6": {
+              "dy": 0
+            },
+            "rope-7": {
+              "dy": 4
+            },
+            "rope-8": {
+              "dy": 9
+            }
+          }
+        }
+      ],
+      "contacts": [],
+      "phases": [
+        {
+          "id": "hook-on",
+          "fromS": 0,
+          "toS": 3,
+          "title": {
+            "en": "Hooking on",
+            "de": "Anschlagen"
+          }
+        },
+        {
+          "id": "hoist",
+          "fromS": 3,
+          "toS": 9,
+          "title": {
+            "en": "Hoisting",
+            "de": "Heben"
+          }
+        },
+        {
+          "id": "traverse",
+          "fromS": 9,
+          "toS": 17,
+          "title": {
+            "en": "Trolley run out",
+            "de": "Katzfahrt nach außen"
+          }
+        },
+        {
+          "id": "lower",
+          "fromS": 17,
+          "toS": 22,
+          "title": {
+            "en": "Lowering",
+            "de": "Senken"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 2,
+          "kind": "load-on",
+          "title": {
+            "en": "Load picked up",
+            "de": "Last aufgenommen"
+          },
+          "target": "concrete"
+        },
+        {
+          "t": 9,
+          "kind": "motion",
+          "title": {
+            "en": "Trolley starts",
+            "de": "Katze fährt an"
+          }
+        }
+      ],
+      "tracks": [
+        {
+          "target": "load:concrete",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0
+            },
+            {
+              "t": 2,
+              "v": 0
+            },
+            {
+              "t": 3,
+              "v": 1
+            },
+            {
+              "t": 22,
+              "v": 1
+            }
+          ]
+        },
+        {
+          "target": "operating:hoist",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.1
+            },
+            {
+              "t": 3,
+              "v": 0.3
+            },
+            {
+              "t": 5,
+              "v": 0.9
+            },
+            {
+              "t": 9,
+              "v": 0.9
+            },
+            {
+              "t": 11,
+              "v": 0.5
+            },
+            {
+              "t": 17,
+              "v": 0.5
+            },
+            {
+              "t": 19,
+              "v": 0.8
+            },
+            {
+              "t": 22,
+              "v": 0.8
+            }
+          ]
+        },
+        {
+          "target": "emitter:winch-vent",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.1
+            },
+            {
+              "t": 3,
+              "v": 0.3
+            },
+            {
+              "t": 5,
+              "v": 0.9
+            },
+            {
+              "t": 9,
+              "v": 0.9
+            },
+            {
+              "t": 11,
+              "v": 0.5
+            },
+            {
+              "t": 17,
+              "v": 0.5
+            },
+            {
+              "t": 19,
+              "v": 0.8
+            },
+            {
+              "t": 22,
+              "v": 0.8
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unload",
+      "title": {
+        "en": "Place the concrete and return",
+        "de": "Beton absetzen und zurückfahren"
+      },
+      "description": {
+        "en": "At 38 m the skip is lowered 7 m onto the formwork, the load is released, and the empty hook block is hoisted while the trolley runs back to 8 m.",
+        "de": "Bei 38 m wird der Kübel 7 m auf die Schalung gesenkt, die Last entlassen und die leere Hakenflasche gehoben, während die Laufkatze auf 8 m zurückfährt."
+      },
+      "durationS": 16,
+      "fps": 30,
+      "loop": false,
+      "rootMotion": "none",
+      "keys": [
+        {
+          "t": 0,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 35
+            },
+            "hoist-block": {
+              "dy": -26
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 0
+            },
+            "rope-5": {
+              "dy": 0
+            },
+            "rope-6": {
+              "dy": 0
+            },
+            "rope-7": {
+              "dy": 4
+            },
+            "rope-8": {
+              "dy": 9
+            }
+          }
+        },
+        {
+          "t": 5,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 35
+            },
+            "hoist-block": {
+              "dy": -33
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 0
+            },
+            "rope-5": {
+              "dy": 0
+            },
+            "rope-6": {
+              "dy": 0
+            },
+            "rope-7": {
+              "dy": 0
+            },
+            "rope-8": {
+              "dy": 2
+            }
+          }
+        },
+        {
+          "t": 7,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 35
+            },
+            "hoist-block": {
+              "dy": -33
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 0
+            },
+            "rope-5": {
+              "dy": 0
+            },
+            "rope-6": {
+              "dy": 0
+            },
+            "rope-7": {
+              "dy": 0
+            },
+            "rope-8": {
+              "dy": 2
+            }
+          }
+        },
+        {
+          "t": 12,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 20
+            },
+            "hoist-block": {
+              "dy": -10
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 5
+            },
+            "rope-5": {
+              "dy": 10
+            },
+            "rope-6": {
+              "dy": 15
+            },
+            "rope-7": {
+              "dy": 20
+            },
+            "rope-8": {
+              "dy": 25
+            }
+          }
+        },
+        {
+          "t": 16,
+          "pose": "lifting-load",
+          "ease": "smooth",
+          "bones": {
+            "trolley": {
+              "dx": 5
+            },
+            "hoist-block": {
+              "dy": -10
+            },
+            "rope-1": {
+              "dy": 0
+            },
+            "rope-2": {
+              "dy": 0
+            },
+            "rope-3": {
+              "dy": 0
+            },
+            "rope-4": {
+              "dy": 5
+            },
+            "rope-5": {
+              "dy": 10
+            },
+            "rope-6": {
+              "dy": 15
+            },
+            "rope-7": {
+              "dy": 20
+            },
+            "rope-8": {
+              "dy": 25
+            }
+          }
+        }
+      ],
+      "contacts": [],
+      "phases": [
+        {
+          "id": "lower",
+          "fromS": 0,
+          "toS": 5,
+          "title": {
+            "en": "Lowering onto the formwork",
+            "de": "Absenken auf die Schalung"
+          }
+        },
+        {
+          "id": "release",
+          "fromS": 5,
+          "toS": 7,
+          "title": {
+            "en": "Releasing the load",
+            "de": "Last entlassen"
+          }
+        },
+        {
+          "id": "return",
+          "fromS": 7,
+          "toS": 16,
+          "title": {
+            "en": "Empty return",
+            "de": "Leerfahrt zurück"
+          }
+        }
+      ],
+      "events": [
+        {
+          "t": 6,
+          "kind": "load-off",
+          "title": {
+            "en": "Concrete placed",
+            "de": "Beton abgesetzt"
+          },
+          "target": "concrete"
+        }
+      ],
+      "tracks": [
+        {
+          "target": "load:concrete",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 1
+            },
+            {
+              "t": 5,
+              "v": 1
+            },
+            {
+              "t": 6.5,
+              "v": 0
+            },
+            {
+              "t": 16,
+              "v": 0
+            }
+          ]
+        },
+        {
+          "target": "operating:hoist",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.8
+            },
+            {
+              "t": 5,
+              "v": 0.4
+            },
+            {
+              "t": 7,
+              "v": 0.3
+            },
+            {
+              "t": 9,
+              "v": 0.9
+            },
+            {
+              "t": 16,
+              "v": 0.5
+            }
+          ]
+        },
+        {
+          "target": "emitter:winch-vent",
+          "ease": "smooth",
+          "keys": [
+            {
+              "t": 0,
+              "v": 0.8
+            },
+            {
+              "t": 5,
+              "v": 0.4
+            },
+            {
+              "t": 7,
+              "v": 0.3
+            },
+            {
+              "t": 9,
+              "v": 0.9
+            },
+            {
+              "t": 16,
+              "v": 0.5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "thermal": {
+    "environment": {
+      "airTempC": 20,
+      "meanRadiantTempC": 20,
+      "relativeHumidity": 0.5,
+      "windMS": 1.5,
+      "windDirectionDeg": 180,
+      "solarWM2": 500,
+      "pressurePa": 101325
+    },
+    "regions": [
+      {
+        "id": "lattice",
+        "title": {
+          "en": "Lattice steel of tower, jib and counter-jib",
+          "de": "Gitterstahl von Turm, Ausleger und Gegenausleger"
+        },
+        "kind": "surface",
+        "material": "steel-s355",
+        "model": "passive",
+        "areaM2": 180,
+        "characteristicLengthM": 0.15,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "ballast",
+        "title": {
+          "en": "Concrete ballast",
+          "de": "Betonballast"
+        },
+        "kind": "surface",
+        "material": "concrete",
+        "model": "passive",
+        "areaM2": 40,
+        "characteristicLengthM": 3.5,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "counterweight",
+        "title": {
+          "en": "Counterweight slabs",
+          "de": "Gegengewichtsplatten"
+        },
+        "kind": "surface",
+        "material": "concrete",
+        "model": "passive",
+        "areaM2": 25,
+        "characteristicLengthM": 2.4,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "house",
+        "title": {
+          "en": "Slewing platform",
+          "de": "Drehbühne"
+        },
+        "kind": "surface",
+        "material": "machinery",
+        "model": "passive",
+        "areaM2": 25,
+        "characteristicLengthM": 3,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "cab",
+        "title": {
+          "en": "Operator cab shell",
+          "de": "Kabinenhülle"
+        },
+        "kind": "surface",
+        "material": "machinery",
+        "model": "passive",
+        "areaM2": 12,
+        "characteristicLengthM": 2,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "cab-glazing",
+        "title": {
+          "en": "Cab glazing",
+          "de": "Kabinenverglasung"
+        },
+        "kind": "glazing",
+        "material": "glass",
+        "model": "passive",
+        "areaM2": 4,
+        "characteristicLengthM": 1.2,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "winch-house",
+        "title": {
+          "en": "Winch house skin",
+          "de": "Hülle des Windenhauses"
+        },
+        "kind": "surface",
+        "material": "machinery",
+        "model": "operating",
+        "areaM2": 38,
+        "characteristicLengthM": 2,
+        "operatingKey": "hoist",
+        "riseK": 15,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "hoist-motor",
+        "title": {
+          "en": "Hoist motor and drive surfaces",
+          "de": "Oberflächen von Hubmotor und Antrieb"
+        },
+        "kind": "engine",
+        "material": "machinery",
+        "model": "operating",
+        "areaM2": 3,
+        "characteristicLengthM": 0.8,
+        "operatingKey": "hoist",
+        "riseK": 45,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "trolley",
+        "title": {
+          "en": "Trolley",
+          "de": "Laufkatze"
+        },
+        "kind": "surface",
+        "material": "machinery",
+        "model": "passive",
+        "areaM2": 4,
+        "characteristicLengthM": 1.4,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "skip",
+        "title": {
+          "en": "Hook block and concrete skip",
+          "de": "Hakenflasche und Betonkübel"
+        },
+        "kind": "surface",
+        "material": "skip-steel",
+        "model": "passive",
+        "areaM2": 8,
+        "characteristicLengthM": 1.2,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "pendants",
+        "title": {
+          "en": "Pendant ties and slings",
+          "de": "Abspannungen und Anschlagmittel"
+        },
+        "kind": "surface",
+        "material": "wire-rope",
+        "model": "passive",
+        "areaM2": 3,
+        "characteristicLengthM": 0.05,
+        "source": "authored-estimate"
+      },
+      {
+        "id": "rope",
+        "title": {
+          "en": "Hoist rope",
+          "de": "Hubseil"
+        },
+        "kind": "surface",
+        "material": "wire-rope",
+        "model": "passive",
+        "areaM2": 1,
+        "characteristicLengthM": 0.02,
+        "source": "authored-estimate"
+      }
+    ],
+    "emitters": [
+      {
+        "id": "winch-vent",
+        "kind": "vent",
+        "title": {
+          "en": "Winch house cooling air outlet",
+          "de": "Kühlluftaustritt des Windenhauses"
+        },
+        "anchor": "winch-vent",
+        "directionDeg": 90,
+        "carries": "airflow",
+        "temperatureC": 45,
+        "velocityMS": 3,
+        "diameterM": 0.4,
+        "source": "authored-estimate"
+      }
+    ],
+    "assumptions": [
+      {
+        "en": "The crane is electric: the only air source is the winch cooling outlet (45 C, 3 m/s at full strength) venting upwards; operating level 1 raises the winch house skin by 15 K and the motor surface by 45 K.",
+        "de": "Der Kran ist elektrisch: Die einzige Luftquelle ist der Kühlluftaustritt der Winde (45 C, 3 m/s bei voller Stärke) nach oben; Betriebsstufe 1 erhöht die Hülle des Windenhauses um 15 K und die Motoroberfläche um 45 K."
+      },
+      {
+        "en": "The lattice is lumped into one region of 180 m2 of member surface with a characteristic member size of 0.15 m; the solar load is 500 W/m2 for the reference case.",
+        "de": "Der Gitterstahl wird zu einer Region mit 180 m2 Stabfläche und 0,15 m charakteristischer Stabgröße zusammengefasst; die Solarlast beträgt im Referenzfall 500 W/m2."
+      }
+    ]
+  },
+  "structure": {
+    "gravityMS2": 9.80665,
+    "dynamics": "quasi-static",
+    "supports": [
+      "base-fixed"
+    ],
+    "assumptions": [
+      {
+        "en": "The foundation is a permanent fully fixed support; its moment reaction equals the overturning moment of all dead and hoist loads about the tower axis and varies with the trolley position (counterweight 20 t at 14.9 m behind the axis balances the jib and about 3 t at 25 m).",
+        "de": "Das Fundament ist ein dauerhaft voll eingespanntes Lager; seine Momentenreaktion entspricht dem Kippmoment aller Eigen- und Hublasten um die Turmachse und ändert sich mit der Katzposition (Gegengewicht 20 t in 14,9 m Abstand hinter der Achse gleicht Ausleger und etwa 3 t bei 25 m aus)."
+      },
+      {
+        "en": "Quasi-static: no hoist acceleration, no wind during operation, no dynamic factors of EN 13001-2. The jib is a cantilever from the slewing unit; the pendant ties are not members.",
+        "de": "Quasi-statisch: keine Hubbeschleunigung, kein Wind im Betrieb, keine dynamischen Beiwerte nach EN 13001-2. Der Ausleger ist ein Kragarm am Drehwerk; die Abspannungen sind keine Stäbe."
+      }
+    ],
+    "clinical": false
+  },
+  "presentation": {
+    "defaultPose": "lifting-load",
+    "defaultClip": "lift-and-traverse",
+    "viewpoints": [
+      "elevation"
+    ]
+  },
+  "exports": [
+    "svg",
+    "pdf",
+    "dxf",
+    "dwg",
+    "png-sequence",
+    "mp4",
+    "webm",
+    "component"
+  ],
+  "completion": "authored"
+}

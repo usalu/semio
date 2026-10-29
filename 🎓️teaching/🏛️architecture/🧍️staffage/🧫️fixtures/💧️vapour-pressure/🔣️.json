@@ -1,0 +1,100 @@
+{
+ "id": "vapour-pressure",
+ "oracle": "CoolProp.PropsSI('P', 'T', T, 'Q', 0, 'Water') (IAPWS-95) and HAPropsSI humidity ratio",
+ "tolerances": {
+  "relative": 0.002,
+  "humidityRelative": 0.006
+ },
+ "temperaturesC": [
+  0.01,
+  5,
+  10,
+  15,
+  20,
+  25,
+  30,
+  34,
+  37,
+  40,
+  50,
+  60
+ ],
+ "humidity": {
+  "pressurePa": 101325,
+  "relativeHumidity": 0.5,
+  "temperaturesC": [
+   5,
+   20,
+   35
+  ]
+ },
+ "expected": {
+  "saturation": [
+   {
+    "tempC": 0.01,
+    "pascal": 611.654771069956
+   },
+   {
+    "tempC": 5,
+    "pascal": 872.575113905957
+   },
+   {
+    "tempC": 10,
+    "pascal": 1228.1989307541448
+   },
+   {
+    "tempC": 15,
+    "pascal": 1705.7929161256181
+   },
+   {
+    "tempC": 20,
+    "pascal": 2339.3181834056754
+   },
+   {
+    "tempC": 25,
+    "pascal": 3169.9293389430873
+   },
+   {
+    "tempC": 30,
+    "pascal": 4246.970836903843
+   },
+   {
+    "tempC": 34,
+    "pascal": 5325.057914159107
+   },
+   {
+    "tempC": 37,
+    "pascal": 6282.2919143601775
+   },
+   {
+    "tempC": 40,
+    "pascal": 7384.938073826001
+   },
+   {
+    "tempC": 50,
+    "pascal": 12351.945837607573
+   },
+   {
+    "tempC": 60,
+    "pascal": 19946.434307886884
+   }
+  ],
+  "specific": [
+   {
+    "tempC": 5,
+    "specificHumidity": 0.0026932765209188242,
+    "vapourPressurePa": 436.2875569529785
+   },
+   {
+    "tempC": 20,
+    "specificHumidity": 0.007240884876590085,
+    "vapourPressurePa": 1169.6590917028377
+   },
+   {
+    "tempC": 35,
+    "specificHumidity": 0.017539349793061956,
+    "vapourPressurePa": 2814.508053393826
+   }
+  ]
+ }
+}

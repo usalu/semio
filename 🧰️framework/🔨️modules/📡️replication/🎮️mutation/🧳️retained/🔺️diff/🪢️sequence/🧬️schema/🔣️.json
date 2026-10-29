@@ -10,7 +10,8 @@
     "bodyBytes",
     "deniedCurrencies",
     "wideText",
-    "outputHandoff"
+    "outputHandoff",
+    "postCustody"
   ],
   "additionalProperties": false,
   "properties": {
@@ -176,6 +177,13 @@
           "const": 2048
         }
       }
+    },
+    "postCustody": {
+      "const": [
+        "original-read",
+        "mutable-handback",
+        "original-intermediate"
+      ]
     }
   }
 }

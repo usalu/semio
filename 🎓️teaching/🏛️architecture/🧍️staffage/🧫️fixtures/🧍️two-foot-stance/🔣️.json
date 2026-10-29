@@ -1,0 +1,266 @@
+{
+ "case": "🧍️two-foot-stance",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "anatomical",
+ "materials": [],
+ "root": {
+  "x": 0,
+  "y": 0.95,
+  "angleDeg": 0
+ },
+ "bones": [
+  {
+   "id": "pelvis",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 0.0,
+   "mass": {
+    "kg": 12,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "point"
+   }
+  },
+  {
+   "id": "leg-left",
+   "parent": "pelvis",
+   "x": -0.15,
+   "y": 0,
+   "angleDeg": -90,
+   "lengthM": 0.95,
+   "mass": {
+    "kg": 10,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "uniform"
+   }
+  },
+  {
+   "id": "leg-right",
+   "parent": "pelvis",
+   "x": 0.15,
+   "y": 0,
+   "angleDeg": -90,
+   "lengthM": 0.95,
+   "mass": {
+    "kg": 10,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "uniform"
+   }
+  },
+  {
+   "id": "trunk",
+   "parent": "pelvis",
+   "x": 0,
+   "y": 0,
+   "angleDeg": 80,
+   "lengthM": 0.6,
+   "mass": {
+    "kg": 32,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "uniform"
+   }
+  },
+  {
+   "id": "head",
+   "parent": "trunk",
+   "x": 0.6,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 0.25,
+   "mass": {
+    "kg": 5,
+    "comX": 0.12,
+    "comY": 0,
+    "distribution": "point"
+   }
+  },
+  {
+   "id": "arm",
+   "parent": "trunk",
+   "x": 0.55,
+   "y": 0,
+   "angleDeg": -170,
+   "lengthM": 0.6,
+   "mass": {
+    "kg": 4,
+    "comX": 0.0,
+    "comY": 0,
+    "distribution": "uniform"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "foot-left",
+   "bone": "leg-left",
+   "x": 0.95,
+   "y": 0,
+   "kind": "contact",
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.25,
+   "footprintWidthM": 0.1,
+   "frictionCoefficient": 0.6
+  },
+  {
+   "id": "foot-right",
+   "bone": "leg-right",
+   "x": 0.95,
+   "y": 0,
+   "kind": "contact",
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.25,
+   "footprintWidthM": 0.1,
+   "frictionCoefficient": 0.6
+  },
+  {
+   "id": "hand",
+   "bone": "arm",
+   "x": 0.6,
+   "y": 0,
+   "kind": "load"
+  }
+ ],
+ "contacts": [
+  "foot-left",
+  "foot-right"
+ ],
+ "supports": [],
+ "loads": [],
+ "scenarios": [
+  {
+   "id": "unloaded",
+   "bones": {
+    "arm": {
+     "angleDeg": -170
+    }
+   },
+   "loads": []
+  },
+  {
+   "id": "reach-right",
+   "bones": {
+    "arm": {
+     "angleDeg": -10
+    }
+   },
+   "loads": [
+    {
+     "id": "carried",
+     "bone": "arm",
+     "at": {
+      "x": 0.300718583712213,
+      "y": 2.055459836628259
+     },
+     "fxN": 0,
+     "fyN": -150.0
+    }
+   ]
+  },
+  {
+   "id": "reach-left",
+   "bones": {
+    "arm": {
+     "angleDeg": 80
+    }
+   },
+   "loads": [
+    {
+     "id": "carried",
+     "bone": "arm",
+     "at": {
+      "x": -0.46830907475473327,
+      "y": 1.6968563501521157
+     },
+     "fxN": 0,
+     "fyN": -150.0
+    }
+   ]
+  },
+  {
+   "id": "reach-far-right",
+   "bones": {
+    "arm": {
+     "angleDeg": -60
+    }
+   },
+   "loads": [
+    {
+     "id": "carried",
+     "bone": "arm",
+     "at": {
+      "x": 0.6593220701883568,
+      "y": 1.6968563501521154
+     },
+     "fxN": 0,
+     "fyN": -150.0
+    }
+   ]
+  }
+ ],
+ "oracle": {
+  "tool": "anastruct",
+  "version": "1.7.0",
+  "values": {
+   "unloaded": {
+    "reactionLeftN": 270.6192555583815,
+    "reactionRightN": 445.5107444416295,
+    "pressureLeftPa": 10824.770222335259,
+    "pressureRightPa": 17820.42977766518,
+    "heavierFoot": "right",
+    "liftOff": false,
+    "shoulderMomentNm": 1.6336931807359178e-15,
+    "shoulderAxialN": 39.24,
+    "shoulderShearN": -6.310273277331121e-15,
+    "shoulderFxN": -0.0,
+    "shoulderFyN": 39.24
+   },
+   "reach-right": {
+    "reactionLeftN": 181.83910278075518,
+    "reactionRightN": 684.2908972192452,
+    "pressureLeftPa": 7273.564111230207,
+    "pressureRightPa": 27371.635888769804,
+    "heavierFoot": "right",
+    "liftOff": false,
+    "shoulderMomentNm": -34.808074026539956,
+    "shoulderAxialN": -177.8274315575253,
+    "shoulderShearN": 64.72389192294956,
+    "shoulderFxN": -0.0,
+    "shoulderFyN": 189.24
+   },
+   "reach-left": {
+    "reactionLeftN": 616.6473284141282,
+    "reactionRightN": 249.4826715858698,
+    "pressureLeftPa": 24665.893136565126,
+    "pressureRightPa": 9979.306863434791,
+    "heavierFoot": "left",
+    "liftOff": false,
+    "shoulderMomentNm": 95.63439740262346,
+    "shoulderAxialN": -64.72389192294958,
+    "shoulderShearN": -177.8274315575253,
+    "shoulderFxN": -0.0,
+    "shoulderFyN": 189.24
+   },
+   "reach-far-right": {
+    "reactionLeftN": -20.915310229747675,
+    "reactionRightN": 887.045310229758,
+    "pressureLeftPa": -836.612409189907,
+    "pressureRightPa": 35481.812409190316,
+    "heavierFoot": "right",
+    "liftOff": true,
+    "shoulderMomentNm": -95.63439740262346,
+    "shoulderAxialN": -64.72389192294956,
+    "shoulderShearN": 177.8274315575253,
+    "shoulderFxN": -0.0,
+    "shoulderFyN": 189.24
+   }
+  }
+ }
+}

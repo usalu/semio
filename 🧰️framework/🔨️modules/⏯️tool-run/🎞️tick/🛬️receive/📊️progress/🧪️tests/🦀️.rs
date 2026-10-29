@@ -12,7 +12,7 @@ type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
 fn counters<'a>(slot:&'a MaybeUninit<ToolRunReceivedProgress>)->&'a PagedList<ToolRunCounter,9>{unsafe{&*std::ptr::addr_of!((*slot.as_ptr()).counters)}}
 fn steps<'a>(slot:&'a MaybeUninit<ToolRunReceivedProgress>)->&'a PagedList<ToolRunStep,64>{unsafe{&*std::ptr::addr_of!((*slot.as_ptr()).steps)}}
 struct Pages<'a>(&'a[u8]);
-impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.0.as_ptr()as usize,extent:self.0.len(),authority:Some((42,7))}}fn byte_at(&self,index:usize)->Option<u8>{self.0.chunks(7).nth(index/7)?.get(index%7).copied()}}
+impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.0.as_ptr()as usize,extent:self.0.len(),authority:Some((42,7))}}fn byte_at(&self,index:usize)->Option<u8>{self.0.chunks(7).nth(index/7)?.get(index%7).copied()}}
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(v,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(v,(h.requested_bytes,h.released_bytes))}
 fn hex(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 fn receipt(g:RetainedCloneGrant,p:RetainedCloneProgress,r:Receipt,h:(usize,usize),physical:&mut(usize,usize)){assert_eq!(r,Some((g,p)));assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),h);physical.0+=h.0;physical.1+=h.1}

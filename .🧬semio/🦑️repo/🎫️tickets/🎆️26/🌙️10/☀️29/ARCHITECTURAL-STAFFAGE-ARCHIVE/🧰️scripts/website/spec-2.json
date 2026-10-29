@@ -1,0 +1,6 @@
+{ "shots": [
+ { "name": "category-humans", "hash": "#/humans", "wait": 7000 },
+ { "name": "detail-top", "hash": "#/humans/walking-commuter", "wait": 7000 },
+ { "name": "detail-full", "hash": "#/humans/walking-commuter", "wait": 7000, "full": true },
+ { "name": "view-thermal", "hash": "#/objects/street-lamp?view=thermal", "wait": 7000 }
+] }

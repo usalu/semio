@@ -1,0 +1,3 @@
+const fs=require("node:fs"),{spawnSync}=require("node:child_process");
+const files=["🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go/🏛️core/🐹️.go","🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/📦️packages/🐹️go/🔍️search/🐹️.go","🧰️framework/🛍️products/🦑️repo/🔨️modules/🌳️tree/🧪️tests/🔦️search/🐹️.go","🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/🔍️tree-search/🐹️.go"];
+for(const file of files){const result=spawnSync("/home/deck/.local/bin/repo",["tools","exec","go","--","fmt",file],{stdio:"inherit",env:{...process.env,SEMIO_LANGUAGE:"en",PATH:"/home/deck/semio/.cache/b/t/m/native/go/1.26.9/linux-x64-42d158b4d8f7b61a/bin:"+process.env.PATH}});if(result.status!==0)process.exit(result.status??1);}

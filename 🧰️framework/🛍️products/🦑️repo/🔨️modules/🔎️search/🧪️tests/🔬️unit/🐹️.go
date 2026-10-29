@@ -176,7 +176,7 @@ func TestDeleteRemovesTheDocument(t *testing.T) {
 }
 
 func TestPersistedIndexReplaysThroughOpen(t *testing.T) {
-	dir := filepath.Join(t.TempDir(), "index")
+	dir := filepath.Join(physicalSearchTempDir(t), "index")
 	index, err := New(dir, NewIndexMapping())
 	if err != nil {
 		t.Fatal(err)

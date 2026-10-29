@@ -23,11 +23,16 @@ export interface CargoLockPortV1{
 }
 export type CargoLockRequestV1=Readonly<{workspaceRoot:string;manifest:string;receiptDirectory:string|null;language:CargoLockLanguageV1;offline:boolean;force:boolean}>;
 
+/** 🧾️ Retains separated original resolver streams within the authored Unicode character and line bounds. */
+export interface CargoLockDiagnosticV1{readonly version:1;readonly status:number|null;readonly stderr:string;readonly stdout:string;readonly truncated:boolean}
+/** ✂️ Stops at complete Unicode code points and original line boundaries without expanding the full captured stream. */
+function boundedDiagnosticV1(value:string,maximumCharacters=policy.diagnosticCharacters,maximumLines=policy.diagnosticLines):string{let end=0,characters=0,lines=0;for(const point of value){if(characters===maximumCharacters||lines===maximumLines)break;end+=point.length;characters++;if(point==="\n")lines++;}return value.slice(0,end);}
 /** 🚫️ Refuses a lock refresh that cannot converge and names the unresolvable crate in both languages. */
 export class CargoLockRefusedV1 extends Error{
  readonly crate:string|null;
+ readonly diagnostic:CargoLockDiagnosticV1;
  readonly texts:Readonly<Record<CargoLockLanguageV1,string>>;
- constructor(language:CargoLockLanguageV1,crate:string|null,texts:Readonly<Record<CargoLockLanguageV1,string>>){super(texts[language]);this.name="CargoLockRefused";this.crate=crate;this.texts=texts;}
+ constructor(language:CargoLockLanguageV1,crate:string|null,texts:Readonly<Record<CargoLockLanguageV1,string>>,diagnostic:CargoLockDiagnosticV1){super(texts[language],{cause:diagnostic});this.name="CargoLockRefused";this.crate=crate;this.texts=texts;this.diagnostic=diagnostic;}
 }
 
 const fill=(template:string,values:Readonly<Record<string,string|number>>):string=>template.replace(/\{([A-Za-z]+)\}/gu,(_,name:string)=>String(values[name]??""));
@@ -70,7 +75,7 @@ export function cargoLockManifestsV1(workspaceRoot:string,members:readonly strin
 }
 
 const probe=(manifest:string):string[]=>["update","--workspace","--locked","--offline","--manifest-path",manifest];
-const detail=(run:CargoLockRunV1):string=>{const line=(run.stderr+"\n"+run.stdout).split("\n").find(row=>row.startsWith("error"))??"";return line.slice(0,policy.detailCharacters);};
+const detail=(run:CargoLockRunV1):string=>{const line=(run.stderr+"\n"+run.stdout).split("\n").find(row=>row.startsWith("error"))??"";return boundedDiagnosticV1(line,policy.detailCharacters,1);};
 
 /** ♻️ Brings the lockfile of the workspace owning `manifest` up to date with every manifest it depends on, once per manifest set, under a per-workspace try-lease. */
 export async function ensureCargoLockV1(request:CargoLockRequestV1,port:CargoLockPortV1):Promise<CargoLockOutcomeV1>{
@@ -89,7 +94,8 @@ export async function ensureCargoLockV1(request:CargoLockRequestV1,port:CargoLoc
  };
  const refuse=(crate:string|null,run:CargoLockRunV1):CargoLockRefusedV1=>{
   const key=crate===null?"failed":request.offline?"unresolvableOffline":"unresolvable",values={workspace,crate:crate??"",detail:detail(run)};
-  return new CargoLockRefusedV1(request.language,crate,{en:text(key,"en",values),de:text(key,"de",values)});
+  const stderr=boundedDiagnosticV1(run.stderr),stdout=boundedDiagnosticV1(run.stdout),diagnostic:CargoLockDiagnosticV1=Object.freeze({version:1,status:run.status,stderr,stdout,truncated:stderr!==run.stderr||stdout!==run.stdout});
+  return new CargoLockRefusedV1(request.language,crate,{en:text(key,"en",values),de:text(key,"de",values)},diagnostic);
  };
  const refresh=async():Promise<CargoLockOutcomeV1>=>{
   if(!request.force&&current())return"current";

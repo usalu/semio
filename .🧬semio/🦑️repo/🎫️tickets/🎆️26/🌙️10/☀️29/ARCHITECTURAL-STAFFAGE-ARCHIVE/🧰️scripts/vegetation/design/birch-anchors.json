@@ -1,0 +1,3 @@
+[{"id":"base-support","bone":"root-plate","x":0,"y":0,"kind":"support","title":{"en":"Stool anchorage","de":"Verankerung des Wurzelstocks"},"support":"fixed","normalDeg":90,"footprintLengthM":1,"footprintWidthM":1,"frictionCoefficient":0.6},
+{"id":"crown-top","bone":"fol-c-top","x":2,"y":0,"kind":"emitter","title":{"en":"Transpiration above the centre stem","de":"Transpiration über dem mittleren Stamm"}},
+{"id":"crown-l","bone":"fol-l-a","x":1.5,"y":0,"kind":"emitter","title":{"en":"Transpiration above the left crown","de":"Transpiration über der Linkskrone"}}]

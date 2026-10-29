@@ -109,5 +109,82 @@
     97,
     98,
     99
-  ]
+  ],
+  "selectedClosure": {
+    "demand": {
+      "items": 1,
+      "copyBytes": 8,
+      "capacityBytes": 16,
+      "releaseBytes": 32,
+      "depth": 4
+    },
+    "cases": [
+      {
+        "axis": "items",
+        "grant": {
+          "items": 0,
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 4
+        },
+        "accepted": false
+      },
+      {
+        "axis": "copyBytes",
+        "grant": {
+          "items": 1,
+          "copyBytes": 7,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 4
+        },
+        "accepted": false
+      },
+      {
+        "axis": "capacityBytes",
+        "grant": {
+          "items": 1,
+          "copyBytes": 8,
+          "capacityBytes": 15,
+          "releaseBytes": 32,
+          "depth": 4
+        },
+        "accepted": false
+      },
+      {
+        "axis": "releaseBytes",
+        "grant": {
+          "items": 1,
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 31,
+          "depth": 4
+        },
+        "accepted": false
+      },
+      {
+        "axis": "depth",
+        "grant": {
+          "items": 1,
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 3
+        },
+        "accepted": false
+      },
+      {
+        "axis": "full",
+        "grant": {
+          "items": 1,
+          "copyBytes": 8,
+          "capacityBytes": 16,
+          "releaseBytes": 32,
+          "depth": 4
+        },
+        "accepted": true
+      }
+    ]
+  }
 }

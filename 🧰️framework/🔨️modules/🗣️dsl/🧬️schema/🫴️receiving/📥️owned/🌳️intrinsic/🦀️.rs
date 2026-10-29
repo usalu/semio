@@ -48,3 +48,17 @@ impl<T:NativeIntrinsicRecord> OwnedFieldReceiving<T> for NativeIntrinsicReceivin
 impl<T:NativeIntrinsicRecord> Drop for NativeIntrinsicReceiving<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original native intrinsic Record requires funded closure");}}
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+
+impl<T:NativeIntrinsicRecord> NativeIntrinsicReceiving<T>{
+ /// 🎯️ Loans this original close frontier with its unchanged body policy and complete physical quote.
+ pub fn select_close(&mut self,body:usize)->Result<semio_framework_value::RetirementSelection<'_,Self>,ValueError>{semio_framework_value::select_retirement_cursor(self,body)}
+}
+impl<T:NativeIntrinsicRecord> semio_framework_value::ErasedSnapshotRetirement for NativeIntrinsicReceiving<T>{
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{OwnedFieldReceiving::close_demands(self,body)}
+ fn next_copy_byte_demand(&self)->Result<usize,ValueError>{Ok(OwnedFieldReceiving::close_demands(self,usize::MAX)?.copy_bytes)}
+ fn next_capacity_byte_demand(&self,body:usize)->Result<usize,ValueError>{Ok(OwnedFieldReceiving::close_demands(self,body)?.capacity_bytes)}
+ fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(OwnedFieldReceiving::close_demands(self,usize::MAX)?.release_bytes)}
+ fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(OwnedFieldReceiving::close_demands(self,usize::MAX)?.depth)}
+ fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{OwnedFieldReceiving::close_step(self,g).map(RetainedCloneStep::Progress)}
+ fn terminal_is_empty(&self)->bool{OwnedFieldReceiving::terminal_is_empty(self)}
+}

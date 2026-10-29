@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "purpose": "retire-completed-generated-dependency-preservation",
+        "endpoint": "node_modules",
+        "maximumRecordBytes": 16384,
+        "maximumCapsules": 4096,
+        "maximumEntries": 16777216,
+        "maximumDepth": 128,
+        "progressEntries": 256,
+        "markerPrefix": ".d"
+      }
+    },
+    "Eligibility": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "binding",
+        "ready",
+        "completed",
+        "identity",
+        "sameDevice",
+        "directory",
+        "live",
+        "fixture"
+      ],
+      "properties": {
+        "owner": {
+          "type": "boolean"
+        },
+        "binding": {
+          "type": "boolean"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "completed": {
+          "type": "boolean"
+        },
+        "identity": {
+          "type": "boolean"
+        },
+        "sameDevice": {
+          "type": "boolean"
+        },
+        "directory": {
+          "type": "boolean"
+        },
+        "live": {
+          "type": "boolean"
+        },
+        "fixture": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "facts",
+        "retire"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "facts": {
+          "$ref": "#/definitions/Eligibility"
+        },
+        "retire": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "purpose",
+        "sourceDirectory",
+        "targetDirectory",
+        "generation",
+        "readySha256",
+        "intentSha256",
+        "receiptSha256",
+        "payload",
+        "intent",
+        "receipt",
+        "capsule"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "purpose": {
+          "const": "retire-completed-generated-dependency-preservation"
+        },
+        "sourceDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "targetDirectory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "generation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "readySha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "intentSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "receiptSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "mode"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            "mode": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        },
+        "intent": {
+          "type": "string",
+          "maxLength": 4096
+        },
+        "receipt": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "capsule": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "dev",
+            "ino",
+            "mode"
+          ],
+          "properties": {
+            "dev": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            "ino": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            },
+            "mode": {
+              "type": "string",
+              "pattern": "^[0-9]+$"
+            }
+          }
+        }
+      }
+    },
+    "CancellationBoundary": {
+      "type": "string",
+      "enum": [
+        "payload-empty",
+        "intent-removed",
+        "receipt-removed",
+        "capsule-removed"
+      ]
+    }
+  }
+}

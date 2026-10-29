@@ -51,6 +51,10 @@ test("production cache retention imports only canonical evidence owners",()=>{
  for(const row of corpus.routes){
   const resolved=ts.resolveModuleName(row.owner,subject,{moduleResolution:ts.ModuleResolutionKind.Bundler,allowImportingTsExtensions:true},ts.sys).resolvedModule;
   expect(resolved?.resolvedFileName).toBe(resolve(dirname(subject),row.owner));
+  if(row.symbol==="default"){
+   expect(read(resolved!.resolvedFileName).statements.filter(node=>ts.isExportAssignment(node)&&!node.isExportEquals)).toHaveLength(1);
+   continue;
+  }
   const declarations=read(origin(resolved!.resolvedFileName,row.symbol)).statements.filter((node):node is ts.FunctionDeclaration=>ts.isFunctionDeclaration(node)&&node.name?.text===row.symbol);
   expect(declarations).toHaveLength(1);
   expect(declarations[0]!.modifiers?.some(modifier=>modifier.kind===ts.SyntaxKind.ExportKeyword)).toBe(true);

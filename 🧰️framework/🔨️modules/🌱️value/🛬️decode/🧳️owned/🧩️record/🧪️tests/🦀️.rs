@@ -6,3 +6,10 @@ fn native_record_receive_borrows_original_named_members_without_payload_copy(){
  for index in 0..3{let((name,number),heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||{let field=fields.iter().find(|field|field.matches(value.field_key(index).unwrap())).unwrap();if field.ordinal==2{(field.name,Some(value.number_field(index).unwrap().as_i64().unwrap()))}else{let text=value.text_field(index).unwrap();let DslValue::Object(entries)=&value else{unreachable!()};let DslValue::String(actual)=&entries[index].1 else{unreachable!()};assert_eq!(std::ptr::from_ref(text),std::ptr::from_ref(actual));assert_eq!(text,law["expected"][field.name].as_str().unwrap());(field.name,None)}});assert_eq!(heap,(0,0));if let Some(number)=number{assert_eq!(number,law["expected"][name].as_i64().unwrap());}}
  assert!(value.field_key(3).is_err());assert!(value.text_field(0).is_err());
 }
+
+#[test]
+fn native_record_keys_preserve_declared_names_ordinals_and_comparison_cost(){
+ let law:serde_json::Value=serde_json::from_str(fixture_text!("../../🧩️record/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ let fields=[NativeRecordField{name:"id",ordinal:0},NativeRecordField{name:"name",ordinal:1},NativeRecordField{name:"value",ordinal:2}];
+ for case in law["keys"].as_array().unwrap(){let key=match case["key"]["name"].as_str(){Some(name)=>NativeRecordKey::Name(name),None=>NativeRecordKey::Ordinal(case["key"]["ordinal"].as_u64().unwrap()as u16)};let matching=fields.iter().filter(|field|field.matches(key)).map(|field|field.name).collect::<Vec<_>>();assert_eq!(serde_json::json!(matching),case["matches"]);assert_eq!(key.comparison_bytes(),case["bytes"].as_u64().unwrap()as usize);}
+}

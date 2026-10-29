@@ -210,7 +210,10 @@ func TestSearchMonorepoTree(t *testing.T) {
 
 	t.Run("empty query returns full tree", func(t *testing.T) {
 		tree := makeTree()
-		result := SearchMonorepoTree(tree, "")
+		result, err := SearchTreeContext(context.Background(), tree, "", TreeSearchOptions{Limit: 100})
+		if err != nil {
+			t.Fatal(err)
+		}
 		if len(result.Children) != 2 {
 			t.Errorf("expected 2 categories, got %d", len(result.Children))
 		}
@@ -218,7 +221,10 @@ func TestSearchMonorepoTree(t *testing.T) {
 
 	t.Run("query matches items", func(t *testing.T) {
 		tree := makeTree()
-		result := SearchMonorepoTree(tree, "cli")
+		result, err := SearchTreeContext(context.Background(), tree, "cli", TreeSearchOptions{Limit: 100})
+		if err != nil {
+			t.Fatal(err)
+		}
 		found := false
 		var walk func(*TreeNode)
 		walk = func(n *TreeNode) {
@@ -237,7 +243,10 @@ func TestSearchMonorepoTree(t *testing.T) {
 
 	t.Run("query with no matches returns empty tree", func(t *testing.T) {
 		tree := makeTree()
-		result := SearchMonorepoTree(tree, "zzzznonexistent")
+		result, err := SearchTreeContext(context.Background(), tree, "zzzznonexistent", TreeSearchOptions{Limit: 100})
+		if err != nil {
+			t.Fatal(err)
+		}
 		totalChildren := 0
 		for _, c := range result.Children {
 			totalChildren += len(c.Children)
@@ -249,7 +258,10 @@ func TestSearchMonorepoTree(t *testing.T) {
 
 	t.Run("parent chain preserved", func(t *testing.T) {
 		tree := makeTree()
-		result := SearchMonorepoTree(tree, "cli")
+		result, err := SearchTreeContext(context.Background(), tree, "cli", TreeSearchOptions{Limit: 100})
+		if err != nil {
+			t.Fatal(err)
+		}
 		if len(result.Children) == 0 {
 			t.Fatal("expected at least one category")
 		}
@@ -294,9 +306,9 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 		}
 	}
 
-	t.Run("uses indexed matches from cache", func(t *testing.T) {
+	t.Run("refreshes indexed matches when projection changes", func(t *testing.T) {
 		indexedTree := makeTree("ultrafastneedle")
-		idx, err := ensureCacheIndexed(context.Background(), indexedTree, nil)
+		idx, err := ensureCacheIndexed(context.Background(), indexedTree, "", nil)
 		if err != nil {
 			t.Fatalf("ensureCacheIndexed failed: %v", err)
 		}
@@ -321,8 +333,17 @@ func TestSearchMonorepoTreeWithCache(t *testing.T) {
 			}
 		}
 		walk(result)
+		if found {
+			t.Fatal("stale cached index retained a previous projection match")
+		}
+		fresh, err := searchMonorepoTreeWithCache(context.Background(), mutatedTree, "different-text")
+		if err != nil {
+			t.Fatal(err)
+		}
+		found = false
+		walk(fresh)
 		if !found {
-			t.Fatal("expected cached index to find bundle:search")
+			t.Fatal("current projection missing from rebuilt index")
 		}
 	})
 

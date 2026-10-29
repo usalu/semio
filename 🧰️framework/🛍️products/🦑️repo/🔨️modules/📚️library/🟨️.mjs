@@ -5,13 +5,15 @@ import {join,resolve,relative,dirname,isAbsolute,sep} from "node:path";
 import {createHash} from "node:crypto";
 import {fileURLToPath} from "node:url";
 import {createRequire} from "node:module";
-import {nxBuildDependencySourceIdentityV1,nxEngineNamedInputV1 as engineNamedInput,nxEngineNativeNamedInputV1 as engineNativeNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
+import {nxBuildDependencySourceIdentityV1,nxBuildDependencySourceChangesV1,nxEngineNamedInputV1 as engineNamedInput,nxEngineNativeNamedInputV1 as engineNativeNamedInput} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🔏️implementation/🟨️.mjs";
 import {nxEngineUnkeyedPrefixesV1,splitNxEngineFilesV1,nxEngineFamilyV1,nxEnginePolicyV1,nxEngineSpawnOnlyV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/🧮️engine-digest/🟦️.ts";
 import {withNxBuildGraphPublicationV1} from "./⚡️caching/🚀️bootstrap/🔌️nx-plugin/📌️graph-pin/🟨️.mjs";
 import { isRuntimeBuiltinSpecifierV1, runtimeIdsV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 
 /** 🔏️ Attests the exact evaluated private projection and its still-current imported contract owner. */
 export function nxBuildDependencyImplementationV1(){nxTaskArgumentsSourceIdentityV1();return nxBuildDependencySourceIdentityV1();}
+/** 👁️ Retains the exact admitted Source projection while identifying physical dependency changes before a mutable child starts. */
+export function nxBuildDependencyImplementationChangesV1(){return nxBuildDependencySourceChangesV1();}
 
 
 /** 🔎️ Classifies exact literal module and URL references as portable source facts. */
@@ -75,6 +77,9 @@ export function nxBuildEngineInputsV1(family="generic"){
  if(!authority)engineAuthorities.set(name,authority={command:`bun "${relative(defaultEngineRoot,fileURLToPath(new URL(engineDigestEntry,import.meta.url))).replaceAll("\\","/").replace(/^(?!\.\.?\/)/u,"./")}"${name==="generic"?"":" "+name}`,packages:nxBuildEngineClosureV1().packages});
  return [{runtime:authority.command},{externalDependencies:[...authority.packages]},{runtime:"node --version"},{runtime:"bun --version"}];
 }
+
+/** 🔌️ Declares the external package roots required by both private executor families before graph selection. */
+export function nxBuildEngineExternalInputsV1(){return[...new Set([...nxBuildEngineInputsV1(),...nxBuildEngineInputsV1("native")].flatMap(row=>row.externalDependencies??[]))].sort();}
 
 /** 📌️ Reads the exact portable graph pinned by this owned build invocation under the plugin implementation identity. */
 const graphPublication=(workspaceRoot,environment,body)=>withNxBuildGraphPublicationV1(workspaceRoot,environment,body,nxBuildDependencyImplementationV1);

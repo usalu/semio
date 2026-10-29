@@ -1,0 +1,8 @@
+      "anchors": [
+        {"id": "contact-hf", "bone": "hoof-hf", "x": 0.0748, "y": -0.0229, "kind": "contact", "title": {"en": "Far hind hoof sole", "de": "Sohle des fernen Hinterhufes"}, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.06, "footprintWidthM": 0.05, "frictionCoefficient": 0.6},
+        {"id": "contact-ff", "bone": "hoof-ff", "x": 0.0748, "y": -0.0229, "kind": "contact", "title": {"en": "Far fore hoof sole", "de": "Sohle des fernen Vorderhufes"}, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.065, "footprintWidthM": 0.055, "frictionCoefficient": 0.6},
+        {"id": "contact-hn", "bone": "hoof-hn", "x": 0.0748, "y": -0.0229, "kind": "contact", "title": {"en": "Near hind hoof sole", "de": "Sohle des nahen Hinterhufes"}, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.06, "footprintWidthM": 0.05, "frictionCoefficient": 0.6},
+        {"id": "contact-fn", "bone": "hoof-fn", "x": 0.0748, "y": -0.0229, "kind": "contact", "title": {"en": "Near fore hoof sole", "de": "Sohle des nahen Vorderhufes"}, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.065, "footprintWidthM": 0.055, "frictionCoefficient": 0.6},
+        {"id": "nose", "bone": "head", "x": 0.232, "y": 0.0, "kind": "emitter", "title": {"en": "Nostrils", "de": "Nasenlöcher"}},
+        {"id": "eye-anchor", "bone": "head", "x": 0.105, "y": 0.04, "kind": "attachment", "title": {"en": "Eye", "de": "Auge"}}
+      ],

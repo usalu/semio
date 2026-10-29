@@ -96,6 +96,17 @@
         "env": "SEMIO_BUILD_MODE"
       }
     ],
+    "testEnv": [
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
+    ],
     "schemaSources": [
       "sharedGlobals",
       "{workspaceRoot}/**/🧬️schema/**/*",
@@ -328,6 +339,20 @@
         "name": "command",
         "shape": "fixed",
         "fixedMegabytes": 2048,
+        "cpu": 1,
+        "priority": "batch"
+      },
+      {
+        "name": "tool-format",
+        "shape": "fixed",
+        "fixedMegabytes": 512,
+        "cpu": 1,
+        "priority": "batch"
+      },
+      {
+        "name": "tool-query",
+        "shape": "fixed",
+        "fixedMegabytes": 512,
         "cpu": 1,
         "priority": "batch"
       }

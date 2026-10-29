@@ -1,0 +1,1002 @@
+{
+ "description": "Broken variants of the reference walker; every case applies its JSON-patch-like operations (path segments `id=<slug>` select the array element with that id, `-` appends) and must report at least the listed codes. The unpatched asset and manifest must report none.",
+ "patchPaths": "RFC 6901 pointers with the id= selector",
+ "cases": [
+  {
+   "name": "duplicate bone id",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/rig/bones/id=head/id",
+     "value": "torso"
+    }
+   ],
+   "expectCodes": [
+    "duplicate-id"
+   ]
+  },
+  {
+   "name": "rig root is not a bone",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/rig/root",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "rig-root"
+   ]
+  },
+  {
+   "name": "missing parent",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/rig/bones/id=torso/parent",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "rig-missing-parent"
+   ]
+  },
+  {
+   "name": "parent cycle",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/rig/bones/id=torso/parent",
+     "value": "head"
+    }
+   ],
+   "expectCodes": [
+    "rig-cycle"
+   ]
+  },
+  {
+   "name": "second root",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/rig/bones/id=head/parent",
+     "value": null
+    }
+   ],
+   "expectCodes": [
+    "rig-multiple-roots"
+   ]
+  },
+  {
+   "name": "shape on unknown bone",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/geometry/elevation/id=head/bone",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "shape with unknown region",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/geometry/elevation/id=head/region",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "shape with unknown material",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/geometry/elevation/id=head/material",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "anchor on unknown bone",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/anchors/id=mouth/bone",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "pose offsets an unknown bone",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/poses/id=stand/bones/ghost",
+     "value": {
+      "angleDeg": 1
+     }
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "pose lists an unknown contact",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/poses/id=stand/contacts/0",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "clip key uses an unknown pose",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=idle-breathing/keys/0/pose",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "clip contact uses an unknown anchor",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=walk/contacts/0/anchor",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "emitter on an unknown anchor",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/thermal/emitters/id=breath/anchor",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "track target does not resolve",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=idle-breathing/tracks/0/target",
+     "value": "emitter:ghost"
+    }
+   ],
+   "expectCodes": [
+    "track-target"
+   ]
+  },
+  {
+   "name": "structure support is unknown",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/structure/supports/0",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "presentation default pose is unknown",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/presentation/defaultPose",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "presentation default clip is unknown",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/presentation/defaultClip",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "fewer than three poses",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/clips/id=bag-swing"
+    },
+    {
+     "op": "remove",
+     "path": "/poses/id=carry-bag"
+    },
+    {
+     "op": "remove",
+     "path": "/poses/id=passing-right-stance"
+    },
+    {
+     "op": "remove",
+     "path": "/poses/id=stride-right-forward"
+    },
+    {
+     "op": "remove",
+     "path": "/poses/id=passing-left-stance"
+    }
+   ],
+   "expectCodes": [
+    "too-few-poses"
+   ]
+  },
+  {
+   "name": "fewer than two clips",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/clips/id=bag-swing"
+    },
+    {
+     "op": "remove",
+     "path": "/clips/id=idle-breathing"
+    }
+   ],
+   "expectCodes": [
+    "too-few-clips"
+   ]
+  },
+  {
+   "name": "key times not ascending",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=idle-breathing/keys/1/t",
+     "value": 5
+    }
+   ],
+   "expectCodes": [
+    "key-order",
+    "key-range"
+   ]
+  },
+  {
+   "name": "key time beyond the duration",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=idle-breathing/keys/2/t",
+     "value": 9
+    }
+   ],
+   "expectCodes": [
+    "key-range"
+   ]
+  },
+  {
+   "name": "pose offset beyond the joint limit",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/poses/id=stand/bones/shank-l",
+     "value": {
+      "angleDeg": 30
+     }
+    }
+   ],
+   "expectCodes": [
+    "joint-limit"
+   ]
+  },
+  {
+   "name": "clip key override beyond the joint limit",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=idle-breathing/keys/1/bones/torso/angleDeg",
+     "value": 120
+    }
+   ],
+   "expectCodes": [
+    "joint-limit"
+   ]
+  },
+  {
+   "name": "fixed joint cannot be offset",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/rig/bones/id=head/joint",
+     "value": {
+      "type": "fixed"
+     }
+    },
+    {
+     "op": "add",
+     "path": "/poses/id=stand/bones/head",
+     "value": {
+      "angleDeg": 3
+     }
+    }
+   ],
+   "expectCodes": [
+    "joint-limit"
+   ]
+  },
+  {
+   "name": "negative mass",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/rig/bones/id=head/mass/kg",
+     "value": -1
+    }
+   ],
+   "expectCodes": [
+    "mass-negative"
+   ]
+  },
+  {
+   "name": "zero emissivity",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/materials/id=skin/emissivity",
+     "value": 0
+    }
+   ],
+   "expectCodes": [
+    "emissivity-range"
+   ]
+  },
+  {
+   "name": "emissivity above one",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/materials/id=skin/emissivity",
+     "value": 1.5
+    }
+   ],
+   "expectCodes": [
+    "emissivity-range"
+   ]
+  },
+  {
+   "name": "material without source",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/materials/id=skin/source"
+    }
+   ],
+   "expectCodes": [
+    "source-missing"
+   ]
+  },
+  {
+   "name": "mass without source",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/rig/bones/id=head/mass/source"
+    }
+   ],
+   "expectCodes": [
+    "source-missing"
+   ]
+  },
+  {
+   "name": "region without source",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/thermal/regions/id=shoes/source"
+    }
+   ],
+   "expectCodes": [
+    "source-missing"
+   ]
+  },
+  {
+   "name": "emitter without source",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/thermal/emitters/id=breath/source"
+    }
+   ],
+   "expectCodes": [
+    "source-missing"
+   ]
+  },
+  {
+   "name": "load without source",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/poses/id=carry-bag/loads/0/source"
+    }
+   ],
+   "expectCodes": [
+    "source-missing"
+   ]
+  },
+  {
+   "name": "empty elevation geometry",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/geometry/elevation",
+     "value": []
+    }
+   ],
+   "expectCodes": [
+    "elevation-empty"
+   ]
+  },
+  {
+   "name": "height deviates by more than 5 percent",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/dimensions/heightM",
+     "value": 2.5
+    }
+   ],
+   "expectCodes": [
+    "dimension-height"
+   ]
+  },
+  {
+   "name": "width deviates by more than 10 percent",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/dimensions/widthM",
+     "value": 0.8
+    }
+   ],
+   "expectCodes": [
+    "dimension-width"
+   ]
+  },
+  {
+   "name": "phase outside the clip",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=walk/phases/0/toS",
+     "value": 3
+    }
+   ],
+   "expectCodes": [
+    "phase-range"
+   ]
+  },
+  {
+   "name": "contact span outside the clip",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=idle-breathing/contacts/0/toS",
+     "value": 99
+    }
+   ],
+   "expectCodes": [
+    "contact-range"
+   ]
+  },
+  {
+   "name": "empty German text",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/title/de",
+     "value": ""
+    }
+   ],
+   "expectCodes": [
+    "text-empty"
+   ]
+  },
+  {
+   "name": "missing English text",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/summary/en"
+    }
+   ],
+   "expectCodes": [
+    "text-empty"
+   ]
+  },
+  {
+   "name": "thermal region bound by no shape",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/thermal/regions/-",
+     "value": {
+      "id": "orphan",
+      "title": {
+       "en": "Orphan",
+       "de": "Waise"
+      },
+      "kind": "surface",
+      "material": "skin",
+      "model": "passive",
+      "areaM2": 0.1,
+      "characteristicLengthM": 0.1,
+      "source": "authored-estimate"
+     }
+    }
+   ],
+   "expectCodes": [
+    "region-unbound"
+   ]
+  },
+  {
+   "name": "core-resistance region without core temperature",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/thermal/regions/id=head-skin/coreTempC"
+    }
+   ],
+   "expectCodes": [
+    "thermal-parameter-missing"
+   ]
+  },
+  {
+   "name": "advance does not match the planted travel",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=walk/advanceM",
+     "value": 2.5
+    }
+   ],
+   "expectCodes": [
+    "clip-advance"
+   ]
+  },
+  {
+   "name": "load without placement",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/poses/id=carry-bag/loads/0/anchor"
+    }
+   ],
+   "expectCodes": [
+    "load-unplaced"
+   ]
+  },
+  {
+   "name": "unknown reference id",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/materials/id=skin/reference",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "closing key of a looping clip differs from the first key",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=idle-breathing/keys/2/bones",
+     "value": {
+      "torso": {
+       "angleDeg": 5
+      }
+     }
+    }
+   ],
+   "expectCodes": [
+    "loop-closing"
+   ]
+  },
+  {
+   "name": "a gap in the contacts without supports",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/structure/supports",
+     "value": []
+    },
+    {
+     "op": "remove",
+     "path": "/clips/id=walk/contacts/2"
+    }
+   ],
+   "expectCodes": [
+    "unsupported-instant"
+   ]
+  },
+  {
+   "name": "the same gap inside a ballistic phase is legitimate",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/structure/supports",
+     "value": []
+    },
+    {
+     "op": "remove",
+     "path": "/clips/id=walk/contacts/2"
+    },
+    {
+     "op": "add",
+     "path": "/clips/id=walk/phases/-",
+     "value": {
+      "id": "flight",
+      "fromS": 0.55,
+      "toS": 0.95,
+      "title": {
+       "en": "Flight",
+       "de": "Flug"
+      },
+      "ballistic": true
+     }
+    }
+   ],
+   "expectCodes": [],
+   "expectAbsent": [
+    "unsupported-instant"
+   ]
+  },
+  {
+   "name": "supports make gaps legitimate",
+   "patch": [
+   {
+    "op": "replace",
+    "path": "/structure/supports",
+    "value": ["contact-l"]
+   },
+   {
+    "op": "remove",
+    "path": "/clips/id=walk/contacts/2"
+   }
+  ],
+   "expectCodes": [],
+   "expectAbsent": [
+    "unsupported-instant"
+   ]
+  },
+  {
+   "name": "a clip without any contact and without supports",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/structure/supports",
+     "value": []
+    },
+    {
+     "op": "replace",
+     "path": "/clips/id=idle-breathing/contacts",
+     "value": []
+    }
+   ],
+   "expectCodes": [
+    "unsupported-instant"
+   ]
+  }
+ ],
+ "manifest": {
+  "$schema": "../🧬️schema/🔣️.json",
+  "version": "semio.staffage/v1",
+  "categories": [
+   {
+    "id": "humans",
+    "emoji": "👤",
+    "title": {
+     "en": "Humans",
+     "de": "Menschen"
+    },
+    "description": {
+     "en": "People",
+     "de": "Menschen"
+    },
+    "file": "humans/🔣️.json"
+   }
+  ],
+  "collections": [
+   {
+    "id": "all",
+    "title": {
+     "en": "All",
+     "de": "Alle"
+    },
+    "description": {
+     "en": "Everything",
+     "de": "Alles"
+    },
+    "assets": [
+     "reference-walker"
+    ]
+   }
+  ],
+  "entries": [
+   {
+    "id": "reference-walker",
+    "category": "humans",
+    "title": {
+     "en": "Reference walker",
+     "de": "Referenz-Fußgänger"
+    },
+    "heightM": 1.73,
+    "widthM": 0.37,
+    "poses": [
+     "stand",
+     "stride-left-forward",
+     "passing-left-stance",
+     "stride-right-forward",
+     "passing-right-stance",
+     "carry-bag"
+    ],
+    "clips": [
+     "walk",
+     "idle-breathing",
+     "bag-swing"
+    ],
+    "analytics": [
+     "thermal",
+     "structural"
+    ],
+    "viewpoints": [
+     "elevation",
+     "plan"
+    ],
+    "exports": [
+     "svg",
+     "pdf",
+     "dxf",
+     "dwg",
+     "png-sequence",
+     "mp4",
+     "webm",
+     "component"
+    ],
+    "distinction": {
+     "en": "Engine fixture",
+     "de": "Engine-Fixture"
+    },
+    "completion": "authored"
+   }
+  ]
+ },
+ "manifestCases": [
+  {
+   "name": "consistent manifest",
+   "patch": [],
+   "expectCodes": []
+  },
+  {
+   "name": "height differs by more than 5 percent",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/entries/0/heightM",
+     "value": 2.4
+    }
+   ],
+   "expectCodes": [
+    "manifest-mismatch"
+   ]
+  },
+  {
+   "name": "pose list differs",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/entries/0/poses/0"
+    }
+   ],
+   "expectCodes": [
+    "manifest-mismatch"
+   ]
+  },
+  {
+   "name": "category differs",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/entries/0/category",
+     "value": "animals"
+    }
+   ],
+   "expectCodes": [
+    "manifest-mismatch",
+    "manifest-count"
+   ]
+  },
+  {
+   "name": "entry without asset",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/entries/-",
+     "value": {
+      "id": "ghost",
+      "category": "humans",
+      "title": {
+       "en": "Reference walker",
+       "de": "Referenz-Fußgänger"
+      },
+      "heightM": 1.73,
+      "widthM": 0.37,
+      "poses": [
+       "stand",
+       "stride-left-forward",
+       "passing-left-stance",
+       "stride-right-forward",
+       "passing-right-stance",
+       "carry-bag"
+      ],
+      "clips": [
+       "walk",
+       "idle-breathing",
+       "bag-swing"
+      ],
+      "analytics": [
+       "thermal",
+       "structural"
+      ],
+      "viewpoints": [
+       "elevation",
+       "plan"
+      ],
+      "exports": [
+       "svg",
+       "pdf",
+       "dxf",
+       "dwg",
+       "png-sequence",
+       "mp4",
+       "webm",
+       "component"
+      ],
+      "distinction": {
+       "en": "Engine fixture",
+       "de": "Engine-Fixture"
+      },
+      "completion": "authored"
+     }
+    }
+   ],
+   "expectCodes": [
+    "manifest-asset-missing",
+    "manifest-count"
+   ]
+  },
+  {
+   "name": "duplicate entry",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/entries/-",
+     "value": {
+      "id": "reference-walker",
+      "category": "humans",
+      "title": {
+       "en": "Reference walker",
+       "de": "Referenz-Fußgänger"
+      },
+      "heightM": 1.73,
+      "widthM": 0.37,
+      "poses": [
+       "stand",
+       "stride-left-forward",
+       "passing-left-stance",
+       "stride-right-forward",
+       "passing-right-stance",
+       "carry-bag"
+      ],
+      "clips": [
+       "walk",
+       "idle-breathing",
+       "bag-swing"
+      ],
+      "analytics": [
+       "thermal",
+       "structural"
+      ],
+      "viewpoints": [
+       "elevation",
+       "plan"
+      ],
+      "exports": [
+       "svg",
+       "pdf",
+       "dxf",
+       "dwg",
+       "png-sequence",
+       "mp4",
+       "webm",
+       "component"
+      ],
+      "distinction": {
+       "en": "Engine fixture",
+       "de": "Engine-Fixture"
+      },
+      "completion": "authored"
+     }
+    }
+   ],
+   "expectCodes": [
+    "duplicate-id",
+    "manifest-count"
+   ]
+  },
+  {
+   "name": "collection lists an unknown asset",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/collections/0/assets/-",
+     "value": "ghost"
+    }
+   ],
+   "expectCodes": [
+    "unresolved-reference"
+   ]
+  },
+  {
+   "name": "asset without entry",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/entries/0"
+    }
+   ],
+   "expectCodes": [
+    "manifest-entry-missing",
+    "manifest-count"
+   ]
+  }
+ ]
+}

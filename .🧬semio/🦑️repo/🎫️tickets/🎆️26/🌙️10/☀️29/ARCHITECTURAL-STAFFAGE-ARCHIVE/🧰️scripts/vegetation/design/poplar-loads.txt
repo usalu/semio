@@ -1,0 +1,3 @@
+calm|wind|en-1991-1-4|fol-l1:2.3:4,fol-r1:2.3:5,fol-l2:2.3:6,fol-r2:2.3:7,fol-l3:2.2:7,fol-r3:2.2:8,fol-l4:2.1:8,fol-r4:2.1:7,fol-top:1.7:9|trunk-1:0:6:0.4
+windy|wind|en-1991-1-4|fol-l1:2.3:99,fol-r1:2.3:114,fol-l2:2.3:135,fol-r2:2.3:147,fol-l3:2.2:163,fol-r3:2.2:172,fol-l4:2.1:171,fol-r4:2.1:165,fol-top:1.7:196|trunk-1:0:6:11.8
+storm|wind|vogel-1989|fol-l1:2.3:471,fol-r1:2.3:543,fol-l2:2.3:642,fol-r2:2.3:698,fol-l3:2.2:773,fol-r3:2.2:816,fol-l4:2.1:814,fol-r4:2.1:786,fol-top:1.7:929|trunk-1:0:6:89

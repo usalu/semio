@@ -1,0 +1,9 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#",
+ "$id":"semio:filesystem:windows-path-spelling:v1",
+ "title":"Windows Filesystem Path Spelling",
+ "$defs":{
+  "Policy":{"const":{"maximumPathUnits":256,"maximumNamespaceOverhead":6,"verbatimPrefix":"\\\\?\\","nativePrefix":"\\??\\","uncMarker":"UNC\\"}},
+  "Case":{"type":"object","additionalProperties":false,"required":["name","root","value","plain","distance"],"properties":{"name":{"type":"string"},"root":{"type":"string"},"value":{"type":"string"},"plain":{"type":["string","null"]},"distance":{"type":["string","null"]}}}
+ }
+}

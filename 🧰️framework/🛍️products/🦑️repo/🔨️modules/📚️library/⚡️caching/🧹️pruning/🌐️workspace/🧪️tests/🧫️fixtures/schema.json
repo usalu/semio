@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "dry",
+    "language",
+    "cancelled"
+  ],
+  "properties": {
+    "dry": {
+      "type": "boolean"
+    },
+    "language": {
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "cancelled": {
+      "type": "boolean"
+    }
+  }
+}

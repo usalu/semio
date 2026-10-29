@@ -1,0 +1,11 @@
+{
+"wood-handbook-2021":"Forest Products Laboratory (2021). Wood Handbook: Wood as an Engineering Material. General Technical Report FPL-GTR-282, USDA Forest Service. Chapter 5 (green density, modulus of elasticity and rupture; closest listed species used as proxy).",
+"en-1991-1-4":"EN 1991-1-4:2005 Eurocode 1, Actions on structures, Part 1-4: Wind actions. Air density 1.25 kg/m3, F = 0.5 rho cd A v^2, peak velocity pressure (1 + 7 Iv) q_m.",
+"en-1991-1-3":"EN 1991-1-3:2003 Eurocode 1, Actions on structures, Part 1-3: Snow loads. Used for the order of magnitude of snow and ice accretion (about 10 kg/m2 on plan area).",
+"vogel-1989":"Vogel, S. (1989). Drag and reconfiguration of broad leaves in high winds. Journal of Experimental Botany 40(8), 941-948.",
+"mayhead-1973":"Mayhead, G. J. (1973). Some drag coefficients for British forest trees derived from wind tunnel studies. Agricultural Meteorology 12, 123-130.",
+"koerner-1979":"Koerner, C., Scheel, J. A. and Bauer, H. (1979). Maximum leaf diffusive conductance in vascular plants. Photosynthetica 13(1), 45-82.",
+"jones-2014":"Jones, H. G. (2014). Plants and Microclimate, 3rd ed., Cambridge University Press. Leaf energy balance, leaf area index, boundary-layer conductance.",
+"monteith-unsworth-2013":"Monteith, J. L. and Unsworth, M. H. (2013). Principles of Environmental Physics, 4th ed., Academic Press. Penman-Monteith leaf transpiration.",
+"pretzsch-2015":"Pretzsch, H., Biber, P., Uhl, E. et al. (2015). Crown size and growing space requirement of common tree species in urban centres, parks, and forests. Urban Forestry and Urban Greening 14(3), 466-479."
+}

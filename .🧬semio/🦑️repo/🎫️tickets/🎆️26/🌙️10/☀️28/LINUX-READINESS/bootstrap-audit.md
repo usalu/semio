@@ -44,3 +44,19 @@ Neutral package requirements were expanded first for xdg-utils and each distribu
 The actual retained Ubuntu container now passes repo preflight, compiles and links a C11 Cairo/Pango/ICU/UUID smoke test against system development packages, and loads a functioning Vulkan software ICD (llvmpipe). See host-capabilities.md and retained smoke input sources. Following successful root lock regeneration, the unchanged bootstrap was resumed; its final outcome will be appended after execution.
 
 Final focused bootstrap regression run after desktop/Vulkan declarations: 13 tests passed, 0 failed, 314 assertions. Shell syntax/LF, PowerShell BOM, all native manager inputs, browser manager argv/error propagation, installer/runtime pins and software-ICD declarations passed. Fresh provisioned container rustup remains pinned at1.29.0 after repeated bootstrap probes.
+
+## Final Current-Source Setup Run
+
+Final configured Linux setup is live as session7334, streamed from start to generated/container-setup-final.log. Before running the exact devcontainer onCreateCommand and postCreateCommand, independent host/container hashing checked969 current Go and changed/untracked implementation/configuration files (14898446 bytes), including file modes. Drift was0. The existing frontend was a regular ELF at /home/vscode/.local/bin/repo. This is the same private Podman :O Source view, with no Source copies or worktree.
+
+Native apt prerequisites were already installed. The bootstrap rebuilt its owned launcher and successfully rebuilt/installed the final native repository ELF from current frozen Go Source. It then entered workspace:setup; global graph inference is progressing with3761 projects. The full setup has not yet reached terminal success. No bootstrap .sh file is edited while this process is live. The existing misleading native-ELF shadowing warning is retained in the log for a post-terminal fix; no native ELF was replaced by a launcher symlink.
+
+## Final Installed ELF Native Validation
+
+Actual batch42380 completed1 because four native search/tree commands each exceeded their explicit120000ms budget with no stdout, no stderr and no progress notification. Both cold and identical warm search used --repo=/workspaces/semio --format=json search linux --limit=8. The only-file and explicit search-package scope variants also timed out120s. No successful search result or cachehit is claimed. Native search cancellation sent SIGINT to its exact owned child at40ms and settled in51ms with SIGINT, without a forced timeout. This proves process interruption, not an unobserved cooperative backend checkpoint. Cursor behavior remains API-level Go/SQLite proof; the CLI has no cursor flag.
+
+The same final installed ELF MCP server completed0 in39ms. Actual newline-delimited initialize, initialized notification, tools/list and resources/list produced exactly response IDs1,2,3 with no error, protocol2025-06-18, 6 tools and 8 resources; the notification produced no response. Full raw MCP stdout is retained temporarily under generated/native-mcp.stdout.json. The Go owner is repairing the confirmed pre-search full-tree/cache bottleneck; no competing native rebuild or setup retry is live.
+
+## Setup Terminal Correction
+
+The earlier session7334 is terminal1, not live. Host earlyoom sent SIGTERM to the captured graph parent at4178MiB RSS, after464worker adoptions. Root has no live setup or wholegraph retry. The parent/worker/fixed-overhead reservation correction has focused green evidence and remains under final lifetime review before a fresh run. The Source overlay must be revalidated against the completed patch before that setup retry. Full monorepo setup/build/test remains unproved.

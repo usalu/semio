@@ -1,0 +1,53 @@
+{
+  "environment": [
+    "SEMIO_TEST_LEVEL",
+    "SEMIO_TEST_BUDGET_MS",
+    "SEMIO_BUILD_BUDGET_MS"
+  ],
+  "cases": [
+    {
+      "id": "workspace-test-environment",
+      "inputs": [
+        "default",
+        "testEnv"
+      ],
+      "contracts": {},
+      "expected": [],
+      "unknown": null
+    },
+    {
+      "id": "test-environment-and-source-contract",
+      "inputs": [
+        "testEnv",
+        "contract"
+      ],
+      "contracts": {
+        "contract": "selected.json"
+      },
+      "expected": [
+        "contract"
+      ],
+      "unknown": null
+    },
+    {
+      "id": "misspelled-environment-stays-unknown",
+      "inputs": [
+        "testEnvMissing"
+      ],
+      "contracts": {},
+      "expected": [],
+      "unknown": "testEnvMissing"
+    },
+    {
+      "id": "environment-is-not-a-file-contract",
+      "inputs": [
+        "testEnv"
+      ],
+      "contracts": {
+        "other": "unselected.json"
+      },
+      "expected": [],
+      "unknown": null
+    }
+  ]
+}

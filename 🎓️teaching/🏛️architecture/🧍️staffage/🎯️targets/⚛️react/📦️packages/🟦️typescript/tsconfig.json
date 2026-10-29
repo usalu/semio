@@ -1,0 +1,39 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/staffage-react-typecheck.tsbuildinfo",
+    "types": [
+      "bun",
+      "react",
+      "react-dom",
+      "vite/client"
+    ],
+    "jsx": "react-jsx",
+    "paths": {
+      "@teaching/staffage": [
+        "../../../../📦️packages/🟦️typescript/🟦️.ts"
+      ],
+      "@teaching/staffage-react": [
+        "./🟦️.tsx"
+      ],
+      "@teaching/staffage-react/app": [
+        "./📚️app/🟦️.tsx"
+      ]
+    }
+  },
+  "include": [
+    "./🟦️.tsx",
+    "./📚️app/**/*.tsx",
+    "../../🧪️tests/*/🟦️.tsx",
+    "../../🧪️tests/🎚️config/🟦️.ts",
+    "../../🔨️modules/🧍️figure/🟦️.tsx",
+    "../../🔨️modules/⏱️clock/**/🟦️.ts",
+    "../../🔨️modules/🧩️element/🟦️.ts",
+    "../../🔨️modules/📤️downloads/**/🟦️.ts",
+    "../../🔨️modules/🧮️pipeline/🟦️.ts",
+    "../../🔨️modules/🗣️labels/🟦️.ts"
+  ],
+  "exclude": [
+    "**/node_modules/**"
+  ]
+}

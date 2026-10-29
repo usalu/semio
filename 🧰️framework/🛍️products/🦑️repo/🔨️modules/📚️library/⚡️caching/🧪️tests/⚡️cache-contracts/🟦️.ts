@@ -8,7 +8,6 @@ import type { ResourceLeaseControl } from "@semio-tech/process/leases";
 import { testCacheContractBindingsV1 } from "./📋️bindings/🟦️.ts";
 import { testCommandInputs } from "./🧾️command-inputs/🟦️.ts";
 import { ticketOutput } from "../../🎫️output/🟦️.ts";
-import { runProcessTestOwner } from "../🧭️ownership/🟦️.ts";
 import { testDependencyBootstrap, testDependencyCancellation, testNxTooling } from "../📦️dependencies/🟦️.ts";
 import { inventory } from "../../📇️inventory/🧮️composition/🟦️.ts";
 import { testStringsV1 } from "../📋️values/🟦️.ts";
@@ -130,8 +129,6 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     }
     await testCommandInputs(root, ticketOutput(root, []), invocation, phaseControl);
     await (await import("../🚀️bootstrap/🟦️.ts")).testNxBootstrap(root, ticketOutput(root, []));
-    await runProcessTestOwner(invocation, root, ticketOutput(root, []), "artifact-publication");
-    await runProcessTestOwner(invocation, root, ticketOutput(root, []), "native-artifact-publication");
     await (await import("../📇️artifacts/🟦️.ts")).testArtifactRegistry(root, ticketOutput(root, []));
     await (await import("../🌎️hub/🟦️.ts")).testHubBuild(root);
     await testDependencyBootstrap(root, ticketOutput(root, []));

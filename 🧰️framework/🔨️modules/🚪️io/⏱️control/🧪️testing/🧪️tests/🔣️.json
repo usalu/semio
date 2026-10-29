@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "grant": {
+    "items": 16777216,
+    "copy": 1073741824,
+    "capacity": 1073741824,
+    "release": 1073741824,
+    "depth": 4096
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "unit": "",
+      "repeat": 1,
+      "maximum": 1048576,
+      "cancelAt": null,
+      "expected": "ok",
+      "returnSlot": false
+    },
+    {
+      "id": "ascii",
+      "unit": "original",
+      "repeat": 1,
+      "maximum": 1048576,
+      "cancelAt": null,
+      "expected": "ok",
+      "returnSlot": false
+    },
+    {
+      "id": "unicode",
+      "unit": "Grüße🙂",
+      "repeat": 1,
+      "maximum": 1048576,
+      "cancelAt": null,
+      "expected": "ok",
+      "returnSlot": false
+    },
+    {
+      "id": "ownership-limit",
+      "unit": "original",
+      "repeat": 1,
+      "maximum": 0,
+      "cancelAt": null,
+      "expected": "limit",
+      "returnSlot": false
+    },
+    {
+      "id": "initial-cancellation",
+      "unit": "original",
+      "repeat": 1,
+      "maximum": 1048576,
+      "cancelAt": 0,
+      "expected": "cancel",
+      "returnSlot": false
+    },
+    {
+      "id": "interior-cancellation",
+      "unit": "🙂",
+      "repeat": 40000,
+      "maximum": 1048576,
+      "cancelAt": 65536,
+      "expected": "cancel",
+      "returnSlot": true
+    }
+  ],
+  "panicCases": [
+    {
+      "id": "semantic-after-retention",
+      "phase": "semantic",
+      "text": "retained original text",
+      "events": [
+        "retained",
+        "closed",
+        "resumed"
+      ],
+      "frontier": "retained"
+    },
+    {
+      "id": "observer-after-retention",
+      "phase": "observer",
+      "text": "retained original text",
+      "events": [
+        "retained",
+        "closed",
+        "resumed"
+      ],
+      "frontier": "retained"
+    },
+    {
+      "id": "semantic-during-reservation",
+      "phase": "semantic",
+      "frontier": "reserved",
+      "text": "retained original text",
+      "events": [
+        "reserved",
+        "resumed"
+      ]
+    },
+    {
+      "id": "observer-during-reservation",
+      "phase": "observer",
+      "frontier": "reserved",
+      "text": "retained original text",
+      "events": [
+        "reserved",
+        "resumed"
+      ]
+    }
+  ],
+  "cleanup": {
+    "rows": 64,
+    "text": "owned",
+    "cases": [
+      {
+        "id": "exact-semantic",
+        "shortBy": 0,
+        "expected": "ok"
+      },
+      {
+        "id": "one-byte-short",
+        "shortBy": 1,
+        "expected": "limit"
+      }
+    ]
+  }
+}

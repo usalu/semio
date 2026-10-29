@@ -193,7 +193,10 @@ func TestExhaustiveMonorepoTreeEntityIDs(t *testing.T) {
 		t.Skip("skipping slow tree test")
 	}
 	withExhaustiveRepo(t)
-	tree := BuildMonorepoTreeCached(context.Background())
+	tree, err := BuildMonorepoTreeCached(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
 	var codebaseNode *TreeNode
 	for _, child := range tree.Children {
 		if child.ID == "codebase" {
@@ -295,7 +298,10 @@ func TestExhaustiveGoalTreeEntityIDs(t *testing.T) {
 		t.Skip("skipping slow tree test")
 	}
 	withExhaustiveRepo(t)
-	tree := BuildMonorepoTreeCached(context.Background())
+	tree, err := BuildMonorepoTreeCached(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
 	goalsNode := tree.Children[2]
 	for _, c := range goalsNode.Children {
 		if c.Kind == TreeNodeGoal {
@@ -329,7 +335,10 @@ func TestExhaustiveContributorTreeEntityIDs(t *testing.T) {
 		t.Skip("skipping slow tree test")
 	}
 	withExhaustiveRepo(t)
-	tree := BuildMonorepoTreeCached(context.Background())
+	tree, err := BuildMonorepoTreeCached(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
 	var contributorsNode *TreeNode
 	for _, c := range tree.Children {
 		if c.ID == "contributors" {
@@ -355,7 +364,10 @@ func TestExhaustiveCheckpointTreeEntityIDs(t *testing.T) {
 		t.Skip("skipping slow tree test")
 	}
 	withExhaustiveRepo(t)
-	tree := BuildMonorepoTreeCached(context.Background())
+	tree, err := BuildMonorepoTreeCached(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
 	var checkpointsNode *TreeNode
 	for _, c := range tree.Children {
 		if c.ID == "checkpoints" {

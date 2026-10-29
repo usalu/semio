@@ -8,7 +8,7 @@ import{requireIssuedResourceControlInvocationV1,withIssuedResourceOperationV1,wi
 import type{ScriptInvocation}from"../../../🧭️routing/📥️invocation/🟦️.ts";
 import type{ResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
 import{checkResourceLeaseControl}from"../../../🔒️leases/🟦️.ts";
-import{validateJsonSchemaSubset}from"@semio-tech/schema-validator-ts";
+import{validateJsonSchemaSubset}from"../../../../🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from"./🧬️schema/🔣️.json" with { type: "json" };
 import { runtimeSupportsV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { runtimeTestArgumentsV1 } from "../../../../../📦️packages/🟦️typescript/⚙️runtime/🚀️process/🟦️.ts";

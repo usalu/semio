@@ -1,0 +1,309 @@
+{
+ "description": "The reference walker must validate against the JSON Schema; each broken variant must be rejected. The twin lists the $defs the TypeScript types restate.",
+ "defs": [
+  "Slug",
+  "Text",
+  "Category",
+  "ParameterSource",
+  "Viewpoint",
+  "ExportFormat",
+  "Completion",
+  "Reference",
+  "Provenance",
+  "Material",
+  "JointType",
+  "Joint",
+  "SegmentMass",
+  "Section",
+  "Bone",
+  "Rig",
+  "AnchorKind",
+  "SupportType",
+  "Anchor",
+  "ShapeRole",
+  "Lod",
+  "CapsuleShape",
+  "EllipseShape",
+  "RectShape",
+  "PolyShape",
+  "PathShape",
+  "ShapeGeometry",
+  "Shape",
+  "BoneOffset",
+  "AppliedLoad",
+  "ThermalBinding",
+  "Pose",
+  "Ease",
+  "ClipKey",
+  "ContactSpan",
+  "Phase",
+  "ClipEvent",
+  "ScalarTrack",
+  "Clip",
+  "Environment",
+  "ThermalModelKind",
+  "ThermalRegion",
+  "Emitter",
+  "ThermalModel",
+  "StructuralModel",
+  "Dimensions",
+  "Presentation",
+  "Asset",
+  "CategoryDocument",
+  "ManifestEntry",
+  "CategoryEntry",
+  "Manifest"
+ ],
+ "invalid": [
+  {
+   "name": "unknown asset property",
+   "patch": [
+    {
+     "op": "add",
+     "path": "/surprise",
+     "value": 1
+    }
+   ]
+  },
+  {
+   "name": "German text missing",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/title/de"
+    }
+   ]
+  },
+  {
+   "name": "empty English text",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/summary/en",
+     "value": ""
+    }
+   ]
+  },
+  {
+   "name": "slug in upper case",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/id",
+     "value": "Reference-Walker"
+    }
+   ]
+  },
+  {
+   "name": "unknown category",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/category",
+     "value": "furniture"
+    }
+   ]
+  },
+  {
+   "name": "unknown ease",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=walk/keys/0/ease",
+     "value": "bounce"
+    }
+   ]
+  },
+  {
+   "name": "unknown joint type",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/rig/bones/id=head/joint/type",
+     "value": "ball"
+    }
+   ]
+  },
+  {
+   "name": "lod out of range",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/geometry/elevation/id=head/lod",
+     "value": 5
+    }
+   ]
+  },
+  {
+   "name": "capsule carrying ellipse fields",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/geometry/elevation/id=neck/rx",
+     "value": 0.1
+    }
+   ]
+  },
+  {
+   "name": "shape without kind",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/geometry/elevation/id=head/kind"
+    }
+   ]
+  },
+  {
+   "name": "unknown shape kind",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/geometry/elevation/id=head/kind",
+     "value": "star"
+    }
+   ]
+  },
+  {
+   "name": "rect without width",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/geometry/elevation/id=foot-l/w"
+    }
+   ]
+  },
+  {
+   "name": "unknown parameter source",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/materials/id=skin/source",
+     "value": "guess"
+    }
+   ]
+  },
+  {
+   "name": "emissivity zero",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/materials/id=skin/emissivity",
+     "value": 0
+    }
+   ]
+  },
+  {
+   "name": "ground mode unknown",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/poses/id=stand/ground",
+     "value": "floating"
+    }
+   ]
+  },
+  {
+   "name": "fewer than three poses",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/poses/5"
+    },
+    {
+     "op": "remove",
+     "path": "/poses/4"
+    },
+    {
+     "op": "remove",
+     "path": "/poses/3"
+    },
+    {
+     "op": "remove",
+     "path": "/poses/2"
+    }
+   ]
+  },
+  {
+   "name": "fewer than two clips",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/clips/2"
+    },
+    {
+     "op": "remove",
+     "path": "/clips/1"
+    }
+   ]
+  },
+  {
+   "name": "empty elevation",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/geometry/elevation",
+     "value": []
+    }
+   ]
+  },
+  {
+   "name": "track target pattern",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/clips/id=walk/tracks/0/target",
+     "value": "breath"
+    }
+   ]
+  },
+  {
+   "name": "clinical must be false",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/structure/clinical",
+     "value": true
+    }
+   ]
+  },
+  {
+   "name": "method must be handcrafted",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/provenance/method",
+     "value": "generated"
+    }
+   ]
+  },
+  {
+   "name": "created must be a date",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/provenance/created",
+     "value": "yesterday"
+    }
+   ]
+  },
+  {
+   "name": "unknown export format",
+   "patch": [
+    {
+     "op": "replace",
+     "path": "/exports/0",
+     "value": "gif"
+    }
+   ]
+  },
+  {
+   "name": "missing required thermal model",
+   "patch": [
+    {
+     "op": "remove",
+     "path": "/thermal"
+    }
+   ]
+  }
+ ]
+}

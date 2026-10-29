@@ -1,0 +1,15 @@
+const fs=require('node:fs');
+const p='🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🟦️.ts';
+let source=fs.readFileSync(p,'utf8');
+const replace=(before,after)=>{if(!source.includes(before))throw Error('Expected current test Source: '+before);source=source.replaceAll(before,after);};
+replace('for(const target of [...Object.keys(protocol.maintenance.targets),...Object.keys(protocol.reset.targets)])','for(const group of [protocol.maintenance,protocol.reset])for(const target of Object.keys(group.targets))');
+replace('"repo:"+target','group.project+":"+target');
+replace('document.kind==="cache-reset"?schema.$defs.ResetOwner:schema.$defs.Owner','document.kind==="cache-reset"?schema.$defs.ResetOwner:document.kind==="maintenance"?schema.$defs.MaintenanceOwner:schema.$defs.Owner');
+replace("IN ('graph','nx')","IN ('graph','nx','rust','products')");
+replace("IN ('repo-cache-reset:cache-reset-graph','repo-cache-reset:cache-reset-nx')","IN ('repo-cache-reset:cache-reset-graph','repo-cache-reset:cache-reset-nx','repo-cache-reset:cache-reset-rust','repo-cache-reset:cache-reset-products')");
+replace("THEN CASE json_extract(?1,'$[1]') WHEN 'repo-cache-reset:cache-reset-graph' THEN 'graph' ELSE 'nx' END ELSE NULL END target","THEN substr(json_extract(?1,'$[1]'),29) ELSE NULL END target");
+replace("manifest.targets[row.args[1]==='repo-cache-reset:cache-reset-graph'?'cache-reset-graph':'cache-reset-nx']","manifest.targets[row.args[1]?.split(':')[1]??'cache-reset-nx']");
+replace("'repo-cache-reset:cache-reset-graph','repo-cache-reset:cache-reset-nx') AND (SELECT count(*) FROM p)","'repo-cache-reset:cache-reset-graph','repo-cache-reset:cache-reset-nx','repo-cache-reset:cache-reset-rust','repo-cache-reset:cache-reset-products') AND (SELECT count(*) FROM p)");
+replace("WHEN 'repo-cache-reset:cache-reset-graph' THEN 'graph' ELSE 'nx' END ELSE NULL END target","WHEN 'repo-cache-reset:cache-reset-graph' THEN 'graph' WHEN 'repo-cache-reset:cache-reset-nx' THEN 'nx' WHEN 'repo-cache-reset:cache-reset-rust' THEN 'rust' ELSE 'products' END ELSE NULL END target");
+replace('"repo-cache-reset:cache-reset-nx","repo-cache-reset:cache-reset-graph"]','"repo-cache-reset:cache-reset-nx","repo-cache-reset:cache-reset-graph","repo-cache-reset:cache-reset-rust","repo-cache-reset:cache-reset-products"]');
+fs.writeFileSync(p,source);

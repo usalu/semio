@@ -387,7 +387,11 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 // ▫️GetArtifactURI MUST retrieve the requested value or return an error.
 // 🌐️GetArtifactURI retrieves and returns the artifact URI using the format repo://{{entity-kind}}/{{id}}.
 func GetArtifactURI(kind string, data map[string]interface{}) string {
-	id := GetArtifactID(kind, data)
+	return ArtifactURIForID(kind, GetArtifactID(kind, data))
+}
+
+// 🔗️ArtifactURIForID renders an already resolved identity without filesystem observations.
+func ArtifactURIForID(kind, id string) string {
 	if id == "" {
 		return "repo://" + kind
 	}

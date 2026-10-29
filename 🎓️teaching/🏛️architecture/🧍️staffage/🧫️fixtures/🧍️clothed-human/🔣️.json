@@ -1,0 +1,157 @@
+{
+ "id": "clothed-human",
+ "oracle": "scipy.optimize.brentq on the ISO 7730 clothing balance, CoolProp saturation pressure; PMV cross-check with pythermalcomfort.pmv_ppd_iso",
+ "tolerances": {
+  "surfaceTempK": 0.1,
+  "fluxRelative": 0.02,
+  "totalsRelative": 0.02,
+  "pmv": 0.02
+ },
+ "iso7730": {
+  "tdb": 20,
+  "tr": 20,
+  "vr": 0.1,
+  "rh": 0.5,
+  "met": 1.2,
+  "clo": 0.8,
+  "emissivityEffective": 0.6983665817077325
+ },
+ "asset": {
+  "dimensions": {
+   "heightM": 1.75,
+   "massKg": 70
+  },
+  "materials": [
+   {
+    "id": "clothing-iso",
+    "title": {
+     "en": "Clothing, ISO 7730 effective radiation",
+     "de": "Bekleidung, effektive Strahlung nach ISO 7730"
+    },
+    "emissivity": 0.6983665817077325,
+    "source": "literature"
+   },
+   {
+    "id": "skin",
+    "title": {
+     "en": "Skin",
+     "de": "Haut"
+    },
+    "emissivity": 0.98,
+    "source": "literature"
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 20,
+    "meanRadiantTempC": 20,
+    "relativeHumidity": 0.5,
+    "windMS": 0.1,
+    "windDirectionDeg": 0,
+    "solarWM2": 0,
+    "pressurePa": 101325
+   },
+   "baseMet": 1.2,
+   "regions": [
+    {
+     "id": "clothing",
+     "title": {
+      "en": "Clothed body",
+      "de": "Bekleideter Körper"
+     },
+     "kind": "clothing",
+     "material": "clothing-iso",
+     "model": "core-resistance",
+     "areaM2": 2.0834897994494677,
+     "characteristicLengthM": 0.4,
+     "coreTempC": 33.74616,
+     "insulationM2KW": 0.14011752,
+     "wettedness": 0,
+     "source": "literature"
+    },
+    {
+     "id": "hands",
+     "title": {
+      "en": "Hands and face",
+      "de": "Hände und Gesicht"
+     },
+     "kind": "skin",
+     "material": "skin",
+     "model": "core-resistance",
+     "areaM2": 0.1,
+     "characteristicLengthM": 0.1,
+     "coreTempC": 35,
+     "insulationM2KW": 0.05,
+     "source": "authored-estimate"
+    }
+   ],
+   "emitters": [
+    {
+     "id": "breath",
+     "kind": "breath",
+     "title": {
+      "en": "Exhaled breath",
+      "de": "Ausgeatmete Luft"
+     },
+     "anchor": "mouth",
+     "directionDeg": 0,
+     "carries": "airflow",
+     "temperatureC": 34,
+     "velocityMS": 1,
+     "diameterM": 0.02,
+     "vapourKgPerKg": 0.033,
+     "source": "literature"
+    }
+   ],
+   "assumptions": []
+  }
+ },
+ "state": {
+  "timeS": 0,
+  "thermal": {
+   "activityMet": 1.2,
+   "operating": {},
+   "regions": {},
+   "emitters": {
+    "breath": 1
+   }
+  },
+  "anchors": {
+   "mouth": {
+    "bone": "head",
+    "x": 0.1,
+    "y": 1.62
+   }
+  },
+  "bones": {
+   "head": {
+    "angleDeg": 0
+   }
+  }
+ },
+ "expected": {
+  "regions": {
+   "clothing": {
+    "surfaceTempC": 26.501966984494942,
+    "radiantFluxWM2": 26.82199648548537,
+    "convectiveFluxWM2": 24.878840180087067,
+    "latentFluxWM2": 0.0,
+    "netFluxWM2": 51.70083666557231,
+    "convectionCoefficientWM2K": 3.826355968803739
+   },
+   "hands": {
+    "surfaceTempC": 29.568320338741767,
+    "radiantFluxWM2": 56.26086204998539,
+    "convectiveFluxWM2": 40.051758644258854,
+    "latentFluxWM2": 12.320972530920761,
+    "netFluxWM2": 108.63359322516466,
+    "convectionCoefficientWM2K": 4.1858714200956255
+   }
+  },
+  "totals": {
+   "emitterSensibleW": 2.5217826836133765,
+   "emitterLatentW": 10.46229707941245
+  },
+  "pmv": -0.6760189279302592
+ }
+}

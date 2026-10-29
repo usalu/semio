@@ -10,7 +10,7 @@ pub struct NativeLabelTerminologies{native:NativeLabelLanguages,reuse:NativeLabe
 impl NativeReceiveMap<NativeLabelTerminologies> for LocalizedLabel{
  fn from_native(value:NativeLabelTerminologies)->Self{Self{cells:[[Cow::Owned(value.native.en),Cow::Owned(value.native.de)],[Cow::Owned(value.reuse.en),Cow::Owned(value.reuse.de)]]}}
 }
-impl<I:NativeValueSource> NativeReceive<I> for LocalizedLabel{
+impl<I:NativeValueSource+?Sized> NativeReceive<I> for LocalizedLabel{
  type Receiver=NativeMappedReceiver<I,NativeLabelTerminologies,Self>;
  fn receive_birth_demand()->semio_framework_value::RetirementDemand{Self::Receiver::birth().expect("localized label has one fixed original terminology ancestor")}
  fn begin_receive(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::Receiver,semio_framework_value::RetainedCloneProgress),ValueError>{Self::Receiver::begin(grant)}

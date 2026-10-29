@@ -8,6 +8,8 @@ import {compactCargoIncrementalSessionsV1,withCargoCacheMaintenanceV1, deleteUni
 import {cargoDirectories} from "../../🦀️cargo/🗂️directories/🟦️.ts";
 import { areaUnitRoot, pruneTestEvidence, scanCacheAreas } from "../🌐️workspace/🟦️.ts";
 import {writeResultLineV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/📤️output/🟦️.ts";
+import {resolveLanguageV1} from "../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
+import {CATALOG_LANGUAGES_V1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🗣️language/📖️catalog/🟦️.ts";
 
 /** 📊️ Dry-run visibility into the shared cache root: per-area sizes, unit counts, and exactly what `cache-prune` would delete. */
 export class CacheReportScript extends BundleScript {
@@ -27,7 +29,7 @@ export class CacheReportScript extends BundleScript {
           `[cache-report] ${area.name}: ${formatBytes(area.totalBytes)} across ${area.unitCount} units; would delete ${area.ageDeletions.length} unused units (${formatBytes(ageBytes)}) and ${area.budgetDeletions.length} over-budget units (${formatBytes(budgetBytes)}); retains ${formatBytes(area.retainedBytes)}${area.guardedOverBudgetBytes ? `; ${formatBytes(area.guardedOverBudgetBytes)} over budget but within the guard age` : ""}`,
         );
       }
-      console.log(`[cache-report] tests: ${await pruneTestEvidence(this.repoRoot, true)}`);
+      console.log(`[cache-report] tests: ${await pruneTestEvidence(this.repoRoot, true, this.invocation, control, resolveLanguageV1(CATALOG_LANGUAGES_V1,args,process.env).language)}`);
   }
 }
 
@@ -60,7 +62,7 @@ export class CachePruneScript extends BundleScript {
         }
         console.log(`[cache-prune] ${dryRun ? "would delete" : "deleted"} ${deletedCount} units; ${formatBytes(deletedBytes)}`);
         signal.throwIfAborted();
-        console.log(`[cache-prune] tests: ${await pruneTestEvidence(this.repoRoot, dryRun)}`);
+        console.log(`[cache-prune] tests: ${await pruneTestEvidence(this.repoRoot, dryRun, this.invocation, control, resolveLanguageV1(CATALOG_LANGUAGES_V1,args,process.env).language)}`);
       });
     }
   }

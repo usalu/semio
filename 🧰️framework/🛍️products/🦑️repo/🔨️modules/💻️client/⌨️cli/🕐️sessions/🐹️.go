@@ -318,7 +318,11 @@ func StreamSessions(ctx context.Context, out chan<- Session, opts ...StreamOptio
 					if !matchesFilter(s.UUID, options) && !matchesFilter(string(s.Kind), options) && !matchesFilter(s.Client, options) {
 						continue
 					}
-					if !matchesQuery(s.UUID+" "+string(s.Kind)+" "+s.Client, options) {
+					queryMatches, queryErr := matchesQuery(ctx, s.UUID+" "+string(s.Kind)+" "+s.Client, options)
+					if queryErr != nil {
+						return queryErr
+					}
+					if !queryMatches {
 						continue
 					}
 					select {

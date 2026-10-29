@@ -22,6 +22,7 @@ semio-framework-schema-composition = { path = "../../../../../../../../../../../
 semio-framework-schema-registry = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
+semio-framework-value-snapshot-projection = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }

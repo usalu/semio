@@ -1,0 +1,158 @@
+{
+  "name": "repo-cache-reset",
+  "projectType": "library",
+  "targets": {
+    "cache-reset-graph": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reset graph",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Reset Inactive Graph Cache",
+              "de": "Inaktiven Graph-Cache zurücksetzen"
+            },
+            "description": {
+              "en": "Retire only the authenticated inactive Graph cache; busy or uncertain ownership is refused.",
+              "de": "Nur den authentifizierten inaktiven Graph-Cache zurücksetzen; aktive oder unklare Eigentümerschaft wird abgewiesen."
+            }
+          }
+        }
+      }
+    },
+    "cache-reset-nx": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reset nx",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Reset Inactive Nx Cache",
+              "de": "Inaktiven Nx-Cache zurücksetzen"
+            },
+            "description": {
+              "en": "Retire only the authenticated inactive Nx cache; busy or uncertain ownership is refused.",
+              "de": "Nur den authentifizierten inaktiven Nx-Cache zurücksetzen; aktive oder unklare Eigentümerschaft wird abgewiesen."
+            }
+          }
+        }
+      }
+    },
+    "cache-reset-rust": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reset rust",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Reset Inactive Rust Cache",
+              "de": "Inaktiven Rust-Cache zurücksetzen"
+            },
+            "description": {
+              "en": "Retire only the authenticated inactive Rust cache; busy or uncertain ownership is refused.",
+              "de": "Nur den authentifizierten inaktiven Rust-Cache zurücksetzen; aktive oder unklare Eigentümerschaft wird abgewiesen."
+            }
+          }
+        }
+      }
+    },
+    "cache-reset-products": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "{projectRoot}/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./📜️script.ts reset products",
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "dashboard": {
+            "title": {
+              "en": "Reset Inactive Products Cache",
+              "de": "Inaktiven Produkte-Cache zurücksetzen"
+            },
+            "description": {
+              "en": "Retire only the authenticated inactive Products cache; busy or uncertain ownership is refused.",
+              "de": "Nur den authentifizierten inaktiven Produkte-Cache zurücksetzen; aktive oder unklare Eigentümerschaft wird abgewiesen."
+            }
+          }
+        }
+      }
+    }
+  }
+}

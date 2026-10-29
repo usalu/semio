@@ -230,7 +230,7 @@
           "maximum": 68719476736
         },
         "automatic": {
-          "description": "Whether a command that finds the image quiescent (nobody holds it, a non-waiting exclusive try succeeds) and still below its pressure floor recreates it at the elastic size; the graph, compiler and products images qualify (all hold only derived data; `repo run repo:cache-reset-<graph|rust|products>` is the on-demand step).",
+          "description": "Whether a command that finds the image quiescent (nobody holds it, a non-waiting exclusive try succeeds) and still below its pressure floor recreates it at the elastic size; the graph, compiler and products images qualify (all hold only derived data; `repo run repo-cache-reset:cache-reset-<graph|rust|products>` is the on-demand step).",
           "type": "boolean"
         },
         "pressureFreeBytes": {
@@ -238,6 +238,32 @@
           "type": "integer",
           "minimum": 1048576,
           "maximum": 68719476736
+        }
+      }
+    },
+    "imageBackendCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "backing",
+        "mounted"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "mounted-image",
+            "directory-partition"
+          ]
+        },
+        "backing": {
+          "enum": [
+            "fixed.dmg",
+            "fixed.dir"
+          ]
+        },
+        "mounted": {
+          "type": "boolean"
         }
       }
     }

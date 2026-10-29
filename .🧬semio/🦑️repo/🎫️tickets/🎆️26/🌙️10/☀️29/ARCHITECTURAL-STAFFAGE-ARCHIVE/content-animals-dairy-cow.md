@@ -1,0 +1,12 @@
+# dairy-cow (Holstein-Friesian) notes
+
+Fragments: `🧰️scripts/animals/dairy-cow/*.json`; scratch generators `cow-rig.py`, `cow-geom.py`, `cow-ik.py`, `cow-emit.py`, `cow-clips.py`, `cow-view.sh`, `cow-png.sh`, `cow-root.ts` in the same folder. Assembled output: `🗑️generated/animals/dairy-cow.json` (check prints the check mark).
+
+- Dimensions: 1.47 m x 2.57 m (default pose bounds), depth 0.72 m, 650 kg (segment masses sum to 650.0, tagged authored-estimate, Dyce 2010 as guidance).
+- Rig: 30 bones; pelvis root, lumbar, thorax, neck, head, jaw, near/far ears, 3-bone tail with switch, udder; near and far hind chains (thigh, gaskin, cannon, cloven hoof) and fore chains (scapula, humerus, forearm, cannon, hoof).
+- Named poses: standing-chewing (default), grazing-head-down (replaces the manifest's drinking-head-down), lying-resting, kneeling-front. Key poses: lowering-hindquarters, walk-phase-0..7 (`"key": true`).
+- Clips: walk-cycle (1.4 s, lateral sequence, duty 0.68, plant, advanceM 1.0294), cud-chewing (5 s loop, 1 jaw cycle/s, 24 breaths/min), lie-down (11 s, non-looping, overlapping spans: hooves -> carpi -> hocks/sternum), graze-and-chew (12 s).
+- Contacts: hoof soles (cloven hoof as one footprint), carpus fronts, hock points, sternum. `structure.supports` is `[]` per coordinator rule. Lying pose contacts all sit on y = 0 within 3 mm (probe).
+- Thermal: 12 regions, 5.30 m2 (Meeh, authored k = 0.0706), metabolicShare sum 1; black patches vs white coat absorptivity, rumen flank, udder, muzzle, eyes, lower legs as skin; baseMet 2.8 (870 W, about 2x Kleiber 437 W; CIGR 2002); walking met from NRC 2001 cost per metre; breath emitter at the nostrils, period 2.5 s, vapour.
+- Simplifications: rigid trunk (spine joints only +-few degrees); far legs identical geometry mirrored by tone/z; udder swings up to 85 degrees to tuck forward when lying and still dips about 0.1 m below the ground line in the lying pose; seam arc where the neck shape meets the shoulder; cow is polled (no horns); lower-leg skin region uses bare-skin material.
+- Sources are real literature only (Dyce et al. 2010, Hildebrand 1976, Krohn and Munksgaard 1993, Beauchemin 1991, Phillips and Morris 2001, Kleiber 1947, NRC 2001, CIGR 2002, Kadzere et al. 2002, Meeh 1879, Berman 2003, Scholander 1950, Cena and Monteith 1975, Gebremedhin and Wu 2001, Hutchinson and Brown 1969, ASHRAE 2021); numerical values are marked authored-estimate.

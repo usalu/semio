@@ -9,11 +9,13 @@ import fixture from "./🔣️.json" with { type: "json" };
 test("neutral repository readers retain supplied actual storage and accepted consumers without opening a replacement store", () => {
   const path = resolve(import.meta.dir, "../../🟦️.ts"), syntax = ts.createSourceFile(path, readFileSync(path, "utf8"), ts.ScriptTarget.Latest, true), names: string[] = [], calls: string[] = []; let parameters: string[] = [];
   const visit = (node: ts.Node): void => {
-    if (ts.isFunctionDeclaration(node) && node.name) { names.push(node.name.text); if (node.name.text === "withRepositoryArtifactV1") parameters = node.parameters.map(row => row.name.getText(syntax)); }
-    if (ts.isCallExpression(node)) calls.push(node.expression.getText(syntax));
+    if (ts.isFunctionDeclaration(node) && node.name) { names.push(node.name.text); if (node.name.text === "withRepositoryArtifactV1") parameters = node.parameters.map(row => row.name.getText()); }
+    if (ts.isCallExpression(node)) calls.push(node.expression.getText());
     ts.forEachChild(node, visit);
   };
   visit(syntax);
+  const settlement = resolve(import.meta.dir, "../../📥️settlement/🟦️.ts");
+  visit(ts.createSourceFile(settlement, readFileSync(settlement, "utf8"), ts.ScriptTarget.Latest, true));
   expect(parameters).toEqual(fixture.parameters);
   const { parameters: _parameters, requiredCalls: _calls, exports: _exports, ...protocol } = fixture;
   expect(new Ajv({ strict: true }).validate({ const: protocol }, schema.definitions.Protocol.const)).toBe(true);

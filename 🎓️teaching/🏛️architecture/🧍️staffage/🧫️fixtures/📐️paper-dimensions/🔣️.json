@@ -1,0 +1,11 @@
+{
+  "figureHeightM": 1.8,
+  "pixelsPerMm": 10,
+  "pixelTolerance": 1,
+  "scales": [
+    { "denominator": 500, "figureMm": 3.6 },
+    { "denominator": 200, "figureMm": 9 },
+    { "denominator": 100, "figureMm": 18 },
+    { "denominator": 50, "figureMm": 36 }
+  ]
+}

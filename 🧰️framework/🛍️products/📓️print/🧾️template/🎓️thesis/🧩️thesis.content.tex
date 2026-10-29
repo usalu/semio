@@ -1,0 +1,96 @@
+\title{Reproducible Research Through Explicit Design Models}
+\subtitle{A worked thesis with bilingual abstracts and a complete academic apparatus}
+\author{Alex Example}
+\date{2026}
+\SemioSetup{
+  thesis-level=master,
+  university={Example University},
+  faculty={Faculty of Architecture},
+  institute={Institute for Computational Design},
+  degree={Master of Science},
+  discipline={Computational Design},
+  programme={Architecture and Technology},
+  student-id={20260001},
+  supervisor={Prof. Taylor Example},
+  reviewers={Prof. Morgan Example},
+  submission={2026-10-28},
+  place={Hannover},
+  keywords={reproducibility, design models, research methods}
+}
+\addbibresource{📚️references.bib}
+
+\begin{document}
+\makethesistitle
+\begin{Abstract}
+Reproducible research requires explicit assumptions, traceable sources and independently verifiable results. This worked thesis demonstrates a complete academic document, from its examination metadata to bilingual abstracts, numbered chapters, references and supplementary evidence. Its illustrative experiment compares two workflows under the same declared evaluation protocol.
+\end{Abstract}
+\begin{Kurzfassung}
+Reproduzierbare Forschung benötigt explizite Annahmen, nachvollziehbare Quellen und unabhängig überprüfbare Ergebnisse. Diese Beispielarbeit zeigt den vollständigen Aufbau einer wissenschaftlichen Abschlussarbeit mit Prüfungsangaben, zweisprachigen Zusammenfassungen, Kapiteln, Quellen und ergänzenden Nachweisen.
+\end{Kurzfassung}
+\begin{Acknowledgements}
+The author thanks the research participants and supervisors for their critical review of the study protocol. All names, institutions and numerical observations in this example are illustrative.
+\end{Acknowledgements}
+\makededication{For everyone who makes research understandable and reproducible.}
+\begin{Abbreviations}
+  \item[API] Application programming interface
+  \item[CI] Continuous integration
+  \item[PDF] Portable document format
+\end{Abbreviations}
+\tableofcontents
+\makemainmatter
+
+\chapter{Introduction}
+\label{chap:introduction}
+Research findings can only be checked when their assumptions and evaluation procedures are explicit. Literate programming offers one foundation for keeping explanations close to executable reasoning \cite{knuth1984}.
+\section{Research Question}
+How does an explicit model affect the repeatability of a design evaluation? The study measures the proportion of independently repeated evaluations that reproduce the declared result.
+\section{Contributions}
+The thesis contributes a documented protocol, an illustrative comparison and an account of the limits of that comparison. Supplementary material records the exact assumptions used in the experiment.
+
+\chapter{Background and Related Work}
+Scientific computing combines reproducible procedures with clear accounts of numerical and methodological limitations \cite{wilson2014}. This thesis treats a source, an evaluation protocol and its resulting observation as separate research artifacts.
+\section{Definitions}
+Repeatability means obtaining the same result under the same specified conditions. The present demonstration evaluates only those specified conditions; it does not establish general validity across institutions or datasets.
+
+\chapter{Research Method}
+\label{chap:method}
+\section{Protocol}
+Two workflows are evaluated on twenty illustrative tasks. Workflow A records informal instructions. Workflow B records the inputs, model version and evaluation steps explicitly. Every task is evaluated twice using the same protocol.
+\section{Metric}
+For $n$ evaluations, of which $r$ reproduce the declared result, the repeatability ratio is
+\begin{equation}
+  R = \frac{r}{n}, \qquad 0 \leq R \leq 1.
+\end{equation}
+\section{Ethics and Data Management}
+The demonstration contains no personal participant data. A real study must replace these illustrative observations with its approved protocol, consent procedure and data availability statement.
+
+\chapter{Results}
+\begin{Table}[title=Illustrative repeatability observations]
+\begin{tabular}{lrrr}
+  Workflow & Reproduced & Evaluations & Ratio \\
+  A & 14 & 20 & 0.70 \\
+  B & 19 & 20 & 0.95
+\end{tabular}
+\end{Table}
+The absolute difference in this illustrative dataset is $0.25$. The observations demonstrate the reporting format rather than establish an empirical claim.
+\begin{Figure}[title=Research evidence chain,height=3cm,anchor=center,justify=center]
+  Declared inputs $\longrightarrow$ explicit model $\longrightarrow$ evaluation protocol $\longrightarrow$ archived result
+\end{Figure}
+
+\chapter{Discussion}
+The protocol in Chapter~\ref{chap:method} makes the comparison inspectable. The small constructed dataset cannot support generalization or causal inference. A subsequent study should preregister its hypotheses, report uncertainty and compare results across independent teams.
+\section{Threats to Validity}
+Task selection, evaluator experience and tooling differences may affect repeatability. These factors should be controlled or reported rather than inferred from the aggregate ratio.
+
+\chapter{Conclusion and Future Work}
+The research question in Chapter~\ref{chap:introduction} motivates a transparent evaluation protocol. The worked document connects its question, method, observations and limitations, and archives the references and supplementary material needed for review.
+
+\makeappendices
+\appendixchapter[PR]{Evaluation Protocol}
+Record each task identifier, input version, evaluator, expected result and observed result. Preserve failed evaluations alongside successful ones. Compute the ratio using all twenty tasks, without excluding inconvenient observations.
+\appendixchapter[DA]{Data Availability}
+All numerical values in this example are authored demonstration data. Replace this statement with the persistent location, access conditions and license of the actual research materials.
+\appendixchapter{References and Registers}
+\makeregisters
+\makedeclaration
+\end{document}

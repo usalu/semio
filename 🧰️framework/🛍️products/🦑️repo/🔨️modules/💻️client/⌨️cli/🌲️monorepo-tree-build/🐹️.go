@@ -10,7 +10,10 @@ package client
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	model "github.com/usalu/semio/repo/model"
+	search "github.com/usalu/semio/repo/search"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -21,93 +24,83 @@ import (
 // 🌳️TreeBuildOptions holds the data fields for a tree build options record.
 type TreeBuildOptions struct {
 	IncludeSections bool
+	Progress        func(search.Progress) `json:"-"`
 }
 
 // 🏢️BuildMonorepoTree MUST assemble the monorepo tree from the available context data.
 // 🏢️BuildMonorepoTree constructs and returns the monorepo tree structure.
-func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
+func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) (*TreeNode, error) {
 	var options TreeBuildOptions
 	if len(opts) > 0 {
 		options = opts[0]
 	}
-	root := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+	codebase, err := buildRepositoryCodebase(ctx, options)
+	if err != nil {
+		return nil, err
+	}
+	return buildRepositoryDomains(ctx, codebase, options)
+}
 
+// 🌲️buildRepositoryCodebase projects authored code independently of domain records.
+func buildRepositoryCodebase(ctx context.Context, options TreeBuildOptions) (*TreeNode, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	reportSearchProgress(options.Progress, search.Progress{Step: "codebase-discovery"})
 	var technologies []Technology
-	var goals []*Goal
-	var drafts []*Draft
-	var policies []PolicyDef
-	var contributors []Contributor
-	var checkpoints []Checkpoint
 	var allFolders []Folder
 	var allFiles []File
-	var sessions []Session
-
+	InvalidateTechnologyCache()
+	technologies = LoadTechnologies()
+	boundaries := []model.ArtifactBoundary{}
+	for _, technology := range technologies {
+		for _, bundle := range technology.Bundles {
+			boundaries = append(boundaries, model.ArtifactBoundary{Root: bundle.Root, ID: bundle.GetID()})
+		}
+	}
+	layout := model.NewArtifactLayout(GetRootDir(), boundaries)
+	streamOptions := StreamOptions{Layout: layout, Progress: func(value StreamProgress) {
+		reportSearchProgress(options.Progress, search.Progress{Current: value.Current, Step: value.Phase})
+	}}
+	var failuresMu sync.Mutex
+	var failures []error
+	fail := func(err error) {
+		if err != nil {
+			failuresMu.Lock()
+			failures = append(failures, err)
+			failuresMu.Unlock()
+		}
+	}
 	var wg sync.WaitGroup
-	wg.Add(9)
-
+	wg.Add(2)
 	go func() {
 		defer wg.Done()
-		technologies = LoadTechnologies()
-	}()
-	go func() {
-		defer wg.Done()
-		goalCh := make(chan *Goal)
-		go func() { StreamGoals(ctx, goalCh) }()
-		for g := range goalCh {
-			goals = append(goals, g)
+		entries := make(chan Folder)
+		completed := make(chan error, 1)
+		go func() { completed <- StreamFolders(ctx, "", entries, streamOptions) }()
+		for entry := range entries {
+			allFolders = append(allFolders, entry)
 		}
+		fail(<-completed)
 	}()
 	go func() {
 		defer wg.Done()
-		drafts, _ = ListDrafts()
-	}()
-	go func() {
-		defer wg.Done()
-		policyCh := make(chan PolicyDef)
-		go func() { StreamPolicies(ctx, policyCh) }()
-		for p := range policyCh {
-			policies = append(policies, p)
+		entries := make(chan File)
+		completed := make(chan error, 1)
+		go func() { completed <- StreamFiles(ctx, "", entries, streamOptions) }()
+		for entry := range entries {
+			allFiles = append(allFiles, entry)
 		}
-	}()
-	go func() {
-		defer wg.Done()
-		contribCh := make(chan Contributor)
-		go func() { StreamContributors(ctx, contribCh) }()
-		for c := range contribCh {
-			contributors = append(contributors, c)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		limit := 100
-		checkpoints = LoadCheckpoints(&limit)
-	}()
-	go func() {
-		defer wg.Done()
-		folderCh := make(chan Folder)
-		go func() { StreamFolders(ctx, "", folderCh) }()
-		for f := range folderCh {
-			allFolders = append(allFolders, f)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		fileCh := make(chan File)
-		go func() { StreamFiles(ctx, "", fileCh) }()
-		for f := range fileCh {
-			allFiles = append(allFiles, f)
-		}
-	}()
-	go func() {
-		defer wg.Done()
-		sessionCh := make(chan Session)
-		go func() { StreamSessions(ctx, sessionCh) }()
-		for s := range sessionCh {
-			sessions = append(sessions, s)
-		}
+		fail(<-completed)
 	}()
 	wg.Wait()
-
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if err := errors.Join(failures...); err != nil {
+		return nil, err
+	}
+	reportSearchProgress(options.Progress, search.Progress{Step: "codebase-assembling"})
 	codebaseNode := &TreeNode{Kind: TreeNodeCategory, ID: "codebase", Label: emojiText(EmojiCodebase) + "Codebase", URI: "repo://codebase"}
 	sort.Slice(technologies, func(i, j int) bool { return technologies[i].Name < technologies[j].Name })
 
@@ -117,6 +110,9 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	globalFolderMap := make(map[string]*folderEntry)
 	for fi := range allFolders {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		f := &allFolders[fi]
 		fNode := &TreeNode{
 			Kind:    TreeNodeFolder,
@@ -131,6 +127,9 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 
 	globalFileNodes := make(map[string]*TreeNode)
 	for fi := range allFiles {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		f := &allFiles[fi]
 		fileNode := &TreeNode{
 			Kind:    TreeNodeFile,
@@ -164,6 +163,10 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	attachFilesToFolders(codebaseNode, allFiles, globalFileNodes)
 
 	for pi := range technologies {
+
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		p := &technologies[pi]
 		pNode := &TreeNode{
 			Kind:    TreeNodeTechnology,
@@ -229,8 +232,84 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 		codebaseNode.Children = append(codebaseNode.Children, pNode)
 	}
 	sortTreeChildren(codebaseNode)
-	root.Children = append(root.Children, codebaseNode)
+	return codebaseNode, ctx.Err()
 
+}
+
+// 🧬️buildRepositoryDomains refreshes live and persistent domain projections for each request.
+func buildRepositoryDomains(ctx context.Context, codebaseNode *TreeNode, options TreeBuildOptions) (*TreeNode, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	root := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{codebaseNode}}
+	var goals []*Goal
+	var drafts []*Draft
+	var policies []PolicyDef
+	var contributors []Contributor
+	var checkpoints []Checkpoint
+	var sessions []Session
+	reportSearchProgress(options.Progress, search.Progress{Step: "domain-discovery"})
+	var failuresMu sync.Mutex
+	var failures []error
+	fail := func(err error) {
+		if err != nil {
+			failuresMu.Lock()
+			failures = append(failures, err)
+			failuresMu.Unlock()
+		}
+	}
+	var wg sync.WaitGroup
+	wg.Add(6)
+	go func() {
+		defer wg.Done()
+		entries := make(chan *Goal)
+		completed := make(chan error, 1)
+		go func() { completed <- StreamGoals(ctx, entries) }()
+		for entry := range entries {
+			goals = append(goals, entry)
+		}
+		fail(<-completed)
+	}()
+	go func() {
+		defer wg.Done()
+		entries := make(chan PolicyDef)
+		completed := make(chan error, 1)
+		go func() { completed <- StreamPolicies(ctx, entries) }()
+		for entry := range entries {
+			policies = append(policies, entry)
+		}
+		fail(<-completed)
+	}()
+	go func() {
+		defer wg.Done()
+		entries := make(chan Contributor)
+		completed := make(chan error, 1)
+		go func() { completed <- StreamContributors(ctx, entries) }()
+		for entry := range entries {
+			contributors = append(contributors, entry)
+		}
+		fail(<-completed)
+	}()
+	go func() {
+		defer wg.Done()
+		entries := make(chan Session)
+		completed := make(chan error, 1)
+		go func() { completed <- StreamSessions(ctx, entries) }()
+		for entry := range entries {
+			sessions = append(sessions, entry)
+		}
+		fail(<-completed)
+	}()
+	go func() { defer wg.Done(); var err error; drafts, err = ListDrafts(); fail(err) }()
+	go func() { defer wg.Done(); limit := 100; checkpoints = LoadCheckpoints(&limit) }()
+	wg.Wait()
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	if err := errors.Join(failures...); err != nil {
+		return nil, err
+	}
+	reportSearchProgress(options.Progress, search.Progress{Step: "domain-assembling"})
 	goalsNode := &TreeNode{Kind: TreeNodeCategory, ID: "goals", Label: "🎯️Goals", URI: "repo://goals"}
 	goalMap := make(map[string]*TreeNode)
 	sort.Slice(goals, func(i, j int) bool { return goals[i].ID < goals[j].ID })
@@ -275,10 +354,14 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	goalsNode.Children = rootGoals
 
 	ticketCh := make(chan Ticket)
-	go func() { StreamTickets(ctx, nil, nil, nil, ticketCh) }()
+	ticketError := make(chan error, 1)
+	go func() { ticketError <- StreamTickets(ctx, nil, nil, nil, ticketCh) }()
 	var tickets []Ticket
 	for t := range ticketCh {
 		tickets = append(tickets, t)
+	}
+	if err := <-ticketError; err != nil {
+		return nil, err
 	}
 	for ti := range tickets {
 		t := &tickets[ti]
@@ -407,6 +490,9 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	sessionsNode := &TreeNode{Kind: TreeNodeCategory, ID: "sessions", Label: "⚪️Sessions", URI: "repo://sessions"}
 	sort.Slice(sessions, func(i, j int) bool { return sessions[i].StartedAt > sessions[j].StartedAt })
 	for si := range sessions {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		s := &sessions[si]
 		kindEmoji := SessionKindEmoji(s.Kind)
 		label := kindEmoji + " " + s.UUID
@@ -439,7 +525,10 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	root.Children = append(root.Children, sessionsNode)
 
 	PropagateParentIDs(root, "")
-	return root
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return root, nil
 }
 
 // 💿️PropagateParentIDs holds the data fields for a PropagateParentIDs record.

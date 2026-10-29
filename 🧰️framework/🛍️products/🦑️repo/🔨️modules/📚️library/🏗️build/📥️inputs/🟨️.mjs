@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1} from "../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import{REVISION_POLICY_V1,physicalSourceOriginV1}from"./🔏️revision/🟨️.mjs";
 import limitsSchema from"./🧬️schema/🔣️.json"with{type:"json"};
 const javascriptManagerV1 = createRequire(import.meta.url)("../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
@@ -11,7 +12,7 @@ import resolutionDocument from "./🦀️resolution/🔣️.json" with { type: "
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { sha256DelimitedHexV1, sha256FirstByteV1, sha256HexV1 } from "../🧂️text-bytes/🟨️.mjs";
 import { mkdirSync, writeFileSync, readFileSync, lstatSync, rmSync, existsSync as persistedExists } from "node:fs";
-import { renameOverBusyFileSyncV1 } from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
+import { concurrentEditV1, retryOnConcurrentEditSyncV1, renameOverBusyFileSyncV1 } from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import { fileURLToPath } from "node:url";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { adoptVerifiedBlockV1, observedFs } from "../👁️observation/🟨️.mjs";
@@ -75,9 +76,9 @@ export function deduplicateProjectInputs(inputs, root) {
 /** 🧾️ Publishes identical content-addressed closure bytes atomically across independent graph writers. */
 const VERIFIED_CLOSURES_V1=new Map();
 
-/** 📤️ Publishes identical content-addressed closure bytes atomically across independent graph writers; a closure whose stamp equals the one last verified equal is not read again. */
+/** 📤️ Publishes identical closure bytes atomically; a replaced directory entry uses the bounded read retry, while stable identity violations fail. An unchanged verified stamp avoids reading bytes again. */
 function publishInputClosureV1(path,contract){
- const verify=()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size!==Buffer.byteLength(contract))throw Error("Original immutable input closure bytes required");const known=VERIFIED_CLOSURES_V1.get(path);if(known&&known.ino===row.ino&&known.size===row.size&&known.mtimeMs===row.mtimeMs&&known.ctimeMs===row.ctimeMs)return;if(!readFileSync(path).equals(Buffer.from(contract)))throw Error("Original immutable input closure bytes required");VERIFIED_CLOSURES_V1.set(path,{ino:row.ino,size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs});};
+ const verify=()=>retryOnConcurrentEditSyncV1("read",()=>{const row=lstatSync(path);if(!row.isFile()||row.isSymbolicLink()||row.nlink!==1||row.size!==Buffer.byteLength(contract)){const current=lstatSync(path);if(current.dev!==row.dev||current.ino!==row.ino)throw concurrentEditV1("identity",path);throw Error("Original immutable input closure bytes required");}const known=VERIFIED_CLOSURES_V1.get(path);if(known&&known.ino===row.ino&&known.size===row.size&&known.mtimeMs===row.mtimeMs&&known.ctimeMs===row.ctimeMs)return;if(!readFileSync(path).equals(Buffer.from(contract)))throw Error("Original immutable input closure bytes required");VERIFIED_CLOSURES_V1.set(path,{ino:row.ino,size:row.size,mtimeMs:row.mtimeMs,ctimeMs:row.ctimeMs});});
  if(persistedExists(path)){verify();return;}
  const temporary=path+"~"+randomUUID();if(temporary.length>REVISION_POLICY_V1.maximumPathUnits||[...temporary].length>REVISION_POLICY_V1.maximumPathUnits)throw Error("Input closure staging path exceeds "+REVISION_POLICY_V1.maximumPathUnits+" characters");try{writeFileSync(temporary,contract,{flag:"wx"});renameOverBusyFileSyncV1(temporary,path);verify();noteBuildGraphStagedLeafV1(path);}finally{rmSync(temporary,{force:true});}
 }
@@ -286,7 +287,7 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
     const ownerExtensions = native ? "{json,semio,wit,wgsl,glsl,h,c,cpp,ts,tsx,js,jsx,mjs,cjs,css,scss,html,svg,sql}" : extensions;
     let ownerTree = [`{workspaceRoot}/${owner}/**/*.${ownerExtensions}`];
     if (ownerView) {
-      const split = ownerTreeGlobsV1(owner, ownerExtensions, ownerView.private, readdirSync(join(workspaceRoot, owner), { withFileTypes: true }).filter((entry) => !POLICY.generatedDirectories.includes(entry.name)).map((entry) => ({ name: entry.name, directory: entry.isDirectory() })));
+      const split = ownerTreeGlobsV1(owner, ownerExtensions, ownerView.private, readdirSync(join(workspaceRoot, owner), { withFileTypes: true }).filter((entry) => !isOpaqueSourcePathV1(entry.name) && !POLICY.generatedDirectories.includes(entry.name)).map((entry) => ({ name: entry.name, directory: entry.isDirectory() })));
       ownerTree = split.shared;
       ownerPrivate = split.private;
     }
@@ -303,12 +304,13 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
     inputs.push(`!{projectRoot}/**/${directory}/**/*`);
     if (owner !== root) inputs.push(`!{workspaceRoot}/${owner}/**/${directory}/**/*`);
   }
+  inputs.push(...opaqueSourceInputExclusionsV1("{projectRoot}"), ...(owner !== root ? opaqueSourceInputExclusionsV1(`{workspaceRoot}/${owner}`) : []));
   if (owner !== runner) inputs.push(`!{workspaceRoot}/${runner}/**/🧪️tests/**/*`);
   const examples = [...exampleCollectionInputs("{projectRoot}"), ...exampleCollectionInputs("{workspaceRoot}")];
   const production = ["!{projectRoot}/**/🧪️tests/**/*", ...examples, "!{projectRoot}/**/*.feature", "!{projectRoot}/**/*.stories.{ts,tsx}"];
   if (owner !== root) production.push(`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`);
   const declarations = json.namedInputs ?? {}, exclusions = [];
-  const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeManifest}`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", ...examples, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...exclusions];
+  const native = (sources, productionOnly = false) => !tools.includes("cargo") ? ["production"] : [...new Set(sources ? [`{workspaceRoot}/${nativeManifest}`, ...sources] : ["{projectRoot}/**/*", ...(owner !== root ? [`{workspaceRoot}/${owner}/**/*`] : [])]), ...(productionOnly ? ["!{projectRoot}/**/🧪️tests/**/*", ...examples, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/🧪️tests/**/*`] : [])] : []), ...POLICY.generatedDirectories.flatMap((directory) => [`!{projectRoot}/**/${directory}/**/*`, ...(owner !== root ? [`!{workspaceRoot}/${owner}/**/${directory}/**/*`] : [])]), ...opaqueSourceInputExclusionsV1("{projectRoot}"),...(owner !== root ? opaqueSourceInputExclusionsV1(`{workspaceRoot}/${owner}`) : []),...exclusions];
   const artifactTypeScript = json.tags?.includes("role:artifact") && json.tags.includes("language:typescript") && owner !== root && existsSync(join(workspaceRoot, root, SCRIPT_BASENAME));
   const artifactSource = join(workspaceRoot, owner, "🟦️.ts");
   const artifactSources = artifactTypeScript ? await closureOf([artifactSource], ["{projectRoot}/package.json"], "artifact-sources") : [];
@@ -326,7 +328,7 @@ export async function inferProjectInputs(json, root, workspaceRoot, facts, scrip
     const path = buildPath(relative(workspaceRoot, absolute));
     if (path === "" || path.startsWith("../")) throw new Error(`Invalid output ownership for ${json.name}: ${output}`);
     if (!sourceOutputOverlaps(path, sourceScopes, root)) continue;
-    if ((owned(path, root) || owned(path, owner)) && path.split("/").some(part => POLICY.generatedDirectories.includes(part))) continue;
+    if (isOpaqueSourcePathV1(path) || (owned(path, root) || owned(path, owner)) && path.split("/").some(part => POLICY.generatedDirectories.includes(part))) continue;
     exclusions.push(`!{workspaceRoot}/${path}`, `!{workspaceRoot}/${path}/**/*`);
     if (owned(path, root)) {
       const local = buildPath(relative(join(workspaceRoot, root), absolute));

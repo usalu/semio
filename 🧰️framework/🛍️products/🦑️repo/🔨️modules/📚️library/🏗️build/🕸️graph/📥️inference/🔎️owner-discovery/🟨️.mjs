@@ -12,6 +12,7 @@ import * as loadedProjectInputs from "../../../../🏗️build/📥️inputs/�
 import ownerAdmissionSchema from "../../../🧬️schema/🚪️admission.json" with { type: "json" };
 import { buildRelativeImportProjectV1, buildInputSourceRoleV1, buildSourceDemandV1, buildNativeSourceObservationV1 } from "../../🚪️admission/🟦️.ts";
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
+import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
@@ -37,7 +38,7 @@ export function walkCargoToml(workspaceRoot) {
   const walk = (directory) => {
     for (const entry of readdirSync(join(workspaceRoot, directory), { withFileTypes: true })) {
       const path = buildPath(join(directory, entry.name));
-      if (entry.isSymbolicLink() || path === "compose" || path === "temp/compose" || entry.name === ".🧬semio" || POLICY.generatedDirectories.includes(entry.name)) continue;
+      if (entry.isSymbolicLink() || isOpaqueSourcePathV1(path) || path === "compose" || path === "temp/compose" || entry.name === ".🧬semio" || POLICY.generatedDirectories.includes(entry.name)) continue;
       if (entry.isDirectory()) walk(path);
       else if (entry.isFile() && entry.name === "Cargo.toml") found.push(path);
     }
@@ -54,7 +55,7 @@ export async function walkCargoTomlControlledV1(workspaceRoot, control) {
     const directory=directories.pop();
     for(const entry of readdirSync(join(workspaceRoot,directory),{withFileTypes:true})){
       const path=buildPath(join(directory,entry.name));
-      if(entry.isSymbolicLink()||path==="compose"||path==="temp/compose"||entry.name===".🧬semio"||POLICY.generatedDirectories.includes(entry.name))continue;
+      if(entry.isSymbolicLink()||isOpaqueSourcePathV1(path)||path==="compose"||path==="temp/compose"||entry.name===".🧬semio"||POLICY.generatedDirectories.includes(entry.name))continue;
       if(entry.isDirectory())directories.push(path);else if(entry.isFile()&&entry.name==="Cargo.toml")found.push(path);
     }
     visited++;
@@ -73,7 +74,7 @@ export function inferenceCandidates(configFiles, workspaceRoot) {
   for (const supplied of configFiles) {
     if (typeof supplied !== "string" || !supplied || supplied.includes("\0") || supplied.includes("\uFFFD")) continue;
     const path = buildPath(supplied), parts = path.split("/");
-    if (exampleCollectionPath(path) || isAbsolute(path) || /^[A-Za-z]:/u.test(path) || parts.some(part => !part || part === "." || part === ".." || part === ".🧬semio" || POLICY.generatedDirectories.includes(part)) || path.startsWith("compose/") || path.startsWith("temp/compose/")) continue;
+    if (isOpaqueSourcePathV1(path) || exampleCollectionPath(path) || isAbsolute(path) || /^[A-Za-z]:/u.test(path) || parts.some(part => !part || part === "." || part === ".." || part === ".🧬semio" || POLICY.generatedDirectories.includes(part)) || path.startsWith("compose/") || path.startsWith("temp/compose/")) continue;
     let directory = root, admitted = true;
     for (const part of parts.slice(0, -1)) {
       directory = join(directory, part);
@@ -147,8 +148,8 @@ export function readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,r
 /** 🧵️ Shares physical traversal while keeping each target's matching and exclusions separate. */
 export async function readBuildSourceInputMatchesV1(scans,workspaceRoot,context){
  const matched=new Set(),compileMatched=new Set(),compileByTarget=new Map(),walked=new Map(),matchers=new Map(),matches=(path,pattern)=>{let matcher=matchers.get(pattern);if(!matcher){matcher=loadedProjectInputs.createBuildInputPathMatcherV1(pattern);matchers.set(pattern,matcher);}return matcher(path);};let visited=0;
-  const walk=async root=>{if(walked.has(root))return walked.get(root);const pending=[root],found=[];while(pending.length){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const directory=pending.pop();const absolute=join(workspaceRoot,directory);if(!existsSync(absolute)||!lstatSync(absolute).isDirectory())continue;for(const entry of readdirSync(absolute,{withFileTypes:true})){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const path=buildPath(join(directory,entry.name));if(entry.isSymbolicLink())continue;if(entry.isDirectory()){if(![...POLICY.generatedDirectories,".git",".🧬semio",".nx",".cache","node_modules","dist","target","🗑️generated"].includes(entry.name)&&!(EXAMPLE_COLLECTIONS.includes(entry.name)&&directory.split("/").at(-1)!==WORKSPACE_OWNERSHIP.collections.moduleMember))pending.push(path);}else if(entry.isFile())found.push(path);}}walked.set(root,found);return found;};
- for(const scan of scans){const patterns=scan.patterns,exclusions=patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1));for(const pattern of patterns.filter(value=>!value.startsWith("!"))){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const index=pattern.search(/[?*[{(!]/u),prefix=index<0?pattern:pattern.slice(0,index),root=index<0?dirname(prefix):prefix.endsWith("/")?prefix.slice(0,-1):dirname(prefix),candidates=index<0?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root||".");for(const path of candidates){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);if(matches(path,pattern)&&!exclusions.some(pattern=>matches(path,pattern))){matched.add(path);if(scan.compile){compileMatched.add(path);const rows=compileByTarget.get(scan.target)??new Set();rows.add(path);compileByTarget.set(scan.target,rows);}}}}}
+  const walk=async root=>{if(isOpaqueSourcePathV1(root))return [];if(walked.has(root))return walked.get(root);const pending=[root],found=[];while(pending.length){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const directory=pending.pop();const absolute=join(workspaceRoot,directory);if(!existsSync(absolute)||!lstatSync(absolute).isDirectory())continue;for(const entry of readdirSync(absolute,{withFileTypes:true})){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const path=buildPath(join(directory,entry.name));if(entry.isSymbolicLink()||isOpaqueSourcePathV1(path))continue;if(entry.isDirectory()){if(![...POLICY.generatedDirectories,".git",".🧬semio",".nx",".cache","node_modules","dist","target","🗑️generated"].includes(entry.name)&&!(EXAMPLE_COLLECTIONS.includes(entry.name)&&directory.split("/").at(-1)!==WORKSPACE_OWNERSHIP.collections.moduleMember))pending.push(path);}else if(entry.isFile())found.push(path);}}walked.set(root,found);return found;};
+ for(const scan of scans){const patterns=scan.patterns,exclusions=patterns.filter(value=>value.startsWith("!")).map(value=>value.slice(1));for(const pattern of patterns.filter(value=>!value.startsWith("!"))){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);const index=pattern.search(/[?*[{(!]/u),prefix=index<0?pattern:pattern.slice(0,index),root=index<0?dirname(prefix):prefix.endsWith("/")?prefix.slice(0,-1):dirname(prefix),candidates=index<0?(existsSync(join(workspaceRoot,pattern))?[pattern]:[]):await walk(root||".");for(const path of candidates){await yieldInferenceV1(context,"build:selected-source-inputs",++visited);if(!isOpaqueSourcePathV1(path)&&matches(path,pattern)&&!exclusions.some(pattern=>matches(path,pattern))){matched.add(path);if(scan.compile){compileMatched.add(path);const rows=compileByTarget.get(scan.target)??new Set();rows.add(path);compileByTarget.set(scan.target,rows);}}}}}
  return {matched,compileMatched,compileByTarget};
 }
 

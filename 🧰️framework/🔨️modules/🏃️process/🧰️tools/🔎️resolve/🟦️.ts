@@ -1,25 +1,27 @@
-import { accessSync, constants, existsSync, readdirSync, statSync } from "node:fs";
+import { accessSync, constants, existsSync, readdirSync, realpathSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, dirname, isAbsolute, join, basename } from "node:path";
 import { findToolV1, TOOL_REGISTRY_V1, type ToolEntryV1, type ToolLocatorV1, type ToolRegistryV1 } from "../📖️registry/🟦️.ts";
 import { runtimeCommandNameV1 } from "../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import { readToolPinV1, systemToolPinPortV1, toolDigestForHostV1, type ToolPinPortV1, type ToolPinV1 } from "../📌️pin/🟦️.ts";
+import { nativeCompilerArgumentsV1, selectNativeCompilerV1 } from "../🛠️native-compiler/🟦️.ts";
 
 /** 🔌️ What resolving a tool touches on the host; tests replace it so every platform is testable on any host. */
 export type ToolHostV1 = Readonly<{
   platform: NodeJS.Platform; architecture: string; environment: Readonly<Record<string, string | undefined>>; root: string; home: string; execPath: string; runtimeCommand: string;
   isExecutable(path: string): boolean; exists(path: string): boolean; list(directory: string): readonly string[]; pins: ToolPinPortV1;
+  canonical?(path: string): string;
 }>;
 
 /** 🔎️ Where a tool was found and how to start it: the program, the arguments that precede the caller's, and the locator that found it. */
-export type ToolResolutionV1 = Readonly<{ id: string; command: string | null; prefix: readonly string[]; source: ToolLocatorV1["kind"] | "missing"; tried: readonly string[]; pin: ToolPinV1 }>;
+export type ToolResolutionV1 = Readonly<{ id: string; command: string | null; prefix: readonly string[]; suffix?: readonly string[]; source: ToolLocatorV1["kind"] | "missing"; tried: readonly string[]; pin: ToolPinV1 }>;
 
 /** 🖥️ The real host of this process rooted at a repository checkout. */
 export function systemToolHostV1(root: string, environment: Readonly<Record<string, string | undefined>> = process.env): ToolHostV1 {
   return Object.freeze({
     platform: process.platform, architecture: process.arch, environment, root, home: homedir(), execPath: process.execPath, runtimeCommand: runtimeCommandNameV1(),
     isExecutable: path => { try { if (!statSync(path).isFile()) return false; if (process.platform !== "win32") accessSync(path, constants.X_OK); return true; } catch { return false; } },
-    exists: path => existsSync(path), list: directory => { try { return readdirSync(directory); } catch { return []; } }, pins: systemToolPinPortV1,
+    exists: path => existsSync(path), list: directory => { try { return readdirSync(directory); } catch { return []; } }, canonical: path => realpathSync(path), pins: systemToolPinPortV1,
   });
 }
 
@@ -44,7 +46,7 @@ const packageRoots = (registry: ToolRegistryV1, host: ToolHostV1): readonly stri
 /** 🧱️ Finds one tool on a host by trying its locators in order; a missing tool answers `source: "missing"` with what was tried. A `command` that is not the first executable name of the tool (`rustc` of the Rust toolchain) is only looked up on the path. */
 export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: ToolRegistryV1 = TOOL_REGISTRY_V1, depth = 0, command?: string): ToolResolutionV1 {
   const pin = readToolPinV1(entry, host.root, host.pins), tried: string[] = [];
-  const found = (command: string, source: ToolLocatorV1["kind"], prefix: readonly string[] = []): ToolResolutionV1 => Object.freeze({ id: entry.id, command, prefix, source, tried, pin });
+  const found = (command: string, source: ToolLocatorV1["kind"], prefix: readonly string[] = [], suffix: readonly string[] = []): ToolResolutionV1 => Object.freeze({ id: entry.id, command, prefix, ...(suffix.length ? { suffix } : {}), source, tried, pin });
   const through = (via: string): ToolResolutionV1 | undefined => {
     const tool = findToolV1(via, registry);
     if (tool === undefined || depth > 4) return undefined;
@@ -59,6 +61,10 @@ export function resolveToolV1(entry: ToolEntryV1, host: ToolHostV1, registry: To
       const value = host.environment[locator.name] ?? host.environment[`SEMIO_TOOL_${entry.id.toUpperCase().replace(/-/gu, "_")}`];
       tried.push(locator.name);
       if (value !== undefined && value !== "" && host.exists(value)) return found(value, "environment");
+    } else if (locator.kind === "native-compiler") {
+      tried.push("installed native compiler SDK");
+      const selected = selectNativeCompilerV1({ ...host, canonical: path => host.canonical?.(path) ?? path });
+      if (selected) return found(selected.command, "native-compiler", [], nativeCompilerArgumentsV1(selected));
     } else if (locator.kind === "runtime") {
       tried.push("runtime");
       if (entry.commands.includes(basename(host.execPath).replace(/\.exe$/iu, "")) || entry.commands.includes(host.runtimeCommand)) return found(host.execPath, "runtime");

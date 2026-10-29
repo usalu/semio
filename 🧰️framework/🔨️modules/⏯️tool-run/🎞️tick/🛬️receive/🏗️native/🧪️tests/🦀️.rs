@@ -9,7 +9,7 @@ use protocol::codec::{OriginalWireSourceIdentity,RetainedWireByteSource};
 type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
 fn original(source:&RetainedRecordBodySourceDecode)->(usize,usize,Option<(u64,u64)>,(usize,usize)){let s=source.source_identity();(s.address,s.extent,s.authority,source.original_range())}
 struct Pages<'a>{bytes:&'a[u8]}
-impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.bytes.as_ptr()as usize,extent:self.bytes.len(),authority:Some((42,7))}}fn byte_at(&self,index:usize)->Option<u8>{self.bytes.chunks(7).nth(index/7)?.get(index%7).copied()}}
+impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.bytes.as_ptr()as usize,extent:self.bytes.len(),authority:Some((42,7))}}fn byte_at(&self,index:usize)->Option<u8>{self.bytes.chunks(7).nth(index/7)?.get(index%7).copied()}}
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(v,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(v,(h.requested_bytes,h.released_bytes))}
 fn receive(g:RetainedCloneGrant,p:RetainedCloneProgress,receipt:Receipt,heap:(usize,usize)){assert_eq!(receipt,Some((g,p)));assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),heap)}
 fn identity(source:&Pages<'_>,g:RetainedCloneGrant)->(RetainedRecordBodySourceDecode,ToolRunIdentityReceiving,(usize,usize)){

@@ -1,0 +1,12 @@
+{
+  "extends": "../../../../../tsconfig.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/staffage-typecheck.tsbuildinfo",
+    "types": ["bun"],
+    "paths": {
+      "@teaching/staffage": ["./🟦️.ts"]
+    }
+  },
+  "include": ["./🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/*.ts", "../../🧪️tests/*/🟦️.ts"],
+  "exclude": ["**/node_modules/**"]
+}

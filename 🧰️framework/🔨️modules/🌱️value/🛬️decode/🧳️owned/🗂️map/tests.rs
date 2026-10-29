@@ -29,3 +29,11 @@ fn advance(r:&mut NativeMapReceiver<DslValue,String>,s:&RetainedCloneSource<DslV
   if cut==100{assert!(cursor.output_ready());let(value,h)=heap(||cursor.take().unwrap());assert_eq!(h,(0,0));assert_eq!(value.original_root_identity(),identity);assert!(law["sharedRoot"].as_bool().unwrap());drain(value)}cursor.begin_close();for _ in 0..100000{if cursor.terminal_is_empty(){break}let d=cursor.close_demands(4096).unwrap();let g=grant(d);for denied in denials(g){let(step,h)=heap(||cursor.close_step(denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!(h,(0,0));assert_eq!(cursor.close_demands(4096).unwrap(),d)}let(step,h)=heap(||cursor.close_step(g).unwrap());assert!(step.progress().fits(g));assert_eq!(h,(step.progress().retained_capacity_bytes,step.progress().released_bytes));}assert!(cursor.terminal_is_empty());drain(s)
  }
 }
+
+struct OriginalMapKey{name:String,ordinal:Option<u16>}
+impl NativeValueSource for OriginalMapKey{fn as_source(&self)->&dyn NativeValueSource{self}fn record_key(&self,index:usize)->Result<super::super::NativeRecordKey<'_>,ValueError>{if index!=0{return Err(invalid())}Ok(match self.ordinal{Some(ordinal)=>super::super::NativeRecordKey::Ordinal(ordinal),None=>super::super::NativeRecordKey::Name(&self.name)})}}
+#[test]
+fn dynamic_map_keys_require_an_actual_borrowed_name(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();
+ for case in law["keyCases"].as_array().unwrap(){let input=OriginalMapKey{name:case["key"]["name"].as_str().unwrap_or("").into(),ordinal:case["key"]["ordinal"].as_u64().map(|value|value as u16)};let g=grant(<OrderedMap<String>as NativeReceive<OriginalMapKey>>::receive_birth_demand());let(mut receiver,_)=<OrderedMap<String>as NativeReceive<OriginalMapKey>>::begin_receive(g).unwrap();assert_eq!(receiver.fragment(&input).is_ok(),case["accepted"].as_bool().unwrap());receiver.begin_close();for _ in 0..100000{if receiver.terminal_is_empty(){break}let g=grant(receiver.close_demands(BODY).unwrap());receiver.close_step(g).unwrap();}assert!(receiver.terminal_is_empty());}
+}

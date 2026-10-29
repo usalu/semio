@@ -1463,6 +1463,17 @@
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🌐️workspace/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🔍️discovery/📂️source/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/📋️build-script/🟦️.ts"
+          ]
+        }
       }
     },
     "test-regeneration-commands": {

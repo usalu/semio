@@ -356,3 +356,19 @@ semio-framework-ui-locale = { path = "../../../../../../../../../🔨️modules/
 
 [target.'cfg(not(target_os = "wasi"))'.dev-dependencies]
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+[package.metadata.semio.build-script]
+version = 1
+kind = "link-only"
+script = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/build.rs"
+environment = ["CARGO_CFG_TARGET_OS", "CARGO_CFG_TARGET_ENV"]
+effects = ["cargo:rustc-link-arg-bin"]
+outputs = []
+
+[[package.metadata.semio.build-script.files]]
+path = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/build.rs"
+sha256 = "596f5b41bde0f0527d707cebd2e4ca31578aae654e8013e2002cc6d6ea6fc060"
+
+[[package.metadata.semio.build-script.files]]
+path = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🏗️builder/🦀️.rs"
+sha256 = "ba342d6001b13c69cd0ef660b9812a98e1cf8912aaa5e3af89c97f3825aa221c"

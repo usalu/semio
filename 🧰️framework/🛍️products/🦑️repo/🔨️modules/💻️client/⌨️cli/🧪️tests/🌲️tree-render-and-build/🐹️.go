@@ -10,6 +10,11 @@ package client
 
 import (
 	"context"
+	"encoding/json"
+	sandbox "github.com/usalu/semio/repo/workspace/sandbox"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -169,9 +174,14 @@ func TestExhaustiveBuildMonorepoTree(t *testing.T) {
 	withExhaustiveRepo(t)
 
 	ctx := context.Background()
-	treeNoSections := BuildMonorepoTreeCached(ctx)
-	treeSections := BuildMonorepoTreeCached(ctx, TreeBuildOptions{IncludeSections: true})
-
+	treeNoSections, err := BuildMonorepoTreeCached(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	treeSections, err := BuildMonorepoTreeCached(ctx, TreeBuildOptions{IncludeSections: true})
+	if err != nil {
+		t.Fatal(err)
+	}
 	t.Run("builds tree with categories", func(t *testing.T) {
 		if treeNoSections == nil {
 			t.Fatal("tree should not be nil")
@@ -343,4 +353,105 @@ func TestExhaustiveBuildMonorepoTree(t *testing.T) {
 		}
 		walk(treeNoSections)
 	})
+}
+
+func TestClientCachedTreeRefreshesPersistentDomainRecordsWithoutSourceChanges(t *testing.T) {
+	root := initTestGitRepo(t, "main")
+	previousRoot := GetRootDir()
+	SetRootDir(root)
+	t.Cleanup(func() { SetRootDir(previousRoot) })
+	data, err := os.ReadFile(sandbox.OriginPath("..", "..", "🔎️search", "🧪️tests", "🧫️fixtures", "🌲️snapshot", "🔣️.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var fixture struct{ DomainRefresh struct{ Titles []string } }
+	if err := json.Unmarshal(data, &fixture); err != nil {
+		t.Fatal(err)
+	}
+	firstTitle, secondTitle := fixture.DomainRefresh.Titles[0], fixture.DomainRefresh.Titles[1]
+
+	path := filepath.Join(GetRepoGoalsDir(), "identity", "🎯️goal.json")
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		t.Fatal(err)
+	}
+	write := func(title string) {
+		data, _ := json.Marshal(map[string]string{"title": title, "status": "open"})
+		if err := os.WriteFile(path, data, 0600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	label := func(root *TreeNode) string {
+		var find func(*TreeNode) string
+		find = func(node *TreeNode) string {
+			if node.Kind == TreeNodeGoal {
+				return node.Label
+			}
+			for _, child := range node.Children {
+				if found := find(child); found != "" {
+					return found
+				}
+			}
+			return ""
+		}
+		return find(root)
+	}
+	write("baseline title")
+	git := func(args ...string) string {
+		command := exec.Command("git", args...)
+		command.Dir = root
+		output, err := command.CombinedOutput()
+		if err != nil {
+			t.Fatalf("fixture git %v: %v %s", args, err, output)
+		}
+		return string(output)
+	}
+	git("add", "--", path)
+	git("commit", "-m", "record fixture")
+	write(firstTitle)
+	beforeStatus := git("status", "--porcelain", "--untracked-files=no")
+	first, err := BuildMonorepoTreeCached(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshotPath := filepath.Join(getCacheDir(), "tree", "snapshot", "payload.json.gz")
+	beforeSnapshot, err := os.Stat(snapshotPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if label(first) != firstTitle {
+		t.Fatalf("initial goal=%q", label(first))
+	}
+	indexed, err := SearchMonorepoTreeWithOptions(context.Background(), first, "first", TreeSearchOptions{Limit: 4})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if label(indexed) != firstTitle {
+		t.Fatal("initial domain record absent from index")
+	}
+	write(secondTitle)
+	afterStatus := git("status", "--porcelain", "--untracked-files=no")
+	if beforeStatus != afterStatus || !strings.Contains(afterStatus, "M ") {
+		t.Fatalf("fixture status differs: %q -> %q", beforeStatus, afterStatus)
+	}
+	second, err := BuildMonorepoTreeCached(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	afterSnapshot, err := os.Stat(snapshotPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !os.SameFile(beforeSnapshot, afterSnapshot) {
+		t.Fatal("domain-only edit rebuilt authored codebase snapshot")
+	}
+	if label(second) != secondTitle {
+		t.Fatalf("warm goal retained stale value %q", label(second))
+	}
+	indexed, err = SearchMonorepoTreeWithOptions(context.Background(), second, "second", TreeSearchOptions{Limit: 4})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if label(indexed) != secondTitle {
+		t.Fatalf("warm index retained stale domain value %q", label(indexed))
+	}
 }

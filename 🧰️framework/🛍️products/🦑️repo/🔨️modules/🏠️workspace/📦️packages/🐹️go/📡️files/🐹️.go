@@ -213,6 +213,28 @@ func NormalizeRepoPath(path string) string {
 // 💿️isRepoExcludedPath holds the data fields for a isRepoExcludedPath record.
 func IsRepoExcludedPath(path string) bool {
 	normalized := NormalizeRepoPath(path)
+	for _, component := range strings.Split(normalized, "/") {
+		for _, generated := range opaqueGeneratedDirectories {
+			if component == generated {
+				return true
+			}
+		}
+		for _, prefix := range []string{opaquePreservationPrefix, opaqueRetirementPrefix} {
+			if len(component) != len(prefix)+opaqueSourceDigestHex || !strings.HasPrefix(component, prefix) {
+				continue
+			}
+			valid := true
+			for _, digit := range component[len(prefix):] {
+				if !((digit >= '0' && digit <= '9') || (digit >= 'a' && digit <= 'f')) {
+					valid = false
+					break
+				}
+			}
+			if valid {
+				return true
+			}
+		}
+	}
 	if normalized == "" {
 		return false
 	}

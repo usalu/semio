@@ -110,7 +110,7 @@ const checkCaller = (entry: ToolEntryV1, registry: ToolRegistryV1, root: string,
 
 /** 🔎️ Resolves a tool on the host, remembering a hit per root so repeated runs do not search again. */
 export function resolveRegisteredToolV1(entry: ToolEntryV1, root: string, options: ToolRunOptionsV1 = {}): ToolResolutionV1 {
-  const registry = options.registry ?? TOOL_REGISTRY_V1, key = `${root}\0${entry.id}\0${options.command ?? ""}`, cached = options.host === undefined && options.env === undefined && options.registry === undefined ? resolved.get(key) : undefined;
+  const registry = options.registry ?? TOOL_REGISTRY_V1, key = `${root}\0${entry.id}\0${options.command ?? ""}`, cached = entry.id !== "cc" && options.host === undefined && options.env === undefined && options.registry === undefined ? resolved.get(key) : undefined;
   if (cached !== undefined) return cached;
   const resolution = resolveToolV1(entry, options.host ?? systemToolHostV1(root, options.env ?? process.env), registry, 0, options.command);
   if (resolution.command !== null && options.host === undefined && options.env === undefined && options.registry === undefined) resolved.set(key, resolution);
@@ -149,7 +149,8 @@ const capture = (command: string, args: readonly string[], cwd: string, environm
 /** 🏃️ Runs a registered tool: checks the declared caller (`caller: import.meta.url`; the static law reads the call sites, because a stack cannot attribute tail calls) against the registry, finds the executable, builds the sanitized environment, waits for machine capacity when the tool is heavy, and runs it with progress and process-tree cancellation. A failed run throws unless `check: false`; `capture: true` returns the output instead of forwarding it. */
 export async function runToolV1(toolId: string, args: readonly string[], options: ToolRunOptionsV1 = {}): Promise<ToolRunResultV1> {
   const { entry, registry, language, resolution, environment, cwd } = prepare(toolId, options);
-  const started = performance.now(), label = options.label ?? entry.id, command = resolution.command!, fullArguments = [...resolution.prefix, ...args];
+  const started = performance.now(), label = options.label ?? entry.id, command = resolution.command!, fullArguments = [...resolution.prefix, ...args, ...resolution.suffix ?? []];
+  const requested = (options.command ?? entry.commands[0]!).replace(/\\/gu, "/").split("/").pop()!.replace(/\.(?:exe|cmd|bat)$/iu, ""), capacity = entry.capacity.rules?.find(rule => rule.command === requested && rule.argumentsPrefix.every((value, index) => args[index] === value)) ?? entry.capacity;
   const emit = (event: Omit<ToolProgressV1, "tool" | "elapsedMs">): void => options.onProgress?.({ tool: entry.id, elapsedMs: Math.round(performance.now() - started), ...event });
   const admit = options.admission === false || entry.capacity.mode === "none" || entry.capacity.mode === "inherit" && options.heavy !== true ? undefined : options.admission ?? defaultAdmission;
   const execute = async (granted: Readonly<Record<string, string>>): Promise<ToolRunResultV1> => {
@@ -177,7 +178,7 @@ export async function runToolV1(toolId: string, args: readonly string[], options
   };
   if (admit === undefined) return execute({});
   emit({ phase: "admitting" });
-  return admit({ tool: entry.id, operation: entry.capacity.operation ?? "command", kind: entry.capacity.kind, label }, grant => execute(grant.environment), options.signal);
+  return admit({ tool: entry.id, operation: capacity.operation ?? "command", kind: capacity.kind, label }, grant => execute(grant.environment), options.signal);
 }
 
 /** ⏱️ What a finished synchronous tool run left behind: Node's `spawnSync` result plus the resolution; `stdout` and `stderr` are strings under a text `encoding` and buffers otherwise. */
@@ -189,8 +190,8 @@ export function runToolSyncV1(toolId: string, args: readonly string[], options?:
 export function runToolSyncV1(toolId: string, args: readonly string[], options?: ToolRunOptionsV1): ToolSyncResultV1<string | Buffer>;
 export function runToolSyncV1(toolId: string, args: readonly string[], options: ToolRunOptionsV1 = {}): ToolSyncResultV1<string | Buffer> {
   const { entry, registry, language, resolution, environment, cwd } = prepare(toolId, options);
-  requireExplicitBunTestOperandsV1(resolution.command!, [...resolution.prefix, ...args], cwd, environment, testCheckoutRootV1(cwd, environment as NodeJS.ProcessEnv) ?? cwd);
-  const result = spawnSync(resolution.command!, [...resolution.prefix, ...args], {
+  requireExplicitBunTestOperandsV1(resolution.command!, [...resolution.prefix, ...args, ...resolution.suffix ?? []], cwd, environment, testCheckoutRootV1(cwd, environment as NodeJS.ProcessEnv) ?? cwd);
+  const result = spawnSync(resolution.command!, [...resolution.prefix, ...args, ...resolution.suffix ?? []], {
     cwd, env: environment, encoding: options.encoding ?? "buffer", maxBuffer: options.maxBuffer ?? 64 * 1024 * 1024, windowsHide: true,
     ...options.stdio === undefined ? {} : { stdio: options.stdio }, ...options.timeout ? { timeout: options.timeout } : {}, ...options.killSignal === undefined ? {} : { killSignal: options.killSignal }, ...options.input === undefined ? {} : { input: options.input },
   });
@@ -202,8 +203,8 @@ export function runToolSyncV1(toolId: string, args: readonly string[], options: 
 /** 🌊️ Starts a registered tool and answers its process at once, for streams, long runs and children the caller cancels itself (a stream exists only for a stdio entry set to `pipe`); the registry resolves the executable and sanitizes the environment, every other option is Node's. */
 export function startToolV1(toolId: string, args: readonly string[], options: ToolRunOptionsV1 = {}): ChildProcessByStdio<Writable, Readable, Readable> {
   const { resolution, environment, cwd } = prepare(toolId, options);
-  requireExplicitBunTestOperandsV1(resolution.command!, [...resolution.prefix, ...args], cwd, environment, testCheckoutRootV1(cwd, environment as NodeJS.ProcessEnv) ?? cwd);
-  return spawn(resolution.command!, [...resolution.prefix, ...args], {
+  requireExplicitBunTestOperandsV1(resolution.command!, [...resolution.prefix, ...args, ...resolution.suffix ?? []], cwd, environment, testCheckoutRootV1(cwd, environment as NodeJS.ProcessEnv) ?? cwd);
+  return spawn(resolution.command!, [...resolution.prefix, ...args, ...resolution.suffix ?? []], {
     cwd, env: environment, windowsHide: true, ...options.stdio === undefined ? {} : { stdio: options.stdio }, ...options.detached === undefined ? {} : { detached: options.detached }, ...options.signal === undefined ? {} : { signal: options.signal },
     ...options.timeout ? { timeout: options.timeout } : {}, ...options.killSignal === undefined ? {} : { killSignal: options.killSignal },
   }) as ChildProcessByStdio<Writable, Readable, Readable>;
@@ -212,7 +213,7 @@ export function startToolV1(toolId: string, args: readonly string[], options: To
 /** 🩺️ Asks a resolved tool for its version with the registry probe; null when the tool has no probe, is missing or does not answer in time. */
 export function probeToolV1(entry: ToolEntryV1, resolution: ToolResolutionV1, environment: Readonly<Record<string, string | undefined>> = process.env, root: string = process.cwd()): string | null {
   if (entry.probe === undefined || resolution.command === null) return null;
-  const result = spawnSync(resolution.command, [...resolution.prefix, ...entry.probe.arguments], { cwd: root, env: toolEnvironmentV1(entry, environment, {}, { root }) , encoding: "utf8", timeout: 10_000, windowsHide: true });
+  const result = spawnSync(resolution.command, [...resolution.prefix, ...entry.probe.arguments, ...resolution.suffix ?? []], { cwd: root, env: toolEnvironmentV1(entry, environment, {}, { root }) , encoding: "utf8", timeout: 10_000, windowsHide: true });
   const match = new RegExp(entry.probe.pattern, "mu").exec(`${result.stdout ?? ""}\n${result.stderr ?? ""}`);
   return result.status === 0 && match !== null ? match[1] ?? match[0] : null;
 }

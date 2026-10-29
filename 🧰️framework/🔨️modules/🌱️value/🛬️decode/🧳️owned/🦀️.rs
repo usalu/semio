@@ -39,8 +39,8 @@ pub trait NativeReceive<I:?Sized>:RetireOwned+Sized{
 
 /// 🧬️ Schema membership quotes every fixed key comparison before a flattened original record read.
 pub trait NativeRecordFields{
- fn native_field_memberships(key:&str)->usize;
- fn native_field_key_bytes()->usize;
+ fn native_field_memberships(key:NativeRecordKey<'_>)->usize;
+ fn native_field_key_bytes(key:NativeRecordKey<'_>)->usize;
 }
 
 /// 🫴️ The original input remains held until staged output and every alias complete funded transfer or closure.

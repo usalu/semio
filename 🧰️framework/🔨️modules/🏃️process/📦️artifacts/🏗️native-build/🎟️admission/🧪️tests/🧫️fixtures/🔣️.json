@@ -350,7 +350,7 @@
         6000000000
       ],
       "q": 0.95,
-      "value": 5900000000.0
+      "value": 5900000000
     }
   ],
   "predictions": [
@@ -1003,6 +1003,46 @@
       "tokens": 1,
       "parallelism": 8,
       "bytes": 6576668672
+    }
+  ],
+  "schedulerSelections": [
+    {
+      "examples": false,
+      "arguments": [
+        "build",
+        "--locked",
+        "--release",
+        "--manifest-path",
+        "$manifest",
+        "--bins"
+      ],
+      "mode": "release"
+    },
+    {
+      "examples": true,
+      "arguments": [
+        "build",
+        "--locked",
+        "--release",
+        "--manifest-path",
+        "$manifest",
+        "--bins",
+        "--examples"
+      ],
+      "mode": "release"
+    },
+    {
+      "examples": false,
+      "mode": "prototype",
+      "arguments": [
+        "build",
+        "--locked",
+        "--profile",
+        "prototype",
+        "--manifest-path",
+        "$manifest",
+        "--bins"
+      ]
     }
   ]
 }

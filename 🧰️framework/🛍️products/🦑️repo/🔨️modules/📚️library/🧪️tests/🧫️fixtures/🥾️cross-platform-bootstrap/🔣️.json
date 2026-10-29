@@ -1,8 +1,10 @@
 {
   "pathBudget": {
     "unit": "utf16",
-    "windowsMaxPath": 260,
-    "cloneRootMax": 46,
+    "maximumAbsolutePathUnits": 256,
+    "windowsApiPathUnits": 260,
+    "windowsDirectoryReserveUnits": 13,
+    "clonePrefixUnits": 46,
     "componentMax": 255
   },
   "scriptEncoding": {

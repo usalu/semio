@@ -1,0 +1,15 @@
+# Canonical Caching Test Aggregate Design
+
+Read-only design from current authored tables/routes, 2026-10-29. No Source edits or commands launched.
+
+Current inventory:104 caching table suites,52 build table suites,21 explicit caching codeSuites,177 unique route IDs. Root workspace:test selects each project’s literal test target. Caching project test currently runs its default contracts body only, so table registration alone does not imply aggregate execution. Keep the49-leaf workspace preservation selection unchanged.
+
+Recommended ownership: make the caching project’s test aggregate order every canonical route once through existing targets. Derive dependency selection from the closed tables and actual command/cwd-to-route mapping, not a second handwritten177-name list.175 use test-<id>; repository-exact is test-repository-exact-cargo and bootstrap-original-invocation is test-bootstrap-original-invocation-source. These are existing legitimate domain target names, not reasons to introduce compatibility aliases. Preserve each target’s executable/resource closure, genuine launcher, grants, language, scratch, platform, tools and budget; aggregate target must not also rerun them inside its process.
+
+A schema-owned aggregate policy should bind its owner manifest and table identities, define included row categories and reserved self-target, and reject missing/ambiguous route targets, duplicate route coverage and dependency paths back to the aggregate/workspace:test. Resolve from actual closed route command structure used by existing suite route law. Existing177 selected targets have no direct default-test dependency, but test transitive cycles as part of admission.
+
+Preserve useful current default testCacheContracts assertions in one explicit contracts leaf. Separate any nested canonical-suite execution already performed by that body (artifact-publication/native-artifact-publication) so they are not executed twice when all canonical leaves are independently ordered. The aggregate can be repo:noop with those exact dependencies; a CLI default test may delegate to the same schema-derived owner plan only if doing so does not introduce a second scheduler or merge different births. Each actual leaf retains its own received Original; no union capability envelope or common birth.
+
+Neutral tests: table route additions automatically enter aggregate; renamed legitimate target key still maps by exact command; missing route, duplicate matching command and self/transitive cycle refuse; foreign helper entries do not become executable; host skip stays explicit; failure aggregation never hides unattempted independent routes while cancellation stops promptly. Independent SQLite route join/anti-join and existing project schema validate selection. Actual small representative aggregate proves each child once and separately issued birth/scratch; do not launch all177 merely to test selection logic.
+
+Root owns implementation. This design does not claim new aggregate dependencies exist yet.

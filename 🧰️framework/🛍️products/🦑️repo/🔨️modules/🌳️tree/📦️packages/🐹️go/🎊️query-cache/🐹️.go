@@ -9,18 +9,20 @@
 package tree
 
 import (
+	bytes "bytes"
 	context "context"
 	sha256 "crypto/sha256"
 	hex "encoding/hex"
 	json "encoding/json"
 	errors "errors"
 	fmt "fmt"
+	io "io"
 	os "os"
 	filepath "path/filepath"
 	sort "sort"
 	strconv "strconv"
 	strings "strings"
-	time "time"
+	sync "sync"
 
 	codebase "github.com/usalu/semio/repo/codebase"
 	search "github.com/usalu/semio/repo/search"
@@ -31,7 +33,7 @@ import (
 
 // 🗄️Local event index under .🦑️repo/⚡️cache for keyword search. Uses a composite repository fingerprint for invalidation.
 // 📌️cacheSchemaVersion holds the data fields for a cacheSchemaVersion record.
-const cacheSchemaVersion = 3
+const cacheSchemaVersion = 6
 
 // 💿️cacheMeta holds the data fields for a cacheMeta record.
 type cacheMeta struct {
@@ -44,6 +46,7 @@ type cacheMeta struct {
 	PointersHash      string            `json:"PointersHash"`
 	SubWorkingHash    string            `json:"SubWorkingHash"`
 	Fingerprint       string            `json:"Fingerprint"`
+	Scope             string            `json:"Scope"`
 	IncludeSections   bool              `json:"IncludeSections"`
 }
 
@@ -54,12 +57,7 @@ func getCacheDir() string {
 	return filepath.Join(workspace.GetRepoMetaDir(), "⚡️cache", hex.EncodeToString(h[:]))
 }
 
-func computeCompositeFingerprint(repoRoot string) (fp string, meta *cacheMeta) {
-	fp, meta, _ = computeCompositeFingerprintContext(context.Background(), repoRoot)
-	return fp, meta
-}
-
-func computeCompositeFingerprintContext(ctx context.Context, repoRoot string) (fp string, meta *cacheMeta, err error) {
+func computeCompositeFingerprintContext(ctx context.Context, repoRoot string, progress func(search.Progress)) (fp string, meta *cacheMeta, err error) {
 	meta = &cacheMeta{
 		SchemaVersion:     cacheSchemaVersion,
 		SubmodulePointers: map[string]string{},
@@ -123,21 +121,20 @@ func computeCompositeFingerprintContext(ctx context.Context, repoRoot string) (f
 	if err := ctx.Err(); err != nil {
 		return "", nil, err
 	}
-	composeMetaHash := hashComposeMetaState(repoRoot)
+	sourceDigest, sourceError := search.FingerprintSource(ctx, repoRoot, workspace.IsRepoExcludedPath, progress)
+	if sourceError != nil {
+		return "", nil, sourceError
+	}
 	if err := ctx.Err(); err != nil {
 		return "", nil, err
 	}
 	meta.SubWorkingHash = hashString(strings.Join(subWork, "|"))
-	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + composeMetaHash + strconv.Itoa(cacheSchemaVersion))
+	fp = hashString(meta.SuperHead + meta.SuperDirtyHash + meta.PointersHash + meta.SubWorkingHash + sourceDigest + strconv.Itoa(cacheSchemaVersion))
 	meta.Fingerprint = fp
 	return fp, meta, nil
 }
 
 // 🧭️getSubmoduleStatus returns recursive submodule status when available.
-func getSubmoduleStatus(repoRoot string) string {
-	stdout, _ := getSubmoduleStatusContext(context.Background(), repoRoot)
-	return stdout
-}
 
 func getSubmoduleStatusContext(ctx context.Context, repoRoot string) (string, error) {
 	stdout, _, exitCode := workspace.ExecCommandContext(ctx, "git", []string{"submodule", "status", "--recursive"}, repoRoot)
@@ -155,28 +152,6 @@ func getSubmoduleStatusContext(ctx context.Context, repoRoot string) (string, er
 		return fallback, nil
 	}
 	return stdout, nil
-}
-
-// ♻️hashComposeMetaState MUST produce a stable hash for compose metadata state changes.
-// hashComposeMetaState computes and returns a hash for compose metadata content relevant to tree cache invalidation.
-// Only structural changes (new goals, tickets, policies, drafts) invalidate the cache.
-// ✏️Ephemeral data (agent session logs, ticket agent tracking updates) is excluded.
-func hashComposeMetaState(repoRoot string) string {
-	metaRoot := workspace.RepoMetaDirForRoot(repoRoot)
-	if !workspace.FileExists(metaRoot) {
-		return ""
-	}
-	var parts []string
-	for _, top := range []string{"🎯️goals", "👮️", "📝️", "📊️metrics", "✍️notes"} {
-		p := filepath.Join(metaRoot, top)
-		if st, err := os.Stat(p); err == nil {
-			parts = append(parts, "d:"+top+":"+strconv.FormatInt(st.ModTime().UnixNano(), 10))
-		}
-	}
-	tickets, _ := filepath.Glob(filepath.Join(metaRoot, "🎫️tickets", "*", "*", "*", "*"))
-	sort.Strings(tickets)
-	parts = append(parts, "tickets:"+strings.Join(tickets, ","))
-	return hashString(strings.Join(parts, "|"))
 }
 
 func treeNodeScopePath(node *TreeNode) string {
@@ -209,16 +184,41 @@ func hashString(s string) string {
 // 🔷️loadCacheMeta holds the data fields for a loadCacheMeta record.
 func loadCacheMeta(indexPath string) (*cacheMeta, error) {
 	p := filepath.Join(indexPath, "meta.json")
-	data, err := os.ReadFile(p)
+	info, err := os.Lstat(p)
 	if err != nil {
 		return nil, err
 	}
-	var m cacheMeta
-	if err := json.Unmarshal(data, &m); err != nil {
+	if !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 {
+		return nil, fmt.Errorf("%w: ordinary search metadata required", search.ErrCorrupt)
+	}
+	file, err := os.Open(p)
+	if err != nil {
 		return nil, err
 	}
+	opened, err := file.Stat()
+	if err != nil || !os.SameFile(info, opened) {
+		file.Close()
+		return nil, fmt.Errorf("%w: search metadata identity changed", search.ErrCorrupt)
+	}
+	data, err := io.ReadAll(io.LimitReader(file, search.MaxManifestBytes+1))
+	closing := file.Close()
+	if err != nil || closing != nil {
+		return nil, errors.Join(err, closing)
+	}
+	if len(data) > search.MaxManifestBytes {
+		return nil, fmt.Errorf("%w: search metadata byte budget", search.ErrCorrupt)
+	}
+	var m cacheMeta
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.DisallowUnknownFields()
+	if err = decoder.Decode(&m); err != nil {
+		return nil, err
+	}
+	if err = decoder.Decode(new(interface{})); err != io.EOF {
+		return nil, fmt.Errorf("%w: trailing search metadata", search.ErrCorrupt)
+	}
 	if m.SchemaVersion != cacheSchemaVersion {
-		return nil, fmt.Errorf("schema version mismatch")
+		return nil, os.ErrNotExist
 	}
 	return &m, nil
 }
@@ -233,38 +233,22 @@ func saveCacheMeta(indexPath string, m *cacheMeta) error {
 	if err != nil {
 		return err
 	}
-	return os.WriteFile(filepath.Join(dir, "meta.json"), data, 0644)
+	if len(data) > search.MaxManifestBytes {
+		return fmt.Errorf("%w: search metadata byte budget", search.ErrTooLarge)
+	}
+	file, err := os.OpenFile(filepath.Join(dir, "meta.json"), os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	if err != nil {
+		return err
+	}
+	count, writeErr := file.Write(data)
+	if writeErr == nil && count != len(data) {
+		writeErr = io.ErrShortWrite
+	}
+	syncErr := file.Sync()
+	return errors.Join(writeErr, syncErr, file.Close())
 }
 
 // 🛤️getChangedPathsFromGit holds the data fields for a getChangedPathsFromGit record.
-func getChangedPathsFromGit(repoRoot string) []string {
-	statusOut, _, _ := workspace.ExecCommand("git", []string{"status", "--porcelain", "-z"}, repoRoot)
-	diffOut, _, _ := workspace.ExecCommand("git", []string{"diff", "--name-only", "HEAD"}, repoRoot)
-	untrackedOut, _, _ := workspace.ExecCommand("git", []string{"ls-files", "-o", "--exclude-standard"}, repoRoot)
-	paths := make(map[string]bool)
-	for _, s := range strings.Split(strings.TrimSpace(statusOut), "\x00") {
-		s = strings.TrimSpace(s)
-		if len(s) >= 4 {
-			paths[strings.TrimSpace(s[3:])] = true
-		}
-	}
-	for _, p := range strings.Split(strings.TrimSpace(diffOut), "\n") {
-		p = strings.TrimSpace(p)
-		if p != "" {
-			paths[p] = true
-		}
-	}
-	for _, p := range strings.Split(strings.TrimSpace(untrackedOut), "\n") {
-		if p != "" {
-			paths[p] = true
-		}
-	}
-	var result []string
-	for p := range paths {
-		result = append(result, p)
-	}
-	return result
-}
 
 // 🔹️expandPathsWithAncestors holds the data fields for a expandPathsWithAncestors record.
 func expandPathsWithAncestors(paths []string) []string {
@@ -332,254 +316,253 @@ func pathToNodesMap(root *TreeNode) map[string][]*TreeNode {
 	return m
 }
 
-const maxSearchCacheLockAttempts = 60
-
 // 🔸️ensureCacheIndexed builds a bounded staged index and atomically commits it after verification.
-func ensureCacheIndexed(ctx context.Context, root *TreeNode, progress func(search.Progress)) (search.Index, error) {
+func ensureCacheIndexed(ctx context.Context, root *TreeNode, scope string, progress func(search.Progress)) (search.Index, error) {
 	if err := ctx.Err(); err != nil {
 		return nil, err
 	}
 	repoRoot := workspace.GetRootDir()
 	reportSearchProgress(progress, search.Progress{Step: "fingerprinting"})
-	fingerprint, newMeta, err := computeCompositeFingerprintContext(ctx, repoRoot)
+	fingerprint, newMeta, err := computeCompositeFingerprintContext(ctx, repoRoot, progress)
 	if err != nil {
 		return nil, err
 	}
+	projectionDigest, err := fingerprintSearchProjection(ctx, root)
+	if err != nil {
+		return nil, err
+	}
+	fingerprint = hashString(fingerprint + projectionDigest)
+	newMeta.Fingerprint = fingerprint
 	includesSections, err := treeIncludesSections(ctx, root)
 	if err != nil {
 		return nil, err
 	}
 	newMeta.IncludeSections = includesSections
+	newMeta.Scope = scope
+	if len(scope) > 4096 {
+		return nil, fmt.Errorf("%w: search scope bytes", search.ErrTooLarge)
+	}
 	dir := getCacheDir()
+	if scope != "" {
+		dir = filepath.Join(dir, "scope-"+hashString(scope))
+	}
 	indexPath := filepath.Join(dir, "index.search")
 	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, err
 	}
-	release, err := acquireSearchCacheLock(ctx, filepath.Join(dir, ".lock"), progress)
+	readLease, err := search.AcquireGenerationLease(ctx, filepath.Join(dir, ".lock"), true, progress)
 	if err != nil {
 		return nil, err
 	}
-	defer release()
-	if err := recoverSearchIndexSwap(indexPath); err != nil {
-		return nil, err
+	release := readLease.Close
+	returned := false
+	defer func() {
+		if !returned {
+			_ = release()
+		}
+	}()
+	retain := func(index search.Index) search.Index {
+		returned = true
+		return &lockedSearchIndex{heldSearchIndex: index, release: release}
 	}
-	existing, metaErr := loadCacheMeta(indexPath)
-	if metaErr == nil && existing.Fingerprint == fingerprint && existing.IncludeSections == includesSections {
-		index, err := search.Open(indexPath)
+	warm, warmErr := loadCacheMeta(indexPath)
+	pending := false
+	for _, path := range []string{indexPath + ".next", indexPath + ".previous"} {
+		if _, err := os.Lstat(path); err == nil {
+			pending = true
+		} else if !os.IsNotExist(err) {
+			return nil, err
+		}
+	}
+	if warmErr == nil && warm.Fingerprint == fingerprint && warm.Scope == scope && warm.IncludeSections == includesSections && !pending {
+		index, err := search.OpenShardedContext(ctx, indexPath, nil)
 		if err != nil {
 			return nil, fmt.Errorf("open current search index: %w", err)
 		}
 		reportSearchProgress(progress, search.Progress{Current: 1, Total: 1, Step: "ready"})
-		return index, nil
+		return retain(index), nil
+	}
+	if err = release(); err != nil {
+		return nil, err
+	}
+	release, err = acquireSearchCacheLock(ctx, filepath.Join(dir, ".lock"), progress)
+	if err != nil {
+		release = func() error { return nil }
+		return nil, err
+	}
+	if err := search.RecoverGenerationSwap(indexPath); err != nil {
+		return nil, err
+	}
+	existing, metaErr := loadCacheMeta(indexPath)
+	if metaErr == nil && existing.Fingerprint == fingerprint && existing.Scope == scope && existing.IncludeSections == includesSections {
+		index, err := search.OpenShardedContext(ctx, indexPath, nil)
+		if err != nil {
+			return nil, fmt.Errorf("open current search index: %w", err)
+		}
+		reportSearchProgress(progress, search.Progress{Current: 1, Total: 1, Step: "ready"})
+		return retain(index), nil
 	}
 	if metaErr != nil && !os.IsNotExist(metaErr) {
 		return nil, fmt.Errorf("load search index metadata: %w", metaErr)
-	}
-	nodes, err := collectSearchIndexNodes(ctx, root, progress)
-	if err != nil {
-		return nil, err
 	}
 	stagedPath := indexPath + ".next"
 	if err := os.RemoveAll(stagedPath); err != nil {
 		return nil, err
 	}
-	staged, err := search.New(stagedPath, search.NewIndexMapping())
+	staged, err := search.NewSharded(stagedPath, hashString(fingerprint+":"+scope+":"+strconv.FormatBool(includesSections)))
 	if err != nil {
 		return nil, err
 	}
-	cleanup := func() { _ = os.RemoveAll(stagedPath) }
-	for offset, node := range nodes {
-		if err := ctx.Err(); err != nil {
-			cleanup()
-			return nil, err
-		}
-		documentID := node.ID
-		if documentID == "" {
-			documentID = node.Label
-		}
-		document := map[string]interface{}{"text": buildSearchDocumentText(node)}
-		if path := treeNodeScopePath(node); path != "" {
-			document["path"] = path
-		}
-		if err := staged.IndexContext(ctx, documentID, document, nil); err != nil {
-			cleanup()
-			return nil, fmt.Errorf("index %q: %w", documentID, err)
-		}
-		reportSearchProgress(progress, search.Progress{Current: offset + 1, Total: len(nodes), Step: "indexed"})
+	defer func() { _ = staged.Abort(); _ = os.RemoveAll(stagedPath) }()
+	cleanup := func(failure error) error { return errors.Join(failure, staged.Abort(), os.RemoveAll(stagedPath)) }
+	indexed, err := streamTreeSearchIndex(ctx, root, staged, progress)
+	if err != nil {
+		return nil, cleanup(err)
 	}
 	if err := ctx.Err(); err != nil {
-		cleanup()
-		return nil, err
+		return nil, cleanup(err)
 	}
 	if err := staged.CloseContext(ctx, func(value search.Progress) {
 		value.Step = "persisting-" + value.Step
 		reportSearchProgress(progress, value)
 	}); err != nil {
-		cleanup()
-		return nil, fmt.Errorf("persist staged search index: %w", err)
+		return nil, cleanup(fmt.Errorf("persist staged search index: %w", err))
 	}
 	if err := saveCacheMeta(stagedPath, newMeta); err != nil {
-		cleanup()
-		return nil, err
+		return nil, cleanup(err)
 	}
-	verified, err := search.Open(stagedPath)
+	verified, err := search.OpenShardedContext(ctx, stagedPath, nil)
 	if err != nil {
-		cleanup()
-		return nil, fmt.Errorf("verify staged search index: %w", err)
+		return nil, cleanup(fmt.Errorf("verify staged search index: %w", err))
 	}
 	if err := verified.Close(); err != nil {
-		cleanup()
-		return nil, err
+		return nil, cleanup(err)
 	}
 	if err := ctx.Err(); err != nil {
-		cleanup()
-		return nil, err
+		return nil, cleanup(err)
 	}
-	if err := commitSearchIndexSwap(indexPath, stagedPath); err != nil {
-		cleanup()
-		return nil, err
+	if err := search.CommitGenerationSwap(indexPath, stagedPath); err != nil {
+		return nil, cleanup(err)
 	}
-	reportSearchProgress(progress, search.Progress{Current: len(nodes), Total: len(nodes), Step: "committed"})
-	index, err := search.Open(indexPath)
+	reportSearchProgress(progress, search.Progress{Current: indexed, Total: indexed, Step: "committed"})
+	index, err := search.OpenShardedContext(ctx, indexPath, nil)
 	if err != nil {
 		return nil, fmt.Errorf("open committed search index: %w", err)
 	}
-	return index, nil
+	return retain(index), nil
 }
 
-func acquireSearchCacheLock(ctx context.Context, path string, progress func(search.Progress)) (func(), error) {
-	for attempt := 0; attempt < maxSearchCacheLockAttempts; attempt++ {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		lock, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
-		if err == nil {
-			if err := lock.Close(); err != nil {
-				_ = os.Remove(path)
-				return nil, err
-			}
-			return func() { _ = os.Remove(path) }, nil
-		}
-		if !os.IsExist(err) {
-			return nil, err
-		}
-		if info, statErr := os.Stat(path); statErr == nil && time.Since(info.ModTime()) > 5*time.Minute {
-			if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
-				return nil, err
-			}
-			continue
-		}
-		reportSearchProgress(progress, search.Progress{Current: attempt + 1, Total: maxSearchCacheLockAttempts, Step: "waiting-lock"})
-		timer := time.NewTimer(200 * time.Millisecond)
-		select {
-		case <-ctx.Done():
-			if !timer.Stop() {
-				<-timer.C
-			}
-			return nil, ctx.Err()
-		case <-timer.C:
-		}
+func acquireSearchCacheLock(ctx context.Context, path string, progress func(search.Progress)) (func() error, error) {
+	lease, err := search.AcquireGenerationLease(ctx, path, false, progress)
+	if err != nil {
+		return nil, err
 	}
-	return nil, errors.New("search index lock timeout")
+	return lease.Close, nil
 }
 
 // 🧩️treeIncludesSections reports whether the tree carries section or definition nodes, the part of a tree an index must not be reused without.
 func treeIncludesSections(ctx context.Context, root *TreeNode) (bool, error) {
-	if root == nil {
-		return false, errors.New("search tree is required")
-	}
-	stack := []*TreeNode{root}
-	for len(stack) > 0 {
-		if err := ctx.Err(); err != nil {
-			return false, err
-		}
-		last := len(stack) - 1
-		node := stack[last]
-		stack = stack[:last]
+	found := false
+	stop := errors.New("sections found")
+	err := walkSearchTree(ctx, root, func(node *TreeNode, depth int) error {
 		if node.Kind == TreeNodeSection || node.Kind == TreeNodeDefinition {
-			return true, nil
+			found = true
+			return stop
 		}
-		stack = append(stack, node.Children...)
+		return nil
+	})
+	if errors.Is(err, stop) {
+		return true, nil
 	}
-	return false, nil
+	return found, err
 }
 
-func collectSearchIndexNodes(ctx context.Context, root *TreeNode, progress func(search.Progress)) ([]*TreeNode, error) {
+// 🚶️ Visits a tree with one frame per ancestor and rejects cyclic or overdeep inputs.
+func walkSearchTree(ctx context.Context, root *TreeNode, visit func(*TreeNode, int) error) error {
 	if root == nil {
-		return nil, errors.New("search tree is required")
+		return errors.New("search tree is required")
 	}
-	stack := []*TreeNode{root}
-	nodes := make([]*TreeNode, 0)
-	visited := 0
+	type frame struct {
+		node    *TreeNode
+		child   int
+		entered bool
+	}
+	stack := []frame{{node: root}}
+	ancestors := map[*TreeNode]bool{}
 	for len(stack) > 0 {
 		if err := ctx.Err(); err != nil {
-			return nil, err
+			return err
 		}
-		last := len(stack) - 1
-		node := stack[last]
-		stack = stack[:last]
-		visited++
-		if visited > search.MaxTraversalNodes {
-			return nil, fmt.Errorf("%w: tree nodes > %d", search.ErrTooLarge, search.MaxTraversalNodes)
-		}
-		if node.Kind != TreeNodeCategory {
-			if len(nodes) >= search.MaxDocuments {
-				return nil, fmt.Errorf("%w: tree documents > %d", search.ErrTooLarge, search.MaxDocuments)
+		current := &stack[len(stack)-1]
+		if !current.entered {
+			if current.node == nil {
+				return errors.New("nil search tree node")
 			}
-			nodes = append(nodes, node)
-		}
-		for index := len(node.Children) - 1; index >= 0; index-- {
-			stack = append(stack, node.Children[index])
-		}
-		reportSearchProgress(progress, search.Progress{Current: visited, Step: "collecting"})
-	}
-	if err := ctx.Err(); err != nil {
-		return nil, err
-	}
-	return nodes, nil
-}
-
-func recoverSearchIndexSwap(indexPath string) error {
-	stagedPath := indexPath + ".next"
-	backupPath := indexPath + ".previous"
-	_, backupErr := os.Stat(backupPath)
-	if backupErr == nil {
-		if _, currentErr := os.Stat(indexPath); os.IsNotExist(currentErr) {
-			if err := os.Rename(backupPath, indexPath); err != nil {
+			if ancestors[current.node] {
+				return errors.New("cyclic search tree")
+			}
+			if len(stack) > search.MaxTraversalDepth {
+				return fmt.Errorf("%w: search tree depth", search.ErrTooLarge)
+			}
+			ancestors[current.node] = true
+			current.entered = true
+			if err := visit(current.node, len(stack)); err != nil {
 				return err
 			}
-		} else if currentErr != nil {
-			return currentErr
-		} else if err := os.RemoveAll(backupPath); err != nil {
-			return err
 		}
-	} else if !os.IsNotExist(backupErr) {
-		return backupErr
+		if current.child < len(current.node.Children) {
+			child := current.node.Children[current.child]
+			current.child++
+			stack = append(stack, frame{node: child})
+			continue
+		}
+		delete(ancestors, current.node)
+		stack = stack[:len(stack)-1]
 	}
-	return os.RemoveAll(stagedPath)
+	return ctx.Err()
 }
 
-func commitSearchIndexSwap(indexPath, stagedPath string) error {
-	backupPath := indexPath + ".previous"
-	hadCurrent := false
-	if _, err := os.Stat(indexPath); err == nil {
-		hadCurrent = true
-		if err := os.Rename(indexPath, backupPath); err != nil {
+func streamTreeSearchIndex(ctx context.Context, root *TreeNode, staged *search.ShardedIndex, progress func(search.Progress)) (int, error) {
+	indexed := 0
+	err := walkSearchTree(ctx, root, func(node *TreeNode, depth int) error {
+		reportSearchProgress(progress, search.Progress{Current: indexed + 1, Step: "collecting"})
+		if err := ctx.Err(); err != nil {
 			return err
 		}
-	} else if !os.IsNotExist(err) {
-		return err
-	}
-	if err := os.Rename(stagedPath, indexPath); err != nil {
-		if hadCurrent {
-			_ = os.Rename(backupPath, indexPath)
+		if node.Kind == TreeNodeCategory {
+			return nil
 		}
-		return err
+		id, document := treeSearchDocument(node)
+		if err := staged.IndexContext(ctx, id, document, nil); err != nil {
+			return fmt.Errorf("index %q: %w", id, err)
+		}
+		indexed++
+		reportSearchProgress(progress, search.Progress{Current: indexed, Step: "indexed"})
+		return ctx.Err()
+	})
+	return indexed, err
+}
+
+func searchNodeAttributes(node *TreeNode) map[string]string {
+	return map[string]string{
+		"kind": string(node.Kind), "subkind": node.SubKind, "year": strconv.Itoa(node.Year), "month": strconv.Itoa(node.Month), "day": strconv.Itoa(node.Day), "status": node.Status, "contributor": node.Contributor,
 	}
-	if hadCurrent {
-		_ = os.RemoveAll(backupPath)
-	}
-	return nil
+}
+
+type heldSearchIndex = search.Index
+type lockedSearchIndex struct {
+	heldSearchIndex
+	release func() error
+	once    sync.Once
+	err     error
+}
+
+func (index *lockedSearchIndex) Close() error { return index.CloseContext(context.Background(), nil) }
+func (index *lockedSearchIndex) CloseContext(ctx context.Context, progress func(search.Progress)) error {
+	index.once.Do(func() {
+		index.err = errors.Join(index.heldSearchIndex.CloseContext(context.Background(), progress), index.release())
+	})
+	return errors.Join(ctx.Err(), index.err)
 }
 
 func reportSearchProgress(progress func(search.Progress), value search.Progress) {
@@ -588,38 +571,44 @@ func reportSearchProgress(progress func(search.Progress), value search.Progress)
 	}
 }
 
-// 🔍️queryCacheIndex queries the owned index with cancellation and progress.
-func queryCacheIndex(ctx context.Context, idx search.Index, query string, limit int, progress func(int, int)) ([]string, error) {
-	if query == "" {
-		return nil, nil
-	}
-	terms := strings.Fields(query)
-	queries := make([]search.Query, 0, len(terms))
-	for _, term := range terms {
-		match := search.NewMatchQuery(term)
-		match.SetFuzziness(2)
-		queries = append(queries, match)
-	}
-	var q search.Query
-	switch len(queries) {
-	case 0:
-		return nil, nil
-	case 1:
-		q = queries[0]
-	default:
-		q = search.NewConjunctionQuery(queries...)
-	}
-	req := search.NewSearchRequest(q)
-	req.Size = limit
-	results, err := idx.SearchContext(ctx, req, progress)
+// #endregion 🎊️Query Cache
+
+// 🔏️fingerprintSearchProjection binds cached index identity to the current CQRS projection.
+func fingerprintSearchProjection(ctx context.Context, root *TreeNode) (string, error) {
+	digest := sha256.New()
+	err := walkSearchTree(ctx, root, func(node *TreeNode, depth int) error {
+		if node.Kind == TreeNodeCategory {
+			return nil
+		}
+		id, document := treeSearchDocument(node)
+		data, err := json.Marshal(struct {
+			ID       string
+			Document map[string]interface{}
+		}{id, document})
+		if err != nil {
+			return err
+		}
+		if len(data) > search.MaxDocumentBytes {
+			return fmt.Errorf("%w: projection document", search.ErrTooLarge)
+		}
+		fmt.Fprintf(digest, "%d:", len(data))
+		_, err = digest.Write(data)
+		return err
+	})
 	if err != nil {
-		return nil, err
+		return "", err
 	}
-	var ids []string
-	for _, hit := range results.Hits {
-		ids = append(ids, hit.ID)
-	}
-	return ids, nil
+	return hex.EncodeToString(digest.Sum(nil)), ctx.Err()
 }
 
-// #endregion 🎊️Query Cache
+func treeSearchDocument(node *TreeNode) (string, map[string]interface{}) {
+	id := node.ID
+	if id == "" {
+		id = node.Label
+	}
+	document := map[string]interface{}{"text": buildSearchDocumentText(node), "attributes": searchNodeAttributes(node)}
+	if path := treeNodeScopePath(node); path != "" {
+		document["path"] = path
+	}
+	return id, document
+}

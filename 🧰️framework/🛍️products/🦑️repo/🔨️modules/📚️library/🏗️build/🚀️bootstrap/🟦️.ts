@@ -104,8 +104,8 @@ export const capacityBuildEnvironmentInstallerV1:BuildEnvironmentInstallerV1=asy
   await withBuildCapacityV1(["dependencies","ensure"],process.env,()=>completeBuildEnvironmentInstallerV1(root,original,phase,recheck),{control:phase,admitDeferred:true});
 };
 
-/** 🥾️ Acquires missing or changed locked parser dependencies through the dependency-free owner. */
-export async function ensureBuildEnvironmentV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,install:BuildEnvironmentInstallerV1=completeBuildEnvironmentInstallerV1,publish:(root:string)=>void=publishBuildBootstrapSourcesV1,requestedScope?:string):Promise<void> {
+/** 🥾️ Acquires locked parser dependencies and returns whether material preparation completed, after producer custody closes and its exact receipt is verified. */
+export async function ensureBuildEnvironmentV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,install:BuildEnvironmentInstallerV1=completeBuildEnvironmentInstallerV1,publish:(root:string)=>void=publishBuildBootstrapSourcesV1,requestedScope?:string):Promise<boolean> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);const check=()=>{checkScriptInvocation(invocation);checkResourceLeaseControl(phaseControl);};check();
   publish(root);check();
   const bootstrap=dependencyInstallSchema.$defs.SourceOwnerBootstrapProtocol.const,scope=requestedScope??bootstrap.scope,base=scope==="."?root:join(root,...scope.split("/")),workspace=(invocation.capabilities as {workspaceRoot?:unknown}).workspaceRoot;
@@ -143,9 +143,9 @@ export async function ensureBuildEnvironmentV1(root:string,invocation:ScriptInvo
     if(!buildParserReceiptMatchesV1(current,current))throw new Error("Closed parser material receipt required");const text=JSON.stringify(current),name=path.slice(path.lastIndexOf(sep)+1);await withArtifactRelativeDirectoryV1(store.root,check,async base=>{if(await base.entry(bootstrap.directory)===null){await base.withNewDirectory(bootstrap.directory,async child=>{await child.sync();});await base.sync();}await base.withDirectory(bootstrap.directory,async directory=>{const existing=await directory.entry(name);if(existing){if(existing.kind!=="file"||!buildParserReceiptMatchesV1(JSON.parse(bounded(path,bootstrap.maximumReceiptBytes).toString()),current))throw new Error("Existing immutable parser receipt changed");return;}const bytes=Buffer.from(text);await directory.withNewFile(name,async file=>{let offset=0;while(offset<bytes.length){check();offset+=file.write(bytes,offset,Math.min(65536,bytes.length-offset),offset);await actualControl.yieldContinuation();check();}file.sync();});await directory.sync();if(bounded(path,bootstrap.maximumReceiptBytes).toString()!==text)throw new Error("Exact durable parser receipt changed");});});check();const settled=walk&&!cached?await confirmWalk():await generation.verifyJavascriptDependencyGenerationReceiptV1(workspace,context,actualControl,scope);if(("sha256" in settled?settled.sha256:undefined)!==owner.sha256)throw new Error("Parser Source-owner changed after receipt");if(walk&&!cached)await generation.publishJavascriptDependencyGenerationReceiptV1(workspace,store,actualControl,check,walk,walkOriginAt);return "ready";
   };
   const inspect=async(publishReceipt:boolean)=>storage(publishReceipt,inspectIn(publishReceipt,false)),recheck:BuildEnvironmentRecheckV1=async(store,control)=>await inspectIn(false,true)(store,control)!=="material-required";
-  const inspection=readBuildParserInspectionV1(await inspect(false));if(inspection==="ready"){check();return;}check();
+  const inspection=readBuildParserInspectionV1(await inspect(false));if(inspection==="ready"){check();return false;}check();
   if(inspection==="material-required"){await invocation.control.publish({owner:invocation.policy.owner,command:"build:dependencies","stage":"running"});check();await install(root,invocation,phaseControl,recheck);check();}
-  if(readBuildParserInspectionV1(await inspect(true))!=="ready")throw new Error("Exact published parser bootstrap receipt required");check();
+  if(readBuildParserInspectionV1(await inspect(true))!=="ready")throw new Error("Exact published parser bootstrap receipt required");check();return inspection==="material-required";
 }
 
 import{withArtifactReadFileSyncV1,withArtifactRelativeDirectoryV1}from"../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts";

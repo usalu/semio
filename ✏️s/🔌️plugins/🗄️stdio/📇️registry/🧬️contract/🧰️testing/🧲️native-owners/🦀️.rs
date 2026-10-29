@@ -5,7 +5,7 @@ use semio_framework_os_kernel::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeO
 use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient;
 use semio_framework_value::native_encoding::NativeEncodeRetirementRecipient;
 use semio_framework_value::NativeEncodeControl;
-use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeDecodeProgress};
+use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 /// 🛬️ Runs `operation` under an original native decode owner and closes every retired owner afterwards.
 pub fn with_decoding<T>(operation: impl FnOnce(&mut NativeSnapshotDecodeOwner<'_, '_>) -> T) -> T {
@@ -53,12 +53,4 @@ pub async fn with_encoding_async<T>(operation: impl AsyncFnOnce(&mut NativeSnaps
         native.close_retirement_recipient(grant).expect("original encode recipient closes");
     }
     result
-}
-
-/// 🛬️ A bare native decode control with its original retirement recipient installed; the recipient is leaked so the control can be built inline at a call site.
-pub fn decode_control<'a>(maximum_bytes: usize, callback: &'a mut dyn FnMut(NativeDecodeProgress) -> bool) -> NativeDecodeControl<'a> {
-    let recipient: &'a mut NativeDecodeRetirementRecipient = Box::leak(Box::new(NativeDecodeRetirementRecipient::new()));
-    let mut native = NativeDecodeControl::new(maximum_bytes, callback);
-    native.install_retirement_recipient(recipient).expect("original decode recipient installs");
-    native
 }

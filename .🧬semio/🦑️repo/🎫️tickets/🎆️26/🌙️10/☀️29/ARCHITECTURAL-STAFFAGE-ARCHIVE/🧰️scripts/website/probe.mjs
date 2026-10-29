@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+const [hash, ...exprs] = process.argv.slice(2);
+const browser = await chromium.launch();
+const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "en-US" })).newPage();
+page.on("console", (m) => ["error", "warning"].includes(m.type()) && console.log("console", m.type(), m.text().slice(0, 3500)));
+page.on("pageerror", (e) => console.log("pageerror", String(e).slice(0, 400)));
+await page.goto("http://localhost:6071/" + hash, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(14000);
+for (const expr of exprs) console.log(expr, "=>", JSON.stringify(await page.evaluate(expr)));
+await browser.close();

@@ -1,12 +1,13 @@
+import{privateRepositoryWorkspaceV1}from"../../../../🧪️testing/🧫️private-repository/🟦️.ts";
 /** 🧪️ Revision: 1 test covering neutral bounded revision contract and independent SQLite admission agree. */
 import{afterAll,test,expect}from"bun:test";
 import Ajv from"ajv";
 import{Database}from"bun:sqlite";
 import{mkdtemp,rm}from"node:fs/promises";
-import{copyFileSync,mkdirSync,mkdtempSync,realpathSync,rmSync}from"node:fs";
-import{tmpdir}from"node:os";
+import{copyFileSync,mkdirSync,rmSync}from"node:fs";
+
 import{join}from"node:path";
-import{fileURLToPath}from"node:url";
+import{fileURLToPath,pathToFileURL}from"node:url";
 import{mirrorRevisionReaderDirectoryV1}from"./🪞️mirror/🟦️.ts";
 import{churnProtocolV1,staleImplementationV1}from"../../../../../../../../🔨️modules/📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import{scriptInvocationEnvironment,withIssuedResourceControlV1}from"../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -36,9 +37,9 @@ afterAll(()=>{for(const root of copies)rmSync(root,{recursive:true,force:true});
 async function implementationPinReadersV1(){
  const fs=await import("node:fs/promises"),{default:ts}=await import("typescript"),source=await fs.readFile(new URL("../🟨️.mjs",import.meta.url),"utf8"),tree=ts.createSourceFile("revision.mjs",source,ts.ScriptTarget.Latest,true),node=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="current"),same=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="unchanged");
  if(!node||!same)throw Error("Actual reader current guard and its comparison required");
- const root=mkdtempSync(join(realpathSync(tmpdir()),"pin-copy-")),directory=mirrorRevisionReaderDirectoryV1(root);copies.push(root);mkdirSync(join(directory,"🧬️schema"),{recursive:true});
+ const root=await(await privateRepositoryWorkspaceV1()).scratch("pin-copy-"),directory=mirrorRevisionReaderDirectoryV1(root);copies.push(root);mkdirSync(join(directory,"🧬️schema"),{recursive:true});
  const owned=(name:string)=>fileURLToPath(new URL(name,import.meta.url));copyFileSync(owned("../🟨️.mjs"),join(directory,"🟨️.mjs"));copyFileSync(owned("../🧬️schema/🔣️.json"),join(directory,"🧬️schema","🔣️.json"));
- const main=await import("../🟨️.mjs"),copy=await import(join(directory,"🟨️.mjs"));
+ const main=await import("../🟨️.mjs"),copy=await import(pathToFileURL(join(directory,"🟨️.mjs")).href);
  expect(copy.withImplementationPinV1).not.toBe(main.withImplementationPinV1);
  const guard=(reader:typeof main)=>new Function("implementationPinnedV1","capture","ownPath","loaded","loadedSchema","ownSchemaPath","ownUnchanged","staleImplementationV1",same.getText(tree)+";"+node.getText(tree)+";return current;")(reader.implementationPinnedV1,()=>({sha256:"changed"}),"/fixture/reader",{byteLength:1,sha256:"loaded"},undefined,"/fixture/schema",()=>false,staleImplementationV1)as()=>void;
  return{main,copy,guard};
@@ -92,11 +93,11 @@ test("implementation pins isolate concurrent invocations while sharing module-co
 }));
 
 test("authority data is read once per pinned invocation and again after the snapshot is cleared; outside a pin every read is fresh",async()=>{
- const fs=await import("node:fs"),os=await import("node:os"),home=fileURLToPath(new URL("..",import.meta.url)),listing=fs.readdirSync(home),moduleName=listing.find(name=>name.endsWith(".mjs"))!,schemaName=listing.find(name=>name.endsWith("schema"))!;
- const scratch=fs.mkdtempSync(join(fs.realpathSync(os.tmpdir()),"revision-snapshot-")),mirror=(await import("./🪞️mirror/🟦️.ts")).mirrorRevisionReaderDirectoryV1(scratch);
+ const fs=await import("node:fs"),home=fileURLToPath(new URL("..",import.meta.url)),listing=fs.readdirSync(home),moduleName=listing.find(name=>name.endsWith(".mjs"))!,schemaName=listing.find(name=>name.endsWith("schema"))!;
+ const scratch=await(await privateRepositoryWorkspaceV1()).scratch("revision-snapshot-"),mirror=(await import("./🪞️mirror/🟦️.ts")).mirrorRevisionReaderDirectoryV1(scratch);
  try{
   fs.mkdirSync(join(mirror,schemaName));const schemaFile=fs.readdirSync(join(home,schemaName))[0]!;fs.copyFileSync(join(home,schemaName,schemaFile),join(mirror,schemaName,schemaFile));fs.copyFileSync(join(home,moduleName),join(mirror,moduleName));
-  const reader=await import(join(mirror,moduleName));let version=0;const read=()=>++version;
+  const reader=await import(pathToFileURL(join(mirror,moduleName)).href);let version=0;const read=()=>++version;
   expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(1);expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(2);
   await reader.withImplementationPinV1(async()=>{
    expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(3);expect(reader.pinnedAuthorityReadV1("registry",read)).toBe(3);expect(reader.pinnedAuthorityReadV1("policy",read)).toBe(4);

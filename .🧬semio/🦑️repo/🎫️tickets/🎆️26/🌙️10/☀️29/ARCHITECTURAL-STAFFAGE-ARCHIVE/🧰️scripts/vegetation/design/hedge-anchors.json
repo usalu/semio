@@ -1,0 +1,3 @@
+[{"id":"base-support","bone":"root-plate","x":1.5,"y":0,"kind":"support","title":{"en":"Hedge row anchorage (planting strip)","de":"Verankerung der Heckenreihe (Pflanzstreifen)"},"support":"fixed","normalDeg":90,"footprintLengthM":3,"footprintWidthM":0.6,"frictionCoefficient":0.6},
+{"id":"crown-a","bone":"block-2","x":1.45,"y":0,"kind":"emitter","title":{"en":"Transpiration above the left blocks","de":"Transpiration über den linken Blöcken"}},
+{"id":"crown-b","bone":"block-5","x":1.45,"y":0,"kind":"emitter","title":{"en":"Transpiration above the right blocks","de":"Transpiration über den rechten Blöcken"}}]

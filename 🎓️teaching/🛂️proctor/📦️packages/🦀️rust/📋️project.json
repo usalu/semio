@@ -144,7 +144,9 @@
         }
       },
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts dev"
@@ -154,7 +156,9 @@
     },
     "check": {
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts check",
@@ -165,17 +169,30 @@
       "inputs": [
         "{projectRoot}/📜️script.ts",
         "sharedGlobals",
-        { "dependentTasksOutputFiles": "**/receipt.json", "transitive": false },
-        { "env": "SEMIO_TEST_LEVEL" },
-        { "env": "SEMIO_TEST_BUDGET_MS" },
-        { "env": "SEMIO_BUILD_BUDGET_MS" },
+        {
+          "dependentTasksOutputFiles": "**/receipt.json",
+          "transitive": false
+        },
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        },
         "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/**/*",
-        { "env": "PROCTOR_COURSE" }
+        {
+          "env": "PROCTOR_COURSE"
+        }
       ]
     },
     "rebuild": {
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts rebuild"
@@ -183,13 +200,19 @@
       "cache": false,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
     "health": {
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts health"
@@ -197,13 +220,19 @@
       "cache": false,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
     "backup": {
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts backup",
@@ -212,7 +241,11 @@
       "cache": false,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -229,11 +262,17 @@
               }
             ]
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       },
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts restore",
@@ -270,11 +309,17 @@
               }
             ]
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       },
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts erase",
@@ -303,11 +348,17 @@
               }
             ]
           },
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       },
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts prune",
@@ -317,7 +368,9 @@
     },
     "capacity": {
       "executor": "repo:script",
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
         "command": "repo ./📜️script.ts capacity",
@@ -326,7 +379,77 @@
       "cache": false,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      }
+    },
+    "serve-release": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "build"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🛂️proctor/📦️packages/🦀️rust",
+        "command": "repo ./📜️script.ts serve-release"
+      },
+      "cache": false,
+      "continuous": true,
+      "metadata": {
+        "semio": {
+          "buildMode": {
+            "fixed": "release"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          },
+          "dashboard": {
+            "ready": {
+              "port": 8791,
+              "portEnv": "PROCTOR_PORT"
+            },
+            "parameters": [
+              {
+                "id": "execution-mode",
+                "title": {
+                  "en": "Required build mode",
+                  "de": "Erforderlicher Build-Modus"
+                },
+                "kind": "choice",
+                "default": "release",
+                "values": [
+                  {
+                    "id": "release",
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "stack",
+                "title": {
+                  "en": "Port and data directory",
+                  "de": "Port und Datenverzeichnis"
+                },
+                "kind": "choice",
+                "values": [
+                  {
+                    "id": "beside",
+                    "env": {
+                      "PROCTOR_PORT": "8793",
+                      "PROCTOR_DATA": "{workspace}/.🧬semio/🎓️teaching/proctor-beside"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
         }
       }
     }

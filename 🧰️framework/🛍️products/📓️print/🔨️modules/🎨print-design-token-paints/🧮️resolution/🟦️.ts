@@ -2,7 +2,7 @@
 import { stylingSchema as authoredTokens } from "@semio-tech/ui-styling";
 import { oklabMix } from "@semio-tech/ui-styling/mixing";
 //#region 🎨️DesignTokenPaints
-const CHROME_PAINT_KEYS = ["base", "borderNormal", "borderEmphasized", "activeBase", "activeForeground", "foreground", "accent"] as const;
+const CHROME_PAINT_KEYS = ["base", "borderNormal", "borderEmphasized", "activeBase", "activeForeground", "foreground", "mutedForeground", "accent", "accentForeground"] as const;
 const PRINT_LEVEL_SURFACE_KEYS = ["window", "pane", "panel", "dialog", "menu"] as const;
 export type PrintTheme = "light" | "dark";
 

@@ -70,7 +70,7 @@ test("every suite has exactly one project target and every build route target na
  for(const row of Object.values(targets))if(row.options?.cwd?.endsWith(suitesDirectory)===true)expect(existsSync(join(checkout,row.options.cwd,"📜️script.ts")),row.options.cwd).toBe(true);
 });
 
-test("the only source that aggregates test files without being one is the declared legacy gate input, agreeing with the independent oracle",async()=>{
+test("no source aggregates test files outside the canonical per-file runner, agreeing with the independent oracle",async()=>{
  const rows=buildTestAggregationV1(true),independent=await ask(oracle,["pure-aggregators",library,buildTestRootV1,schemaPath])as string[];
  expect(rows.map(row=>row.split(" -> ")[0]!).filter((file,index,all)=>all.indexOf(file)===index)).toEqual([...fixture.pureAggregators]);
  expect(sorted(independent)).toEqual([...rows]);

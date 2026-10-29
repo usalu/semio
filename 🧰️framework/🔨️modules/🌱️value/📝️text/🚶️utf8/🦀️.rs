@@ -49,6 +49,4 @@ impl RetainedUtf8Buffer{
 }
 impl Drop for RetainedUtf8Buffer{fn drop(&mut self){let empty=self.output.is_none()&&self.retirement.is_empty();assert!(std::thread::panicking()||empty,"UTF8 original buffer requires funded child closure");if empty{unsafe{ManuallyDrop::drop(&mut self.output);}}}}
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+

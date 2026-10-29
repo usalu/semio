@@ -1,0 +1,1073 @@
+{
+  "version": 1,
+  "inputs": [
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/✍️writer/🦀️.rs",
+      "sha256": "86ed3d584964806c66ad2206f1e416bc5ab3d34d77d71da01366a38e035f45d7",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/📄️document-model/🦀️.rs",
+      "sha256": "940ea377edfa499dfe347380a828deb97d65f49784092ba3f8f57dd1c7e22383",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🔢️values/🦀️.rs",
+      "sha256": "fa1d5acd6ae22d2c1d7acc5600d1a8216e332e21431dbd1bc69a2d9e3805d691",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🔤️lexer-and-parse/alphabets/data.rs",
+      "sha256": "dc40132f56f407601cb40d0c8366222498ccce47de168a9b48969601a4abe038",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🔤️lexer-and-parse/alphabets/tests.rs",
+      "sha256": "3797d419a2e70fff7281636a87c1bee7101819d2cc72753b304db8a5f4d49ff3",
+      "tests": [
+        "complete_neutral_alphabet_cases_use_the_real_reader",
+        "page_selection_resets_and_out_of_alphabet_payloads_refuse",
+        "neutral_print_and_ignored_character_cases_use_the_real_reader",
+        "lexical_errors_use_original_utf8_bytes_and_reals_require_decimal_mantissa"
+      ],
+      "assertions": [
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "855"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Part21Value :: Str ( expected . into ( ) )",
+            "\"{}\"",
+            "row [ \"name\" ]"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "result . is_err ( )",
+            "\"{}\"",
+            "row [ \"name\" ]"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "vec ! [ Part21Value :: Str ( \"Ą\" . into ( ) ) , Part21Value :: Str ( \"¡\" . into ( ) ) ]"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "parse_part21 ( & envelope ( & format ! ( \"\\\\S\\\\{payload}\" ) , \"\" ) ) . is_err ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "None"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "row [ \"nameAfter\" ] . as_str ( ) . unwrap ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "expected",
+            "\"{}\"",
+            "row [ \"name\" ]"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "source . find ( '?' ) . unwrap ( )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "parse_part21 ( & envelope ( \"\" , & format ! ( \",{literal}\" ) ) ) . is_err ( )",
+            "\"{literal}\""
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "path": "cases.json",
+          "sha256": "75f5e34dd72ce903e8bd5e8bfb630d3f55d13f2897d60901c658052cb13362b5"
+        },
+        {
+          "path": "../../../../../🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/control-cases.json",
+          "sha256": "ba82d7eba60d90df6cec185bf4c5fdff31a81d9eb862aaf1afde4b5a39c1fb0c"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🔤️lexer-and-parse/alphabets/🦀️.rs",
+      "sha256": "b1f750c52ee34295075400b355da53e12d4b34f13e9e7a1dca6802fb42d6ea7a",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🔤️lexer-and-parse/🦀️.rs",
+      "sha256": "b52f8bfbc7301e716fa76978c9c34dfc748bee6dbbf6a06d578a3fcd04fcc003",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🚦️controlled/🛫️output/🦀️.rs",
+      "sha256": "94ad1c1856a76a72d30214b03661acceb365f067a5fab648cf88f89136e8aa68",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🚦️controlled/🛬️input/🦀️.rs",
+      "sha256": "72eb055500d4a5641581f8a9ee6d77a6b17c8d5b838ba5eb308f87ba481679a7",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🚦️controlled/🦀️.rs",
+      "sha256": "8c0b4b10bf4b18856023f30295118f5ce2862b672d7a61228179b0ab52171659",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🚦️controlled/🧪️tests/🦀️.rs",
+      "sha256": "7496e57b1f80d26a618f33e79d43db5454d9c00a3805eebd2946d1587ef60461",
+      "tests": [
+        "part21_original_decoder_returns_every_success_and_cancelled_prefix_to_actual_recipient",
+        "part21_rejected_nested_child_preserves_owned_parent_text_and_siblings",
+        "part21_cohort_retirement_releases_original_capacity_without_literal_byte_credit"
+      ],
+      "assertions": [
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Default :: default ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Default :: default ( )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "matches ! ( error . kind , ValueRefusalKind :: DepthLimit | ValueRefusalKind :: OwnershipLimit | ValueRefusalKind :: WorkLimit )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "! heap . overflowed"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "progress . retained_capacity_bytes"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "progress . released_bytes"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "progress . copied_items <= 1 && progress . copied_bytes <= grant . maximum_copy_bytes && progress . retained_capacity_bytes <= grant . maximum_capacity_bytes && progress . released_bytes <= grant . maximum_release_bytes"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "heap . requested_bytes"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "0"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "row [ \"value\" ]"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "heap . requested_bytes + c1 + c2"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "control . owned_bytes ( ) >= heap . requested_bytes"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "0"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: Canceled"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "heap . requested_bytes + c"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: OwnershipLimit"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Default :: default ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: InvalidValue"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "heap . requested_bytes > 0"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "0"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "heap . requested_bytes"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "heap . requested_bytes + c"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "row [ \"expectedTextBytes\" ] . as_u64 ( ) . unwrap ( ) as usize"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "backing + c"
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "path": "🧫️fixtures/🔣️.json",
+          "sha256": "6b682c16f7c5437d29826ae5f50a3345b90951059696c2f94d85c23fba1fdbc6"
+        },
+        {
+          "path": "🧫️fixtures/🔣️.json",
+          "sha256": "6b682c16f7c5437d29826ae5f50a3345b90951059696c2f94d85c23fba1fdbc6"
+        },
+        {
+          "path": "../../🧪️tests/🧫️fixtures/🚦️sqlite-cohort/🔣️.json",
+          "sha256": "34ac4cb61ecb8f9f8139636ba4e5cf4e1e2ecc7595c2f946b7d575e749bac011"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🦀️.rs",
+      "sha256": "fb1ceb05b979e5a6836f2f13ab176b79c00e2939698a77d5776cfcced1a0c9ac",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🧪️tests/🔬️unit/🦀️.rs",
+      "sha256": "47e7f0bb31a1e071917677b367967ec176f6d71bc5671c6ceb74d4035286d641",
+      "tests": [
+        "round_trip_parse_serialize_reparse",
+        "instance_count_and_types_preserved",
+        "oriented_edge_derived_attrs_are_star",
+        "complex_instance_keeps_every_type",
+        "typed_value_wrapper_round_trips",
+        "string_escapes_round_trip",
+        "doubled_quote_escape",
+        "unicode_x2_escape",
+        "every_iso_10303_21_string_directive_is_read",
+        "undefined_iso_8859_positions_are_refused",
+        "unset_and_derived_values",
+        "nested_lists_round_trip",
+        "malformed_input_is_typed_error_not_fabrication",
+        "value_projection_is_the_canonical_contract_shape",
+        "canonical_text_is_a_fixed_point",
+        "path_edits_address_the_projection",
+        "binary_literals_preserve_padding_and_refuse_malformed_content",
+        "supplementary_unicode_round_trips_without_invalid_x2_groups",
+        "x2_utf16_surrogate_pairs_decode_as_one_scalar",
+        "unicode_directives_reject_unpaired_surrogates_and_invalid_scalars",
+        "separately_encoded_header_instances_and_footer_match_canonical_and_independent_step"
+      ],
+      "assertions": [
+        {
+          "kind": "assert",
+          "expected": [
+            "! doc . instances . is_empty ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "vec ! [ Part21Value :: List ( vec ! [ Part21Value :: Str ( \"AUTOMOTIVE_DESIGN\" . into ( ) ) ] ) ]"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "reparsed",
+            "\"round trip must be lossless at the graph level\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "26"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "3"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "1"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "matches ! ( args [ 3 ] , Part21Value :: Unset )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Part21Value :: Derived"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Part21Value :: Derived"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "2"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"IFCQUANTITYAREA\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"IFCPHYSICALSIMPLEQUANTITY\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "doc"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"IFCLENGTHMEASURE\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Some ( 3000.0 )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "doc"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "raw",
+            "\"escape round trip for {raw:?}\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Some ( \"it's here\" )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Some ( \"中文\" )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"\\\\\"",
+            "\"the doubled reverse solidus is ONE literal backslash\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"a\\\\b\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"A\"",
+            "\"\\\\X\\\\ takes exactly two hex digits and no terminator\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"A\\u{00C1}\"",
+            "\"\\\\X\\\\ must not swallow the next directive's opener\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"\\u{00C1}\"",
+            "\"\\\\S\\\\ shifts the character by 128 on the default alphabet\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"\\u{00C1}\"",
+            "\"\\\\PA\\\\ selects ISO 8859-1, which is the default\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"\\u{1F600}\"",
+            "\"\\\\X4\\\\ reads UCS-4 groups\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "\"中文\""
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "error . to_string ( ) . contains ( \"ISO 8859 page F\" )",
+            "\"the refusal must identify the undefined page: {error}\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Part21Value :: Unset"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Part21Value :: Derived"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Part21Value :: Int ( 1 )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "2"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Some ( 1.0 )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "doc"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "parse_part21 ( bad ) . is_err ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "serde_json :: json ! ( [ { \"kind\" : \"list\" , \"values\" : [ { \"kind\" : \"str\" , \"value\" : \"IFC2X3\" } ] } ] )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "serde_json :: json ! ( { \"id\" : 1 , \"entities\" : [ { \"typeName\" : \"X\" , \"arguments\" : [ { \"kind\" : \"ref\" , \"value\" : 2 } , { \"kind\" : \"str\" , \"value\" : \"s\" } , { \"kind\" : \"enum\" , \"value\" : \"E\" } , { \"kind\" : \"int\" , \"value\" : 3 } , { \"kind\" : \"real\" , \"value\" : { \"negative\" : false , \"coefficient\" : \"15\" , \"scale\" : 1 } } , { \"kind\" : \"list\" , \"values\" : [ { \"kind\" : \"int\" , \"value\" : 1 } , { \"kind\" : \"int\" , \"value\" : 2 } ] } , { \"kind\" : \"typed\" , \"typeName\" : \"Y\" , \"values\" : [ { \"kind\" : \"real\" , \"value\" : { \"negative\" : false , \"coefficient\" : \"3\" , \"scale\" : 0 } } ] } , { \"kind\" : \"unset\" } , { \"kind\" : \"derived\" } ] } ] } )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "serde_json :: json ! ( [ { \"typeName\" : \"A\" , \"arguments\" : [ { \"kind\" : \"int\" , \"value\" : 1 } ] } , { \"typeName\" : \"B\" , \"arguments\" : [ { \"kind\" : \"int\" , \"value\" : 2 } ] } ] )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "document"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "semio_framework_pack_json :: from_json_str :: < Part21Value > ( r#\"{\"kind\":\"str\",\"value\":\"s\",\"extra\":1}\"# , semio_framework_pack_json :: JsonMemberPolicy :: Reject ) . is_err ( )",
+            "\"an undeclared member is refused\""
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "semio_framework_pack_json :: from_json_str :: < Part21Value > ( r#\"{\"kind\":\"blob\"}\"# , semio_framework_pack_json :: JsonMemberPolicy :: Reject ) . is_err ( )",
+            "\"an unknown kind is refused\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "canonical"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Part21Value :: Str ( \"edited\" . into ( ) )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Part21Value :: Binary ( content . into ( ) )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "document"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "parse_part21 ( & source ) . is_err ( )",
+            "\"{content}\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "r\"\\X4\\000000C40001F60000004E2D\\X0\\\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Some ( \"Ä😀中\" )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Some ( \"😀\" )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "parse_part21 ( & text ) . is_err ( )",
+            "\"accepted malformed directive {literal}\""
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "write_part21 ( & doc )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "semio_s_artifact_stdio_step_test_oracle :: standards :: v_ap214 :: subsets :: base :: project_step_ap214_any ( & reference ) . unwrap ( )"
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "path": "../../✍️writer/🧪️fixtures/🔣️stream.json",
+          "sha256": "742f1c5324d2ecfdf56248ddef46a20a73ccaff16c199d188d91be719b6cb5a1"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🧪️tests/🚦️sqlite-cohort/🦀️.rs",
+      "sha256": "588b8d7aa08e0e5a9a50570f770b19b497740860d797c7852695acc7785c7ccc",
+      "tests": [
+        "part21_cohort_controlled_constructor_preserves_every_owned_variant",
+        "part21_cohort_controlled_output_preserves_exact_decimal_fields_without_display",
+        "part21_cohort_controlled_input_cancels_during_owned_unicode_copy",
+        "part21_cohort_controlled_output_cancels_during_owned_unicode_copy",
+        "part21_cohort_controlled_objects_refuse_unknown_duplicate_and_wrong_typed_fields",
+        "part21_cohort_controlled_instances_preserve_literal_field_order_and_exact_cumulative_bound",
+        "part21_cohort_controlled_list_admission_reaches_real_interior_units",
+        "part21_cohort_controlled_recursive_owner_refuses_depth_before_unbounded_construction",
+        "part21_cohort_controlled_header_document_fields_match_independent_exact_output",
+        "part21_cohort_controlled_instance_decimal_closed_fields_refuse_wrong_domains",
+        "part21_cohort_controlled_owner_restores_parent_work_limit_category",
+        "part21_cohort_controlled_long_borrowed_key_refuses_during_actual_key_work",
+        "part21_cohort_controlled_partial_named_owner_retains_paid_copy_and_invalid_refusal"
+      ],
+      "assertions": [
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "value"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "independent_value ( & value )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "instance"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "serde_json :: json ! ( { \"id\" : instance . id , \"entities\" : instance . entities . iter ( ) . map ( | ( name , arguments ) | serde_json :: json ! ( { \"typeName\" : name , \"arguments\" : arguments . iter ( ) . map ( independent_value ) . collect :: < Vec < _ >> ( ) } ) ) . collect :: < Vec < _ >> ( ) } )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "value . to_value ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "independent_value ( & value )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "value"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "instance . to_value ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "serde_json :: json ! ( { \"id\" : instance . id , \"entities\" : instance . entities . iter ( ) . map ( | ( name , arguments ) | serde_json :: json ! ( { \"typeName\" : name , \"arguments\" : arguments . iter ( ) . map ( independent_value ) . collect :: < Vec < _ >> ( ) } ) ) . collect :: < Vec < _ >> ( ) } )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: Canceled"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "reached"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: OwnershipLimit"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: Canceled"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "reached"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: OwnershipLimit"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: InvalidValue"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: InvalidValue"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "[ \"id\" , \"entities\" ]"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "[ \"\" , \"REPEATED\" , \"REPEATED\" ]"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "value"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: OwnershipLimit"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "instance"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "instance"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: OwnershipLimit"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "decoded_interior"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: Canceled"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "encoded_interior"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: Canceled"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: DepthLimit"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: DepthLimit"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "[ \"fileDescription\" , \"fileName\" , \"fileSchema\" ]"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "independent_header ( & header )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "header"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "[ \"header\" , \"instances\" ]"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "serde_json :: json ! ( { \"header\" : independent_header ( & document . header ) , \"instances\" : [ { \"id\" : u64 :: MAX , \"entities\" : document . instances [ 0 ] . entities . iter ( ) . map ( | ( name , arguments ) | serde_json :: json ! ( { \"typeName\" : name , \"arguments\" : arguments . iter ( ) . map ( independent_value ) . collect :: < Vec < _ >> ( ) } ) ) . collect :: < Vec < _ >> ( ) } ] } )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "document"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: InvalidValue"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: InvalidValue"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "value"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: WorkLimit"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "value . to_value ( )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: WorkLimit"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: Canceled"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "reached"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "ValueRefusalKind :: InvalidValue"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "control . owned_bytes ( ) >= name . len ( )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "copied"
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "path": "../🧫️fixtures/🚦️sqlite-cohort/🔣️.json",
+          "sha256": "34ac4cb61ecb8f9f8139636ba4e5cf4e1e2ecc7595c2f946b7d575e749bac011"
+        }
+      ]
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🧾️value-and-canonical-codecs/🦀️.rs",
+      "sha256": "b42751efba2e27e29771d57bf027d7171f5994f4742d83d463cfb9a07fa3bb53",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🫴️receiving/🦀️.rs",
+      "sha256": "4f43a9ec8a9c24f4197775329606da2d7c8af0e8a64bb29e5084c67faa9abb3d",
+      "tests": [],
+      "assertions": [],
+      "fixtures": []
+    },
+    {
+      "path": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/📐️part21/🫴️receiving/🧪️tests/🦀️.rs",
+      "sha256": "8902840fed4b99798f73bbd29be3b97a48d3180944e8b4a7b875b5bc6a8b4ee6",
+      "tests": [
+        "original_erased_part21_sources_keep_binary_admission_and_funded_closure"
+      ],
+      "assertions": [
+        {
+          "kind": "assert",
+          "expected": [
+            "cursor . step ( g ) . unwrap ( ) . progress ( ) . fits ( g )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "Default :: default ( )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "step . progress ( ) . fits ( grant ( d ) )"
+          ]
+        },
+        {
+          "kind": "assert_eq",
+          "expected": [
+            "row [ \"admitted\" ] . as_bool ( ) . unwrap ( )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "matches ! ( & value , Part21Value :: Binary ( actual ) if actual == text )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "receiver . close_step ( g ) . unwrap ( ) . progress ( ) . fits ( g )"
+          ]
+        },
+        {
+          "kind": "assert",
+          "expected": [
+            "receiver . terminal_is_empty ( )"
+          ]
+        }
+      ],
+      "fixtures": [
+        {
+          "path": "../🔣️.json",
+          "sha256": "90a2f751b890e4ea7fa1b82221b7d3f1cb25f08447a2917388739be15920cfe4"
+        }
+      ]
+    }
+  ]
+}

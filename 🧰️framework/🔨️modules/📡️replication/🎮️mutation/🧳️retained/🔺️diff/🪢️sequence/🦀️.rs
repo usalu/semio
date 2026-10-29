@@ -3,22 +3,22 @@ use super::{RetainedDiffFragment,RetainedDiffOwner,RetainedDiffPreflightAdvance,
 use super::super::{binding_demand,retained_mutation_demand_fits};
 use super::super::super::{ApplyCapability,MutationMessage};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneRef, RetainedCloneBinding, RetainedCloneSource, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, ProjectionField, ProjectionOutput};
+use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, ProjectionField, ProjectionOutput, post::{OriginalPostRead,PagedOneItemPostMode}};
 use semio_framework_value_persistent::original_vector_concat::OriginalVectorConcat;
 use std::mem::{ManuallyDrop,size_of};
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"ordered retained diff lost its original sequence frontier")}
 /// 🧳️ One sparse edit stays direct; longer sequences own every typed intermediate and diagnostic.
 pub struct RetainedDiffSequence<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>>{
  child:ManuallyDrop<Option<RetainedDiffOwner<P,D>>>,projection:ProjectionField<P>,
- candidate:ManuallyDrop<Option<P::Output>>,intermediate:ManuallyDrop<Option<RetainedCloneSource<P,P::Output>>>,
+ candidate:ManuallyDrop<Option<P::Output>>,candidate_read:OriginalPostRead<P::Output>,intermediate:ManuallyDrop<Option<RetainedCloneSource<P,P::Output>>>,
  pending_messages:ManuallyDrop<Option<Vec<MutationMessage>>>,output_messages:ManuallyDrop<Option<Vec<MutationMessage>>>,
  messages:OriginalVectorConcat<MutationMessage>,message_retirement:RetainedCloneClose,candidate_retirement:RetainedCloneClose,
  diff:Option<RetainedCloneBinding>,original:Option<RetainedCloneBinding>,ordinal:usize,phase:u8,single:bool,admitted:bool,closing:bool,
 }
 impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> Default for RetainedDiffSequence<P,D>{fn default()->Self{Self::new()}}
 impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSequence<P,D>{
- pub fn new()->Self{Self{child:ManuallyDrop::new(None),projection:Default::default(),candidate:ManuallyDrop::new(None),intermediate:ManuallyDrop::new(None),pending_messages:ManuallyDrop::new(None),output_messages:ManuallyDrop::new(None),messages:Default::default(),message_retirement:Default::default(),candidate_retirement:Default::default(),diff:None,original:None,ordinal:0,phase:0,single:false,admitted:true,closing:false}}
- fn fixed()->usize{size_of::<usize>()*10+size_of::<bool>()*3+size_of::<u8>()*2+size_of::<Vec<MutationMessage>>()*2}
+ pub fn new()->Self{Self{child:ManuallyDrop::new(None),projection:Default::default(),candidate:ManuallyDrop::new(None),candidate_read:Default::default(),intermediate:ManuallyDrop::new(None),pending_messages:ManuallyDrop::new(None),output_messages:ManuallyDrop::new(None),messages:Default::default(),message_retirement:Default::default(),candidate_retirement:Default::default(),diff:None,original:None,ordinal:0,phase:0,single:false,admitted:true,closing:false}}
+ fn fixed()->usize{size_of::<usize>()*10+size_of::<bool>()*3+size_of::<u8>()*2+size_of::<Vec<MutationMessage>>()*2+size_of::<OriginalPostRead<P::Output>>()}
  fn scalar()->RetirementDemand{RetirementDemand{copy_bytes:Self::fixed(),depth:1,..Default::default()}}
  fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.copy_bytes=demand.copy_bytes.checked_add(Self::fixed()).ok_or_else(invalid)?;demand.depth=demand.depth.checked_add(1).ok_or_else(invalid)?;Ok(demand)}
  fn child_grant(grant:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-Self::fixed(),maximum_depth:grant.maximum_depth-1,..grant}}
@@ -26,8 +26,9 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
  fn current<'a>(intermediate:&'a Option<RetainedCloneSource<P,P::Output>>,original:RetainedCloneRef<'a,P>)->RetainedCloneRef<'a,P>{intermediate.as_ref().map_or(original,RetainedCloneSource::borrow)}
  fn sources(&self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>)->Result<(),ValueError>{if self.diff.is_some()&&!diffs.check_binding(&self.diff)?||self.original.is_some()&&!original.check_binding(&self.original)?{return Err(invalid());}Ok(())}
  /// ⚖️ Root preflight never changes the externally supplied unpublished candidate.
- pub fn preflight_demand(&self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&P,body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn preflight_demand(&self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||self.phase>17{return Err(invalid());}self.sources(diffs,original)?;
+  if !self.single&&matches!(self.phase,6|8){if let Some(demand)=self.candidate_read.demand(&self.candidate,if self.phase==6{PagedOneItemPostMode::Original}else{PagedOneItemPostMode::Mutable},body)?{return Self::nested(demand);}}
   let demand=match self.phase{
    0=>RetirementDemand{copy_bytes:diffs.binding_copy_bytes(),depth:1,..Default::default()},
    1=>RetirementDemand{copy_bytes:original.binding_copy_bytes(),depth:1,..Default::default()},
@@ -35,7 +36,7 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
    3=>self.projection.demands(Self::current(&self.intermediate,original),body)?,
    4=>self.projection.take_output_demand()?,
    5=>retained_diff_birth_demand::<P,D>(),
-   6=>{let source=Self::current(&self.intermediate,original);let candidate=if self.single{post}else{self.candidate.as_ref().ok_or_else(invalid)?.projected_value()};self.child.as_ref().ok_or_else(invalid)?.preflight_demand(diffs.project(self.ordinal,|rows|&rows[self.ordinal]),source,candidate,body)?},
+   6=>{let source=Self::current(&self.intermediate,original);let candidate=if self.single{post}else{self.candidate_read.read(&self.candidate,PagedOneItemPostMode::Original)?.original()?.project(0,ProjectionOutput::projected_value)};self.child.as_ref().ok_or_else(invalid)?.preflight_demand(diffs.project(self.ordinal,|rows|&rows[self.ordinal]),source,candidate,body)?},
    7=>self.messages.push_demand()?,
    8=>self.child.as_ref().ok_or_else(invalid)?.commit_demand(diffs.project(self.ordinal,|rows|&rows[self.ordinal]),Self::current(&self.intermediate,original),self.candidate.as_ref().ok_or_else(invalid)?.projected_value(),body)?,
    9=>if self.child.as_ref().ok_or_else(invalid)?.terminal_is_empty(){Default::default()}else{self.child.as_ref().unwrap().close_demand(body)?},
@@ -47,9 +48,10 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
    _=>return Err(invalid()),
   };Self::nested(demand)
  }
- pub fn preflight(&mut self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:&P,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
+ pub fn preflight(&mut self,diffs:RetainedCloneRef<'_,Vec<D>>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>{
   let demand=self.preflight_demand(diffs,original,post,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedDiffPreflightAdvance::Progress(Default::default()));}
   let child_grant=Self::child_grant(grant);let mut progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+  if !self.single&&matches!(self.phase,6|8){if let Some(receipt)=self.candidate_read.prepare(&mut self.candidate,if self.phase==6{PagedOneItemPostMode::Original}else{PagedOneItemPostMode::Mutable},body,child_grant)?{return Ok(RetainedDiffPreflightAdvance::Progress(Self::receipt(receipt)));}}
   match self.phase{
    0=>{progress=Self::receipt(diffs.bind(&mut self.diff,child_grant)?.ok_or_else(invalid)?);self.phase=1;},
    1=>{progress=Self::receipt(original.bind(&mut self.original,child_grant)?.ok_or_else(invalid)?);self.phase=2;},
@@ -58,7 +60,7 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
    4=>{let(candidate,receipt)=self.projection.take_output(child_grant)?.ok_or_else(invalid)?;*self.candidate=Some(candidate);self.projection.begin_close();progress=Self::receipt(receipt);self.phase=5;},
    5=>{let(child,receipt)=begin_retained_diff::<P,D>(child_grant).ok_or_else(invalid)?;*self.child=Some(child);progress=Self::receipt(receipt);self.phase=6;},
    6=>{
-    let source=Self::current(&self.intermediate,original);let candidate=if self.single{post}else{self.candidate.as_ref().ok_or_else(invalid)?.projected_value()};
+    let source=Self::current(&self.intermediate,original);let candidate=if self.single{post}else{self.candidate_read.read(&self.candidate,PagedOneItemPostMode::Original)?.original()?.project(0,ProjectionOutput::projected_value)};
     let step=preflight_retained_diff(self.child.as_mut().ok_or_else(invalid)?,diffs.project(self.ordinal,|rows|&rows[self.ordinal]),source,candidate,body,child_grant,receiving).map_err(|error|{let receipt=error.retained_progress();error.with_retained_progress(if receipt==RetainedCloneProgress::default(){receipt}else{Self::receipt(receipt)})})?;progress=Self::receipt(step.progress());
     match step{RetainedDiffPreflightStep::Admitted(_,messages)=>{*self.pending_messages=Some(messages);self.phase=7;},RetainedDiffPreflightStep::Refused(_,messages)=>{*self.pending_messages=Some(messages);self.admitted=false;self.phase=7;},RetainedDiffPreflightStep::Progress(_)=>{}}
    },
@@ -97,6 +99,7 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
   else if !self.message_retirement.is_empty()||self.pending_messages.is_some(){self.message_retirement.next_owner_demands::<Vec<MutationMessage>>(self.pending_messages.is_some(),&None,body)?}
   else if self.output_messages.is_some(){self.message_retirement.next_owner_demands::<Vec<MutationMessage>>(true,&None,body)?}
   else if let Some(source)=self.intermediate.as_ref(){if source.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<RetainedCloneSource<P,P::Output>>(),depth:1,..Default::default()}}else{source.next_close_demand(body)?}}
+  else if !self.candidate_read.terminal_is_empty(){self.candidate_read.demand(&self.candidate,PagedOneItemPostMode::Mutable,body)?.ok_or_else(invalid)?}
   else if self.candidate.is_some()||!self.candidate_retirement.is_empty(){self.candidate_retirement.next_owner_demands::<P::Output>(self.candidate.is_some(),&None,body)?}
   else if self.original.is_some(){binding_demand(&self.original,body)?}
   else if self.diff.is_some(){binding_demand(&self.diff,body)?}
@@ -112,13 +115,14 @@ impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> RetainedDiffSe
   else if let Some(step)=self.message_retirement.begin_granted(&mut self.pending_messages,child_grant)?{step}
   else if let Some(step)=self.message_retirement.begin_granted(&mut self.output_messages,child_grant)?{step}
   else if let Some(source)=self.intermediate.as_mut(){if !source.terminal_is_empty(){source.close_step(child_grant)?}else{self.intermediate.take();RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<RetainedCloneSource<P,P::Output>>(),..Default::default()})}}
+  else if !self.candidate_read.terminal_is_empty(){RetainedCloneStep::Progress(self.candidate_read.prepare(&mut self.candidate,PagedOneItemPostMode::Mutable,grant.maximum_copy_bytes.saturating_sub(Self::fixed()),child_grant)?.ok_or_else(invalid)?)}
   else if !self.candidate_retirement.is_empty(){self.candidate_retirement.step_granted(child_grant)?}
   else if let Some(step)=self.candidate_retirement.begin_granted(&mut self.candidate,child_grant)?{step}
   else if self.original.is_some(){RetainedCloneBinding::close_one(&mut self.original,child_grant)?}
   else{RetainedCloneBinding::close_one(&mut self.diff,child_grant)?};
   Ok(RetainedCloneStep::Progress(Self::receipt(step.progress())))
  }
- fn empty(&self)->bool{self.child.is_none()&&self.candidate.is_none()&&self.intermediate.is_none()&&self.pending_messages.is_none()&&self.output_messages.is_none()&&self.projection.owners_empty()&&self.messages.terminal_is_empty()&&self.message_retirement.is_empty()&&self.candidate_retirement.is_empty()&&self.original.is_none()&&self.diff.is_none()}
+ fn empty(&self)->bool{self.child.is_none()&&self.candidate_read.terminal_is_empty()&&self.candidate.is_none()&&self.intermediate.is_none()&&self.pending_messages.is_none()&&self.output_messages.is_none()&&self.projection.owners_empty()&&self.messages.terminal_is_empty()&&self.message_retirement.is_empty()&&self.candidate_retirement.is_empty()&&self.original.is_none()&&self.diff.is_none()}
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.empty()}
 }
 impl<P:SnapshotProjection+Send+'static,D:RetainedDiffFragment<P>> Drop for RetainedDiffSequence<P,D>{fn drop(&mut self){let empty=self.empty();assert!(std::thread::panicking()||empty,"ordered retained diff requires paid child, source, diagnostic and candidate closure");if empty{unsafe{ManuallyDrop::drop(&mut self.child);ManuallyDrop::drop(&mut self.candidate);ManuallyDrop::drop(&mut self.intermediate);ManuallyDrop::drop(&mut self.pending_messages);ManuallyDrop::drop(&mut self.output_messages);}}}}

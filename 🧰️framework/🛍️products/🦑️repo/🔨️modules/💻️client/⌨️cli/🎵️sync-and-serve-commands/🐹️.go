@@ -207,7 +207,10 @@ func analyzeCommand(factory EngineFactory, config *Config) *command.Command {
 			ctx := cmd.Context()
 			id := args[0]
 			buildOpts := TreeBuildOptions{}
-			tree := BuildMonorepoTreeCached(ctx, buildOpts)
+			tree, err := BuildMonorepoTreeCached(ctx, buildOpts)
+			if err != nil {
+				return err
+			}
 			var found *TreeNode
 			var findByID func(node *TreeNode)
 			findByID = func(node *TreeNode) {

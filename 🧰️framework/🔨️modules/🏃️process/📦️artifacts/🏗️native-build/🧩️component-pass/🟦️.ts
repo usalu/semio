@@ -33,7 +33,7 @@ import { stageArtifacts } from "../../📤️publication/🟦️.ts";
 import { acquireCargoBuildLeaseV1 } from "../🔒️lease/🟦️.ts";
 import { CargoProvenanceSessionV1, cargoConfigurationArgumentsV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1, sharedProvenanceCustodyV1, type CargoProvenanceStagedV1 } from "../🟦️.ts";
 import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitIdentityV1, cargoUnitLeafV1, type CargoProvenanceRootsV1, type CargoUnitObservationV1 } from "../🧾️receipt/🟦️.ts";
-import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, admissionMemoryShareV1, buildSchedulerV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1 } from "../🎟️admission/🟦️.ts";
+import { ADMISSION_POLICY_V1, admissionMemoryBytesV1, admissionMemoryShareV1, buildSchedulerV1,schedulerCargoSelectionV1, compilerWrapperEnvironmentV1, quantileR7V1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitKeyV1, unitObservationsV1, unitOutputBytesV1, type UnitObservationV1 } from "../🎟️admission/🟦️.ts";
 import { createJobserverV1, defaultJobserverStyleV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
 import { criticalPathV1, startTimelineV1, TELEMETRY_POLICY_V1, writeBuildReportV1, type BuildScriptRunV1, type StageRecordV1 } from "../📈️telemetry/🟦️.ts";
 import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../🗃️stage-cache/🟦️.ts";
@@ -390,6 +390,12 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const buildLeases: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>>[] = [];
   const withCapacity: NonNullable<NativeBuildDriverOptionsV1["withCapacity"]> = options.withCapacity ?? (async compile => { const units = await compileUnitsForHostV1({ environment: options.environment, signal: admission.signal }); return withCompilerCapacityConsumptionV1({ request: units.request, directory: options.leaseDirectory, control: admission, environment: options.environment }, (facts, held) => { requireGrantedCompileUnitsV1(units.decision, facts.parallelism); return compile(facts, held, undefined); }); });
   try {
+  if(!options.scheduler){
+   const selected=schedulerCargoSelectionV1(false,options.environment.SEMIO_BUILD_MODE==="prototype"?"prototype":"release"),environment={...options.environment,CARGO_TARGET_DIR:generation.target,CARGO_BUILD_BUILD_DIR:generation.build};
+   const scheduler=await withCargoCompilerInputsV1({manifest:selected.manifest,cwd:options.cwd,arguments:selected.args,environment,control:options.control},options.withCargoInputs,input=>input.withWriter(writer=>withCompilerCapacityConsumptionV1({directory:options.leaseDirectory,control:writer,environment:input.environment,request:{kind:"exact",parallelism:1}},async(_capacity,control)=>{
+    const scheduler=(await buildSchedulerV1({cwd:options.cwd,targetDirectory:generation.target,buildDirectory:generation.build,environment:input.environment,arguments:input.arguments,control,storage:options.storage,sourceBoundary:options.sourceBoundary})).get("semio-build-scheduler");if(!scheduler)throw Error("Actual compiled scheduler required");return async()=>scheduler;
+   })));options={...options,scheduler};
+  }
   for (const profile of [...new Set(plan.passes.map(pass => pass.profile))].sort()) { const pass = plan.passes.find(row => row.profile === profile)!; buildLeases.push(await acquireCargoBuildLeaseV1({ directory: options.leaseDirectory, buildDirectory: generation.build, targetDirectory: generation.target, args: nativeBuildPassArgsV1(pass), signal, control: options.control })); }
   return await withCapacity(async(capacity,cpuControl,driverScope)=>{
   const tokens = Math.min(options.tokens ?? capacity.parallelism, capacity.parallelism);
@@ -397,7 +403,7 @@ export function runNativeBuildDriverV1(options: NativeBuildDriverOptionsV1): Pro
   const cargoHome = resolve(options.environment.CARGO_HOME ?? join(homedir(), ".cargo")), roots: CargoProvenanceRootsV1 = { repository: options.cwd, build: generation.build, cargoHome };
   const physicalControl = () => cargoProvenancePhysicalControlV1({ cancelled: () => signal.aborted, remainingMs: () => {inputContinuations.check();planContinuations.check();return checkResourceLeaseControl(admission);}, scale: Math.max(1, components.length), onProgress: cargoProvenanceProgressSinkV1(() => inputContinuations.check()) });
   const custody = sharedProvenanceCustodyV1(options.cwd, physicalControl);let sessionOwner:CargoProvenanceSessionV1|undefined;
-  const scheduler = options.scheduler ?? (await buildSchedulerV1({ cwd: options.cwd, targetDirectory: generation.target, buildDirectory: generation.build, environment: options.environment, control: cpuControl,storage:options.storage,sourceBoundary:options.sourceBoundary })).get("semio-build-scheduler")!;
+  const scheduler = options.scheduler!;
   const historyPath = unitHistoryPathV1(options.cacheRoot), history = await readUnitHistoryV1(historyPath);
   const jobserver = await createJobserverV1({ version: 1, tokens, style: defaultJobserverStyleV1() }, generation.jobserver);
   let broker:Awaited<ReturnType<typeof startAdmissionBrokerV1>>;

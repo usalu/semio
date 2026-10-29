@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "actions",
+    "filesystemBytes",
+    "maximumPhysicalBytes",
+    "entry",
+    "requiredClosureSuffixes",
+    "expectedState"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "actions": {
+      "const": [
+        "allocate",
+        "activate",
+        "deactivate",
+        "inactive"
+      ]
+    },
+    "filesystemBytes": {
+      "type": "integer",
+      "minimum": 33554432
+    },
+    "maximumPhysicalBytes": {
+      "type": "integer",
+      "minimum": 34603008
+    },
+    "entry": {
+      "const": "📜️script.ts"
+    },
+    "requiredClosureSuffixes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "string"
+      }
+    },
+    "expectedState": {
+      "const": "inactive"
+    }
+  }
+}

@@ -228,20 +228,10 @@ export class SchemaScript extends Script {
     });
   }
 
-  /**
-   * ⚙️ Vitest matches spec files against its configured `include`, and the repository names a test case
-   * `🧪️tests/<case>/🟦️.ts` rather than `*.test.ts`, so the run needs a config that names them. That config
-   * is the module's own tracked vitest project, so adding an oracle spec to `framework.schema` needs no
-   * edit here: the module declares its specs once, and this command only points vitest at that declaration.
-   * @see `🧰️framework/🔨️modules/🧬️schema/🧪️tests/🎚️config/🟦️.ts` owns this module's explicit test configuration.
-   */
-  private oracleArguments(): string[] {
-    return ["vitest", "run", "--config", join(this.root, SCHEMA_ORACLE_VITEST_CONFIG)];
-  }
-
-  /** 📕️ Runs the ajv draft-07 oracle spec that validates the owned Rust structural validator. */
-  private oracle(): void {
-    runCmd(process.execPath, ["x", ...this.oracleArguments()], { cwd: this.root });
+  /** 📕️ Runs the declared draft-07 oracle through the repository's owned Vitest policy and admitted workers. */
+  private async oracle(): Promise<void> {
+    const {runVitest}=await import("../../🧪️testing/🧪️vitest/🟦️.ts");
+    await runVitest(this.root,[],join(this.root,SCHEMA_ORACLE_VITEST_CONFIG));
   }
 
   /**
@@ -276,13 +266,14 @@ export class SchemaScript extends Script {
    * 🧪️ The whole schema gate: the harness invariants over the catalog and the third-party draft-07 oracle.
    * Both halves always run — a failing harness must not hide a failing oracle — and the exit code is their union.
    */
-  private test(rest: string[]): void {
+  private async test(rest: string[]): Promise<void> {
     const tracked = this.readCatalog();
     if (!tracked.parsed) throw new Error(`[schema test] ${this.catalogPath()} is absent or unreadable after a re-read. Run repo ./📜️script.ts schema generate before the gate; running the harness against a torn catalog reports every scope as malformed.`);
     const harness = runCmdStatus(runtimeExecutableV1(), [`${this.testDomainPath()}/📜️script.ts`, "test", "schema", ...rest], { cwd: this.root });
-    const oracle = runCmdStatus(process.execPath, ["x", ...this.oracleArguments()], { cwd: this.root });
+    let oracle=0;
+    try{await this.oracle();}catch(error){console.error(error);oracle=1;}
     console.log(`[schema test] harness exit=${harness}, draft-07 oracle exit=${oracle}`);
-    if (harness !== 0 || oracle !== 0) process.exit(1);
+    if (harness !== 0 || oracle !== 0) process.exitCode=1;
   }
 
   /** 📊️ Writes the full scope/diagnostic evidence pair into a report directory. */

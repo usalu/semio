@@ -440,6 +440,16 @@
         "closure": {
           "type": "string",
           "pattern": "^[a-f0-9]{64}$"
+        },
+        "externalInputs": {
+          "type": "array",
+          "maxItems": 65536,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
         }
       }
     }
@@ -601,7 +611,10 @@
         }
       }
     },
-    "BuildTool": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,31}$" },
+    "BuildTool": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,31}$"
+    },
     "BuildPolicy": {
       "type": "object",
       "required": [

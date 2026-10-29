@@ -14,7 +14,7 @@ const describe = (entry: ToolEntryV1, resolution: ToolResolutionV1): string => `
 /** 📋️ Prints the registered tools with their pin, where each was found on this host and the command that runs it. */
 function list(head: readonly string[], context: ToolsCommandContextV1, root: string): number {
   const language = toolLanguageV1(context.environment), rows = TOOL_REGISTRY_V1.tools.map(entry => ({ entry, resolution: resolveRegisteredToolV1(entry, root, { env: context.environment }) }));
-  if (head.includes("--json")) { context.write(JSON.stringify(rows.map(({ entry, resolution }) => ({ id: entry.id, kind: entry.kind, summary: entry.summary, capabilities: entry.capabilities, adapter: entry.adapter, allowedCallers: entry.allowedCallers, pin: resolution.pin, source: resolution.source, command: resolution.command, prefix: resolution.prefix, tried: resolution.tried })), null, 1)); return 0; }
+  if (head.includes("--json")) { context.write(JSON.stringify(rows.map(({ entry, resolution }) => ({ id: entry.id, kind: entry.kind, summary: entry.summary, capabilities: entry.capabilities, adapter: entry.adapter, allowedCallers: entry.allowedCallers, pin: resolution.pin, source: resolution.source, command: resolution.command, prefix: resolution.prefix, suffix: resolution.suffix ?? [], tried: resolution.tried })), null, 1)); return 0; }
   context.write(toolMessageV1("listHeader", {}, language));
   for (const { entry, resolution } of rows) context.write(describe(entry, resolution));
   return 0;

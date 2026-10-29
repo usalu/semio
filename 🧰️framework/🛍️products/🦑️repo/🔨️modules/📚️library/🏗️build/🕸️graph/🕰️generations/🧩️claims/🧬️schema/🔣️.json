@@ -19,7 +19,9 @@
         "environmentSlots": "SEMIO_GRAPH_COMPUTERS",
         "failedRetryMilliseconds": 60000,
         "failureReasonCharacters": 200,
-        "lockNameCharacters": 120
+        "lockNameCharacters": 120,
+        "probe": "nonwaiting-kernel",
+        "freshProbe": "bounded-directory-admission"
       }
     },
     "Claim": {
@@ -345,6 +347,56 @@
           "failedRetryMilliseconds": "Wie lange der fehlgeschlagene Anspruch desselben Inhalts seine Eigentümer abdeckt, damit sie nicht sofort erneut versucht werden.",
           "failureReasonCharacters": "Die meisten Zeichen des Grundes, den ein fehlgeschlagener Anspruch festhält.",
           "lockNameCharacters": "Die meisten abschliessenden Zeichen eines Eigentümernamens im Namen seiner Sperrdatei."
+        }
+      }
+    },
+    "ProbeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "result"
+      ],
+      "properties": {
+        "outcome": {
+          "enum": [
+            "held",
+            "busy",
+            "failure"
+          ]
+        },
+        "result": {
+          "enum": [
+            "held",
+            "unavailable",
+            "error"
+          ]
+        }
+      }
+    },
+    "FreshProbeCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outcome",
+        "result"
+      ],
+      "properties": {
+        "outcome": {
+          "enum": [
+            "held",
+            "busy",
+            "admission",
+            "failure",
+            "foreign-timeout"
+          ]
+        },
+        "result": {
+          "enum": [
+            "held",
+            "unavailable",
+            "error"
+          ]
         }
       }
     }

@@ -1,0 +1,21 @@
+# Retained Diff Original-Candidate Audit
+
+Read-only review after actual build 20245 E0308; no source modification, build, probe, or success claim.
+
+RetainedDiffSequence (🧰️framework/🔨️modules/📡️replication/🎮️mutation/🧳️retained/🔺️diff/🪢️sequence/🦀️.rs) owns actual P::Output candidate13, obtains it from funded ProjectionField take at phase4/line58, and passes candidate.projected_value() as raw &P at lines38/61–62. The updated central preflight requires RetainedCloneRef<P>. A borrowed projected value is not itself an admitted original. The external single-item post argument29/50 is similarly only &P.
+
+Existing correct authority path is first-party OriginalPostRead (value/📽️projection/👁️post/🦀️.rs:18–48): quote actual source admission24–33; refuse insufficient grants before moving owner35–38; admit the actual owner through RetainedCloneSource::admit_borrowed40; retain/restore ownership on refusal; return the same owner via take_authority before mutable commit41; refuse access while a funding frontier remains46–48. For P::Output, the genuine projection is owner.projected_value(), not a proxy P or a projection forged from another original. Sequence already uses exactly this owned-output admission shape at phase11 for its intermediate source.
+
+The external caller already has the corresponding canonical seam: OS paged-one-item mutation-apply lines52/75 passes post.original()? to central preflight. Sequence should preserve that supplied original for the single branch. Multi-edit candidate admission and return before phase8 mutable commit must be explicitly funded and included in cancellation/close custody; merely changing the argument type or borrowing an unrelated source is insufficient. Current phase9 closes child before intermediate replacement, and close paths108–118 retain all candidate/source/binding owners; repair must preserve these orderings.
+
+Relevant mounted regression seams: sequence/🧪️tests/🦀️.rs:114 checks zero/single paths avoid projections and preserve payload pointer; central diff tests96 assert denied progress/heap zero and original/external-post pointer stability; receiving/🧪️tests/🦀️.rs:53 checks actual receiving ledger and construction recipient, denied callbacks zero, funded output and cancellation cleanup. Existing source-string tests under retained/📏️body/🧪️tests/🟦️.ts:29–33 still describe raw &post call shapes and require review with the authored API repair. Their text assertions cannot substitute for compiled ownership/funding tests.
+
+Finding sent to backend: use real staged candidate/source admission and the existing mutable-return lifecycle; no fabricated token, cold reconstructed P, or unrelated original projection.
+
+## Authored Candidate-Custody Review
+
+Current sequence stores OriginalPostRead<P::Output>13, includes its layout in fixed quote21, and quotes/prepares actual ownership admission at phase6 and authority handback at phase8 (31/54). Its child post reference39/63 projects from the admitted actual P::Output source with ProjectionOutput::projected_value; external single post is now supplied as RetainedCloneRef. No forged token or cold reconstructed candidate found. Cancellation closes child first111, returns admitted candidate authority118, then funds candidate retirement120; empty125 includes candidate-read emptiness.
+
+Handback scope: normal phase8 returns candidate before child commit; child closure follows commit at phase9. Central RetainedDiffOwner retains post identity metadata, not a binding alias. RetainedCloneSource::take_authority (value/🧬️retained-clone/🔗️source/🦀️.rs:117–121) closes its own alias then unwraps only when external aliases are gone. Thus any fragment retaining post-derived original child custody must release that custody before successful preflight completion. The reviewed sequence test EditApply stages fields from diff originals, so its post pointer/identity checks do not independently demonstrate release of a retained post-derived child alias. No concrete current fragment violating that condition identified; this is a coverage/contract limit, sent to backend rather than a speculative defect.
+
+No concrete source defect found in reviewed admission, cancellation, borrowed projection or layout additions. Actual compiled tests remain required and were not run by this audit.

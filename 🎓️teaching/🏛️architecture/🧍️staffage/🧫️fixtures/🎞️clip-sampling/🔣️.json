@@ -1,0 +1,59 @@
+{
+  "description": "Eases, time wrapping, frame numbering and key sampling on the reference-walker clips; expected numbers are authored by hand.",
+  "eases": [
+    { "ease": "linear", "t": 0.25, "value": 0.25 },
+    { "ease": "smooth", "t": 0.25, "value": 0.15625 },
+    { "ease": "smooth", "t": 0.5, "value": 0.5 },
+    { "ease": "in", "t": 0.5, "value": 0.25 },
+    { "ease": "out", "t": 0.5, "value": 0.75 },
+    { "ease": "step", "t": 0.999, "value": 0 },
+    { "ease": "step", "t": 1, "value": 1 },
+    { "ease": "smooth", "t": -1, "value": 0 },
+    { "ease": "in", "t": 2, "value": 1 }
+  ],
+  "wrap": [
+    { "t": 1.25, "duration": 1, "loop": true, "value": 0.25 },
+    { "t": -0.25, "duration": 1, "loop": true, "value": 0.75 },
+    { "t": 4, "duration": 4, "loop": true, "value": 0 },
+    { "t": 1.25, "duration": 1, "loop": false, "value": 1 },
+    { "t": -3, "duration": 1, "loop": false, "value": 0 }
+  ],
+  "frames": [
+    { "t": 0, "fps": 30, "frame": 0 },
+    { "t": 0.1, "fps": 30, "frame": 3 },
+    { "t": 0.2333333333333333, "fps": 30, "frame": 7 },
+    { "t": 0.0333, "fps": 30, "frame": 0 },
+    { "t": 1, "fps": 24, "frame": 24 }
+  ],
+  "keySamples": [
+    { "clip": "idle-breathing", "t": 0.5, "bones": { "torso": 0.15625, "head": -0.15625 }, "note": "smooth weight of 0.25 between the first two keys" },
+    { "clip": "idle-breathing", "t": 1, "bones": { "torso": 0.5, "head": -0.5 } },
+    { "clip": "idle-breathing", "t": 2, "bones": { "torso": 1, "head": -1 } },
+    { "clip": "idle-breathing", "t": 5, "bones": { "torso": 0.5, "head": -0.5 }, "note": "wraps to t = 1" },
+    { "clip": "bag-swing", "t": 0.5, "bones": { "torso": -4, "pelvis": 2 }, "loadScale": { "shoulder-bag": 1.15 } }
+  ],
+  "tracks": [
+    { "clip": "idle-breathing", "t": 2.2, "target": "emitter:breath", "value": 0.5083333333333333 },
+    { "clip": "idle-breathing", "t": 0, "target": "emitter:breath", "value": 0 },
+    { "clip": "bag-swing", "t": 1, "target": "load:shoulder-bag", "value": 1.3 }
+  ],
+  "transition": {
+    "from": "stand",
+    "to": "carry-bag",
+    "durationS": 1,
+    "atHalf": { "bones": { "pelvis": 1, "torso": -1.5, "arm-l": 3 }, "activityMet": 1.3, "loadFyN": -24.515, "contacts": ["contact-l", "contact-r"] },
+    "clampedBefore": 0,
+    "clampedAfter": 1
+  },
+  "phases": [
+    { "clip": "idle-breathing", "t": 1, "phase": "inhale" },
+    { "clip": "idle-breathing", "t": 2, "phase": "exhale" },
+    { "clip": "walk", "t": 0.7, "phase": "right-stance" }
+  ],
+  "contacts": [
+    { "clip": "walk", "t": 0.25, "anchors": ["contact-l"] },
+    { "clip": "walk", "t": 0.5, "anchors": ["contact-l", "contact-r"] },
+    { "clip": "walk", "t": 0.75, "anchors": ["contact-r"] },
+    { "clip": "walk", "t": 0.02, "anchors": ["contact-l", "contact-r"] }
+  ]
+}

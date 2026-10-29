@@ -36,6 +36,9 @@ def decide(policy, state):
 
 
 def budget(policy, environment, host):
+    carried = bool(environment.get(policy["planEnvironment"], ""))
+    derived = policy["minimumBudgetMegabytes"] if carried else math.floor(max(0, host) * policy["hostShare"])
+    bound = max(policy["minimumBudgetMegabytes"], min(policy["maximumBudgetMegabytes"], derived))
     text = environment.get(policy["budgetEnvironment"])
     if text is not None:
         try:
@@ -44,17 +47,8 @@ def budget(policy, environment, host):
             return {"error": True}
         if not math.isfinite(value) or value < policy["minimumBudgetMegabytes"]:
             return {"error": True}
-        return {"bytes": math.floor(value) * MEGABYTE}
-    try:
-        plan = json.loads(environment.get(policy["planEnvironment"], "null"))
-    except ValueError:
-        plan = None
-
-    def part(value):
-        return value if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value) and value > 0 else 0
-    granted = part(plan.get("memoryMegabytes")) + part(plan.get("fixedMegabytes")) if isinstance(plan, dict) else 0
-    derived = math.floor(granted * policy["grantShare"]) if granted > 0 else math.floor(part(host) * policy["hostShare"])
-    return {"bytes": max(policy["minimumBudgetMegabytes"], min(policy["maximumBudgetMegabytes"], derived)) * MEGABYTE}
+        bound = min(bound, math.floor(value))
+    return {"bytes": bound * MEGABYTE}
 
 
 def languages(policy, environment):

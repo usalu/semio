@@ -1,0 +1,80 @@
+[
+  {
+    "name": "Successful consumer completes before final verification",
+    "body": "success",
+    "accepted": [
+      "success"
+    ],
+    "recheck": "success",
+    "expected": {
+      "rechecks": 1,
+      "failure": "none",
+      "members": 0
+    }
+  },
+  {
+    "name": "Failed body retains exact primary without new admission",
+    "body": "failure",
+    "accepted": [
+      "success"
+    ],
+    "recheck": "failure",
+    "expected": {
+      "rechecks": 0,
+      "failure": "body",
+      "members": 1
+    }
+  },
+  {
+    "name": "Undefined body failure remains a failure",
+    "body": "undefined-failure",
+    "accepted": [
+      "success"
+    ],
+    "recheck": "failure",
+    "expected": {
+      "rechecks": 0,
+      "failure": "undefined",
+      "members": 1
+    }
+  },
+  {
+    "name": "Accepted consumer failure prevents final admission",
+    "body": "success",
+    "accepted": [
+      "failure"
+    ],
+    "recheck": "failure",
+    "expected": {
+      "rechecks": 0,
+      "failure": "consumer",
+      "members": 1
+    }
+  },
+  {
+    "name": "Independent body and accepted failures remain aggregated",
+    "body": "failure",
+    "accepted": [
+      "failure"
+    ],
+    "recheck": "failure",
+    "expected": {
+      "rechecks": 0,
+      "failure": "aggregate",
+      "members": 2
+    }
+  },
+  {
+    "name": "Successful body still refuses failed final verification",
+    "body": "success",
+    "accepted": [
+      "success"
+    ],
+    "recheck": "failure",
+    "expected": {
+      "rechecks": 1,
+      "failure": "validation",
+      "members": 1
+    }
+  }
+]

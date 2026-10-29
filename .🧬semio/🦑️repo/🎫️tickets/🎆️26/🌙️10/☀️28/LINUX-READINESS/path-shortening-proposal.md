@@ -21,6 +21,8 @@ For product fixture paths, retain the standard/subset/editor/window hierarchy an
 | 🏝️change-dehumidifying-setpoint-schedule | 🏝️dehumidify-setpoint-schedule |
 | 👁️set-brush-preview | 👁️brush-preview |
 
-A dry string transformation across every tracked non-ticket path finds 0 target collisions. Over-budget non-ticket files decrease from 12 to 0; over-budget non-ticket directories decrease from 28 to 0. The file budget is 213 relative UTF-16 units and the directory budget 202, reserving the fixture-declared 46-unit clone root under stock Windows MAX_PATH.
+A dry string transformation across every tracked non-ticket path finds 0 target collisions. Over-budget non-ticket files decrease from 12 to 0; over-budget non-ticket directory counts were originally measured with a202-unit threshold; that preliminary count is superseded by the corrected201-unit law. The file budget is 213 relative UTF-16 units and the directory budget 201, reserving the fixture-declared 46-unit clone root under stock Windows MAX_PATH.
 
 This is a naming proposal, not a verified migration. Before implementing, scope each mapping to the owning fixture roots, inspect dynamic fixture discovery and literal path references, adjust canonical fixture identifiers if derived from names, update all references together, and rerun owning fixture suites plus the stock Windows path laws. No backwards-compatible aliases or migration scripts should remain.
+
+The proper directory threshold is201 UTF-16 units. The earlier202-unit arithmetic and its dry-run directory result are superseded by product-path-audit.md, which records the applied domain-preserving names and complete current-worktree proof. This preliminary proposal was not itself applied.

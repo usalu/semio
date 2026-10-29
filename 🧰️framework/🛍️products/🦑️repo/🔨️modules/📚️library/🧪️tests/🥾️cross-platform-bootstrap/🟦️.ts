@@ -1,5 +1,5 @@
 /** 🥾️ Cross-platform zero-touch laws for a fresh clone on devcontainer, native Windows, macOS and Linux: the stock
- * Windows path budget, script encodings Windows PowerShell 5.1 and bash read correctly, the distribution-neutral Linux
+ * strict 256-unit path and Windows directory budgets, script encodings Windows PowerShell 5.1 and bash read correctly, the distribution-neutral Linux
  * linker, repo-local git configuration, the native bootstraps' provisioning contract and clone-resolvable workspaces.
  * Every measurement is cross-checked against an independent implementation (iconv-lite, smol-toml, ignore, git). @see ../../🧫️fixtures/🥾️cross-platform-bootstrap/🔣️.json */
 import { describe, expect, test } from "bun:test";
@@ -13,10 +13,13 @@ import Ajv from "ajv";
 import { build, type Plugin } from "esbuild";
 import iconv from "iconv-lite";
 import ignore from "ignore";
+import {Database as SourcePathDatabase} from "bun:sqlite";
 import * as SmolToml from "smol-toml";
+import pathSchema from "../../🧬️schema/🥾️cross-platform-bootstrap/📏️paths/🔣️.json" with {type:"json"};
+import pathCases from "../🧫️fixtures/🥾️cross-platform-bootstrap/📏️paths/🔣️.json" with {type:"json"};
 
 type Fixture = Readonly<{
-  pathBudget: Readonly<{ unit: "utf16"; windowsMaxPath: number; cloneRootMax: number; componentMax: number }>;
+  pathBudget: Readonly<{ unit:"utf16"; maximumAbsolutePathUnits:number; windowsApiPathUnits:number; windowsDirectoryReserveUnits:number; clonePrefixUnits:number; componentMax:number }>;
   scriptEncoding: Readonly<{ bomExtensions: readonly string[]; lfExtensions: readonly string[]; excludedPrefixes: readonly string[] }>;
   cargoLinker: Readonly<{ config: string; linuxTable: string; linuxRustflags: readonly string[]; forbiddenRustflagFragments: readonly string[] }>;
   repoLocalGitConfig: readonly (readonly [string, string])[];
@@ -72,7 +75,10 @@ function git(args: readonly string[], cwd = repoRoot, env: NodeJS.ProcessEnv = p
   return result.stdout;
 }
 
-const tracked = git(["-c", "core.quotepath=off", "ls-files", "-z"]).split("\0").filter(Boolean);
+/** 🗃️ Captures existing checkout Source candidates without relying on an index update. */
+function currentCheckoutSourcePathsV1(candidates:string,present:(path:string)=>boolean):string[]{return [...new Set(candidates.split("\0").filter(path=>path&&present(path)))].sort((a,b)=>Buffer.compare(Buffer.from(a),Buffer.from(b)));}
+
+const tracked = currentCheckoutSourcePathsV1(git(["-c", "core.quotepath=off", "ls-files", "-z", "--cached", "--others", "--exclude-standard"]), path => lstatSync(join(repoRoot,path),{throwIfNoEntry:false})!==undefined);
 
 type PathBudgetReport = Readonly<{ max: number; overBudget: readonly string[]; overComponent: readonly string[] }>;
 
@@ -125,17 +131,45 @@ describe("cross-platform bootstrap", () => {
     expect(imports).toEqual(fixture.freshClone.deferredImports.imports as typeof imports);
     expect(Object.keys(result.metafile.inputs)).toEqual(["<stdin>"]);
   });
-  test("validates the portable law fixture", () => {
-    
-    expect(fixture["pathBudget"]["unit"]).toEqual("utf16");
-    
+  test("validates the strict path policy and absolute UTF-16 boundary cases", () => {
+    expect(new Ajv({strict:true}).validate(pathSchema.definitions.Policy,fixture.pathBudget)).toBe(true);
+    expect(new Ajv({strict:true}).validate(pathSchema.definitions.Cases,pathCases)).toBe(true);
+    const policy=fixture.pathBudget,prefix="C:/"+"r".repeat(policy.clonePrefixUnits-4)+"/";
+    expect(prefix.length).toBe(policy.clonePrefixUnits);
+    expect(prefix.endsWith("/")).toBe(true);
+    for(const row of pathCases.cases){
+      const path=prefix+row.symbol.repeat(row.repeat),maximum=Math.min(policy.maximumAbsolutePathUnits,policy.windowsApiPathUnits-(row.kind==="directory"?policy.windowsDirectoryReserveUnits:1)),native=path.length<=maximum,oracle=iconv.encode(path,"utf16le").length/2<=maximum;
+      expect(native,row.name).toBe(row.expected);expect(native,row.name).toBe(oracle);
+    }
   });
 
-  test("keeps every tracked path inside the stock Windows MAX_PATH budget below a declared clone root", () => {
-    const { windowsMaxPath, cloneRootMax, componentMax } = fixture.pathBudget;
-    const fileBudget = windowsMaxPath - 1 - cloneRootMax;
-    // CreateDirectoryW rejects a directory at MAX_PATH - 12, so the directory string itself stops one unit earlier.
-    const directoryBudget = windowsMaxPath - 12 - 1 - cloneRootMax;
+
+  test("current Source enumeration preserves deleted indexed and new authored cases", () => {
+    const cases = JSON.parse(readFileSync(join(libraryRoot, "🧪️tests/🧫️fixtures/🥾️cross-platform-bootstrap/📁️source-paths/🔣️.json"), "utf8")) as { cases: { name:string; candidates:string[]; present:string[]; expected:string[] }[] };
+    const schema = JSON.parse(readFileSync(join(libraryRoot, "🧬️schema/🥾️cross-platform-bootstrap/📁️source-paths/🔣️.json"), "utf8"));
+    expect(new Ajv({strict:true}).compile(schema)(cases)).toBe(true);
+    const database = new SourcePathDatabase(":memory:");
+    try {
+      for (const row of cases.cases) {
+        const present = new Set(row.present), result = currentCheckoutSourcePathsV1(row.candidates.join("\0"), path => present.has(path));
+        const oracle = database.query("SELECT DISTINCT c.value FROM json_each(?1) c JOIN json_each(?2) p ON c.value=p.value WHERE c.value<>'' ORDER BY c.value COLLATE BINARY").all(JSON.stringify(row.candidates), JSON.stringify(row.present)) as {value:string}[];
+        expect(result, row.name).toEqual(row.expected);
+        expect(result, row.name).toEqual(oracle.map(row => row.value));
+      }
+    } finally { database.close(); }
+  });
+
+  test("current Source enumeration agrees with the actual read-only Git deleted-path oracle", () => {
+    const candidates = git(["-c", "core.quotepath=off", "ls-files", "-z", "--cached", "--others", "--exclude-standard"]);
+    const deleted = new Set(git(["-c", "core.quotepath=off", "ls-files", "-z", "--deleted"]).split("\0").filter(Boolean));
+    const oracle = [...new Set(candidates.split("\0").filter(path => path && !deleted.has(path)))].sort((a,b) => Buffer.compare(Buffer.from(a),Buffer.from(b)));
+    expect(currentCheckoutSourcePathsV1(candidates,path=>lstatSync(join(repoRoot,path),{throwIfNoEntry:false})!==undefined)).toEqual(oracle);
+  },60_000);
+
+  test("keeps every current Source path inside the strict 256-unit absolute budget below the declared clone prefix", () => {
+    const {maximumAbsolutePathUnits,windowsApiPathUnits,windowsDirectoryReserveUnits,clonePrefixUnits,componentMax}=fixture.pathBudget;
+    const fileBudget=Math.min(maximumAbsolutePathUnits,windowsApiPathUnits-1)-clonePrefixUnits;
+    const directoryBudget=Math.min(maximumAbsolutePathUnits,windowsApiPathUnits-windowsDirectoryReserveUnits)-clonePrefixUnits;
     const directories = [...new Set(tracked.flatMap((path) => path.split("/").slice(0, -1).map((_, index, parts) => parts.slice(0, index + 1).join("/"))))];
     const utf16 = (value: string) => iconv.encode(value, "utf16le").length / 2;
     const files = measurePaths(tracked, (value) => value.length, fileBudget, componentMax);
@@ -151,16 +185,17 @@ describe("cross-platform bootstrap", () => {
     expect(dirs.overBudget, `tracked directories above ${directoryBudget} UTF-16 units (max ${dirs.max})`).toEqual([]);
   }, 60_000);
 
-  test("keeps current product paths inside the stock Windows MAX_PATH budget", () => {
-    const paths = [...new Set(git(["-c", "core.quotepath=off", "ls-files", "-z", "--cached", "--others", "--exclude-standard"]).split("\0").filter(path => path && !path.includes("/🎫️tickets/") && existsSync(join(repoRoot, path))))];
-    const { windowsMaxPath, cloneRootMax, componentMax } = fixture.pathBudget;
+  test("keeps current product paths inside the strict absolute and Windows directory budgets", () => {
+    const paths = tracked.filter(path => !path.includes("/🎫️tickets/"));
+    const {maximumAbsolutePathUnits,windowsApiPathUnits,windowsDirectoryReserveUnits,clonePrefixUnits,componentMax}=fixture.pathBudget;
+    const fileBudget=Math.min(maximumAbsolutePathUnits,windowsApiPathUnits-1)-clonePrefixUnits,directoryBudget=Math.min(maximumAbsolutePathUnits,windowsApiPathUnits-windowsDirectoryReserveUnits)-clonePrefixUnits;
     const directories = [...new Set(paths.flatMap(path => path.split("/").slice(0, -1).map((_, index, parts) => parts.slice(0, index + 1).join("/"))))];
     const utf16 = (value: string) => iconv.encode(value, "utf16le").length / 2;
-    const files = measurePaths(paths, value => value.length, windowsMaxPath - 1 - cloneRootMax, componentMax);
-    const dirs = measurePaths(directories, value => value.length, windowsMaxPath - 13 - cloneRootMax, componentMax);
+    const files = measurePaths(paths, value => value.length, fileBudget, componentMax);
+    const dirs = measurePaths(directories, value => value.length, directoryBudget, componentMax);
     expect(paths.length).toBeGreaterThan(1000);
-    expect(files).toEqual(measurePaths(paths, utf16, windowsMaxPath - 1 - cloneRootMax, componentMax));
-    expect(dirs).toEqual(measurePaths(directories, utf16, windowsMaxPath - 13 - cloneRootMax, componentMax));
+    expect(files).toEqual(measurePaths(paths, utf16, fileBudget, componentMax));
+    expect(dirs).toEqual(measurePaths(directories, utf16, directoryBudget, componentMax));
     expect(files.overComponent).toEqual([]);
     expect(dirs.overComponent).toEqual([]);
     expect(files.overBudget).toEqual([]);

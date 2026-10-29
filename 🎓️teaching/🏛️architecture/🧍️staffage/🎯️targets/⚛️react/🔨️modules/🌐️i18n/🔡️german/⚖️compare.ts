@@ -1,0 +1,30 @@
+/** ⚖️ Deutsche Texte des Vergleichs. @see ../../🔠️english/⚖️compare.ts — Englisch, Schlüssel für Schlüssel */
+import type { COMPARE_EN } from "../🔠️english/⚖️compare.ts";
+
+export const COMPARE_DE: Record<keyof typeof COMPARE_EN, string> = {
+  "compare.title": "Vergleichen",
+  "compare.lede": "Zwei bis vier Felder auf einer Uhr: andere Assets, oder ein Asset in anderen Ansichten, Stilen und Analysezuständen.",
+  "compare.eyebrow": "Nebeneinander",
+  "compare.scale": "Zeichenmaßstab",
+  "compare.scaleCustom": "Eigener Maßstab",
+  "compare.quick": "Schnellvergleiche",
+  "compare.sameAsset": "Gleiches Asset, andere Ansichten",
+  "compare.sameView": "Andere Assets, gleiche Ansicht",
+  "compare.addPane": "Feld hinzufügen",
+  "compare.swap": "Erste zwei tauschen",
+  "compare.reset": "Zurücksetzen",
+  "compare.transport": "Gemeinsame Uhr aller Felder",
+  "compare.removePane": "Feld {index} entfernen",
+  "compare.asset": "Asset",
+  "compare.view": "Ansicht",
+  "compare.pick": "Pose oder Clip",
+  "compare.pickDefault": "Standard-Clip auf der gemeinsamen Uhr",
+  "compare.pose": "Pose",
+  "compare.clip": "Clip",
+  "compare.width": "Nennbreite",
+  "compare.inspectHint": "Zeigen Sie auf ein gezeichnetes Element einer Analyseansicht oder fokussieren Sie es, um den Wert zu lesen.",
+  "compare.unknownAsset": "Dieses Asset ist nicht im Archiv",
+  "compare.needTwo.title": "Zum Vergleichen braucht es zwei zeichenbare Assets",
+  "compare.needTwo.body": "Derzeit lassen sich nur {count} Assets zeichnen. Noch nicht erstellte oder bei der Prüfung gescheiterte Assets lassen sich nicht vergleichen.",
+  "compare.sharedClock": "Alle Felder lesen eine Uhr, daher bleiben Clips auf demselben Bild. Eine Pose bewegt sich nicht. Der Maßstab ändert Linienstärken und Detail, nie die Maße.",
+};

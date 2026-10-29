@@ -20,7 +20,14 @@
         "maximumMetadataDepth": 64,
         "maximumReadOperations": 1048576,
         "maximumBatchFailures": 3,
-        "maximumInventoryRecordsPerYield": 128
+        "maximumInventoryRecordsPerYield": 128,
+        "opaquePathBasenames": {
+          "prefixes": [
+            ".p",
+            ".d"
+          ],
+          "digestHex": 8
+        }
       }
     },
     "Admission": {

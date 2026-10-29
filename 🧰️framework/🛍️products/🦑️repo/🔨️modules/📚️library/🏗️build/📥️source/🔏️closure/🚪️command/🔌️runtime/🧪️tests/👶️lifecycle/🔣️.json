@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "parent": {
+    "filesystemBytes": 67108864,
+    "maximumPhysicalBytes": 68157440
+  },
+  "child": {
+    "filesystemBytes": 33554432,
+    "maximumPhysicalBytes": 34603008
+  },
+  "expected": {
+    "childAttached": true,
+    "childRemoved": true,
+    "parentRetired": true
+  }
+}

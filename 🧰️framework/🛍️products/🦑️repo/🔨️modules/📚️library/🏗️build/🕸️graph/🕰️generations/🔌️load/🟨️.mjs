@@ -1,7 +1,7 @@
 import{createHash}from"node:crypto";
 import{join}from"node:path";
 import{graphQueueRequestedAtV1,graphQueueYieldsV1,yieldGraphQueueV1}from"../🛌️yield/🟨️.mjs";
-import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createGenerationStoreV1,rowKeyV1}from"../🟨️.mjs";
+import{GENERATION_POLICY_V1,canonicalJsonV1,compareCodePointsV1,createGenerationStoreV1,readGenerationExternalInputsV1,resolveGenerationExternalInputV1,rowKeyV1}from"../🟨️.mjs";
 import{createGraphPhaseClockV1}from"../../⏱️phases/🟨️.mjs";
 import{decodeVerifiedScopeV1}from"../🔭️coverage/🟨️.mjs";
 import{readPinnedGenerationV1}from"../🧷️pin/🟨️.mjs";
@@ -289,7 +289,8 @@ export async function expandStreamV1(entries,expand,{maximumProjects,maximumByte
 /** 🕰️ Loads the all-workspace graph (a command whose front door offered a yield ticket and that only waits for a peer's build ends instead of waiting: see `../🛌️yield`), the closure of some projects, or the slice of a selected scope (tasks or literal owners) from the newest sealed generation; `lean` answers only project and target names. A shared reader verifies and serves it without ever taking a writer; only a stale or missing generation enters the builder custody, where a holder that finds the work done by a peer serves that generation.
  * `host` binds the repository: `release()` (optional: drops the in-process caches a construction filled, called once the graph is assembled so a process that goes on to run for hours keeps only the graph), `identity()`, `implementationRows()`, `withShared(body)`, `withBuilder(body)`, `storeOptions(store, control)`, `membership(previous, signal)`, `discoverPart(spec, signal)`, `expand(projects, control)`, `expansionLimits`, `readGraph(value)`, `readLean(value)`, `clock(control)`, `say(key, fields)` and the constants `workspaceRoot`, `namedInputs`, `registryDigest`, `signal`.
  */
-export async function loadGenerationGraphV1(host,{policy="fresh",closure,selection,slice,lean,pin}={}){
+export async function loadGenerationGraphV1(host,{policy="fresh",closure,selection,slice,lean,pin,externalInputs=[]}={}){
+ externalInputs=readGenerationExternalInputsV1(externalInputs);
  const requestedAt=graphQueueRequestedAtV1()??Date.now(),identity=await host.identity(),roots=slice?[...new Set(slice.roots)]:closure?[...new Set(closure)]:undefined,rows=pin===undefined?await host.implementationRows():[],implementation=implementationDigestV1(rows),scoped=scopeImplementationRowsV1(rows),limits=host.expansionLimits??{maximumProjects:GENERATION_POLICY_V1.expansionMaximumProjects,maximumBytes:GENERATION_POLICY_V1.expansionMaximumBytes};
  let pointer;
  const attempt=async(builder,store,control)=>{
@@ -309,9 +310,10 @@ export async function loadGenerationGraphV1(host,{policy="fresh",closure,selecti
   else if(host.verbose||lean)host.say(roots?"closure":"verified",roots?{count:result.names.size}:{generation,checked:result.plan?.checked??0});
   if(result.plan?.cutoff?.questions)host.say("cutoff",{questions:result.plan.cutoff.questions,rows:result.plan.stale??0,held:result.plan.cutoff.held,changed:result.plan.cutoff.changed});
   if(lean){const listing=await engine.catalog(result.current,{signal:host.signal});return{graph:host.readLean({version:1,lean:true,projects:Object.fromEntries(listing.projects.map(row=>[row.name,{name:row.name,root:row.root,targets:Object.fromEntries(row.targets.map(target=>[target,{}]))}])),dependencies:[],...(listing.unavailable.length?{unavailable:listing.unavailable}:{})}),result};}
-  const stream=engine.assembleStream(result.current,{names:result.names&&[...result.names],compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});
-  const projects=await expandStreamV1(stream.nodes(),chunk=>host.expand(chunk,control),limits),assembled=await stream.finish(),closureDigest=selection?createHash("sha256").update(canonicalJsonV1([assembled.membership,[...result.names].sort()])).digest("hex"):assembled.membership;
-  const graph=host.readGraph({version:1,projects,dependencies:assembled.dependencies,namedInputs:host.namedInputs,externalNodes:assembled.externalNodes,...(assembled.unavailable.length?{unavailable:assembled.unavailable}:{}),admission:{selection:selection??{kind:"all"},registry:host.registryDigest,closure:closureDigest}});
+  const stream=engine.assembleStream(result.current,{names:result.names&&[...result.names],externalInputs,compare:(a,b)=>a.localeCompare(b),signal:host.signal,progress});
+  const projects=await expandStreamV1(stream.nodes(),chunk=>host.expand(chunk,control),limits),assembled=await stream.finish(),externalRoots=[...new Set(externalInputs.map(name=>resolveGenerationExternalInputV1(assembled.externalNodes,name)))].sort(compareCodePointsV1);
+  const closureDigest=selection?createHash("sha256").update(canonicalJsonV1([assembled.membership,[...result.names].sort(),...externalRoots.length?[externalRoots]:[]])).digest("hex"):assembled.membership;
+  const graph=host.readGraph({version:1,projects,dependencies:assembled.dependencies,namedInputs:host.namedInputs,externalNodes:assembled.externalNodes,...(assembled.unavailable.length?{unavailable:assembled.unavailable}:{}),admission:{selection:selection??{kind:"all"},registry:host.registryDigest,closure:closureDigest,...externalRoots.length?{externalInputs:externalRoots}:{}}});
   if(host.sealed){const manifest=result.current.manifest,owners=Object.keys(manifest.owners).sort(compareCodePointsV1);host.sealed({generation:manifest.generation,manifest:result.current.pointer.manifest,owners,covered:pin!==undefined?decodeVerifiedScopeV1(owners,pin.covered):result.names,atMs:pin!==undefined?pin.covered.atMs:requestedAt});}
   return{graph,result};
  };

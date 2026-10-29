@@ -2,7 +2,7 @@
 import {afterAll,expect,test} from "bun:test";
 import {testPythonV1} from "../../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
 import {chmodSync,existsSync,mkdirSync,mkdtempSync,readFileSync,readdirSync,realpathSync,rmSync,statSync,writeFileSync} from "node:fs";
-import {tmpdir} from "node:os";
+import {uptime} from "node:os";
 import {dirname,join,relative,sep} from "node:path";
 import {fileURLToPath,pathToFileURL} from "node:url";
 import {createHash} from "node:crypto";
@@ -21,7 +21,7 @@ import {withBuildGraphStagingV1} from "../../../../../📥️inputs/💾️stora
 
 const here=dirname(fileURLToPath(import.meta.url)),python=testPythonV1(),oracle=join(here,"🐍️.py"),fixturePath=join(here,"🔣️.json"),schemaPath=join(here,"..","🏊️pool","🧬️schema","🔣️.json");
 const ask=(command:string)=>JSON.parse(Bun.spawnSync([python!,"-I",oracle,fixturePath,schemaPath,command]).stdout.toString());
-const roots:string[]=[],scratch=()=>{const root=mkdtempSync(join(realpathSync(tmpdir()),"graph-farm-law-"));roots.push(root);return root;};
+const roots:string[]=[],scratch=()=>{const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Owned test artifacts directory required");mkdirSync(artifacts,{recursive:true});const root=mkdtempSync(join(realpathSync(artifacts),"f-"));roots.push(root);return root;};
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const sha=(data:string|Buffer)=>createHash("sha256").update(data).digest("hex");
 const worker=join(here,"..","👷️worker","🟨️.mjs"),service=pathToFileURL(join(here,"🧫️fixtures","🛰️service","🟨️.mjs")).href,adopter=join(here,"🧫️fixtures","🛰️adopter","🟨️.mjs");
@@ -251,8 +251,10 @@ test("the farm starts the worker its own capacity grant pays for, accepts a host
  const open=(environment:Record<string,string>)=>openProjectFarmV1({workspaceRoot:root,context:{registry:null},contracts:{},launch:null,projects:566,commandInputs:null,projectsByRoot:new Map(),componentRoots:[],environment,processed:()=>24,cores:10,write:line=>lines.push(line),
   spawnProcess:((_command:string,_args:readonly string[],options:{env:Record<string,string>})=>{const child=new ScriptedChild(String(children.length),log);children.push(child);return child;}) as never,
   request:(() => ({granted:new Promise<{jobs:number;megabytes:number}|undefined>(done=>{grant=done;}),release:()=>{released.push("host");}})) as never})!;
- const plan=JSON.stringify({version:1,id:"x",jobs:1,cpu:1,memoryMegabytes:2048,fixedMegabytes:1536});
- const farm=open({LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_PLAN:plan});
+ const id="farm_live_0001",capacity=join(root,"capacity"),plan=JSON.stringify({version:1,id,jobs:1,cpu:1,memoryMegabytes:2048,fixedMegabytes:1536,floorMegabytes:1981});
+ mkdirSync(join(capacity,"grants"),{recursive:true});
+ writeFileSync(join(capacity,"grants",id+".json"),JSON.stringify({id,operation:"run",jobs:1,cpu:1,reservedMegabytes:7168,admittedAtMs:Date.now(),observedMegabytes:null,pid:process.pid,bootAtMs:Math.round((Date.now()-uptime()*1000)/1000)*1000}));
+ const farm=open({LANG:"en_US.UTF-8",SEMIO_HOST_CAPACITY_DIRECTORY:capacity,SEMIO_HOST_CAPACITY_PLAN:plan});
  const job=(name:string)=>({name,root:name,json:{},native:false,pipeline:false,nativeRoot:name,selectedInputs:[],head:[],cacheKey:"0".repeat(24)});
  for(let index=0;index<23;index++)expect(await farm.prepare(job("miss"+index))).toBe(false);
  expect(children.length).toBe(0);

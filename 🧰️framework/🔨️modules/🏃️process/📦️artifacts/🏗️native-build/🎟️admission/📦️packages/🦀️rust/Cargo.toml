@@ -1,9 +1,11 @@
+cargo-features = ["trim-paths"]
+
 [package]
 name = "semio-build-scheduler"
 version = "0.0.0"
 edition = "2024"
 publish = false
-description = "Memory-admitting rustc wrapper of the release build driver"
+description = "Memory-admitting rustc wrapper of the native build driver"
 
 [[bin]]
 name = "semio-build-scheduler"

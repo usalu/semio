@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1} from "../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import {buildOptionsV1,literalBuildProjectSelectorsV1,selectLiteralBuildProjectsV1} from "./📥️options/🟦️.ts";
 export {buildOptionsV1} from "./📥️options/🟦️.ts";
 import type { BuildGraphV1 } from "../🕸️graph/📋️model/🟦️.ts";
@@ -145,7 +146,7 @@ export async function watchBuildInvocationV1(root:string,graph:BuildGraphV1,args
   }).catch(error=>{failure??={error};controller.abort(failure.error);stop();}).finally(()=>{busy=false;if(!stopped&&changed.size)pending=setTimeout(flush,200);});};
   check();const watcher=watch(root,{recursive:true},(_event,filename)=>{
     if(stopped||!filename)return;try{check();}catch(fault){error(fault);return;}const path=filename.toString().replaceAll("\\","/");
-    if(path.split("/").some(part=>[...cachePolicy.generatedDirectories,".git",".🧬semio","temp"].includes(part)))return;
+    if(isOpaqueSourcePathV1(path)||path.split("/").some(part=>[...cachePolicy.generatedDirectories,".git",".🧬semio","temp"].includes(part)))return;
     if(path.split("/").some((part,index,parts)=>ownership.collections.names.includes(part)&&parts[index-1]!==ownership.collections.moduleMember))return;
     const selected=names.some(name=>graph.projects[name]!.root==="."||path.startsWith(graph.projects[name]!.root+"/")),global=includeGlobal&&!Object.values(graph.projects).some(project=>project.root!=="."&&path.startsWith(project.root+"/"));
     if(!selected&&!global)return;

@@ -55,7 +55,6 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework-2d-compute = { path = "../../../../../../../../🔨️modules/◻️2d/🧮️compute/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-job-payload = { path = "../../../../../../../../🔨️modules/🧵️job/📬️outcome/📦️builder/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../../../../../🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-ui-layout = { path = "../../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

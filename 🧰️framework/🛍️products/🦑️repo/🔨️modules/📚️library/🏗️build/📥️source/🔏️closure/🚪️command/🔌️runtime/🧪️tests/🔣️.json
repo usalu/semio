@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "actions": [
+    "allocate",
+    "activate",
+    "deactivate",
+    "inactive"
+  ],
+  "filesystemBytes": 33554432,
+  "maximumPhysicalBytes": 34603008,
+  "entry": "📜️script.ts",
+  "requiredClosureSuffixes": [
+    "📁️directory/🔀️exchange/🟦️.ts",
+    "📁️directory/📋️contract/🟦️.ts"
+  ],
+  "expectedState": "inactive"
+}

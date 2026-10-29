@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "wire": 0,
+      "expected": 0
+    },
+    {
+      "wire": 17,
+      "expected": 17
+    },
+    {
+      "wire": 4294967295,
+      "expected": 4294967295
+    },
+    {
+      "wire": 4294967296,
+      "expected": null
+    }
+  ]
+}

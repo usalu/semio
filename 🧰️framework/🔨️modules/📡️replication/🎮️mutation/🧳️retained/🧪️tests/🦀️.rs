@@ -56,7 +56,7 @@ fn preflight(o:&mut RetainedDiffOwner<Projection,Diff>,d:&RetainedCloneSource<Di
 fn retained_mutation_yields_typed_diff_before_preflight_inverse_and_commit(){
  let corpus:serde_json::Value=serde_json::from_str(fixture_text!("../../🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in corpus["cases"].as_array().unwrap(){
-  let base=case["base"].as_i64().unwrap();let mut m=source(Operation{set:case["set"].as_i64().unwrap(),refused:case["refused"].as_bool().unwrap()});let mut p=source(Projection{value:base,untouched:vec![1;256]});let mut post=Projection{value:base,untouched:vec![2;256]};let pointer=post.untouched.as_ptr();
+  let base=case["base"].as_i64().unwrap();let mut m=source(Operation{set:case["set"].as_i64().unwrap(),refused:case["refused"].as_bool().unwrap()});let mut p=source(Projection{value:base,untouched:vec![1;256]});let mut post=PostFixture::new(Projection{value:base,untouched:vec![2;256]});let pointer=post.untouched.as_ptr();
   let(mut o,_)=begin_retained_mutation::<Projection,Operation>(grant(retained_mutation_birth_demand::<Projection,Operation>())).unwrap();let factory=semio_framework_value::factory::OwnedValueRetirementFactory::<Operation>::default();let c=RetainedMutationCloseContext{mutations:&factory};
   if let Some(diff)=decision(&mut o,&m,&p){
    assert_eq!(post.value,base);let mut d=source(diff);let(mut apply,_)=begin_retained_diff::<Projection,Diff>(grant(retained_diff_birth_demand::<Projection,Diff>())).unwrap();preflight(&mut apply,&d,&p,&post);assert_eq!(post.value,base);

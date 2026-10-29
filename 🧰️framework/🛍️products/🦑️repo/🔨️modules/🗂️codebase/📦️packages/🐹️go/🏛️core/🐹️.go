@@ -3,7 +3,6 @@ package codebase
 import (
 	os "os"
 	filepath "path/filepath"
-	strings "strings"
 
 	model "github.com/usalu/semio/repo/model"
 	statutes "github.com/usalu/semio/repo/statutes"
@@ -14,14 +13,14 @@ import (
 
 // 💿️CodebaseContext holds the data fields for a codebase context record.
 type CodebaseContext struct {
-	RootDir  string
-	RootURI  string
+	RootDir      string
+	RootURI      string
 	Technologies []model.Technology
-	Bundles  []model.Bundle
-	Files    []string
-	Breachs  []model.Breach
-	Tickets  []model.Ticket
-	Policies []statutes.PolicyDef
+	Bundles      []model.Bundle
+	Files        []string
+	Breachs      []model.Breach
+	Tickets      []model.Ticket
+	Policies     []statutes.PolicyDef
 }
 
 // 📝️NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
@@ -39,7 +38,9 @@ func NewCodebaseContext(rootDir string) *CodebaseContext {
 func (ctx *CodebaseContext) LoadBundles() {
 	ctx.Technologies = loadTechnologiesInternal(ctx.RootDir)
 	ctx.Bundles = nil
-	for _, technology := range ctx.Technologies { ctx.Bundles = append(ctx.Bundles, technology.Bundles...) }
+	for _, technology := range ctx.Technologies {
+		ctx.Bundles = append(ctx.Bundles, technology.Bundles...)
+	}
 }
 
 // 📄️LoadFiles MUST read from the configured storage path.
@@ -102,11 +103,15 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 	var matchedLen int
 	for _, bundle := range ctx.Bundles {
 		root := workspace.NormalizePath(bundle.Root)
-		if strings.HasPrefix(normalizedPath, root+"/") || normalizedPath == root {
-			if len(root) > matchedLen {
+		if model.ArtifactBoundaryOwnsPath(root, normalizedPath) {
+			length := len(root)
+			if root == "." {
+				length = 0
+			}
+			if length > matchedLen || matchedBundle == "" {
 				matchedBundle = bundle.Name
 				matchedRoot = root
-				matchedLen = len(root)
+				matchedLen = length
 			}
 		}
 	}
@@ -119,13 +124,13 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 // 🔷️GetFileID MUST return the stored value without modification.
 // 🔑️GetFileID returns the file i d of the CodebaseContext.
 func (ctx *CodebaseContext) GetFileID(file string) string {
-	return (model.ArtifactIndex{RootDir:ctx.RootDir,Bundles:ctx.Bundles}).BuildFileID(file, nil)
+	return model.NewArtifactIndex(ctx.RootDir, ctx.Bundles).BuildFileID(file, nil)
 }
 
 // 📁️GetFolderID MUST return the stored value without modification.
 // 🔹️GetFolderID returns the folder i d of the CodebaseContext.
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
-	return (model.ArtifactIndex{RootDir:ctx.RootDir,Bundles:ctx.Bundles}).BuildFolderID(folder, nil)
+	return model.NewArtifactIndex(ctx.RootDir, ctx.Bundles).BuildFolderID(folder, nil)
 }
 
 // 📁️ParentFolderID MUST return the artifact id of the folder holding the path, nil at the root.
@@ -140,7 +145,7 @@ func (ctx *CodebaseContext) ParentFolderID(path string) *string {
 
 // 📦️OwningBundleID MUST return the artifact id of the deepest bundle owning the path, nil for none.
 func (ctx *CodebaseContext) OwningBundleID(path string) *string {
-	bundle := (model.ArtifactIndex{RootDir:ctx.RootDir,Bundles:ctx.Bundles}).GetBundleByPath(workspace.NormalizePath(path))
+	bundle := model.NewArtifactIndex(ctx.RootDir, ctx.Bundles).GetBundleByPath(workspace.NormalizePath(path))
 	if bundle == nil {
 		return nil
 	}
@@ -150,7 +155,7 @@ func (ctx *CodebaseContext) OwningBundleID(path string) *string {
 
 // 📥️FileURI MUST operate on the CodebaseContext receiver and return consistent results.
 func (ctx *CodebaseContext) FileURI(path string) string {
-	return "repo://file/"+ctx.GetFileID(workspace.NormalizePath(path))
+	return "repo://file/" + ctx.GetFileID(workspace.NormalizePath(path))
 }
 
 // 🔗️FolderURI MUST operate on the CodebaseContext receiver and return consistent results.

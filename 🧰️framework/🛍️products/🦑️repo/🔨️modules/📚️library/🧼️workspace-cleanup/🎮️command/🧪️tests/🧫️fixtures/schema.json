@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "platform",
+    "processes",
+    "dry",
+    "cancelled",
+    "calls"
+  ],
+  "properties": {
+    "platform": {
+      "enum": [
+        "linux",
+        "darwin",
+        "win32"
+      ]
+    },
+    "processes": {
+      "enum": [
+        "idle",
+        "active",
+        "unreadable"
+      ]
+    },
+    "dry": {
+      "type": "boolean"
+    },
+    "cancelled": {
+      "type": "boolean"
+    },
+    "calls": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1
+    }
+  }
+}

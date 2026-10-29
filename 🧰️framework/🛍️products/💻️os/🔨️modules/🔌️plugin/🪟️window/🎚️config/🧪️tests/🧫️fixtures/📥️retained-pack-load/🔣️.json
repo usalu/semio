@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "identityMaximumCapacityBytes": 1048576,
+  "actorAuthority": {
+    "historyActor": "historical-window-author",
+    "openedActor": "opened-window-reader-é",
+    "newPartitionActor": "opened-session",
+    "hydratedPartitionActor": "opened-session",
+    "historyActorPreservation": "exact",
+    "storedPackPreservation": "exact",
+    "genesisConstruction": "decoded-original-pack-and-verified-digest",
+    "genesisConstructionEncodeCalls": 0,
+    "genesisConstructionDecodeCalls": 0,
+    "envelopeOwner": "move-exact-original",
+    "binding": "before-construction",
+    "ambientDefault": "refuse",
+    "foreignActorFault": "window-config.actor",
+    "foreignActorPublication": 0,
+    "retirementItems": 1,
+    "retirementCopyBytes": 65536,
+    "retirementCapacityBytes": 65536,
+    "retirementReleaseBytes": 65536,
+    "retirementDepth": 64
+  },
+  "budgets": {
+    "threadStackBytes": 2097152,
+    "typedMutationBytes": 4096,
+    "storeDecodePageConstant": "ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES",
+    "jobPayloadPageConstant": "JOB_PAYLOAD_PAGE_BYTES"
+  },
+  "grant": {
+    "derivation": "exact-next-allocation-or-release-demand",
+    "floorConstant": "ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES",
+    "turnBoundConstant": "WINDOW_CONFIG_PACK_LOAD_TURNS",
+    "packBound": "owner-maximum-publication-bytes",
+    "exhaustionFault": "window-config.load-bound",
+    "capacityFault": "window-config.capacity"
+  },
+  "owners": [
+    {
+      "kind": "retained-load-a",
+      "schema": "test.window.retained-load.a",
+      "windowIds": ["left", "right"]
+    },
+    {
+      "kind": "retained-load-b",
+      "schema": "test.window.retained-load.b",
+      "windowIds": ["other"]
+    }
+  ],
+  "savedCamera": {
+    "kind": "retained-load-a",
+    "windowId": "left",
+    "viewport": {"x": 12.5, "y": -3.25, "zoom": 2.0},
+    "eye": [18.75, -4.5, 33.25]
+  },
+  "candidateProtocol": {
+    "phases": [
+      "ingress",
+      "decoding",
+      "validating-identity",
+      "preparing-store",
+      "ready",
+      "cancelling",
+      "retiring-rejected-candidate",
+      "retiring-displaced-store",
+      "complete"
+    ],
+    "typedReplayInput": "retained-value-tokens",
+    "diagnosticOwnership": "first-fault-owned-until-terminal-close",
+    "authorityBoundary": "ready-current-generation-commit-only",
+    "identityChecks": [
+      "state-envelope",
+      "pack-component",
+      "version-one",
+      "owner-schema",
+      "spr-document-id",
+      "spr-document-schema",
+      "outer-inner-partition-id",
+      "current-lifetime-generation"
+    ],
+    "closeOrder": ["pending-event", "logical-owners", "allocation-demands", "terminal-empty"]
+  },
+  "requiredScenarios": [
+    {"id": "missing-envelope", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "wrong-component", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "wrong-state-schema", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "wrong-version", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "cancel-during-decode", "phase": "decode", "outcome": "retained-until-bounded-close"},
+    {"id": "cancel-ready-candidate", "phase": "ready", "outcome": "retained-until-bounded-close"},
+    {"id": "publication-load-race", "phase": "commit-race", "outcome": "one-current-generation-commits"},
+    {"id": "same-kind-and-cross-kind-reopen", "phase": "reopen", "outcome": "exact-packs-restored"},
+    {"id": "saved-camera-round-trip", "phase": "reopen", "outcome": "exact-packs-restored"},
+    {"id": "over-bound-pack", "phase": "decode", "outcome": "rejected-before-authority-change"},
+    {"id": "turn-bound-exhausted", "phase": "decode", "outcome": "typed-fault-never-ok"},
+    {"id": "app-close", "phase": "close", "outcome": "terminal-empty"},
+    {"id": "coordinate-valued-state", "phase": "reopen", "outcome": "exact-packs-restored"}
+  ]
+}

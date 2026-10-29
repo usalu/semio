@@ -1,0 +1,52 @@
+{
+ "cases": [
+  {
+   "name": "already-ready",
+   "statuses": [
+    0
+   ],
+   "launches": 1,
+   "accepted": true
+  },
+  {
+   "name": "fresh-publication",
+   "statuses": [
+    76,
+    0
+   ],
+   "launches": 2,
+   "accepted": true
+  },
+  {
+   "name": "ordinary-failure",
+   "statuses": [
+    1
+   ],
+   "launches": 1,
+   "accepted": false
+  },
+  {
+   "name": "replacement-failure",
+   "statuses": [
+    76,
+    1
+   ],
+   "launches": 2,
+   "accepted": false
+  }
+ ],
+ "cold": {
+  "entry": "entry.mjs",
+  "files": {
+   "package.json": "{\"name\":\"cold\",\"version\":\"1.0.0\",\"dependencies\":{\"cold-parser\":\"1.0.0\"}}",
+   "entry.mjs": "import{createRequire}from\"node:module\";const own=createRequire(import.meta.url);export async function runCapturedBuildSourceV1(){console.log(\"RESULT \"+own(\"cold-parser\").answer);}"
+  },
+  "installed": {
+   "node_modules/cold-parser/package.json": "{\"name\":\"cold-parser\",\"version\":\"1.0.0\",\"main\":\"index.cjs\"}",
+   "node_modules/cold-parser/index.cjs": "module.exports={answer:42};"
+  },
+  "specifier": "cold-parser",
+  "target": "installed:cold-parser@1.0.0",
+  "output": "RESULT 42"
+ }
+}

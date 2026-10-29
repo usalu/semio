@@ -1,0 +1,16 @@
+[
+ {"name":"ordinary drive","root":"C:\\repo","value":"C:\\repo\\out","plain":"C:\\repo\\out","distance":"out"},
+ {"name":"forward slashes","root":"C:\\repo","value":"C:/repo/out","plain":"C:\\repo\\out","distance":"out"},
+ {"name":"drive case","root":"C:\\repo","value":"c:\\REPO\\out","plain":"c:\\REPO\\out","distance":"out"},
+ {"name":"verbatim drive","root":"C:\\repo","value":"\\\\?\\C:\\repo\\out","plain":"C:\\repo\\out","distance":"out"},
+ {"name":"native drive","root":"C:\\repo","value":"\\??\\C:\\repo\\out","plain":"C:\\repo\\out","distance":"out"},
+ {"name":"ordinary share","root":"\\\\server\\share\\repo","value":"\\\\server\\share\\repo\\out","plain":"\\\\server\\share\\repo\\out","distance":"out"},
+ {"name":"verbatim share","root":"\\\\server\\share\\repo","value":"\\\\?\\UNC\\server\\share\\repo\\out","plain":"\\\\server\\share\\repo\\out","distance":"out"},
+ {"name":"native share","root":"\\\\server\\share\\repo","value":"\\??\\UNC\\server\\share\\repo\\out","plain":"\\\\server\\share\\repo\\out","distance":"out"},
+ {"name":"device namespace","root":"C:\\repo","value":"\\\\.\\PhysicalDrive0","plain":null,"distance":null},
+ {"name":"volume namespace","root":"C:\\repo","value":"\\\\?\\Volume{11111111-1111-1111-1111-111111111111}\\repo","plain":null,"distance":null},
+ {"name":"drive relative","root":"C:\\repo","value":"C:repo\\out","plain":null,"distance":null},
+ {"name":"root relative","root":"C:\\repo","value":"\\repo\\out","plain":null,"distance":null},
+ {"name":"missing share","root":"C:\\repo","value":"\\\\?\\UNC\\server","plain":null,"distance":null},
+ {"name":"quoted name","root":"C:\\repo","value":"C:\\repo\\bad\"name","plain":null,"distance":null}
+]

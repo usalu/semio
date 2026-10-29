@@ -1,0 +1,115 @@
+{
+  "version": 1,
+  "directories": [
+    "alpha",
+    "alpha/beta",
+    "alpha/beta/gamma",
+    "alpha/beta/gamma/delta",
+    "alpha/beta/gamma/delta/epsilon",
+    "alpha/beta/gamma/delta/epsilon/zeta",
+    "alpha/beta/gamma/delta/epsilon/zeta/eta",
+    "alpha/beta/gamma/delta/epsilon/zeta/eta/theta"
+  ],
+  "files": [
+    "alpha/package.json",
+    "alpha/beta/gamma/project.csproj"
+  ],
+  "probePath": "alpha/beta/gamma/delta/epsilon/zeta/eta/theta",
+  "expectedFolderID": "🛅alpha🗃️beta🛅gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta",
+  "removeFile": "alpha/package.json",
+  "expectedAfterRemovalID": "🗃️alpha🗃️beta🛅gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta",
+  "maximumWarmAllocations": 16,
+  "maximumDirectoryObservations": 1,
+  "boundaries": [
+    {
+      "root": "alpha/beta",
+      "id": "bundle:beta"
+    },
+    {
+      "root": "alpha/beta/gamma",
+      "id": "bundle:gamma"
+    }
+  ],
+  "expectedBoundaryID": "bundle:gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta",
+  "boundaryCases": [
+    {
+      "name": "nearest nested boundary",
+      "coordinate": "relative",
+      "boundaries": [
+        {
+          "root": "alpha/beta",
+          "id": "bundle:beta"
+        },
+        {
+          "root": "alpha/beta/gamma",
+          "id": "bundle:gamma"
+        }
+      ],
+      "expectedFolderID": "bundle:gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta"
+    },
+    {
+      "name": "repository root boundary",
+      "coordinate": "relative",
+      "boundaries": [
+        {
+          "root": ".",
+          "id": "bundle:root"
+        }
+      ],
+      "expectedFolderID": "bundle:root🛅alpha🗃️beta🛅gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta"
+    },
+    {
+      "name": "absolute root and observation",
+      "coordinate": "absolute",
+      "boundaries": [
+        {
+          "root": ".",
+          "id": "bundle:root"
+        }
+      ],
+      "expectedFolderID": "bundle:root🛅alpha🗃️beta🛅gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta"
+    },
+    {
+      "name": "prefix near miss",
+      "coordinate": "relative",
+      "boundaries": [
+        {
+          "root": "alpha/bet",
+          "id": "wrong"
+        }
+      ],
+      "expectedFolderID": "🛅alpha🗃️beta🛅gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta"
+    },
+    {
+      "name": "first equal boundary wins",
+      "coordinate": "relative",
+      "boundaries": [
+        {
+          "root": "alpha/beta",
+          "id": "first"
+        },
+        {
+          "root": "alpha/beta",
+          "id": "second"
+        }
+      ],
+      "expectedFolderID": "first🛅gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta"
+    },
+    {
+      "name": "portable boundary separators",
+      "coordinate": "relative",
+      "boundaries": [
+        {
+          "root": "alpha\\beta",
+          "id": "portable"
+        }
+      ],
+      "expectedFolderID": "portable🛅gamma🗃️delta🗃️epsilon🗃️zeta🗃️eta🗃️theta"
+    }
+  ],
+  "discoveryCancellation": {
+    "files": 513,
+    "cancelAt": 256,
+    "phase": "resolving-file-identities"
+  }
+}

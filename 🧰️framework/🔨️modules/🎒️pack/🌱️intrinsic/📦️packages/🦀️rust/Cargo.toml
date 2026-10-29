@@ -30,6 +30,7 @@ semio-framework-pack-format-retained = { path = "../../../📐️format/🎮️r
 semio-framework-pack-record = { path = "../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-pack-record-retained = { path = "../../../🌱️value/🛬️decode/📦️packages/🦀️rust" }
 semio-framework-replication-codec = { path = "../../../../📡️replication/⚙️codec/📦️packages/🦀️rust" }
+semio-framework-replication-wire-core = { path = "../../../../📡️replication/🧾️wire/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }

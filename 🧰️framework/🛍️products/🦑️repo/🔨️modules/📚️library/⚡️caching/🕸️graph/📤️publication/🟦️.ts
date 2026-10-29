@@ -1,3 +1,4 @@
+import{withRepositoryRuntimeEntriesV1}from"../../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import {withGraphPublicationLeaseV1,publishGraphTransactionV1,readGraphPublicationSnapshotV1,recoverGraphPublicationV1,requireGraphPublicationLeaseV1} from "./📦️transaction/🟦️.ts";
 import {graphPublicationFileAllocationV1} from "../../💾️storage/🔒️enforcement/🔌️nx/📦️graph/📒️journal/🟦️.ts";
 import {existsSync,lstatSync,mkdirSync,realpathSync} from "node:fs";
@@ -28,11 +29,11 @@ export async function publishGraphFilesV1(value:GraphPublicationV1):Promise<void
   const control=scriptCompilerAdmissionControlV1(original,"nx:graph-publication",0),check=()=>{checkResourceLeaseControl(control);if(!value.generationHolds())throw Error("Original graph publication generation changed");};
   const workspace=readNativeCallerAuthorityV1(original.capabilities).repositoryRoot;
   value=graphPublicationWithWorkspaceRootV1(value,workspace);
-  await withRepositoryCacheStoreV1(workspace,"graph",original,control,(_graph,graphPhase)=>withNxGraphCacheStoreV1(workspace,original,graphPhase,async graph=>{const identity={version:1 as const,toolingIdentity:value.toolingIdentity,workspaceRoot:value.environment.NX_WORKSPACE_ROOT_PATH??workspace,graphIdentity:value.environment.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity:value.environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!},namespace=await acquireNxGraphNamespaceV1(graph,identity);try{const base=nxGraphNamespaceDirectoryV1(graph.root,identity),watcher=value.environment.SEMIO_NX_WATCHER_IDENTITY,expected=watcher?join(base,"watchers",watcher):base;if(watcher&&!/^[a-f0-9]{24}$/u.test(watcher)||value.environment.SEMIO_NX_GRAPH_STORAGE!==graph.root||directory!==expected||value.environment.NX_WORKSPACE_DATA_DIRECTORY!==directory)throw Error("Original funded graph publication namespace required");mkdirSync(directory,{recursive:true});if(realpathSync(directory)!==directory)throw Error("Original graph directory changed");
+  await withRepositoryRuntimeEntriesV1(workspace,original,control,()=>withRepositoryCacheStoreV1(workspace,"graph",original,control,(_graph,graphPhase)=>withNxGraphCacheStoreV1(workspace,original,graphPhase,async graph=>{const identity={version:1 as const,toolingIdentity:value.toolingIdentity,workspaceRoot:value.environment.NX_WORKSPACE_ROOT_PATH??workspace,graphIdentity:value.environment.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity:value.environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!},namespace=await acquireNxGraphNamespaceV1(graph,identity);try{const base=nxGraphNamespaceDirectoryV1(graph.root,identity),watcher=value.environment.SEMIO_NX_WATCHER_IDENTITY,expected=watcher?join(base,"watchers",watcher):base;if(watcher&&!/^[a-f0-9]{24}$/u.test(watcher)||value.environment.SEMIO_NX_GRAPH_STORAGE!==graph.root||directory!==expected||value.environment.NX_WORKSPACE_DATA_DIRECTORY!==directory)throw Error("Original funded graph publication namespace required");mkdirSync(directory,{recursive:true});if(realpathSync(directory)!==directory)throw Error("Original graph directory changed");
   await withGraphPublicationLeaseV1(directory,value.toolingIdentity,control,async lease=>{
    await publishGraphGenerationV1(graph,lease,value);
   });
-  }finally{await namespace.release();}}));
+  }finally{await namespace.release();}})));
  });
 }
 
@@ -47,7 +48,7 @@ export async function publishGraphGenerationV1(graph:NxGraphCacheStoreV1,lease:G
 
 /** ⏳️ Forwards one authenticated publication caller until its owned journal capture settles. */
 export async function withGraphPublisherControlV1<T>(environment:Readonly<Record<string,string|undefined>>,body:(control:ResourceLeaseControl)=>Promise<T>):Promise<T>{
- return receiveScriptProcessRequestInvocationV1(environment,original=>body(scriptCompilerAdmissionControlV1(original,"nx:graph-publisher",0)));
+ return receiveScriptProcessRequestInvocationV1(environment,original=>{const control=scriptCompilerAdmissionControlV1(original,"nx:graph-publisher",0),workspace=readNativeCallerAuthorityV1(original.capabilities).repositoryRoot;return withRepositoryRuntimeEntriesV1(workspace,original,control,()=>body(control));});
 }
 
 export {withGraphPublicationLeaseV1,publishGraphTransactionV1,readGraphPublicationSnapshotV1,recoverGraphPublicationV1,graphPublicationFileAllocationV1};

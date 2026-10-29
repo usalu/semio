@@ -43,5 +43,106 @@
       ".vscode/extensions.json",
       ".devcontainer/editor-overlay.json"
     ]
-  }
+  },
+  "actions": [
+    {
+      "name": "Root workflow",
+      "directory": "/",
+      "files": [
+        ".github/workflows/ci.yml"
+      ],
+      "valid": true
+    },
+    {
+      "name": "Root action Yml",
+      "directory": "/",
+      "files": [
+        "action.yml"
+      ],
+      "valid": true
+    },
+    {
+      "name": "Root action Yaml",
+      "directory": "/",
+      "files": [
+        "action.yaml"
+      ],
+      "valid": true
+    },
+    {
+      "name": "Root unrelated Yaml",
+      "directory": "/",
+      "files": [
+        "other.yaml"
+      ],
+      "valid": false
+    },
+    {
+      "name": "Empty workflow directory",
+      "directory": "/",
+      "files": [],
+      "directories": [
+        ".github/workflows"
+      ],
+      "valid": false
+    },
+    {
+      "name": "Workflow named directory",
+      "directory": "/",
+      "files": [],
+      "directories": [
+        ".github/workflows/ci.yml"
+      ],
+      "valid": false
+    },
+    {
+      "name": "Composite action Yml",
+      "directory": "/actions/one",
+      "files": [
+        "actions/one/action.yml"
+      ],
+      "valid": true
+    },
+    {
+      "name": "Composite action Yaml",
+      "directory": "/actions/one",
+      "files": [
+        "actions/one/action.yaml"
+      ],
+      "valid": true
+    },
+    {
+      "name": "Configured Yaml",
+      "directory": "/actions/one",
+      "files": [
+        "actions/one/workflow.yaml"
+      ],
+      "valid": true
+    },
+    {
+      "name": "Nested Yaml",
+      "directory": "/actions/one",
+      "files": [
+        "actions/one/sub/action.yml"
+      ],
+      "valid": false
+    },
+    {
+      "name": "Action named directory",
+      "directory": "/actions/one",
+      "files": [],
+      "directories": [
+        "actions/one/action.yml"
+      ],
+      "valid": false
+    },
+    {
+      "name": "Unrelated file",
+      "directory": "/actions/one",
+      "files": [
+        "actions/one/README.md"
+      ],
+      "valid": false
+    }
+  ]
 }

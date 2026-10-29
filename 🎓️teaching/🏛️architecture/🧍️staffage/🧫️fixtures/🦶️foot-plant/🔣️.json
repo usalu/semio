@@ -1,0 +1,11 @@
+{
+  "description": "Planted contact anchors of the reference walker do not slide: within each span, outside the handover crossfades, the anchor's world x stays within 0.1 mm; the root is continuous across handovers and loop seams.",
+  "clip": "walk",
+  "cycles": 3,
+  "stepsPerSecond": 240,
+  "driftToleranceM": 0.0001,
+  "handoverToleranceM": 0.0005,
+  "handovers": [{ "fromS": 0.45, "toS": 0.55 }, { "fromS": 0.95, "toS": 1 }, { "fromS": 0, "toS": 0.05 }],
+  "maxRootAccelerationMS2": 40,
+  "groundToleranceM": 1e-9
+}

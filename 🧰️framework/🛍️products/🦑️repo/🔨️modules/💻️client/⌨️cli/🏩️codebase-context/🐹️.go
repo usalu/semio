@@ -10,6 +10,7 @@ package client
 
 import (
 	"fmt"
+	model "github.com/usalu/semio/repo/model"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -102,11 +103,15 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 	var matchedLen int
 	for _, bundle := range ctx.Bundles {
 		root := NormalizePath(bundle.Root)
-		if strings.HasPrefix(normalizedPath, root+"/") || normalizedPath == root {
-			if len(root) > matchedLen {
+		if model.ArtifactBoundaryOwnsPath(root, normalizedPath) {
+			length := len(root)
+			if root == "." {
+				length = 0
+			}
+			if length > matchedLen || matchedBundle == "" {
 				matchedBundle = bundle.Name
 				matchedRoot = root
-				matchedLen = len(root)
+				matchedLen = length
 			}
 		}
 	}

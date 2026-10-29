@@ -10,4 +10,4 @@ captureCargoLockInventoryV1(value:unknown,root:unknown):CapturedInputInventoryV1
 admitExactSourceExtentV1(input:unknown):Readonly<{sourceBytes:number;metadataBytes:number;inventories:number}>;
 }
 export const loadedSourceInventoryURLV1:string;
-export function createSourceInventoryDataV1(policy:Readonly<Record<string,number>>):Readonly<SourceInventoryDataV1>;
+export function createSourceInventoryDataV1(policy:Readonly<Record<string,number|Readonly<{prefixes:readonly string[];digestHex:number}>>>):Readonly<SourceInventoryDataV1>;

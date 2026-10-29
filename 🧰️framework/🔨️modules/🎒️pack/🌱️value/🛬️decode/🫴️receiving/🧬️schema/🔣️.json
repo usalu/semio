@@ -74,7 +74,8 @@
         "stages",
         "deniedAxes",
         "checks",
-        "firstCloseHeapBytes"
+        "firstCloseHeapBytes",
+        "sourceRange"
       ],
       "properties": {
         "sourceFormat": {
@@ -122,6 +123,23 @@
         },
         "firstCloseHeapBytes": {
           "const": 0
+        },
+        "sourceRange": {
+          "const": {
+            "prefix": [
+              170
+            ],
+            "suffix": [
+              187
+            ],
+            "pageBytes": 7,
+            "cancelCuts": [
+              0,
+              8,
+              64,
+              100000
+            ]
+          }
         }
       }
     },

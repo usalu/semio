@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unchanged",
+      "initial": "old",
+      "edits": [
+        "old"
+      ],
+      "changed": [
+        false
+      ]
+    },
+    {
+      "id": "changed",
+      "initial": "old",
+      "edits": [
+        "new"
+      ],
+      "changed": [
+        true
+      ]
+    },
+    {
+      "id": "restored",
+      "initial": "old",
+      "edits": [
+        "new",
+        "old"
+      ],
+      "changed": [
+        true,
+        false
+      ]
+    }
+  ]
+}

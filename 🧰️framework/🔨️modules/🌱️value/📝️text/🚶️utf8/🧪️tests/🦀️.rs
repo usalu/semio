@@ -1,5 +1,6 @@
 use semio_framework_test_fixtures::fixture_text;
-use super::*;
+use semio_framework_value::{RetirementDemand,RetainedCloneGrant,retained_utf8::{RetainedUtf8Cursor,RetainedUtf8Buffer}};
+use semio_framework_value_testing_allocator as _;
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes.max(257),maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn close(writer:&mut RetainedUtf8Buffer)->(usize,usize){writer.begin_close();let maximum_turns=64usize.saturating_add(writer.capacity().saturating_mul(4));let(mut born,mut released,mut turns)=(0,0,0);while !writer.terminal_is_empty(){let d=writer.close_demand(257).unwrap();let(short,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||writer.close_step(RetainedCloneGrant{maximum_items:0,..grant(d)}).unwrap());assert_eq!(short.progress(),Default::default());assert_eq!(heap,(0,0));let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||writer.close_step(grant(d)).unwrap());assert_eq!(heap,(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(step.progress().fits(grant(d)));born+=heap.0;released+=heap.1;turns+=1;assert!(turns<maximum_turns);}let(step,heap)=semio_framework_value_testing_allocator::observe_retirement_allocations(||writer.close_step(Default::default()).unwrap());assert_eq!(heap,(0,0));assert_eq!(step.progress(),Default::default());(born,released)}
 

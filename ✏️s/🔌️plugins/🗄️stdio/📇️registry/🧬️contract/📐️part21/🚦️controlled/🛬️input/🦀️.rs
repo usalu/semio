@@ -1,5 +1,6 @@
 //! 🛬️ One admitted workspace retains every failed Part21 prefix without synchronous destruction.
 use super::*;
+use crate::is_part21_binary;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 #[derive(Default,semio_framework_value::RetireOwned)]
 struct DecodeSlot{values:Vec<Part21Value>,name:String}
@@ -22,6 +23,7 @@ fn object<'v>(value:&'v DslValue,allowed:&[&str],control:&mut NativeDecodeContro
 }
 /// 🛡️ Keeps fixed-schema key rejection allocation-free at every typed child boundary.
 fn fields(entries:&[(String,DslValue)],allowed:&[&str],control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{
+ for(key,_)in entries{control.scoped_stage(|control|{control.begin_stage(key.len())?;for chunk in key.as_bytes().chunks(65536){control.advance(chunk.len())?;}Ok::<(),ValueError>(())})?;}
  if entries.len()>allowed.len(){return Err(invalid("Part21 object exceeds its declared field roster"));}
  control.scoped_stage(|control|{
   control.begin_stage(entries.len())?;
@@ -36,7 +38,7 @@ fn fields(entries:&[(String,DslValue)],allowed:&[&str],control:&mut NativeDecode
 impl DecodeOwner{
  fn text(&mut self,value:&DslValue,control:&mut NativeDecodeControl<'_>)->Result<String,ValueError>{
   let text=value.as_str().ok_or_else(||invalid("Part21 text field requires Text"))?;self.text=control.allocate_vec(text.len())?;
-  control.scoped_stage(|control|{control.begin_stage(text.len().div_ceil(65536))?;for chunk in text.as_bytes().chunks(65536){self.text.extend_from_slice(chunk);control.step()?;}Ok::<(),ValueError>(())})?;
+  control.scoped_stage(|control|{control.begin_stage(text.len())?;for chunk in text.as_bytes().chunks(65536){self.text.extend_from_slice(chunk);control.advance(chunk.len())?;}Ok::<(),ValueError>(())})?;
   let original=std::mem::take(&mut self.text);Ok(unsafe{String::from_utf8_unchecked(original)})
  }
  fn slots(&mut self,control:&mut NativeDecodeControl<'_>)->Result<(),ValueError>{if self.slots.is_empty(){self.slots=control.allocate_vec(64)?;for _ in 0..64{self.slots.push(DecodeSlot::default());}}Ok::<(),ValueError>(())}

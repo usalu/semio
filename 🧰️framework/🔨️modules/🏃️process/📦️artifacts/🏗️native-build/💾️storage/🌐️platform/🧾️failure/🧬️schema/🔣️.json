@@ -1,0 +1,91 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "purpose",
+    "allocationId",
+    "phase",
+    "kind",
+    "backingRoot",
+    "policyRoot",
+    "parentRoot",
+    "checks",
+    "truncated"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "purpose": {
+      "const": "native-recovered-child-retirement"
+    },
+    "allocationId": {
+      "type": "string",
+      "maxLength": 1024
+    },
+    "phase": {
+      "type": "string",
+      "maxLength": 1024
+    },
+    "kind": {
+      "type": "string",
+      "maxLength": 1024
+    },
+    "backingRoot": {
+      "type": "string",
+      "maxLength": 1024
+    },
+    "policyRoot": {
+      "type": "string",
+      "maxLength": 1024
+    },
+    "parentRoot": {
+      "type": "string",
+      "maxLength": 1024
+    },
+    "checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "child",
+        "committed",
+        "compilerState",
+        "backingRoot",
+        "policyRoot"
+      ],
+      "properties": {
+        "child": {
+          "type": "boolean"
+        },
+        "committed": {
+          "type": "boolean"
+        },
+        "compilerState": {
+          "type": "boolean"
+        },
+        "backingRoot": {
+          "type": "boolean"
+        },
+        "policyRoot": {
+          "type": "boolean"
+        }
+      }
+    },
+    "truncated": {
+      "type": "array",
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "allocationId",
+          "phase",
+          "kind",
+          "backingRoot",
+          "policyRoot",
+          "parentRoot"
+        ]
+      }
+    }
+  }
+}

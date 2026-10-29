@@ -9,6 +9,7 @@
 package client
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -38,7 +39,7 @@ func TestExhaustiveToolTechnologyTree(t *testing.T) {
 		t.Skip("skipping slow tool technology tree test in short mode")
 	}
 	withExhaustiveRepo(t)
-	result := ToolTechnologyTree()
+	result := ToolTechnologyTree(context.Background())
 	if result.Error != "" {
 		t.Errorf("ToolTechnologyTree returned error: %s", result.Error)
 	}

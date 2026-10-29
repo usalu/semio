@@ -1,0 +1,2203 @@
+{
+  "$schema": "../🧬️schema/🔣️.json#/$defs/Manifest",
+  "version": "semio.staffage/v1",
+  "categories": [
+    {
+      "id": "humans",
+      "emoji": "👤️",
+      "title": {
+        "en": "Humans",
+        "de": "Menschen"
+      },
+      "description": {
+        "en": "Pedestrians, workers and people in everyday postures and gestures, with rigs for gait and seated poses.",
+        "de": "Passantinnen und Passanten, Arbeitende und Menschen in alltäglichen Haltungen und Gesten, mit Modellen für Gang und Sitzen."
+      },
+      "file": "👤️humans/🔣️.json"
+    },
+    {
+      "id": "vegetation",
+      "emoji": "🌳️",
+      "title": {
+        "en": "Vegetation",
+        "de": "Vegetation"
+      },
+      "description": {
+        "en": "Trees, hedges and grasses with wind sway, storm and snow load states and leaf transpiration over the day.",
+        "de": "Bäume, Hecken und Gräser mit Windschwingung, Sturm- und Schneelastzuständen und Blatttranspiration im Tagesgang."
+      },
+      "file": "🌳️vegetation/🔣️.json"
+    },
+    {
+      "id": "animals",
+      "emoji": "🐕️",
+      "title": {
+        "en": "Animals",
+        "de": "Tiere"
+      },
+      "description": {
+        "en": "Domestic animals, farm animals and wildlife with quadruped and bird rigs, gait clips and metabolic heat.",
+        "de": "Haus-, Nutz- und Wildtiere mit Vierbein- und Vogelmodellen, Gangzyklen und Stoffwechselwärme."
+      },
+      "file": "🐕️animals/🔣️.json"
+    },
+    {
+      "id": "objects",
+      "emoji": "🪑️",
+      "title": {
+        "en": "Objects",
+        "de": "Gegenstände"
+      },
+      "description": {
+        "en": "Street furniture, office furniture and playground equipment with occupant loads and operating states.",
+        "de": "Stadtmöbel, Büromöbel und Spielgeräte mit Personenlasten und Betriebszuständen."
+      },
+      "file": "🪑️objects/🔣️.json"
+    },
+    {
+      "id": "vehicles",
+      "emoji": "🚜️",
+      "title": {
+        "en": "Vehicles and Machines",
+        "de": "Fahrzeuge und Maschinen"
+      },
+      "description": {
+        "en": "Cars, buses, bicycles and machines with wheel, track and boom articulation and load-state clips.",
+        "de": "Pkw, Busse, Fahrräder und Maschinen mit Rad-, Ketten- und Auslegergelenken sowie Lastzustands-Clips."
+      },
+      "file": "🚜️vehicles/🔣️.json"
+    },
+    {
+      "id": "components",
+      "emoji": "🧱️",
+      "title": {
+        "en": "Components",
+        "de": "Bauteile"
+      },
+      "description": {
+        "en": "Structural members, openings and glazing with load-state poses, moving-load clips and support rigs.",
+        "de": "Tragende Bauteile, Öffnungen und Verglasungen mit Lastzuständen, Wanderlast-Clips und Auflagermodellen."
+      },
+      "file": "🧱️components/🔣️.json"
+    }
+  ],
+  "collections": [
+    {
+      "id": "street-life",
+      "title": {
+        "en": "Street Life",
+        "de": "Stadtleben"
+      },
+      "description": {
+        "en": "Everyday pedestrians, a cyclist, a dog, a park bench, a street lamp and a car for animating public street scenes.",
+        "de": "Alltägliche Passanten, eine radfahrende Person, ein Hund, eine Parkbank, eine Straßenleuchte und ein Auto für belebte Straßenszenen."
+      },
+      "assets": [
+        "walking-commuter",
+        "jogger",
+        "cyclist",
+        "labrador-dog",
+        "park-bench",
+        "street-lamp",
+        "city-car"
+      ]
+    },
+    {
+      "id": "courtyard-trees",
+      "title": {
+        "en": "Courtyard Trees",
+        "de": "Hofbäume"
+      },
+      "description": {
+        "en": "Columnar and multi-stem trees, a hedge and a grass clump for planted courtyards.",
+        "de": "Säulenförmige und mehrstämmige Bäume, eine Hecke und ein Grashorst für begrünte Innenhöfe."
+      },
+      "assets": [
+        "multi-stem-birch",
+        "lombardy-poplar",
+        "hornbeam-hedge",
+        "miscanthus-grass"
+      ]
+    },
+    {
+      "id": "accessibility",
+      "title": {
+        "en": "Accessibility",
+        "de": "Barrierefreiheit"
+      },
+      "description": {
+        "en": "Figures and elements for accessibility studies: a wheelchair user, an elderly person with a cane, a parent with a stroller, a stair flight and a sliding door.",
+        "de": "Figuren und Bauteile für Barrierefreiheits-Studien: Rollstuhlnutzende, ältere Person mit Gehstock, Elternteil mit Kinderwagen, Treppenlauf und Schiebetür."
+      },
+      "assets": [
+        "wheelchair-user",
+        "elderly-with-cane",
+        "parent-with-stroller",
+        "stair-flight",
+        "sliding-door"
+      ]
+    },
+    {
+      "id": "structural-references",
+      "title": {
+        "en": "Structural References",
+        "de": "Tragwerksreferenzen"
+      },
+      "description": {
+        "en": "Reference members with known load states for checking the structural model: a cantilever balcony, a glulam beam, a tied canopy and a steel column.",
+        "de": "Referenzbauteile mit bekannten Lastzuständen zur Prüfung des Tragwerksmodells: Kragbalkon, Brettschichtholzbalken, abgespanntes Vordach und Stahlstütze."
+      },
+      "assets": [
+        "cantilever-balcony",
+        "glulam-beam",
+        "tied-canopy",
+        "steel-column"
+      ]
+    },
+    {
+      "id": "construction-site",
+      "title": {
+        "en": "Construction Site",
+        "de": "Baustelle"
+      },
+      "description": {
+        "en": "Workers and machines for construction site scenes: a box-carrying worker, an excavator, a tower crane and a forklift.",
+        "de": "Arbeitende Personen und Maschinen für Baustellenszenen: Person mit Kiste, Bagger, Turmdrehkran und Gabelstapler."
+      },
+      "assets": [
+        "worker-carrying-box",
+        "excavator",
+        "tower-crane",
+        "forklift"
+      ]
+    }
+  ],
+  "entries": [
+    {
+      "id": "walking-commuter",
+      "category": "humans",
+      "title": {
+        "en": "Walking Commuter",
+        "de": "Pendler zu Fuß"
+      },
+      "heightM": 1.77,
+      "widthM": 0.4,
+      "poses": [
+        "standing",
+        "check-watch",
+        "contact-left",
+        "passing-right"
+      ],
+      "clips": [
+        "walk-cycle",
+        "glance-at-watch",
+        "idle-breathing"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A heel-to-toe walk with double support and a shoulder bag hung from the torso on a revolute joint, so the bag swings with the stride and its weight sits on the near shoulder.",
+        "de": "Ein Fersen-Zehen-Gang mit Doppelstützphase und einer am Oberkörper drehbar aufgehängten Schultertasche, die im Schritt schwingt und deren Gewicht auf der nahen Schulter liegt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "seated-reader",
+      "category": "humans",
+      "title": {
+        "en": "Seated Reader",
+        "de": "Lesende Person im Sitzen"
+      },
+      "heightM": 1.34,
+      "widthM": 1.02,
+      "poses": [
+        "seated-upright",
+        "reclined-reading",
+        "reaching-for-cup",
+        "standing"
+      ],
+      "clips": [
+        "page-turn",
+        "stand-up",
+        "lean-back"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Seat, thigh-edge and backrest contacts carry the pelvis and thighs on a bench, with flat feet and a reclined reading pose that no standing figure can show.",
+        "de": "Auflager an Sitz, Oberschenkelkante und Rückenlehne tragen Becken und Oberschenkel auf der Bank, bei flach stehenden Füßen und einer zurückgelehnten Leseposition, die keine stehende Figur zeigen kann."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "running-child",
+      "category": "humans",
+      "title": {
+        "en": "Running Child",
+        "de": "Rennendes Kind"
+      },
+      "heightM": 1.12,
+      "widthM": 0.27,
+      "poses": [
+        "standing-ready",
+        "mid-stride",
+        "airborne",
+        "crouch",
+        "jump-takeoff",
+        "jump-apex"
+      ],
+      "clips": [
+        "sprint-cycle",
+        "standing-jump"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Child proportions (about 5.8 heads to the body) with a sprint cycle whose flight phases leave both feet airborne, and a standing jump from a crouch that the adult jogger does not have.",
+        "de": "Kinderproportionen (etwa 5,8 Kopflängen pro Körper) mit einem Sprintzyklus, dessen Flugphasen beide Füße vom Boden lösen, und einem Standsprung aus der Hocke, den der erwachsene Jogger nicht hat."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "wheelchair-user",
+      "category": "humans",
+      "title": {
+        "en": "Wheelchair User",
+        "de": "Rollstuhlnutzende Person"
+      },
+      "heightM": 1.45,
+      "widthM": 1.09,
+      "poses": [
+        "seated-level",
+        "hands-on-rims",
+        "push-end",
+        "ramp-ascent"
+      ],
+      "clips": [
+        "push-cycle",
+        "ramp-roll",
+        "rest-in-chair"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Seated in a manual wheelchair whose frame is the root and whose rear tyre and castor patches are the only ground contacts, while the hands drive the hand rims.",
+        "de": "Sitzt in einem manuellen Rollstuhl, dessen Rahmen die Wurzel des Modells ist und dessen Hinterrad- und Lenkrollenkontakte die einzigen Bodenkontakte sind; die Hände treiben die Greifreifen an."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "elderly-with-cane",
+      "category": "humans",
+      "title": {
+        "en": "Elderly Person with Cane",
+        "de": "Ältere Person mit Gehstock"
+      },
+      "heightM": 1.63,
+      "widthM": 0.54,
+      "poses": [
+        "stooped-standing",
+        "cane-planted",
+        "resting-on-cane",
+        "contact-left",
+        "passing-left"
+      ],
+      "clips": [
+        "cane-gait",
+        "rest-on-cane"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A stooped posture and a cane-tip contact as a third ground contact give a three-point gait, which the walking commuter with only its four foot contacts cannot represent.",
+        "de": "Gebeugte Haltung und ein Kontakt an der Stockspitze als dritter Bodenkontakt ergeben einen Dreipunktgang, den der Pendler mit nur seinen vier Fußkontakten nicht abbilden kann."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "cyclist",
+      "category": "humans",
+      "title": {
+        "en": "Cyclist",
+        "de": "Radfahrende Person"
+      },
+      "heightM": 1.79,
+      "widthM": 1.74,
+      "poses": [
+        "riding-upright",
+        "standing-on-pedals",
+        "coasting",
+        "dismounted-astride"
+      ],
+      "clips": [
+        "pedal-cycle",
+        "brake-and-stop",
+        "dismount"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Seated on a saddle with a hand on the handlebar, the pedal spindles are attachments on the cranks, so the crank angle drives the leg chain and the feet follow the pedals while the tyre patches carry the bicycle.",
+        "de": "Sitzt auf dem Sattel mit einer Hand am Lenker; die Pedalspindeln sind Befestigungspunkte an den Kurbeln, sodass der Kurbelwinkel das Beinmodell steuert und die Füße den Pedalen folgen, während die Reifenkontakte das Rad tragen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "worker-carrying-box",
+      "category": "humans",
+      "title": {
+        "en": "Worker Carrying Box",
+        "de": "Arbeitende Person mit Kiste"
+      },
+      "heightM": 1.82,
+      "widthM": 0.68,
+      "poses": [
+        "squat-grip",
+        "lift-mid",
+        "carrying-box-low",
+        "carrying-box-chest",
+        "setting-down"
+      ],
+      "clips": [
+        "squat-lift",
+        "carry-walk",
+        "set-down"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Two 10 kg box bones hang from the hands, so the 20 kg load acts at the grips and moves the centre of mass forward, with the largest lumbar lever arm in the mid-lift pose.",
+        "de": "Zwei 10 kg schwere Kistenknochen hängen an den Händen, sodass die 20 kg Last an den Griffen angreift und den Schwerpunkt nach vorn verlagert; in der Mittelhubpose ist der Hebelarm am Lendengelenk am größten."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "parent-with-stroller",
+      "category": "humans",
+      "title": {
+        "en": "Parent with Stroller",
+        "de": "Elternteil mit Kinderwagen"
+      },
+      "heightM": 1.77,
+      "widthM": 1.8,
+      "poses": [
+        "pushing-stroller",
+        "pausing-with-stroller",
+        "checking-child",
+        "kerb-tilt"
+      ],
+      "clips": [
+        "push-walk",
+        "stop-and-check-child",
+        "kerb-tilt-up"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "The stroller is a wheeled sub-assembly with its own contacts, and in the kerb-tilt pose the front wheels lift 12 cm so that only the rear wheel touches the ground, which no unladen figure can show.",
+        "de": "Der Kinderwagen ist eine Radbaugruppe mit eigenen Kontakten; in der Bordsteinpose heben sich die Vorderräder um 12 cm, sodass nur das Hinterrad den Boden berührt, was keine Figur ohne Wagen zeigen kann."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "jogger",
+      "category": "humans",
+      "title": {
+        "en": "Jogger",
+        "de": "Jogger:in"
+      },
+      "heightM": 1.77,
+      "widthM": 1.04,
+      "poses": [
+        "initial-contact-l",
+        "midstance-l",
+        "flight-l",
+        "stretch-stand",
+        "stretch-quad-r",
+        "stretch-hamstring"
+      ],
+      "clips": [
+        "run-cycle",
+        "stretch"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A running gait with a forward trunk lean, arm drive and flight poses that have no ground contact at all, whereas the walking commuter always keeps at least one foot down.",
+        "de": "Laufgang mit Oberkörpervorlage, Armschwung und Flugposen ganz ohne Bodenkontakt, während der gehende Pendler immer mindestens einen Fuß am Boden hat."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "person-with-umbrella",
+      "category": "humans",
+      "title": {
+        "en": "Person with Umbrella",
+        "de": "Person mit Regenschirm"
+      },
+      "heightM": 2.09,
+      "widthM": 1.05,
+      "poses": [
+        "umbrella-up-still",
+        "umbrella-tilted-to-wind",
+        "umbrella-furled"
+      ],
+      "clips": [
+        "rain-gust-sway",
+        "close-umbrella"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A rigid umbrella hangs from the right hand on a revolute joint with two rib bones and a canopy load point, so wind loads the umbrella as well as the body, which the other figures do not carry.",
+        "de": "Ein starrer Schirm hängt drehbar an der rechten Hand, mit zwei Rippenknochen und einem Schirmmittelpunkt als Lastpunkt, sodass der Wind auch auf den Schirm wirkt und nicht nur auf den Körper."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "leaning-person",
+      "category": "humans",
+      "title": {
+        "en": "Leaning Person",
+        "de": "Angelehnte Person"
+      },
+      "heightM": 1.8,
+      "widthM": 0.6,
+      "poses": [
+        "leaning-shoulder-wall",
+        "leaning-arms-folded",
+        "phone-call",
+        "pushing-off",
+        "standing-away"
+      ],
+      "clips": [
+        "phone-call-idle",
+        "push-off"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Its shoulder and seat contacts take a horizontal wall reaction that the soles resist by friction, so the pose is wall-supported rather than free standing.",
+        "de": "Schulter- und Gesäßkontakte an der Wand nehmen eine horizontale Wandreaktion auf, der die Sohlen durch Reibung entgegenwirken; die Haltung ist an der Wand abgestützt und steht nicht frei."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tour-guide",
+      "category": "humans",
+      "title": {
+        "en": "Tour Guide",
+        "de": "Stadtführende Person"
+      },
+      "heightM": 2.27,
+      "widthM": 1.25,
+      "poses": [
+        "standing-pointing",
+        "gesturing-to-group",
+        "holding-flag",
+        "waving"
+      ],
+      "clips": [
+        "gesture-point",
+        "turn-and-wave"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Carries a fixed pointer in the right hand and a flag on a revolute pole in the left hand, so its pointing and waving gestures are authored on the arms.",
+        "de": "Trägt einen starr verbundenen Zeigestab in der rechten und eine Fahne an einem drehbaren Stab in der linken Hand; Zeig- und Winkbewegungen sind an den Armen festgelegt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "english-oak",
+      "category": "vegetation",
+      "title": {
+        "en": "English Oak",
+        "de": "Stieleiche"
+      },
+      "heightM": 18.23,
+      "widthM": 18.31,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "wet-snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A mature open-grown oak with a short massive bole that divides at about 3 m into widely spreading limbs under a broad dome-shaped crown, unlike the columnar poplar or the flat-topped pine.",
+        "de": "Ausgewachsene, frei stehende Eiche mit kurzem, massigem Stamm, der bei etwa 3 m in weit ausladende Äste teilt und eine breite, kuppelförmige Krone trägt; anders als die säulenförmige Pappel oder die flachkronige Kiefer."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "lombardy-poplar",
+      "category": "vegetation",
+      "title": {
+        "en": "Lombardy Poplar",
+        "de": "Pyramidenpappel"
+      },
+      "heightM": 26.05,
+      "widthM": 4.17,
+      "poses": [
+        "calm",
+        "windy",
+        "storm"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A single straight stem with four trunk bones and steeply ascending branch tiers forming a narrow, flame-shaped column of foliage, unlike the multi-stem birch or the spreading oak.",
+        "de": "Ein gerader Einzelstamm mit vier Stammknochen und steil aufsteigenden Astetagen, die eine schmale, flammenförmige Blattsäule bilden; anders als die Mehrstamm-Birke oder die ausladende Eiche."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "multi-stem-birch",
+      "category": "vegetation",
+      "title": {
+        "en": "Multi-stem Birch",
+        "de": "Mehrstämmige Birke"
+      },
+      "heightM": 13.03,
+      "widthM": 9.26,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "ice"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Three slender stems grow from one stool, each a separate two-bone chain from the shared root plate, so the ice pose can bow the outer stems apart.",
+        "de": "Drei schlanke Stämme wachsen aus einem gemeinsamen Stock, jeder als eigene Zweiknochenkette von der gemeinsamen Wurzelplatte; in der Eispose können sich die äußeren Stämme auseinanderbiegen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "scots-pine",
+      "category": "vegetation",
+      "title": {
+        "en": "Scots Pine",
+        "de": "Waldkiefer"
+      },
+      "heightM": 22.16,
+      "widthM": 12.15,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A straight, bare bole under a high, flat-topped crown of horizontal needle plates, whose two needle-leaf regions total 150 m² against 450 m² for the English oak.",
+        "de": "Gerader, astfreier Stamm unter einer hohen, flachen Krone aus waagerechten Nadelplatten; die beiden Nadelblattregionen ergeben zusammen 150 m², gegenüber 450 m² bei der Stieleiche."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "date-palm",
+      "category": "vegetation",
+      "title": {
+        "en": "Date Palm",
+        "de": "Dattelpalme"
+      },
+      "heightM": 12.49,
+      "widthM": 6.89,
+      "poses": [
+        "calm",
+        "windy",
+        "storm"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An unbranched trunk with a terminal rosette of pinnate fronds; the rig is one stem plus frond bones that droop under wind instead of swaying branches.",
+        "de": "Unverzweigter Stamm mit einer endständigen Rosette gefiederter Wedel; das Modell besteht aus einem Stamm und Wedelknochen, die sich im Wind senken, statt Äste schwingen zu lassen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "weeping-willow",
+      "category": "vegetation",
+      "title": {
+        "en": "Weeping Willow",
+        "de": "Trauerweide"
+      },
+      "heightM": 11.07,
+      "widthM": 16.23,
+      "poses": [
+        "calm",
+        "windy",
+        "storm"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Eight long curtains of pendulous whips hang from arching limbs almost to the ground and shape a bell-shaped silhouette in the calm, windy and storm poses.",
+        "de": "Acht lange Vorhänge aus hängenden Ruten an überhängenden Ästen reichen fast bis zum Boden und formen in den Posen Ruhe, frischer Wind und Sturm eine glockenförmige Silhouette."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "hornbeam-hedge",
+      "category": "vegetation",
+      "title": {
+        "en": "Hornbeam Hedge",
+        "de": "Hainbuchenhecke"
+      },
+      "heightM": 1.88,
+      "widthM": 3.14,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A clipped hedge segment of six stem bundles and six flat-topped blocks rather than an individual tree, whose snow pose loads the clipped top surfaces.",
+        "de": "Geschnittenes Heckenstück aus sechs Stammbündeln und sechs flach geschnittenen Blöcken statt eines Einzelbaums; in der Schneepose lastet Schnee auf den geschnittenen Oberflächen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "miscanthus-grass",
+      "category": "vegetation",
+      "title": {
+        "en": "Miscanthus Grass",
+        "de": "Chinaschilf"
+      },
+      "heightM": 1.77,
+      "widthM": 2.14,
+      "poses": [
+        "calm",
+        "windy",
+        "storm",
+        "snow"
+      ],
+      "clips": [
+        "wind-sway",
+        "gust",
+        "diurnal-transpiration"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A trunkless clump of arching blades and four stiff culms, each culm a chain of two revolute bones that bends under wind; in its wet-snow pose the blades bow down by 15 degrees.",
+        "de": "Stammloser Horst aus bogigen Blättern und vier steifen Halmen; jeder Halm ist eine Kette aus zwei Drehgelenk-Knochen, die sich im Wind biegt, und in der Nassschneepose neigen sich die Blätter um 15 Grad."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "labrador-dog",
+      "category": "animals",
+      "title": {
+        "en": "Labrador Dog",
+        "de": "Labrador"
+      },
+      "heightM": 0.73,
+      "widthM": 1.43,
+      "poses": [
+        "standing-alert",
+        "sitting-waiting",
+        "sniffing-head-down"
+      ],
+      "clips": [
+        "walk-cycle",
+        "trot-cycle",
+        "sniff-ground",
+        "sit-and-pant"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A quadruped with a collar load anchor and a rump contact that carries part of the load in the sitting pose, in addition to its four paws.",
+        "de": "Vierbeiner mit Halsband als Lastanker und einem Gesäßkontakt, der in der Sitzpose zusätzlich zu den vier Pfoten einen Teil der Last trägt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "domestic-cat",
+      "category": "animals",
+      "title": {
+        "en": "Domestic Cat",
+        "de": "Hauskatze"
+      },
+      "heightM": 0.36,
+      "widthM": 0.8,
+      "poses": [
+        "standing-alert",
+        "sitting-tail-wrapped",
+        "stretch-stance",
+        "play-bow",
+        "stretch-deep"
+      ],
+      "clips": [
+        "walk-cycle",
+        "stalk-cycle",
+        "stretch"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 4.2 kg quadruped with a four-segment spine and five-bone tail, whose stalk cycle keeps three paws on the ground in every phase.",
+        "de": "Vierbeiner mit 4,2 kg, vierteiliger Wirbelsäule und fünfknochigem Schwanz, dessen Pirschzyklus in jeder Phase drei Pfoten am Boden hält."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "horse",
+      "category": "animals",
+      "title": {
+        "en": "Horse",
+        "de": "Pferd"
+      },
+      "heightM": 2.37,
+      "widthM": 2.9,
+      "poses": [
+        "standing-alert",
+        "standing-rest",
+        "grazing-head-down"
+      ],
+      "clips": [
+        "walk-cycle",
+        "graze-and-swish"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 550 kg quadruped whose three-bone neck and head chain lowers the muzzle to the sward in the grazing pose, while all four hooves stay on the ground.",
+        "de": "Ein 550 kg schweres Pferd, dessen dreiteilige Hals-Kopf-Kette in der Grasepose das Maul zur Grasnarbe senkt, während alle vier Hufe am Boden bleiben."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "pigeon",
+      "category": "animals",
+      "title": {
+        "en": "Pigeon",
+        "de": "Taube"
+      },
+      "heightM": 0.24,
+      "widthM": 0.32,
+      "poses": [
+        "standing-alert",
+        "wings-half-open",
+        "pecking-strike",
+        "takeoff-crouch",
+        "takeoff-liftoff",
+        "airborne-wings-up",
+        "airborne-wings-down"
+      ],
+      "clips": [
+        "walk-cycle",
+        "peck-cycle",
+        "take-off"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "The only bird in the archive, with wing-flap take-off and airborne poses, and four feather regions that total about 0.05 m² in its thermal model.",
+        "de": "Einziger Vogel im Archiv mit Flügelschlag-Start- und Flugposen sowie vier Federregionen, die im Wärmemodell zusammen etwa 0,05 m² ergeben."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "roe-deer",
+      "category": "animals",
+      "title": {
+        "en": "Roe Deer",
+        "de": "Reh"
+      },
+      "heightM": 1.08,
+      "widthM": 1.46,
+      "poses": [
+        "alert",
+        "grazing",
+        "alert-foreleg-raised",
+        "bounding-gathered",
+        "bounding-pushoff"
+      ],
+      "clips": [
+        "walk-cycle",
+        "bound-cycle",
+        "alarm-freeze"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A slender deer whose cannon bones (about 0.23 m) are longer than the labrador's metatarsus (0.135 m), and whose alarm clip lifts the near foreleg while the other three hooves stay planted.",
+        "de": "Schlanker Hirsch, dessen Röhrenbeine (etwa 0,23 m) länger sind als der Mittelfuß des Labradors (0,135 m), und dessen Alarm-Clip das nahe Vorderbein anhebt, während die drei übrigen Hufe stehen bleiben."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "dairy-cow",
+      "category": "animals",
+      "title": {
+        "en": "Dairy Cow",
+        "de": "Milchkuh"
+      },
+      "heightM": 1.47,
+      "widthM": 2.57,
+      "poses": [
+        "standing-chewing",
+        "grazing-head-down",
+        "lying-resting",
+        "kneeling-front"
+      ],
+      "clips": [
+        "walk-cycle",
+        "cud-chewing",
+        "lie-down",
+        "graze-and-chew"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A heavy bovine with rumen-flank and udder thermal regions, where fermentation heat is modelled, and a lying pose that rests on the sternum, carpi and hocks.",
+        "de": "Schwerer Rinderkörper mit Pansen- und Euterregionen im Wärmemodell, in dem die Gärungswärme modelliert ist; die Liegepose ruht auf Brustbein, Karpalgelenken und Sprunggelenken."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "park-bench",
+      "category": "objects",
+      "title": {
+        "en": "Park Bench",
+        "de": "Parkbank"
+      },
+      "heightM": 0.85,
+      "widthM": 1.8,
+      "poses": [
+        "unloaded",
+        "occupied-one",
+        "occupied-two"
+      ],
+      "clips": [
+        "occupant-sit-down",
+        "sun-exposure-cycle"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.8 m timber seat and backrest on two steel end frames, whose load states are one or two occupants placed on the seat, unlike the point contacts of a chair.",
+        "de": "Holzsitz und -lehne von 1,8 m Breite auf zwei Stahl-Endgestellen, deren Lastzustände ein oder zwei auf der Sitzfläche platzierte Personen sind, anders als die Punktkontakte eines Stuhls."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "cafe-chair",
+      "category": "objects",
+      "title": {
+        "en": "Café Chair",
+        "de": "Café-Stuhl"
+      },
+      "heightM": 0.9,
+      "widthM": 0.46,
+      "poses": [
+        "upright-empty",
+        "pulled-out",
+        "tilted-on-two-legs"
+      ],
+      "clips": [
+        "pull-out-and-sit",
+        "tip-back"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A light chair drawn in elevation with coinciding near and far legs (two leg pairs, four legs in reality), so its load rests on two point contacts at the rear and front feet; a 75 kg occupant load sits on the seat in the sit-down clip and the chair tips back on its rear feet, where the park bench rests on two long end frames.",
+        "de": "Leichter Stuhl mit in der Ansicht zusammenfallenden Beinpaaren (zwei Beinpaare, real vier Beine); seine Last ruht auf zwei Punktkontakten an Hinter- und Vorderfuß, im Hinsetz-Clip wirkt eine Personenlast von 75 kg auf dem Sitz, und er kippt auf den hinteren Füßen zurück, während die Parkbank auf zwei langen Endgestellen ruht."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "office-swivel-chair",
+      "category": "objects",
+      "title": {
+        "en": "Office Swivel Chair",
+        "de": "Bürodrehstuhl"
+      },
+      "heightM": 1.08,
+      "widthM": 0.62,
+      "poses": [
+        "seat-low",
+        "seat-high",
+        "reclined"
+      ],
+      "clips": [
+        "swivel-rotation",
+        "height-adjust"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Five castor contacts on a prismatic gas-spring column with a backrest recline joint, and a swivel turn about the vertical axis as a motion event that a fixed-leg chair does not have.",
+        "de": "Fünf Rollenkontakte an einer prismatischen Gasfedersäule mit Lehnen-Neigungsgelenk und einer Drehung um die Hochachse als Bewegungsereignis, das ein Stuhl mit festen Beinen nicht hat."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "height-adjustable-desk",
+      "category": "objects",
+      "title": {
+        "en": "Height-adjustable Desk",
+        "de": "Höhenverstellbarer Schreibtisch"
+      },
+      "heightM": 1.17,
+      "widthM": 1.6,
+      "poses": [
+        "seated-height",
+        "mid-height",
+        "standing-height"
+      ],
+      "clips": [
+        "raise-and-lower",
+        "load-on-surface"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Two identical two-stage telescoping prismatic columns raise the top from 0.72 m to 1.15 m under a drawn monitor and a placed laptop load, so the desk changes height rather than standing fixed.",
+        "de": "Zwei identische zweistufige prismatische Teleskopsäulen heben die Platte von 0,72 m auf 1,15 m, unter einem gezeichneten Monitor und einer aufgelegten Laptop-Last, sodass der Tisch seine Höhe ändert statt fest zu stehen."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "street-lamp",
+      "category": "objects",
+      "title": {
+        "en": "Street Lamp",
+        "de": "Straßenleuchte"
+      },
+      "heightM": 6,
+      "widthM": 1.2,
+      "poses": [
+        "dusk-off",
+        "lit-night",
+        "lit-in-wind"
+      ],
+      "clips": [
+        "ignition-at-dusk",
+        "pole-sway-in-gust"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A tall tapered column with a cantilevered luminaire arm, whose operating thermal rise and ignition event describe a lighting cycle that the other static objects do not have.",
+        "de": "Hohe, verjüngte Säule mit ausladendem Leuchtenarm; Betriebserwärmung und Zündereignis beschreiben einen Leuchtzyklus, den die übrigen statischen Objekte nicht haben."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "market-parasol",
+      "category": "objects",
+      "title": {
+        "en": "Market Parasol",
+        "de": "Marktschirm"
+      },
+      "heightM": 2.39,
+      "widthM": 2.63,
+      "poses": [
+        "open-still",
+        "tilted-to-sun",
+        "furled"
+      ],
+      "clips": [
+        "wind-flap",
+        "sun-tilt"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 2.6 m eight-rib canopy on an aluminium mast with a sliding runner whose stretchers fold the ribs down along the mast, plus a tilt joint on a heavy concrete base, whose structural check applies the wind loads at the crown hub to a fixed socket.",
+        "de": "2,6 m achtspeichiger Schirm auf einem Aluminiummast mit Gleitläufer, dessen Spreizen die Speichen am Mast nach unten klappen, und Neigungsgelenk auf einem schweren Betonfuß; die Tragwerksprüfung setzt die Windlasten an der Schirmkrone auf eine feste Aufnahme an."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "waste-bin",
+      "category": "objects",
+      "title": {
+        "en": "Waste Bin",
+        "de": "Abfallbehälter"
+      },
+      "heightM": 1.03,
+      "widthM": 0.53,
+      "poses": [
+        "closed-empty",
+        "lid-open",
+        "full-load"
+      ],
+      "clips": [
+        "lid-open-close",
+        "waste-fill"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A lidded container whose only moving part is the hinged lid, and whose contents add a distributed load in the full-load pose.",
+        "de": "Behälter mit Deckel; das einzige bewegliche Teil ist das Scharniergelenk des Deckels, und der Inhalt erzeugt in der Vollpose eine verteilte Last."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "playground-swing",
+      "category": "objects",
+      "title": {
+        "en": "Playground Swing",
+        "de": "Spielplatzschaukel"
+      },
+      "heightM": 2.41,
+      "widthM": 2.67,
+      "poses": [
+        "rest",
+        "pendulum-forward",
+        "pendulum-back"
+      ],
+      "clips": [
+        "pendulum-swing",
+        "occupant-push"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A steel A-frame with a seat hung on chain bones from a top beam, modelled as a one-degree-of-freedom pendulum with inertial dynamics, in which the occupant push acts while the seat swings.",
+        "de": "Stahl-A-Rahmen mit einem an Kettenknochen vom Tragbalken hängenden Sitz; modelliert als Pendel mit einem Freiheitsgrad und Trägheitsdynamik, bei der der Schub der Person während des Schwingens wirkt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "city-car",
+      "category": "vehicles",
+      "title": {
+        "en": "City Car",
+        "de": "Stadtauto"
+      },
+      "heightM": 1.5,
+      "widthM": 3.92,
+      "poses": [
+        "parked",
+        "driving",
+        "hatch-open",
+        "bonnet-open",
+        "braking-nose-down"
+      ],
+      "clips": [
+        "drive-by",
+        "park-and-open-hatch"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "Suspended front and rear axles with ±0.1 m prismatic travel, a bonnet and tailgate on revolute hinges, and a tailpipe emitter, with two axle contacts in elevation, unlike the two-wheeled cargo bike.",
+        "de": "Gefederte Vorder- und Hinterachse mit ±0,1 m prismatischem Federweg, Motorhaube und Heckklappe an Drehgelenken und einer Auspuffquelle; in der Ansicht zwei Achskontakte, anders als beim zweirädrigen Lastenrad."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "city-bus",
+      "category": "vehicles",
+      "title": {
+        "en": "City Bus",
+        "de": "Stadtbus"
+      },
+      "heightM": 3.14,
+      "widthM": 12,
+      "poses": [
+        "level-cruise",
+        "at-stop-level",
+        "kneeling-at-stop",
+        "braking"
+      ],
+      "clips": [
+        "arrive-kneel-doors",
+        "depart"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 12 m battery-electric solo bus with a kneeling pose and four sliding door leaves on prismatic joints, which the car's hinged bonnet and tailgate do not have.",
+        "de": "12-m-Elektrosolobus mit Kniepose und vier Türflügeln auf prismatischen Gelenken, die der Pkw mit seiner Motorhaube und Heckklappe an Drehgelenken nicht hat."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "excavator",
+      "category": "vehicles",
+      "title": {
+        "en": "Excavator",
+        "de": "Bagger"
+      },
+      "heightM": 3.43,
+      "widthM": 9.85,
+      "poses": [
+        "stowed",
+        "digging",
+        "raised-boom"
+      ],
+      "clips": [
+        "dig-cycle",
+        "dump-and-stow"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A tracked machine whose boom, stick and bucket form a revolute chain, each driven by a hydraulic cylinder with a prismatic rod on a fixed house; no other vehicle in the archive has a boom-stick-bucket chain.",
+        "de": "Kettenfahrzeug, dessen Ausleger, Löffelstiel und Löffel eine Drehgelenkkette bilden, jeweils angetrieben von einem hydraulischen Zylinder mit prismatischer Stange auf festem Oberwagen; kein anderes Fahrzeug im Archiv hat eine Ausleger-Stiel-Löffel-Kette."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tower-crane",
+      "category": "vehicles",
+      "title": {
+        "en": "Tower Crane",
+        "de": "Turmdrehkran"
+      },
+      "heightM": 48.85,
+      "widthM": 71.8,
+      "poses": [
+        "parked-weathervane",
+        "lifting-load",
+        "max-reach",
+        "skip-at-ground"
+      ],
+      "clips": [
+        "lift-and-traverse",
+        "unload"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A tall lattice mast with a horizontal jib and counter-jib, where the trolley runs along the jib so that the hoisted load acts as a moving point load.",
+        "de": "Hoher Gitterturm mit horizontalem Ausleger und Gegenausleger; die Laufkatze fährt am Ausleger entlang, sodass die Last als bewegliche Einzellast wirkt."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "forklift",
+      "category": "vehicles",
+      "title": {
+        "en": "Forklift",
+        "de": "Gabelstapler"
+      },
+      "heightM": 2.26,
+      "widthM": 4.07,
+      "poses": [
+        "lowered-forks",
+        "lifted-load",
+        "tilted-mast"
+      ],
+      "clips": [
+        "lift-pallet",
+        "drive-with-load"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A counterbalanced truck with a telescopic mast whose lift carriage is a prismatic joint, and whose mast tilt changes the overturning moment about the front axle.",
+        "de": "Gegengewichtsstapler mit Teleskopmast; der Hubschlitten ist ein prismatisches Gelenk, und die Mastneigung verändert das Kippmoment um die Vorderachse."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "cargo-bike",
+      "category": "vehicles",
+      "title": {
+        "en": "Cargo Bike",
+        "de": "Lastenrad"
+      },
+      "heightM": 1.18,
+      "widthM": 2.68,
+      "poses": [
+        "parked-on-stand",
+        "loaded-on-stand",
+        "rolling-loaded"
+      ],
+      "clips": [
+        "roll-by",
+        "load-box"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A two-wheeled bicycle with a front cargo box, so its load sits ahead of the front axle and shifts the reaction towards the front wheel.",
+        "de": "Zweirädriges Fahrrad mit vorderer Transportbox; die Last liegt vor der Vorderachse und verlagert die Reaktion zum Vorderrad."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "cantilever-balcony",
+      "category": "components",
+      "title": {
+        "en": "Cantilever Balcony",
+        "de": "Kragbalkon"
+      },
+      "heightM": 1.3,
+      "widthM": 1.83,
+      "poses": [
+        "self-weight",
+        "distributed-live-load",
+        "point-load-tip"
+      ],
+      "clips": [
+        "loading-ramp",
+        "moving-point-load"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A slab restrained only at the wall, so the root carries the full bending moment and the rig is a fixed-support beam, unlike the simply supported glulam beam.",
+        "de": "Platte, die nur an der Wand eingespannt ist; der Anschnitt trägt das volle Biegemoment und das Modell ist ein eingespannter Balken, anders als der frei aufliegende Brettschichtholzbalken."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "glulam-beam",
+      "category": "components",
+      "title": {
+        "en": "Glulam Beam",
+        "de": "Brettschichtholzbalken"
+      },
+      "heightM": 0.6,
+      "widthM": 8,
+      "poses": [
+        "self-weight",
+        "distributed-live-load",
+        "point-load-midspan"
+      ],
+      "clips": [
+        "moving-point-load",
+        "loading-ramp"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "An 8 m GL24h glulam beam of 160 × 600 mm, simply supported on a pin and a roller with timber stiffness E0,mean 11.6 GPa, whose deflection model neglects shear, unlike the cantilevered balcony.",
+        "de": "8-m-Brettschichtholzbalken GL24h, 160 × 600 mm, auf Festlager und Loslager mit einem Holz-Elastizitätsmodul E0,mittel von 11,6 GPa; die Durchbiegung vernachlässigt Schub, anders als der eingespannte Balkon."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "steel-column",
+      "category": "components",
+      "title": {
+        "en": "Steel Column",
+        "de": "Stahlstütze"
+      },
+      "heightM": 3,
+      "widthM": 0.3,
+      "poses": [
+        "axial-self-weight",
+        "eccentric-load",
+        "lateral-wind"
+      ],
+      "clips": [
+        "loading-ramp",
+        "eccentric-load-sweep"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 3.0 m HEB 200 column on a fixed footing with a free head, loaded axially, eccentrically and by lateral wind, whose statics exclude second-order buckling effects, unlike the beams.",
+        "de": "3,0 m hohe HEB-200-Stütze auf eingespanntem Fundament mit freiem Kopf, axial, exzentrisch und durch Seitenwind belastet; die Statik erfasst Effekte nach Theorie II. Ordnung (Knicken) nicht, anders als die Balken."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "stair-flight",
+      "category": "components",
+      "title": {
+        "en": "Stair Flight",
+        "de": "Treppenlauf"
+      },
+      "heightM": 3.02,
+      "widthM": 3.7,
+      "poses": [
+        "self-weight",
+        "crowd-live-load",
+        "point-load-tread"
+      ],
+      "clips": [
+        "loading-ramp",
+        "moving-point-load"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A stepped, inclined run supported at landings, whose load path runs through the stringers and treads instead of a single beam.",
+        "de": "Gestufter, geneigter Lauf auf Podesten; der Lastpfad verläuft über Wangen und Stufen statt über einen einzelnen Balken."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "sliding-door",
+      "category": "components",
+      "title": {
+        "en": "Sliding Door",
+        "de": "Schiebetür"
+      },
+      "heightM": 2.15,
+      "widthM": 3.1,
+      "poses": [
+        "closed",
+        "half-open",
+        "open"
+      ],
+      "clips": [
+        "slide-open-close",
+        "slide-open"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 2.0 m glass leaf on a carriage along a 3.0 m track between a pin and a roller jamb, so its weight acts as a moving vertical load that changes the jamb reactions, with wind out of plane not modelled.",
+        "de": "2,0-m-Glasflügel an einem Laufwagen auf einer 3,0 m langen Schiene zwischen Festlager und Loslager an den Laibungen; sein Gewicht wirkt als wandernde Vertikallast und ändert die Laibungsreaktionen, Winddruck quer zur Ebene ist nicht modelliert."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tilt-window",
+      "category": "components",
+      "title": {
+        "en": "Tilt Window",
+        "de": "Kippfenster"
+      },
+      "heightM": 1.25,
+      "widthM": 0.3,
+      "poses": [
+        "closed",
+        "tilted-open",
+        "fully-tilted"
+      ],
+      "clips": [
+        "tilt-open-close",
+        "wind-pressure-pulse"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 1.2 m timber-framed sash pinned at its bottom hinge, with a horizontal head-stay roller active in every pose, that tilts outward with wind suction acting normal to the sash.",
+        "de": "Ein 1,2 m breiter Holzrahmenflügel, unten am Scharnier gelenkig gelagert, mit einem horizontalen Kopfhaltestab als Rollenlager, der in jeder Pose aktiv ist; er kippt nach außen, Windsog wirkt senkrecht zum Flügel."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "glass-balustrade",
+      "category": "components",
+      "title": {
+        "en": "Glass Balustrade",
+        "de": "Glasgeländer"
+      },
+      "heightM": 1.12,
+      "widthM": 0.3,
+      "poses": [
+        "self-weight-unloaded",
+        "handrail-line-load",
+        "crowd-impact-point",
+        "wind-pressure"
+      ],
+      "clips": [
+        "handrail-push",
+        "impact-pulse"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A single 1.1 m laminated glass panel cantilevered from a floor clamp with no posts, shown in section: a handrail line load of 1.0 kN/m (taken per metre of run on a 1 m strip), a separate crowd impact point load and wind pressure act at its top.",
+        "de": "Eine einzelne 1,1 m hohe Verbundglasfüllung ohne Pfosten, am Bodenklemmhalter eingespannt und im Schnitt gezeigt: Eine Handlauf-Linienlast von 1,0 kN/m (je Meter Länge auf einem 1-m-Streifen), eine getrennte Anprall-Einzellast und Winddruck wirken oben."
+      },
+      "completion": "authored"
+    },
+    {
+      "id": "tied-canopy",
+      "category": "components",
+      "title": {
+        "en": "Tied Canopy",
+        "de": "Abgespanntes Vordach"
+      },
+      "heightM": 3.09,
+      "widthM": 6,
+      "poses": [
+        "self-weight",
+        "snow-load",
+        "wind-uplift"
+      ],
+      "clips": [
+        "loading-ramp",
+        "wind-gust"
+      ],
+      "analytics": [
+        "thermal",
+        "structural"
+      ],
+      "viewpoints": [
+        "elevation"
+      ],
+      "exports": [
+        "svg",
+        "pdf",
+        "dxf",
+        "dwg",
+        "png-sequence",
+        "mp4",
+        "webm",
+        "component"
+      ],
+      "distinction": {
+        "en": "A 5.5 m steel canopy pinned at the wall and held by a tube strut hinged at both ends, modelled as a bilateral roller along the rod, so the strut carries snow in tension and net wind uplift in compression and the canopy keeps its restraint.",
+        "de": "5,5 m langes Stahlvordach, am Wandanschluss gelenkig gelagert und von einem beidseitig gelenkig angeschlossenen Rohrstab gehalten, als beidseitige Rolle entlang des Stabs modelliert; der Stab trägt Schnee auf Zug und Netto-Windsog auf Druck, sodass das Vordach seine Halterung behält."
+      },
+      "completion": "authored"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "title": "Architectural Staffage Archive",
+  "emoji": "🧍",
+  "status": "open",
+  "description": "Build a complete architectural staffage archive website (48+ handcrafted assets across humans, vegetation, animals, furniture/objects, vehicles/machines, building components) with typed versioned schema, SI dimensions and drawing scales, seven synchronized views, rigs/poses/clips, asset-specific thermal and structural models, editorial website with viewer/compare/playground, and genuine SVG/PDF/DXF/DWG(if available)/video exports. Brief: staffage-launch-kit/prompt.txt. Coordinator model: Opus 5.5 (not in ticket llm registry).",
+  "goal": "🎯runningdrawing",
+  "sessions": [
+    "40352115-dc23-4de7-9508-581a9386465f"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-29 02:25:16",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "linux",
+      "client": "claude-code",
+      "checkpoint": "82dd1da20064a425cd3683d591cae50f86b68da5",
+      "prompt": "Build a complete architectural staffage archive website (48+ handcrafted assets across humans, vegetation, animals, furniture/objects, vehicles/machines, building components) with typed versioned schema, SI dimensions and drawing scales, seven synchronized views, rigs/poses/clips, asset-specific thermal and structural models, editorial website with viewer/compare/playground, and genuine SVG/PDF/DXF/DWG(if available)/video exports. Brief: staffage-launch-kit/prompt.txt. Coordinator model: Opus 5.5 (not in ticket llm registry)."
+    }
+  ]
+}

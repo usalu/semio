@@ -1,0 +1,32 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "binary"
+  ],
+  "properties": {
+    "schema": {
+      "const": "stdio.part21.native-receiving"
+    },
+    "binary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "admitted"
+        ],
+        "properties": {
+          "value": {
+            "type": "string"
+          },
+          "admitted": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

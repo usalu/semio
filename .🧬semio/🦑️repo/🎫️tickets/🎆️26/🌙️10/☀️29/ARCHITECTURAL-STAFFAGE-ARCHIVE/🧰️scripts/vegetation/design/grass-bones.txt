@@ -1,0 +1,25 @@
+root-plate|-|Crown and rhizome mat|Horstbasis und Rhizomfilz|0|90|0.12|fixed|0|4|0.06|uniform|jones-2014|0.35
+culm-1a|root-plate|Flowering culm 1, lower|Blütenhalm 1, unten|0.12|-22|0.8|-8|8|0.3|0.4|uniform|jones-2014|0.012
+culm-1b|culm-1a|Flowering culm 1, arching tip|Blütenhalm 1, Bogenspitze|0.8|-12|0.45|-15|15|0.15|0.22|uniform|jones-2014|0.008
+plume-1|culm-1b|Plume 1|Fahne 1|0.45|0|0.3|-20|20|0.12|0.15|point|jones-2014
+culm-2a|root-plate|Flowering culm 2, lower|Blütenhalm 2, unten|0.12|-7|0.8|-8|8|0.3|0.4|uniform|jones-2014|0.012
+culm-2b|culm-2a|Flowering culm 2, arching tip|Blütenhalm 2, Bogenspitze|0.8|-6|0.45|-15|15|0.15|0.22|uniform|jones-2014|0.008
+plume-2|culm-2b|Plume 2|Fahne 2|0.45|0|0.3|-20|20|0.12|0.15|point|jones-2014
+culm-3a|root-plate|Flowering culm 3, lower|Blütenhalm 3, unten|0.12|7|0.8|-8|8|0.3|0.4|uniform|jones-2014|0.012
+culm-3b|culm-3a|Flowering culm 3, arching tip|Blütenhalm 3, Bogenspitze|0.8|6|0.45|-15|15|0.15|0.22|uniform|jones-2014|0.008
+plume-3|culm-3b|Plume 3|Fahne 3|0.45|0|0.3|-20|20|0.12|0.15|point|jones-2014
+culm-4a|root-plate|Flowering culm 4, lower|Blütenhalm 4, unten|0.12|22|0.8|-8|8|0.3|0.4|uniform|jones-2014|0.012
+culm-4b|culm-4a|Flowering culm 4, arching tip|Blütenhalm 4, Bogenspitze|0.8|12|0.45|-15|15|0.15|0.22|uniform|jones-2014|0.008
+plume-4|culm-4b|Plume 4|Fahne 4|0.45|0|0.3|-20|20|0.12|0.15|point|jones-2014
+bl-L1a|root-plate|Blade bundle 1 left, rising|Blattbündel 1 links, aufsteigend|0.12|60|0.5|-10|10|0.3|0.25|uniform|jones-2014
+bl-L1b|bl-L1a|Blade bundle 1 left, arching|Blattbündel 1 links, überhängend|0.5|45|0.6|-25|25|0.3|0.3|uniform|jones-2014
+bl-L2a|root-plate|Blade bundle 2 left, rising|Blattbündel 2 links, aufsteigend|0.12|35|0.55|-10|10|0.3|0.275|uniform|jones-2014
+bl-L2b|bl-L2a|Blade bundle 2 left, arching|Blattbündel 2 links, überhängend|0.55|40|0.65|-25|25|0.3|0.325|uniform|jones-2014
+bl-L3a|root-plate|Blade bundle 3 left, rising|Blattbündel 3 links, aufsteigend|0.12|15|0.6|-10|10|0.3|0.3|uniform|jones-2014
+bl-L3b|bl-L3a|Blade bundle 3 left, arching|Blattbündel 3 links, überhängend|0.6|35|0.7|-25|25|0.3|0.35|uniform|jones-2014
+bl-R1a|root-plate|Blade bundle 1 right, rising|Blattbündel 1 rechts, aufsteigend|0.12|-60|0.5|-10|10|0.3|0.25|uniform|jones-2014
+bl-R1b|bl-R1a|Blade bundle 1 right, arching|Blattbündel 1 rechts, überhängend|0.5|-45|0.6|-25|25|0.3|0.3|uniform|jones-2014
+bl-R2a|root-plate|Blade bundle 2 right, rising|Blattbündel 2 rechts, aufsteigend|0.12|-35|0.55|-10|10|0.3|0.275|uniform|jones-2014
+bl-R2b|bl-R2a|Blade bundle 2 right, arching|Blattbündel 2 rechts, überhängend|0.55|-40|0.65|-25|25|0.3|0.325|uniform|jones-2014
+bl-R3a|root-plate|Blade bundle 3 right, rising|Blattbündel 3 rechts, aufsteigend|0.12|-15|0.6|-10|10|0.3|0.3|uniform|jones-2014
+bl-R3b|bl-R3a|Blade bundle 3 right, arching|Blattbündel 3 rechts, überhängend|0.6|-35|0.7|-25|25|0.3|0.35|uniform|jones-2014

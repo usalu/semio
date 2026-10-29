@@ -1,0 +1,28 @@
+{
+  "cases": [
+    {
+      "name": "owned-stale-birth-yields-to-wrapper",
+      "owner": true,
+      "stale": true,
+      "status": 0
+    },
+    {
+      "name": "unowned-stale-birth-exits",
+      "owner": false,
+      "stale": true,
+      "status": 75
+    },
+    {
+      "name": "owned-ordinary-failure-is-unchanged",
+      "owner": true,
+      "stale": false,
+      "status": 0
+    },
+    {
+      "name": "unowned-ordinary-failure-is-unchanged",
+      "owner": false,
+      "stale": false,
+      "status": 0
+    }
+  ]
+}

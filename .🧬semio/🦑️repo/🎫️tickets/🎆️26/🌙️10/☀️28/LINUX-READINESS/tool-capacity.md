@@ -1,0 +1,7 @@
+# Tiny Go Tool Capacity Classification
+
+Confirmed classification defect: tools registry process/🧰️tools/🔣️.json defines one go entry owning both go and gofmt, with capacity admit/command/build. runToolV1 at tools/🏃️run/🟦️.ts154 treats heavy:false only as an inherit-mode exemption; admit mode still waits. At178 admission forwards entry.capacity.kind without command/argv discrimination. CLI tool-registry command passes heavy:!head.includes(--light), so --light cannot change this build-kind request. Thus formatter and version queries inherit compiler sizing despite doing no compilation.
+
+Correct schema-first boundary is executable/subcommand action classification under tool registry capacity, preserving the capacity gate with a smaller authored formatter/query request. Do not make --light an arbitrary bypass for go build/test/run. Classify gofmt as formatter/script, go version/env as bounded query, and go build/test/run as compilation. Host policy comes from library/🏗️build/🔣️policy.json via host-capacity/control; fix command semantics before tuning its global resource floors.
+
+Existing tests process/🧰️tools/🧪️tests/🏃️run/🟦️.ts record ToolAdmissionV1 asks in the heavy-tool admission test. Extend language-neutral fixture rows to executable/arguments/expected class and compare against independent table/schema oracle. Assert tiny operations still call admission, compilation keeps its class, cancellation and sanitized grant environment remain unchanged. No source edits and no capacity bypass by audit.

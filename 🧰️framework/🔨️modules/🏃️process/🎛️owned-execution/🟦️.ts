@@ -1,7 +1,7 @@
 import {noticeLanguagesV1} from "../../../📦️packages/🟦️typescript/⚙️runtime/🗣️language/🟦️.ts";
 import{readOwnedCommandAuxiliaryInputV1,publishOwnedAuxiliaryInputV1,type OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
 export type{OwnedCommandAuxiliaryInputV1}from"./📥️auxiliary/🟦️.ts";
-import {captureOwnedCommandBodyV1,writeOwnedCommandOutputV1} from "./📥️capture/🟦️.ts";
+import {captureOwnedCommandBodyV1,writeOwnedCommandOutputV1,type OwnedCommandInputV1} from "./📥️capture/🟦️.ts";
 import {resultStreamV1} from "../🏗️build/📤️output/🟦️.ts";
 import {bunTestCeilingV1} from "../🧪️testing/🟨️bun/🧯️ceiling/🟦️.ts";
 import {routeRegisteredCommandV1} from "../🧰️tools/🔌️funnel/🟦️.ts";
@@ -47,7 +47,7 @@ export interface OwnedCommandOptions {
 /** 🧺️ Runs one tool without blocking the event loop and without forwarding its output: several tools run at once (jco, wasm-opt, a descriptor emitter, a
  * module probe), so their output is kept as a 64 KiB tail and surfaced only in the failure. Cancellation terminates the tool's process tree, forcefully after 2 s.
  * Resolves with the output tail. */
-export async function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; control?: ResourceLeaseControl; output?: OwnedCommandOptions["output"] }> = {}): Promise<string> {
+export async function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ input?: OwnedCommandInputV1; env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal; control?: ResourceLeaseControl; output?: OwnedCommandOptions["output"] }> = {}): Promise<string> {
  const prepared=prepareTestCommandV1(command,args,options.env??process.env,tmpdir()),started=performance.now(),granted=Object.keys(prepared.environment).length?{...options,env:{...(options.env??process.env),...prepared.environment}}:options;
  let captured:Awaited<ReturnType<typeof captureOwnedCommandBodyV1>>;
  try{captured=await captureOwnedCommandBodyV1(command,prepared.args,cwd,granted,false);}

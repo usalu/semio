@@ -53,6 +53,13 @@
           "Semio",
           "repo"
         ],
+        "unixReceiptDirectory": [
+          ".local",
+          "share",
+          "semio",
+          "repo"
+        ],
+        "receiptFile": "installed.json",
         "maximumPathLength": 256,
         "maximumBinaryBytes": 536870912,
         "maximumProfileBytes": 1048576,
@@ -65,6 +72,37 @@
           ".zshrc"
         ],
         "marker": "semio native repo PATH"
+      }
+    },
+    "ReceiptCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "platform",
+        "home",
+        "localAppData",
+        "expected"
+      ],
+      "properties": {
+        "platform": {
+          "enum": [
+            "linux",
+            "darwin",
+            "win32"
+          ]
+        },
+        "home": {
+          "type": "string",
+          "minLength": 1
+        },
+        "localAppData": {
+          "type": "string"
+        },
+        "expected": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
       }
     },
     "InvocationCase": {
@@ -204,6 +242,56 @@
         },
         "rejected": {
           "type": "boolean"
+        }
+      }
+    },
+    "Receipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "platform",
+        "digest",
+        "executable",
+        "directory",
+        "source",
+        "mode"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "platform": {
+          "enum": [
+            "darwin",
+            "linux",
+            "win32"
+          ]
+        },
+        "digest": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "executable": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "mode": {
+          "enum": [
+            "prototype",
+            "release"
+          ]
         }
       }
     }

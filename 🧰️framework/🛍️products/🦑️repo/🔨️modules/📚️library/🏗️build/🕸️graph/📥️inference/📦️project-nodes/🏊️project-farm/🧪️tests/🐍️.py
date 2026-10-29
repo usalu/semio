@@ -67,16 +67,8 @@ def runtime(name, megabytes):
 
 
 def own_grant(environment):
-    try:
-        plan = json.loads(environment.get(policy["planEnvironment"], "null"))
-    except ValueError:
-        return None
-    if not isinstance(plan, dict):
-        return None
-    jobs, megabytes = plan.get("jobs"), plan.get("memoryMegabytes")
-    if isinstance(jobs, bool) or not isinstance(jobs, int) or jobs < 1 or isinstance(megabytes, bool) or not isinstance(megabytes, (int, float)) or megabytes <= 0:
-        return None
-    return {"source": "own", "workers": min(policy["ownWorkers"], jobs), "megabytes": int(megabytes // jobs)}
+    """🎫️ Carried plans without a live reservation cannot fund an owned pool."""
+    return None
 
 
 def granted_pool(granted):

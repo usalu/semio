@@ -1,0 +1,128 @@
+{
+  "version": 1,
+  "minimum": 4.5,
+  "themes": [
+    "light",
+    "dark"
+  ],
+  "pairs": [
+    {
+      "role": "body",
+      "text": "muted-foreground",
+      "surface": "canvas"
+    },
+    {
+      "role": "cover",
+      "text": "muted-foreground",
+      "surface": "window"
+    },
+    {
+      "role": "link",
+      "text": "foreground",
+      "surface": "canvas"
+    },
+    {
+      "role": "outline",
+      "text": "foreground",
+      "surface": "canvas"
+    },
+    {
+      "role": "filled-primary",
+      "text": "accent-foreground",
+      "surface": "primary"
+    },
+    {
+      "role": "filled-secondary",
+      "text": "accent-foreground",
+      "surface": "secondary"
+    },
+    {
+      "role": "filled-tertiary",
+      "text": "accent-foreground",
+      "surface": "tertiary"
+    },
+    {
+      "role": "neutral-filled",
+      "text": "foreground",
+      "surface": "panel"
+    },
+    {
+      "role": "heading-number-primary-prefix",
+      "text": "accent-foreground",
+      "surface": "primary"
+    },
+    {
+      "role": "heading-number-primary-leaf",
+      "text": "accent-foreground",
+      "surface": "primary"
+    },
+    {
+      "role": "heading-number-secondary-prefix",
+      "text": "accent-foreground",
+      "surface": "secondary"
+    },
+    {
+      "role": "heading-number-secondary-leaf",
+      "text": "accent-foreground",
+      "surface": "secondary"
+    },
+    {
+      "role": "heading-number-tertiary-prefix",
+      "text": "accent-foreground",
+      "surface": "tertiary"
+    },
+    {
+      "role": "heading-number-tertiary-leaf",
+      "text": "accent-foreground",
+      "surface": "tertiary"
+    },
+    {
+      "role": "heading-number-outline-prefix",
+      "text": "foreground",
+      "surface": "canvas"
+    },
+    {
+      "role": "heading-number-outline-leaf",
+      "text": "foreground",
+      "surface": "canvas"
+    }
+  ],
+  "regressions": [
+    {
+      "foreground": "#7b827d",
+      "background": "#f7f3e3",
+      "maximum": 4.5
+    },
+    {
+      "foreground": "#f7f3e3",
+      "background": "#34d1bf",
+      "maximum": 4.5
+    },
+    {
+      "foreground": "#ff344f",
+      "background": "#f7f3e3",
+      "maximum": 4.5
+    },
+    {
+      "foreground": "#91968f",
+      "background": "#34d1bf",
+      "maximum": 4.5
+    }
+  ],
+  "actualThemes": [
+    {
+      "theme": "light",
+      "normal": "3E494A",
+      "outline": "001117",
+      "filled": "001117",
+      "link": "001117"
+    },
+    {
+      "theme": "dark",
+      "normal": "91968F",
+      "outline": "F7F3E3",
+      "filled": "001117",
+      "link": "F7F3E3"
+    }
+  ]
+}

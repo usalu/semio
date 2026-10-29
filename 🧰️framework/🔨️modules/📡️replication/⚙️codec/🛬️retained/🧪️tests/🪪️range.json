@@ -20,7 +20,17 @@
           "2"
         ]
       },
-      "equal": true
+      "equal": true,
+      "expectedBytes": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
     },
     {
       "name": "same extent from another frame",
@@ -42,7 +52,17 @@
           "2"
         ]
       },
-      "equal": false
+      "equal": false,
+      "expectedBytes": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
     },
     {
       "name": "foreign equal byte backing",
@@ -64,7 +84,17 @@
           "2"
         ]
       },
-      "equal": false
+      "equal": false,
+      "expectedBytes": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
     },
     {
       "name": "foreign generation",
@@ -86,7 +116,49 @@
           "3"
         ]
       },
-      "equal": false
+      "equal": false,
+      "expectedBytes": [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "name": "whole original buffer begins at zero",
+      "left": {
+        "backing": "original",
+        "extent": 8,
+        "rangeStart": 0,
+        "authority": [
+          "1",
+          "2"
+        ]
+      },
+      "right": {
+        "backing": "original",
+        "extent": 8,
+        "rangeStart": 0,
+        "authority": [
+          "1",
+          "2"
+        ]
+      },
+      "equal": true,
+      "expectedBytes": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7
+      ]
     }
   ]
 }

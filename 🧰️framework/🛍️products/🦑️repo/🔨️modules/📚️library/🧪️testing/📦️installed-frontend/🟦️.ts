@@ -8,11 +8,13 @@ import { performance } from "node:perf_hooks";
 import { checkResourceLeaseControl, type ResourceLeaseControl } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import { resolveMcpBin } from "../../🚨️policy/🖥️cli/🟦️.ts";
 import installationSchema from "../../../💻️client/🔌️mcp/📥️installation/🧬️schema/🔣️.json" with { type: "json" };
+import { compileJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 
 const installation = Object.freeze(installationSchema.$defs.Protocol.const);
+const receiptValidator = compileJsonSchemaSubset(installationSchema.$defs.Receipt);
 type Receipt = Readonly<{ version: 1; platform: "darwin" | "linux" | "win32"; digest: string; executable: string; directory: string; source: string; mode: "prototype" | "release" }>;
 type FileProof = Readonly<{ path: string; ancestry: readonly string[]; stamp: string; digest: string; bytes: number; header: string; text?: string }>;
-type Provenance = Readonly<{ receipt: FileProof; pin: FileProof; executable: FileProof; profile: FileProof; record: Receipt }>;
+type Provenance = Readonly<{ receipt: FileProof; executable: FileProof; profile: FileProof; record: Receipt }>;
 
 function physicalPath(value: string): string {
   assert.equal(resolve(value), value, "Absolute canonical path required");
@@ -62,23 +64,21 @@ export async function captureInstalledFrontendProofV1(root: string, control: Res
   assert.ok(!environment.REPO_MCP_BIN && !environment.REPO_CLI_BIN && !process.env.REPO_MCP_BIN && !process.env.REPO_CLI_BIN, "Canonical frontend profile required without binary overrides");
   const platform = process.platform as Receipt["platform"], home = homedir(), local = environment.LOCALAPPDATA;
   if (platform === "win32") assert.ok(local, "Official LOCALAPPDATA installation root required");
-  const installationRoot = platform === "win32" ? join(local!, ...installation.windowsDirectory) : join(home, ".local", "share", "semio", "repo");
-  const receipt = await fileProof(join(installationRoot, "installed.json"), 4096, control, true), record = JSON.parse(receipt.text!) as Receipt;
-  assert.deepEqual(Object.keys(record).sort(), ["version", "platform", "digest", "executable", "directory", "source", "mode"].sort());
+  const installationRoot = platform === "win32" ? join(local!, ...installation.windowsDirectory) : join(home, ...installation.unixReceiptDirectory);
+  const receipt = await fileProof(join(installationRoot, installation.receiptFile), 4096, control, true), record = JSON.parse(receipt.text!) as Receipt;
+  assert.deepEqual(receiptValidator.validate(record), [], "Closed per-user installation receipt required");
   assert.equal(record.version, 1); assert.equal(record.platform, platform); assert.match(record.digest, /^[a-f0-9]{64}$/u); assert.ok(record.mode === "prototype" || record.mode === "release");
   assert.equal(record.mode, environment.SEMIO_BUILD_MODE, "Requested canonical frontend profile required");
   const directory = platform === "win32" ? join(installationRoot, record.digest) : join(home, ...installation.unixDirectory);
   assert.equal(record.directory, directory); assert.equal(record.executable, join(directory, platform === "win32" ? "repo.exe" : "repo"));
   assert.equal(record.source, resolveMcpBin(root, record.mode));
-  const pin = await fileProof(join(root, ".🧬semio", "🦑️repo", "native-repo-path"), 4096, control, true);
-  assert.equal(pin.text, record.executable.replaceAll("\\", "/") + "\n");
   const profile = await fileProof(record.source, installation.maximumBinaryBytes, control), executable = await fileProof(record.executable, installation.maximumBinaryBytes, control);
   assert.equal(profile.digest, record.digest); assert.equal(executable.digest, record.digest);
   assert.ok(nativeHeader(profile.header, platform) && nativeHeader(executable.header, platform), "Native profile and installed executable required");
-  return Object.freeze({ receipt, pin, profile, executable, record: Object.freeze(record) });
+  return Object.freeze({ receipt, profile, executable, record: Object.freeze(record) });
 }
 export function assertSameInstalledFrontendProofV1(before: Provenance, after: Provenance): void {
   assert.deepEqual(after.record, before.record);
-  for (const key of ["receipt", "pin", "profile", "executable"] as const) assert.deepEqual(after[key], before[key], "Canonical publication changed during protocol probe");
+  for (const key of ["receipt", "profile", "executable"] as const) assert.deepEqual(after[key], before[key], "Canonical publication changed during protocol probe");
 }
 

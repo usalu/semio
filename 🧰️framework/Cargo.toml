@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🔨️modules/🚪️io/⏱️control/🧪️testing/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/⏪️time-travel/📦️packages/🦀️rust",
     "🔨️modules/⏪️time-travel/🕹️actions/📦️packages/🦀️rust",

@@ -1,22 +1,40 @@
-/** 🎮️ Contract: the workspace cleanup command accepts exactly a closed mode plus an optional dry marker (and passes the rest of `taxonomy` and `test` through) and rejects everything else before touching a resource; the corpus is language-agnostic and `🐍️.py` parses the same argument vectors. */
-import {expect,setDefaultTimeout,test} from "bun:test";
-import Ajv from "ajv";
-import {dirname,join} from "node:path";
-import {fileURLToPath} from "node:url";
-import {testPythonV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🧰️toolchain/🟦️.ts";
-import {readWorkspaceCleanupEntryV1} from "../🟦️.ts";
-import corpus from "./🔣️.json";
-import schema from "./🧬️schema/🔣️.json";
+import {expect,test} from "bun:test";
+import {readFileSync} from "node:fs";
+import {posix,win32} from "node:path";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv/dist/2020";
+import ts from "typescript";
+import {transformSync} from "esbuild";
+import schema from "./🧫️fixtures/schema.json" with {type:"json"};
+import fixture from "./🧫️fixtures/cases.json" with {type:"json"};
 
-setDefaultTimeout(120000);
-const here=dirname(fileURLToPath(import.meta.url)),python=testPythonV1();
-for(const row of corpus.accepted)test("accepts "+JSON.stringify(row.segments),()=>{const entry=readWorkspaceCleanupEntryV1(row.segments);expect<unknown>({mode:entry.mode,dry:entry.dry,arguments:[...entry.arguments]}).toEqual({mode:row.mode,dry:row.dry,arguments:row.arguments});expect(Object.isFrozen(entry)).toBe(true);expect(Object.isFrozen(entry.arguments)).toBe(true);});
-for(const row of corpus.rejected)test("rejects "+JSON.stringify(row.segments),()=>{expect(()=>readWorkspaceCleanupEntryV1(row.segments)).toThrow("Closed workspace cleanup command required");});
-for(const[index,value]of corpus.nonArrays.entries())test("rejects the non-array input "+index,()=>{expect(()=>readWorkspaceCleanupEntryV1(value as never)).toThrow("Closed workspace cleanup command required");});
-test("an array holding a non-string is rejected",()=>{expect(()=>readWorkspaceCleanupEntryV1(["dry",1] as never)).toThrow("Closed workspace cleanup command required");});
-test("the corpus is closed under its schema",()=>{const ajv=new Ajv({strict:true});expect(ajv.validate(schema,corpus),JSON.stringify(ajv.errors)).toBe(true);});
-test("the independent Python model reaches the same verdicts",()=>{
- if(!python)throw Error("Independent Python oracle required");
- const result=Bun.spawnSync([python,"-I",join(here,"🐍️.py"),join(here,"🔣️.json")]);
- expect(result.stderr.toString()).toBe("");expect(JSON.parse(result.stdout.toString())).toEqual({failures:[]});expect(result.exitCode).toBe(0);
+test("workspace cleanup delegates cache maintenance with its exact incoming invocation",async()=>{
+ const text=readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),program=ts.createSourceFile("actual-cleanup.ts",text,ts.ScriptTarget.Latest,true),owner=program.statements.find(node=>ts.isClassDeclaration(node)&&node.name?.text==="CleanScript")!.getText(program).replace(/^export\s/u,""),db=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema);
+ try{for(const compiler of ["typescript","esbuild"]as const)for(const row of fixture.cases){
+  expect(validate(row)).toBe(true);const path=row.platform==="win32"?win32:posix,root=row.platform==="win32"?"C:\\workspace":"/workspace",original=Object.freeze({control:Object.freeze({signal:new AbortController().signal})}),refusal=Object.freeze({cancelled:true}),calls:string[][]=[];let raw=0;
+  const ports={Script:class{},processTableSnapshot:()=>row.processes==="unreadable"?null:row.processes==="active"?[{command:"active"}]:[],ACTIVE_SEMIO_TECH_BUILD:/active/u,CachePruneScript:class{constructor(module:string,workspace:string,invocation:unknown){expect(module).toBe(path.join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching"));expect(workspace).toBe(root);expect(invocation).toBe(original);}async run(args:string[]){calls.push(args);if(row.cancelled)throw refusal;}},join:path.join,repoCacheDirectory:(value:string)=>path.join(value,"cache"),console:{log:()=>{}},runtimeExecutableV1:()=>"runtime",orchestratorBudgetOpts:()=>({}),runCmdStatus:()=>{raw++;return 0;}};
+  const code=compiler==="typescript"?ts.transpileModule(owner,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText:transformSync(owner,{loader:"ts",target:"es2022"}).code,Command=new Function(...Object.keys(ports),code+";return CleanScript;")(...Object.values(ports)),command=Object.assign(new Command(),{root,repoRoot:root,invocation:original});let caught:unknown;
+  try{await command.runCachePrune(row.dry);}catch(error){caught=error;}
+  const oracle=db.query("SELECT CASE WHEN ?1='idle' THEN 1 ELSE 0 END calls").get(row.processes)as{calls:number};expect(calls.length).toBe(row.calls);expect(calls.length).toBe(oracle.calls);expect(raw).toBe(0);expect(caught).toBe(row.cancelled?refusal:undefined);if(row.calls)expect(calls[0]).toEqual(row.dry?["--dry-run"]:[]);
+ }}finally{db.close();}
+});
+
+test("workspace root birth carries its authored root and received originals retain their authority",async()=>{
+ const syntax=ts.createSourceFile("entry.ts",readFileSync(new URL("../../../🚨️policy/🧭️entrypoints/🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),owner=syntax.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="runWorkspaceScriptMain")!.getText(syntax).replace(/^export /u,""),db=new Database(":memory:");
+ try{for(const compiler of ["typescript","esbuild"]as const)for(const row of fixture.cases)for(const received of [false,true]){
+  const root=row.platform==="win32"?"C:\\workspace":"/workspace",router=Object.freeze({repoRoot:root}),original=Object.freeze({original:true});let births=0,handled=0;
+  const ports={process:{env:received?{INVOCATION:"original"}:{}},SCRIPT_PROCESS_INVOCATION_ENV:"INVOCATION",readScriptPolicy:(value:unknown)=>value,createScriptProcessEnvelope:(policy:unknown,capabilities:unknown)=>{births++;expect(capabilities).toEqual({workspaceRoot:root});return original;},withScriptProcessEnvelope:async(value:unknown,body:(incoming:unknown)=>Promise<void>)=>{expect(value).toBe(original);await body(original);},receiveScriptProcessInvocation:async(environment:unknown,body:(incoming:unknown)=>Promise<void>)=>{await body(original);},runScriptMain:async(incomingRouter:unknown,options:{invocation:unknown})=>{handled++;expect(incomingRouter).toBe(router);expect(options.invocation).toBe(original);}};
+  const code=compiler==="typescript"?ts.transpileModule(owner,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText:transformSync(owner,{loader:"ts",target:"es2022"}).code,run=new Function(...Object.keys(ports),code+";return runWorkspaceScriptMain;")(...Object.values(ports));await run(router);expect(births).toBe((db.query("SELECT CASE WHEN ? THEN 0 ELSE 1 END births").get(received)as{births:number}).births);expect(handled).toBe(1);
+ }}finally{db.close();}
+});
+
+test("workspace cleanup retires dependency capsules through its original Store writer and preserves dry-run",async()=>{
+ const syntax=ts.createSourceFile("clean.ts",readFileSync(new URL("../🟦️.ts",import.meta.url),"utf8"),ts.ScriptTarget.Latest,true),owner=syntax.statements.find(node=>ts.isClassDeclaration(node)&&node.name?.text==="CleanScript")!.getText(syntax).replace(/^export\s/u,""),validate=new Ajv({strict:true}).compile(schema),db=new Database(":memory:");
+ try{for(const compiler of ["typescript","esbuild"]as const)for(const row of fixture.cases){
+  expect(validate(row)).toBe(true);const root=row.platform==="win32"?"C:\\workspace":"/workspace",original=Object.freeze({original:true}),control=Object.freeze({original}),actualPhase=Object.freeze({control}),store=Object.freeze({original}),refusal=Object.freeze({cancelled:true});let opened=0,retired=0;
+  const ports={Script:class{},scriptCompilerAdmissionControlV1:(incoming:unknown,operation:string,budget:number)=>{expect(incoming).toBe(original);expect(operation).toBe("clean:dependency-preservations");expect(budget).toBe(1000);return control;},buildBudgetMs:()=>1000,withJavascriptDependencyStorageV1:async(workspace:string,incoming:unknown,phase:unknown,body:(store:unknown,phase:unknown)=>Promise<unknown>)=>{opened++;expect(workspace).toBe(root);expect(incoming).toBe(original);expect(phase).toBe(control);return body(store,actualPhase);},retireJavascriptDependencyPreservationsV1:async(workspace:string,incomingStore:unknown,phase:unknown)=>{retired++;expect(workspace).toBe(root);expect(incomingStore).toBe(store);expect(phase).toBe(actualPhase);if(row.cancelled)throw refusal;return {retired:["capsule"],retained:[],entries:7};},console:{log:()=>{}}};
+  const code=compiler==="typescript"?ts.transpileModule(owner,{compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText:transformSync(owner,{loader:"ts",target:"es2022"}).code,Command=new Function(...Object.keys(ports),code+";return CleanScript;")(...Object.values(ports)),command=Object.assign(new Command(),{root,repoRoot:root,invocation:original});let caught:unknown;
+  try{await command.runDependencyPreservationRetirement(row.dry);}catch(error){caught=error;}
+  const oracle=db.query("SELECT CASE WHEN ? THEN 0 ELSE 1 END calls").get(row.dry)as{calls:number};expect(opened).toBe(oracle.calls);expect(retired).toBe(oracle.calls);expect(caught).toBe(row.cancelled&&!row.dry?refusal:undefined);
+ }}finally{db.close();}
 });

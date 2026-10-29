@@ -1,0 +1,64 @@
+[
+  {
+    "id": "cold-online",
+    "cached": false,
+    "offline": false,
+    "failure": null,
+    "events": [
+      "inputs",
+      "receipt",
+      "writer",
+      "capacity",
+      "compile",
+      "retire"
+    ]
+  },
+  {
+    "id": "cold-offline",
+    "cached": false,
+    "offline": true,
+    "failure": null,
+    "events": [
+      "inputs",
+      "receipt",
+      "writer",
+      "capacity",
+      "compile",
+      "retire"
+    ]
+  },
+  {
+    "id": "receipt-hit",
+    "cached": true,
+    "offline": true,
+    "failure": null,
+    "events": [
+      "inputs",
+      "receipt",
+      "retire"
+    ]
+  },
+  {
+    "id": "fetch-refused",
+    "cached": false,
+    "offline": true,
+    "failure": "fetch",
+    "events": [
+      "inputs"
+    ]
+  },
+  {
+    "id": "compile-refused",
+    "cached": false,
+    "offline": false,
+    "failure": "compile",
+    "events": [
+      "inputs",
+      "receipt",
+      "writer",
+      "capacity",
+      "compile",
+      "retire"
+    ]
+  }
+]

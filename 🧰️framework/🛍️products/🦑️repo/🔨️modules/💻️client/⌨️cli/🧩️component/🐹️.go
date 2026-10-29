@@ -12,13 +12,15 @@
 package client
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/usalu/semio/repo/client/internal/command"
 	"github.com/usalu/semio/repo/graphql"
 	"os"
+	"os/signal"
+	"syscall"
 	"time"
-
 )
 
 // ⚙️Config holds the data fields for a config record.
@@ -134,8 +136,10 @@ func NewRootWithConfig(factory EngineFactory) (*command.Command, *Config) {
 
 // ❌️Execute MUST delegate to the root command and propagate errors.
 // ⌨️Execute runs the root command and returns any error.
-func Execute(factory EngineFactory) error {
-	return NewRoot(factory).Execute()
+func Execute(ctx context.Context, factory EngineFactory) error {
+	root := NewRoot(factory)
+	root.SetContext(ctx)
+	return root.Execute()
 }
 
 // 🔶️defaultEngineFactory holds the data fields for a defaultEngineFactory record.
@@ -161,7 +165,12 @@ func RunCLI() error {
 	if err := BindWorkingDirectory(); err != nil {
 		return err
 	}
-	if err := Execute(defaultEngineFactory); err != nil {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if err := Execute(ctx, defaultEngineFactory); err != nil {
+		if ctx.Err() != nil {
+			return ExitError{Code: 130}
+		}
 		var exitErr ExitError
 		if errors.As(err, &exitErr) {
 			return exitErr

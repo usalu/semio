@@ -9,15 +9,15 @@
 package graphql
 
 import (
- json "encoding/json"
- fmt "fmt"
- os "os"
- strings "strings"
+	json "encoding/json"
+	fmt "fmt"
+	os "os"
 	filepath "path/filepath"
+	strings "strings"
 
 	codebase "github.com/usalu/semio/repo/codebase"
- events "github.com/usalu/semio/repo/events"
 	contributorspkg "github.com/usalu/semio/repo/contributors"
+	events "github.com/usalu/semio/repo/events"
 	goalspkg "github.com/usalu/semio/repo/goals"
 	languages "github.com/usalu/semio/repo/languages"
 	model "github.com/usalu/semio/repo/model"
@@ -34,20 +34,20 @@ type RepoContext struct {
 	codebase           *codebase.CodebaseContext
 	bundles            []model.Bundle
 	managementProvider providers.ManagementProvider
-	tickets *ticketspkg.TicketService
- ticketSession string
- repositoryURL string
-	goals *goalspkg.Goals
+	tickets            *ticketspkg.TicketService
+	ticketSession      string
+	repositoryURL      string
+	goals              *goalspkg.Goals
 }
 
 // 🔶️NewRepoContext MUST initialize all required fields and return a valid repo context.
 // 🐙️NewRepoContext creates and returns a new repo context instance.
 func NewRepoContext(rootDir string) model.RepoContext {
- snapshot := codebase.NewCodebaseContext(rootDir)
- snapshot.LoadBundles()
- ctx := &RepoContext{rootDir:rootDir, bundles:snapshot.Bundles, codebase:snapshot, managementProvider:providers.DefaultManagementProvider(rootDir)}
- ctx.bindServices()
- return ctx
+	snapshot := codebase.NewCodebaseContext(rootDir)
+	snapshot.LoadBundles()
+	ctx := &RepoContext{rootDir: rootDir, bundles: snapshot.Bundles, codebase: snapshot, managementProvider: providers.DefaultManagementProvider(rootDir)}
+	ctx.bindServices()
+	return ctx
 }
 
 // 🔹️ManagementProv holds the data fields for a ManagementProv record.
@@ -95,7 +95,7 @@ func (c *RepoContext) GetTechnologies() []*model.Technology {
 // 💾️GetCheckpoints MUST retrieve the requested value or return an error.
 // ✔️GetCheckpoints retrieves and returns the checkpoints.
 func (c *RepoContext) GetCheckpoints(limit *int) ([]*model.Checkpoint, error) {
-	checkpoints := contributorspkg.ListCheckpoints(contributorspkg.NewFsCheckpointSource(c.rootDir),limit)
+	checkpoints := contributorspkg.ListCheckpoints(contributorspkg.NewFsCheckpointSource(c.rootDir), limit)
 	res := make([]*model.Checkpoint, len(checkpoints))
 	for i := range checkpoints {
 		res[i] = &checkpoints[i]
@@ -106,7 +106,7 @@ func (c *RepoContext) GetCheckpoints(limit *int) ([]*model.Checkpoint, error) {
 // 🔸️GetFolders MUST retrieve the requested value or return an error.
 // 🟫️GetFolders retrieves and returns the folders.
 func (c *RepoContext) GetFolders() []*model.Folder {
-	ctx := &codebase.CodebaseContext{RootDir:c.rootDir, Bundles:c.bundles}
+	ctx := &codebase.CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	if err := ctx.LoadFiles(); err != nil {
 		return []*model.Folder{}
 	}
@@ -120,7 +120,7 @@ func (c *RepoContext) GetFolders() []*model.Folder {
 			Name:      entry.Name,
 			ParentID:  entry.ParentID,
 			BundleID:  entry.BundleID,
-			Kind:      (model.ArtifactIndex{RootDir:c.rootDir,Bundles:c.bundles}).FolderKind(entry.Path),
+			Kind:      model.NewArtifactIndex(c.rootDir, c.bundles).FolderKind(entry.Path),
 			Generated: model.IsGeneratedFolder(entry.Path),
 		})
 	}
@@ -130,7 +130,7 @@ func (c *RepoContext) GetFolders() []*model.Folder {
 // 📄️GetFiles MUST retrieve the requested value or return an error.
 // 💠️GetFiles retrieves and returns the files.
 func (c *RepoContext) GetFiles() []*model.File {
-	ctx := &codebase.CodebaseContext{RootDir:c.rootDir, Bundles:c.bundles}
+	ctx := &codebase.CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	if err := ctx.LoadFiles(); err != nil {
 		return []*model.File{}
 	}
@@ -155,15 +155,17 @@ func (c *RepoContext) GetFiles() []*model.File {
 // 📖️GetDefinitions MUST retrieve the requested value or return an error.
 // 🔳️GetDefinitions retrieves and returns the definitions.
 func (c *RepoContext) GetDefinitions() []*model.Definition {
-	ctx := &codebase.CodebaseContext{RootDir:c.rootDir, Bundles:c.bundles}
+	ctx := &codebase.CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	if err := ctx.LoadFiles(); err != nil {
 		return []*model.Definition{}
 	}
 	var results []*model.Definition
 	for _, file := range ctx.Files {
-		content,err:=workspace.ReadTextFile(filepath.Join(c.rootDir,file))
- if err!=nil { continue }
- definitions:=codebase.FileDefinitions(content,file)
+		content, err := workspace.ReadTextFile(filepath.Join(c.rootDir, file))
+		if err != nil {
+			continue
+		}
+		definitions := codebase.FileDefinitions(content, file)
 		fileID := ctx.GetFileID(file)
 		for i := range definitions {
 			def := definitions[i]
@@ -178,18 +180,20 @@ func (c *RepoContext) GetDefinitions() []*model.Definition {
 // 📑️GetSections MUST retrieve the requested value or return an error.
 // 🔲️GetSections retrieves and returns the sections.
 func (c *RepoContext) GetSections() []*model.Section {
-	ctx := &codebase.CodebaseContext{RootDir:c.rootDir, Bundles:c.bundles}
+	ctx := &codebase.CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	if err := ctx.LoadFiles(); err != nil {
 		return []*model.Section{}
 	}
 	var results []*model.Section
 	for _, file := range ctx.Files {
-		content,err:=workspace.ReadTextFile(filepath.Join(c.rootDir,file))
- if err!=nil { continue }
- sections:=languages.ParseSections(content,file)
+		content, err := workspace.ReadTextFile(filepath.Join(c.rootDir, file))
+		if err != nil {
+			continue
+		}
+		sections := languages.ParseSections(content, file)
 		fileID := ctx.GetFileID(file)
 		for i := range sections {
-			sec := rootedSection(sections[i],fileID,file)
+			sec := rootedSection(sections[i], fileID, file)
 			results = append(results, &sec)
 		}
 	}
@@ -232,48 +236,102 @@ func (c *RepoContext) GetGoals() ([]*model.Goal, error) {
 // #endregion 🩻️Repo Context
 
 // 🪺️rootedSection retains scoped identities through every nested source node.
-func rootedSection(section model.Section,fileID,filePath string) model.Section { section.FilePath=filePath;section.ID=model.BuildSectionID(fileID,languages.NormalizeSectionPath(section.Path));for i:=range section.Children { section.Children[i]=rootedSection(section.Children[i],fileID,filePath) };for i:=range section.Definitions { section.Definitions[i].FilePath=filePath;section.Definitions[i].ID=codebase.DefinitionID(fileID,section.Definitions[i]) };return section }
+func rootedSection(section model.Section, fileID, filePath string) model.Section {
+	section.FilePath = filePath
+	section.ID = model.BuildSectionID(fileID, languages.NormalizeSectionPath(section.Path))
+	for i := range section.Children {
+		section.Children[i] = rootedSection(section.Children[i], fileID, filePath)
+	}
+	for i := range section.Definitions {
+		section.Definitions[i].FilePath = filePath
+		section.Definitions[i].ID = codebase.DefinitionID(fileID, section.Definitions[i])
+	}
+	return section
+}
 
 // 🐙️goalManagement implements the goal management port with one root-bound provider.
-type goalManagement struct { providers.ManagementProvider; repositoryURL string }
+type goalManagement struct {
+	providers.ManagementProvider
+	repositoryURL string
+}
 
 // 🏁️CreateMilestone preserves the goal domain's integer identity.
-func (port goalManagement) CreateMilestone(title, description string) (int64,error) { number,err:=port.ManagementProvider.CreateMilestone(title,description); return int64(number),err }
+func (port goalManagement) CreateMilestone(title, description string) (int64, error) {
+	number, err := port.ManagementProvider.CreateMilestone(title, description)
+	return int64(number), err
+}
 
 // 🛠️UpdateMilestone updates the selected repository's milestone.
-func (port goalManagement) UpdateMilestone(number int64,title,description,state,due string) error { value,err:=goalNumber(number);if err!=nil { return err };return port.ManagementProvider.UpdateMilestone(value,title,description,state,due) }
+func (port goalManagement) UpdateMilestone(number int64, title, description, state, due string) error {
+	value, err := goalNumber(number)
+	if err != nil {
+		return err
+	}
+	return port.ManagementProvider.UpdateMilestone(value, title, description, state, due)
+}
 
 // 🗑️DeleteMilestone deletes the selected repository's milestone.
-func (port goalManagement) DeleteMilestone(number int64) error { value,err:=goalNumber(number);if err!=nil { return err };return port.ManagementProvider.DeleteMilestone(value) }
+func (port goalManagement) DeleteMilestone(number int64) error {
+	value, err := goalNumber(number)
+	if err != nil {
+		return err
+	}
+	return port.ManagementProvider.DeleteMilestone(value)
+}
 
 // 🎯️CreateGoalIssue preserves the optional milestone identity.
-func (port goalManagement) CreateGoalIssue(title,description string,milestone *int64) (string,error) { var selected *int; if milestone!=nil { value,err:=goalNumber(*milestone);if err!=nil { return "",err };selected=&value }; return port.ManagementProvider.CreateGoalIssue(title,description,selected) }
+func (port goalManagement) CreateGoalIssue(title, description string, milestone *int64) (string, error) {
+	var selected *int
+	if milestone != nil {
+		value, err := goalNumber(*milestone)
+		if err != nil {
+			return "", err
+		}
+		selected = &value
+	}
+	return port.ManagementProvider.CreateGoalIssue(title, description, selected)
+}
 
 // 🌐️RepoURL returns the origin captured with this repository context.
 func (port goalManagement) RepoURL() string { return port.repositoryURL }
 
 // 📡️ticketEvents delivers actual domain events through the captured coordinator.
-type ticketEvents struct { emitter events.Emitter }
+type ticketEvents struct{ emitter events.Emitter }
 
 // 📤️Emit preserves the already encoded ticket payload.
-func (port ticketEvents) Emit(kind,source,payload string) { port.emitter.Emit(events.EventKind(kind),source,jsonPayload(payload)) }
+func (port ticketEvents) Emit(kind, source, payload string) {
+	port.emitter.Emit(events.EventKind(kind), source, jsonPayload(payload))
+}
 
 // 🧾️jsonPayload retains a ticket's canonical JSON payload as a JSON value.
 func jsonPayload(payload string) interface{} { return json.RawMessage(payload) }
 
 // 🧭️bindServices captures all repository-sensitive production ports once.
 func (c *RepoContext) bindServices() {
- c.ticketSession=contributorspkg.CurrentTicketSessionID()
- emitter:=events.NewHTTPEmitter(os.Getenv("COMPOSE_SERVER_ADDR"),os.Getenv("COMPOSE_SERVER_TOKEN"))
- home,_:=os.UserHomeDir()
- c.tickets=ticketspkg.NewTicketService(ticketspkg.NewTicketLayout(workspace.RepoMetaDirForRoot(c.rootDir)),&ticketspkg.FileTicketStore{},c.managementProvider,ticketspkg.SystemTicketClock{},ticketEvents{emitter:emitter}).WithRoots(ticketspkg.PlanRoots{RepoRoot:c.rootDir,HomeDir:home})
- remote,_,status:=workspace.ExecCommand("git",[]string{"config","--get","remote.origin.url"},c.rootDir)
- repositoryURL:=""
- if status==0 { repositoryURL=strings.TrimSuffix(strings.TrimSpace(remote),".git"); if strings.HasPrefix(repositoryURL,"git@github.com:") { repositoryURL="https://github.com/"+strings.TrimPrefix(repositoryURL,"git@github.com:") } }
- if strings.HasPrefix(repositoryURL,"ssh://git@github.com/") { repositoryURL="https://github.com/"+strings.TrimPrefix(repositoryURL,"ssh://git@github.com/") }
- c.repositoryURL=repositoryURL
- c.goals=goalspkg.NewGoals(goalspkg.NewFsGoalStore(c.rootDir),goalManagement{ManagementProvider:c.managementProvider,repositoryURL:repositoryURL},emitter,workspace.GetGitAuthor(c.rootDir))
+	c.ticketSession = contributorspkg.CurrentTicketSessionID()
+	emitter := events.NewHTTPEmitter(os.Getenv("COMPOSE_SERVER_ADDR"), os.Getenv("COMPOSE_SERVER_TOKEN"))
+	home, _ := os.UserHomeDir()
+	c.tickets = ticketspkg.NewTicketService(ticketspkg.NewTicketLayout(workspace.RepoMetaDirForRoot(c.rootDir)), &ticketspkg.FileTicketStore{}, c.managementProvider, ticketspkg.SystemTicketClock{}, ticketEvents{emitter: emitter}).WithRoots(ticketspkg.PlanRoots{RepoRoot: c.rootDir, HomeDir: home})
+	remote, _, status := workspace.ExecCommand("git", []string{"config", "--get", "remote.origin.url"}, c.rootDir)
+	repositoryURL := ""
+	if status == 0 {
+		repositoryURL = strings.TrimSuffix(strings.TrimSpace(remote), ".git")
+		if strings.HasPrefix(repositoryURL, "git@github.com:") {
+			repositoryURL = "https://github.com/" + strings.TrimPrefix(repositoryURL, "git@github.com:")
+		}
+	}
+	if strings.HasPrefix(repositoryURL, "ssh://git@github.com/") {
+		repositoryURL = "https://github.com/" + strings.TrimPrefix(repositoryURL, "ssh://git@github.com/")
+	}
+	c.repositoryURL = repositoryURL
+	c.goals = goalspkg.NewGoals(goalspkg.NewFsGoalStore(c.rootDir), goalManagement{ManagementProvider: c.managementProvider, repositoryURL: repositoryURL}, emitter, workspace.GetGitAuthor(c.rootDir))
 }
 
 // 🔢️goalNumber refuses an identity outside the system port's representable range.
-func goalNumber(number int64) (int,error) { value:=int(number);if int64(value)!=number { return 0,fmt.Errorf("milestone identity exceeds system range") };return value,nil }
+func goalNumber(number int64) (int, error) {
+	value := int(number)
+	if int64(value) != number {
+		return 0, fmt.Errorf("milestone identity exceeds system range")
+	}
+	return value, nil
+}

@@ -233,6 +233,12 @@
       "owners": [
         "🔁️verification/📋️orchestration/🟦️.ts"
       ]
+    },
+    {
+      "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧼️workspace-cleanup/🎮️command/🟦️.ts",
+      "owners": [
+        "🧹️pruning/📋️orchestration/🟦️.ts"
+      ]
     }
   ],
   "inventory": {

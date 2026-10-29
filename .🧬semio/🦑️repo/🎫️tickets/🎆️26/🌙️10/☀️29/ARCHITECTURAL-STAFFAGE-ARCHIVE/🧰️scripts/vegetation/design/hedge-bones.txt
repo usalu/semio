@@ -1,0 +1,13 @@
+root-plate|-|Hedge row base|Heckenfuß|-1.5|0|3|fixed|0|100|1.5|uniform|wood-handbook-2021|0.3
+stem-1|root-plate|Stem bundle 1|Stammbündel 1|0.25|90|0.35|-3|3|5|0.18|uniform|wood-handbook-2021|0.06
+stem-2|root-plate|Stem bundle 2|Stammbündel 2|0.75|90|0.35|-3|3|5|0.18|uniform|wood-handbook-2021|0.06
+stem-3|root-plate|Stem bundle 3|Stammbündel 3|1.25|90|0.35|-3|3|5|0.18|uniform|wood-handbook-2021|0.06
+stem-4|root-plate|Stem bundle 4|Stammbündel 4|1.75|90|0.35|-3|3|5|0.18|uniform|wood-handbook-2021|0.06
+stem-5|root-plate|Stem bundle 5|Stammbündel 5|2.25|90|0.35|-3|3|5|0.18|uniform|wood-handbook-2021|0.06
+stem-6|root-plate|Stem bundle 6|Stammbündel 6|2.75|90|0.35|-3|3|5|0.18|uniform|wood-handbook-2021|0.06
+block-1|stem-1|Clipped foliage block 1|Geschnittener Laubblock 1|0.35|0|1.45|-6|6|36|0.73|point|jones-2014
+block-2|stem-2|Clipped foliage block 2|Geschnittener Laubblock 2|0.35|0|1.45|-6|6|36|0.73|point|jones-2014
+block-3|stem-3|Clipped foliage block 3|Geschnittener Laubblock 3|0.35|0|1.45|-6|6|36|0.73|point|jones-2014
+block-4|stem-4|Clipped foliage block 4|Geschnittener Laubblock 4|0.35|0|1.45|-6|6|36|0.73|point|jones-2014
+block-5|stem-5|Clipped foliage block 5|Geschnittener Laubblock 5|0.35|0|1.45|-6|6|36|0.73|point|jones-2014
+block-6|stem-6|Clipped foliage block 6|Geschnittener Laubblock 6|0.35|0|1.45|-6|6|36|0.73|point|jones-2014

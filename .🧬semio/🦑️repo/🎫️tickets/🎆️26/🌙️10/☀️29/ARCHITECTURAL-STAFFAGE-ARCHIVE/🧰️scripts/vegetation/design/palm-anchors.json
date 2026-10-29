@@ -1,0 +1,3 @@
+[{"id":"base-support","bone":"root-plate","x":0,"y":0,"kind":"support","title":{"en":"Root ball anchorage","de":"Verankerung des Wurzelballens"},"support":"fixed","normalDeg":90,"footprintLengthM":1.2,"footprintWidthM":1.2,"frictionCoefficient":0.6},
+{"id":"crown-top","bone":"fr-l4b","x":1.7,"y":0.3,"kind":"emitter","title":{"en":"Transpiration above the crown","de":"Transpiration über der Krone"}},
+{"id":"crown-r","bone":"fr-r3b","x":1.7,"y":0.3,"kind":"emitter","title":{"en":"Transpiration above the right fronds","de":"Transpiration über den rechten Wedeln"}}]

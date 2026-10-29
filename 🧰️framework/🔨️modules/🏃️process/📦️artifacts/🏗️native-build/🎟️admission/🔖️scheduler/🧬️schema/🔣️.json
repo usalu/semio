@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
     "Protocol": {
-      "const": {"version": 1, "file": ".semio-build-scheduler.json", "maximumReceiptBytes": 65536, "maximumInputBytes": 4194304, "environmentPrefixes": ["CARGO_", "RUST"]}
+      "const": {"version": 1, "file": ".semio-build-scheduler.json", "maximumReceiptBytes": 65536, "maximumInputBytes": 4194304, "environmentPrefixes": ["CARGO_", "RUST", "SEMIO_CARGO_CONFIGURATION_"]}
     },
     "Receipt": {
       "type": "object",

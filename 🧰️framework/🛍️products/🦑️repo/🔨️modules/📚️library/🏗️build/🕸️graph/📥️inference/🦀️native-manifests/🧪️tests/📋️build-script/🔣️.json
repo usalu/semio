@@ -1,0 +1,98 @@
+{
+  "cases": [
+    {
+      "mutation": "none",
+      "accepted": true
+    },
+    {
+      "mutation": "missing",
+      "accepted": false
+    },
+    {
+      "mutation": "stale-hash",
+      "accepted": false
+    },
+    {
+      "mutation": "omitted-helper",
+      "accepted": false
+    },
+    {
+      "mutation": "extra-file",
+      "accepted": false
+    },
+    {
+      "mutation": "duplicate-file",
+      "accepted": false
+    },
+    {
+      "mutation": "dynamic-include",
+      "accepted": false
+    },
+    {
+      "mutation": "outputs",
+      "accepted": false
+    },
+    {
+      "mutation": "environment",
+      "accepted": false
+    },
+    {
+      "mutation": "build-dependency",
+      "accepted": false
+    },
+    {
+      "mutation": "target-build-dependency",
+      "accepted": false
+    },
+    {
+      "mutation": "opaque-path",
+      "accepted": false
+    },
+    {
+      "mutation": "escaped-path",
+      "accepted": false
+    },
+    {
+      "mutation": "oversized",
+      "accepted": false
+    },
+    {
+      "mutation": "generated-path",
+      "accepted": false
+    },
+    {
+      "mutation": "long-path",
+      "accepted": false
+    }
+  ],
+  "wiringCases": [
+    {
+      "mode": "asserted",
+      "resolved": true
+    },
+    {
+      "mode": "unknown",
+      "resolved": false,
+      "reason": "build-script"
+    },
+    {
+      "mode": "stale",
+      "resolved": false,
+      "reason": "build-script"
+    },
+    {
+      "mode": "dynamic",
+      "resolved": false,
+      "reason": "dynamic-include"
+    },
+    {
+      "mode": "unlisted",
+      "resolved": false,
+      "reason": "unparsable"
+    },
+    {
+      "mode": "disabled",
+      "resolved": true
+    }
+  ]
+}

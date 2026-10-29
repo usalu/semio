@@ -665,32 +665,13 @@ func toolResultFromEvents(events []Event, data interface{}) workspace.ToolResult
 }
 
 // 🌳️toolResultFromTreeList holds the data fields for a toolResultFromTreeList record.
-func toolResultFromTreeList(nodeKind treepkg.TreeNodeKind) workspace.ToolResult {
-	ctx := context.Background()
-	tree := treepkg.BuildMonorepoTreeCached(ctx, treepkg.TreeBuildOptions{})
-	filter := treepkg.TreeFilter{OnlyKinds: map[treepkg.TreeNodeKind]bool{nodeKind: true}}
-	tree = treepkg.FilterMonorepoTree(tree, &filter)
-	var nodes []*treepkg.TreeNode
-	flattenTreeNodes(tree, &nodes)
-	var sb strings.Builder
-	for _, n := range nodes {
-		entityKind := treepkg.TreeNodeKindToEntityKind(n.Kind)
-		if entityKind == "" {
-			entityKind = string(n.Kind)
-		}
-		if n.Data != nil {
-			sb.WriteString(model.RenderEntityMarkdown(entityKind, n.Data) + "\n")
-		}
-	}
-	output := workspace.NewOutput()
-	output.Plain(sb.String())
-	return workspace.ToolResult{Output: *output}
-}
 
 // ⬛️toolResultFromTreeRender holds the data fields for a toolResultFromTreeRender record.
-func toolResultFromTreeRender(nodeKind treepkg.TreeNodeKind) workspace.ToolResult {
-	ctx := context.Background()
-	tree := treepkg.BuildMonorepoTreeCached(ctx, treepkg.TreeBuildOptions{})
+func toolResultFromTreeRender(ctx context.Context, nodeKind treepkg.TreeNodeKind) workspace.ToolResult {
+	tree, err := treepkg.BuildMonorepoTreeCached(ctx, treepkg.TreeBuildOptions{})
+	if err != nil {
+		return workspace.ToolResult{Error: err.Error()}
+	}
 	filter := treepkg.TreeFilter{OnlyKinds: map[treepkg.TreeNodeKind]bool{nodeKind: true}}
 	tree = treepkg.FilterMonorepoTree(tree, &filter)
 	text := treepkg.RenderMonorepoTreeMarkdown(tree, treepkg.DefaultEntityRenderer{})

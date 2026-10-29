@@ -1,4 +1,5 @@
 import{refuseBuildV1}from"../../../📖️texts/🟦️.ts";
+import{requireCanonicalTestAggregateV1}from"../../../../⚡️caching/🗂️suites/🧮️aggregate/🟦️.ts";
 import{applyBuildGeneratedTaskDependenciesV1,buildSourceContractGroupsV1}from"../../🚪️admission/🟦️.ts";
 import{buildSchedulingExclusionsInputV1,buildSchedulingPrefixesV1}from"../../../📥️source/🔏️closure/🗓️scheduling/🟦️.ts";
 /** 🧱️ Normalizes one project's targets and named inputs into its generated Build configuration. */
@@ -331,6 +332,7 @@ export async function projectInputs(json, root, workspaceRoot, facts, scripts=cr
  * @param {string} projectDir
  */
 export async function projectWithDefaults(json, root, projectDir, workspaceRoot, contracts = {}, facts, commandInputs, scripts=createScriptInputCache(), sourceGroups, sourceRepresentation = "hash", selectedTargets,inputNames=[]) {
+  requireCanonicalTestAggregateV1(json,root);
   const ownsScript = existsSync(join(projectDir, SCRIPT_BASENAME));
   const nativeRoot = json.metadata?.nativeRoot ?? root;
   if (json.metadata?.nativeRoot && (typeof nativeRoot !== "string" || isAbsolute(nativeRoot) || nativeRoot.split(/[\\/]/).some(part => ["", ".", ".."].includes(part)) || !existsSync(join(workspaceRoot, nativeRoot, "Cargo.toml")))) throw new Error(`Invalid native package root for ${json.name}: ${nativeRoot}`);

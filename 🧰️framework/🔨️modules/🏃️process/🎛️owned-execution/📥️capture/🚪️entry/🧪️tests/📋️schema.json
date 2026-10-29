@@ -1,0 +1,92 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "modulePath",
+        "specifier",
+        "expectedPath"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "modulePath": {
+          "type": "string",
+          "pattern": "^[^/\\\\]"
+        },
+        "physicalSourcePath": {
+          "type": "string"
+        },
+        "physicalOrigin": {
+          "type": "string"
+        },
+        "specifier": {
+          "type": "string"
+        },
+        "expectedPath": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "entryUnits": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "specifierUnits": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "originUnits": {
+          "type": "integer",
+          "minimum": 8
+        }
+      }
+    },
+    "Observation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "specifier",
+        "specifierUnits",
+        "origin",
+        "originUnits",
+        "entryUnits",
+        "query",
+        "fragment"
+      ],
+      "properties": {
+        "specifier": {
+          "type": "string",
+          "pattern": "^[.]"
+        },
+        "specifierUnits": {
+          "type": "integer",
+          "maximum": 256
+        },
+        "origin": {
+          "type": "string",
+          "pattern": "^file:"
+        },
+        "originUnits": {
+          "type": "integer",
+          "maximum": 4096
+        },
+        "entryUnits": {
+          "type": "integer",
+          "maximum": 256
+        },
+        "query": {
+          "const": ""
+        },
+        "fragment": {
+          "const": ""
+        }
+      }
+    }
+  }
+}

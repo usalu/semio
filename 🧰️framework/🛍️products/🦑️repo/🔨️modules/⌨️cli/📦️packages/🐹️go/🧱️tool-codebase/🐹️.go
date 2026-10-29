@@ -144,8 +144,8 @@ func ToolBundleList() workspace.ToolResult {
 }
 
 // 🔖️ToolTechnologyTree MUST complete the operation successfully.
-func ToolTechnologyTree() workspace.ToolResult {
-	return toolResultFromTreeRender(treepkg.TreeNodeTechnology)
+func ToolTechnologyTree(ctx context.Context) workspace.ToolResult {
+	return toolResultFromTreeRender(ctx, treepkg.TreeNodeTechnology)
 }
 
 // 🔖️ToolFolderList MUST complete the operation successfully.

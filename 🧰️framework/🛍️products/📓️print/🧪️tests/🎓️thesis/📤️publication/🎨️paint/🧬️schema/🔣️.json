@@ -1,0 +1,58 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "runs",
+    "heading",
+    "foreground"
+  ],
+  "properties": {
+    "runs": {
+      "type": "array",
+      "maxItems": 65536,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "text",
+          "color"
+        ],
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 1048576
+          },
+          "color": {
+            "type": "string",
+            "pattern": "^#[0-9a-fA-F]{6}$"
+          }
+        }
+      }
+    },
+    "heading": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "number"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "number": {
+          "type": "string",
+          "pattern": "^[0-9]+(?:\\.[0-9]+)*$",
+          "maxLength": 128
+        }
+      }
+    },
+    "foreground": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    }
+  }
+}

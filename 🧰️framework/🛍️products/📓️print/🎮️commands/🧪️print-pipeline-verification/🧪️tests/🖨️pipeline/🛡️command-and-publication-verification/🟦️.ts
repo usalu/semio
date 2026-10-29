@@ -82,7 +82,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"));
   const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/🗺️gallery-identities.json"), "utf8"));
   const documents = api.printDocuments();
-  assert.equal(documents.length, 88);
+  assert.equal(documents.length, 89);
   assert.deepEqual(documents.filter((row: any) => row.collection === "visualizations").map((row: any) => row.id).sort(), Object.keys(gallery).sort());
   assert.equal(new Set(documents.map((row:{id:string})=>row.id)).size,documents.length);
   assert.throws(() => api.printDocument("../report"), /Unknown/);

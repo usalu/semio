@@ -5,20 +5,20 @@ use semio_framework_value_persistent::list::PagedList;
 use semio_framework_value_native_owned::native_decoding::owned::tree::{NativeSequenceReceiver,RecordEntries};
 type Index=PagedList<Option<(u64,usize)>,{usize::MAX}>;
 type Rows<V,const N:usize>=PagedList<(PagedUtf8<{usize::MAX}>,V),N>;
-type Child<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>,const N:usize>=NativeSequenceReceiver<I,(PagedUtf8<{usize::MAX}>,V),Rows<V,N>,RecordEntries>;
-pub struct PagedMapReceiver<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>,const N:usize>{binding:Option<RetainedCloneBinding>,index:ManuallyDrop<Option<Index>>,child:ManuallyDrop<Option<Child<I,V,N>>>,output:ManuallyDrop<Option<PagedMap<V,N>>>,retirement:RetainedCloneClose,count:usize,slots:usize,item:usize,offset:usize,probe:usize,comparison:usize,hash:u64,phase:u8,closing:bool}
-impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>,const N:usize> PagedMapReceiver<I,V,N>{
+type Child<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize>=NativeSequenceReceiver<I,(PagedUtf8<{usize::MAX}>,V),Rows<V,N>,RecordEntries>;
+pub struct PagedMapReceiver<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize>{binding:Option<RetainedCloneBinding>,index:ManuallyDrop<Option<Index>>,child:ManuallyDrop<Option<Child<I,V,N>>>,output:ManuallyDrop<Option<PagedMap<V,N>>>,retirement:RetainedCloneClose,count:usize,slots:usize,item:usize,offset:usize,probe:usize,comparison:usize,hash:u64,phase:u8,closing:bool}
+impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize> PagedMapReceiver<I,V,N>{
  fn metadata()->usize{2*size_of::<usize>()*6+size_of::<u64>()*2+size_of::<u8>()}
  fn rows(&self)->Result<&Index,ValueError>{self.index.as_ref().ok_or_else(invalid)}
  fn key<'a>(&self,input:&'a I,index:usize)->Result<&'a str,ValueError>{input.record_name(index)}
  fn paid(error:ValueError)->ValueError{let p=error.retained_progress();error.with_retained_progress(add_receipt(p,Self::metadata()).unwrap_or(p))}
 }
-impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>,const N:usize> NativeReceive<I> for PagedMap<V,N>{
+impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize> NativeReceive<I> for PagedMap<V,N>{
  type Receiver=PagedMapReceiver<I,V,N>;
  fn receive_birth_demand()->RetirementDemand{fixed(2*size_of::<Self::Receiver>())}
  fn begin_receive(g:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError>{let d=<Self as NativeReceive<I>>::receive_birth_demand();if !retained_clone_grant_admits(g,d){return Err(invalid())}Ok((PagedMapReceiver{binding:None,index:ManuallyDrop::new(Some(Index::new())),child:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),count:0,slots:0,item:0,offset:0,probe:usize::MAX,comparison:0,hash:0xcbf29ce484222325,phase:0,closing:false},receipt(d)))}
 }
-impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>,const N:usize> NativeReceiver<I,PagedMap<V,N>> for PagedMapReceiver<I,V,N>{
+impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize> NativeReceiver<I,PagedMap<V,N>> for PagedMapReceiver<I,V,N>{
  fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.phase>=8{return Err(invalid())}input.check_binding(&self.binding)?;let m=Self::metadata();match self.phase{
  0=>Ok(fixed(input.binding_copy_bytes()+m)),1=>Ok(fixed(m)),
  2=>{let rows=self.rows()?;if rows.len()==self.slots{return Ok(fixed(m))}if !rows.has_reserved_slot(){nested(RetirementDemand{copy_bytes:rows.next_reserve_copy_byte_demand().map_err(|_|invalid())?,capacity_bytes:rows.next_allocation_bytes().map_err(|_|invalid())?,depth:rows.next_reserve_depth_demand().map_err(|_|invalid())?,..Default::default()},m)}else{Ok(RetirementDemand{copy_bytes:m+size_of::<Option<(u64,usize)>>(),depth:rows.next_push_depth_demand().map_err(|_|invalid())?.checked_add(1).ok_or_else(invalid)?,..Default::default()})}},
@@ -44,6 +44,6 @@ impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>,const N:u
  fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demands(g.maximum_copy_bytes)?;if !retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if let Some(child)=self.child.as_mut(){if !child.terminal_is_empty(){return child.close_step(g)}self.child.take();return Ok(RetainedCloneStep::Progress(receipt(d)))}if !self.retirement.is_empty(){return self.retirement.step_granted(g)}if let Some(step)=self.retirement.begin_granted(&mut self.output,g)?{return Ok(step)}if let Some(step)=self.retirement.begin_granted(&mut self.index,g)?{return Ok(step)}RetainedCloneBinding::close_one(&mut self.binding,g)}
  fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.output.is_none()&&self.index.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>,const N:usize> Drop for PagedMapReceiver<I,V,N>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native original map receiving requires funded closure")}}
+impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize> Drop for PagedMapReceiver<I,V,N>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native original map receiving requires funded closure")}}
 
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+

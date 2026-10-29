@@ -1,0 +1,222 @@
+{
+  "name": "@teaching/staffage-site",
+  "$schema": "../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "!{projectRoot}/dist/**",
+      "sharedGlobals",
+      {
+        "externalDependencies": [
+          "@tailwindcss/vite",
+          "@vitejs/plugin-react",
+          "react",
+          "react-dom",
+          "tailwindcss",
+          "typescript",
+          "vite",
+          "vitest"
+        ]
+      },
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🟦️.ts",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🌐️.html",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🎨️.css",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🏗️builder/🌐️vite/🟦️.ts",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🧪️tests/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🎨️palette/🎨️.css",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript/**/*",
+      "{workspaceRoot}/package.json",
+      "{workspaceRoot}/tsconfig.json"
+    ],
+    "tailwindScan": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🎯️targets/⚛️react/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/**/*",
+      "!{workspaceRoot}/**/{🧪️tests,🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples,📖️stories,🎭️e2e}/**",
+      "!{workspaceRoot}/**/*.{feature,stories.*,story.*,mdx}"
+    ],
+    "testEnv": [
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      }
+    ]
+  },
+  "targets": {
+    "dev": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6071,
+              "portEnv": "TEACHING_ARCHITECTURE_STAFFAGE_PORT"
+            },
+            "parameters": [
+              {
+                "id": "steady",
+                "kind": "flag",
+                "env": {
+                  "TEACHING_ARCHITECTURE_STAFFAGE_WATCH": "off"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts dev",
+        "forwardAllArgs": true,
+        "env": {
+          "NODE_OPTIONS": "",
+          "SEMIO_BUILD_DYNAMIC_OUTPUT": "false",
+          "SEMIO_BUILD_TERMINAL": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        }
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "dev-site": {
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "ready": {
+              "port": 6071,
+              "portEnv": "TEACHING_ARCHITECTURE_STAFFAGE_PORT"
+            },
+            "parameters": [
+              {
+                "id": "steady",
+                "kind": "flag",
+                "env": {
+                  "TEACHING_ARCHITECTURE_STAFFAGE_WATCH": "off"
+                }
+              }
+            ]
+          }
+        }
+      },
+      "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts dev-site",
+        "forwardAllArgs": true,
+        "env": {
+          "NODE_OPTIONS": "",
+          "SEMIO_BUILD_DYNAMIC_OUTPUT": "false",
+          "SEMIO_BUILD_TERMINAL": "false",
+          "VSCODE_INSPECTOR_OPTIONS": ""
+        }
+      },
+      "cache": false,
+      "continuous": true
+    },
+    "build": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts build",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "closure": {
+            "typescript": [
+              "{projectRoot}/tsconfig.site.json"
+            ],
+            "modules": [
+              "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/🏗️builder/🌐️vite/🟦️.ts"
+            ]
+          }
+        }
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        {
+          "externalDependencies": [
+            "@tailwindcss/vite",
+            "@vitejs/plugin-react",
+            "react",
+            "react-dom",
+            "tailwindcss",
+            "vite"
+          ]
+        },
+        "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*",
+        "tailwindScan"
+      ],
+      "outputs": [
+        "{projectRoot}/.🧾️store/build.json"
+      ]
+    },
+    "test": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test",
+        "forwardAllArgs": true
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        "testEnv"
+      ],
+      "outputs": []
+    },
+    "typecheck": {
+      "executor": "repo:script",
+      "dependsOn": [
+        "@semio-tech/assets:build",
+        "@semio-tech/ui-styling-tokens:generate"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      },
+      "metadata": {
+        "semio": {
+          "closure": {
+            "typescript": [
+              "{projectRoot}/tsconfig.json"
+            ]
+          }
+        }
+      },
+      "cache": true,
+      "inputs": [
+        "default",
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": false
+        }
+      ],
+      "outputs": []
+    }
+  }
+}

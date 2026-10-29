@@ -228,5 +228,17 @@
       "hostFreeBytes": 2147483648000,
       "capacityBytes": 64424509440
     }
+  ],
+  "imageBackends": [
+    {
+      "id": "mounted-image",
+      "backing": "fixed.dmg",
+      "mounted": true
+    },
+    {
+      "id": "directory-partition",
+      "backing": "fixed.dir",
+      "mounted": false
+    }
   ]
 }

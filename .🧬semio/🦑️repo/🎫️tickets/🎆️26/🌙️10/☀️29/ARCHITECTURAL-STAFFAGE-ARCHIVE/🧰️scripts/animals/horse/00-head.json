@@ -1,0 +1,41 @@
+    {
+      "id": "horse",
+      "category": "animals",
+      "title": { "en": "Horse", "de": "Pferd" },
+      "summary": {
+        "en": "An adult warmblood horse of 550 kg with 1.6 m withers height: unguligrade skeleton with scapula, humerus, radius, cannon bone, pastern and hoof as separate chains on the near and far side, a three-part neck with head, jaw and ears, a four-bone tail, standing, resting on three legs, grazing, a four-beat lateral walk, grazing with tail swish and chewing, and a short-coat thermal model with nostril breath.",
+        "de": "Ein erwachsenes Warmblutpferd von 550 kg und 1,6 m Widerristhöhe: hufgängiges Skelett mit Schulterblatt, Oberarm, Unterarm, Röhrbein, Fesselbein und Huf als getrennten Ketten der nahen und fernen Seite, dreigliedriger Hals mit Kopf, Unterkiefer und Ohren, vierteiliger Schweif, Stehen, Dösen auf drei Beinen, Grasen, Viertakt-Schritt in Seitenfolge, Grasen mit Schweifschlagen und Kauen sowie ein Wärmemodell für kurzes Fell mit Nüsternatmung."
+      },
+      "tags": ["animal", "horse", "equine", "quadruped", "unguligrade", "mammal", "livestock", "gait", "grazing"],
+      "provenance": {
+        "author": "Semio staffage content worker (animals)",
+        "method": "handcrafted",
+        "created": "2026-10-29",
+        "references": [
+          { "id": "hildebrand-1965", "citation": "Hildebrand, M. (1965). Symmetrical gaits of horses. Science 150, 701-708. Lateral-sequence walk, duty factor and footfall formula." },
+          { "id": "muybridge-1887", "citation": "Muybridge, E. (1887). Animal Locomotion: An Electro-Photographic Investigation of Consecutive Phases of Animal Movements. University of Pennsylvania, plates of the walking horse." },
+          { "id": "buchner-1997", "citation": "Buchner, H. H. F., Savelberg, H. H. C. M., Schamhardt, H. C., Barneveld, A. (1997). Inertial properties of Dutch Warmblood horses. Journal of Biomechanics 30, 653-658. Segment fractions here are authored estimates guided by that study." },
+          { "id": "back-clayton-2013", "citation": "Back, W., Clayton, H. M. (eds) (2013). Equine Locomotion, 2nd edition. Saunders Elsevier. Joint ranges of motion here are authored to lie inside the ranges described there." },
+          { "id": "hoyt-taylor-1981", "citation": "Hoyt, D. F., Taylor, C. R. (1981). Gait and the energetics of locomotion in horses. Nature 292, 239-240." },
+          { "id": "kleiber-1947", "citation": "Kleiber, M. (1947). Body size and metabolic rate. Physiological Reviews 27, 511-541." },
+          { "id": "spector-1956", "citation": "Spector, W. S. (ed.) (1956). Handbook of Biological Data. Saunders, surface area of mammals by Meeh's formula A = k·M^(2/3) with k = 9.0 cm² per g^(2/3) for the horse." },
+          { "id": "scholander-1950", "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236." },
+          { "id": "cena-monteith-1975", "citation": "Cena, K., Monteith, J. L. (1975). Transfer processes in animal coats. I. Radiative transfer. Proceedings of the Royal Society B 188, 377-393." },
+          { "id": "gebremedhin-2001", "citation": "Gebremedhin, K. G., Wu, B. (2001). A model of evaporative cooling of wet skin surface and fur layer. Journal of Thermal Biology 26, 537-545." },
+          { "id": "hodgson-rose-1994", "citation": "Hodgson, D. R., Rose, R. J. (eds) (1994). The Athletic Horse: Principles and Practice of Equine Sports Medicine. Saunders. Respiratory rate and tidal volume of the resting and walking horse." },
+          { "id": "ashrae-2021", "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort, respiratory heat loss." }
+        ],
+        "notes": {
+          "en": "Side elevation drawn for the near (left) side of a horse facing and walking to the right. Far-side limbs, far ear and far hoof are separate bone chains drawn darker and behind. The nominal height includes the raised head and ears of the default pose, so it exceeds the 1.6 m withers height.",
+          "de": "Seitenansicht der nahen (linken) Seite eines nach rechts blickenden und gehenden Pferdes. Gliedmaßen, Ohr und Huf der fernen Seite sind eigene Knochenketten, dunkler und weiter hinten gezeichnet. Die Nennhöhe enthält den erhobenen Kopf und die Ohren der Standardpose und übersteigt daher die Widerristhöhe von 1,6 m."
+        }
+      },
+      "dimensions": { "heightM": 2.37, "widthM": 2.9, "depthM": 0.62, "massKg": 550 },
+      "materials": [
+        { "id": "short-coat", "title": { "en": "Short summer coat", "de": "Kurzes Sommerfell" }, "emissivity": 0.96, "solarAbsorptivity": 0.65, "densityKgM3": 1000, "conductivityWmK": 0.04, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+        { "id": "mane-tail-hair", "title": { "en": "Mane and tail hair", "de": "Mähnen- und Schweifhaar" }, "emissivity": 0.95, "solarAbsorptivity": 0.8, "densityKgM3": 1300, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+        { "id": "hoof-horn", "title": { "en": "Hoof horn", "de": "Hufhorn" }, "emissivity": 0.92, "solarAbsorptivity": 0.8, "densityKgM3": 1300, "source": "authored-estimate" },
+        { "id": "bare-skin", "title": { "en": "Bare skin (muzzle, nostrils)", "de": "Nackte Haut (Maul, Nüstern)" }, "emissivity": 0.98, "solarAbsorptivity": 0.8, "source": "literature", "reference": "ashrae-2021" },
+        { "id": "eye-surface", "title": { "en": "Moist eye surface", "de": "Feuchte Augenoberfläche" }, "emissivity": 0.98, "solarAbsorptivity": 0.5, "source": "authored-estimate", "reference": "ashrae-2021" },
+        { "id": "halter-webbing", "title": { "en": "Nylon halter webbing", "de": "Halfter aus Nylongurt" }, "emissivity": 0.9, "solarAbsorptivity": 0.6, "densityKgM3": 1140, "source": "literature" }
+      ],

@@ -1,0 +1,20 @@
+[
+  {
+    "mounted": true,
+    "path": "/native/m",
+    "arguments": [
+      "+f",
+      "--",
+      "/native/m"
+    ]
+  },
+  {
+    "mounted": false,
+    "path": "/native/m",
+    "arguments": [
+      "-Q",
+      "+D",
+      "/native/m"
+    ]
+  }
+]

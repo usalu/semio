@@ -1,3 +1,4 @@
+import type {CargoCompilerInputsPortV1} from "../../../📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
 import { defineScriptProviderV1, loadScriptProviderV1 } from "../../../🔌️providers/🟦️.ts";
 import type { ScriptInvocation } from "../../../🧭️routing/📥️invocation/🟦️.ts";
 import type { ResourceLeaseControl } from "../../../🔒️leases/🟦️.ts";
@@ -14,7 +15,7 @@ export type ExactCargoLawRequestV1 = Omit<ExactCargoLawOptions, "storage" | "sou
 export type CargoArtifactBuildRequestV1 = Omit<CargoArtifactBuildOptionsV1, "storage" | "sourceBoundary" | "maximumObservationBytes" | "withCargoInputs"> & Readonly<{ invocation: ScriptInvocation; producer: "artifact" | "descriptor-emitter" }>;
 
 /** 🏪️ Exposes the bounded compiler store a provider holds open for one operation. */
-export type CompilerStoreViewV1 = Readonly<{ control: ResourceLeaseControl; root: string; buildDirectory: string; captureDirectory: string; storage: NativeStorageReservationV1; sourceBoundary: CargoSourceBoundaryPolicyV1; environment: Readonly<Record<string, string | undefined>> }>;
+export type CompilerStoreViewV1 = Readonly<{ control: ResourceLeaseControl; root: string; buildDirectory: string; captureDirectory: string; storage: NativeStorageReservationV1; sourceBoundary: CargoSourceBoundaryPolicyV1; withCargoInputs: CargoCompilerInputsPortV1; environment: Readonly<Record<string, string | undefined>> }>;
 
 /** 🔌️ Admits and runs Cargo compiler work under the authority an issuing parent selected for the whole script process. */
 export interface CargoAdmissionProviderV1 {

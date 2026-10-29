@@ -10,6 +10,7 @@ package client
 
 import (
 	"fmt"
+	model "github.com/usalu/semio/repo/model"
 	"path/filepath"
 	"strings"
 )
@@ -24,10 +25,14 @@ func GetBundleByPath(path string) *Bundle {
 	for i := range bundles {
 		bundle := &bundles[i]
 		root := NormalizePath(bundle.Root)
-		if strings.HasPrefix(normalizedPath, root+"/") || normalizedPath == root {
-			if len(root) > matchedLen {
+		if model.ArtifactBoundaryOwnsPath(root, normalizedPath) {
+			length := len(root)
+			if root == "." {
+				length = 0
+			}
+			if length > matchedLen || bestMatch == nil {
 				bestMatch = bundle
-				matchedLen = len(root)
+				matchedLen = length
 			}
 		}
 	}
@@ -43,11 +48,15 @@ func findBundleInfo(path string) (name, root string, ok bool) {
 	var matchedLen int
 	for _, bundle := range bundles {
 		root := NormalizePath(bundle.Root)
-		if strings.HasPrefix(normalizedPath, root+"/") || normalizedPath == root {
-			if len(root) > matchedLen {
+		if model.ArtifactBoundaryOwnsPath(root, normalizedPath) {
+			length := len(root)
+			if root == "." {
+				length = 0
+			}
+			if length > matchedLen || matchedBundle == "" {
 				matchedBundle = bundle.Name
 				matchedRoot = root
-				matchedLen = len(root)
+				matchedLen = length
 			}
 		}
 	}

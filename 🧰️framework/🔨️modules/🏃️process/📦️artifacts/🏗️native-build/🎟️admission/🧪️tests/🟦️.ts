@@ -2,6 +2,7 @@ import { createIssuedResourceControlV1 } from "../../../../🧭️routing/📥�
 import { withBuildTestInvocationV1 } from "../../../../🧪️testing/📥️invocation/🟦️.ts";
 import { expect, test } from "bun:test";
 import Ajv from "ajv";
+import {parse as parseToml} from "smol-toml";
 import { quantile } from "d3-array";
 import { Database } from "bun:sqlite";
 import ts from "typescript";
@@ -108,3 +109,8 @@ test("the broker endpoint stays below the Unix socket path limit however long th
     if (previous === undefined) delete process.env.TMPDIR; else process.env.TMPDIR = previous;
   }
 });
+
+ test("scheduler input selection declares the complete locked host profile resolve before offline planning",()=>{
+ const select=(admission as unknown as {schedulerCargoSelectionV1:(examples?:boolean,mode?:"prototype"|"release")=>{manifest:string;args:readonly string[]}}).schedulerCargoSelectionV1;
+ for(const vector of fixture.schedulerSelections){const selected=select(vector.examples,vector.mode as "prototype"|"release");expect(definition("SchedulerSelectionV1")(selected)).toBe(true);expect(selected.args).toEqual(vector.arguments.map(arg=>arg==="$manifest"?selected.manifest:arg));expect(selected.manifest.endsWith("Cargo.toml")).toBe(true);const manifest=readFileSync(selected.manifest,"utf8");expect(manifest).toContain("semio-build-scheduler");expect(parseToml(manifest)["cargo-features"]).toContain("trim-paths");}
+ });

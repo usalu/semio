@@ -24,7 +24,7 @@ def select(protocol, args):
             return None
         index += 1
     if reset:
-        return {"kind": "cache-reset", "target": "nx", "owner": protocol["reset"]["scriptRoot"]}
+        return {"kind": "cache-reset", "target": protocol["reset"]["targets"][target], "owner": protocol["reset"]["scriptRoot"]}
     if maintenance:
         return {"kind": "maintenance", "target": protocol["maintenance"]["targets"][target], "owner": protocol["maintenance"]["scriptRoot"]}
     return {"kind": "frontend", "target": target, "owner": protocol["owner"]}

@@ -19,7 +19,7 @@ type OwnershipFixture = {
 
 export function proveRepoEntityKindsOwnership(repoRoot: string): void {
   const owner = join(import.meta.dir, "..", "..");
-  const fixture: unknown = JSON.parse(readFileSync(join(owner, "🧫️fixtures/🏷️entity-kinds/🔣️.json"), "utf8"));
+  const fixture: unknown = JSON.parse(readFileSync(join(owner, "🧪️tests/🧫️fixtures/🏷️entity-kinds/🔣️.json"), "utf8"));
   const ajv = new Ajv({ strict: false });
   assert(ajv.compile<OwnershipFixture>(JSON.parse(readFileSync(join(owner, "🧬️schema/🏷️entity-kinds/🔣️.json"), "utf8")))(fixture));
   const source = readEntityCatalog(repoRoot);

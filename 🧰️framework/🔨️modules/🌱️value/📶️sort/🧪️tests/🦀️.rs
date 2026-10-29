@@ -1,5 +1,6 @@
-use semio_framework_test_fixtures::fixture_text;
-use super::*;
+use semio_framework_test_fixtures::repo_text;
+use semio_framework_value::sort::*;
+use semio_framework_value_testing_allocator as _;
 
 fn execute(keys: &[[u64; 3]]) -> (Vec<usize>, usize) {
     let mut order: Vec<usize> = (0..keys.len()).collect();
@@ -24,7 +25,7 @@ fn execute(keys: &[[u64; 3]]) -> (Vec<usize>, usize) {
 
 #[test]
 fn retained_index_sort_matches_portable_order_and_bounds_every_action() {
-    let corpus: serde_json::Value = serde_json::from_str(fixture_text!("../../../../📶️sort/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let corpus: serde_json::Value = serde_json::from_str(repo_text!("🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
         let keys: Vec<[u64; 3]> = case["keys"].as_array().unwrap().iter().map(|key| std::array::from_fn(|axis| key[axis].as_u64().unwrap())).collect();
         let expected: Vec<usize> = case["order"].as_array().unwrap().iter().map(|index| index.as_u64().unwrap() as usize).collect();

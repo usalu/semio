@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import {existsSync,lstatSync,readdirSync,statSync} from "node:fs";
 import {join} from "node:path";
 import budget from "../../../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🔣️policy.json" with {type:"json"};
@@ -16,7 +17,7 @@ export function newestImplementationMillisecondsV1(libraryRoot:string,policy:Doc
   for(const entry of names){
    if(++seen>policy.walkEntries)break;
    const path=join(directory,entry.name);
-   if(entry.isDirectory()){if(!skip.has(entry.name))stack.push(path);continue;}
+   if(isOpaqueSourcePathV1(path))continue;if(entry.isDirectory()){if(!skip.has(entry.name))stack.push(path);continue;}
    if(!entry.isFile()||!SOURCE.test(entry.name))continue;
    try{const time=statSync(path).mtimeMs;if(newest===null||time>newest)newest=time;}catch{}
   }

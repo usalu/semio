@@ -1,6 +1,7 @@
 use super::*;
 use semio_framework_value::{NativeEncodeControl, ValueRefusalKind};
-use semio_s_artifact_stdio_contract_testing::decode_control;
+use semio_framework_io_control_testing::with_decoding;
+fn grant()->semio_framework_value::RetainedCloneGrant{semio_framework_value::RetainedCloneGrant{maximum_items:1<<24,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<30,maximum_release_bytes:1<<30,maximum_depth:4096}}
 
 fn cohort() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🚦️sqlite-cohort/🔣️.json")).unwrap()
@@ -58,13 +59,13 @@ fn independent_value(value: &Part21Value) -> serde_json::Value {
 fn part21_cohort_controlled_constructor_preserves_every_owned_variant() {
     for value in values() {
         let wire = value.to_value();
-        let restored = Part21Value::from_value_controlled(&wire, &mut decode_control(1048576, &mut |_| true)).unwrap();
+        let restored = with_decoding(1048576, grant(), &mut |_| true, |control| Part21Value::from_value_controlled(&wire, control)).0.unwrap();
         assert_eq!(restored, value);
         let independent: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&restored)).unwrap();
         assert_eq!(independent, independent_value(&value));
     }
     let instance = Part21Instance { id: u64::MAX, entities: vec![("".into(), values()), ("REPEATED".into(), vec![]), ("REPEATED".into(), vec![])] };
-    assert_eq!(Part21Instance::from_value_controlled(&instance.to_value(), &mut decode_control(1048576, &mut |_| true)).unwrap(), instance);
+    assert_eq!(with_decoding(1048576, grant(), &mut |_| true, |control| Part21Instance::from_value_controlled(&instance.to_value(), control)).0.unwrap(), instance);
     let independent: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&instance)).unwrap();
     assert_eq!(
         independent,
@@ -97,21 +98,18 @@ fn part21_cohort_controlled_input_cancels_during_owned_unicode_copy() {
     let text = f["longText"]["unit"].as_str().unwrap().repeat(usize::try_from(f["longText"]["repeat"].as_u64().unwrap()).unwrap());
     let value = Part21Value::Typed { name: text, items: vec![Part21Value::Unset] }.to_value();
     let mut reached = false;
-    let error = Part21Value::from_value_controlled(
-        &value,
-        &mut decode_control(1048576, &mut |p| {
+    let error = with_decoding(1048576, grant(), &mut |p| {
             if p.total >= 65536 && p.completed >= 65536 && p.completed < p.total {
                 reached = true;
                 false
             } else {
                 true
             }
-        }),
-    )
+        }, |control| Part21Value::from_value_controlled(&value, control)).0
     .unwrap_err();
     assert_eq!(error.kind, ValueRefusalKind::Canceled);
     assert!(reached);
-    let error = Part21Value::from_value_controlled(&value, &mut decode_control(1, &mut |_| true)).unwrap_err();
+    let error = with_decoding(1, grant(), &mut |_| true, |control| Part21Value::from_value_controlled(&value, control)).0.unwrap_err();
     assert_eq!(error.kind, ValueRefusalKind::OwnershipLimit);
 }
 
@@ -140,10 +138,10 @@ fn part21_cohort_controlled_output_cancels_during_owned_unicode_copy() {
 fn part21_cohort_controlled_objects_refuse_unknown_duplicate_and_wrong_typed_fields() {
     for row in cohort()["controlled"]["malformedValues"].as_array().unwrap() {
         let value = semio_framework_pack_json::from_json_str::<DslValue>(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert_eq!(Part21Value::from_value_controlled(&value, &mut decode_control(1_048_576, &mut |_| true)).unwrap_err().kind, ValueRefusalKind::InvalidValue);
+        assert_eq!(with_decoding(1_048_576, grant(), &mut |_| true, |control| Part21Value::from_value_controlled(&value, control)).0.unwrap_err().kind, ValueRefusalKind::InvalidValue);
     }
     let duplicate = DslValue::object([("kind".into(), "unset".to_value()), ("kind".into(), "derived".to_value())]);
-    assert_eq!(Part21Value::from_value_controlled(&duplicate, &mut decode_control(1_048_576, &mut |_| true)).unwrap_err().kind, ValueRefusalKind::InvalidValue);
+    assert_eq!(with_decoding(1_048_576, grant(), &mut |_| true, |control| Part21Value::from_value_controlled(&duplicate, control)).0.unwrap_err().kind, ValueRefusalKind::InvalidValue);
 }
 
 #[test]
@@ -158,11 +156,12 @@ fn part21_cohort_controlled_instances_preserve_literal_field_order_and_exact_cum
     assert_eq!(instance.to_value_controlled(&mut NativeEncodeControl::new(encode_bytes, &mut |_| true)).unwrap(), value);
     assert_eq!(instance.to_value_controlled(&mut NativeEncodeControl::new(encode_bytes - 1, &mut |_| true)).unwrap_err().kind, ValueRefusalKind::OwnershipLimit);
     let mut decode_yes = |_| true;
-    let mut decode = decode_control(1_048_576, &mut decode_yes);
-    assert_eq!(Part21Instance::from_value_controlled(&value, &mut decode).unwrap(), instance);
-    let decode_bytes = decode.owned_bytes();
-    assert_eq!(Part21Instance::from_value_controlled(&value, &mut decode_control(decode_bytes, &mut |_| true)).unwrap(), instance);
-    assert_eq!(Part21Instance::from_value_controlled(&value, &mut decode_control(decode_bytes - 1, &mut |_| true)).unwrap_err().kind, ValueRefusalKind::OwnershipLimit);
+    let decode_bytes = with_decoding(1_048_576, grant(), &mut decode_yes, |decode|{
+    assert_eq!(Part21Instance::from_value_controlled(&value, decode).unwrap(), instance);
+    decode.owned_bytes()
+    }).0;
+    assert_eq!(with_decoding(decode_bytes, grant(), &mut |_| true, |control| Part21Instance::from_value_controlled(&value, control)).0.unwrap(), instance);
+    assert_eq!(with_decoding(decode_bytes - 1, grant(), &mut |_| true, |control| Part21Instance::from_value_controlled(&value, control)).0.unwrap_err().kind, ValueRefusalKind::OwnershipLimit);
 }
 
 #[test]
@@ -171,17 +170,14 @@ fn part21_cohort_controlled_list_admission_reaches_real_interior_units() {
     let value = Part21Value::List((0..count).map(|_| Part21Value::Unset).collect());
     let wire = value.to_value();
     let mut decoded_interior = false;
-    let decoded = Part21Value::from_value_controlled(
-        &wire,
-        &mut decode_control(1_048_576, &mut |p| {
+    let decoded = with_decoding(1_048_576, grant(), &mut |p| {
             if p.total == count && p.completed == 256 {
                 decoded_interior = true;
                 false
             } else {
                 true
             }
-        }),
-    )
+        }, |control| Part21Value::from_value_controlled(&wire, control)).0
     .unwrap_err();
     assert!(decoded_interior);
     assert_eq!(decoded.kind, ValueRefusalKind::Canceled);
@@ -209,7 +205,7 @@ fn part21_cohort_controlled_recursive_owner_refuses_depth_before_unbounded_const
         value = Part21Value::Typed { name: String::new(), items: vec![value] };
         wire = DslValue::object([("kind".into(), "typed".to_value()), ("typeName".into(), String::new().to_value()), ("values".into(), DslValue::Array(vec![wire]))]);
     }
-    assert_eq!(Part21Value::from_value_controlled(&wire, &mut decode_control(1_048_576, &mut |_| true)).unwrap_err().kind, ValueRefusalKind::DepthLimit);
+    assert_eq!(with_decoding(1_048_576, grant(), &mut |_| true, |control| Part21Value::from_value_controlled(&wire, control)).0.unwrap_err().kind, ValueRefusalKind::DepthLimit);
     assert_eq!(value.to_value_controlled(&mut NativeEncodeControl::new(1_048_576, &mut |_| true)).unwrap_err().kind, ValueRefusalKind::DepthLimit);
     <DslValue as FromValue>::retire_decoded(wire);
     <Part21Value as FromValue>::retire_decoded(value);
@@ -231,7 +227,7 @@ fn part21_cohort_controlled_header_document_fields_match_independent_exact_outpu
     assert_eq!(actual.as_object().unwrap().iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), ["fileDescription", "fileName", "fileSchema"]);
     let independent: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&actual)).unwrap();
     assert_eq!(independent, independent_header(&header));
-    assert_eq!(Part21Header::from_value_controlled(&actual, &mut decode_control(1_048_576, &mut |_| true)).unwrap(), header);
+    assert_eq!(with_decoding(1_048_576, grant(), &mut |_| true, |control| Part21Header::from_value_controlled(&actual, control)).0.unwrap(), header);
     let document = Part21Document { header, instances: vec![Part21Instance { id: u64::MAX, entities: vec![("".into(), values()), ("R".into(), vec![]), ("R".into(), vec![])] }] };
     let actual = document.to_value_controlled(&mut NativeEncodeControl::new(1_048_576, &mut |_| true)).unwrap();
     assert_eq!(actual.as_object().unwrap().iter().map(|(key, _)| key.as_str()).collect::<Vec<_>>(), ["header", "instances"]);
@@ -240,7 +236,7 @@ fn part21_cohort_controlled_header_document_fields_match_independent_exact_outpu
         independent,
         serde_json::json!({"header": independent_header(&document.header), "instances": [{"id": u64::MAX, "entities": document.instances[0].entities.iter().map(|(name,arguments)|serde_json::json!({"typeName":name,"arguments":arguments.iter().map(independent_value).collect::<Vec<_>>()})).collect::<Vec<_>>()}]})
     );
-    assert_eq!(Part21Document::from_value_controlled(&actual, &mut decode_control(1_048_576, &mut |_| true)).unwrap(), document);
+    assert_eq!(with_decoding(1_048_576, grant(), &mut |_| true, |control| Part21Document::from_value_controlled(&actual, control)).0.unwrap(), document);
 }
 
 #[test]
@@ -248,11 +244,11 @@ fn part21_cohort_controlled_instance_decimal_closed_fields_refuse_wrong_domains(
     let f = cohort();
     for row in f["controlled"]["malformedInstances"].as_array().unwrap() {
         let value = semio_framework_pack_json::from_json_str::<DslValue>(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert_eq!(Part21Instance::from_value_controlled(&value, &mut decode_control(1_048_576, &mut |_| true)).unwrap_err().kind, ValueRefusalKind::InvalidValue);
+        assert_eq!(with_decoding(1_048_576, grant(), &mut |_| true, |control| Part21Instance::from_value_controlled(&value, control)).0.unwrap_err().kind, ValueRefusalKind::InvalidValue);
     }
     for row in f["controlled"]["malformedDecimals"].as_array().unwrap() {
         let value = semio_framework_pack_json::from_json_str::<DslValue>(&row.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        assert_eq!(Part21Decimal::from_value_controlled(&value, &mut decode_control(1_048_576, &mut |_| true)).unwrap_err().kind, ValueRefusalKind::InvalidValue);
+        assert_eq!(with_decoding(1_048_576, grant(), &mut |_| true, |control| Part21Decimal::from_value_controlled(&value, control)).0.unwrap_err().kind, ValueRefusalKind::InvalidValue);
     }
 }
 
@@ -263,12 +259,13 @@ fn part21_cohort_controlled_owner_restores_parent_work_limit_category() {
     let before = usize::try_from(f["controlled"]["workload"]["parentBefore"].as_u64().unwrap()).unwrap();
     let value = Part21Value::Str(f["literalText"].as_str().unwrap().into());
     let mut yes = |_| true;
-    let mut input = decode_control(1_048_576, &mut yes);
+    with_decoding(1_048_576, grant(), &mut yes, |input|{
     input.begin_stage(total).unwrap();
     input.advance(before).unwrap();
-    assert_eq!(Part21Value::from_value_controlled(&value.to_value(), &mut input).unwrap(), value);
+    assert_eq!(Part21Value::from_value_controlled(&value.to_value(), input).unwrap(), value);
     input.advance(total - before).unwrap();
     assert_eq!(input.step().unwrap_err().kind, ValueRefusalKind::WorkLimit);
+    });
     let mut encode_yes = |_| true;
     let mut output = NativeEncodeControl::new(1_048_576, &mut encode_yes);
     output.begin_stage(total).unwrap();
@@ -284,17 +281,14 @@ fn part21_cohort_controlled_long_borrowed_key_refuses_during_actual_key_work() {
     let key = f["longText"]["unit"].as_str().unwrap().repeat(usize::try_from(f["longText"]["repeat"].as_u64().unwrap()).unwrap());
     let input = DslValue::object([("kind".into(), "unset".to_value()), (key.clone(), DslValue::Null)]);
     let mut reached = false;
-    let error = Part21Value::from_value_controlled(
-        &input,
-        &mut decode_control(65_536, &mut |p| {
+    let error = with_decoding(65_536, grant(), &mut |p| {
             if p.total == key.len() && p.completed >= 65_536 && p.completed < p.total {
                 reached = true;
                 false
             } else {
                 true
             }
-        }),
-    )
+        }, |control| Part21Value::from_value_controlled(&input, control)).0
     .unwrap_err();
     assert_eq!(error.kind, ValueRefusalKind::Canceled);
     assert!(reached);
@@ -312,9 +306,10 @@ fn part21_cohort_controlled_partial_named_owner_retains_paid_copy_and_invalid_re
         }
         true
     };
-    let mut control = decode_control(1_048_576, &mut callback);
-    let error = Part21Value::from_value_controlled(&input, &mut control).unwrap_err();
+    with_decoding(1_048_576, grant(), &mut callback, |control|{
+    let error = Part21Value::from_value_controlled(&input, control).unwrap_err();
     assert_eq!(error.kind, ValueRefusalKind::InvalidValue);
     assert!(control.owned_bytes() >= name.len());
+    });
     assert!(copied);
 }

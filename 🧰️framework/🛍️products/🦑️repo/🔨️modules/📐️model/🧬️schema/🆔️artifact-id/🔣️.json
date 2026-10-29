@@ -1,0 +1,170 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "semio.repo.model.artifact-layout/1",
+  "title": "Invocation-Owned Artifact Layout",
+  "type": "object",
+  "$defs": {
+    "ArtifactLayoutProtocol": {
+      "const": {
+        "lifetime": "one-invocation",
+        "maximumDirectoryObservations": 1,
+        "followSymlinks": false,
+        "requiredManifests": [
+          "package.json",
+          "pyproject.toml",
+          "go.mod",
+          "Cargo.toml"
+        ],
+        "requiredExtensions": [
+          ".csproj",
+          ".sln"
+        ]
+      }
+    },
+    "ArtifactLayoutFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "directories",
+        "files",
+        "probePath",
+        "expectedFolderID",
+        "removeFile",
+        "expectedAfterRemovalID",
+        "maximumWarmAllocations",
+        "maximumDirectoryObservations",
+        "boundaries",
+        "expectedBoundaryID",
+        "boundaryCases",
+        "discoveryCancellation"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "directories": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "probePath": {
+          "type": "string"
+        },
+        "expectedFolderID": {
+          "type": "string"
+        },
+        "removeFile": {
+          "type": "string"
+        },
+        "expectedAfterRemovalID": {
+          "type": "string"
+        },
+        "maximumWarmAllocations": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "maximumDirectoryObservations": {
+          "const": 1
+        },
+        "boundaries": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "root",
+              "id"
+            ],
+            "properties": {
+              "root": {
+                "type": "string"
+              },
+              "id": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "expectedBoundaryID": {
+          "type": "string"
+        },
+        "boundaryCases": {
+          "type": "array",
+          "minItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "coordinate",
+              "boundaries",
+              "expectedFolderID"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "coordinate": {
+                "enum": [
+                  "relative",
+                  "absolute"
+                ]
+              },
+              "boundaries": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "root",
+                    "id"
+                  ],
+                  "properties": {
+                    "root": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              "expectedFolderID": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "discoveryCancellation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "files",
+            "cancelAt",
+            "phase"
+          ],
+          "properties": {
+            "files": {
+              "const": 513
+            },
+            "cancelAt": {
+              "const": 256
+            },
+            "phase": {
+              "const": "resolving-file-identities"
+            }
+          }
+        }
+      }
+    }
+  }
+}

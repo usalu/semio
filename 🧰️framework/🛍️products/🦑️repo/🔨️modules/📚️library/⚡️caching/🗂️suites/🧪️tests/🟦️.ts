@@ -8,6 +8,7 @@ import{testPythonV1}from"../../../../../../../🔨️modules/🏃️process/📦
 import{aggregatedProcessTestFilesV1,discoverProcessTestFilesV1,expandProcessTestSuiteV1,type ProcessTestSuiteV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🟦️.ts";
 import processSchema from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🗂️suites/🧬️schema/🔣️json/🟦️.ts";
 import{cachingTestCoverageV1,cachingTestRootV1,readCachingTestTableV1}from"../🟦️.ts";
+import{canonicalTestAggregatePolicyV1,canonicalTestRoutesV1,resolveCanonicalTestTargetsV1}from"../🧮️aggregate/🟦️.ts";
 import table from"../🔣️.json"with{type:"json"};
 import fixture from"./🧫️fixtures/🔣️.json"with{type:"json"};
 
@@ -41,10 +42,9 @@ test("no caching test file imports another test file, so each file receives its 
 });
 
 test("every suite has a project target and every route target names a declared suite",()=>{
- const declared=readCachingTestTableV1(),known=new Set([...declared.suites.map(suite=>suite.id),...declared.codeSuites]),targets=(JSON.parse(readFileSync(project,"utf8"))as{targets:Record<string,{options?:{command?:string;cwd?:string}}>}).targets,pattern=/📜️script\.ts test(?: (\S+))?(?: \S+)*$/u,routed=new Map<string,string[]>();
- for(const[name,target]of Object.entries(targets)){const command=target.options?.command??"",match=pattern.exec(command);if(match&&match[1]!==undefined&&(target.options?.cwd===undefined||target.options.cwd==="{projectRoot}"||target.options.cwd.endsWith("⚡️caching")||command.includes("⚡️caching/📜️script.ts")))routed.set(match[1],[...(routed.get(match[1])??[]),name]);}
- expect(sorted([...known].filter(id=>!routed.has(id)))).toEqual([]);
- expect(sorted([...routed.keys()].filter(id=>!known.has(id)))).toEqual([]);
+ const declaration=JSON.parse(readFileSync(project,"utf8")),routes=canonicalTestRoutesV1(),targets=resolveCanonicalTestTargetsV1({...declaration,root:canonicalTestAggregatePolicyV1.root},routes);
+ expect(targets).toHaveLength(routes.length+1);
+ expect(declaration.targets.test.dependsOn).toEqual(targets);
 });
 
 test("budget classes follow the independent oracle on every vector and cover every process-spawning file of the module",async()=>{

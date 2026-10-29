@@ -25,6 +25,11 @@ updates:
 
   - package-ecosystem: "gomod"
     directories:
+      - "/🧰️framework/🔨️modules/📁️filesystem/🛡️durability/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🏠️workspace/📦️packages/🐹️go/🏖️sandbox"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🚀️launcher/📦️packages/🐹️go/📦️main"
+      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🐹️go/📦️main"
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧾️yaml/📦️packages/🐹️go"
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go"
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🪪️identity/📦️packages/🐹️go"
@@ -47,7 +52,6 @@ updates:
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🐹️go"
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔗️graphql/📦️packages/🐹️go"
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go"
-      - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/⌨️cli/📦️packages/🐹️go/🚀️bin"
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go"
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/🖥️server/🎛️coordinator/📦️packages/🐹️go/📦️main"
       - "/🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
@@ -74,6 +78,7 @@ updates:
   - package-ecosystem: "github-actions"
     directories:
       - "/"
+      - "/.github/actions/native-repo"
       - "/.github/actions/repo-launcher"
       - "/.github/actions/devcontainer-repo"
       - "/.github/actions/devcontainer-suites"

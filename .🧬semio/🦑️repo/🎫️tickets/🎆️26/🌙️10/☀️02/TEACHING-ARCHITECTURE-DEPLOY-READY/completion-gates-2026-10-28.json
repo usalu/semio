@@ -1,0 +1,475 @@
+{
+  "version": 1,
+  "scope": "Architecture course frontend and actual proctor backend; no clips.",
+  "workspace": "/home/deck/semio",
+  "ticket": "/home/deck/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/TEACHING-ARCHITECTURE-DEPLOY-READY",
+  "launchPolicy": "Pending ledger only. Recheck authoritative capacity and backend owner before any launch; one native compiler job at a time.",
+  "environment": {
+    "SEMIO_LANGUAGE": "en",
+    "SEMIO_TICKET_DIR": "/home/deck/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️02/TEACHING-ARCHITECTURE-DEPLOY-READY"
+  },
+  "gates": [
+    {
+      "id": "proctor-release",
+      "cwd": "🎓️teaching",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "build",
+        "-p",
+        "teaching-proctor"
+      ],
+      "status": "Scoped release build 41361 exited 0. Current artifact passed the strengthened isolated native smoke; runtime 29196 was stopped through its owner and exited 130. This does not publish the qualified product receipt or provide a persistent frontend.",
+      "log": "🗑️generated/proctor-native-build.log"
+    },
+    {
+      "id": "qualified-proctor-release",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "@teaching/proctor:build",
+        "--configuration=release",
+        "--parallel=1"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "status": "Backend44967 authoritative terminal0; normal qualified owner build completed with497 dep-info Sources and0 uncovered. Persistent runtime remains separately pending.",
+      "log": "🗑️generated/proctor-qualified-build.log"
+    },
+    {
+      "id": "native-owned",
+      "cwd": "🎓️teaching",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "Current candidate 70992 log records 31 passing tests, no failures or filters, including concrete and erased mapped-source paths; replication IDs recorded 9 passes. The log ends repo stage complete, but the outer handle was unavailable for separate exit recovery. Earlier 13230 had authoritative exit 0.",
+      "log": "🗑️generated/native-owned-tests.log"
+    },
+    {
+      "id": "dsl-direct-ordinal",
+      "cwd": "🎓️teaching",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "genuine_tagged_records_receive_original_ordinal_payloads_without_wire_conversion",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "Coordinated 86170 exited 0: 16 DSL tests and 49 wire tests passed, with no filters. Includes direct ordinal payloads, borrowed octets, intrinsic selected closure and wire range validation.",
+      "log": "🗑️generated/dsl-direct-ordinal.log"
+    },
+    {
+      "id": "course-unit",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "@teaching/architecture-course:test",
+        "--parallel=1"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "status": "82275 terminal 130, deliberately released graph-wait memory; never reached Vitest. Same complete unit target pending.",
+      "log": "🗑️generated/course-unit-current.log"
+    },
+    {
+      "id": "course-semantic",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "@teaching/architecture-course:typecheck",
+        "--parallel=1"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "status": "Root39681 authoritative terminal1: five realprerequisites succeeded0/5cachehits; framework-rs:generate failed actualCargoE0119 duplicateRetireOwned meshdecoder State. NoTSC. Exactredundantmacro removed; Root81792 fullowningmeshlibtests live. Fullsemantic retry waits realrepair checks.",
+      "log": "🗑️generated/course-typecheck-dispatch-fixed.log",
+      "ownerHandle": 39681,
+      "terminalExitCode": 1
+    },
+    {
+      "id": "watcher-recovery",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "repo:test-caller-environment",
+        "--parallel=1"
+      ],
+      "environmentUnset": [
+        "NX_DAEMON"
+      ],
+      "status": "32120 terminal 130, deliberately released graph-wait memory; actual managed SDK assertions not run. Preserve fixture daemon failure coverage, invocation-local fallback and next-call-enabled assertions.",
+      "log": "🗑️generated/daemon-recovery-managed.log"
+    },
+    {
+      "id": "full-browser",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "@teaching/architecture-course:test-e2e",
+        "--configuration=release",
+        "--parallel=1",
+        "--",
+        "--topology",
+        "both",
+        "--serial"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "status": "4072 terminal 130 under measured capacity pressure, no browser results. Both dev and release-rehearsal full projects required; no project/grep filter. Earlier 54529 terminal 1 handoff76; 66219 terminal130 confirmed watcher failure; 82206 terminal1 duplicate manifest.",
+      "log": "🗑️generated/full-e2e-current.log",
+      "scheduling": "Serial topologies with capacity-governed browser workers; --parallel=1 limits repository target concurrency, not Playwright workers."
+    },
+    {
+      "id": "persistent-dev",
+      "cwd": ".",
+      "argv": [
+        "repo",
+        "run",
+        "@teaching/architecture-course:dev",
+        "--configuration=prototype"
+      ],
+      "environment": {
+        "NX_DAEMON": "false"
+      },
+      "environmentUnset": [
+        "SEMIO_BUILD_MODE"
+      ],
+      "status": "81722 authoritative terminal1 after actual572-project graph assembly and Nx graph publication: Original captured runtime entry provider required. No application listener created. Provider was installed only in command kernel, not separately received Nx authorizer request lifetime; causal fix pending.",
+      "log": "🗑️generated/course-dev-dispatch-fixed.log",
+      "ownerHandle": 81722,
+      "terminalExitCode": 1
+    }
+  ],
+  "acceptance": [
+    "All 10 authored quizzes including perfect score, four challenges, feedback/badges and persisted individual answers",
+    "boot, first-visit and both-language browser journeys",
+    "presence, shortage, away, faults and live-leaderboard multi-user/reconnection cases",
+    "desktop, phone, layout and pets projects",
+    "release rehearsal production origin separation plus dev topology",
+    "real managed frontend/proctor remains available after verification",
+    "Public frontend/backend availability remains separately evidenced; local test success does not prove remote proctor availability",
+    "Retain reports/input scripts; remove generated outputs only after terminal handles and ticket completion"
+  ],
+  "runtimeTransition": {
+    "review": "runtime-transition-2026-10-28.md",
+    "observedServiceOwnership": "not-probed",
+    "isolatedSmoke": {
+      "mode": "release",
+      "port": 18791,
+      "owner": "backend agent",
+      "handle": 29196,
+      "status": "StrengthenedNodesmokeexit0; owned29196Ctrl+Cauthoritativeterminal130, independentregisteredNodeportprobeECONNREFUSEDconfirmsclosed.",
+      "assertions": [
+        "exactinstance",
+        "OPTIONS204",
+        "POSTcoursequery200",
+        "10independentquizIDs/titles",
+        "en/de",
+        "GETandPOSTCORS"
+      ]
+    },
+    "persistent": {
+      "mode": "prototype",
+      "frontend": "http://127.0.0.1:6061/",
+      "proctor": "http://127.0.0.1:8791/instance",
+      "ownerHandle": null,
+      "acquisition": "qualified proctor product through declared target dependency",
+      "reusePolicy": "Never stop reused services; both-ready command may return"
+    },
+    "releaseBrowser": {
+      "topologies": [
+        "dev",
+        "rehearsal"
+      ],
+      "serial": true,
+      "qualifiedProductRequired": true
+    },
+    "phase": "NormalSource andNxexternal boundaries crossed. Root39681 terminal1 on actualmeshRustduplicate (fixed, owning81792live); preview81722 terminal1 capturedprovider missing in separateNxpublicationOriginal. Frontend fixes authenticated received-owner scope. Backend19402 retainedlive throughsharedgraph/capacity; no listener/application readiness. Fullunit/watcher/bothbrowser required."
+  },
+  "additionalRustChecks": [
+    {
+      "id": "ui-erased-axes-label",
+      "cwd": "🧰️framework",
+      "manifest": "🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-framework-ui-locale",
+      "test": "declared_axes_and_labels_receive_actual_erased_sources",
+      "log": "🗑️generated/ui-erased-receiving.log",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "declared_axes_and_labels_receive_actual_erased_sources",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "Root75081 authoritative exit0 actualstrengthenednamedlaw1passed0failed16filtered,13.41sreleasecompile/0.22sruntime. Genuine9caseerasedNativeReceive forlocale/terminology/label withfundeddenials,cancellation/output/cursor/sourceclosure, portable1test29assertions. Prior25385weakscalar/traitonlyscope is historical.",
+      "acceptance": "Require actual named test execution count at least one and zero failures.",
+      "schedule": "Deferred; does not block the immediate proctor app retry after sole coordinated70992 passes."
+    },
+    {
+      "id": "energy-erased-entity-id",
+      "cwd": "✏️s/🔌️plugins/🔋️energy",
+      "manifest": "🔨️modules/⚡️simulation/⚙️engine/🔋️model/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-plugin-energy-engine-model",
+      "test": "erased_original_identifier_source_preserves_unsigned_wire_bounds",
+      "log": "🗑️generated/energy-entity-erased-source-fixed.log",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "🔨️modules/⚡️simulation/⚙️engine/🔋️model/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "erased_original_identifier_source_preserves_unsigned_wire_bounds",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "3922 authoritativeexit0: actualnamedEngineModel law1passed0failed22filtered. ExecutesNativeScalarValue<dynNativeValueSource>::read onactualDslValue unsignedboundarycases; NativeReceive<dyn>compilecompatibilityonly, no actualfundedreceiving/closureclaim. Prior63604missingtestdevdep fixed bytest-onlyserde_jsonworkspace declaration.",
+      "acceptance": "Require actual named test execution count at least one and zero failures.",
+      "schedule": "Deferred; does not block the immediate proctor app retry after sole coordinated70992 passes."
+    },
+    {
+      "id": "energy-erased-schedule-id",
+      "cwd": "✏️s/🔌️plugins/🔋️energy",
+      "manifest": "🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-plugin-energy-engine-schedule",
+      "test": "erased_original_identifier_source_preserves_unsigned_wire_bounds",
+      "log": "🗑️generated/energy-schedule-erased-source.log",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "erased_original_identifier_source_preserves_unsigned_wire_bounds",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "6227 authoritativeexit0 actualnamedSchedulelaw1passed0failed3filtered,8.88sreleasecompile. NativeScalarValue<dynNativeValueSource>::read unsignedbounds runtime; NativeReceive<dyn>compiletraitcompatibilityonly, no fundedreceivingclaim.",
+      "acceptance": "Require actual named test execution count at least one and zero failures.",
+      "schedule": "Deferred; does not block the immediate proctor app retry after sole coordinated70992 passes."
+    },
+    {
+      "id": "part21-erased-binary",
+      "cwd": "✏️s/🔌️plugins/🗄️stdio",
+      "manifest": "📇️registry/🧬️contract/📐️part21/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-stdio-contract-part21",
+      "test": "original_erased_part21_sources_keep_binary_admission_and_funded_closure",
+      "log": "🗑️generated/part21-visible-lock-diagnostic.log",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "📇️registry/🧬️contract/📐️part21/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "original_erased_part21_sources_keep_binary_admission_and_funded_closure",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "45760 exited 1 before compiler/test execution. Visible, untruncated Cargo diagnostic status101 proves composition-publication inherits semio-framework-diagnostic from its declared ROOT workspace, but that workspace.dependencies entry is absent. Paths exist; this is manifest inheritance, not registry availability. Actual Part21 runtime remains unverified. No live handle.",
+      "acceptance": "Require actual named test execution count at least one and zero failures.",
+      "schedule": "Deferred; does not block the immediate proctor app retry after sole coordinated70992 passes."
+    },
+    {
+      "id": "retained-root-mutation-post",
+      "cwd": "🧰️framework",
+      "manifest": "🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-framework-replication-mutation-retained",
+      "test": "retained_mutation_yields_typed_diff_before_preflight_inverse_and_commit",
+      "status": "Root37386 authoritative exit0: actual selected retained-root mutation/post law1passed0failed18filtered; release compilation2.86s. No broader retained-suite claim.",
+      "log": "🗑️generated/retained-root-post-law.log",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "🔨️modules/📡️replication/🎮️mutation/🧳️retained/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "retained_mutation_yields_typed_diff_before_preflight_inverse_and_commit",
+        "--",
+        "--test-threads=1"
+      ],
+      "acceptance": "Require actual named test execution count at least one and zero failures.",
+      "schedule": "Deferred; no concurrent Cargo and no obstruction to current sole proctor41361."
+    },
+    {
+      "id": "energy-original-zone-post",
+      "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-energy-model-snapshot",
+      "test": "energy_state_original_zone_receive_projection_and_inverse_preserve_paid_authority",
+      "status": "NOT EXECUTED. Corrected to actual snapshot owner: manifest lib entry mounts snapshot/state cfg(test) tests containing this exact law. Prior Root18221 selected schema package, which has only two unrelated async sanity tests, and stopped before compiler on genuine OS store-engine Source cap; it did not verify this law. Canonical snapshot full --lib observation pending.",
+      "log": "🗑️generated/energy-original-zone-post-law.log",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "energy_state_original_zone_receive_projection_and_inverse_preserve_paid_authority",
+        "--",
+        "--test-threads=1"
+      ],
+      "acceptance": "Require actual named test execution count at least one and zero failures.",
+      "schedule": "Full snapshot --lib unfiltered requires fresh capacity and native owner coordination; frontend main runtime has priority."
+    },
+    {
+      "id": "energy-sparse-branch-post",
+      "cwd": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model",
+      "manifest": "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-s-artifact-energy-model-snapshot",
+      "test": "energy_native_sparse_zone_path_rebuilds_only_its_pages_and_branch_and_restores_original_inverse_authority",
+      "status": "NOT EXECUTED. Corrected to actual snapshot owner: manifest lib entry mounts snapshot/state cfg(test) tests containing this exact law. Prior Root18221 selected schema package, which has only two unrelated async sanity tests, and stopped before compiler on genuine OS store-engine Source cap; it did not verify this law. Canonical snapshot full --lib observation pending.",
+      "log": "🗑️generated/energy-sparse-branch-post-law.log",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "energy_native_sparse_zone_path_rebuilds_only_its_pages_and_branch_and_restores_original_inverse_authority",
+        "--",
+        "--test-threads=1"
+      ],
+      "acceptance": "Require actual named test execution count at least one and zero failures.",
+      "schedule": "Full snapshot --lib unfiltered requires fresh capacity and native owner coordination; frontend main runtime has priority."
+    },
+    {
+      "id": "paged-map-erased-default",
+      "cwd": "🧰️framework",
+      "manifest": "🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-framework-value",
+      "test": "shared_original_paged_map_supports_erased_receiving_and_funded_default",
+      "argv": [
+        "repo",
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "test",
+        "--manifest-path",
+        "🔨️modules/🌱️value/📦️packages/🦀️rust/Cargo.toml",
+        "--lib",
+        "shared_original_paged_map_supports_erased_receiving_and_funded_default",
+        "--",
+        "--test-threads=1"
+      ],
+      "status": "Root 22219 exited 0: the full Value package passed 15/15 tests across its library and seven integration targets, plus 4/4 doctests; zero failures and zero filtered tests. All 34 Source units were admitted under unchanged caps. PagedMap funded-default/empty-closure law passed; erased NativeReceive and Sync remain compile-time compatibility coverage.",
+      "acceptance": "Require actual named execution count at least one and zero failures.",
+      "schedule": "Deferred; no extra Cargo while qualified owner has priority.",
+      "log": "🗑️generated/value-bounded-test-fixed.log"
+    }
+  ],
+  "retainedSequence": {
+    "session": 80829,
+    "status": "terminal0",
+    "actualPassed": 1,
+    "failed": 0,
+    "filtered": 18,
+    "scope": "Mounted ordered sequence law only; external Energy runtime and other filtered retained tests not executed."
+  },
+  "schedulingObservation": {
+    "at": "2026-10-28T21:57:03Z",
+    "headroomMegabytes": 6026,
+    "capacityWaiters": 0,
+    "semanticNeedMegabytes": 3763,
+    "semanticAdmitted": true,
+    "semanticHandle": 62580,
+    "semanticPid": 460571,
+    "qualifiedOwnerHandle": 44967,
+    "qualifiedOwnerAdmitted": false,
+    "qualifiedOwnerPhase": "Backend confirms peer-waiting without loader/compiler/grant",
+    "launchedSemantic": true
+  },
+  "browserPreparation": {
+    "status": "Source-reviewed only; no installation or browser launch performed.",
+    "automatic": true,
+    "entry": "runCourseEndToEnd -> ensureBrowser",
+    "revisionAuthority": "Installed Playwright CLI's own playwright-core/browsers.json",
+    "required": [
+      "chromium INSTALLATION_COMPLETE",
+      "chromium-headless-shell INSTALLATION_COMPLETE"
+    ],
+    "cache": "repoToolCacheEnv PLAYWRIGHT_BROWSERS_PATH, default tools/ms-playwright",
+    "optionalPreparedArgv": [
+      "repo",
+      "tools",
+      "exec",
+      "playwright",
+      "--",
+      "install",
+      "chromium"
+    ],
+    "systemBrowserSubstitution": false,
+    "duplicateInstall": false,
+    "report": "course-browser-preparation-2026-10-28.md"
+  }
+}

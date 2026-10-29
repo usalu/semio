@@ -379,6 +379,31 @@
           "maximum": 9007199254740991
         }
       }
+    },
+    "SchedulerSelectionV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "manifest",
+        "args"
+      ],
+      "properties": {
+        "manifest": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "args": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 8,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 256
+          }
+        }
+      }
     }
   }
 }

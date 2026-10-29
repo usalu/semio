@@ -1,0 +1,14 @@
+
+## Retained Driver One Signature: Coherent Generic Source Contract
+
+Read-only current Source audit after actual82884 failure; frontend owns implementation and fixtures, root owns unrelated87405. No builds, Source edits or handle polls.
+
+Concrete mismatch is isolated to shared RetainedValueDriver::one still declaring (&[u8],maximum), while actual RetainedDocumentDriver and intrinsic BodyDriver already implement generic<S:RetainedWireByteSource+?Sized>(input:&S,range:(usize,usize),maximum). Adopt that existing full signature on the trait, importing the canonical replication-wire-core RetainedWireByteSource; do not convert source to Vec/slice, fabricate identity or add an overload.
+
+All implementation/use sites found: document driver impl decode/document:86+; intrinsic BodyDriver:179+; RecordCursor::advance calls document.one(source,range,maximum); intrinsic Materializer invokes cursor.one twice with actual held slice and explicit whole range. One mounted receiving test calls driver.one(&bytes,capacity) and needs explicit (0,bytes.len()). Framework scan found only these2impls; teaching/s Rust scans found no driver references. This is scoped Source enumeration, not compiler completeness.
+
+Object/identity constraints: RetainedValueDriver is ALREADY Sized, so generic one adds no new object-safety regression. RetainedWireByteSource itself is dyn-compatible (identity+byte_at only); ?Sized admits borrowed slices and genuine dyn sources without copying. Record receiving constructors validate start<=end<=actual source extent and retain full OriginalWireSourceIdentity plus selected range; every public receiving advance validates actual identity equality. Preserve full identity including range_start/address/extent/authority and range-relative parser offsets; source reads remain byte_at(range.0+offset), preventing prefix/suffix from entering decode. No extra synthetic Source handle is needed.
+
+body_bytes(&[u8]) remains a distinct informational interface: intrinsic BodyDriver uses only slice length and DocumentDriver ignores argument in favor of verified manifest uncompressed_body_len. Current intrinsic callers already own the actual whole slice. This mismatch does not justify flattening paged Record input or changing that informational port; current Record receiving does not route paged ingress through body_bytes.
+
+Frontend proposed schema/fixture sourceRange prefix170/suffix187/pageBytes7 and genuine paged nonzero-range Document law are appropriate concrete regression evidence: exercise actual retained source/range, output and denial/closure receipts, not a reconstructed bytecopy. Keep existing fixture/oracle and full range identity checks. This review does not claim those authored tests have executed; actual owning Cargo results and eventual complete frontend semantics remain separate. No blocking Source-contract issue found beyond the identified stale trait/testcall.

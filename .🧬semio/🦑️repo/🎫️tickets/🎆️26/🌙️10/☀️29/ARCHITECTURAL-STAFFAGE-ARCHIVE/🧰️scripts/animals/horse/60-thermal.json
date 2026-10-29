@@ -1,0 +1,40 @@
+      "thermal": {
+        "environment": { "airTempC": 20, "meanRadiantTempC": 20, "relativeHumidity": 0.5, "windMS": 0.5, "windDirectionDeg": 180, "solarWM2": 0, "pressurePa": 101325 },
+        "baseMet": 1.5,
+        "regions": [
+          { "id": "coat-trunk", "title": { "en": "Trunk coat", "de": "Rumpffell" }, "kind": "fur", "material": "short-coat", "model": "core-resistance", "areaM2": 3.43, "characteristicLengthM": 0.55, "coreTempC": 37.8, "insulationM2KW": 0.18, "metabolicShare": 0.63, "source": "authored-estimate", "reference": "scholander-1950" },
+          { "id": "coat-neck", "title": { "en": "Neck coat", "de": "Halsfell" }, "kind": "fur", "material": "short-coat", "model": "core-resistance", "areaM2": 0.62, "characteristicLengthM": 0.2, "coreTempC": 37.8, "insulationM2KW": 0.15, "metabolicShare": 0.07, "source": "authored-estimate", "reference": "scholander-1950" },
+          { "id": "coat-head", "title": { "en": "Head coat", "de": "Kopffell" }, "kind": "fur", "material": "short-coat", "model": "core-resistance", "areaM2": 0.3, "characteristicLengthM": 0.2, "coreTempC": 37.8, "insulationM2KW": 0.1, "metabolicShare": 0.06, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "coat-limbs", "title": { "en": "Limb coat", "de": "Fell der Gliedmaßen" }, "kind": "fur", "material": "short-coat", "model": "core-resistance", "areaM2": 1.3, "characteristicLengthM": 0.12, "coreTempC": 37.8, "insulationM2KW": 0.12, "metabolicShare": 0.2, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "tail", "title": { "en": "Tail hair", "de": "Schweifhaar" }, "kind": "hair", "material": "mane-tail-hair", "model": "core-resistance", "areaM2": 0.12, "characteristicLengthM": 0.08, "coreTempC": 37.8, "insulationM2KW": 0.25, "metabolicShare": 0.005, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "mane", "title": { "en": "Mane and forelock", "de": "Mähne und Schopf" }, "kind": "hair", "material": "mane-tail-hair", "model": "core-resistance", "areaM2": 0.1, "characteristicLengthM": 0.08, "coreTempC": 37.8, "insulationM2KW": 0.25, "metabolicShare": 0.002, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "ears", "title": { "en": "Ears", "de": "Ohren" }, "kind": "fur", "material": "short-coat", "model": "core-resistance", "areaM2": 0.03, "characteristicLengthM": 0.08, "coreTempC": 37.8, "insulationM2KW": 0.07, "metabolicShare": 0.005, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "muzzle-skin", "title": { "en": "Muzzle and nostril skin", "de": "Flotzmaul und Nüsternhaut" }, "kind": "skin", "material": "bare-skin", "model": "core-resistance", "areaM2": 0.015, "characteristicLengthM": 0.06, "coreTempC": 37.8, "insulationM2KW": 0.06, "wettedness": 0.3, "metabolicShare": 0.01, "source": "authored-estimate", "reference": "ashrae-2021" },
+          { "id": "eyes", "title": { "en": "Eyes", "de": "Augen" }, "kind": "skin", "material": "eye-surface", "model": "core-resistance", "areaM2": 0.003, "characteristicLengthM": 0.03, "coreTempC": 37.8, "insulationM2KW": 0.02, "wettedness": 1, "metabolicShare": 0.003, "source": "authored-estimate", "reference": "ashrae-2021" },
+          { "id": "hooves", "title": { "en": "Hooves", "de": "Hufe" }, "kind": "surface", "material": "hoof-horn", "model": "core-resistance", "areaM2": 0.12, "characteristicLengthM": 0.12, "coreTempC": 30, "insulationM2KW": 0.08, "metabolicShare": 0.015, "source": "authored-estimate", "reference": "cena-monteith-1975" }
+        ],
+        "emitters": [
+          { "id": "breath-nose", "kind": "breath", "title": { "en": "Nasal breathing", "de": "Nasenatmung" }, "anchor": "nose", "directionDeg": -35, "carries": "vapour", "temperatureC": 30, "velocityMS": 3.6, "diameterM": 0.032, "vapourKgPerKg": 0.026, "periodS": 5, "dutyFrom": 0.5, "dutyTo": 1, "source": "authored-estimate", "reference": "hodgson-rose-1994" },
+          { "id": "snort", "kind": "breath", "title": { "en": "Snort", "de": "Schnauben" }, "anchor": "nose", "directionDeg": -40, "carries": "airflow", "temperatureC": 31, "velocityMS": 9, "diameterM": 0.03, "periodS": 5, "dutyFrom": 0.9, "dutyTo": 1, "source": "authored-estimate", "reference": "hodgson-rose-1994" }
+        ],
+        "assumptions": [
+          { "en": "Total coat area follows Meeh's law A = 0.09·M^(2/3) = 6.04 m² for 550 kg (k = 9.0 cm² per g^(2/3), Spector 1956); the regions sum to 6.04 m².", "de": "Die gesamte Fellfläche folgt dem Meeh-Gesetz A = 0,09·M^(2/3) = 6,04 m² für 550 kg (k = 9,0 cm² je g^(2/3), Spector 1956); die Regionen summieren sich zu 6,04 m²." },
+          { "en": "Insulation values run from the core (37.8 °C) to the outer coat surface through tissue and a short summer coat; they are authored estimates guided by Scholander et al. (1950) and Cena and Monteith (1975). Hooves are modelled with a distal core temperature of 30 °C.", "de": "Dämmwerte laufen vom Körperkern (37,8 °C) durch Gewebe und kurzes Sommerfell zur Felloberfläche; sie sind Schätzwerte nach Scholander et al. (1950) und Cena und Monteith (1975). Die Hufe werden mit einer distalen Kerntemperatur von 30 °C modelliert." },
+          { "en": "Activity is expressed in the engine's 58.15 W/m² unit over the 6.04 m² coat: 1.5 met is a standing horse (about 540 W, 1 W/kg, 3.4 W/kg^0.75 times 1.4 after Kleiber 1947), 1.9 grazing with chewing, 4.2 walking at 1.3 m/s (about 1.5 kW; Hoyt and Taylor 1981 give the order of magnitude); all are authored estimates, higher than a human-scale 'walking 2.5' because a horse's area-specific heat output is larger.", "de": "Die Aktivität wird in der 58,15-W/m²-Einheit der Engine über die 6,04 m² Fellfläche angegeben: 1,5 met entsprechen einem stehenden Pferd (rund 540 W, 1 W/kg, 3,4 W/kg^0,75 mal 1,4 nach Kleiber 1947), 1,9 Grasen mit Kauen, 4,2 Schritt mit 1,3 m/s (rund 1,5 kW; Hoyt und Taylor 1981 geben die Größenordnung); alles Schätzwerte, höher als ein menschlicher Schritt-Wert von 2,5, weil die flächenbezogene Wärmeabgabe eines Pferdes größer ist." },
+          { "en": "Resting respiration is 12 breaths per minute (period 5 s) with a tidal volume of about 5 L exhaled through two nostrils of about 8 cm² together, hence an exhale velocity of 3 to 4 m/s; the exhaled air is about 30 °C and saturated. Sweat is represented by an optional wettedness override of the coat regions that the walking poses bind.", "de": "Die Ruheatmung beträgt 12 Atemzüge pro Minute (Periode 5 s) bei etwa 5 L Atemzugvolumen durch zwei Nüstern von zusammen rund 8 cm², daher eine Ausatemgeschwindigkeit von 3 bis 4 m/s; die Ausatemluft hat etwa 30 °C und ist gesättigt. Schweiß wird durch eine wahlweise Benetzungsvorgabe der Fellregionen dargestellt, die die Schrittposen setzen." }
+        ]
+      },
+      "structure": {
+        "gravityMS2": 9.80665,
+        "dynamics": "quasi-static",
+        "supports": [],
+        "assumptions": [
+          { "en": "Segments are rigid with authored masses summing to 550 kg (Buchner et al. 1997 as guide); the hoof soles carry the load in stance and share it by position.", "de": "Segmente sind starr mit Massen von zusammen 550 kg (Leitfaden Buchner et al. 1997); die Hufsohlen tragen im Stand und teilen die Last nach Lage." },
+          { "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle, tendon or suspensory model is assumed, so the fetlock and carpus moments are net external moments only.", "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; kein Muskel-, Sehnen- oder Fesselträgermodell wird angenommen, Fessel- und Karpalmomente sind daher nur äußere Nettomomente." }
+        ],
+        "clinical": false
+      },
+      "presentation": { "defaultPose": "standing-alert", "defaultClip": "walk-cycle", "viewpoints": ["elevation"] },
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "completion": "authored"
+    }

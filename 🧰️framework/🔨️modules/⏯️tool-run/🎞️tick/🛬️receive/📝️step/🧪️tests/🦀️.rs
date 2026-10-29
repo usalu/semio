@@ -16,7 +16,7 @@ fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(value,heap)=semio_fr
 fn hex(text:&str)->Vec<u8>{text.as_bytes().chunks_exact(2).map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect()}
 #[test]
 fn original_typed_step_receiving_preserves_final_native_arguments_and_every_interruption(){
- let law:serde_json::Value=serde_json::from_str(crate::fixture_text("🎞️tick/🛬️receive/📝️step/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let bytes=hex(law["bodyHex"].as_str().unwrap());let source=Pages{identity:OriginalWireSourceIdentity{address:bytes.as_ptr()as usize,extent:bytes.len(),authority:Some((42,7))},bytes:&bytes};
+ let law:serde_json::Value=serde_json::from_str(crate::fixture_text("🎞️tick/🛬️receive/📝️step/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let bytes=hex(law["bodyHex"].as_str().unwrap());let source=Pages{identity:OriginalWireSourceIdentity{range_start:0,address:bytes.as_ptr()as usize,extent:bytes.len(),authority:Some((42,7))},bytes:&bytes};
  let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:17,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};let metadata=RetainedCloneGrant{maximum_copy_bytes:0,maximum_capacity_bytes:0,maximum_release_bytes:0,..g};
  let corpus:serde_json::Value=serde_json::from_str(crate::fixture_text("🧪️tests/🧫️fixtures/🎞️ticks.json")).unwrap();let reference=crate::ToolRunTick::decode(&hex(corpus["ticks"][0]["hex"].as_str().unwrap())).unwrap();
  for stop in law["interruptAfter"].as_array().unwrap(){let stop=stop.as_u64().unwrap()as usize;let(mut lower,mut physical)=observe(||RetainedRecordBodySourceDecode::admit(&source,(0,bytes.len()),ToolRunReceivingLimits::REPORTS.tick.record_body(),g).unwrap().unwrap());lower.take_receipt().unwrap();

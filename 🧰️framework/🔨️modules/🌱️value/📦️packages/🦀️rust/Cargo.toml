@@ -47,3 +47,31 @@ serde_json = "1.0.140"
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-value-testing-allocator = { path = "../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+[[test]]
+name = "value-utf8"
+path = "../../📝️text/🚶️utf8/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-publication"
+path = "../../📣️publication/🌳️root/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-paged-record"
+path = "../../📦️paged/📇️record/🧪️tests.rs"
+
+[[test]]
+name = "value-paged-read"
+path = "../../📦️paged/📖️read/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-paged-receiving"
+path = "../../📦️paged/🛬️receive/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-sort"
+path = "../../📶️sort/🧪️tests/🦀️.rs"
+
+[[test]]
+name = "value-scratch"
+path = "../../🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs"

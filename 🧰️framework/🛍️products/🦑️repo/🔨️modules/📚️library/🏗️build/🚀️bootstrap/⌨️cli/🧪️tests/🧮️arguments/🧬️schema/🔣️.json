@@ -5,25 +5,127 @@
   "description": "Language-agnostic cases for the native recovery selection: an argument vector in, the kind and target of the fixed recovery command or nothing out.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "cases"],
+  "required": [
+    "version",
+    "cases",
+    "owners",
+    "refusals"
+  ],
   "properties": {
-    "version": { "const": 1 },
+    "version": {
+      "const": 1
+    },
     "cases": {
       "type": "array",
       "minItems": 1,
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["name", "args", "kind", "target"],
+        "required": [
+          "name",
+          "args",
+          "kind",
+          "target"
+        ],
         "properties": {
-          "name": { "type": "string", "minLength": 1 },
-          "args": { "type": "array", "items": { "type": "string" } },
-          "kind": { "enum": ["frontend", "maintenance", "cache-reset", null] },
-          "target": { "enum": ["build", "install", "preview", "retire", "nx", null] }
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kind": {
+            "enum": [
+              "frontend",
+              "maintenance",
+              "cache-reset",
+              null
+            ]
+          },
+          "target": {
+            "enum": [
+              "build",
+              "install",
+              "preview",
+              "retire",
+              "nx",
+              null,
+              "graph",
+              "rust",
+              "products"
+            ]
+          }
         },
         "oneOf": [
-          { "properties": { "kind": { "const": null }, "target": { "const": null } } },
-          { "properties": { "kind": { "enum": ["frontend", "maintenance", "cache-reset"] }, "target": { "enum": ["build", "install", "preview", "retire", "nx"] } } }
+          {
+            "properties": {
+              "kind": {
+                "const": null
+              },
+              "target": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "frontend",
+                  "maintenance",
+                  "cache-reset"
+                ]
+              },
+              "target": {
+                "enum": [
+                  "build",
+                  "install",
+                  "preview",
+                  "retire",
+                  "nx",
+                  "graph",
+                  "rust",
+                  "products"
+                ]
+              }
+            }
+          }
+        ]
+      }
+    },
+    "owners": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "frontend",
+        "maintenance",
+        "reset"
+      ],
+      "properties": {
+        "frontend": {
+          "type": "object"
+        },
+        "maintenance": {
+          "type": "object"
+        },
+        "reset": {
+          "type": "object"
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "enum": [
+          "linked",
+          "oversized"
         ]
       }
     }

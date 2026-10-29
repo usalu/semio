@@ -6,7 +6,10 @@ import { INFERENCE_LIMITS_V1 } from "../🧬️schema/🟨️.mjs";
 import { runtimeParseTomlV1 } from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/📄️parse/🟦️.ts";
 import {runtimeKeyV1} from "../../../../../../../../📦️packages/🟦️typescript/⚙️runtime/🏷️identity/🟦️.ts";
 import {refuseBuildV1} from "../../../📖️texts/🟦️.ts";
-const { existsSync, readdirSync } = observedFs;
+import {validateJsonSchemaSubset} from "../../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
+import {isOpaqueSourcePathV1,CACHE_POLICY} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
+import sourceSchema from "./🧬️schema/🔣️.json" with {type:"json"};
+const { existsSync, readdirSync, readFileSync, lstatSync } = observedFs;
 
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "native-manifests";
@@ -33,14 +36,15 @@ function cachedRustReferences(file, cache, snapshots) {
 }
 
 /** 📥️ Resolves Cargo entry points and compact source references without running a compiler; a `compiled` closure is what a compilation without `cfg(test)` reads, so the mounts and includes that only exist under `#[cfg(test)]` stay out of it. */
-export function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE, snapshots = new Map(), compiled = false) {
+export function rustSourceFiles(entries, manifestRoot, cache = RUST_SOURCE_CACHE, snapshots = new Map(), compiled = false, allowedFiles) {
   let closures = RUST_INPUT_SNAPSHOTS.get(snapshots);
   if (!closures) { closures = new Map(); RUST_INPUT_SNAPSHOTS.set(snapshots, closures); }
-  const key = JSON.stringify([manifestRoot, entries.map(entry => resolve(entry)), compiled]);
+  const key = JSON.stringify([manifestRoot, entries.map(entry => resolve(entry)), compiled, allowedFiles ? [...allowedFiles].sort() : null]);
   return [...memoizedObservedComputationV1(closures,key,()=>{
   const files = new Set(), visited = new Set();
   const literal = (value) => typeof value === "string" ? value : Array.isArray(value) ? value.map(literal).join("") : manifestRoot;
   const visit = (file, moduleBase = dirname(file)) => {
+    if(allowedFiles&&!allowedFiles.has(file))throw Error("Unlisted asserted build script Source: "+file);
     files.add(file);
     const identity = file + "\0" + moduleBase;
     if (!existsSync(file) || visited.has(identity)) return;
@@ -82,11 +86,28 @@ export function cargoSourceSetV1(root, workspaceRoot, facts, includeTests = true
 /** 🧠️ The answers of {@link cargoSourceSetV1} per fact table (one per project): the targets of a project ask for the same crates again and again, and a replayed answer hands every asker the rows it rests on without probing the tree again. */
 const CARGO_SOURCE_SETS_V1 = new WeakMap();
 
+/** 🧷️ Binds an authored link-only effect assertion to its exact finite script closure; hashes attest reviewed bytes, not executable semantics. */
+export function assertedCargoBuildScriptInputsV1(cargo,script,workspaceRoot,operations){
+ const assertion=cargo.package?.metadata?.semio?.["build-script"],policy=sourceSchema.definitions.BuildScriptPolicy.const;
+ if(validateJsonSchemaSubset(sourceSchema.definitions.BuildScriptAssertion,assertion,sourceSchema).length||Object.keys(cargo["build-dependencies"]??{}).length||Object.values(cargo.target??{}).some(target=>Object.keys(target["build-dependencies"]??{}).length))return undefined;
+ if(relative(workspaceRoot,script).split(sep).join("/")!==assertion.script)return undefined;
+ const declared=[],seen=new Set();let bytes=0;
+ for(const row of assertion.files){
+  if(row.path.includes(":")||row.path.includes("\\")||row.path.includes("\0")||isAbsolute(row.path)||isOpaqueSourcePathV1(row.path)||row.path.split("/").some(part=>!part||part==="."||part===".."||part===".🧬semio"||CACHE_POLICY.generatedDirectories.includes(part)))return undefined;
+  const absolute=resolve(workspaceRoot,row.path);if(absolute.length>policy.maximumPathUnits||relative(workspaceRoot,absolute).split(sep).join("/")!==row.path||seen.has(absolute))return undefined;seen.add(absolute);
+  const file=operations.stat(absolute);if(!file.isFile()||file.isSymbolicLink()||!Number.isSafeInteger(file.size)||file.size<0||file.size>policy.maximumFileBytes||(bytes+=file.size)>policy.maximumSourceBytes)return undefined;
+  const source=operations.read(absolute);if(source.length!==file.size||createHash("sha256").update(source).digest("hex")!==row.sha256)return undefined;declared.push(absolute);
+ }
+ if(!seen.has(script))return undefined;
+ const actual=operations.sources(script,seen);if(actual.length!==declared.length)return undefined;actual.sort();declared.sort();
+ return actual.every((path,index)=>path===declared[index])?declared:undefined;
+}
+
 function cargoSourceSetOfV1(root, workspaceRoot, facts, includeTests, compiled) {
   const directory = join(workspaceRoot, root), manifest = join(directory, "Cargo.toml"), unresolved = (reason, message) => ({ version: 1, root, resolved: false, reason, ...(message ? { message } : {}) });
   if (!existsSync(manifest)) return unresolved("no-manifest");
   const cargo = readToml(manifest), entries = [cargo.lib?.path ?? "src/lib.rs", "src/main.rs", ...(cargo.bin ?? []).map((target) => target.path), ...(includeTests ? [...(cargo.test ?? []), ...(cargo.bench ?? []), ...(cargo.example ?? [])].map((target) => target.path) : []), ...(cargo.package?.build === false ? [] : [typeof cargo.package?.build === "string" ? cargo.package.build : "build.rs"])].filter(Boolean).map((path) => resolve(directory, path)).filter(existsSync);
-  if (cargo.package?.build !== false && existsSync(resolve(directory, typeof cargo.package?.build === "string" ? cargo.package.build : "build.rs"))) return unresolved("build-script");
+  const buildScript=cargo.package?.build===false?undefined:resolve(directory,typeof cargo.package?.build==="string"?cargo.package.build:"build.rs"),hasBuildScript=buildScript&&existsSync(buildScript);
   for (const source of ["src/bin", ...(includeTests ? ["tests", "examples", "benches"] : [])]) {
     if (!existsSync(join(directory, source))) continue;
     for (const entry of readdirSync(join(directory, source), { withFileTypes: true })) {
@@ -96,6 +117,7 @@ function cargoSourceSetOfV1(root, workspaceRoot, facts, includeTests, compiled) 
   }
   if (!entries.length) return unresolved("no-entries");
   try {
+    if(hasBuildScript&&!assertedCargoBuildScriptInputsV1(cargo,buildScript,workspaceRoot,{stat:lstatSync,read:readFileSync,sources:(script,allowed)=>rustSourceFiles([script],directory,RUST_SOURCE_CACHE,facts,true,allowed)}))return unresolved("build-script");
     const read = rustSourceFiles(entries, directory, RUST_SOURCE_CACHE, facts, compiled), place = (file) => `{workspaceRoot}/${buildPath(relative(workspaceRoot, file))}`;
     const emitters = read.filter((file) => file.endsWith(".rs") && existsSync(file) && cachedRustReferences(file, RUST_SOURCE_CACHE, facts).emitted > 0).map(place);
     return { version: 1, root, resolved: true, files: read.map(place), ...(emitters.length ? { emitters } : {}) };

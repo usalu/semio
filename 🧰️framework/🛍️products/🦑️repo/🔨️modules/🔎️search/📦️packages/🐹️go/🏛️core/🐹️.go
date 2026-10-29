@@ -2,6 +2,7 @@ package search
 
 import (
 	"bufio"
+	"container/heap"
 	"context"
 	"encoding/json"
 	"errors"
@@ -9,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"sort"
 	"strings"
 	"sync"
@@ -17,14 +19,15 @@ import (
 // #region 📜️Schema
 
 const (
-	schema            = "semio.search.event/1"
-	MaxDocumentBytes  = 1 << 20
-	MaxDocuments      = 250_000
-	MaxTraversalNodes = 500_000
-	MaxPendingEvents  = 500_000
-	MaxIndexBytes     = 256 << 20
-	MaxQueryBytes     = 4 << 10
-	MaxQueryTerms     = 32
+	schema             = "semio.search.event/1"
+	MaxDocumentBytes   = 1 << 20
+	MaxIdentifierBytes = 4096
+	MaxDocuments       = 250_000
+	MaxTraversalNodes  = 500_000
+	MaxPendingEvents   = 500_000
+	MaxIndexBytes      = 256 << 20
+	MaxQueryBytes      = 4 << 10
+	MaxQueryTerms      = 32
 )
 
 var (
@@ -52,9 +55,30 @@ func (query conjunctionQuery) terms() []*MatchQuery {
 	return terms
 }
 
+const MaxQueryResults = 10000
+const MaxQueryFuzziness = 32
+
+var ErrStaleCursor = errors.New("search cursor belongs to another index generation")
+
+type SearchCursor struct {
+	Fingerprint string  `json:"fingerprint"`
+	ID          string  `json:"id"`
+	Score       float64 `json:"score"`
+}
+
+type SearchStatistics struct {
+	PeakResidentDocuments     int `json:"peakResidentDocuments"`
+	PeakPendingEvents         int `json:"peakPendingEvents"`
+	PeakRetainedHits          int `json:"peakRetainedHits"`
+	PeakResidentDocumentBytes int `json:"peakResidentDocumentBytes"`
+}
+
 type SearchRequest struct {
-	Query Query
-	Size  int
+	Query     Query
+	Size      int
+	After     *SearchCursor
+	Accept    func(string, map[string]string) bool
+	FilterKey string
 }
 
 type SearchHit struct {
@@ -63,8 +87,10 @@ type SearchHit struct {
 }
 
 type SearchResult struct {
-	Total uint64       `json:"total"`
-	Hits  []*SearchHit `json:"hits"`
+	Total      uint64           `json:"total"`
+	Next       *SearchCursor    `json:"next,omitempty"`
+	Statistics SearchStatistics `json:"statistics"`
+	Hits       []*SearchHit     `json:"hits"`
 }
 
 type IndexMapping struct{}
@@ -87,21 +113,27 @@ type Progress struct {
 }
 
 type event struct {
-	Schema string `json:"schema"`
-	Seq    uint64 `json:"seq"`
-	Kind   string `json:"kind"`
-	ID     string `json:"id"`
-	Text   string `json:"text,omitempty"`
+	Schema     string            `json:"schema"`
+	Seq        uint64            `json:"seq"`
+	Kind       string            `json:"kind"`
+	ID         string            `json:"id"`
+	Text       string            `json:"text,omitempty"`
+	Attributes map[string]string `json:"attributes,omitempty"`
 }
 
 type ownedIndex struct {
-	mu      sync.RWMutex
-	path    string
-	docs    map[string]string
-	seen    map[uint64]struct{}
-	seq     uint64
-	pending []event
-	closed  bool
+	mu                sync.RWMutex
+	path              string
+	docs              map[string]string
+	attributes        map[string]map[string]string
+	seen              map[uint64]struct{}
+	seq               uint64
+	pending           []event
+	pendingBytes      int
+	documentBytes     int
+	peakDocuments     int
+	peakDocumentBytes int
+	closed            bool
 }
 
 // #endregion 📜️Schema
@@ -174,29 +206,17 @@ func (index *ownedIndex) IndexContext(ctx context.Context, id string, value inte
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	text := ""
-	switch document := value.(type) {
-	case map[string]interface{}:
-		for _, field := range []string{"text", "path"} {
-			if part, ok := document[field].(string); ok {
-				text += " " + part
-			}
-		}
-	default:
-		encoded, err := json.Marshal(document)
-		if err != nil {
-			return err
-		}
-		text = string(encoded)
+	text, err := searchDocumentText(value)
+	if err != nil {
+		return err
 	}
-	text = strings.TrimSpace(text)
 	if len(text) > MaxDocumentBytes {
 		return fmt.Errorf("%w: document %q has %d bytes, maximum %d", ErrTooLarge, id, len(text), MaxDocumentBytes)
 	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	if err := index.append(ctx, "indexed", id, text); err != nil {
+	if err := index.append(ctx, "indexed", id, text, documentAttributes(value)); err != nil {
 		return err
 	}
 	report(progress, Progress{Current: 1, Total: 1, Step: "indexed"})
@@ -208,14 +228,14 @@ func (index *ownedIndex) Delete(id string) error {
 }
 
 func (index *ownedIndex) DeleteContext(ctx context.Context, id string, progress func(Progress)) error {
-	if err := index.append(ctx, "deleted", id, ""); err != nil {
+	if err := index.append(ctx, "deleted", id, "", nil); err != nil {
 		return err
 	}
 	report(progress, Progress{Current: 1, Total: 1, Step: "deleted"})
 	return nil
 }
 
-func (index *ownedIndex) append(ctx context.Context, kind, id, text string) error {
+func (index *ownedIndex) append(ctx context.Context, kind, id, text string, attributes map[string]string) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -227,44 +247,97 @@ func (index *ownedIndex) append(ctx context.Context, kind, id, text string) erro
 	if index.closed {
 		return errors.New("index closed")
 	}
-	if id == "" {
-		return errors.New("index event has empty id")
+	if id == "" || len(id) > MaxIdentifierBytes {
+		return fmt.Errorf("%w: bounded nonempty document identifier required", ErrTooLarge)
 	}
-	if kind == "indexed" {
-		if _, exists := index.docs[id]; !exists && len(index.docs) >= MaxDocuments {
-			return fmt.Errorf("%w: documents > %d", ErrTooLarge, MaxDocuments)
-		}
-	}
-	if len(index.pending) >= MaxPendingEvents {
-		return fmt.Errorf("%w: pending events > %d", ErrTooLarge, MaxPendingEvents)
-	}
-	index.seq++
-	item := event{Schema: schema, Seq: index.seq, Kind: kind, ID: id, Text: text}
-	if err := index.apply(item); err != nil {
-		index.seq--
+	if err := validateAttributes(attributes); err != nil {
 		return err
 	}
+	if len(index.pending) >= MaxPendingEvents {
+		return fmt.Errorf("%w: pending event capacity", ErrTooLarge)
+	}
+	if attributes != nil {
+		owned := make(map[string]string, len(attributes))
+		for key, value := range attributes {
+			owned[key] = value
+		}
+		attributes = owned
+	}
+	item := event{Schema: schema, Seq: index.seq + 1, Kind: kind, ID: id, Text: text, Attributes: attributes}
+	encoded, err := json.Marshal(item)
+	if err != nil {
+		return err
+	}
+	if len(encoded) > MaxDocumentBytes*2 || index.pendingBytes+len(encoded)+1 > MaxIndexBytes {
+		return fmt.Errorf("%w: pending event byte capacity", ErrTooLarge)
+	}
+	if err = index.apply(item); err != nil {
+		return err
+	}
+	index.seq++
 	index.pending = append(index.pending, item)
+	index.pendingBytes += len(encoded) + 1
 	return nil
 }
 
 func (index *ownedIndex) apply(item event) error {
+	if item.ID == "" || len(item.ID) > MaxIdentifierBytes {
+		return fmt.Errorf("%w: bounded nonempty document identifier required", ErrTooLarge)
+	}
+	previous, exists := index.docs[item.ID]
+	oldBytes := 0
+	if exists {
+		oldBytes = len(item.ID) + len(previous) + attributeBytes(index.attributes[item.ID])
+	}
 	switch item.Kind {
 	case "indexed":
-		if item.ID == "" {
-			return errors.New("index event has empty id")
-		}
 		if len(item.Text) > MaxDocumentBytes {
-			return fmt.Errorf("document %q exceeds %d bytes", item.ID, MaxDocumentBytes)
+			return fmt.Errorf("%w: document byte capacity", ErrTooLarge)
 		}
-		if _, exists := index.docs[item.ID]; !exists && len(index.docs) >= MaxDocuments {
-			return fmt.Errorf("documents exceed %d", MaxDocuments)
+		if !exists && len(index.docs) >= MaxDocuments {
+			return fmt.Errorf("%w: document capacity", ErrTooLarge)
+		}
+		if err := validateAttributes(item.Attributes); err != nil {
+			return err
+		}
+		nextBytes := index.documentBytes - oldBytes + len(item.ID) + len(item.Text) + attributeBytes(item.Attributes)
+		if nextBytes > MaxIndexBytes {
+			return fmt.Errorf("%w: resident document byte capacity", ErrTooLarge)
+		}
+		if len(item.Attributes) > 0 {
+			if index.attributes == nil {
+				index.attributes = map[string]map[string]string{}
+			}
+			index.attributes[item.ID] = item.Attributes
+		} else {
+			delete(index.attributes, item.ID)
 		}
 		index.docs[item.ID] = item.Text
+		index.documentBytes = nextBytes
+		index.peakDocuments = max(index.peakDocuments, len(index.docs))
+		index.peakDocumentBytes = max(index.peakDocumentBytes, index.documentBytes)
 	case "deleted":
 		delete(index.docs, item.ID)
+		delete(index.attributes, item.ID)
+		index.documentBytes -= oldBytes
 	default:
 		return fmt.Errorf("unknown index event kind %q", item.Kind)
+	}
+	return nil
+}
+func attributeBytes(attributes map[string]string) int {
+	size := 0
+	for key, value := range attributes {
+		size += len(key) + len(value)
+	}
+	return size
+}
+func validateAttributes(attributes map[string]string) error {
+	if len(attributes) > 16 {
+		return fmt.Errorf("%w: document attribute fields", ErrTooLarge)
+	}
+	if attributeBytes(attributes) > 4096 {
+		return fmt.Errorf("%w: document attribute bytes", ErrTooLarge)
 	}
 	return nil
 }
@@ -286,6 +359,8 @@ func (index *ownedIndex) CloseContext(ctx context.Context, progress func(Progres
 		return nil
 	}
 	if index.path == "" || len(index.pending) == 0 {
+		index.pending = nil
+		index.pendingBytes = 0
 		index.closed = true
 		return nil
 	}
@@ -361,6 +436,7 @@ func (index *ownedIndex) CloseContext(ctx context.Context, progress func(Progres
 		return err
 	}
 	index.pending = nil
+	index.pendingBytes = 0
 	index.closed = true
 	report(progress, Progress{Current: 1, Total: 1, Step: "committed"})
 	return nil
@@ -464,70 +540,178 @@ func (index *ownedIndex) Search(request *SearchRequest) (*SearchResult, error) {
 }
 
 func (index *ownedIndex) SearchContext(ctx context.Context, request *SearchRequest, progress func(int, int)) (*SearchResult, error) {
+	if request != nil && request.After != nil {
+		return nil, ErrStaleCursor
+	}
+	limit, err := searchLimit(request, true)
+	if err != nil {
+		return nil, err
+	}
+	selected := &hitHeap{}
+	heap.Init(selected)
+	result, err := index.visitMatches(ctx, request, progress, func(hit SearchHit) error { retainHit(selected, hit, limit); return nil })
+	if err != nil {
+		return nil, err
+	}
+	result.Hits = rankedHits(selected)
+	result.Statistics.PeakRetainedHits = len(result.Hits)
+	return result, nil
+}
+
+func (index *ownedIndex) visitMatches(ctx context.Context, request *SearchRequest, progress func(int, int), visit func(SearchHit) error) (*SearchResult, error) {
+	terms, err := searchTerms(request)
+	if err != nil {
+		return nil, err
+	}
+	if err = ctx.Err(); err != nil {
+		return nil, err
+	}
+	index.mu.RLock()
+	defer index.mu.RUnlock()
+	total, offset := len(index.docs), 0
+	result := &SearchResult{Statistics: SearchStatistics{PeakResidentDocuments: index.peakDocuments, PeakResidentDocumentBytes: index.peakDocumentBytes, PeakPendingEvents: len(index.pending)}}
+	for id, text := range index.docs {
+		if err = ctx.Err(); err != nil {
+			return nil, err
+		}
+		if progress != nil {
+			progress(offset, total)
+		}
+		if err = ctx.Err(); err != nil {
+			return nil, err
+		}
+		offset++
+		if request.Accept != nil && !request.Accept(id, index.attributes[id]) {
+			continue
+		}
+		value, matched := scoreContext(ctx, text, terms)
+		if err = ctx.Err(); err != nil {
+			return nil, err
+		}
+		if matched {
+			result.Total++
+			if visit != nil {
+				if err = visit(SearchHit{ID: id, Score: value}); err != nil {
+					return nil, err
+				}
+			}
+		}
+	}
+	if err = ctx.Err(); err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func searchTerms(request *SearchRequest) ([]*MatchQuery, error) {
 	if request == nil || request.Query == nil {
 		return nil, errors.New("search query is required")
+	}
+	if len(request.FilterKey) > MaxQueryBytes {
+		return nil, fmt.Errorf("%w: query eligibility bytes", ErrTooLarge)
 	}
 	terms := request.Query.terms()
 	if len(terms) > MaxQueryTerms {
 		return nil, fmt.Errorf("%w: query terms > %d", ErrTooLarge, MaxQueryTerms)
 	}
-	queryBytes := 0
+	bytes := 0
 	for _, term := range terms {
-		queryBytes += len(term.Term)
+		if term == nil {
+			return nil, errors.New("search term is required")
+		}
+		bytes += len(term.Term)
 	}
-	if queryBytes > MaxQueryBytes {
+	if bytes > MaxQueryBytes {
 		return nil, fmt.Errorf("%w: query bytes > %d", ErrTooLarge, MaxQueryBytes)
 	}
-	if err := ctx.Err(); err != nil {
-		return nil, err
+	return terms, nil
+}
+
+func searchLimit(request *SearchRequest, unlimited bool) (int, error) {
+	if _, err := searchTerms(request); err != nil {
+		return 0, err
 	}
-	index.mu.RLock()
-	defer index.mu.RUnlock()
-	if err := ctx.Err(); err != nil {
-		return nil, err
+	if unlimited && request.Size == -1 {
+		return MaxDocuments, nil
 	}
-	ids := make([]string, 0, len(index.docs))
-	for id := range index.docs {
-		ids = append(ids, id)
+	if request.Size < 0 || request.Size > MaxQueryResults {
+		return 0, fmt.Errorf("%w: query result size must be between 0 and %d", ErrTooLarge, MaxQueryResults)
 	}
-	sort.Strings(ids)
-	result := &SearchResult{}
-	for offset, id := range ids {
-		if err := ctx.Err(); err != nil {
-			return nil, err
-		}
-		if progress != nil {
-			progress(offset, len(ids))
-		}
-		score, match := score(index.docs[id], terms)
-		if match {
-			result.Hits = append(result.Hits, &SearchHit{ID: id, Score: score})
-		}
+	return request.Size, nil
+}
+
+type hitHeap []*SearchHit
+
+func (h hitHeap) Len() int                { return len(h) }
+func (h hitHeap) Less(i, j int) bool      { return betterHit(h[j], h[i]) }
+func (h hitHeap) Swap(i, j int)           { h[i], h[j] = h[j], h[i] }
+func (h *hitHeap) Push(value interface{}) { *h = append(*h, value.(*SearchHit)) }
+func (h *hitHeap) Pop() interface{} {
+	old := *h
+	last := len(old) - 1
+	value := old[last]
+	*h = old[:last]
+	return value
+}
+func betterHit(a, b *SearchHit) bool { return a.Score > b.Score || a.Score == b.Score && a.ID < b.ID }
+func retainHit(h *hitHeap, hit SearchHit, limit int) {
+	if limit == 0 {
+		return
 	}
-	sort.SliceStable(result.Hits, func(left, right int) bool {
-		if result.Hits[left].Score == result.Hits[right].Score {
-			return result.Hits[left].ID < result.Hits[right].ID
-		}
-		return result.Hits[left].Score > result.Hits[right].Score
-	})
-	result.Total = uint64(len(result.Hits))
-	if request.Size >= 0 && len(result.Hits) > request.Size {
-		result.Hits = result.Hits[:request.Size]
+	if h.Len() < limit {
+		candidate := hit
+		heap.Push(h, &candidate)
+	} else if betterHit(&hit, (*h)[0]) {
+		candidate := hit
+		(*h)[0] = &candidate
+		heap.Fix(h, 0)
 	}
-	return result, nil
+}
+func rankedHits(h *hitHeap) []*SearchHit {
+	result := []*SearchHit(*h)
+	sort.Slice(result, func(i, j int) bool { return betterHit(result[i], result[j]) })
+	return result
 }
 
 func score(text string, queries []*MatchQuery) (float64, bool) {
-	words := strings.FieldsFunc(strings.ToLower(text), func(r rune) bool { return !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r >= 0x80) })
+	return scoreContext(context.Background(), text, queries)
+}
+
+// 🎯️ Matches one bounded document without constructing an index or retaining other stream items.
+func MatchContext(ctx context.Context, text string, query Query) (bool, error) {
+	if len(text) > MaxDocumentBytes {
+		return false, fmt.Errorf("%w: document bytes", ErrTooLarge)
+	}
+	terms, err := searchTerms(&SearchRequest{Query: query})
+	if err != nil {
+		return false, err
+	}
+	if err = ctx.Err(); err != nil {
+		return false, err
+	}
+	_, matched := scoreContext(ctx, text, terms)
+	return matched, ctx.Err()
+}
+
+func scoreContext(ctx context.Context, text string, queries []*MatchQuery) (float64, bool) {
+	lower := strings.ToLower(text)
+	words := strings.FieldsFunc(lower, func(r rune) bool { return !((r >= 'a' && r <= 'z') || (r >= '0' && r <= '9') || r >= 0x80) })
 	total := 0.0
 	for _, query := range queries {
+		if query.Fuzziness < 0 {
+			return 0, false
+		}
 		term := strings.ToLower(query.Term)
 		best := query.Fuzziness + 1
-		if strings.Contains(strings.ToLower(text), term) {
-			best = 0
+		if strings.Contains(lower, term) {
+			total += float64(query.Fuzziness + 1)
+			continue
 		}
 		for _, word := range words {
-			distance := boundedDistance(term, word, query.Fuzziness)
+			if ctx.Err() != nil {
+				return 0, false
+			}
+			distance := boundedDistanceContext(ctx, term, word, query.Fuzziness)
 			if distance < best {
 				best = distance
 			}
@@ -541,21 +725,39 @@ func score(text string, queries []*MatchQuery) (float64, bool) {
 }
 
 func boundedDistance(left, right string, maximum int) int {
+	return boundedDistanceContext(context.Background(), left, right, maximum)
+}
+func boundedDistanceContext(ctx context.Context, left, right string, maximum int) int {
 	if left == right {
 		return 0
+	}
+	if len(left) == 0 {
+		return len(right)
+	}
+	if len(right) == 0 {
+		return len(left)
 	}
 	if maximum < 0 || abs(len(left)-len(right)) > maximum {
 		return maximum + 1
 	}
-	previous := make([]int, len(right)+1)
-	for index := range previous {
-		previous[index] = index
+	previous, current := make([]int, len(right)+1), make([]int, len(right)+1)
+	for j := range previous {
+		previous[j] = maximum + 1
+		if j <= maximum {
+			previous[j] = j
+		}
 	}
 	for i := 1; i <= len(left); i++ {
-		current := make([]int, len(right)+1)
+		if ctx.Err() != nil {
+			return maximum + 1
+		}
 		current[0] = i
-		minimum := current[0]
-		for j := 1; j <= len(right); j++ {
+		start, end := max(1, i-maximum), min(len(right), i+maximum)
+		if start > 1 {
+			current[start-1] = maximum + 1
+		}
+		minimum := maximum + 1
+		for j := start; j <= end; j++ {
 			cost := 0
 			if left[i-1] != right[j-1] {
 				cost = 1
@@ -563,10 +765,13 @@ func boundedDistance(left, right string, maximum int) int {
 			current[j] = min(previous[j]+1, current[j-1]+1, previous[j-1]+cost)
 			minimum = min(minimum, current[j])
 		}
+		if end < len(right) {
+			current[end+1] = maximum + 1
+		}
 		if minimum > maximum {
 			return maximum + 1
 		}
-		previous = current
+		previous, current = current, previous
 	}
 	return previous[len(right)]
 }
@@ -579,3 +784,44 @@ func abs(value int) int {
 }
 
 // #endregion 🔎️Query
+
+// 🧾️ FieldText renders indexed fields in lexical key order and sequences in their declared order.
+func FieldText(data map[string]interface{}) string {
+	keys := make([]string, 0, len(data))
+	for key := range data {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	parts := make([]string, 0, len(keys))
+	for _, key := range keys {
+		value := data[key]
+		if physical := reflect.ValueOf(value); physical.IsValid() {
+			switch physical.Kind() {
+			case reflect.Slice, reflect.Map, reflect.Ptr:
+				if physical.IsNil() {
+					value = nil
+				}
+			}
+		}
+		switch typed := value.(type) {
+		case nil:
+			parts = append(parts, "")
+		case string:
+			parts = append(parts, typed)
+		case []string:
+			parts = append(parts, strings.Join(typed, " "))
+		default:
+			sequence := reflect.ValueOf(value)
+			if sequence.IsValid() && (sequence.Kind() == reflect.Slice || sequence.Kind() == reflect.Array) {
+				items := make([]string, sequence.Len())
+				for i := range items {
+					items[i] = fmt.Sprint(sequence.Index(i).Interface())
+				}
+				parts = append(parts, strings.Join(items, " "))
+			} else {
+				parts = append(parts, fmt.Sprint(value))
+			}
+		}
+	}
+	return strings.Join(parts, " ")
+}

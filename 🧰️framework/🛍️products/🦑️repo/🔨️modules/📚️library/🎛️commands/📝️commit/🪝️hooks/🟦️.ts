@@ -51,14 +51,6 @@ const MICRO_COMMIT_RESOLVE_REPO_CLI_SH = `compose_resolve_repo_cli() {
     echo "$REPO_CLI_BIN"
     return
   fi
-  NATIVE_PIN="$ROOT/.🧬semio/🦑️repo/native-repo-path"
-  if [ -f "$NATIVE_PIN" ]; then
-    REPO_CLI=$(sed -n '1p' "$NATIVE_PIN" 2>/dev/null)
-    if [ -n "$REPO_CLI" ] && [ -x "$REPO_CLI" ]; then
-      echo "$REPO_CLI"
-      return
-    fi
-  fi
   LAUNCHER_CLI="\${XDG_DATA_HOME:-$HOME/.local/share}/semio/launcher/bin/repo"
   if [ -n "$HOME" ] && [ -x "$LAUNCHER_CLI" ]; then
     echo "$LAUNCHER_CLI"

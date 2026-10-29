@@ -9,10 +9,8 @@ const testRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
  * spec at its taxonomy location `🧪️tests/✅️draft07-oracle/🟦️.ts`, which vitest's default
  * `**‍/*.{test,spec}.?(c|m)[jt]s?(x)` include glob does not match — without an explicit `include`
  * vitest exits 1 with "No test files found", which a shell ignoring the exit code reads as green.
- * Root `📜️script.ts` `schema test` runs it with `bunx vitest run --config <this file>`.
+ * Root `📜️script.ts` `schema test` runs it through the repository Vitest policy.
  * @see https://vitest.dev/config/#include */
-const moduleRoot = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-
 export default defineConfig({
   root: testRoot,
   cacheDir: testCacheDirectoryV1(process.env, "framework-schema"),

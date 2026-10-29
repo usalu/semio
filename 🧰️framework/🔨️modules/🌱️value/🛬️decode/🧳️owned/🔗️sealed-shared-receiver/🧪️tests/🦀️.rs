@@ -115,3 +115,6 @@ fn native_flattened_original_record_preserves_source_schema_and_all_partial_cust
 }
 
 #[path="🫙️empty/🦀️.rs"]mod empty_record;
+
+#[test]
+fn native_flattened_ordinals_refuse_ambiguous_declared_ids(){use crate::native_decoding::owned::{NativeRecordFields,NativeRecordKey};assert_eq!(FlattenedRecord::native_field_memberships(NativeRecordKey::Name("name")),1);assert_eq!(FlattenedRecord::native_field_memberships(NativeRecordKey::Name("volume")),1);assert_eq!(FlattenedRecord::native_field_memberships(NativeRecordKey::Ordinal(0)),2);assert_eq!(FlattenedRecord::native_field_memberships(NativeRecordKey::Ordinal(1)),0);}

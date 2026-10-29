@@ -1,0 +1,99 @@
+{
+ "case": "🦶️centre-of-pressure",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "anatomical",
+ "materials": [],
+ "root": {
+  "x": 0,
+  "y": 0.95,
+  "angleDeg": -90
+ },
+ "bones": [
+  {
+   "id": "leg",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 0.95,
+   "mass": {
+    "kg": 8.0,
+    "comX": 0,
+    "comY": 0,
+    "distribution": "uniform"
+   }
+  },
+  {
+   "id": "torso",
+   "parent": "leg",
+   "x": 0,
+   "y": 0.0,
+   "angleDeg": 0,
+   "lengthM": 0.0,
+   "mass": {
+    "kg": 62.0,
+    "comX": 0,
+    "comY": 0,
+    "distribution": "point"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "foot",
+   "bone": "leg",
+   "x": 0.95,
+   "y": 0,
+   "kind": "contact",
+   "support": "contact",
+   "normalDeg": 90,
+   "footprintLengthM": 0.25,
+   "footprintWidthM": 0.1,
+   "frictionCoefficient": 0.6
+  }
+ ],
+ "contacts": [
+  "foot"
+ ],
+ "supports": [],
+ "loads": [],
+ "scenarios": [
+  {
+   "id": "within",
+   "bones": {
+    "torso": {
+     "y": 0.04
+    }
+   }
+  },
+  {
+   "id": "beyond",
+   "bones": {
+    "torso": {
+     "y": 0.2
+    }
+   }
+  }
+ ],
+ "oracle": {
+  "tool": "anastruct",
+  "version": "1.7.0",
+  "values": {
+   "within": {
+    "normalN": 686.6999999999997,
+    "baseMomentNm": 24.32879945620894,
+    "copX": 0.03542857063668116,
+    "unclampedCopX": 0.03542857063668116,
+    "clamped": false
+   },
+   "beyond": {
+    "normalN": 686.7000000000002,
+    "baseMomentNm": 121.64400181263689,
+    "copX": 0.125,
+    "unclampedCopX": 0.17714285978249142,
+    "clamped": true
+   }
+  }
+ }
+}

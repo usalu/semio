@@ -40,6 +40,16 @@
       ]
     },
     {
+      "id": "thesis",
+      "texPath": "🧾️template/🎓️thesis/🎓️thesis.tex",
+      "collection": "templates",
+      "sources": [
+        "🧾️template/🎓️thesis/🎓️thesis.tex",
+        "🧾️template/🎓️thesis/🧩️thesis.content.tex",
+        "🧾️template/🎓️thesis/📚️references.bib"
+      ]
+    },
+    {
       "id": "flyer",
       "texPath": "🧾️template/📰️flyer/📰️flyer.tex",
       "collection": "templates",

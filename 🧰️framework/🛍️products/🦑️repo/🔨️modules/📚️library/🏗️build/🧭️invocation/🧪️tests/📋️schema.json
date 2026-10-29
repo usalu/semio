@@ -10,7 +10,8 @@
     "conflictCases",
     "targetDeclarations",
     "declarationSelections",
-    "ownedWorkflow"
+    "ownedWorkflow",
+    "cargoModes"
   ],
   "properties": {
     "version": {
@@ -310,6 +311,9 @@
           ]
         }
       }
+    },
+    "cargoModes": {
+      "$ref": "#/properties/originalModeCases"
     }
   }
 }

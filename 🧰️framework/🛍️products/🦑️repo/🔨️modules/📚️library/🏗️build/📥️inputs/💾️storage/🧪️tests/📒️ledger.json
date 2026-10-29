@@ -72,7 +72,13 @@
     },
     "secondInput": {
       "value": 23
-    }
+    },
+    "invalidSourceRoots": [
+      "../foreign",
+      "/foreign",
+      "C:\\foreign",
+      "a/../foreign"
+    ]
   },
   "writerCases": [
     {

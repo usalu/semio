@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "accepted"
+  ],
+  "properties": {
+    "mutation": {
+      "enum": [
+        "none",
+        "missing",
+        "stale-hash",
+        "omitted-helper",
+        "extra-file",
+        "duplicate-file",
+        "dynamic-include",
+        "outputs",
+        "environment",
+        "build-dependency",
+        "target-build-dependency",
+        "opaque-path",
+        "escaped-path",
+        "oversized",
+        "generated-path",
+        "long-path"
+      ]
+    },
+    "accepted": {
+      "type": "boolean"
+    }
+  }
+}

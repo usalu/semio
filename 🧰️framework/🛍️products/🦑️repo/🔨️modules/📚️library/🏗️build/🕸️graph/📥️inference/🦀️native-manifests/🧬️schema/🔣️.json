@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "semio:build:rust-source-set:v1",
   "title": "Rust Source Set",
-  "description": "The Rust source set of one crate: the workspace-relative files a compilation of the crate reads (resolved), or the reason no static reading exists (unresolved). A key derived from an unresolved crate's directory alone is unsound because a path attribute can mount files outside it.",
+  "description": "The exact Rust Source set of a crate, including a closed hash-bound authored link-only build-script assertion when present. Unknown scripts and source universes that cannot be closed refuse precision admission.",
   "oneOf": [
     {
       "type": "object",
@@ -76,5 +76,91 @@
         }
       }
     }
-  ]
+  ],
+  "definitions": {
+    "BuildScriptPolicy": {
+      "const": {
+        "maximumFiles": 64,
+        "maximumFileBytes": 1048576,
+        "maximumSourceBytes": 16777216,
+        "targetEnvironment": [
+          "CARGO_CFG_TARGET_OS",
+          "CARGO_CFG_TARGET_ENV"
+        ],
+        "maximumPathUnits": 256
+      }
+    },
+    "BuildScriptAssertion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "kind",
+        "script",
+        "environment",
+        "effects",
+        "outputs",
+        "files"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "kind": {
+          "const": "link-only"
+        },
+        "script": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "environment": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 2,
+          "items": {
+            "enum": [
+              "CARGO_CFG_TARGET_OS",
+              "CARGO_CFG_TARGET_ENV"
+            ]
+          }
+        },
+        "effects": {
+          "const": [
+            "cargo:rustc-link-arg-bin"
+          ]
+        },
+        "outputs": {
+          "const": []
+        },
+        "files": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 1,
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 256
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        }
+      },
+      "description": "An authored effect assertion bound to reviewed Source bytes and the exact literal script closure. It declares Cargo-generated target facts, linker arguments and no file outputs; hashes do not prove executable semantics."
+    }
+  }
 }

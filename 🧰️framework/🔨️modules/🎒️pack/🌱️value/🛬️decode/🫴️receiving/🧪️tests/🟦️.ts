@@ -13,3 +13,13 @@ test("complete Pack record source preserves explicit framing and every denied re
 });
 
 test("generic record retirement retains the authored body and cancellation matrix",()=>{const f=JSON.parse(read("🧫️fixtures/🔣️.json"));expect(new Ajv().compile(JSON.parse(read("../🧬️schema/🔣️.json")))(f)).toBe(true);const db=new Database(":memory:");try{const rows=db.query("SELECT CAST(b.value AS INTEGER) body, CAST(c.value AS INTEGER) cut FROM json_each(?1,'$.correlatedRetirement.bodies') b CROSS JOIN json_each(?1,'$.correlatedRetirement.cancelCuts') c ORDER BY b.key,c.key").all(JSON.stringify(f));expect(rows).toEqual(f.correlatedRetirement.bodies.flatMap((body:number)=>f.correlatedRetirement.cancelCuts.map((cut:number)=>({body,cut}))));}finally{db.close();}});
+
+test("document driver range contract preserves indexed pages and explicit nonzero bounds",()=>{
+ const fixture=JSON.parse(read("🧫️fixtures/🔣️.json"));expect(new Ajv().compile(JSON.parse(read("../🧬️schema/🔣️.json")))(fixture)).toBe(true);
+ const plan=fixture.documentReceiving.sourceRange,body=Buffer.from(fixture.text,"utf8"),original=Buffer.concat([Buffer.from(plan.prefix),body,Buffer.from(plan.suffix)]),range=[plan.prefix.length,plan.prefix.length+body.length],pages:Buffer[]=[];
+ for(let at=0;at<original.length;at+=plan.pageBytes)pages.push(original.subarray(at,at+plan.pageBytes));
+ const indexed=Buffer.from(Array.from({length:range[1]-range[0]},(_,i)=>pages[Math.floor((range[0]+i)/plan.pageBytes)][(range[0]+i)%plan.pageBytes]));
+ expect(indexed.equals(original.subarray(...range))).toBe(true);expect(indexed.toString()).toBe(fixture.text);
+ const db=new Database(":memory:");try{expect(db.query("select substr(?1,?2+1,?3-?2) as selected").get(original,...range)).toEqual({selected:indexed});}finally{db.close();}
+ const driver=read("../../🎮️driver/🦀️.rs");expect(driver).toContain("fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)");
+});

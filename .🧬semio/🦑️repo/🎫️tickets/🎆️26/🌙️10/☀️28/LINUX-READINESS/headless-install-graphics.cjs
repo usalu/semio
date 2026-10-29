@@ -1,0 +1,4 @@
+const cp=require("child_process"),fs=require("fs"),path=require("path");
+const packages=["libegl1","libgles2","libegl-mesa0"];
+const execute=args=>new Promise((resolve,reject)=>{const child=cp.spawn("/usr/bin/sudo",["-n","/usr/bin/apt-get",...args],{stdio:["ignore","inherit","inherit"],env:{...process.env,DEBIAN_FRONTEND:"noninteractive"}});let timedOut=false;const timer=setTimeout(()=>{timedOut=true;child.kill("SIGTERM");},120000);child.once("error",reject);child.once("close",(code,signal)=>{clearTimeout(timer);if(code!==0)reject(Error(JSON.stringify({args,code,signal,timedOut})));else resolve();});});
+(async()=>{console.log("[DEBUG] Graphics system package provisioning "+JSON.stringify(packages));await execute(["update"]);await execute(["-o","Dpkg::Lock::Timeout=30","install","-y","--no-install-recommends",...packages]);console.log("[DEBUG] Graphics package provisioning complete");})().catch(error=>{console.error(error);process.exitCode=1;});

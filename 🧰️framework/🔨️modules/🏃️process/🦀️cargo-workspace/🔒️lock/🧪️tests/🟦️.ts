@@ -67,3 +67,20 @@ for(const row of cases)test("Cargo lock currency: "+row.name,async()=>{
   if(!row.steps.some(step=>step.expect.refusedCrate))expect(lines.some(line=>line.includes("Cargo.lock"))).toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 },120000);
+
+import{Database}from"bun:sqlite";
+import diagnostics from"./🧫️fixtures/🧾️diagnostic.json";
+test("lock refusal retains bounded original resolver streams and nested causes",async()=>{
+ const ajv=new Ajv({strict:true}),validCase=ajv.compile(schema.definitions.DiagnosticCase),validDiagnostic=ajv.compile(schema.definitions.Diagnostic),db=new Database(":memory:"),policy=schema.definitions.Policy.const;
+ const oracle=db.query("WITH RECURSIVE ends(n,pos) AS (SELECT 0,0 UNION ALL SELECT n+1,pos+instr(substr(?1,pos+1),char(10)) FROM ends WHERE n<?3 AND instr(substr(?1,pos+1),char(10))>0) SELECT substr(?1,1,min(?2,coalesce((SELECT pos FROM ends WHERE n=?3),length(?1)))) AS value");
+ try{for(const row of diagnostics.cases){
+  expect(validCase(row)).toBe(true);const run={status:row.status,stderr:row.stderr.repeat(row.repeat),stdout:row.stdout.repeat(row.repeat)};let released=0;
+  const port:CargoLockPortV1={run:async args=>args[0]==="locate-project"?{status:0,stdout:"/original/Cargo.toml\n",stderr:""}:run,tryHold:async()=>({release:()=>{released++;}}),pause:async()=>{},report:()=>{}};
+  const failure=await ensureCargoLockV1({workspaceRoot:"/original",manifest:"/original/Cargo.toml",receiptDirectory:null,language:"en",offline:false,force:true},port).then(()=>null,error=>error);
+  expect(failure).toBeInstanceOf(CargoLockRefusedV1);const cause=failure.cause;
+  expect(validDiagnostic(cause)).toBe(true);expect(Object.isFrozen(cause)).toBe(true);expect(cause.status).toBe(run.status);
+  for(const stream of["stderr","stdout"]as const){const expected=oracle.get(run[stream],policy.diagnosticCharacters,policy.diagnosticLines)as{value:string};expect(cause[stream]).toBe(expected.value);expect(Buffer.from(cause[stream],"utf8").toString("utf8")).toBe(cause[stream]);expect([...cause[stream]].length).toBeLessThanOrEqual(policy.diagnosticCharacters);}
+  expect(Buffer.from(failure.texts.en,"utf8").toString("utf8")).toBe(failure.texts.en);expect(Buffer.from(failure.texts.de,"utf8").toString("utf8")).toBe(failure.texts.de);expect(cause.truncated).toBe(cause.stderr!==run.stderr||cause.stdout!==run.stdout);expect(released).toBe(1);
+  if(row.name==="nested-manifest-cause"){expect(Bun.inspect(failure)).toContain("package workspace root is missing");expect(failure.diagnostic).toBe(cause);expect(cause.stderr).toContain("package workspace root is missing");expect(failure.texts.en).not.toContain("package workspace root is missing");}
+ }}finally{db.close();}
+});

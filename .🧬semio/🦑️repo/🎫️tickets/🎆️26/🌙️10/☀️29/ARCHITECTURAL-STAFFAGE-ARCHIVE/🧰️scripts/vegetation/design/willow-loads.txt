@@ -1,0 +1,3 @@
+calm|wind|en-1991-1-4|curt-w1:3.6:2.2,curt-w2:4.75:3.3,curt-w3:4.8:3.3,curt-w4:4.85:3.4,curt-e1:3.6:2.2,curt-e2:4.75:3.3,curt-e3:4.8:3.3,curt-e4:4.85:3.4,cap-w:0.9:6,cap-e:0.9:6|trunk-1:0:1.9:0.4
+windy|wind|en-1991-1-4|curt-w1:3.6:42,curt-w2:4.75:62,curt-w3:4.8:63,curt-w4:4.85:65,curt-e1:3.6:42,curt-e2:4.75:62,curt-e3:4.8:63,curt-e4:4.85:65,cap-w:0.9:126,cap-e:0.9:126|trunk-1:0:1.9:15.7
+storm|wind|vogel-1989|curt-w1:3.6:159,curt-w2:4.75:234,curt-w3:4.8:238,curt-w4:4.85:248,curt-e1:3.6:159,curt-e2:4.75:234,curt-e3:4.8:238,curt-e4:4.85:248,cap-w:0.9:476,cap-e:0.9:476|trunk-1:0:1.9:119

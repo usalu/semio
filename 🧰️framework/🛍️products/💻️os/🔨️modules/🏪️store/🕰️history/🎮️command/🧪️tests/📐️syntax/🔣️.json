@@ -1,0 +1,20 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unclosed-helper",
+      "source": "struct Store; trait Helpers {fn replay();} impl Helpers for Store { fn replay() {} impl Store { fn advance() {} }\n",
+      "accepted": false
+    },
+    {
+      "id": "closed-sibling",
+      "source": "struct Store; trait Helpers {fn replay();} impl Helpers for Store { fn replay() {} } impl Store { fn advance() {} }\n",
+      "accepted": true
+    },
+    {
+      "id": "nested-body",
+      "source": "struct Store; trait Helpers {fn replay();} impl Helpers for Store { fn replay() { if true { let _x = 1; } } } impl Store { fn advance() {} }\n",
+      "accepted": true
+    }
+  ]
+}

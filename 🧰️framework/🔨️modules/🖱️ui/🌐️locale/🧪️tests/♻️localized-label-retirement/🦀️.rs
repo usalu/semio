@@ -10,7 +10,7 @@ unsafe impl GlobalAlloc for LabelAllocator{
  unsafe fn alloc(&self,layout:Layout)->*mut u8{let pointer=unsafe{System.alloc(layout)};if !pointer.is_null(){let _=ALLOCATION.try_with(|value|if let Some((a,r))=value.get(){value.set(Some((a+layout.size(),r)));});}pointer}
  unsafe fn dealloc(&self,pointer:*mut u8,layout:Layout){let _=ALLOCATION.try_with(|value|if let Some((a,r))=value.get(){value.set(Some((a,r+layout.size())));});unsafe{System.dealloc(pointer,layout);}}
 }
-fn observed<T>(operation:impl FnOnce()->T)->(T,(usize,usize)){ALLOCATION.with(|value|{assert!(value.get().is_none());value.set(Some((0,0)));});let result=operation();let physical=ALLOCATION.with(|value|value.replace(None).unwrap());(result,physical)}
+pub(crate) fn observed<T>(operation:impl FnOnce()->T)->(T,(usize,usize)){ALLOCATION.with(|value|{assert!(value.get().is_none());value.set(Some((0,0)));});let result=operation();let physical=ALLOCATION.with(|value|value.replace(None).unwrap());(result,physical)}
 fn grant(owner:&ControlledRetirement<LocalizedLabel>)->RetainedCloneGrant{let copy=owner.next_copy_byte_demand().unwrap();RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()}}
 fn original(row:&serde_json::Value)->LocalizedLabel{
  let mut cells=std::array::from_fn(|_|std::array::from_fn(|_|Cow::Borrowed("")));

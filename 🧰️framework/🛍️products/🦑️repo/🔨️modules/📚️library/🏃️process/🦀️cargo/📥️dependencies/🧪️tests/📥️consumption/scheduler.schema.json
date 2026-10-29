@@ -1,0 +1,46 @@
+{
+  "type": "array",
+  "minItems": 4,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "cached",
+      "offline",
+      "failure",
+      "events"
+    ],
+    "properties": {
+      "id": {
+        "type": "string"
+      },
+      "cached": {
+        "type": "boolean"
+      },
+      "offline": {
+        "type": "boolean"
+      },
+      "failure": {
+        "enum": [
+          null,
+          "fetch",
+          "compile"
+        ]
+      },
+      "events": {
+        "type": "array",
+        "items": {
+          "enum": [
+            "receipt",
+            "inputs",
+            "writer",
+            "capacity",
+            "compile",
+            "retire"
+          ]
+        }
+      }
+    }
+  }
+}

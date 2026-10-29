@@ -346,32 +346,13 @@ func toolResultFromEvents(events []Event, data interface{}) ToolResult {
 }
 
 // 🌳️toolResultFromTreeList holds the data fields for a toolResultFromTreeList record.
-func toolResultFromTreeList(nodeKind TreeNodeKind) ToolResult {
-	ctx := context.Background()
-	tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{})
-	filter := TreeFilter{OnlyKinds: map[TreeNodeKind]bool{nodeKind: true}}
-	tree = FilterMonorepoTree(tree, &filter)
-	var nodes []*TreeNode
-	flattenTreeNodes(tree, &nodes)
-	var sb strings.Builder
-	for _, n := range nodes {
-		entityKind := treeNodeKindToEntityKind(n.Kind)
-		if entityKind == "" {
-			entityKind = string(n.Kind)
-		}
-		if n.Data != nil {
-			sb.WriteString(renderEntityMarkdown(entityKind, n.Data) + "\n")
-		}
-	}
-	output := NewOutput()
-	output.Plain(sb.String())
-	return ToolResult{Output: *output}
-}
 
 // ⬛️toolResultFromTreeRender holds the data fields for a toolResultFromTreeRender record.
-func toolResultFromTreeRender(nodeKind TreeNodeKind) ToolResult {
-	ctx := context.Background()
-	tree := BuildMonorepoTreeCached(ctx, TreeBuildOptions{})
+func toolResultFromTreeRender(ctx context.Context, nodeKind TreeNodeKind) ToolResult {
+	tree, err := BuildMonorepoTreeCached(ctx, TreeBuildOptions{})
+	if err != nil {
+		return ToolResult{Error: err.Error()}
+	}
 	filter := TreeFilter{OnlyKinds: map[TreeNodeKind]bool{nodeKind: true}}
 	tree = FilterMonorepoTree(tree, &filter)
 	text := RenderMonorepoTreeMarkdown(tree)

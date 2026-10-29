@@ -38,7 +38,7 @@ export type HostEvaluationV1=Readonly<{floorMegabytes:number;unrealizedMegabytes
 /** 🧩️ The tool-neutral resource envelope a build tool renders into its own flags. */
 export type HostPlanV1=Readonly<{version:1;id:string;jobs:number;cpu:number;memoryMegabytes:number;fixedMegabytes:number;floorMegabytes:number}>;
 /** 🏷️ Names of the closed definitions a value can be required to match. */
-export type HostDefinitionV1="Policy"|"Host"|"Request"|"Waiter"|"Grant"|"Decision"|"Evaluation"|"Plan"|"GrantLiveness"|"Handover"|"HandoverFacts"|"Estimates"|"EstimateStore"|"Outcome"|"Estimate";
+export type HostDefinitionV1="Reservation"|"Policy"|"Host"|"Request"|"Waiter"|"Grant"|"Decision"|"Evaluation"|"Plan"|"GrantLiveness"|"Handover"|"HandoverFacts"|"Estimates"|"EstimateStore"|"Outcome"|"Estimate";
 
 /** 🛂️ Requires a value to match one closed definition of the host capacity schema. */
 export function requireHostCapacityV1<T>(definition:HostDefinitionV1,value:unknown):T{

@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "field",
+    "document",
+    "cancelAt",
+    "selectedClosure"
+  ],
+  "properties": {
+    "field": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 65535
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "label",
+        "values"
+      ],
+      "properties": {
+        "label": {
+          "type": "string"
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 4294967295
+          }
+        }
+      }
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "selectedClosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "demand",
+        "cases"
+      ],
+      "properties": {
+        "demand": {
+          "$ref": "#/definitions/Currencies"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "axis",
+              "grant",
+              "accepted"
+            ],
+            "properties": {
+              "axis": {
+                "enum": [
+                  "items",
+                  "copyBytes",
+                  "capacityBytes",
+                  "releaseBytes",
+                  "depth",
+                  "full"
+                ]
+              },
+              "grant": {
+                "$ref": "#/definitions/Currencies"
+              },
+              "accepted": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Currencies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "properties": {
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

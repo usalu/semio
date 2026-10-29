@@ -1,7 +1,7 @@
 #!/usr/bin/env repo
 import { receiveScriptProcessInvocation } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { resolveTestLevel } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/🎚️budget/🟦️.ts";
-/** 🛂️ `teaching-proctor` task router: `repo ./📜️script.ts <build|test [fundamental|quick|long|exhaustive] [args…]|dev|check [catalog]|rebuild|health|backup [directory/|file|-]|restore <file|->|erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run]|prune --older-than <age> [--dry-run]|capacity [--learners n] [--compression n] [--report file] [--executable proctor] [--hall-only]>`.
+/** 🛂️ `teaching-proctor` task router: `repo ./📜️script.ts <build|test [fundamental|quick|long|exhaustive] [args…]|dev|serve-release|check [catalog]|rebuild|health|backup [directory/|file|-]|restore <file|->|erase (--handle <handle>|--tag <tag>|--learner <id>) [--dry-run]|prune --older-than <age> [--dry-run]|capacity [--learners n] [--compression n] [--report file] [--executable proctor] [--hall-only]>`.
  *
  * `build` is the only verb that compiles: it leaves the executable as a cached product with a receipt (`../../🏗️bootstrap/🧾️product/🟦️.ts`).
  * Every other verb but `test` and `capacity` resolves that product and runs a private copy of it, so a running dev proctor never
@@ -31,6 +31,7 @@ import { runRepositoryCargoTests } from "../../../../🧰️framework/🛍️pro
 import { join } from "node:path";
 import { PROCTOR_LIBRARY_PACKAGES, PROCTOR_PACKAGE, TEACHING_WORKSPACE, proctorBackupTarget, proctorCourse, proctorDevelopmentEnvironment, proctorSelection } from "../../🏗️bootstrap/🟦️.ts";
 import { buildProctorProduct, runDevelopmentProctor, runProctor } from "../../🏗️bootstrap/🧾️product/🟦️.ts";
+import { readNativeCallerAuthorityV1 } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📦️artifacts/📋️native-orchestration/📥️invocation/🟦️.ts";
 
 /** 🏗️ Builds the proctor through the issued Cargo launcher in the original mode and leaves it as the cached product every consumer resolves
  * (`../../🏗️bootstrap/🧾️product/🟦️.ts`): `dist/build/<mode>/<sha256>/proctor` beside `dist/build/<mode>/receipt.json`. */
@@ -54,6 +55,15 @@ class TestScript extends BundleScript {
 class DevScript extends BundleScript {
   async run(): Promise<void> {
     await runDevelopmentProctor(this.repoRoot, this.invocation);
+  }
+}
+
+/** 🚀️ Serves the qualified release product through the actual release Original and caller-configurable server environment. */
+class ServeReleaseScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("serve-release takes no arguments\nserve-release nimmt keine Argumente");
+    if (readNativeCallerAuthorityV1(this.invocation.capabilities).original.buildMode !== "release") throw new Error("serve-release requires the original release build mode\nserve-release erfordert den ursprünglichen Release-Build-Modus");
+    await runProctor(this.repoRoot, this.invocation, ["serve"], proctorDevelopmentEnvironment(this.repoRoot));
   }
 }
 
@@ -115,6 +125,6 @@ class CapacityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("dev", DevScript).register("check", CheckScript).register("rebuild", RebuildScript).register("health", HealthScript).register("backup", BackupScript).register("restore", RestoreScript).register("erase", EraseScript).register("prune", PruneScript).register("capacity", CapacityScript);
+const router = new ScriptRouter(import.meta.dir).register("build", BuildScript).register("test", TestScript).register("dev", DevScript).register("serve-release", ServeReleaseScript).register("check", CheckScript).register("rebuild", RebuildScript).register("health", HealthScript).register("backup", BackupScript).register("restore", RestoreScript).register("erase", EraseScript).register("prune", PruneScript).register("capacity", CapacityScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

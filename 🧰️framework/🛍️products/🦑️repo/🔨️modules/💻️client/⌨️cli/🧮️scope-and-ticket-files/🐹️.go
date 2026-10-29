@@ -10,6 +10,7 @@ package client
 
 import (
 	"fmt"
+	workspace "github.com/usalu/semio/repo/workspace"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -59,36 +60,7 @@ func normalizeRepoPath(path string) string {
 
 // 💿️isRepoExcludedPath holds the data fields for a isRepoExcludedPath record.
 func isRepoExcludedPath(path string) bool {
-	normalized := normalizeRepoPath(path)
-	if normalized == "" {
-		return false
-	}
-	if normalized == ".🧬semio" || strings.HasPrefix(normalized, ".🧬semio/") {
-		return true
-	}
-	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") || strings.Contains(normalized, "/asset/repo/") {
-		return true
-	}
-	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") ||
-		strings.Contains(normalized, "/node_modules/") {
-		return true
-	}
-	if normalized == ".git" || strings.HasPrefix(normalized, ".git/") || strings.Contains(normalized, "/.git/") {
-		return true
-	}
-	for _, segment := range []string{"/dist/", "/build/", "/target/", "/__pycache__/", "/.next/", "/coverage/"} {
-		if strings.Contains(normalized, segment) {
-			return true
-		}
-	}
-	base := filepath.Base(normalized)
-	if strings.HasSuffix(base, ".Designer.cs") {
-		return true
-	}
-	if strings.Contains(normalized, "/codegen/") {
-		return true
-	}
-	return false
+	return workspace.IsRepoExcludedPath(normalizeRepoPath(path))
 }
 
 // 🧹️filterConsideredFiles holds the data fields for a filterConsideredFiles record.

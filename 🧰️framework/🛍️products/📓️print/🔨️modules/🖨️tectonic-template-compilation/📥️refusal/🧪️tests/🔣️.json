@@ -67,7 +67,8 @@
         "version": 1,
         "originalCancelled": false,
         "compilerCancelled": false,
-        "remainingMilliseconds": 1
+        "remainingMilliseconds": 1,
+        "compilerPrimaryPropagation": false
       },
       "accepted": true
     },
@@ -76,7 +77,8 @@
         "version": 1,
         "originalCancelled": false,
         "compilerCancelled": false,
-        "remainingMilliseconds": null
+        "remainingMilliseconds": null,
+        "compilerPrimaryPropagation": false
       },
       "accepted": true
     },
@@ -85,6 +87,57 @@
         "version": 1,
         "originalCancelled": true,
         "compilerCancelled": false,
+        "remainingMilliseconds": 100,
+        "compilerPrimaryPropagation": false
+      },
+      "accepted": false
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": false,
+        "compilerCancelled": true,
+        "remainingMilliseconds": 100,
+        "compilerPrimaryPropagation": false
+      },
+      "accepted": false
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": false,
+        "compilerCancelled": false,
+        "remainingMilliseconds": 0,
+        "compilerPrimaryPropagation": false
+      },
+      "accepted": false
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": true,
+        "compilerCancelled": true,
+        "remainingMilliseconds": 0,
+        "compilerPrimaryPropagation": false
+      },
+      "accepted": false
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": false,
+        "compilerCancelled": true,
+        "compilerPrimaryPropagation": true,
+        "remainingMilliseconds": 100
+      },
+      "accepted": true
+    },
+    {
+      "state": {
+        "version": 1,
+        "originalCancelled": true,
+        "compilerCancelled": true,
+        "compilerPrimaryPropagation": true,
         "remainingMilliseconds": 100
       },
       "accepted": false
@@ -94,26 +147,94 @@
         "version": 1,
         "originalCancelled": false,
         "compilerCancelled": true,
-        "remainingMilliseconds": 100
-      },
-      "accepted": false
-    },
-    {
-      "state": {
-        "version": 1,
-        "originalCancelled": false,
-        "compilerCancelled": false,
+        "compilerPrimaryPropagation": true,
         "remainingMilliseconds": 0
       },
       "accepted": false
+    }
+  ],
+  "diagnostics": [
+    {
+      "name": "successful compiler is silent",
+      "capture": {
+        "version": 1,
+        "status": 0,
+        "signal": null,
+        "stdout": "notes",
+        "stderr": ""
+      },
+      "maximumBytes": 128,
+      "expected": "",
+      "maximumLines": 128
     },
     {
-      "state": {
+      "name": "failure combines captured streams",
+      "capture": {
         "version": 1,
-        "originalCancelled": true,
-        "compilerCancelled": true,
-        "remainingMilliseconds": 0
+        "status": 1,
+        "signal": null,
+        "stdout": "notes",
+        "stderr": "error: Undefined control sequence"
       },
+      "maximumBytes": 128,
+      "expected": "[print] Compiler diagnostic:\nnotes\nerror: Undefined control sequence\n",
+      "maximumLines": 128
+    },
+    {
+      "name": "tail preserves UTF8 boundary",
+      "capture": {
+        "version": 1,
+        "status": 1,
+        "signal": null,
+        "stdout": "discard",
+        "stderr": "αβγδ"
+      },
+      "maximumBytes": 6,
+      "expected": "γδ\n",
+      "maximumLines": 128
+    },
+    {
+      "name": "signal retains captured failure output",
+      "capture": {
+        "version": 1,
+        "status": null,
+        "signal": "SIGTERM",
+        "stdout": "",
+        "stderr": "stopped"
+      },
+      "maximumBytes": 128,
+      "expected": "[print] Compiler diagnostic:\nstopped\n",
+      "maximumLines": 128
+    },
+    {
+      "name": "tail honors line transport",
+      "capture": {
+        "version": 1,
+        "status": 1,
+        "signal": null,
+        "stdout": "earlier\nmiddle",
+        "stderr": "last"
+      },
+      "maximumBytes": 128,
+      "maximumLines": 2,
+      "expected": "[print] Compiler diagnostic:\nlast\n"
+    }
+  ],
+  "propagationCases": [
+    {
+      "reason": "same-primary",
+      "accepted": true
+    },
+    {
+      "reason": "same-message-and-outcome",
+      "accepted": false
+    },
+    {
+      "reason": "external",
+      "accepted": false
+    },
+    {
+      "reason": "none",
       "accepted": false
     }
   ]

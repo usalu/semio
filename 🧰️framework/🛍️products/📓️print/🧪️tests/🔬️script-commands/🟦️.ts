@@ -22,12 +22,22 @@ export class GenerateScript extends BundleScript {
 }
 export class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    if (segments[0] === "assignment") {
-      if (segments.length !== 1) throw new Error("Expected test assignment");
-      const { captureOwnedCommandV1 } = await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts"), { scriptInvocationEnvironment, withRequestedIssuedResourceControlV1 } = await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"), phaseControl = createIssuedResourceControlV1(this.invocation, "print:assignment:test", 0);
-      await withPrintExecutionV1({ workspace: this.repoRoot, invocation: this.invocation, phaseControl, kind: "probe" }, execution => withPrintScratchV1(execution, "test/assignment", scratch => withRequestedIssuedResourceControlV1(scratch.control, 30000, async control => {
-        process.stdout.write(await captureOwnedCommandV1(process.execPath, ["test", "../../🧪️tests/📝️assignment/🟦️.ts"], this.root, { control, env: scriptInvocationEnvironment(this.invocation, scratch.environment) }));
+    if (segments[0] === "assignment" || segments[0] === "thesis") {
+      const selection = segments[0], suite = selection === "thesis" ? "🎓️thesis" : "📝️assignment";
+      if (segments.length !== 1) throw new Error("Expected test " + selection);
+      const { captureOwnedCommandV1 } = await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🎛️owned-execution/🟦️.ts"), { scriptInvocationEnvironment, withRequestedIssuedResourceControlV1 } = await import("../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts"), phaseControl = createIssuedResourceControlV1(this.invocation, "print:" + selection + ":test", 0);
+      await withPrintExecutionV1({ workspace: this.repoRoot, invocation: this.invocation, phaseControl, kind: "probe" }, execution => withPrintScratchV1(execution, "test/" + selection, scratch => withRequestedIssuedResourceControlV1(scratch.control, 30000, async control => {
+        process.stdout.write(await captureOwnedCommandV1(process.execPath, ["test", "../../🧪️tests/" + suite + "/🟦️.ts"], this.root, { control, env: scriptInvocationEnvironment(this.invocation, scratch.environment) }));
       })));
+      return;
+    }
+    if (segments[0] === "thesis-render") {
+      if (segments.length !== 1) throw new Error("Expected test thesis-render");
+      const phaseControl = createIssuedResourceControlV1(this.invocation, "print:thesis:render", 0);
+      await withPrintExecutionV1({ workspace: this.repoRoot, invocation: this.invocation, phaseControl, kind: "probe" }, async execution => {
+        const { verifyThesisRendering } = await import("../../🧪️tests/🎓️thesis/🖨️rendering/🟦️.ts");
+        await verifyThesisRendering(execution);
+      });
       return;
     }
     if (segments[0] === "measurement") {
@@ -48,5 +58,5 @@ export class TestScript extends BundleScript {
   }
 }
 export class CheckScript extends BundleScript{
- async run():Promise<void>{await runArtifactTypeScriptPackageMain(this.root,"@semio-tech/print",{suites:["🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts","🎮️commands/🧪️print-pipeline-verification/🟦️.ts"]});}
+ async run():Promise<void>{await runArtifactTypeScriptPackageMain(this.root,"@semio-tech/print",{suites:["🔨️modules/🎨print-design-token-paints/🧪️tests/🟦️.ts","🧪️tests/🎓️thesis/📤️publication/🎨️paint/🧪️tests/🟦️.ts","📦️artifacts/📖️pdf/📜️script.ts","📦️artifacts/📖️pdf/🧪️tests/🟦️.ts","🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts","🧪️tests/🧬️chart-mutations/🟦️.ts","🧪️tests/📜️chart-inference-result/🟦️.ts","🔨️modules/🏠️host/💡️inferences/🧵️worker/🟦️.ts","🎮️commands/🧪️print-pipeline-verification/🟦️.ts"]});}
 }

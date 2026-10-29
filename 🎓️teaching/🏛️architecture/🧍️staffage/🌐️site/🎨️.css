@@ -1,0 +1,8 @@
+/* 🎨️ The site's styles are the semio design system's own chain, the same one the course site loads:
+   Tailwind, the palette (colours, fonts and their @font-face rules), the tokens, levels, glass and utilities of
+   `🖱️ui`, and its document globals. The archive app is its only class-name surface besides `🖱️ui` itself. */
+@import "../../../../🧰️framework/🔨️modules/🖱️ui/🧵️styles/🎨️.css";
+@source "../🎯️targets/⚛️react";
+/* 🧪️ Product CSS never depends on tests, fixtures, examples, e2e specs or stories: Tailwind scans no file of them. */
+@source not "../../../../**/{🧪️tests,🧫️fixtures,🧫️examples,🧪️fixtures,🧪️examples,📖️stories,🎭️e2e}";
+@source not "../../../../**/*.{feature,stories.*,story.*,mdx}";

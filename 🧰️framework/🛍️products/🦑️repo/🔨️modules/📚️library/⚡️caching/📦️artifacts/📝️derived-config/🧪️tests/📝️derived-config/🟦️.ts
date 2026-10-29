@@ -2,8 +2,9 @@ import assert from "node:assert/strict";
 import { test } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
-import { NEXTEST, NEXTEST_SCOPES, dependabotProblems, deriveNextest, nextestProblems, writeDerivedConfig } from "../../🟦️.ts";
+import { dirname, join, posix } from "node:path";
+import { Database } from "bun:sqlite";
+import { NEXTEST, NEXTEST_SCOPES, dependabotProblems, deriveNextest, nextestProblems, writeNextestConfig } from "../../🟦️.ts";
 
 /** 📝️ Validates portable nextest and dependency ownership vectors through independent TOML/YAML parsers, with editor-free generation. */
 export async function testDerivedConfig(workspace: string): Promise<void> {
@@ -37,13 +38,38 @@ export async function testDerivedConfig(workspace: string): Promise<void> {
     write(fixture.generation.expectedPaths[0], row.scope);
     for (const path of fixture.generation.untouchedPaths) write(path, "{\"name\":\"dashboard-only\"}\n");
     const before = fixture.generation.untouchedPaths.map((path: string) => readFileSync(join(temporary, path), "utf8"));
-    assert.deepEqual(await writeDerivedConfig(temporary), fixture.generation.expectedPaths);
+    assert.deepEqual(await writeNextestConfig(temporary), fixture.generation.expectedPaths);
     assert.deepEqual(nextestProblems(temporary), []);
     assert.deepEqual(Bun.TOML.parse(readFileSync(join(temporary, fixture.generation.expectedPaths[0]), "utf8")), toml.parse(deriveNextest(row.root, row.scope)));
-    assert.deepEqual(await writeDerivedConfig(temporary), []);
+    assert.deepEqual(await writeNextestConfig(temporary), []);
     assert.deepEqual(fixture.generation.untouchedPaths.map((path: string) => readFileSync(join(temporary, path), "utf8")), before);
     for (const path of fixture.generation.absentPaths) assert.equal(existsSync(join(temporary, path)), false, path);
   } finally { rmSync(temporary, { recursive: true, force: true }); }
 }
 
 test("derived configuration remains editor-free and agrees with third-party parsers", async () => { await testDerivedConfig(process.cwd()); });
+
+
+test("dependency-update action manifests agree with closed vectors and independent SQLite selection", () => {
+  const fixture = JSON.parse(readFileSync(join(import.meta.dir, "../🧫️fixtures/📝️derived-config/🔣️.json"), "utf8")), yaml = createRequire(import.meta.url)("yaml"), database = new Database(":memory:");
+  const output = process.env.SEMIO_TEST_OUTPUT_DIR ?? join(process.cwd(), ".cache/test-sandbox");
+  mkdirSync(output, { recursive: true });
+  database.exec("CREATE TABLE entries(folder TEXT, name TEXT, kind TEXT)");
+  const insert = database.prepare("INSERT INTO entries VALUES(?,?,?)"), oracle = database.prepare("SELECT count(*)>0 AS valid FROM entries WHERE kind='file' AND ((?='/' AND ((folder='.' AND name IN('action.yml','action.yaml')) OR (folder='.github/workflows' AND (name GLOB '*.yml' OR name GLOB '*.yaml')))) OR (?<>'/' AND folder=? AND (name GLOB '*.yml' OR name GLOB '*.yaml')))");
+  try {
+    for (const row of fixture.actions) {
+      const root = mkdtempSync(join(output, "actions-")), write = (file:string,text:string) => {mkdirSync(dirname(join(root,file)),{recursive:true});writeFileSync(join(root,file),text);};
+      try {
+        database.exec("DELETE FROM entries");
+        mkdirSync(join(root,row.directory.slice(1)),{recursive:true});
+        for(const file of row.files){write(file,"name: Fixture\n");insert.run(posix.dirname(file),posix.basename(file),"file");}
+        for(const file of row.directories??[]){mkdirSync(join(root,file),{recursive:true});insert.run(posix.dirname(file),posix.basename(file),"directory");}
+        write("go.work","go 1.26\nuse ()\n");
+        write(".github/dependabot.yml",yaml.stringify({version:2,updates:[{"package-ecosystem":"github-actions",directory:row.directory,schedule:{interval:"weekly"}}]}));
+        const independent = Boolean((oracle.get(row.directory,row.directory,row.directory.slice(1)) as {valid:number}).valid);
+        assert.equal(independent,row.valid,row.name+" oracle");
+        assert.deepEqual(dependabotProblems(root),independent?[]:[".github/dependabot.yml: github-actions directory "+row.directory+" holds no manifest"],row.name);
+      } finally {rmSync(root,{recursive:true,force:true});}
+    }
+  } finally {database.close();}
+});

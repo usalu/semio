@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/print/thesis.schema.json",
+  "title": "Thesis",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "language",
+    "theme",
+    "title",
+    "author",
+    "degree"
+  ],
+  "properties": {
+    "language": {
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "theme": {
+      "enum": [
+        "light",
+        "dark"
+      ]
+    },
+    "degree": {
+      "enum": [
+        "bachelor",
+        "master",
+        "doctoral",
+        "custom"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "author": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subtitle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "date": {
+      "type": "string",
+      "minLength": 1
+    },
+    "thesisType": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "\\S"
+    },
+    "university": {
+      "type": "string",
+      "minLength": 1
+    },
+    "faculty": {
+      "type": "string",
+      "minLength": 1
+    },
+    "institute": {
+      "type": "string",
+      "minLength": 1
+    },
+    "discipline": {
+      "type": "string",
+      "minLength": 1
+    },
+    "supervisor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "reviewers": {
+      "type": "string",
+      "minLength": 1
+    },
+    "submission": {
+      "type": "string",
+      "minLength": 1
+    },
+    "defense": {
+      "type": "string",
+      "minLength": 1
+    },
+    "place": {
+      "type": "string",
+      "minLength": 1
+    },
+    "orcid": {
+      "type": "string",
+      "minLength": 1
+    },
+    "programme": {
+      "type": "string",
+      "minLength": 1
+    },
+    "studentId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "keywords": {
+      "type": "string",
+      "minLength": 1
+    },
+    "declarationText": {
+      "type": "string",
+      "minLength": 1
+    },
+    "declarationTitle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "dedicationTitle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "abbreviationsTitle": {
+      "type": "string",
+      "minLength": 1
+    },
+    "awardedDegree": {
+      "type": "string",
+      "minLength": 1
+    }
+  },
+  "if": {
+    "properties": {
+      "degree": {
+        "const": "custom"
+      }
+    },
+    "required": [
+      "degree"
+    ]
+  },
+  "then": {
+    "required": [
+      "thesisType"
+    ],
+    "properties": {
+      "thesisType": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "\\S"
+      }
+    }
+  }
+}

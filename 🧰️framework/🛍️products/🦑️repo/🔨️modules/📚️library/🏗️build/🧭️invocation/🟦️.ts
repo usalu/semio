@@ -144,7 +144,7 @@ export function buildModeConflictMessageV1(values: readonly string[], pinned: re
 /** 🎯️ Resolves mode options before the task graph and daemon receive the environment. */
 export function resolveBuildModeV1(selection: Selection, environment: NodeJS.ProcessEnv, declarations:readonly SelectedBuildTargetModeV1[]=[]): Selection {
   const delimiter = selection.args.indexOf("--"), head = selection.args.slice(0, delimiter < 0 ? undefined : delimiter), tail = delimiter < 0 ? [] : selection.args.slice(delimiter);
-  if (!["run", "run-many", "affected"].includes(head[0]??"")) return selection;
+  if (!["run", "run-many", "affected", "cargo"].includes(head[0]??"")) return selection;
   const configurations: string[] = [], args: string[] = [];
   for (let index = 0; index < head.length; index++) {
     const argument = head[index]!;

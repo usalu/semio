@@ -47,40 +47,56 @@ func (e FolderKind) String() string {
 // 🟠️DeriveFolderKind infers and returns the folder kind from the given input.
 
 // 🩵️DeriveFolderKind holds the data fields for a DeriveFolderKind record.
-func DeriveFolderKind(path string) FolderKind { return (ArtifactIndex{RootDir:workspace.GetRootDir()}).FolderKind(path) }
+func DeriveFolderKind(path string) FolderKind {
+	return NewArtifactIndex(workspace.GetRootDir(), nil).FolderKind(path)
+}
 
 // 🧭️FolderKind classifies a directory within this index's repository.
-func (index ArtifactIndex) FolderKind(path string) FolderKind {
-	base := filepath.Base(path)
-	if strings.HasPrefix(base, ".") {
-		return FolderKindRequired
+func (index *ArtifactLayout) FolderKind(path string) FolderKind {
+	index.mutex.Lock()
+	defer index.mutex.Unlock()
+	return index.folderKind(path)
+}
+func (index *ArtifactLayout) folderKind(path string) FolderKind {
+	normalized, valid := index.namespacePath(path)
+	if !valid {
+		return FolderKindOrganization
 	}
-
+	if cached, ok := index.folderKinds[normalized]; ok {
+		return cached
+	}
 	kind := FolderKindOrganization
-	requiredIndicators := []string{"package.json", "pyproject.toml", "go.mod", "Cargo.toml"}
-	for _, indicator := range requiredIndicators {
-		if workspace.FileExists(filepath.Join(index.RootDir, path, indicator)) {
-			kind = FolderKindRequired
-			break
-		}
-	}
-
-	if kind == FolderKindOrganization {
-		dir := filepath.Join(index.RootDir, path)
-		if entries, err := os.ReadDir(dir); err == nil {
-			for _, entry := range entries {
-				if !entry.IsDir() {
-					ext := filepath.Ext(entry.Name())
-					if ext == ".csproj" || ext == ".sln" {
-						kind = FolderKindRequired
-						break
-					}
-				}
+	if strings.HasPrefix(filepath.Base(normalized), ".") {
+		kind = FolderKindRequired
+	} else if entries, err := index.readDirectory(filepath.Join(index.rootDir, normalized)); err == nil {
+		for _, entry := range entries {
+			if entry.Type()&os.ModeSymlink != 0 || entry.IsDir() {
+				continue
+			}
+			if entry.Type() != 0 {
+				continue
+			}
+			name := entry.Name()
+			extension := filepath.Ext(name)
+			if name == "package.json" || name == "pyproject.toml" || name == "go.mod" || name == "Cargo.toml" || extension == ".csproj" || extension == ".sln" {
+				kind = FolderKindRequired
+				break
 			}
 		}
 	}
-
+	index.folderKinds[normalized] = kind
 	return kind
+}
+
+func readArtifactDirectory(path string) ([]os.DirEntry, error) {
+	info, err := os.Lstat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+		return nil, os.ErrInvalid
+	}
+	return os.ReadDir(path)
 }
 
 // 🩶️IsGeneratedFolder MUST return true only when the condition is met.
@@ -126,14 +142,18 @@ func (f *Folder) IsNode() {}
 // 💙️GetID MUST return the stored value without modification.
 // ⚪️GetID returns the i d of the Folder.
 func (f *Folder) GetID() string {
- if f.ID!="" { return f.ID }
+	if f.ID != "" {
+		return f.ID
+	}
 	return BuildFolderID(f.Path, f.BundleID)
 }
 
 // 💚️GetURI MUST return the stored value without modification.
 // ⚫️GetURI returns the u r i of the Folder.
 func (f *Folder) GetURI() string {
- if f.URI!="" { return f.URI }
+	if f.URI != "" {
+		return f.URI
+	}
 	return BuildFolderUriFromPath(f.Path)
 }
 
@@ -305,14 +325,18 @@ func IsSemanticallyIgnored(path string) bool {
 // 🖤️GetID MUST return the stored value without modification.
 // 💚️GetID returns the i d of the File.
 func (f *File) GetID() string {
- if f.ID!="" { return f.ID }
+	if f.ID != "" {
+		return f.ID
+	}
 	return BuildFileID(f.Path, f.BundleID)
 }
 
 // 🤎️GetURI MUST return the stored value without modification.
 // 💛️GetURI returns the u r i of the File.
 func (f *File) GetURI() string {
- if f.URI!="" { return f.URI }
+	if f.URI != "" {
+		return f.URI
+	}
 	return BuildFileUriFromPath(f.Path)
 }
 

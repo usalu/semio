@@ -1,4 +1,5 @@
 #!/usr/bin/env repo
+import {withCargoCompilerInputsV1} from "../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️inputs/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import {captureCargoCompilationGraphV1,actualCargoCompilerPlanningPortV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/🕸️units/📥️capture/🟦️.ts";
 import {admitCargoSourceBoundariesV1,actualCargoSourceAdmissionPortV1} from "../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts";
@@ -43,8 +44,14 @@ async function captureCargo(original:ScriptInvocation,workspace:string,root:stri
  const policy=readCargoTestPolicyV1(environment),control=scriptCompilerAdmissionControlV1(original,"framework:cargo",policy.buildBudgetMs);
  return withAdmittedCompilerStoreV1(workspace,policy.mode,control,environment,async (store,control)=>{
   const boundary=args.indexOf("--"),arguments_=boundary<0?[...args,"--manifest-path",policy.manifestPath]:[...args.slice(0,boundary),"--manifest-path",policy.manifestPath,...args.slice(boundary)],generated=environment.SEMIO_TYPEGEN_OUT?join(store.captureDirectory,"typegen.ts"):undefined,env={...store.environment,...(generated?{SEMIO_TYPEGEN_OUT:generated}:{})};
-  const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd:root,program:"cargo",prefix:[],args:arguments_,environment:env,maximumOutputBytes:134217728},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,root,store.storage));await store.storage.recheck();
-  const output=mkdtempSync(join(store.captureDirectory,"general-cargo-"));try{const remaining=control.remainingMilliseconds();if(remaining===null||remaining<1)throw new Error("Finite original compiler capture deadline required");const result=await captureOwnedProcess("cargo",arguments_,{invocation:original,cwd:root,env,budgetMs:Math.floor(remaining),maxOutputBytes:16777216,stdoutPath:join(output,"stdout.txt"),stderrPath:join(output,"stderr.txt")});if(emit)process.stdout.write(result.stdout);process.stderr.write(result.stderr);if(result.reason!=="exit"||result.signal)throw new Error(`Framework Cargo stopped: ${result.reason} ${result.signal??""}`);if(result.status===0&&generated)copyFileSync(generated,environment.SEMIO_TYPEGEN_OUT!);return result.status??1;}finally{if(!policy.retainArtifacts)rmSync(output,{recursive:true,force:true});}
+  return withCargoCompilerInputsV1({manifest:policy.manifestPath,cwd:root,arguments:arguments_,environment:env,control},store.withCargoInputs,async actual=>{
+   const arguments_=[...actual.arguments],env=actual.environment,control=actual.control;
+   const graph=await captureCargoCompilationGraphV1({workspaceRoot:workspace,cwd:root,program:"cargo",prefix:[],args:arguments_,environment:env,maximumOutputBytes:134217728},control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,workspace,store.sourceBoundary,control,actualCargoSourceAdmissionPortV1(env,root,store.storage));await store.storage.recheck();
+   return actual.withWriter(async control=>{
+    const separator=arguments_.indexOf("--"),head=separator<0?arguments_:arguments_.slice(0,separator),tail=separator<0?[]:arguments_.slice(separator),locked=[...head,...["--locked","--offline"].filter(flag=>!head.includes(flag)),...tail];
+   const output=mkdtempSync(join(store.captureDirectory,"general-cargo-"));try{const remaining=control.remainingMilliseconds();if(remaining===null||remaining<1)throw new Error("Finite original compiler capture deadline required");const result=await captureOwnedProcess("cargo",locked,{invocation:original,cwd:root,env,budgetMs:Math.floor(remaining),maxOutputBytes:16777216,stdoutPath:join(output,"stdout.txt"),stderrPath:join(output,"stderr.txt")});if(emit)process.stdout.write(result.stdout);process.stderr.write(result.stderr);if(result.reason!=="exit"||result.signal)throw new Error(`Framework Cargo stopped: ${result.reason} ${result.signal??""}`);if(result.status===0&&generated)copyFileSync(generated,environment.SEMIO_TYPEGEN_OUT!);return result.status??1;}finally{if(!policy.retainArtifacts)rmSync(output,{recursive:true,force:true});}
+   });
+  });
  });
 }
 

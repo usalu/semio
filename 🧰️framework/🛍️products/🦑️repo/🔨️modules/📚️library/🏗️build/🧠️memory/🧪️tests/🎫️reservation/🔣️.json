@@ -1,0 +1,186 @@
+{
+  "budgets": [
+    {
+      "name": "measured-envelope-exceeds-actual-reservation",
+      "carriedMegabytes": 16384,
+      "fixedMegabytes": 461,
+      "reservedMegabytes": 3831,
+      "expectedMegabytes": 1915
+    },
+    {
+      "name": "smaller-current-grant",
+      "carriedMegabytes": 16384,
+      "fixedMegabytes": 461,
+      "reservedMegabytes": 2048,
+      "expectedMegabytes": 1024
+    },
+    {
+      "name": "grown-current-grant",
+      "carriedMegabytes": 2048,
+      "fixedMegabytes": 461,
+      "reservedMegabytes": 8192,
+      "expectedMegabytes": 4096
+    },
+    {
+      "name": "unqualified-carried-envelope",
+      "carriedMegabytes": 16384,
+      "fixedMegabytes": 461,
+      "expectedMegabytes": 1024
+    },
+    {
+      "name": "explicit-cannot-exceed-actual-reservation",
+      "carriedMegabytes": 16384,
+      "fixedMegabytes": 461,
+      "reservedMegabytes": 3831,
+      "explicitMegabytes": 4096,
+      "expectedMegabytes": 1915
+    },
+    {
+      "name": "explicit-can-lower-the-budget",
+      "carriedMegabytes": 16384,
+      "fixedMegabytes": 461,
+      "reservedMegabytes": 3831,
+      "explicitMegabytes": 1024,
+      "expectedMegabytes": 1024
+    },
+    {
+      "name": "foreign-ledger-row-is-not-a-grant",
+      "carriedMegabytes": 16384,
+      "fixedMegabytes": 461,
+      "reservedMegabytes": 16384,
+      "foreign": true,
+      "expectedMegabytes": 1024
+    }
+  ],
+  "pressure": [
+    {
+      "name": "resident-pages-exceed-managed-heap",
+      "counters": {
+        "rss": 4380942336,
+        "heapUsed": 1073741824,
+        "external": 134217728
+      },
+      "expectedBytes": 4380942336
+    },
+    {
+      "name": "managed-storage-exceeds-current-resident-pages",
+      "counters": {
+        "rss": 1073741824,
+        "heapUsed": 1610612736,
+        "external": 536870912
+      },
+      "expectedBytes": 2147483648
+    }
+  ],
+  "allocations": [
+    {
+      "reservedMegabytes": 3831,
+      "expected": {
+        "parentMegabytes": 1915,
+        "fixedMegabytes": 461,
+        "workerMegabytes": 1455,
+        "ownMegabytes": 1455
+      }
+    },
+    {
+      "reservedMegabytes": 2048,
+      "expected": {
+        "parentMegabytes": 1024,
+        "fixedMegabytes": 461,
+        "workerMegabytes": 563,
+        "ownMegabytes": null
+      }
+    },
+    {
+      "reservedMegabytes": 1,
+      "expected": {
+        "parentMegabytes": 1,
+        "fixedMegabytes": 0,
+        "workerMegabytes": 0,
+        "ownMegabytes": null
+      }
+    },
+    {
+      "reservedMegabytes": 8192,
+      "expected": {
+        "parentMegabytes": 4096,
+        "fixedMegabytes": 461,
+        "workerMegabytes": 3635,
+        "ownMegabytes": 3635
+      }
+    }
+  ],
+  "liveness": [
+    {
+      "state": "active",
+      "expectedMegabytes": 1915
+    },
+    {
+      "state": "stale",
+      "expectedMegabytes": 1024
+    },
+    {
+      "state": "previous-boot",
+      "expectedMegabytes": 1024
+    },
+    {
+      "state": "dead",
+      "expectedMegabytes": 1024
+    },
+    {
+      "state": "quiet",
+      "expectedMegabytes": null
+    },
+    {
+      "state": "zero",
+      "expectedMegabytes": null
+    }
+  ],
+  "refresh": [
+    {
+      "name": "unchanged",
+      "previous": {
+        "workers": 1,
+        "megabytes": 1455
+      },
+      "next": {
+        "workers": 1,
+        "megabytes": 1455
+      },
+      "retire": false
+    },
+    {
+      "name": "larger-is-conservative",
+      "previous": {
+        "workers": 1,
+        "megabytes": 1455
+      },
+      "next": {
+        "workers": 1,
+        "megabytes": 3635
+      },
+      "retire": false
+    },
+    {
+      "name": "reservation-shrank",
+      "previous": {
+        "workers": 1,
+        "megabytes": 1455
+      },
+      "next": {
+        "workers": 1,
+        "megabytes": 1024
+      },
+      "retire": true
+    },
+    {
+      "name": "no-worker-fits",
+      "previous": {
+        "workers": 1,
+        "megabytes": 1455
+      },
+      "next": null,
+      "retire": true
+    }
+  ]
+}

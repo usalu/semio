@@ -3,7 +3,11 @@ import { join, relative, resolve } from "node:path";
 import { coverageDir } from "../../🏃️process/📋️context/🔣️policy/🟦️.ts";
 import { repoCacheDirectory } from "../../⚡️caching/🟦️.ts";
 import { loadCatalogTaxonomy } from "../../🔍️discovery/🔐️taxonomy-authority/🟦️.ts";
-import { orchestratorBudgetOpts, runCmd, runCmdStatus } from "../../🏃️process/🟦️.ts";
+import { orchestratorBudgetOpts, runCmd } from "../../🏃️process/🟦️.ts";
+import { CachePruneScript } from "../../⚡️caching/🧹️pruning/📋️orchestration/🟦️.ts";
+import {withJavascriptDependencyStorageV1,retireJavascriptDependencyPreservationsV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
+import {scriptCompilerAdmissionControlV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
+import {buildBudgetMs} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/⏱️budget/🟦️.ts";
 import { processTableSnapshot, ACTIVE_SEMIO_TECH_BUILD } from "../../🏃️process/📋️process-table/🟦️.ts";
 import { Script } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runTaxonomyCliWorkflow } from "../../🧹️normalization/🎮️command-contract/🔁️workflow/🟦️.ts";
@@ -23,7 +27,7 @@ import { runtimeExecutableV1 } from "../../../../../../📦️packages/🟦️ty
  * `clean-mechanism` is now the `taxonomy/owner-shape` policy and removes nothing at all.
  */
 export class CleanScript extends Script {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const entry = readWorkspaceCleanupEntryV1(segments);
     segments = [entry.mode, ...entry.arguments];
     if (segments[0] === "taxonomy") {
@@ -105,11 +109,22 @@ export class CleanScript extends Script {
       ...report.skippedProtected.map((p) => `[clean] protected ${p}`),
     ];
     for (const line of lines) console.log(line);
-    this.runCachePrune(dry);
+    await this.runDependencyPreservationRetirement(dry);
+    await this.runCachePrune(dry);
+  }
+
+  /** 🧹️ Retires completed dependency capsules under the current Original writer and binding authority. */
+  private async runDependencyPreservationRetirement(dry:boolean):Promise<void> {
+    if(dry)return;
+    const control=scriptCompilerAdmissionControlV1(this.invocation,"clean:dependency-preservations",buildBudgetMs());
+    const report=await withJavascriptDependencyStorageV1(this.repoRoot,this.invocation,control,(store,phase)=>retireJavascriptDependencyPreservationsV1(this.repoRoot,store,phase));
+    if(!report)throw Error("Completed dependency preservation retirement required");
+    console.log(`[clean] dependency-preservations retired=${report.retired.length} retained=${report.retained.length} entries=${report.entries}`);
+    for(const row of report.retained)console.log(`[clean] retained ${row.path}: ${row.reason}`);
   }
 
   /** ⚡️Bounds the shared cache root through its own owner instead of size-sweeping it — `clean` never walks or deletes under it directly. */
-  private runCachePrune(dry: boolean): void {
+  private async runCachePrune(dry: boolean): Promise<void> {
     const processes = processTableSnapshot();
     if (!processes) {
       console.log(`[clean] cache-prune skipped: the process table is unreadable, so an active Semio Tech build cannot be ruled out`);
@@ -119,9 +134,9 @@ export class CleanScript extends Script {
       console.log(`[clean] cache-prune skipped active Semio Tech build`);
       return;
     }
-    const cachingScript = join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📜️script.ts");
-    const status = runCmdStatus(runtimeExecutableV1(), [cachingScript, "cache-prune", ...(dry ? ["--dry-run"] : [])], { cwd: this.root, ...orchestratorBudgetOpts() });
-    console.log(`[clean] cache-prune ${status === 0 ? "ok" : `unavailable (exit ${status})`} ${repoCacheDirectory(this.root)}`);
+    const cachingRoot = join(this.root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching");
+    await new CachePruneScript(cachingRoot, this.repoRoot, this.invocation).run(dry ? ["--dry-run"] : []);
+    console.log(`[clean] cache-prune ok ${repoCacheDirectory(this.root)}`);
   }
 }
 

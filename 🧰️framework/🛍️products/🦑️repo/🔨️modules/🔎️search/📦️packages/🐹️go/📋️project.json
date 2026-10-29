@@ -4,9 +4,15 @@
   "projectType": "library",
   "namedInputs": {
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ],
     "goToolchain": [
       "{workspaceRoot}/go.work",
@@ -27,6 +33,58 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go",
         "command": "repo ./📜️script.ts test"
+      },
+      "dependsOn": [
+        "test-oracle"
+      ]
+    },
+    "test-oracle": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "goToolchain",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧵️shards/🟦️.ts",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🧵️shards/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧬️schema/🔣️.json",
+        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🌲️snapshot/🔣️.json"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/📦️packages/🐹️go",
+        "command": "repo ./📜️script.ts test-oracle"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧵️shards/🟦️.ts"
+          ],
+          "dashboard": {
+            "verb": "test",
+            "title": {
+              "en": "Test Search Contract",
+              "de": "Suchvertrag testen"
+            },
+            "description": {
+              "en": "Check ranking, pagination and scopes against neutral fixtures.",
+              "de": "Rangfolge, Paginierung und Bereiche anhand neutraler Fälle prüfen."
+            }
+          },
+          "closure": {
+            "resources": [
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🧵️shards/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧬️schema/🔣️.json",
+              "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🔎️search/🧪️tests/🧫️fixtures/🌲️snapshot/🔣️.json"
+            ]
+          }
+        }
       }
     }
   }

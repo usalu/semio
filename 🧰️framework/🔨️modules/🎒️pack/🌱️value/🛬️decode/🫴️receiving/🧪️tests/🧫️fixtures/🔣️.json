@@ -49,7 +49,22 @@
       "chunkBlake3",
       "declaredFields"
     ],
-    "firstCloseHeapBytes": 0
+    "firstCloseHeapBytes": 0,
+    "sourceRange": {
+      "prefix": [
+        170
+      ],
+      "suffix": [
+        187
+      ],
+      "pageBytes": 7,
+      "cancelCuts": [
+        0,
+        8,
+        64,
+        100000
+      ]
+    }
   },
   "correlatedRetirement": {
     "bodies": [

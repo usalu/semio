@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "minItems": 2,
+  "maxItems": 2,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "mounted",
+      "path",
+      "arguments"
+    ],
+    "properties": {
+      "mounted": {
+        "type": "boolean"
+      },
+      "path": {
+        "type": "string",
+        "maxLength": 256
+      },
+      "arguments": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

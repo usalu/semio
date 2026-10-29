@@ -15,7 +15,8 @@
           "name",
           "left",
           "right",
-          "equal"
+          "equal",
+          "expectedBytes"
         ],
         "additionalProperties": false,
         "properties": {
@@ -88,6 +89,14 @@
           },
           "equal": {
             "type": "boolean"
+          },
+          "expectedBytes": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
           }
         }
       }

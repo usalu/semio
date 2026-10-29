@@ -268,6 +268,9 @@
                 },
                 "buildMode": {
                   "$ref": "#/$defs/BuildModeDeclaration"
+                },
+                "arguments": {
+                  "$ref": "#/$defs/TaskArgumentPolicy"
                 }
               }
             }
@@ -492,6 +495,18 @@
         "type": "string",
         "maxLength": 256,
         "pattern": "^\\{(?:projectRoot|workspaceRoot)\\}/(?!.*//)(?!(?:[^/]+/)*\\.{1,2}(?:/|$))[^\\u0000-\\u001f\\u007f\\\\:*?\"<>|{}\\[\\]]+$"
+      }
+    },
+    "TaskArgumentPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum"
+      ],
+      "properties": {
+        "maximum": {
+          "const": 0
+        }
       }
     }
   }

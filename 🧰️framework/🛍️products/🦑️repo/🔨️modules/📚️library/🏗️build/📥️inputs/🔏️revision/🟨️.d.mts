@@ -27,3 +27,5 @@ export function withImplementationPinV1<T>(body:()=>Promise<T>|T):Promise<T>;
 export function pinnedAuthorityReadV1<T>(key:string,read:()=>T):T;
 /** 🧽️ Forgets the authority snapshot. */
 export function clearPinnedAuthorityV1():void;
+/** 👁️ Observes current physical revision DATA only for paths admitted to a captured image, retaining all descriptor and finite-byte guards. */
+export function observeCurrentSourceRevisionV1(path:string,maximumBytes:number):BoundedSourceRevisionV1&Readonly<{text:null}>;

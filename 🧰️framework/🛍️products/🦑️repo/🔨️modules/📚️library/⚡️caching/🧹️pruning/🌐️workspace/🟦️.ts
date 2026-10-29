@@ -2,6 +2,7 @@ import { repoCacheDirectory } from "../../🟦️.ts";
 import { cargoDirectories } from "../../🦀️cargo/🗂️directories/🟦️.ts";
 import { CACHE_POLICY } from "../../🔍️discovery/📂️source/🟦️.ts";
 import {checkResourceLeaseControl,type ResourceLeaseControl} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import type {ScriptInvocation} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { scanCargoBuildUnits, scanCargoIncrementalUnits, scanCargoTargetUnits, scanDirectoryUnits, type CacheAreaInput, type CacheUnit, type CargoIncrementalScan } from "../🟦️.ts";
 
 export interface CacheAreaScanOperations {
@@ -14,12 +15,13 @@ export interface CacheAreaScanOperations {
 }
 
 /** 🧪️ Delegates test evidence retention to the test domain that owns pinning and active runs. */
-export async function pruneTestEvidence(repoRoot: string, dry: boolean): Promise<string> {
-  const [{ collectGarbage, formatGcReport }, { loadOracleRegistry }] = await Promise.all([
-    import("../../../../🧪️test/📦️packages/🟦️typescript/🗑️retention/🟦️.ts"),
-    import("../../../../🧪️test/📦️packages/🟦️typescript/🤝️contributions/🟦️.ts"),
+export async function pruneTestEvidence(repoRoot: string, dry: boolean, invocation:ScriptInvocation, control:ResourceLeaseControl, language:"en"|"de"): Promise<string> {
+  const [{retainRepositoryTestArtifactsV1,repositoryTestRetentionReportV1}, {default:policy}] = await Promise.all([
+    import("../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts"),
+    import("../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🔣️policy/🔣️json/🟦️.ts"),
   ]);
-  return formatGcReport(collectGarbage(repoRoot, loadOracleRegistry(repoRoot), { dry, olderThanMs: CACHE_POLICY.storage.tests.unusedAgeMs }));
+  const outcome=await retainRepositoryTestArtifactsV1(repoRoot,invocation,control,{...policy,version:1},undefined,{dryRun:dry});
+  return repositoryTestRetentionReportV1(language,outcome,dry);
 }
 
 /** ⚡️ Projects the shared cache root into independently bounded areas from one cancellation signal. */

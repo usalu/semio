@@ -58,7 +58,7 @@ export async function containerPlaygroundDeclarationsV1(workspace:string,invocat
 
 /** 🚀️ Verifies the image's pinned runtime acquisition before application dependency synchronization, and that every named
  * volume nested in the checkout is private to that checkout (`${devcontainerId}`: two clones with the same folder name must
- * not share `node_modules` or build caches) and, created root-owned by Docker, is handed to the remote user before
+ * not share installed dependency generations or build caches) and, created root-owned by Docker, is handed to the remote user before
  * `postCreateCommand` installs into it. https://containers.dev/implementors/json_reference/#variables-in-devcontainerjson
  * https://code.visualstudio.com/remote/advancedcontainers/improve-performance#_use-a-targeted-named-volume */
 export async function testContainerRuntimeBootstrap(workspace: string,invocation:ScriptInvocation): Promise<void> {
@@ -91,6 +91,9 @@ export async function testContainerRuntimeBootstrap(workspace: string,invocation
   const nested = (mounts: readonly Readonly<Record<string, string>>[]) => nestedMounts(mounts).map((mount) => mount.target!.replace("${containerWorkspaceFolder}", config.workspaceFolder));
   const parsedMounts = config.mounts.map((mount) => Object.fromEntries(mount.split(",").map((pair) => [pair.slice(0, pair.indexOf("=")), pair.slice(pair.indexOf("=") + 1)])));
   const volumes = nested(parsedMounts);
+  const projection = JSON.parse(readFileSync(join(import.meta.dir, "../../🧬️schema/🔣️.json"), "utf8")).$defs.SourceDependencyProjection.const;
+  assert.equal(fixture.sourceEndpointBasename, projection.sourceEndpointBasename);
+  for (const mount of parsedMounts) assert.notEqual(posix.basename(mount.target!), fixture.sourceEndpointBasename, "Source dependency projection endpoints must remain replaceable on their parent filesystem, not be volume mountpoints");
   for (const mount of nestedMounts(parsedMounts)) assert.ok(mount.source!.includes("${devcontainerId}"), `The volume at ${mount.target} is nested in the checkout, so it must be private to it (\${devcontainerId})`);
   assert.deepEqual(volumes, nested(require("lodash").map(config.mounts, (mount: string) => require("lodash").fromPairs(require("lodash").map(mount.split(","), (pair: string) => require("lodash").split(pair, /=(.*)/s, 2))))));
   assert.deepEqual(volumes, fixture.workspaceVolumeTargets);

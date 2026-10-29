@@ -1,0 +1,4 @@
+calm|wind|en-1991-1-4|bl-L1b:0.3:0.01,bl-L2b:0.3:0.01,bl-L3b:0.3:0.01,bl-R1b:0.3:0.01,bl-R2b:0.3:0.01,bl-R3b:0.3:0.01,plume-1:0.15:0.01,plume-2:0.15:0.01,plume-3:0.15:0.01,plume-4:0.15:0.01
+windy|wind|en-1991-1-4|bl-L1b:0.3:0.4,bl-L2b:0.3:0.4,bl-L3b:0.3:0.4,bl-R1b:0.3:0.4,bl-R2b:0.3:0.4,bl-R3b:0.3:0.4,plume-1:0.15:0.15,plume-2:0.15:0.15,plume-3:0.15:0.15,plume-4:0.15:0.15
+storm|wind|vogel-1989|bl-L1b:0.3:2.2,bl-L2b:0.3:2.2,bl-L3b:0.3:2.2,bl-R1b:0.3:2.2,bl-R2b:0.3:2.2,bl-R3b:0.3:2.2,plume-1:0.15:0.8,plume-2:0.15:0.8,plume-3:0.15:0.8,plume-4:0.15:0.8
+snow|snow|en-1991-1-3|bl-L1b:0.3:15,bl-L2b:0.3:15,bl-L3b:0.3:15,bl-R1b:0.3:15,bl-R2b:0.3:15,bl-R3b:0.3:15,plume-1:0.15:1,plume-2:0.15:1,plume-3:0.15:1,plume-4:0.15:1

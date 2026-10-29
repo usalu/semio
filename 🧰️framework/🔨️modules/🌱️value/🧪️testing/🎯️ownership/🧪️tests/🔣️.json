@@ -1,0 +1,244 @@
+{
+  "version": 1,
+  "package": "semio-framework-value",
+  "manifest": "📦️packages/🦀️rust/Cargo.toml",
+  "caps": {
+    "maxSourceFiles": 32,
+    "maxSourceBytes": 262144,
+    "maxActiveLines": 4000
+  },
+  "baseline": {
+    "productionFiles": 28,
+    "libraryTestFiles": 44,
+    "individualTests": 15
+  },
+  "expected": {
+    "productionFiles": 28,
+    "libraryTestFiles": 30,
+    "individualTests": 15,
+    "integrationTargets": 7
+  },
+  "owners": [
+    {
+      "id": "value-utf8",
+      "entry": "📝️text/🚶️utf8/🧪️tests/🦀️.rs",
+      "sources": [
+        {
+          "path": "📝️text/🚶️utf8/🧪️tests/🦀️.rs",
+          "tests": [
+            "original_utf8_cursor_pages_match_portable_scalar_offsets_without_allocations",
+            "original_utf8_buffer_funds_transfer_and_every_cancellation_frontier"
+          ],
+          "assertionTokens": 30,
+          "bodySha256": "b0057fe833fa5c91e83d6bc06ebc62c42dcec26f3b5178c0fa5a986bf350b1fa",
+          "fixtureLiterals": [
+            "../../📝️text/🚶️utf8/🧪️tests/🧫️fixtures/🔣️.json",
+            "../../📝️text/🚶️utf8/🧪️tests/🧫️fixtures/🔣️.json"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "value-publication",
+      "entry": "📣️publication/🌳️root/🧪️tests/🦀️.rs",
+      "sources": [
+        {
+          "path": "📣️publication/🌳️root/🧪️tests/🦀️.rs",
+          "tests": [
+            "original_publication_root_reveals_all_candidates_at_one_decision_and_returns_original_owners",
+            "original_publication_roots_close_both_sources_before_and_after_shared_visibility"
+          ],
+          "assertionTokens": 25,
+          "bodySha256": "e64dee214c17d76129f91ab3a581fe1795e192eeaf5dc4188bca11194984a06c",
+          "fixtureLiterals": [
+            "🔣️.json"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "value-paged-record",
+      "entry": "📦️paged/📇️record/🧪️tests.rs",
+      "sources": [
+        {
+          "path": "📦️paged/📇️record/🧪️tests.rs",
+          "tests": [
+            "original_indexed_record_keeps_literal_key_order_and_actual_entry_addresses"
+          ],
+          "assertionTokens": 5,
+          "bodySha256": "8b53ff255206f81a7edb3c891db53d5a3c10d8d99469812d335d9e004dd44a8d",
+          "fixtureLiterals": [
+            "🧪️.json"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "value-paged-read",
+      "entry": "📦️paged/📖️read/🧪️tests/🦀️.rs",
+      "sources": [
+        {
+          "path": "📦️paged/📖️read/🧪️tests/🦀️.rs",
+          "tests": [
+            "original_paged_byte_source_borrows_exact_fragments_across_physical_boundaries"
+          ],
+          "assertionTokens": 8,
+          "bodySha256": "cc4ecf3c5abb9a54f53c29de2f2bbe0360688f783d8aebd35a93b7a99c19c3cb",
+          "fixtureLiterals": [
+            "🔣️.json"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "value-paged-receiving",
+      "entry": "📦️paged/🛬️receive/🧪️tests/🦀️.rs",
+      "sources": [
+        {
+          "path": "📦️paged/🛬️receive/🧪️tests/🦀️.rs",
+          "tests": [
+            "original_paged_text_admits_exact_unicode_and_closes_every_partial_owner"
+          ],
+          "assertionTokens": 9,
+          "bodySha256": "4c27cc4c4ff848fa3543e5ce34d17994d5ae78fce52d4bddd9e49bf047c81327",
+          "fixtureLiterals": [
+            "🔣️.json"
+          ]
+        },
+        {
+          "path": "📦️paged/🛬️receive/🗂️map/🧪️tests/🦀️.rs",
+          "tests": [
+            "original_map_keys_receive_in_authored_order_and_reject_duplicates",
+            "shared_original_paged_map_supports_erased_receiving_and_funded_default"
+          ],
+          "assertionTokens": 14,
+          "bodySha256": "87b0f9a0e08fd40ec641d76a9f829092bd0ce744357e94694ab2c655633ba229",
+          "fixtureLiterals": [
+            "🔣️.json"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "value-sort",
+      "entry": "📶️sort/🧪️tests/🦀️.rs",
+      "sources": [
+        {
+          "path": "📶️sort/🧪️tests/🦀️.rs",
+          "tests": [
+            "retained_index_sort_matches_portable_order_and_bounds_every_action",
+            "retained_index_sort_refuses_wrong_observation_without_changing_cursor"
+          ],
+          "assertionTokens": 9,
+          "bodySha256": "1d0eb41e7ea218fd2bf62a31012b48bc1d73738f4b574c0b6ffaed9b13ed26d7",
+          "fixtureLiterals": [
+            "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🧫️fixtures/🔣️.json"
+          ],
+          "revisions": [
+            {
+              "reason": "Manifest-dependent fixture lookup replaced by existing repository-relative reader; the same unchanged sort fixture bytes and assertions are used.",
+              "previousBodySha256": "729163a062b84b02bbd02523594c27cf2b42404207fa84561d138f767e3eb39d",
+              "previousAssertionTokens": 9,
+              "previousFixtureLiterals": [
+                "../../../../📶️sort/🧪️tests/🧫️fixtures/🔣️.json"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "value-scratch",
+      "entry": "🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs",
+      "sources": [
+        {
+          "path": "🔑️hashed/🧮️scratch/🧪️tests/🦀️.rs",
+          "tests": [
+            "original_scratch_hash_matches_neutral_dictionary",
+            "scratch_hash_forced_collisions_preserve_deleted_probe_chains",
+            "incremental_fixed_slots_reserve_initialize_probe_and_release_without_growth"
+          ],
+          "assertionTokens": 27,
+          "bodySha256": "43000fd5c2335dd78ac5530f7d66a449dc4833ef0baac85c3a32ba788c7d7e87",
+          "fixtureLiterals": [
+            "../../🔑️hashed/🧮️scratch/🧪️tests/🧫️fixtures/🔣️.json",
+            "🧫️fixtures/📇️incremental.json"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "lib",
+      "entry": "📦️packages/🦀️rust/🦀️.rs",
+      "sources": [
+        {
+          "path": "🗂️ordered/🔢️numeric/🧮️scratch/🎟️reservation/🧪️tests/🦀️.rs",
+          "tests": [
+            "neutral_structural_reservations_match_ordered_reference"
+          ],
+          "assertionTokens": 13,
+          "bodySha256": "9e40ce36bb9ed7076514771a0fd2b6cefd75a60c7b2840860d67cf98fc409174",
+          "fixtureLiterals": [
+            "🧫️fixtures/🔣️.json"
+          ],
+          "revisions": [
+            {
+              "reason": "Explicit 16-row payload geometry selected before allocation; original maximum depth five and all existing assertions retained; one physical page-capacity assertion added.",
+              "previousBodySha256": "c5574389e10b4ff405c79b6f3443231ee11d2bf89e70647fc8a9251e34ce24be",
+              "previousAssertionTokens": 12,
+              "previousFixtureLiterals": [
+                "🧫️fixtures/🔣️.json"
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "cfg": [
+    "unix",
+    "target_family=unix",
+    "target_os=linux",
+    "target_arch=x86_64",
+    "target_pointer_width=64",
+    "target_endian=little",
+    "target_env=gnu",
+    "panic=unwind",
+    "target_has_atomic=8",
+    "target_has_atomic=16",
+    "target_has_atomic=32",
+    "target_has_atomic=64",
+    "target_has_atomic=ptr",
+    "test"
+  ],
+  "validation": {
+    "source": "📦️packages/🦀️rust/📜️script.ts",
+    "packages": [
+      "semio-framework-value",
+      "semio-framework-value-tests"
+    ],
+    "utf8Group": {
+      "package": "semio-framework-value",
+      "target": {
+        "kind": "test",
+        "name": "value-utf8"
+      },
+      "cargoArgs": [
+        "--locked"
+      ],
+      "laws": [
+        "original_utf8_cursor_pages_match_portable_scalar_offsets_without_allocations",
+        "original_utf8_buffer_funds_transfer_and_every_cancellation_frontier"
+      ]
+    }
+  },
+  "fixtureCoordinate": {
+    "literal": "🧰️framework/🔨️modules/🌱️value/📶️sort/🧪️tests/🧫️fixtures/🔣️.json",
+    "path": "📶️sort/🧪️tests/🧫️fixtures/🔣️.json",
+    "manifests": [
+      "📦️packages/🦀️rust/Cargo.toml",
+      "🧪️tests/🥣️companion/📦️packages/🦀️rust/Cargo.toml"
+    ],
+    "sha256": "08761982a94bd50bcc3a10a90a367105767e5ead94c7f32d268fd2d603ddc31f"
+  }
+}

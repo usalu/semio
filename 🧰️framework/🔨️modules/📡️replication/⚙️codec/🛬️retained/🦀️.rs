@@ -44,10 +44,10 @@ impl RetainedWireUtf8Validation{
 
 #[derive(Clone,Copy)]
 enum RetainedWireFieldSource{Plain,Json(RetainedWireJsonStringSource),Range{original_range:(usize,usize)},PrefixedUuid{original_prefix_range:(usize,usize),original_uuid_range:(usize,usize)},Timestamp{original_timestamp_range:(usize,usize),epoch_millis:i64,year:i64,month:u8,day:u8,hour:u8,minute:u8,second:u8,millis:u16,year_width:usize}}
-pub struct RetainedWireFieldDecode{original:usize,extent:usize,authority:Option<(u64,u64)>,output_extent:usize,source:RetainedWireFieldSource,output:ManuallyDrop<Option<Vec<u8>>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,phase:u8,closing:bool,text:bool,utf8:RetainedWireUtf8Validation}
+pub struct RetainedWireFieldDecode{identity:OriginalWireSourceIdentity,output_extent:usize,source:RetainedWireFieldSource,output:ManuallyDrop<Option<Vec<u8>>>,receipt:Option<(RetainedCloneGrant,RetainedCloneProgress)>,phase:u8,closing:bool,text:bool,utf8:RetainedWireUtf8Validation}
 impl RetainedWireFieldDecode{
  /// 👁️ Borrows the original payload without allocating any field or receipt backing.
- pub fn new<S:RetainedWireByteSource+?Sized>(source:&S,text:bool)->Self{let identity=source.original_source_identity();Self{original:identity.address,extent:identity.extent,authority:identity.authority,output_extent:identity.extent,source:RetainedWireFieldSource::Plain,output:ManuallyDrop::new(None),receipt:None,phase:0,closing:false,text,utf8:RetainedWireUtf8Validation::new()}}
+ pub fn new<S:RetainedWireByteSource+?Sized>(source:&S,text:bool)->Self{let identity=source.original_source_identity();Self{identity,output_extent:identity.extent,source:RetainedWireFieldSource::Plain,output:ManuallyDrop::new(None),receipt:None,phase:0,closing:false,text,utf8:RetainedWireUtf8Validation::new()}}
  /// 📏️ Binds one original field range while retaining the complete source's actual owner identity.
  pub fn new_range<S:RetainedWireByteSource+?Sized>(source:&S,original_range:(usize,usize),text:bool)->Result<Self,ValueError>{let width=original_range.1.checked_sub(original_range.0).filter(|_|original_range.1<=source.original_source_identity().extent).ok_or_else(||ValueError::literal(ValueRefusalKind::InvalidValue,"original wire field escaped its source"))?;let mut owner=Self::new(source,text);owner.output_extent=width;owner.source=RetainedWireFieldSource::Range{original_range};Ok(owner)}
  /// 🔣️ Binds exactly quoted original JSON and defers all syntax scanning and derived writes to paid pieces.
@@ -88,8 +88,8 @@ impl RetainedWireFieldDecode{
    }
   })
  }
- pub fn source_identity(&self)->(usize,usize){(self.original,self.extent)}
- pub fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.original,extent:self.extent,authority:self.authority}}
+ pub fn source_identity(&self)->(usize,usize){(self.identity.address,self.identity.extent)}
+ pub fn original_source_identity(&self)->OriginalWireSourceIdentity{self.identity}
  /// 🧳️ Takes the exact published backing from its real caller slot after metadata admission.
  pub fn admit_received(original:&mut Option<Vec<u8>>,grant:RetainedCloneGrant)->Result<Option<Self>,ValueError>{
   if original.is_none()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
@@ -105,7 +105,7 @@ impl RetainedWireFieldDecode{
  pub fn close_demands(&self)->RetirementDemand{if self.receipt.is_some()||self.phase==3||!self.closing{return Default::default()}RetirementDemand{release_bytes:self.output.as_ref().map_or(0,Vec::capacity),depth:1,..Default::default()}}
  /// 🔐️ Quotes physical cancellation custody without mutating this original field's active phase.
  pub fn retirement_demands(&self)->RetirementDemand{RetirementDemand{release_bytes:self.output.as_ref().map_or(0,Vec::capacity),depth:usize::from(!self.terminal_is_empty()),..Default::default()}}
- fn validate_source<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<(),ValueError>{let identity=source.original_source_identity();if identity.address!=self.original||identity.extent!=self.extent||identity.authority!=self.authority{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original wire source identity or extent changed"))}Ok(())}
+ fn validate_source<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<(),ValueError>{if source.original_source_identity()!=self.identity{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original wire source identity or extent changed"))}Ok(())}
  pub fn receipt(&self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt}
  pub fn take_receipt(&mut self)->Option<(RetainedCloneGrant,RetainedCloneProgress)>{self.receipt.take()}
  pub fn is_ready(&self)->bool{!self.closing&&self.phase==2&&self.receipt.is_none()}
@@ -203,4 +203,4 @@ mod tests;
 mod paged_bytes;
 pub use paged_bytes::RetainedWireBytesDecode;
 
-impl<const N:usize> RetainedWireByteSource for semio_framework_value::paged::PagedBytes<N>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.retained_bytes().contiguous_at(0).map_or(self as*const Self as usize,|page|page.as_ptr()as usize),extent:self.len(),authority:None}}fn byte_at(&self,index:usize)->Option<u8>{self.retained_bytes().get(index).copied()}}
+impl<const N:usize> RetainedWireByteSource for semio_framework_value::paged::PagedBytes<N>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.retained_bytes().contiguous_at(0).map_or(self as*const Self as usize,|page|page.as_ptr()as usize),extent:self.len(),authority:None}}fn byte_at(&self,index:usize)->Option<u8>{self.retained_bytes().get(index).copied()}}

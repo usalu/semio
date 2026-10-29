@@ -5,16 +5,16 @@ use std::{marker::PhantomData,mem::size_of};
 /// 🧬️ Maps only a complete actual typed owner through an infallible authored ownership transfer.
 pub trait NativeReceiveMap<T>:RetireOwned{fn from_native(value:T)->Self;}
 /// 🪡️ A wrapper retains its defining receiver through the same original input and funded cleanup.
-pub struct NativeMappedReceiver<I,T:NativeReceive<I>,U:NativeReceiveMap<T>>{inner:T::Receiver,marker:PhantomData<fn()->(I,U)>}
+pub struct NativeMappedReceiver<I:?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>>{inner:T::Receiver,marker:PhantomData<fn(&I)->U>}
 fn nested(mut d:RetirementDemand)->Result<RetirementDemand,ValueError>{d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::DepthLimit,"native mapped receiving depth overflow"))?;Ok(d)}
 fn child(g:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_depth:g.maximum_depth-1,..g}}
-impl<I:'static,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeMappedReceiver<I,T,U>{
+impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeMappedReceiver<I,T,U>{
  /// 📐️ Adds the real wrapper ancestor to its defining child's original constructor quote.
  pub fn birth()->Result<RetirementDemand,ValueError>{nested(T::receive_birth_demand())}
  /// 🎟️ Refusal constructs no child or wrapper owner.
  pub fn begin(g:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{let d=Self::birth()?;if !crate::retained_clone::retained_clone_grant_admits(g,d){return Err(ValueError::literal(crate::ValueRefusalKind::WorkLimit,"native wrapper constructor requires its complete original quote"))}let(inner,p)=T::begin_receive(child(g))?;Ok((Self{inner,marker:PhantomData},p))}
 }
-impl<I:'static,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeReceiver<I,U> for NativeMappedReceiver<I,T,U>{
+impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeReceiver<I,U> for NativeMappedReceiver<I,T,U>{
  fn demands(&self,input:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>{nested(self.inner.demands(input,body)?)}
  fn advance(&mut self,input:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demands(input,body)?;if !crate::retained_clone::retained_clone_grant_admits(g,d){return Ok(RetainedCloneStep::Progress(Default::default()))}self.inner.advance(input,control,body,child(g))}
  fn output_ready(&self)->bool{self.inner.output_ready()}

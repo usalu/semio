@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "maximumSnapshotBytes": 4194304,
+        "maximumLoaderBytes": 32768,
+        "maximumURLUnits": 4096,
+        "maximumPathUnits": 256
+      }
+    },
+    "Command": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "program",
+        "arguments",
+        "input",
+        "implementation",
+        "loader",
+        "environment"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "program": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "arguments": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "string",
+            "maxLength": 32768
+          }
+        },
+        "input": {
+          "type": "string",
+          "maxLength": 4194304
+        },
+        "implementation": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "loader": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH"
+          ],
+          "properties": {
+            "BUN_RUNTIME_TRANSPILER_CACHE_PATH": {
+              "const": "0"
+            }
+          }
+        }
+      }
+    },
+    "Proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "snapshot",
+        "sha256",
+        "loaderSha256",
+        "root"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "snapshot": {
+          "type": "null"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "loaderSha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "root": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    }
+  }
+}

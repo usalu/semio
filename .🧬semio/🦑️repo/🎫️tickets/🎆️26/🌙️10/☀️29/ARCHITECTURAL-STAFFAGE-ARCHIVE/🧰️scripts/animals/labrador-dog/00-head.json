@@ -1,0 +1,39 @@
+    {
+      "id": "labrador-dog",
+      "category": "animals",
+      "title": { "en": "Labrador Dog", "de": "Labrador" },
+      "summary": {
+        "en": "An adult Labrador Retriever of 30 kg with 0.57 m withers height: digitigrade four-legged skeleton with separate near and far limb chains, jointed tail, flexing spine, jaw and ears; walk and trot gaits with correct footfall order, a sitting pose, sniffing, panting and a short-coated thermal model.",
+        "de": "Ein erwachsener Labrador Retriever von 30 kg mit 0,57 m Widerristhöhe: zehengängiges vierbeiniges Skelett mit getrennten Gliedmaßenketten der nahen und fernen Seite, gegliederter Rute, biegsamer Wirbelsäule, Unterkiefer und Ohren; Schritt und Trab mit korrekter Fußfolge, Sitzpose, Schnüffeln, Hecheln und ein Wärmemodell für kurzes Fell."
+      },
+      "tags": ["animal", "dog", "quadruped", "digitigrade", "mammal", "pet", "gait", "panting"],
+      "provenance": {
+        "author": "Semio staffage content worker (animals)",
+        "method": "handcrafted",
+        "created": "2026-10-29",
+        "references": [
+          { "id": "muybridge-1887", "citation": "Muybridge, E. (1887). Animal Locomotion: An Electro-Photographic Investigation of Consecutive Phases of Animal Movements. University of Pennsylvania, plates of walking and trotting dogs." },
+          { "id": "hildebrand-1976", "citation": "Hildebrand, M. (1976). Analysis of tetrapod gaits: general considerations and symmetrical gaits. In: Herman, R. M. et al. (eds), Neural Control of Locomotion, Plenum Press, pp. 203-236." },
+          { "id": "amit-2009", "citation": "Amit, T., Gomberg, B. R., Milgram, J., Shahar, R. (2009). Segmental inertial properties in dogs determined by magnetic resonance imaging. The Veterinary Journal 182, 94-99. Segment fractions here are authored estimates guided by that study." },
+          { "id": "jaegger-2002", "citation": "Jaegger, G., Marcellin-Little, D. J., Levine, D. (2002). Reliability of goniometry in Labrador Retrievers. American Journal of Veterinary Research 63, 979-986. Joint limits here are authored to lie inside the reported ranges of motion." },
+          { "id": "taylor-1970", "citation": "Taylor, C. R., Schmidt-Nielsen, K., Raab, J. L. (1970). Scaling of energetic cost of running to body size in mammals. American Journal of Physiology 219, 1104-1107." },
+          { "id": "kleiber-1947", "citation": "Kleiber, M. (1947). Body size and metabolic rate. Physiological Reviews 27, 511-541; resting heat production 3.4 W per kg^0.75." },
+          { "id": "spector-1956", "citation": "Spector, W. S. (ed.) (1956). Handbook of Biological Data. Saunders, surface area of mammals by Meeh's formula A = k·M^(2/3), k = 0.112 m²/kg^(2/3) for the dog." },
+          { "id": "scholander-1950", "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236." },
+          { "id": "cena-monteith-1975", "citation": "Cena, K., Monteith, J. L. (1975). Transfer processes in animal coats. I. Radiative transfer. Proceedings of the Royal Society B 188, 377-393." },
+          { "id": "gebremedhin-2001", "citation": "Gebremedhin, K. G., Wu, B. (2001). A model of evaporative cooling of wet skin surface and fur layer. Journal of Thermal Biology 26, 537-545." },
+          { "id": "goldberg-1981", "citation": "Goldberg, M. B., Langman, V. A., Taylor, C. R. (1981). Panting in dogs: paths of air flow in response to heat and exercise. Respiration Physiology 43, 327-338." },
+          { "id": "ashrae-2021", "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort, respiratory heat loss." }
+        ],
+        "notes": {
+          "en": "Side elevation drawn for the near (left) side of a dog walking to the right. Far-side limbs, ear and tail root are separate bone chains drawn darker and behind. Bounds include the raised head, so the nominal height is larger than the withers height.",
+          "de": "Seitenansicht der nahen (linken) Seite eines nach rechts gehenden Hundes. Gliedmaßen, Ohr und Rutenwurzel der fernen Seite sind eigene Knochenketten, dunkler und weiter hinten gezeichnet. Die Umgrenzung enthält den erhobenen Kopf, die Nennhöhe ist daher größer als die Widerristhöhe."
+        }
+      },
+      "dimensions": { "heightM": 0.73, "widthM": 1.48, "depthM": 0.28, "massKg": 30 },
+      "materials": [
+        { "id": "short-fur", "title": { "en": "Short double coat", "de": "Kurzes Doppelfell" }, "emissivity": 0.96, "solarAbsorptivity": 0.6, "densityKgM3": 1100, "conductivityWmK": 0.045, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+        { "id": "bare-skin", "title": { "en": "Bare skin (nose, pads)", "de": "Nackte Haut (Nase, Ballen)" }, "emissivity": 0.98, "solarAbsorptivity": 0.8, "source": "literature", "reference": "ashrae-2021" },
+        { "id": "tongue-mucosa", "title": { "en": "Moist tongue mucosa", "de": "Feuchte Zungenschleimhaut" }, "emissivity": 0.98, "solarAbsorptivity": 0.5, "source": "authored-estimate", "reference": "goldberg-1981" },
+        { "id": "claw-horn", "title": { "en": "Claw horn", "de": "Krallenhorn" }, "emissivity": 0.9, "solarAbsorptivity": 0.8, "source": "authored-estimate" }
+      ],

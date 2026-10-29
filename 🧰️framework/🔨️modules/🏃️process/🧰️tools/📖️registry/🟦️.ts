@@ -25,6 +25,7 @@ export type ToolProvisionV1 = Readonly<{ kind: "internal" | "bootstrap-asset" | 
 export type ToolLocatorV1 =
   | Readonly<{ kind: "environment"; name: string }>
   | Readonly<{ kind: "runtime" }>
+  | Readonly<{ kind: "native-compiler" }>
   | Readonly<{ kind: "provisioned"; partition: string; segments: readonly string[]; executable: string }>
   | Readonly<{ kind: "package-script"; package: string; script: string; via: string; prefix?: readonly string[] }>
   | Readonly<{ kind: "script"; path: string; via: string; prefix?: readonly string[] }>
@@ -32,7 +33,7 @@ export type ToolLocatorV1 =
 /** 🌿️ The environment policy of one tool. */
 export type ToolEnvironmentSpecV1 = Readonly<{ mode: "inherit" | "allowlist"; pass: readonly string[]; deny: readonly string[]; set: Readonly<Record<string, string>>; cacheDirectories?: Readonly<Record<string, readonly string[]>> }>;
 /** 🎟️ How a tool takes part in machine capacity admission. */
-export type ToolCapacitySpecV1 = Readonly<{ mode: "none" | "inherit" | "admit"; operation?: string; kind?: "test" | "check" | "generate" | "build" | "script" | "service" }>;
+export type ToolCapacitySpecV1 = Readonly<{ mode: "none" | "inherit" | "admit"; operation?: string; kind?: "test" | "check" | "generate" | "build" | "script" | "service"; rules?: readonly Readonly<{ command: string; argumentsPrefix: readonly string[]; operation: string; kind: "test" | "check" | "generate" | "build" | "script" | "service" }>[] }>;
 /** 🧩️ One registered external tool. */
 export type ToolEntryV1 = Readonly<{
   id: string; kind: string; summary: ToolTextV1; capabilities: readonly string[]; commands: readonly string[]; platforms: readonly ToolPlatformV1[];
@@ -67,6 +68,12 @@ export function readToolRegistryV1(document: unknown): ToolRegistryV1 {
       const owner = owners.get(command);
       if (owner !== undefined) throw new Error(`Tool registry invalid: command ${command} belongs to ${owner} and ${tool.id}`);
       owners.set(command, tool.id);
+    }
+    const rules = new Set<string>();
+    for (const rule of tool.capacity.rules ?? []) {
+      const key = JSON.stringify([rule.command, rule.argumentsPrefix]);
+      if (!tool.commands.includes(rule.command) || rules.has(key)) throw new Error(`Tool registry invalid: undeclared or duplicate capacity command for ${tool.id}`);
+      rules.add(key);
     }
   }
   for (const tool of registry.tools) for (const locator of tool.locate) if ("via" in locator && !ids.has(locator.via)) throw new Error(`Tool registry invalid: ${tool.id} locates through unknown tool ${locator.via}`);

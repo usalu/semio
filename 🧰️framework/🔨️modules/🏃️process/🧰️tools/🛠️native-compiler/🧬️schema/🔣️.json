@@ -1,0 +1,35 @@
+{
+ "$schema": "http://json-schema.org/draft-07/schema#",
+ "title": "Native Compiler Selection",
+ "definitions": {
+  "Protocol": {
+   "const": {
+    "version": 1,
+    "maximumBranches": 32,
+    "maximumSourceFiles": 32768,
+    "maximumSourceDirectories": 8192,
+    "maximumSourceBytes": 536870912,
+    "maximumFileBytes": 67108864,
+    "architectures": {"x64": "x86_64", "arm64": "aarch64"},
+    "sdk": "org.freedesktop.Sdk",
+    "compiler": "gcc",
+    "explicitEnvironment": ["SEMIO_TOOL_CC", "COMPILER_PATH", "GCC_EXEC_PREFIX", "LIBRARY_PATH", "CPATH", "C_INCLUDE_PATH", "CPLUS_INCLUDE_PATH", "OBJC_INCLUDE_PATH"],
+    "executedTools": ["/bin/sh", "/usr/bin/ld", "/usr/bin/as"],
+    "linkerDirectory": "/usr/bin",
+    "libraryDirectory": "/usr/lib"
+   }
+  },
+  "Selection": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": ["version", "command", "root", "machine"],
+   "properties": {
+    "version": {"const": 1},
+    "command": {"type": "string", "minLength": 1},
+    "root": {"type": "string", "minLength": 1},
+    "machine": {"enum": ["x86_64", "aarch64"]},
+    "libraryDirectory": {"type": "string", "minLength": 1}
+   }
+  }
+ }
+}

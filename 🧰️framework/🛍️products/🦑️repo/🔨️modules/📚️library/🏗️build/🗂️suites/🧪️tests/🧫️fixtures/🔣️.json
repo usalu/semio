@@ -46,7 +46,5 @@
       "spawns": false
     }
   ],
-  "pureAggregators": [
-    "🧪️tests/🕸️graph/🟦️.ts"
-  ]
+  "pureAggregators": []
 }

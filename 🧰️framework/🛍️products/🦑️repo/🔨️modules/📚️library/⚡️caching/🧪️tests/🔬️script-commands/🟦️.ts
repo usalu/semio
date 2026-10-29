@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
 import { EventEmitter } from "node:events";
+import {refuseProcessV1} from "../../../../../../../🔨️modules/🏃️process/📖️texts/🟦️.ts";
 import { chmodSync, copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, utimesSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join, relative, resolve } from "node:path";
@@ -85,6 +86,7 @@ export class TestScript extends BundleScript {
       if(args.length!==1)throw new Error("Expected test sdk-material");
       const {withNxSdkMaterialReportV1,proveNxSdkMaterialConsumptionV1}=await import("../../🚀️bootstrap/🛠️tools/📦️sdk/📊️material/🟦️.ts");await withNxSdkMaterialReportV1(this.repoRoot,this.invocation,phaseControl,async(report,store,materialPhase)=>{await proveNxSdkMaterialConsumptionV1(report.generation,report.generationMaterial,store,materialPhase);await proveNxSdkMaterialConsumptionV1(report.snapshot,report.snapshotMaterial,store,materialPhase);const {proveNxSdkBinaryPublicationV1}=await import("../../🚀️bootstrap/🛠️tools/📦️sdk/🧊️binary/🧪️tests/📥️runtime/🟦️.ts");await proveNxSdkBinaryPublicationV1(store,materialPhase);writeFileSync(join(repositoryTestArtifactRootV1(this.repoRoot),"sdk-material.json"),JSON.stringify(report,null,2)+"\n");});return;
     }
+    if(args[0]==="daemon-output-observation"){if(args.length!==1)throw Error("Expected test daemon-output-observation");await(await import("../../🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/📥️runtime/🟦️.ts")).proveNxDaemonOutputObservationV1(this.repoRoot,repositoryTestArtifactRootV1(this.repoRoot),this.invocation);return;}
     if (args[0] === "daemon-journal") {
       if (args.length !== 1 && (args.length !== 2 || !["transport", "workspace"].includes(args[1]!))) throw new Error("Expected test daemon-journal [transport|workspace]");
       const output = repositoryTestArtifactRootV1(this.repoRoot);
@@ -179,6 +181,7 @@ export class TestScript extends BundleScript {
       writeFileSync(join(artifacts, "bun-workspace-ownership.json"), JSON.stringify(report, null, 2) + "\n");
       return;
     }
+    if(args.length!==1||args[0]!=="contracts")throw refuseProcessV1("invalid","script.suite-unknown",{suite:args.join(" "),known:"contracts"});
     await testCacheContracts(this.invocation,phaseControl);
   }
 }

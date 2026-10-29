@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "commands": [
+    "build",
+    "complete",
+    "watch"
+  ],
+  "refusals": [
+    {
+      "arguments": [],
+      "error": "usage:"
+    },
+    {
+      "arguments": [
+        "unknown"
+      ],
+      "error": "unknown command"
+    },
+    {
+      "arguments": [
+        "build"
+      ],
+      "error": "Print build requires exactly one document id"
+    },
+    {
+      "arguments": [
+        "build",
+        "thesis",
+        "extra"
+      ],
+      "error": "Print build requires exactly one document id"
+    }
+  ]
+}

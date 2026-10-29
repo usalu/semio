@@ -14,7 +14,8 @@
     "daemonFailures",
     "lockReuse",
     "watchStartup",
-    "daemonStartup"
+    "daemonStartup",
+    "daemonWatcherFailure"
   ],
   "properties": {
     "version": {
@@ -96,8 +97,8 @@
     },
     "daemonFailures": {
       "type": "array",
-      "minItems": 2,
-      "maxItems": 2,
+      "minItems": 3,
+      "maxItems": 3,
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -253,6 +254,33 @@
         },
         "accepted": {
           "const": 2
+        }
+      }
+    },
+    "daemonWatcherFailure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "message",
+        "maximumMilliseconds",
+        "expected"
+      ],
+      "properties": {
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "maximumMilliseconds": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "expected": {
+          "const": {
+            "startupRejected": true,
+            "pendingRejected": true,
+            "reported": 1
+          }
         }
       }
     }

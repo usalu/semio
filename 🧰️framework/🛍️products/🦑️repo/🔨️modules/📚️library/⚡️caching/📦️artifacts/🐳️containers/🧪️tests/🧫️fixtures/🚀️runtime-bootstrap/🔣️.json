@@ -2,7 +2,6 @@
   "bun": "1.4.2",
   "node": "24.15.0",
   "workspaceVolumeTargets": [
-    "/workspaces/semio/node_modules",
     "/workspaces/semio/.🧬semio/🦑️repo/⚡️cache",
     "/workspaces/semio/.cache"
   ],
@@ -219,5 +218,6 @@
         "debugger"
       ]
     }
-  ]
+  ],
+  "sourceEndpointBasename": "node_modules"
 }

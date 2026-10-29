@@ -1,0 +1,129 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "reserved-original-birth",
+      "phase": "reserved",
+      "present": false,
+      "retire": false,
+      "platformCalls": 0
+    },
+    {
+      "name": "committed",
+      "phase": "committed",
+      "present": true,
+      "retire": true,
+      "platformCalls": 1
+    },
+    {
+      "name": "retiring",
+      "phase": "retiring",
+      "present": true,
+      "retire": false,
+      "platformCalls": 0
+    },
+    {
+      "name": "absent",
+      "phase": null,
+      "present": false,
+      "retire": true,
+      "platformCalls": 0
+    },
+    {
+      "name": "unfunded",
+      "phase": null,
+      "present": true,
+      "error": "Exact funded Nx native shard required",
+      "platformCalls": 0
+    },
+    {
+      "name": "busy-committed",
+      "phase": "committed",
+      "present": true,
+      "error": "actual-reader-busy",
+      "platformCalls": 1
+    },
+    {
+      "name": "ambiguous",
+      "phase": "committed",
+      "present": true,
+      "copies": 2,
+      "error": "Exact funded Nx native shard required",
+      "platformCalls": 0
+    }
+  ],
+  "birth": [
+    {
+      "version": 1,
+      "request": {
+        "version": 1,
+        "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "parentIdentity": "original-parent-binding",
+        "directory": "/workspace/nx/shard/native",
+        "filesystemBytes": 66060288,
+        "maximumPhysicalBytes": 67108864,
+        "policySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "stage": "declared",
+      "parent": {
+        "dev": "1",
+        "ino": "2",
+        "mode": 16832
+      },
+      "directory": null,
+      "root": null
+    },
+    {
+      "version": 1,
+      "request": {
+        "version": 1,
+        "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "parentIdentity": "original-parent-binding",
+        "directory": "/workspace/nx/shard/native",
+        "filesystemBytes": 66060288,
+        "maximumPhysicalBytes": 67108864,
+        "policySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "stage": "directory",
+      "parent": {
+        "dev": "1",
+        "ino": "2",
+        "mode": 16832
+      },
+      "directory": {
+        "dev": "1",
+        "ino": "3",
+        "mode": 16832
+      },
+      "root": null
+    },
+    {
+      "version": 1,
+      "request": {
+        "version": 1,
+        "allocation": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "parentIdentity": "original-parent-binding",
+        "directory": "/workspace/nx/shard/native",
+        "filesystemBytes": 66060288,
+        "maximumPhysicalBytes": 67108864,
+        "policySha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+      },
+      "stage": "root",
+      "parent": {
+        "dev": "1",
+        "ino": "2",
+        "mode": 16832
+      },
+      "directory": {
+        "dev": "1",
+        "ino": "3",
+        "mode": 16832
+      },
+      "root": {
+        "dev": "1",
+        "ino": "4",
+        "mode": 16832
+      }
+    }
+  ]
+}

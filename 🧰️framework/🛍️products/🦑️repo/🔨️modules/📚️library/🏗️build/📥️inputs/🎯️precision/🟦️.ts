@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1} from "../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import {validateJsonSchemaSubset} from "../../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import schema from "./🧬️schema/🔣️.json" with {type: "json"};
 import {resolveBuildHelpLanguageV1} from "../../⚙️operations/📖️help/🟦️.ts";
@@ -221,7 +222,7 @@ export function cargoManifestDirectoriesV1(list: (directory: string) => readonly
   const found: string[] = [], paths = new Set(skip.paths), names = new Set(skip.names), walk = (directory: string): void => {
     for (const entry of list(directory)) {
       const path = directory ? `${directory}/${entry.name}` : entry.name;
-      if (entry.link || paths.has(path) || names.has(entry.name)) continue;
+      if (entry.link || isOpaqueSourcePathV1(path) || paths.has(path) || names.has(entry.name)) continue;
       if (entry.directory) walk(path);
       else if (entry.file && entry.name === "Cargo.toml") found.push(directory);
     }
@@ -461,13 +462,14 @@ const readReceipt = (host: ProgramHostV1, key: string, tsconfig: string, chain: 
 export function includeRootsV1(include: readonly string[], exclude: readonly string[], host: Pick<InputPrecisionHostV1, "listDirectory" | "exists">): string[] {
   const isExcluded = excludesV1(exclude), roots = new Set<string>();
   for (const pattern of include) {
-    const stop = pattern.search(/[*?{[]/u), base = stop < 0 ? pattern : pattern.slice(0, pattern.lastIndexOf("/", stop)), pending = [normalize(base)];
-    if (stop < 0 && SOURCE.test(pattern) && host.exists(pattern)) roots.add(pattern);
+    const stop = pattern.search(/[*?{[]/u), separator=pattern.lastIndexOf("/",stop), base = stop < 0 ? pattern : separator<0?"":pattern.slice(0,separator), pending = [normalize(base)];
+    if (stop < 0 && !isOpaqueSourcePathV1(pattern) && SOURCE.test(pattern) && host.exists(pattern)) roots.add(pattern);
     while (stop >= 0 && pending.length) {
       const directory = pending.pop()!;
+      if(isOpaqueSourcePathV1(directory))continue;
       for (const entry of host.listDirectory(directory)) {
         const path = directory ? `${directory}/${entry.name}` : entry.name;
-        if (SKIPPED.has(entry.name) || isExcluded(path)) continue;
+        if (isOpaqueSourcePathV1(path) || SKIPPED.has(entry.name) || isExcluded(path)) continue;
         if (entry.directory) pending.push(path);
         else if (SOURCE.test(path) && globMatchesV1(pattern, path)) roots.add(path);
       }
@@ -482,15 +484,16 @@ export function entryFilesV1(globs: readonly string[], host: Pick<InputPrecision
   for (const pattern of globs.filter((glob) => !glob.startsWith("!")).map(strip)) {
     const stop = pattern.search(GLOB_CHARACTERS);
     if (stop < 0) {
-      if (SOURCE.test(pattern) && host.exists(pattern) && !excluded(pattern)) found.add(pattern);
+      if (!isOpaqueSourcePathV1(pattern) && SOURCE.test(pattern) && host.exists(pattern) && !excluded(pattern)) found.add(pattern);
       continue;
     }
     const pending = [normalize(pattern.slice(0, Math.max(0, pattern.lastIndexOf("/", stop))))];
     while (pending.length) {
       const directory = pending.pop()!;
+      if(isOpaqueSourcePathV1(directory))continue;
       for (const entry of host.listDirectory(directory)) {
         const path = directory ? `${directory}/${entry.name}` : entry.name;
-        if (SKIPPED.has(entry.name) || entry.name.startsWith(".") || excluded(path)) continue;
+        if (isOpaqueSourcePathV1(path) || SKIPPED.has(entry.name) || entry.name.startsWith(".") || excluded(path)) continue;
         if (entry.directory) pending.push(path);
         else if (SOURCE.test(path) && globMatchesV1(pattern, path)) found.add(path);
       }
@@ -517,7 +520,7 @@ async function deriveProgramV1(tsconfig: string, host: Pick<InputPrecisionHostV1
   const program = host.program ?? fail(`TypeScript program analysis missing: ${tsconfig}`);
   const config = configuration(tsconfig, host), include = entries ? [] : config.include ?? [`${config.directory ? `${config.directory}/` : ""}**/*`], exclude = entries ? [] : config.exclude ?? [];
   const isExcluded = excludesV1(exclude), ask = (question: SourceRootsQuestionV1): Promise<readonly string[]> => host.sourceRoots ? host.sourceRoots(question) : Promise.resolve(question.mode === "entries" ? entryFilesV1(question.globs, host) : includeRootsV1(question.include, question.exclude, host));
-  const roots = new Set<string>(entries ? await ask({mode: "entries", globs: entries}) : config.files.filter((file) => host.exists(file)));
+  const roots = new Set<string>(entries ? await ask({mode: "entries", globs: entries}) : config.files.filter((file) => !isOpaqueSourcePathV1(file) && host.exists(file)));
   if (entries && !roots.size) fail(`Program entries select no TypeScript file: ${tsconfig}`);
   if (include.length) for (const file of await ask({mode: "include", include, exclude})) roots.add(file);
   const chain = unique([...config.chain, tsconfig]).map((path) => ({path, sha256: program.fact("digest", path) as string | null})), receiptKey = JSON.stringify(["input-precision-program", 1, tsconfig, program.compiler, ...(entries ? [entries] : [])]);

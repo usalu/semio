@@ -1,0 +1,20 @@
+{
+  "units": "m",
+  "asset": "walking-commuter",
+  "timeS": 1.25,
+  "layers": [
+    { "name": "STAFFAGE-BODY", "aci": 7, "lineweight": 50, "polylines": [
+      { "closed": true, "points": [{ "x": -0.25, "y": 0 }, { "x": 0.25, "y": 0 }, { "x": 0.3, "y": 0.9 }, { "x": 0.2, "y": 1.45 }, { "x": 0.12, "y": 1.8 }, { "x": -0.12, "y": 1.8 }, { "x": -0.2, "y": 1.45 }, { "x": -0.3, "y": 0.9 }] },
+      { "closed": false, "points": [{ "x": 0, "y": 0.9 }, { "x": 0.45, "y": 0.8 }, { "x": 0.7, "y": 0.4 }] }
+    ], "texts": [] },
+    { "name": "STAFFAGE-DETAIL", "aci": 5, "lineweight": 25, "polylines": [
+      { "closed": true, "points": [{ "x": -0.1, "y": 1.5 }, { "x": 0.1, "y": 1.5 }, { "x": 0.1, "y": 1.7 }, { "x": -0.1, "y": 1.7 }] }
+    ], "texts": [] },
+    { "name": "STAFFAGE-GROUND", "aci": 8, "lineweight": 100, "polylines": [
+      { "closed": false, "points": [{ "x": -1, "y": 0 }, { "x": 1, "y": 0 }] }
+    ], "texts": [] },
+    { "name": "STAFFAGE-TEXT", "aci": 2, "lineweight": 18, "polylines": [], "texts": [
+      { "at": { "x": 0.35, "y": 0.1 }, "heightM": 0.1, "text": "1,80 m · 2,5 m²" }
+    ] }
+  ]
+}

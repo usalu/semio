@@ -1,292 +1,526 @@
 {
- "version": 1,
- "cases": [
-  {
-   "name": "build",
-   "args": [
-    "run",
-    "repo-mcp:build"
-   ],
-   "kind": "frontend",
-   "target": "build"
+  "version": 1,
+  "cases": [
+    {
+      "name": "build",
+      "args": [
+        "run",
+        "repo-mcp:build"
+      ],
+      "kind": "frontend",
+      "target": "build"
+    },
+    {
+      "name": "install",
+      "args": [
+        "run",
+        "repo-mcp:install"
+      ],
+      "kind": "frontend",
+      "target": "install"
+    },
+    {
+      "name": "every shared option on build",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--skip-cache",
+        "--skip-cache=true",
+        "--skip-remote-cache",
+        "--skip-remote-cache=true",
+        "--output=stream"
+      ],
+      "kind": "frontend",
+      "target": "build"
+    },
+    {
+      "name": "the streamed output spelled in two words",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--output",
+        "stream"
+      ],
+      "kind": "frontend",
+      "target": "build"
+    },
+    {
+      "name": "a repeated option",
+      "args": [
+        "run",
+        "repo-mcp:install",
+        "--skip-cache",
+        "--skip-cache"
+      ],
+      "kind": "frontend",
+      "target": "install"
+    },
+    {
+      "name": "a build only option on build",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--exclude-dependencies"
+      ],
+      "kind": "frontend",
+      "target": "build"
+    },
+    {
+      "name": "a build only option with a value on build",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--exclude-dependencies=true"
+      ],
+      "kind": "frontend",
+      "target": "build"
+    },
+    {
+      "name": "a build only option on install is not recovery",
+      "args": [
+        "run",
+        "repo-mcp:install",
+        "--exclude-dependencies"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "a build only option on maintenance is not recovery",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-nx",
+        "--exclude-dependencies"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "preview maintenance",
+      "args": [
+        "run",
+        "repo-cache-retirement:cache-retire-inactive-preview"
+      ],
+      "kind": "maintenance",
+      "target": "preview"
+    },
+    {
+      "name": "retire maintenance with an option",
+      "args": [
+        "run",
+        "repo-cache-retirement:cache-retire-inactive",
+        "--skip-cache"
+      ],
+      "kind": "maintenance",
+      "target": "retire"
+    },
+    {
+      "name": "the Nx cache reset",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-nx"
+      ],
+      "kind": "cache-reset",
+      "target": "nx"
+    },
+    {
+      "name": "the Nx cache reset with streamed output",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-nx",
+        "--output",
+        "stream"
+      ],
+      "kind": "cache-reset",
+      "target": "nx"
+    },
+    {
+      "name": "another output mode is not recovery",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--output",
+        "json"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "a dangling output option is not recovery",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--output"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "an unknown option is not recovery",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "--verbose"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "a stray positional is not recovery",
+      "args": [
+        "run",
+        "repo-mcp:build",
+        "extra"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "another verb is not recovery",
+      "args": [
+        "build",
+        "repo-mcp:build"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "no arguments are not recovery",
+      "args": [],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "a missing target is not recovery",
+      "args": [
+        "run"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "a project without a target is not recovery",
+      "args": [
+        "run",
+        "repo-mcp"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "a three part target is not recovery",
+      "args": [
+        "run",
+        "repo-mcp:build:extra"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "an unknown project is not recovery",
+      "args": [
+        "run",
+        "other:build"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "an unknown frontend target is not recovery",
+      "args": [
+        "run",
+        "repo-mcp:test"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "an unknown maintenance target is not recovery",
+      "args": [
+        "run",
+        "repo:other"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "an inherited object property is not a maintenance target",
+      "args": [
+        "run",
+        "repo:constructor"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "the prototype key is not a maintenance target",
+      "args": [
+        "run",
+        "repo:__proto__"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "a method name is not a reset target",
+      "args": [
+        "run",
+        "repo:toString"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "the maintenance targets do not belong to the frontend project",
+      "args": [
+        "run",
+        "repo-mcp:cache-reset-nx"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "the frontend targets do not belong to the repo project",
+      "args": [
+        "run",
+        "repo:build"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "the graph cache reset",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-graph"
+      ],
+      "kind": "cache-reset",
+      "target": "graph"
+    },
+    {
+      "name": "the rust cache reset",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-rust"
+      ],
+      "kind": "cache-reset",
+      "target": "rust"
+    },
+    {
+      "name": "the products cache reset",
+      "args": [
+        "run",
+        "repo-cache-reset:cache-reset-products"
+      ],
+      "kind": "cache-reset",
+      "target": "products"
+    },
+    {
+      "name": "reset target requires its authored domain owner",
+      "args": [
+        "run",
+        "repo:cache-reset-nx"
+      ],
+      "kind": null,
+      "target": null
+    },
+    {
+      "name": "maintenance target requires its authored domain owner",
+      "args": [
+        "run",
+        "repo:cache-retire-inactive"
+      ],
+      "kind": null,
+      "target": null
+    }
+  ],
+  "owners": {
+    "frontend": {
+      "name": "repo-mcp",
+      "targets": {
+        "build": {
+          "executor": "repo:script",
+          "dependsOn": [],
+          "options": {
+            "command": "repo ./📜️script.ts build",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
+          }
+        },
+        "install": {
+          "executor": "repo:script",
+          "dependsOn": [
+            "build"
+          ],
+          "options": {
+            "command": "repo ./📜️script.ts install",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp"
+          }
+        }
+      }
+    },
+    "maintenance": {
+      "name": "repo-cache-retirement",
+      "targets": {
+        "cache-retire-inactive-preview": {
+          "executor": "repo:script",
+          "cache": false,
+          "dependsOn": [],
+          "outputs": [],
+          "options": {
+            "command": "repo ./📜️script.ts cache-retire-inactive preview",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+            "forwardAllArgs": false
+          },
+          "metadata": {
+            "semio": {
+              "execution": {
+                "version": 1,
+                "kind": "source"
+              }
+            }
+          }
+        },
+        "cache-retire-inactive": {
+          "executor": "repo:script",
+          "cache": false,
+          "dependsOn": [],
+          "outputs": [],
+          "options": {
+            "command": "repo ./📜️script.ts cache-retire-inactive retire",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+            "forwardAllArgs": false
+          },
+          "metadata": {
+            "semio": {
+              "execution": {
+                "version": 1,
+                "kind": "source"
+              }
+            }
+          }
+        }
+      }
+    },
+    "reset": {
+      "name": "repo-cache-reset",
+      "targets": {
+        "cache-reset-graph": {
+          "executor": "repo:script",
+          "cache": false,
+          "dependsOn": [],
+          "outputs": [],
+          "inputs": [
+            "{projectRoot}/**/*"
+          ],
+          "options": {
+            "command": "repo ./📜️script.ts reset graph",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+            "forwardAllArgs": false
+          },
+          "metadata": {
+            "semio": {
+              "execution": {
+                "version": 1,
+                "kind": "source"
+              },
+              "sourceInputObservation": "freshness",
+              "cache": {
+                "version": 1,
+                "class": "live",
+                "reason": "exercises-host-resources"
+              }
+            }
+          }
+        },
+        "cache-reset-nx": {
+          "executor": "repo:script",
+          "cache": false,
+          "dependsOn": [],
+          "outputs": [],
+          "inputs": [
+            "{projectRoot}/**/*"
+          ],
+          "options": {
+            "command": "repo ./📜️script.ts reset nx",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+            "forwardAllArgs": false
+          },
+          "metadata": {
+            "semio": {
+              "execution": {
+                "version": 1,
+                "kind": "source"
+              },
+              "sourceInputObservation": "freshness",
+              "cache": {
+                "version": 1,
+                "class": "live",
+                "reason": "exercises-host-resources"
+              }
+            }
+          }
+        },
+        "cache-reset-rust": {
+          "executor": "repo:script",
+          "cache": false,
+          "dependsOn": [],
+          "outputs": [],
+          "inputs": [
+            "{projectRoot}/**/*"
+          ],
+          "options": {
+            "command": "repo ./📜️script.ts reset rust",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+            "forwardAllArgs": false
+          },
+          "metadata": {
+            "semio": {
+              "execution": {
+                "version": 1,
+                "kind": "source"
+              },
+              "sourceInputObservation": "freshness",
+              "cache": {
+                "version": 1,
+                "class": "live",
+                "reason": "exercises-host-resources"
+              }
+            }
+          }
+        },
+        "cache-reset-products": {
+          "executor": "repo:script",
+          "cache": false,
+          "dependsOn": [],
+          "outputs": [],
+          "inputs": [
+            "{projectRoot}/**/*"
+          ],
+          "options": {
+            "command": "repo ./📜️script.ts reset products",
+            "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
+            "forwardAllArgs": false
+          },
+          "metadata": {
+            "semio": {
+              "execution": {
+                "version": 1,
+                "kind": "source"
+              },
+              "sourceInputObservation": "freshness",
+              "cache": {
+                "version": 1,
+                "class": "live",
+                "reason": "exercises-host-resources"
+              }
+            }
+          }
+        }
+      }
+    }
   },
-  {
-   "name": "install",
-   "args": [
-    "run",
-    "repo-mcp:install"
-   ],
-   "kind": "frontend",
-   "target": "install"
-  },
-  {
-   "name": "every shared option on build",
-   "args": [
-    "run",
-    "repo-mcp:build",
-    "--skip-cache",
-    "--skip-cache=true",
-    "--skip-remote-cache",
-    "--skip-remote-cache=true",
-    "--output=stream"
-   ],
-   "kind": "frontend",
-   "target": "build"
-  },
-  {
-   "name": "the streamed output spelled in two words",
-   "args": [
-    "run",
-    "repo-mcp:build",
-    "--output",
-    "stream"
-   ],
-   "kind": "frontend",
-   "target": "build"
-  },
-  {
-   "name": "a repeated option",
-   "args": [
-    "run",
-    "repo-mcp:install",
-    "--skip-cache",
-    "--skip-cache"
-   ],
-   "kind": "frontend",
-   "target": "install"
-  },
-  {
-   "name": "a build only option on build",
-   "args": [
-    "run",
-    "repo-mcp:build",
-    "--exclude-dependencies"
-   ],
-   "kind": "frontend",
-   "target": "build"
-  },
-  {
-   "name": "a build only option with a value on build",
-   "args": [
-    "run",
-    "repo-mcp:build",
-    "--exclude-dependencies=true"
-   ],
-   "kind": "frontend",
-   "target": "build"
-  },
-  {
-   "name": "a build only option on install is not recovery",
-   "args": [
-    "run",
-    "repo-mcp:install",
-    "--exclude-dependencies"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "a build only option on maintenance is not recovery",
-   "args": [
-    "run",
-    "repo:cache-reset-nx",
-    "--exclude-dependencies"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "preview maintenance",
-   "args": [
-    "run",
-    "repo:cache-retire-inactive-preview"
-   ],
-   "kind": "maintenance",
-   "target": "preview"
-  },
-  {
-   "name": "retire maintenance with an option",
-   "args": [
-    "run",
-    "repo:cache-retire-inactive",
-    "--skip-cache"
-   ],
-   "kind": "maintenance",
-   "target": "retire"
-  },
-  {
-   "name": "the Nx cache reset",
-   "args": [
-    "run",
-    "repo:cache-reset-nx"
-   ],
-   "kind": "cache-reset",
-   "target": "nx"
-  },
-  {
-   "name": "the Nx cache reset with streamed output",
-   "args": [
-    "run",
-    "repo:cache-reset-nx",
-    "--output",
-    "stream"
-   ],
-   "kind": "cache-reset",
-   "target": "nx"
-  },
-  {
-   "name": "another output mode is not recovery",
-   "args": [
-    "run",
-    "repo-mcp:build",
-    "--output",
-    "json"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "a dangling output option is not recovery",
-   "args": [
-    "run",
-    "repo-mcp:build",
-    "--output"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "an unknown option is not recovery",
-   "args": [
-    "run",
-    "repo-mcp:build",
-    "--verbose"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "a stray positional is not recovery",
-   "args": [
-    "run",
-    "repo-mcp:build",
-    "extra"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "another verb is not recovery",
-   "args": [
-    "build",
-    "repo-mcp:build"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "no arguments are not recovery",
-   "args": [],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "a missing target is not recovery",
-   "args": [
-    "run"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "a project without a target is not recovery",
-   "args": [
-    "run",
-    "repo-mcp"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "a three part target is not recovery",
-   "args": [
-    "run",
-    "repo-mcp:build:extra"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "an unknown project is not recovery",
-   "args": [
-    "run",
-    "other:build"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "an unknown frontend target is not recovery",
-   "args": [
-    "run",
-    "repo-mcp:test"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "an unknown maintenance target is not recovery",
-   "args": [
-    "run",
-    "repo:other"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "an inherited object property is not a maintenance target",
-   "args": [
-    "run",
-    "repo:constructor"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "the prototype key is not a maintenance target",
-   "args": [
-    "run",
-    "repo:__proto__"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "a method name is not a reset target",
-   "args": [
-    "run",
-    "repo:toString"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "the maintenance targets do not belong to the frontend project",
-   "args": [
-    "run",
-    "repo-mcp:cache-reset-nx"
-   ],
-   "kind": null,
-   "target": null
-  },
-  {
-   "name": "the frontend targets do not belong to the repo project",
-   "args": [
-    "run",
-    "repo:build"
-   ],
-   "kind": null,
-   "target": null
-  }
- ]
+  "refusals": [
+    "linked",
+    "oversized"
+  ]
 }

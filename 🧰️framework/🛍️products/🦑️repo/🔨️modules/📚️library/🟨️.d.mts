@@ -25,3 +25,6 @@ export interface NxProjectedTargetV1{executor:string;inputs?:unknown[];outputs?:
 export interface NxProjectedProjectV1{name:string;root:string;targets:Record<string,NxProjectedTargetV1>;namedInputs:Record<string,unknown[]>;[key:string]:unknown}
 export interface NxProjectedGraphV1{projects:Record<string,NxProjectedProjectV1>;externalNodes:Record<string,unknown>}
 export interface NxDependencyContextV1{workspaceRoot:string;projects:Record<string,BuildProjectV1>;externalNodes?:Record<string,unknown>;fileMap?:{projectFileMap:Record<string,readonly{file:string}[]>;nonProjectFiles:readonly{file:string}[]}}
+
+/** 🔌️ Names both executor families' external package roots before graph selection. */
+export function nxBuildEngineExternalInputsV1():readonly string[];

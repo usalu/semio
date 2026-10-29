@@ -531,6 +531,41 @@
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test assignment"
       }
+    },
+    "test-thesis": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test thesis"
+      }
+    },
+    "test-thesis-render": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test thesis-render",
+        "forwardAllArgs": false
+      },
+      "dependsOn": [
+        "fonts",
+        "deps-tectonic",
+        "deps-tex",
+        "generate"
+      ]
     }
   },
   "metadata": {

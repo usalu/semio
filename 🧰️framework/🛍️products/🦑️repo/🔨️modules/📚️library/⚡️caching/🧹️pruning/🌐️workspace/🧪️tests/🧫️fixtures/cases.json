@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "dry": false,
+      "language": "en",
+      "cancelled": false
+    },
+    {
+      "dry": true,
+      "language": "de",
+      "cancelled": false
+    },
+    {
+      "dry": false,
+      "language": "de",
+      "cancelled": true
+    }
+  ]
+}

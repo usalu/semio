@@ -1,0 +1,175 @@
+{
+ "id": "leaf-transpiration",
+ "oracle": "scipy.optimize.brentq on the leaf / passive-surface energy balance with CoolProp saturation pressure and air properties",
+ "tolerances": {
+  "latentRelative": 0.01,
+  "surfaceTempK": 0.1,
+  "fluxRelative": 0.02
+ },
+ "asset": {
+  "dimensions": {
+   "heightM": 5,
+   "massKg": 0
+  },
+  "materials": [
+   {
+    "id": "leaf",
+    "title": {
+     "en": "Leaf",
+     "de": "Blatt"
+    },
+    "emissivity": 0.97,
+    "solarAbsorptivity": 0.5,
+    "source": "literature"
+   },
+   {
+    "id": "dark-panel",
+    "title": {
+     "en": "Dark panel",
+     "de": "Dunkle Platte"
+    },
+    "emissivity": 0.9,
+    "solarAbsorptivity": 0.8,
+    "source": "illustrative"
+   }
+  ],
+  "thermal": {
+   "environment": {
+    "airTempC": 25,
+    "meanRadiantTempC": 25,
+    "relativeHumidity": 0.5,
+    "windMS": 1,
+    "windDirectionDeg": 0,
+    "solarWM2": 600,
+    "pressurePa": 101325
+   },
+   "regions": [
+    {
+     "id": "leaf",
+     "title": {
+      "en": "Leaf surface",
+      "de": "Blattfläche"
+     },
+     "kind": "foliage",
+     "material": "leaf",
+     "model": "leaf",
+     "areaM2": 1,
+     "characteristicLengthM": 0.07,
+     "stomatalConductanceMS": 0.005,
+     "source": "literature"
+    },
+    {
+     "id": "panel",
+     "title": {
+      "en": "Dark panel",
+      "de": "Dunkle Platte"
+     },
+     "kind": "surface",
+     "material": "dark-panel",
+     "model": "passive",
+     "areaM2": 1,
+     "characteristicLengthM": 0.5,
+     "source": "illustrative"
+    }
+   ],
+   "emitters": [],
+   "assumptions": []
+  }
+ },
+ "state": {
+  "timeS": 0,
+  "thermal": {
+   "activityMet": 1,
+   "operating": {},
+   "regions": {},
+   "emitters": {}
+  },
+  "anchors": {},
+  "bones": {}
+ },
+ "environments": {
+  "windy-sun": {
+   "airTempC": 25,
+   "meanRadiantTempC": 25,
+   "relativeHumidity": 0.5,
+   "windMS": 1,
+   "windDirectionDeg": 0,
+   "solarWM2": 600,
+   "pressurePa": 101325
+  },
+  "still-sun": {
+   "airTempC": 30,
+   "meanRadiantTempC": 32,
+   "relativeHumidity": 0.4,
+   "windMS": 0,
+   "windDirectionDeg": 0,
+   "solarWM2": 800,
+   "pressurePa": 101325
+  },
+  "breezy-shade": {
+   "airTempC": 15,
+   "meanRadiantTempC": 14,
+   "relativeHumidity": 0.7,
+   "windMS": 3,
+   "windDirectionDeg": 90,
+   "solarWM2": 0,
+   "pressurePa": 95000
+  }
+ },
+ "expected": {
+  "windy-sun": {
+   "leaf": {
+    "surfaceTempC": 26.38904744618588,
+    "radiantFluxWM2": 8.156405218725334,
+    "convectiveFluxWM2": 20.67977465861186,
+    "latentFluxWM2": 121.16382012266246,
+    "netFluxWM2": -3.410605131648481e-13,
+    "convectionCoefficientWM2K": 14.887738151346426
+   },
+   "panel": {
+    "surfaceTempC": 64.5428238949233,
+    "radiantFluxWM2": 260.386023376662,
+    "convectiveFluxWM2": 219.61397662333505,
+    "latentFluxWM2": 0.0,
+    "netFluxWM2": -2.9558577807620168e-12,
+    "convectionCoefficientWM2K": 5.553826332861628
+   }
+  },
+  "still-sun": {
+   "leaf": {
+    "surfaceTempC": 35.416695764287724,
+    "radiantFluxWM2": 21.72086214227847,
+    "convectiveFluxWM2": 22.812973123741415,
+    "latentFluxWM2": 155.46616473398063,
+    "netFluxWM2": 5.115907697472721e-13,
+    "convectionCoefficientWM2K": 4.211603183281467
+   },
+   "panel": {
+    "surfaceTempC": 84.3297145314501,
+    "radiantFluxWM2": 390.9178405903306,
+    "convectiveFluxWM2": 249.08215940966832,
+    "latentFluxWM2": 0.0,
+    "netFluxWM2": -1.0231815394945443e-12,
+    "convectionCoefficientWM2K": 4.584639576294497
+   }
+  },
+  "breezy-shade": {
+   "leaf": {
+    "surfaceTempC": 13.841243105920615,
+    "radiantFluxWM2": -0.8263087241882622,
+    "convectiveFluxWM2": -28.98096614020276,
+    "latentFluxWM2": 29.80727486439083,
+    "netFluxWM2": -1.9184653865522705e-13,
+    "convectionCoefficientWM2K": 25.01039371440176
+   },
+   "panel": {
+    "surfaceTempC": 14.65863342725249,
+    "radiantFluxWM2": 3.19431975676029,
+    "convectiveFluxWM2": -3.194319756760248,
+    "latentFluxWM2": 0.0,
+    "netFluxWM2": 4.218847493575595e-14,
+    "convectionCoefficientWM2K": 9.357447423895556
+   }
+  }
+ }
+}

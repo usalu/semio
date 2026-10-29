@@ -1,0 +1,7 @@
+      "anchors": [
+        { "id": "contact-n", "bone": "toes-n", "x": 0.022, "y": -0.0045, "kind": "contact", "title": { "en": "Near foot, ball of the toes", "de": "Nahe Fuß, Zehenballen" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.034, "footprintWidthM": 0.03, "frictionCoefficient": 0.6 },
+        { "id": "contact-f", "bone": "toes-f", "x": 0.022, "y": -0.0045, "kind": "contact", "title": { "en": "Far foot, ball of the toes", "de": "Ferner Fuß, Zehenballen" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.034, "footprintWidthM": 0.03, "frictionCoefficient": 0.6 },
+        { "id": "nostril", "bone": "head", "x": 0.037, "y": 0.005, "kind": "emitter", "title": { "en": "Nostrils in the cere", "de": "Nasenlöcher in der Wachshaut" } },
+        { "id": "beak-tip", "bone": "head", "x": 0.054, "y": -0.002, "kind": "attachment", "title": { "en": "Beak tip", "de": "Schnabelspitze" } },
+        { "id": "eye", "bone": "head", "x": 0.024, "y": 0.007, "kind": "attachment", "title": { "en": "Eye (gaze reference of the head-bob)", "de": "Auge (Blickbezug des Kopfnickens)" } }
+      ],

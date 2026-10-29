@@ -10,7 +10,7 @@ driven from the repository's design tokens and both built through `📜️script
 | `🖋️latex/` | The LaTeX packages. `semio.cls` plus `semio-core`, `semio-window`, `semio-table`, `semio-fonts`, `semio-tokens`, `semio-phd` (the dissertation apparatus), and the visualization bundle `semio-viz` with its kernel and namespace packages. |
 | `🧬️schema/` | `🔣️.json` — the JSON Schema of an authored chart and catalogue entry, the family option vocabularies (`x-semio-family-options`), the demo tables and the probe protocol — and `🟦️.ts`, its typed twin. Chart snapshots, semantic diffs and mutation decisions live in `📸️snapshot/`, `🔀️diff/`, and `🧬️mutations/`; all visualization derivations live in `💡️inferences/`. |
 | `🖼️assets/` | `📊️viz-taxonomy.md` (the human taxonomy, the single source of the sections and leaves), `🔣️viz-catalog.json` (the handcrafted chart-kind catalogue), fonts and demo images. |
-| `🧾️template/` | Documents. `📋️report`, `📃️paper`, `🎓️phd`, `📰️flyer`, `🏗️zukunftbau`; `📊️viz-gallery/` is generated, one document per taxonomy section; `📊️viz-api/🔓️viz-api.tex` is the hand-written API reference. |
+| `🧾️template/` | Documents. `📋️report`, `📃️paper`, `🎓️phd`, `🎓️thesis`, `📰️flyer`, `🏗️zukunftbau`; `📊️viz-gallery/` is generated, one document per taxonomy section; `📊️viz-api/🔓️viz-api.tex` is the hand-written API reference. |
 | `🔨️modules/` | TypeScript modules: catalogue loading and generation, the probe harness, font provisioning, tectonic compilation. |
 | `🎮️commands/` | The command objects `📜️script.ts` routes to. |
 | `🧪️tests/` | One directory per test case: `🥒️.feature`, `🟦️.ts`, `🧫️fixtures/`. |
@@ -42,7 +42,7 @@ set **Script path** to `🧰️framework/🛍️products/📓️print/🔨️mod
 **Build owner project** to `@semio-tech/print`, and **Working directory** to
 `🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript`. Put `build <document id>` in
 **Arguments** and choose **Start**. The document ids are the `id` values of
-`🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json`: `report`, `paper`, `phd`, `flyer`,
+`🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json`: `report`, `paper`, `phd`, `thesis`, `flyer`,
 `zwischenbericht`, `forschungsbericht`, `kompaktbericht`, `viz-api` and the `viz-<n>` gallery documents.
 `build` takes exactly one id. Read compile progress, artifact paths and errors in the task output; its menu
 offers restart and stop.
@@ -94,6 +94,60 @@ The three running-header labels can be authored independently of the document ti
 The left chip includes the semio emblem; all three authored zones keep their physical left/center/right order.
 Deutsch: `\SemioHeaderSetup{left={Architektur und Technologie},center={Fingerübung},right={Parametrisierung}}`
 setzt die drei Kopfzeilen-Chips unabhängig von Titel und Abschnitt.
+
+## The thesis kind
+
+`\documentclass[type=thesis,theme=light,language=en]{semio}` provides a bound,
+chapter-based academic document. An explicit `language=en` or `language=de` is
+required. Use `\SemioSetup{thesis-level=bachelor}`, `master`, `doctoral` or `custom`
+to choose the localized thesis heading; `thesis-type={...}` overrides that heading
+and `degree={...}` supplies the actual academic award.
+The class option `bindingoffset=12mm` customizes the binding gutter; the defaults
+are 8mm for `thesis` and 15mm for `phd`.
+
+The worked source in `🧾️template/🎓️thesis/` includes examination metadata,
+English and German abstracts, acknowledgements, dedication, abbreviations, a table
+of contents, research chapters, equations, tables, figures, citations, appendices,
+registers and a signed declaration. Its dataset is explicitly illustrative.
+Build both light and dark editions with `repo run @semio-tech/print:build-thesis`.
+
+```latex
+\SemioSetup{thesis-level=master,degree={Master of Science},
+  university={Example University},programme={Architecture},
+  student-id={20260001},supervisor={Prof. Example},
+  submission={2026-10-28},place={Hannover},keywords={design, research}}
+\makethesistitle
+\begin{Abstract} English abstract. \end{Abstract}
+\begin{Kurzfassung} Deutsche Zusammenfassung. \end{Kurzfassung}
+\begin{Acknowledgements} Thanks. \end{Acknowledgements}
+\makededication{For my family.}
+\begin{Abbreviations} \item[API] Application programming interface. \end{Abbreviations}
+\tableofcontents
+\makemainmatter
+\chapter{Introduction}
+% Research chapters follow.
+\makeappendices
+\appendixchapter{Supplementary Material}
+\makeregisters
+\makedeclaration[The declaration required by the examining institution.]
+```
+
+Unset academic fields are omitted. `declaration-text`, `declaration-title`,
+`dedication-title` and `abbreviations-title` customize the institutional wording.
+Use `\makebackmatter` for unnumbered closing chapters without resetting page
+numbers. `\makefrontmatter` preserves Roman page progression when called after
+the academic title; repeated calls do not restart numbering. Main matter restores
+the configured heading-numbering depth and starts Arabic page numbering at one.
+The declaration schema and plain-text metadata inference are exported
+from `@semio-tech/print/template/thesis`; shared declaration vectors are validated
+against AJV by `repo run @semio-tech/print:test-thesis`. Run
+`repo run @semio-tech/print:test-thesis-render` for the actual compiler/PDF.js
+language, theme and degree matrix plus compiler refusal cases.
+
+Deutsch: Die Dokumentart `thesis` unterstützt Bachelor-, Master- und Doktorarbeiten
+sowie frei benannte Abschlüsse. Die Sprache ist ausdrücklich anzugeben. Titelblatt,
+Zusammenfassungen, Widmung, Abkürzungen und Erklärung sind anpassbar; Hauptteil,
+Anhänge und Verzeichnisse verwenden die gemeinsamen Print-Komponenten.
 
 ## The dissertation kind
 

@@ -112,7 +112,11 @@ func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) e
 			if !matchesFilter(g.ID, options) && !matchesFilter(g.Title, options) {
 				continue
 			}
-			if !matchesQuery(g.ID+" "+g.Title+" "+g.Description+" "+g.Status, options) {
+			queryMatches, queryErr := matchesQuery(ctx, g.ID+" "+g.Title+" "+g.Description+" "+g.Status, options)
+			if queryErr != nil {
+				return queryErr
+			}
+			if !queryMatches {
 				continue
 			}
 			out <- g
@@ -137,7 +141,11 @@ func StreamStatutes(ctx context.Context, out chan<- StatuteMeta, opts ...StreamO
 			if !matchesFilter(string(meta.Kind), options) && !matchesFilter(meta.Reason, options) {
 				continue
 			}
-			if !matchesQuery(string(meta.Kind)+" "+meta.Reason+" "+meta.Solution, options) {
+			queryMatches, queryErr := matchesQuery(ctx, string(meta.Kind)+" "+meta.Reason+" "+meta.Solution, options)
+			if queryErr != nil {
+				return queryErr
+			}
+			if !queryMatches {
 				continue
 			}
 			out <- meta
@@ -163,7 +171,11 @@ func StreamCheckpoints(ctx context.Context, limit *int, out chan<- Checkpoint, o
 			if !matchesFilter(c.SHA, options) && !matchesFilter(c.Title, options) {
 				continue
 			}
-			if !matchesQuery(c.SHA+" "+c.Title, options) {
+			queryMatches, queryErr := matchesQuery(ctx, c.SHA+" "+c.Title, options)
+			if queryErr != nil {
+				return queryErr
+			}
+			if !queryMatches {
 				continue
 			}
 			out <- c

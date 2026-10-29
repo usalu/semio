@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "target": "serve-release",
+  "mode": "release",
+  "command": "repo ./📜️script.ts serve-release",
+  "dependsOn": [
+    "build"
+  ],
+  "cache": false,
+  "continuous": true,
+  "port": 8791,
+  "portEnvironment": "PROCTOR_PORT",
+  "cases": [
+    {
+      "target": "serve-release",
+      "requested": "release",
+      "accepted": true
+    },
+    {
+      "target": "serve-release",
+      "requested": "prototype",
+      "accepted": false
+    },
+    {
+      "target": "dev",
+      "requested": "prototype",
+      "accepted": true
+    },
+    {
+      "target": "dev",
+      "requested": "release",
+      "accepted": false
+    }
+  ]
+}

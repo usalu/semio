@@ -2,7 +2,9 @@
  "version": 1,
  "leaseDirectory": ".cache/b/l/m/data",
  "floorMegabytes": {
-  "minimum": 4096
+  "minimum": 1536,
+  "maximum": 4096,
+  "basisPoints": 1250
  },
  "commands": [
   {
@@ -98,6 +100,64 @@
    ],
    "outcome": "throw",
    "message": "Expected repo leases status"
+  },
+  {
+   "args": [
+    "status",
+    "--json"
+   ],
+   "environment": {
+    "SEMIO_LANGUAGE": "de"
+   },
+   "outcome": "json"
+  },
+  {
+   "args": [
+    "status",
+    "--json"
+   ],
+   "environment": {},
+   "outcome": "throw",
+   "messageIncludes": "No language selected for texts."
+  }
+ ],
+ "environment": {
+  "SEMIO_LANGUAGE": "en"
+ },
+ "floorCases": [
+  {
+   "totalMegabytes": 1024,
+   "expected": 1024
+  },
+  {
+   "totalMegabytes": 8192,
+   "expected": 1536
+  },
+  {
+   "totalMegabytes": 16384,
+   "expected": 2048
+  },
+  {
+   "totalMegabytes": 32768,
+   "expected": 4096
+  },
+  {
+   "totalMegabytes": 131072,
+   "expected": 4096
+  }
+ ],
+ "grantCases": [
+  {
+   "jobs": 0,
+   "valid": true
+  },
+  {
+   "jobs": 1,
+   "valid": true
+  },
+  {
+   "jobs": -1,
+   "valid": false
   }
  ]
 }

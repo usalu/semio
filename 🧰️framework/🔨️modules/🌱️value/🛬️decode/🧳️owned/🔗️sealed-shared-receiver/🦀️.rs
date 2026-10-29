@@ -3,15 +3,15 @@ use super::{NativeReceive,NativeReceiver};
 use crate::{NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits},shared_issuance::{SealedShared,SharedIssuer}};
 use std::mem::{ManuallyDrop,size_of};
 impl<T:super::NativeRecordFields+Send+Sync+'static> super::NativeRecordFields for SealedShared<T>{
- fn native_field_memberships(key:&str)->usize{T::native_field_memberships(key)}
- fn native_field_key_bytes()->usize{T::native_field_key_bytes()}
+ fn native_field_memberships(key:super::NativeRecordKey<'_>)->usize{T::native_field_memberships(key)}
+ fn native_field_key_bytes(key:super::NativeRecordKey<'_>)->usize{T::native_field_key_bytes(key)}
 }
 
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Bind,Birth,Receive,Take,Close,Release,Seal,Ready,Spent}
 /// 🧳️ The original input binding, boxed child and unpublished payload remain independently closeable.
-pub struct NativeSharedReceiver<I:Sync+'static,T:NativeReceive<I>+Send+Sync+'static>{
- binding:Option<RetainedCloneBinding>,child:ManuallyDrop<Option<Box<T::Receiver>>>,raw:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<SealedShared<T>>>,retirement:RetainedCloneClose,phase:Phase,closing:bool,subset:bool,input:std::marker::PhantomData<fn()->I>,
+pub struct NativeSharedReceiver<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static>{
+ binding:Option<RetainedCloneBinding>,child:ManuallyDrop<Option<Box<T::Receiver>>>,raw:ManuallyDrop<Option<T>>,output:ManuallyDrop<Option<SealedShared<T>>>,retirement:RetainedCloneClose,phase:Phase,closing:bool,subset:bool,input:std::marker::PhantomData<fn(&I)>,
 }
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original shared receiving owner is closed, foreign or already transferred")}
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
@@ -19,17 +19,17 @@ fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copi
 fn nested(mut d:RetirementDemand,copy:usize)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(copy).ok_or_else(invalid)?;d.depth=d.depth.checked_add(1).ok_or_else(invalid)?;Ok(d)}
 fn child_grant(g:RetainedCloneGrant,copy:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-copy,maximum_depth:g.maximum_depth-1,..g}}
 fn add(mut p:RetainedCloneProgress,copy:usize)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(copy).ok_or_else(invalid)?;Ok(p)}
-impl<I:Sync+'static,T:NativeReceive<I>+Send+Sync+'static> NativeSharedReceiver<I,T>{
+impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> NativeSharedReceiver<I,T>{
  fn metadata()->usize{size_of::<Phase>()}
  fn child(&self)->Result<&T::Receiver,ValueError>{self.child.as_deref().ok_or_else(invalid)}
 }
-impl<I:Sync+'static,T:NativeReceive<I>+Send+Sync+'static> NativeReceive<I> for SealedShared<T>{
+impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> NativeReceive<I> for SealedShared<T>{
  type Receiver=NativeSharedReceiver<I,T>;
  fn receive_birth_demand()->RetirementDemand{fixed(size_of::<Self::Receiver>()*2)}
  fn begin_receive(g:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError>{let d=<Self as NativeReceive<I>>::receive_birth_demand();if !retained_clone_grant_admits(g,d){return Err(invalid());}Ok((NativeSharedReceiver{binding:None,child:ManuallyDrop::new(None),raw:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),phase:Phase::Bind,closing:false,subset:false,input:std::marker::PhantomData},receipt(d)))}
  fn begin_record_subset(g:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError>{let(mut receiver,p)=Self::begin_receive(g)?;receiver.subset=true;Ok((receiver,p))}
 }
-impl<I:Sync+'static,T:NativeReceive<I>+Send+Sync+'static> NativeReceiver<I,SealedShared<T>> for NativeSharedReceiver<I,T>{
+impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> NativeReceiver<I,SealedShared<T>> for NativeSharedReceiver<I,T>{
  fn demands(&self,original:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||matches!(self.phase,Phase::Ready|Phase::Spent){return Err(invalid());}original.check_binding(&self.binding)?;let m=Self::metadata();
   match self.phase{
@@ -75,6 +75,6 @@ impl<I:Sync+'static,T:NativeReceive<I>+Send+Sync+'static> NativeReceiver<I,Seale
  }
  fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.child.is_none()&&self.raw.is_none()&&self.output.is_none()&&self.retirement.is_empty()}
 }
-impl<I:Sync+'static,T:NativeReceive<I>+Send+Sync+'static> Drop for NativeSharedReceiver<I,T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original shared receiving requires funded closure");}}
+impl<I:Sync+'static+?Sized,T:NativeReceive<I>+Send+Sync+'static> Drop for NativeSharedReceiver<I,T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original shared receiving requires funded closure");}}
 
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

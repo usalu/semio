@@ -1,6 +1,8 @@
 //! 🧪️ The neutral dictionary corpus validates real fixed slots against the standard independent map.
 use semio_framework_test_fixtures::fixture_text;
-use super::*;
+use semio_framework_value::scratch_hash::*;
+use std::hash::{Hash,Hasher};
+use semio_framework_value_testing_allocator as _;
 #[test]
 fn original_scratch_hash_matches_neutral_dictionary(){
  let fixture:serde_json::Value=serde_json::from_str(fixture_text!("../../🔑️hashed/🧮️scratch/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();

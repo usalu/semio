@@ -1,0 +1,24 @@
+{
+  "description": "SVG path flattening: curves stay within 0.5 mm of the analytic curve; lines, relative and absolute forms yield exact vertices. Curves are described analytically (control points, arc centre and radii) and compared against three.js curves.",
+  "toleranceM": 0.0005,
+  "curves": [
+    { "name": "cubic bump", "d": "M 0 0 C 0 2 3 2 3 0", "analytic": { "type": "cubic", "points": [[0, 0], [0, 2], [3, 2], [3, 0]] } },
+    { "name": "smooth cubic continuation", "d": "M 0 0 C 0 1 1 1 1 0 S 2 -1 2 0", "analytic": { "type": "cubic", "points": [[0, 0], [0, 1], [1, 1], [1, 0]] }, "second": { "type": "cubic", "points": [[1, 0], [1, -1], [2, -1], [2, 0]] } },
+    { "name": "quadratic", "d": "M 0 0 Q 1 2 2 0", "analytic": { "type": "quadratic", "points": [[0, 0], [1, 2], [2, 0]] } },
+    { "name": "smooth quadratic continuation", "d": "M 0 0 Q 1 1 2 0 T 4 0", "analytic": { "type": "quadratic", "points": [[0, 0], [1, 1], [2, 0]] }, "second": { "type": "quadratic", "points": [[2, 0], [3, -1], [4, 0]] } },
+    { "name": "quarter circle", "d": "M 1 0 A 1 1 0 0 1 0 1", "analytic": { "type": "arc", "cx": 0, "cy": 0, "rx": 1, "ry": 1, "rotationDeg": 0, "fromDeg": 0, "toDeg": 90 } },
+    { "name": "quarter circle with packed flags and relative end", "d": "M 1 0 a1 1 0 01 -1 1", "analytic": { "type": "arc", "cx": 0, "cy": 0, "rx": 1, "ry": 1, "rotationDeg": 0, "fromDeg": 0, "toDeg": 90 } },
+    { "name": "half ellipse below the axis", "d": "M 2 0 A 2 1 0 0 0 -2 0", "analytic": { "type": "arc", "cx": 0, "cy": 0, "rx": 2, "ry": 1, "rotationDeg": 0, "fromDeg": 0, "toDeg": -180 } },
+    { "name": "large radius quarter circle", "d": "M 5 0 A 5 5 0 0 1 0 5", "analytic": { "type": "arc", "cx": 0, "cy": 0, "rx": 5, "ry": 5, "rotationDeg": 0, "fromDeg": 0, "toDeg": 90 } }
+  ],
+  "polylines": [
+    { "name": "absolute triangle", "d": "M 0 0 L 2 0 L 2 1 Z", "rings": [[[0, 0], [2, 0], [2, 1]]], "closed": true },
+    { "name": "relative triangle", "d": "m 0 0 l 2 0 l 0 1 z", "rings": [[[0, 0], [2, 0], [2, 1]]], "closed": true },
+    { "name": "horizontal and vertical", "d": "M 0 0 H 2 V 1 H 0 z", "rings": [[[0, 0], [2, 0], [2, 1], [0, 1]]], "closed": true },
+    { "name": "relative horizontal and vertical", "d": "M 1 1 h 2 v 1 h -2", "rings": [[[1, 1], [3, 1], [3, 2], [1, 2]]], "closed": false },
+    { "name": "implicit lineto after moveto", "d": "M 0 0 1 0 1 1", "rings": [[[0, 0], [1, 0], [1, 1]]], "closed": false },
+    { "name": "two subpaths", "d": "M 0 0 L 1 0 L 1 1 Z M 2 2 L 3 2 L 3 3 Z", "rings": [[[0, 0], [1, 0], [1, 1]], [[2, 2], [3, 2], [3, 3]]], "closed": true },
+    { "name": "exponent numbers and commas", "d": "M 1e-1,0 L 2.5E0 ,.5", "rings": [[[0.1, 0], [2.5, 0.5]]], "closed": false }
+  ],
+  "invalid": ["L 1 1", "M 0 0 X 1 1", "M 0 0 L 1", "M 0 0 A 1 1 0 2 0 1 1"]
+}

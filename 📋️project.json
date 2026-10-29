@@ -594,42 +594,105 @@
           },
           {
             "id": "build-remote-cache-status",
-            "title": { "en": "Show the remote build cache", "de": "Remote-Build-Cache anzeigen" },
-            "description": { "en": "Report the remote cache contract, how Nx and Bazel use it, whether the server answers and what the local store holds; nothing is stored.", "de": "Den Remote-Cache-Vertrag, die Umsetzung in Nx und Bazel, die Erreichbarkeit des Servers und den Inhalt des lokalen Speichers melden; es wird nichts gespeichert." },
+            "title": {
+              "en": "Show the remote build cache",
+              "de": "Remote-Build-Cache anzeigen"
+            },
+            "description": {
+              "en": "Report the remote cache contract, how Nx and Bazel use it, whether the server answers and what the local store holds; nothing is stored.",
+              "de": "Den Remote-Cache-Vertrag, die Umsetzung in Nx und Bazel, die Erreichbarkeit des Servers und den Inhalt des lokalen Speichers melden; es wird nichts gespeichert."
+            },
             "verb": "inspect",
-            "command": ["repo", "remote-cache", "status"]
+            "command": [
+              "repo",
+              "remote-cache",
+              "status"
+            ]
           },
           {
             "id": "build-remote-cache-serve",
-            "title": { "en": "Serve the local remote build cache", "de": "Lokalen Remote-Build-Cache bereitstellen" },
-            "description": { "en": "Serve a bounded remote cache for Bazel and Nx on this machine until stopped; clients point SEMIO_REMOTE_CACHE_ENDPOINT at it.", "de": "Einen begrenzten Remote-Cache für Bazel und Nx auf diesem Rechner bereitstellen, bis er gestoppt wird; Clients richten SEMIO_REMOTE_CACHE_ENDPOINT darauf." },
+            "title": {
+              "en": "Serve the local remote build cache",
+              "de": "Lokalen Remote-Build-Cache bereitstellen"
+            },
+            "description": {
+              "en": "Serve a bounded remote cache for Bazel and Nx on this machine until stopped; clients point SEMIO_REMOTE_CACHE_ENDPOINT at it.",
+              "de": "Einen begrenzten Remote-Cache für Bazel und Nx auf diesem Rechner bereitstellen, bis er gestoppt wird; Clients richten SEMIO_REMOTE_CACHE_ENDPOINT darauf."
+            },
             "verb": "serve",
-            "command": ["repo", "remote-cache", "serve", "--port", "{port}"],
+            "command": [
+              "repo",
+              "remote-cache",
+              "serve",
+              "--port",
+              "{port}"
+            ],
             "continuous": true,
-            "ready": { "port": 6090, "portEnv": "SEMIO_REMOTE_CACHE_PORT", "path": "/healthz" }
+            "ready": {
+              "port": 6090,
+              "portEnv": "SEMIO_REMOTE_CACHE_PORT",
+              "path": "/healthz"
+            }
           },
           {
             "id": "build-remote-cache-gc",
-            "title": { "en": "Plan the collection of the remote build cache", "de": "Einsammeln des Remote-Build-Caches planen" },
-            "description": { "en": "List which unusable, idle and least recently used entries the remote cache store would lose; nothing is removed.", "de": "Auflisten, welche unbrauchbaren, ungenutzten und am längsten ungenutzten Einträge der Remote-Cache-Speicher verlieren würde; es wird nichts entfernt." },
+            "title": {
+              "en": "Plan the collection of the remote build cache",
+              "de": "Einsammeln des Remote-Build-Caches planen"
+            },
+            "description": {
+              "en": "List which unusable, idle and least recently used entries the remote cache store would lose; nothing is removed.",
+              "de": "Auflisten, welche unbrauchbaren, ungenutzten und am längsten ungenutzten Einträge der Remote-Cache-Speicher verlieren würde; es wird nichts entfernt."
+            },
             "verb": "inspect",
-            "command": ["repo", "remote-cache", "gc", "--dry-run"]
+            "command": [
+              "repo",
+              "remote-cache",
+              "gc",
+              "--dry-run"
+            ]
           },
           {
             "id": "build-remote-execution-status",
-            "title": { "en": "Show the remote execution service", "de": "Remote-Execution-Dienst anzeigen" },
-            "description": { "en": "Report the remote execution contract, whether the gRPC endpoint answers and which workers, queues and counters the scheduler reports; nothing is started.", "de": "Den Remote-Execution-Vertrag, die Erreichbarkeit des gRPC-Endpunkts und die Worker, Warteschlangen und Zähler des Schedulers melden; es wird nichts gestartet." },
+            "title": {
+              "en": "Show the remote execution service",
+              "de": "Remote-Execution-Dienst anzeigen"
+            },
+            "description": {
+              "en": "Report the remote execution contract, whether the gRPC endpoint answers and which workers, queues and counters the scheduler reports; nothing is started.",
+              "de": "Den Remote-Execution-Vertrag, die Erreichbarkeit des gRPC-Endpunkts und die Worker, Warteschlangen und Zähler des Schedulers melden; es wird nichts gestartet."
+            },
             "verb": "inspect",
-            "command": ["repo", "remote-execution", "status"]
+            "command": [
+              "repo",
+              "remote-execution",
+              "status"
+            ]
           },
           {
             "id": "build-remote-execution-serve",
-            "title": { "en": "Run the remote execution service", "de": "Remote-Execution-Dienst betreiben" },
-            "description": { "en": "Run the in-house execution service with the shared store and a local worker on this machine until stopped so hermetic Bazel actions can run remotely; clients set the variables printed at start.", "de": "Den hauseigenen Ausführungsdienst mit dem gemeinsamen Speicher und einem lokalen Worker auf diesem Rechner bis zum Stopp betreiben, damit hermetische Bazel-Actions remote laufen können; Clients setzen die beim Start ausgegebenen Variablen." },
+            "title": {
+              "en": "Run the remote execution service",
+              "de": "Remote-Execution-Dienst betreiben"
+            },
+            "description": {
+              "en": "Run the in-house execution service with the shared store and a local worker on this machine until stopped so hermetic Bazel actions can run remotely; clients set the variables printed at start.",
+              "de": "Den hauseigenen Ausführungsdienst mit dem gemeinsamen Speicher und einem lokalen Worker auf diesem Rechner bis zum Stopp betreiben, damit hermetische Bazel-Actions remote laufen können; Clients setzen die beim Start ausgegebenen Variablen."
+            },
             "verb": "serve",
-            "command": ["repo", "remote-execution", "serve", "--worker-port", "{port}"],
+            "command": [
+              "repo",
+              "remote-execution",
+              "serve",
+              "--worker-port",
+              "{port}"
+            ],
             "continuous": true,
-            "ready": { "port": 8981, "portEnv": "SEMIO_REMOTE_EXECUTION_WORKER_PORT", "path": "/healthz" }
+            "ready": {
+              "port": 8981,
+              "portEnv": "SEMIO_REMOTE_EXECUTION_WORKER_PORT",
+              "path": "/healthz"
+            }
           },
           {
             "id": "build-exec",
@@ -1555,17 +1618,39 @@
       "{workspaceRoot}/**/*.{c,cc,cpp,cxx,h,hh,hpp,hxx,ixx}"
     ],
     "cmakeToolchain": [
-      { "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts\" fingerprint cmake" },
-      { "env": "CC" },
-      { "env": "CFLAGS" },
-      { "env": "CMAKE_GENERATOR" },
-      { "env": "CMAKE_TOOLCHAIN_FILE" },
-      { "env": "CXX" },
-      { "env": "CXXFLAGS" },
-      { "env": "DEVELOPER_DIR" },
-      { "env": "LDFLAGS" },
-      { "env": "MACOSX_DEPLOYMENT_TARGET" },
-      { "env": "SDKROOT" }
+      {
+        "runtime": "repo \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/🛠️tools/🧰️native/📜️script.ts\" fingerprint cmake"
+      },
+      {
+        "env": "CC"
+      },
+      {
+        "env": "CFLAGS"
+      },
+      {
+        "env": "CMAKE_GENERATOR"
+      },
+      {
+        "env": "CMAKE_TOOLCHAIN_FILE"
+      },
+      {
+        "env": "CXX"
+      },
+      {
+        "env": "CXXFLAGS"
+      },
+      {
+        "env": "DEVELOPER_DIR"
+      },
+      {
+        "env": "LDFLAGS"
+      },
+      {
+        "env": "MACOSX_DEPLOYMENT_TARGET"
+      },
+      {
+        "env": "SDKROOT"
+      }
     ]
   },
   "targets": {
@@ -1611,10 +1696,54 @@
           "sourceInputObservation": "freshness",
           "runtimeSourceEntries": [
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️candidate/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/📤️publication/🧪️tests/📦️transaction/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/📂️membership/🧪️tests/🛡️ignore/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/💾️storage/🧪️tests/📒️ledger/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/💾️storage/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/🔌️nx/📦️graph/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔄️settlement/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/✅️verification/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🛂️admission/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧭️portable-cli/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📐️portable-model/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/📌️pinned-publication/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔭️observed-facts/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🔌️nx-engine/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🚀️dependency-bootstrap/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🧊️optional-cache/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🌐️source-discovery/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🎯️source-demand/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🧩️claims/🧪️tests/🎛️control/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🕰️generations/🔐️custody/🧪️tests/🔑️kernel/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧪️tests/📤️publication/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/👁️observation/🧪️tests/🟦️.ts",
             "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🟦️.ts",
-            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts"
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🕸️graph/🏗️scheduling/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📤️arguments/🧪️tests/⚖️contracts/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️precision/🧪️tests/🔣️glob-dialects/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🧊️stable-file/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🎯️target-policy/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🏭️generator-outputs/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🕸️dependency-edges/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/📜️toml/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/🦀️cargo-go/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🧭️script-inputs/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🪢️revision-graph/🧪️tests/⚖️roster/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🌡️host-capacity/🧪️tests/🧮️arguments/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📊️reporting/🧪️tests/🧮️names/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🎯️selected/🦀️rust/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔒️leases/⌨️command/🧪️tests/🧮️status/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🌡️host-capacity/🧪️tests/🧮️resources/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/👁️evidence/🧪️tests/🧮️closure/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🔧️tools/🏗️bazel/🚦️test-classes/🧾️witness/🧪️tests/🧮️digest/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🔁retry/🧪️tests/🧮️projection/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/🗂️generation-files/🧪️tests/🧮️model/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🚀️bootstrap/⌨️cli/🧪️tests/🧮️arguments/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🩺️preflight/🧪️tests/🧮️matrix/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️inputs/🌿️environment/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧪️tests/🕸️graph/🟦️.ts"
           ],
           "cache": {
             "version": 1,
@@ -4502,7 +4631,11 @@
       "cache": true,
       "dependsOn": [],
       "outputs": [],
-      "inputs": ["cmakeSources", "cmakeToolchain", "sharedGlobals"],
+      "inputs": [
+        "cmakeSources",
+        "cmakeToolchain",
+        "sharedGlobals"
+      ],
       "options": {
         "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp custody",
         "forwardAllArgs": true
@@ -5857,7 +5990,11 @@
     "cpp-test-toolchain": {
       "executor": "repo:script",
       "cache": true,
-      "inputs": ["cmakeSources", "cmakeToolchain", "sharedGlobals"],
+      "inputs": [
+        "cmakeSources",
+        "cmakeToolchain",
+        "sharedGlobals"
+      ],
       "options": {
         "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test-toolchain"
       },
@@ -5905,6 +6042,72 @@
       "inputs": [
         "default"
       ]
+    },
+    "test-dependency-readmission": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test dependency-readmission"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🔁️dependencies/🧪️tests/📥️process/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📥️source/🔏️closure/🔁️dependencies/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧷️format-stamps/🔄️reexec/🧪️tests/🟦️.ts"
+          ],
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
+    },
+    "test-graph-memory-reservation": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv"
+      ],
+      "outputs": [],
+      "options": {
+        "command": "repo ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test graph-memory"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🧪️tests/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧠️memory/🧪️tests/🎫️reservation/🟦️.ts",
+            "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/📦️project-nodes/🏊️project-farm/🧪️tests/🟦️.ts"
+          ],
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          }
+        }
+      }
     }
   }
 }

@@ -390,6 +390,15 @@
           }
         }
       ]
+    },
+    "OperatorNormalization": {
+      "const": {
+        "operation": "showText",
+        "optionalGlyphFields": [
+          "vmetric",
+          "operatorListId"
+        ]
+      }
     }
   }
 }

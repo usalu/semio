@@ -1,0 +1,23 @@
+root-plate|-|Root plate and stem base|Wurzelteller und Stammbasis|0|90|0.3|fixed|0|150|0.15|uniform|wood-handbook-2021|0.6
+stem-1|root-plate|Stem, lower|Stamm unten|0.3|0|3|-2|2|350|1.5|uniform|wood-handbook-2021|0.5
+stem-2|stem-1|Stem, middle|Stamm Mitte|3|1|2.7|-3|3|314|1.35|uniform|wood-handbook-2021|0.46
+stem-3|stem-2|Stem, upper|Stamm oben|2.7|-1|2.4|-4|4|280|1.2|uniform|wood-handbook-2021|0.44
+crown|stem-3|Crown shaft with leaf bases|Kronenschaft mit Blattbasen|2.4|0|0.6|-6|6|60|0.3|uniform|jones-2014|0.4
+fr-l1a|crown|Frond 1 left, proximal|Wedel 1 links, proximal|0.6|78|1.9|-18|18|7|0.95|point|jones-2014
+fr-l1b|fr-l1a|Frond 1 left, distal|Wedel 1 links, distal|1.9|35|1.7|-30|30|5|0.85|point|jones-2014
+fr-l2a|crown|Frond 2 left, proximal|Wedel 2 links, proximal|0.6|53|1.9|-18|18|7|0.95|point|jones-2014
+fr-l2b|fr-l2a|Frond 2 left, distal|Wedel 2 links, distal|1.9|25|1.7|-30|30|5|0.85|point|jones-2014
+fr-l3a|crown|Frond 3 left, proximal|Wedel 3 links, proximal|0.6|28|1.9|-18|18|7|0.95|point|jones-2014
+fr-l3b|fr-l3a|Frond 3 left, distal|Wedel 3 links, distal|1.9|18|1.7|-30|30|5|0.85|point|jones-2014
+fr-l4a|crown|Frond 4 left, proximal|Wedel 4 links, proximal|0.6|10|1.9|-18|18|7|0.95|point|jones-2014
+fr-l4b|fr-l4a|Frond 4 left, distal|Wedel 4 links, distal|1.9|10|1.7|-30|30|5|0.85|point|jones-2014
+fr-r1a|crown|Frond 1 right, proximal|Wedel 1 rechts, proximal|0.6|-78|1.9|-18|18|7|0.95|point|jones-2014
+fr-r1b|fr-r1a|Frond 1 right, distal|Wedel 1 rechts, distal|1.9|-35|1.7|-30|30|5|0.85|point|jones-2014
+fr-r2a|crown|Frond 2 right, proximal|Wedel 2 rechts, proximal|0.6|-53|1.9|-18|18|7|0.95|point|jones-2014
+fr-r2b|fr-r2a|Frond 2 right, distal|Wedel 2 rechts, distal|1.9|-25|1.7|-30|30|5|0.85|point|jones-2014
+fr-r3a|crown|Frond 3 right, proximal|Wedel 3 rechts, proximal|0.6|-28|1.9|-18|18|7|0.95|point|jones-2014
+fr-r3b|fr-r3a|Frond 3 right, distal|Wedel 3 rechts, distal|1.9|-18|1.7|-30|30|5|0.85|point|jones-2014
+fr-r4a|crown|Frond 4 right, proximal|Wedel 4 rechts, proximal|0.6|-10|1.9|-18|18|7|0.95|point|jones-2014
+fr-r4b|fr-r4a|Frond 4 right, distal|Wedel 4 rechts, distal|1.9|-10|1.7|-30|30|5|0.85|point|jones-2014
+bunch-l|crown|Date bunch, left|Dattelrispe links|0.3|150|1.2|-25|25|20|0.8|point|jones-2014
+bunch-r|crown|Date bunch, right|Dattelrispe rechts|0.3|-150|1.2|-25|25|20|0.8|point|jones-2014

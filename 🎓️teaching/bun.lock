@@ -738,6 +738,51 @@
         "yaml": "2.9.0"
       }
     },
+    "🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript": {
+      "name": "@teaching/staffage-site",
+      "version": "0.1.0",
+      "dependencies": {
+        "@teaching/staffage": "workspace:*",
+        "@teaching/staffage-react": "workspace:*"
+      },
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "@semio-tech/ui-styling": "workspace:*",
+        "@tailwindcss/vite": "^4.1.18",
+        "@vitejs/plugin-react": "^5.1.2",
+        "typescript": "^5.9.3",
+        "vite": "^7.3.1",
+        "vitest": "^4.0.17"
+      }
+    },
+    "🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript": {
+      "name": "@teaching/staffage-react",
+      "version": "0.1.0",
+      "dependencies": {
+        "@teaching/staffage": "workspace:*",
+        "react": "^19.2.3",
+        "react-dom": "^19.2.3"
+      },
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "@testing-library/react": "^16.3.0",
+        "@types/react": "^19.2.8",
+        "@types/react-dom": "^19.2.3",
+        "@vitejs/plugin-react": "^5.1.2",
+        "jsdom": "^24.1.3",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+      }
+    },
+    "🏛️architecture/🧍️staffage/📦️packages/🟦️typescript": {
+      "name": "@teaching/staffage",
+      "version": "0.1.0",
+      "devDependencies": {
+        "@semio-tech/process": "workspace:*",
+        "typescript": "^5.9.3",
+        "vitest": "^4.0.17"
+      }
+    },
     "../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust": {
       "name": "@semio-tech/framework-diagnostic-rs",
       "version": "0.1.0",
@@ -6875,6 +6920,15 @@
     ],
     "@teaching/architecture-course": [
       "@teaching/architecture-course@workspace:🏛️architecture/📚️course/📦️packages/🟦️typescript"
+    ],
+    "@teaching/staffage": [
+      "@teaching/staffage@workspace:🏛️architecture/🧍️staffage/📦️packages/🟦️typescript"
+    ],
+    "@teaching/staffage-react": [
+      "@teaching/staffage-react@workspace:🏛️architecture/🧍️staffage/🎯️targets/⚛️react/📦️packages/🟦️typescript"
+    ],
+    "@teaching/staffage-site": [
+      "@teaching/staffage-site@workspace:🏛️architecture/🧍️staffage/🌐️site/📦️packages/🟦️typescript"
     ],
     "@testing-library/dom": [
       "@testing-library/dom@10.4.2",

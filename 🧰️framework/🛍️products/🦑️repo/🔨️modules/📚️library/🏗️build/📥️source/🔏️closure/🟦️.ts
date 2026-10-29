@@ -79,3 +79,6 @@ export const buildSourceClosureLoaderV1=sourceClosureLoaderV1(false,{prefixes:bu
 
 /** 🚰️ Executes bounded owned auxiliary DATA without consuming ordinary stdin or mutable source aliases. */
 export const buildSourceClosureStreamLoaderV1=sourceClosureLoaderV1(true);
+
+/** 📥️ Uses the closed Native helper stdin for the same authenticated immutable loader. */
+export const buildSourceClosureStdinLoaderV1=sourceClosureLoaderV1(true,undefined,0);

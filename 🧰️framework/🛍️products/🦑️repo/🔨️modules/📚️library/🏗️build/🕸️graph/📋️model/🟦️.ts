@@ -9,7 +9,7 @@ export interface BuildTargetV1 { execution:BuildExecutionV1; configurations?:Rec
 /** 🧩️ Describes an owned project with its complete inferred operations. */
 export interface BuildProjectV1 { name:string; root:string; targets:Record<string,BuildTargetV1>; tags?:string[]; namedInputs?:Record<string,unknown[]>; [key:string]:unknown }
 /** 🕸️ Defines the authoritative portable workspace graph. */
-export interface BuildGraphV1 { version:1; projects:Record<string,BuildProjectV1>; dependencies:{source:string;target:string;type?:string;sourceFile?:string}[]; namedInputs?:Record<string,unknown[]>; externalNodes?:Record<string,unknown>; unavailable?:BuildUnavailableProjectV1[]; admission?:{selection:BuildGraphSelectionV1;registry:string;closure:string} }
+export interface BuildGraphV1 { version:1; projects:Record<string,BuildProjectV1>; dependencies:{source:string;target:string;type?:string;sourceFile?:string}[]; namedInputs?:Record<string,unknown[]>; externalNodes?:Record<string,unknown>; unavailable?:BuildUnavailableProjectV1[]; admission?:{selection:BuildGraphSelectionV1;registry:string;closure:string;externalInputs?:readonly string[]} }
 /** 🚧️ Names one project withheld from the snapshot because a source its inference consumed does not parse. */
 export interface BuildUnavailableProjectV1 { root:string; project?:string; source:string; sha256:string; reason:string; missing?:string[] }
 /** 📋️ Describes observed root entries without granting mutation or storage custody. */

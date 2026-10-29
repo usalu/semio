@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "source": "actual-borrowed-fields",
+  "bodyBytes": 4096,
+  "maximumTurns": 4096,
+  "deniedCurrencies": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "cancellation": "every-receiving-prefix",
+  "cases": [
+    {
+      "id": "locale-en",
+      "kind": "locale",
+      "input": "en",
+      "expected": "en"
+    },
+    {
+      "id": "locale-de",
+      "kind": "locale",
+      "input": "de",
+      "expected": "de"
+    },
+    {
+      "id": "terminology-native",
+      "kind": "terminology",
+      "input": "native",
+      "expected": "native"
+    },
+    {
+      "id": "terminology-reuse",
+      "kind": "terminology",
+      "input": "reuse",
+      "expected": "reuse"
+    },
+    {
+      "id": "add-widget",
+      "kind": "label",
+      "input": {
+        "native": {
+          "en": "Add Widget",
+          "de": "Widget hinzufügen"
+        },
+        "reuse": {
+          "en": "Add Part",
+          "de": "Teil hinzufügen"
+        }
+      },
+      "expected": {
+        "native": {
+          "en": "Add Widget",
+          "de": "Widget hinzufügen"
+        },
+        "reuse": {
+          "en": "Add Part",
+          "de": "Teil hinzufügen"
+        }
+      }
+    },
+    {
+      "id": "rename-layer",
+      "kind": "label",
+      "input": {
+        "native": {
+          "en": "Rename layer \"roof\" to \"deck\"",
+          "de": "Ebene \"roof\" in \"deck\" umbenennen"
+        },
+        "reuse": {
+          "en": "Rename layer \"roof\" to \"deck\"",
+          "de": "Ebene \"roof\" in \"deck\" umbenennen"
+        }
+      },
+      "expected": {
+        "native": {
+          "en": "Rename layer \"roof\" to \"deck\"",
+          "de": "Ebene \"roof\" in \"deck\" umbenennen"
+        },
+        "reuse": {
+          "en": "Rename layer \"roof\" to \"deck\"",
+          "de": "Ebene \"roof\" in \"deck\" umbenennen"
+        }
+      }
+    },
+    {
+      "id": "locale-invariant-data",
+      "kind": "label",
+      "input": {
+        "native": {
+          "en": "os.setThemeId",
+          "de": "os.setThemeId"
+        },
+        "reuse": {
+          "en": "os.setThemeId",
+          "de": "os.setThemeId"
+        }
+      },
+      "expected": {
+        "native": {
+          "en": "os.setThemeId",
+          "de": "os.setThemeId"
+        },
+        "reuse": {
+          "en": "os.setThemeId",
+          "de": "os.setThemeId"
+        }
+      }
+    },
+    {
+      "id": "empty-text-cells",
+      "kind": "label",
+      "input": {
+        "native": {
+          "en": "",
+          "de": ""
+        },
+        "reuse": {
+          "en": "",
+          "de": ""
+        }
+      },
+      "expected": {
+        "native": {
+          "en": "",
+          "de": ""
+        },
+        "reuse": {
+          "en": "",
+          "de": ""
+        }
+      }
+    },
+    {
+      "id": "unicode-cells",
+      "kind": "label",
+      "input": {
+        "native": {
+          "en": "snow 雪\u0000💎",
+          "de": "Schnee 雪\u0000💎"
+        },
+        "reuse": {
+          "en": "ä",
+          "de": "ä"
+        }
+      },
+      "expected": {
+        "native": {
+          "en": "snow 雪\u0000💎",
+          "de": "Schnee 雪\u0000💎"
+        },
+        "reuse": {
+          "en": "ä",
+          "de": "ä"
+        }
+      }
+    }
+  ]
+}

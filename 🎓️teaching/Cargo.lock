@@ -1035,6 +1035,7 @@ dependencies = [
  "semio-framework-replication-mutation",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
 ]
 
@@ -1058,6 +1059,7 @@ dependencies = [
  "semio-framework-replication-crypto",
  "semio-framework-replication-error",
  "semio-framework-replication-wire-core",
+ "semio-framework-value",
 ]
 
 [[package]]
@@ -1077,6 +1079,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
+ "semio-framework-pack-json",
  "semio-framework-replication-causal",
  "semio-framework-replication-crypto",
  "semio-framework-replication-edit",
@@ -1106,6 +1109,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "serde",
 ]
 
@@ -1414,6 +1418,7 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-ordered",
  "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
@@ -1427,6 +1432,7 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "serde",
 ]

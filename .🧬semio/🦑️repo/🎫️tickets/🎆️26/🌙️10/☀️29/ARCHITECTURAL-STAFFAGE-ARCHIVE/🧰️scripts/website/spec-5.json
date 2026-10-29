@@ -1,0 +1,8 @@
+{ "shots": [
+ { "name": "view-dark-solid", "hash": "#/humans/walking-commuter?view=dark-solid&clip=walk-cycle&t=0.4", "wait": 9000, "height": 1000 },
+ { "name": "detail-full", "hash": "#/objects/street-lamp?view=thermal", "wait": 10000, "height": 1000, "full": true },
+ { "name": "compare", "hash": "#/compare", "wait": 12000, "height": 1000 },
+ { "name": "playground", "hash": "#/playground", "wait": 9000, "height": 1000 },
+ { "name": "collections", "hash": "#/collections", "wait": 9000, "height": 1000 },
+ { "name": "all", "hash": "#/all", "wait": 12000, "height": 1000 }
+] }

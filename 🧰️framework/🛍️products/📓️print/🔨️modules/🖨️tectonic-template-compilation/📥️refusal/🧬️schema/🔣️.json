@@ -39,6 +39,8 @@
     "Policy": {
       "const": {
         "maximumLogBytes": 262144,
+        "maximumDiagnosticBytes": 16384,
+        "maximumDiagnosticLines": 128,
         "maximumRequestBytes": 4194304,
         "maximumResultBytes": 2097152,
         "maximumResultLines": 8192,
@@ -93,7 +95,8 @@
         "version",
         "originalCancelled",
         "compilerCancelled",
-        "remainingMilliseconds"
+        "remainingMilliseconds",
+        "compilerPrimaryPropagation"
       ],
       "properties": {
         "version": {
@@ -116,8 +119,27 @@
               "maximum": 9007199254740991
             }
           ]
+        },
+        "compilerPrimaryPropagation": {
+          "type": "boolean"
         }
-      }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "compilerPrimaryPropagation": {
+              "const": false
+            }
+          }
+        },
+        {
+          "properties": {
+            "compilerCancelled": {
+              "const": true
+            }
+          }
+        }
+      ]
     }
   }
 }

@@ -1,0 +1,46 @@
+{
+  "cases": [
+    {
+      "platform": "linux",
+      "processes": "idle",
+      "dry": false,
+      "cancelled": false,
+      "calls": 1
+    },
+    {
+      "platform": "darwin",
+      "processes": "idle",
+      "dry": true,
+      "cancelled": false,
+      "calls": 1
+    },
+    {
+      "platform": "win32",
+      "processes": "idle",
+      "dry": false,
+      "cancelled": false,
+      "calls": 1
+    },
+    {
+      "platform": "linux",
+      "processes": "active",
+      "dry": false,
+      "cancelled": false,
+      "calls": 0
+    },
+    {
+      "platform": "linux",
+      "processes": "unreadable",
+      "dry": false,
+      "cancelled": false,
+      "calls": 0
+    },
+    {
+      "platform": "linux",
+      "processes": "idle",
+      "dry": false,
+      "cancelled": true,
+      "calls": 1
+    }
+  ]
+}

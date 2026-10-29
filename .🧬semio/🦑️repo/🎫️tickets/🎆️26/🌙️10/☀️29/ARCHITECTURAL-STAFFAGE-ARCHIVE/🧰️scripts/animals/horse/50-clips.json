@@ -1,0 +1,381 @@
+      "clips": [
+        {
+          "id": "walk-cycle",
+          "title": {
+            "en": "Walking, four-beat",
+            "de": "Schritt im Viertakt"
+          },
+          "description": {
+            "en": "Lateral-sequence walk after Hildebrand (1965) and Muybridge: near hind, near fore, far hind, far fore touch down at quarter-cycle intervals; each hoof is on the ground 64 % of the cycle, so two to four hooves always carry. The head nods once per stride and the tail sways gently.",
+            "de": "Schritt in Seitenfolge nach Hildebrand (1965) und Muybridge: nahes Hinterbein, nahes Vorderbein, fernes Hinterbein, fernes Vorderbein setzen im Viertelzyklus auf; jeder Huf steht 64 % des Zyklus am Boden, sodass stets zwei bis vier Hufe tragen. Der Kopf nickt einmal pro Schritt und der Schweif pendelt leicht."
+          },
+          "durationS": 0.95,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": "plant",
+          "advanceM": 1.25,
+          "keys": [
+                    {"t": 0.0, "pose": "walk-phase-0", "ease": "smooth"},
+                    {"t": 0.11875, "pose": "walk-phase-1", "ease": "smooth"},
+                    {"t": 0.2375, "pose": "walk-phase-2", "ease": "smooth"},
+                    {"t": 0.35625, "pose": "walk-phase-3", "ease": "smooth"},
+                    {"t": 0.475, "pose": "walk-phase-4", "ease": "smooth"},
+                    {"t": 0.59375, "pose": "walk-phase-5", "ease": "smooth"},
+                    {"t": 0.7125, "pose": "walk-phase-6", "ease": "smooth"},
+                    {"t": 0.83125, "pose": "walk-phase-7", "ease": "smooth"}
+                  ],
+          "contacts": [
+            {
+              "anchor": "contact-hn",
+              "fromS": 0,
+              "toS": 0.608
+            },
+            {
+              "anchor": "contact-fn",
+              "fromS": 0.2375,
+              "toS": 0.8455
+            },
+            {
+              "anchor": "contact-hf",
+              "fromS": 0.475,
+              "toS": 0.95
+            },
+            {
+              "anchor": "contact-hf",
+              "fromS": 0,
+              "toS": 0.133
+            },
+            {
+              "anchor": "contact-ff",
+              "fromS": 0.7125,
+              "toS": 0.95
+            },
+            {
+              "anchor": "contact-ff",
+              "fromS": 0,
+              "toS": 0.3705
+            }
+          ],
+          "phases": [
+            {
+              "id": "near-hind-strike",
+              "fromS": 0,
+              "toS": 0.2375,
+              "title": {
+                "en": "Near hind strikes first",
+                "de": "Nahes Hinterbein setzt zuerst auf"
+              }
+            },
+            {
+              "id": "near-fore-strike",
+              "fromS": 0.2375,
+              "toS": 0.475,
+              "title": {
+                "en": "Near fore follows",
+                "de": "Nahes Vorderbein folgt"
+              }
+            },
+            {
+              "id": "far-hind-strike",
+              "fromS": 0.475,
+              "toS": 0.7125,
+              "title": {
+                "en": "Far hind strikes",
+                "de": "Fernes Hinterbein setzt auf"
+              }
+            },
+            {
+              "id": "far-fore-strike",
+              "fromS": 0.7125,
+              "toS": 0.95,
+              "title": {
+                "en": "Far fore closes the sequence",
+                "de": "Fernes Vorderbein schließt die Folge"
+              }
+            }
+          ],
+          "events": [
+            {
+              "t": 0,
+              "kind": "contact-on",
+              "title": {
+                "en": "Near hind hoof touches down",
+                "de": "Nahes Hinterbein setzt auf"
+              },
+              "target": "contact-hn"
+            },
+            {
+              "t": 0.2375,
+              "kind": "contact-on",
+              "title": {
+                "en": "Near fore hoof touches down",
+                "de": "Nahes Vorderbein setzt auf"
+              },
+              "target": "contact-fn"
+            },
+            {
+              "t": 0.475,
+              "kind": "contact-on",
+              "title": {
+                "en": "Far hind hoof touches down",
+                "de": "Fernes Hinterbein setzt auf"
+              },
+              "target": "contact-hf"
+            },
+            {
+              "t": 0.7125,
+              "kind": "contact-on",
+              "title": {
+                "en": "Far fore hoof touches down",
+                "de": "Fernes Vorderbein setzt auf"
+              },
+              "target": "contact-ff"
+            },
+            {
+              "t": 0.608,
+              "kind": "contact-off",
+              "title": {
+                "en": "Near hind hoof lifts",
+                "de": "Nahes Hinterbein hebt ab"
+              },
+              "target": "contact-hn"
+            },
+            {
+              "t": 0.8455,
+              "kind": "contact-off",
+              "title": {
+                "en": "Near fore hoof lifts",
+                "de": "Nahes Vorderbein hebt ab"
+              },
+              "target": "contact-fn"
+            },
+            {
+              "t": 0.133,
+              "kind": "contact-off",
+              "title": {
+                "en": "Far hind hoof lifts",
+                "de": "Fernes Hinterbein hebt ab"
+              },
+              "target": "contact-hf"
+            },
+            {
+              "t": 0.3705,
+              "kind": "contact-off",
+              "title": {
+                "en": "Far fore hoof lifts",
+                "de": "Fernes Vorderbein hebt ab"
+              },
+              "target": "contact-ff"
+            },
+            {
+              "t": 0,
+              "kind": "motion",
+              "title": {
+                "en": "Head at lowest point of the nod",
+                "de": "Kopf am tiefsten Punkt des Nickens"
+              }
+            }
+          ],
+          "tracks": [
+            {
+              "target": "emitter:breath-nose",
+              "ease": "smooth",
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.9
+                },
+                {
+                  "t": 0.475,
+                  "v": 1.0
+                },
+                {
+                  "t": 0.95,
+                  "v": 0.9
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "graze-and-swish",
+          "title": {
+            "en": "Grazing and swishing the tail",
+            "de": "Grasen und Schweifschlagen"
+          },
+          "description": {
+            "en": "The standing horse grazes with the head down: the jaw chews at 75 strokes per minute, the head and ears move slightly, and the tail swishes twice to drive off flies. All four hooves stay planted and the clip loops.",
+            "de": "Das stehende Pferd grast mit gesenktem Kopf: der Unterkiefer kaut mit 75 Zügen pro Minute, Kopf und Ohren bewegen sich leicht, und der Schweif schlägt zweimal gegen Fliegen. Alle vier Hufe bleiben stehen, der Clip läuft als Schleife."
+          },
+          "durationS": 6.4,
+          "fps": 30,
+          "loop": true,
+          "rootMotion": "none",
+          "keys": [
+                    {"t": 0.0, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -2.0}, "head": {"angleDeg": 65.0}, "neck-3": {"angleDeg": 6.7}, "tail-1": {"angleDeg": 6.0}, "tail-2": {"angleDeg": -12.7}, "tail-3": {"angleDeg": -25.3}, "tail-4": {"angleDeg": -12.0}, "ear-n": {"angleDeg": 12.0}, "ear-f": {"angleDeg": 11.3}}},
+                    {"t": 0.2, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 65.6}, "neck-3": {"angleDeg": 6.9}, "tail-1": {"angleDeg": 11.4}, "tail-2": {"angleDeg": -6.7}, "tail-3": {"angleDeg": -25.7}, "tail-4": {"angleDeg": -20.7}, "ear-n": {"angleDeg": 19.1}, "ear-f": {"angleDeg": 10.2}}},
+                    {"t": 0.4, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -14.0}, "head": {"angleDeg": 66.1}, "neck-3": {"angleDeg": 7.0}, "tail-1": {"angleDeg": 15.9}, "tail-2": {"angleDeg": 0.7}, "tail-3": {"angleDeg": -22.1}, "tail-4": {"angleDeg": -26.4}, "ear-n": {"angleDeg": 22.0}, "ear-f": {"angleDeg": 13.7}}},
+                    {"t": 0.6, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 66.7}, "neck-3": {"angleDeg": 7.0}, "tail-1": {"angleDeg": 18.9}, "tail-2": {"angleDeg": 8.5}, "tail-3": {"angleDeg": -15.1}, "tail-4": {"angleDeg": -28.0}, "ear-n": {"angleDeg": 19.1}, "ear-f": {"angleDeg": 19.7}}},
+                    {"t": 0.8, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -2.0}, "head": {"angleDeg": 67.1}, "neck-3": {"angleDeg": 7.0}, "tail-1": {"angleDeg": 20.0}, "tail-2": {"angleDeg": 15.4}, "tail-3": {"angleDeg": -5.9}, "tail-4": {"angleDeg": -25.3}, "ear-n": {"angleDeg": 12.0}, "ear-f": {"angleDeg": 24.7}}},
+                    {"t": 1.0, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 67.5}, "neck-3": {"angleDeg": 6.8}, "tail-1": {"angleDeg": 18.9}, "tail-2": {"angleDeg": 20.5}, "tail-3": {"angleDeg": 4.2}, "tail-4": {"angleDeg": -18.8}, "ear-n": {"angleDeg": 4.9}, "ear-f": {"angleDeg": 25.8}}},
+                    {"t": 1.2, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -14.0}, "head": {"angleDeg": 67.8}, "neck-3": {"angleDeg": 6.6}, "tail-1": {"angleDeg": 15.9}, "tail-2": {"angleDeg": 22.9}, "tail-3": {"angleDeg": 13.7}, "tail-4": {"angleDeg": -9.4}, "ear-n": {"angleDeg": 2.0}, "ear-f": {"angleDeg": 22.3}}},
+                    {"t": 1.4, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 67.9}, "neck-3": {"angleDeg": 6.4}, "tail-1": {"angleDeg": 11.4}, "tail-2": {"angleDeg": 22.2}, "tail-3": {"angleDeg": 21.1}, "tail-4": {"angleDeg": 1.4}, "ear-n": {"angleDeg": 4.9}, "ear-f": {"angleDeg": 16.3}}},
+                    {"t": 1.6, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -2.0}, "head": {"angleDeg": 68.0}, "neck-3": {"angleDeg": 6.1}, "tail-1": {"angleDeg": 6.0}, "tail-2": {"angleDeg": 18.7}, "tail-3": {"angleDeg": 25.3}, "tail-4": {"angleDeg": 12.0}, "ear-n": {"angleDeg": 12.0}, "ear-f": {"angleDeg": 11.3}}},
+                    {"t": 1.8, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 67.9}, "neck-3": {"angleDeg": 5.7}, "tail-1": {"angleDeg": 0.6}, "tail-2": {"angleDeg": 12.7}, "tail-3": {"angleDeg": 25.7}, "tail-4": {"angleDeg": 20.7}, "ear-n": {"angleDeg": 19.1}, "ear-f": {"angleDeg": 10.2}}},
+                    {"t": 2.0, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -14.0}, "head": {"angleDeg": 67.8}, "neck-3": {"angleDeg": 5.4}, "tail-1": {"angleDeg": -3.9}, "tail-2": {"angleDeg": 5.3}, "tail-3": {"angleDeg": 22.1}, "tail-4": {"angleDeg": 26.4}, "ear-n": {"angleDeg": 22.0}, "ear-f": {"angleDeg": 13.7}}},
+                    {"t": 2.2, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 67.5}, "neck-3": {"angleDeg": 5.0}, "tail-1": {"angleDeg": -6.9}, "tail-2": {"angleDeg": -2.5}, "tail-3": {"angleDeg": 15.1}, "tail-4": {"angleDeg": 28.0}, "ear-n": {"angleDeg": 19.1}, "ear-f": {"angleDeg": 19.7}}},
+                    {"t": 2.4, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -2.0}, "head": {"angleDeg": 67.1}, "neck-3": {"angleDeg": 4.6}, "tail-1": {"angleDeg": -8.0}, "tail-2": {"angleDeg": -9.4}, "tail-3": {"angleDeg": 5.9}, "tail-4": {"angleDeg": 25.3}, "ear-n": {"angleDeg": 12.0}, "ear-f": {"angleDeg": 24.7}}},
+                    {"t": 2.6, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 66.7}, "neck-3": {"angleDeg": 4.2}, "tail-1": {"angleDeg": -6.9}, "tail-2": {"angleDeg": -14.5}, "tail-3": {"angleDeg": -4.2}, "tail-4": {"angleDeg": 18.8}, "ear-n": {"angleDeg": 4.9}, "ear-f": {"angleDeg": 25.8}}},
+                    {"t": 2.8, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -14.0}, "head": {"angleDeg": 66.1}, "neck-3": {"angleDeg": 3.9}, "tail-1": {"angleDeg": -3.9}, "tail-2": {"angleDeg": -16.9}, "tail-3": {"angleDeg": -13.7}, "tail-4": {"angleDeg": 9.4}, "ear-n": {"angleDeg": 2.0}, "ear-f": {"angleDeg": 22.3}}},
+                    {"t": 3.0, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 65.6}, "neck-3": {"angleDeg": 3.6}, "tail-1": {"angleDeg": 0.6}, "tail-2": {"angleDeg": -16.2}, "tail-3": {"angleDeg": -21.1}, "tail-4": {"angleDeg": -1.4}, "ear-n": {"angleDeg": 4.9}, "ear-f": {"angleDeg": 16.3}}},
+                    {"t": 3.2, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -2.0}, "head": {"angleDeg": 65.0}, "neck-3": {"angleDeg": 3.3}, "tail-1": {"angleDeg": 6.0}, "tail-2": {"angleDeg": -12.7}, "tail-3": {"angleDeg": -25.3}, "tail-4": {"angleDeg": -12.0}, "ear-n": {"angleDeg": 12.0}, "ear-f": {"angleDeg": 11.3}}},
+                    {"t": 3.4, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 64.4}, "neck-3": {"angleDeg": 3.1}, "tail-1": {"angleDeg": 11.4}, "tail-2": {"angleDeg": -6.7}, "tail-3": {"angleDeg": -25.7}, "tail-4": {"angleDeg": -20.7}, "ear-n": {"angleDeg": 19.1}, "ear-f": {"angleDeg": 10.2}}},
+                    {"t": 3.6, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -14.0}, "head": {"angleDeg": 63.9}, "neck-3": {"angleDeg": 3.0}, "tail-1": {"angleDeg": 15.9}, "tail-2": {"angleDeg": 0.7}, "tail-3": {"angleDeg": -22.1}, "tail-4": {"angleDeg": -26.4}, "ear-n": {"angleDeg": 22.0}, "ear-f": {"angleDeg": 13.7}}},
+                    {"t": 3.8, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 63.3}, "neck-3": {"angleDeg": 3.0}, "tail-1": {"angleDeg": 18.9}, "tail-2": {"angleDeg": 8.5}, "tail-3": {"angleDeg": -15.1}, "tail-4": {"angleDeg": -28.0}, "ear-n": {"angleDeg": 19.1}, "ear-f": {"angleDeg": 19.7}}},
+                    {"t": 4.0, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -2.0}, "head": {"angleDeg": 62.9}, "neck-3": {"angleDeg": 3.0}, "tail-1": {"angleDeg": 20.0}, "tail-2": {"angleDeg": 15.4}, "tail-3": {"angleDeg": -5.9}, "tail-4": {"angleDeg": -25.3}, "ear-n": {"angleDeg": 12.0}, "ear-f": {"angleDeg": 24.7}}},
+                    {"t": 4.2, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 62.5}, "neck-3": {"angleDeg": 3.2}, "tail-1": {"angleDeg": 18.9}, "tail-2": {"angleDeg": 20.5}, "tail-3": {"angleDeg": 4.2}, "tail-4": {"angleDeg": -18.8}, "ear-n": {"angleDeg": 4.9}, "ear-f": {"angleDeg": 25.8}}},
+                    {"t": 4.4, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -14.0}, "head": {"angleDeg": 62.2}, "neck-3": {"angleDeg": 3.4}, "tail-1": {"angleDeg": 15.9}, "tail-2": {"angleDeg": 22.9}, "tail-3": {"angleDeg": 13.7}, "tail-4": {"angleDeg": -9.4}, "ear-n": {"angleDeg": 2.0}, "ear-f": {"angleDeg": 22.3}}},
+                    {"t": 4.6, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 62.1}, "neck-3": {"angleDeg": 3.6}, "tail-1": {"angleDeg": 11.4}, "tail-2": {"angleDeg": 22.2}, "tail-3": {"angleDeg": 21.1}, "tail-4": {"angleDeg": 1.4}, "ear-n": {"angleDeg": 4.9}, "ear-f": {"angleDeg": 16.3}}},
+                    {"t": 4.8, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -2.0}, "head": {"angleDeg": 62.0}, "neck-3": {"angleDeg": 3.9}, "tail-1": {"angleDeg": 6.0}, "tail-2": {"angleDeg": 18.7}, "tail-3": {"angleDeg": 25.3}, "tail-4": {"angleDeg": 12.0}, "ear-n": {"angleDeg": 12.0}, "ear-f": {"angleDeg": 11.3}}},
+                    {"t": 5.0, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 62.1}, "neck-3": {"angleDeg": 4.3}, "tail-1": {"angleDeg": 0.6}, "tail-2": {"angleDeg": 12.7}, "tail-3": {"angleDeg": 25.7}, "tail-4": {"angleDeg": 20.7}, "ear-n": {"angleDeg": 19.1}, "ear-f": {"angleDeg": 10.2}}},
+                    {"t": 5.2, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -14.0}, "head": {"angleDeg": 62.2}, "neck-3": {"angleDeg": 4.6}, "tail-1": {"angleDeg": -3.9}, "tail-2": {"angleDeg": 5.3}, "tail-3": {"angleDeg": 22.1}, "tail-4": {"angleDeg": 26.4}, "ear-n": {"angleDeg": 22.0}, "ear-f": {"angleDeg": 13.7}}},
+                    {"t": 5.4, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 62.5}, "neck-3": {"angleDeg": 5.0}, "tail-1": {"angleDeg": -6.9}, "tail-2": {"angleDeg": -2.5}, "tail-3": {"angleDeg": 15.1}, "tail-4": {"angleDeg": 28.0}, "ear-n": {"angleDeg": 19.1}, "ear-f": {"angleDeg": 19.7}}},
+                    {"t": 5.6, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -2.0}, "head": {"angleDeg": 62.9}, "neck-3": {"angleDeg": 5.4}, "tail-1": {"angleDeg": -8.0}, "tail-2": {"angleDeg": -9.4}, "tail-3": {"angleDeg": 5.9}, "tail-4": {"angleDeg": 25.3}, "ear-n": {"angleDeg": 12.0}, "ear-f": {"angleDeg": 24.7}}},
+                    {"t": 5.8, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 63.3}, "neck-3": {"angleDeg": 5.8}, "tail-1": {"angleDeg": -6.9}, "tail-2": {"angleDeg": -14.5}, "tail-3": {"angleDeg": -4.2}, "tail-4": {"angleDeg": 18.8}, "ear-n": {"angleDeg": 4.9}, "ear-f": {"angleDeg": 25.8}}},
+                    {"t": 6.0, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -14.0}, "head": {"angleDeg": 63.9}, "neck-3": {"angleDeg": 6.1}, "tail-1": {"angleDeg": -3.9}, "tail-2": {"angleDeg": -16.9}, "tail-3": {"angleDeg": -13.7}, "tail-4": {"angleDeg": 9.4}, "ear-n": {"angleDeg": 2.0}, "ear-f": {"angleDeg": 22.3}}},
+                    {"t": 6.2, "pose": "grazing-head-down", "ease": "smooth", "bones": {"jaw": {"angleDeg": -8.0}, "head": {"angleDeg": 64.4}, "neck-3": {"angleDeg": 6.4}, "tail-1": {"angleDeg": 0.6}, "tail-2": {"angleDeg": -16.2}, "tail-3": {"angleDeg": -21.1}, "tail-4": {"angleDeg": -1.4}, "ear-n": {"angleDeg": 4.9}, "ear-f": {"angleDeg": 16.3}}}
+                  ],
+          "contacts": [
+            {
+              "anchor": "contact-hn",
+              "fromS": 0,
+              "toS": 6.4
+            },
+            {
+              "anchor": "contact-hf",
+              "fromS": 0,
+              "toS": 6.4
+            },
+            {
+              "anchor": "contact-fn",
+              "fromS": 0,
+              "toS": 6.4
+            },
+            {
+              "anchor": "contact-ff",
+              "fromS": 0,
+              "toS": 6.4
+            }
+          ],
+          "phases": [
+            {
+              "id": "swish-1",
+              "fromS": 0,
+              "toS": 3.2,
+              "title": {
+                "en": "First swish while chewing",
+                "de": "Erstes Schlagen beim Kauen"
+              }
+            },
+            {
+              "id": "swish-2",
+              "fromS": 3.2,
+              "toS": 6.4,
+              "title": {
+                "en": "Second swish and snort",
+                "de": "Zweites Schlagen und Schnauben"
+              }
+            }
+          ],
+          "events": [
+            {
+              "t": 0.4,
+              "kind": "motion",
+              "title": {
+                "en": "Tail swish begins",
+                "de": "Schweifschlagen beginnt"
+              }
+            },
+            {
+              "t": 3.6,
+              "kind": "motion",
+              "title": {
+                "en": "Second tail swish begins",
+                "de": "Zweites Schweifschlagen beginnt"
+              }
+            },
+            {
+              "t": 3.0,
+              "kind": "exhale",
+              "title": {
+                "en": "Snort",
+                "de": "Schnauben"
+              }
+            }
+          ],
+          "tracks": [
+            {
+              "target": "emitter:snort",
+              "ease": "smooth",
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0
+                },
+                {
+                  "t": 2.8,
+                  "v": 0
+                },
+                {
+                  "t": 3.1,
+                  "v": 1
+                },
+                {
+                  "t": 3.4,
+                  "v": 0
+                },
+                {
+                  "t": 6.4,
+                  "v": 0
+                }
+              ]
+            },
+            {
+              "target": "emitter:breath-nose",
+              "ease": "smooth",
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 0.6
+                },
+                {
+                  "t": 3.1,
+                  "v": 0.4
+                },
+                {
+                  "t": 6.4,
+                  "v": 0.6
+                }
+              ]
+            },
+            {
+              "target": "activityMet",
+              "ease": "smooth",
+              "keys": [
+                {
+                  "t": 0,
+                  "v": 1.9
+                },
+                {
+                  "t": 3.2,
+                  "v": 2.0
+                },
+                {
+                  "t": 6.4,
+                  "v": 1.9
+                }
+              ]
+            }
+          ]
+        }
+      ],

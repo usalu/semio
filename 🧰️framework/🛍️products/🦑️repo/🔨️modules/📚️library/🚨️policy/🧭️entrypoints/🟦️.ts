@@ -25,11 +25,12 @@ export async function runPolicyOnlyMain(scriptUrl: string): Promise<void> {
 }
 
 /** 📜️Workspace root `script.ts` entry (no policy dispatch). */
-export async function runWorkspaceScriptMain(router: ScriptRouter): Promise<void> {
+export async function runWorkspaceScriptMain(router: ScriptRouter, options:Readonly<{freshCapabilities?:()=>Promise<Readonly<Record<string,unknown>>>}>={}): Promise<void> {
   const run = (invocation: ScriptInvocation) => runScriptMain(router, { invocation });
   if (process.env[SCRIPT_PROCESS_INVOCATION_ENV] !== undefined) return receiveScriptProcessInvocation(process.env, run);
   const policy = readScriptPolicy({ version: 1, owner: "workspace-root", maximumElapsedMilliseconds: 0 });
-  return withScriptProcessEnvelope(createScriptProcessEnvelope(policy, {}, Date.now()), run);
+  const capabilities=await options.freshCapabilities?.()??{workspaceRoot:router.repoRoot};
+  return withScriptProcessEnvelope(createScriptProcessEnvelope(policy, capabilities, Date.now()), run);
 }
 
 /**

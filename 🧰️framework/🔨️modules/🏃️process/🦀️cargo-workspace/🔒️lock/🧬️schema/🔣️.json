@@ -10,24 +10,43 @@
     "Input": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["path", "sha256"],
+      "required": [
+        "path",
+        "sha256"
+      ],
       "properties": {
-        "path": { "type": "string", "minLength": 1, "maxLength": 4096 },
-        "sha256": { "$ref": "#/definitions/Hash" }
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "sha256": {
+          "$ref": "#/definitions/Hash"
+        }
       }
     },
     "Receipt": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["version", "lock", "manifests"],
+      "required": [
+        "version",
+        "lock",
+        "manifests"
+      ],
       "properties": {
-        "version": { "const": 1 },
-        "lock": { "$ref": "#/definitions/Input" },
+        "version": {
+          "const": 1
+        },
+        "lock": {
+          "$ref": "#/definitions/Input"
+        },
         "manifests": {
           "type": "array",
           "minItems": 1,
           "maxItems": 65536,
-          "items": { "$ref": "#/definitions/Input" }
+          "items": {
+            "$ref": "#/definitions/Input"
+          }
         }
       }
     },
@@ -40,8 +59,17 @@
         "maximumOutputBytes": 16777216,
         "maximumOutputLines": 65536,
         "detailCharacters": 400,
-        "dependencyTables": ["dependencies", "dev-dependencies", "build-dependencies"],
-        "extraInputs": [".cargo/config.toml", ".cargo/config", "rust-toolchain.toml", "rust-toolchain"],
+        "dependencyTables": [
+          "dependencies",
+          "dev-dependencies",
+          "build-dependencies"
+        ],
+        "extraInputs": [
+          ".cargo/config.toml",
+          ".cargo/config",
+          "rust-toolchain.toml",
+          "rust-toolchain"
+        ],
         "staleMarkers": [
           "cannot update the lock file",
           "cannot create the lock file",
@@ -53,7 +81,9 @@
           "failed to select a version for `([^`]+)`",
           "searched package name: `([^`]+)`",
           "failed to get `([^`]+)` as a dependency"
-        ]
+        ],
+        "diagnosticCharacters": 8192,
+        "diagnosticLines": 64
       }
     },
     "Messages": {
@@ -91,34 +121,149 @@
     "Case": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "files", "steps"],
+      "required": [
+        "name",
+        "files",
+        "steps"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1 },
-        "online": { "type": "boolean" },
-        "manifest": { "type": "string" },
-        "files": { "type": "object", "additionalProperties": { "type": "string" } },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "online": {
+          "type": "boolean"
+        },
+        "manifest": {
+          "type": "string"
+        },
+        "files": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
         "steps": {
           "type": "array",
           "minItems": 1,
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["do", "expect"],
+            "required": [
+              "do",
+              "expect"
+            ],
             "properties": {
-              "do": { "enum": ["ensure", "ensure-force", "ensure-concurrent", "write"] },
-              "files": { "type": "object", "additionalProperties": { "type": "string" } },
+              "do": {
+                "enum": [
+                  "ensure",
+                  "ensure-force",
+                  "ensure-concurrent",
+                  "write"
+                ]
+              },
+              "files": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
               "expect": {
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                  "outcomes": { "type": "array", "items": { "enum": ["current", "refreshed"] } },
-                  "cargoCalls": { "type": "integer", "minimum": 0 },
-                  "oracle": { "enum": ["locked-ok", "locked-stale"] },
-                  "refusedCrate": { "type": "string" }
+                  "outcomes": {
+                    "type": "array",
+                    "items": {
+                      "enum": [
+                        "current",
+                        "refreshed"
+                      ]
+                    }
+                  },
+                  "cargoCalls": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "oracle": {
+                    "enum": [
+                      "locked-ok",
+                      "locked-stale"
+                    ]
+                  },
+                  "refusedCrate": {
+                    "type": "string"
+                  }
                 }
               }
             }
           }
+        }
+      }
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "version",
+        "status",
+        "stderr",
+        "stdout",
+        "truncated"
+      ],
+      "properties": {
+        "version": {
+          "const": 1
+        },
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "stderr": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "stdout": {
+          "type": "string",
+          "maxLength": 8192
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "DiagnosticCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "status",
+        "stderr",
+        "stdout",
+        "repeat"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": [
+            "integer",
+            "null"
+          ]
+        },
+        "stderr": {
+          "type": "string"
+        },
+        "stdout": {
+          "type": "string"
+        },
+        "repeat": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
         }
       }
     }

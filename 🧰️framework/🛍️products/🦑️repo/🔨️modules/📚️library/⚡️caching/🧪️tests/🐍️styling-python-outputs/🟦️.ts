@@ -3,7 +3,7 @@ import{readFileSync}from"node:fs";
 import{createRequire}from"node:module";
 import{join}from"node:path";
 import{parse}from"@iarna/toml";
-import{stylingPythonOutputV1,STYLING_PYTHON_POLICY_V1 as policy}from"@semio-tech/ui-styling/builder/python/contract";
+import{stylingPythonOutputV1,STYLING_PYTHON_POLICY_V1 as policy}from"../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🐍️python/📋️contract/🟦️.ts";
 /** 🐍️ Verifies the actual Python Source/output contract without fabricating a Native execution owner. */
 export async function testStylingPythonSourceContractV1(workspace:string):Promise<void>{
  const require=createRequire(import.meta.url),fixture=JSON.parse(readFileSync(join(import.meta.dir,"../🧫️fixtures/🎨️styling-outputs/🐍️python/🔣️.json"),"utf8")),packagePath=join(fixture.owner,fixture.package),project=JSON.parse(readFileSync(join(workspace,packagePath,"📋️project.json"),"utf8")),manifestSource=readFileSync(join(workspace,packagePath,"pyproject.toml"),"utf8"),manifest=Bun.TOML.parse(manifestSource);

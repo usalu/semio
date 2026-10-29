@@ -9,15 +9,23 @@
 package client
 
 import (
-	"fmt"
+	"context"
+	model "github.com/usalu/semio/repo/model"
 	search "github.com/usalu/semio/repo/search"
 	"regexp"
-	"strconv"
 	"strings"
 )
 
 // 🟣️StreamOptions holds the data fields for a stream options record.
+type StreamProgress struct {
+	Current int
+	Phase   string
+}
+
+// 📡️StreamOptions controls authored discovery and matching.
 type StreamOptions struct {
+	Layout         *model.ArtifactLayout `json:"-"`
+	Progress       func(StreamProgress)  `json:"-"`
 	ShowIgnored    bool
 	ShowGenerated  bool
 	ExcludeKinds   []string
@@ -87,80 +95,16 @@ func matchesFilter(name string, opts StreamOptions) bool {
 }
 
 // 🔍️matchesQuery holds the data fields for a matchesQuery record.
-func matchesQuery(text string, opts StreamOptions) bool {
+func matchesQuery(ctx context.Context, text string, opts StreamOptions) (bool, error) {
+	if err := ctx.Err(); err != nil {
+		return false, err
+	}
 	if opts.Query == "" {
-		return true
+		return true, nil
 	}
-	lowerText := strings.ToLower(text)
-	lowerQuery := strings.ToLower(opts.Query)
-	if strings.Contains(lowerText, lowerQuery) {
-		return true
-	}
-	mapping := search.NewIndexMapping()
-	index, err := search.NewMemOnly(mapping)
-	if err != nil {
-		return true
-	}
-	defer index.Close()
-	doc := map[string]interface{}{"text": text}
-	index.Index("item", doc)
-	mq := search.NewMatchQuery(opts.Query)
-	mq.SetFuzziness(2)
-	searchRequest := search.NewSearchRequest(mq)
-	searchRequest.Size = 1
-	results, err := index.Search(searchRequest)
-	if err != nil {
-		return true
-	}
-	return results.Total > 0
-}
-
-// 🔖️queryableItem holds the data fields for a queryableItem record.
-type queryableItem struct {
-	text string
-	idx  int
-}
-
-// ⚪️searchFilterItems returns the matching item positions.
-func searchFilterItems(items []queryableItem, query string) map[int]bool {
-	result := make(map[int]bool)
-	if query == "" {
-		for _, item := range items {
-			result[item.idx] = true
-		}
-		return result
-	}
-	mapping := search.NewIndexMapping()
-	index, err := search.NewMemOnly(mapping)
-	if err != nil {
-		for _, item := range items {
-			result[item.idx] = true
-		}
-		return result
-	}
-	defer index.Close()
-	for _, item := range items {
-		doc := map[string]interface{}{"text": item.text}
-		index.Index(fmt.Sprintf("%d", item.idx), doc)
-	}
-	mq := search.NewMatchQuery(query)
-	mq.SetFuzziness(2)
-	searchRequest := search.NewSearchRequest(mq)
-	searchRequest.Size = len(items)
-	results, err := index.Search(searchRequest)
-	if err != nil {
-		for _, item := range items {
-			result[item.idx] = true
-		}
-		return result
-	}
-	for _, hit := range results.Hits {
-		idx, err := strconv.Atoi(hit.ID)
-		if err == nil {
-			result[idx] = true
-		}
-	}
-	return result
+	match := search.NewMatchQuery(opts.Query)
+	match.SetFuzziness(2)
+	return search.MatchContext(ctx, text, match)
 }
 
 // ⚫️shouldIncludeKind holds the data fields for a shouldIncludeKind record.

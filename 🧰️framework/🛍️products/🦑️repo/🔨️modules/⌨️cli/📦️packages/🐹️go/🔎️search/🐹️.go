@@ -11,6 +11,7 @@ package cli
 import (
 	json "encoding/json"
 	fmt "fmt"
+	search "github.com/usalu/semio/repo/search"
 	sort "sort"
 	strings "strings"
 
@@ -56,6 +57,7 @@ func searchCommand(factory EngineFactory, config *Config) *Command {
 		Args:  MaximumNArgs(1),
 		RunE: func(cmd *Command, args []string) error {
 			ctx := cmd.Context()
+			progress := search.NewProgressReporter(cmd.ErrOrStderr())
 
 			filter := buildTreeFilterFromFlags(cmd)
 			if len(args) > 0 {
@@ -69,8 +71,16 @@ func searchCommand(factory EngineFactory, config *Config) *Command {
 				IncludeSections: filter.OnlyKinds[treepkg.TreeNodeSection] ||
 					filter.OnlyKinds[treepkg.TreeNodeDefinition],
 			}
-			tree := treepkg.BuildMonorepoTreeCached(ctx, buildOpts)
-			tree, err := treepkg.SearchMonorepoTreeWithCache(ctx, tree, filter.Query)
+			buildOpts.Progress = progress
+			tree, err := treepkg.BuildMonorepoTreeCached(ctx, buildOpts)
+			if err != nil {
+				return err
+			}
+			limit, _ := cmd.Flags().GetInt("limit")
+			if limit == 0 {
+				limit = 100
+			}
+			tree, err = treepkg.SearchMonorepoTreeWithOptions(ctx, tree, filter.Query, treepkg.TreeSearchOptions{Limit: limit, Filter: &filter, Progress: progress})
 			if err != nil {
 				return err
 			}
@@ -93,6 +103,7 @@ func searchCommand(factory EngineFactory, config *Config) *Command {
 			return nil
 		},
 	}
+	cmd.Flags().Int("limit", 100, "Maximum ranked search hits (1–10000)")
 	bindTreeFlags(cmd)
 	return cmd
 }
@@ -115,6 +126,7 @@ func listCommand(factory EngineFactory, config *Config) *Command {
 		Args:  MaximumNArgs(1),
 		RunE: func(cmd *Command, args []string) error {
 			ctx := cmd.Context()
+			progress := search.NewProgressReporter(cmd.ErrOrStderr())
 			sorted, _ := cmd.Flags().GetBool("sorted")
 			limit, _ := cmd.Flags().GetInt("limit")
 			filter := buildTreeFilterFromFlags(cmd)
@@ -128,8 +140,16 @@ func listCommand(factory EngineFactory, config *Config) *Command {
 				IncludeSections: filter.OnlyKinds[treepkg.TreeNodeSection] ||
 					filter.OnlyKinds[treepkg.TreeNodeDefinition],
 			}
-			tree := treepkg.BuildMonorepoTreeCached(ctx, buildOpts)
-			tree, err := treepkg.SearchMonorepoTreeWithCache(ctx, tree, filter.Query)
+			buildOpts.Progress = progress
+			tree, err := treepkg.BuildMonorepoTreeCached(ctx, buildOpts)
+			if err != nil {
+				return err
+			}
+			searchLimit := limit
+			if searchLimit == 0 {
+				searchLimit = 100
+			}
+			tree, err = treepkg.SearchMonorepoTreeWithOptions(ctx, tree, filter.Query, treepkg.TreeSearchOptions{Limit: searchLimit, Filter: &filter, Progress: progress})
 			if err != nil {
 				return err
 			}
@@ -297,9 +317,16 @@ func queryCommand(factory EngineFactory, config *Config) *Command {
 		Args:  ArbitraryArgs,
 		RunE: func(cmd *Command, args []string) error {
 			ctx := cmd.Context()
+			progress := search.NewProgressReporter(cmd.ErrOrStderr())
 			query := strings.Join(args, " ")
-			tree := treepkg.BuildMonorepoTreeCached(ctx, treepkg.TreeBuildOptions{IncludeSections: true})
-			matched := treepkg.SearchTreeInMemory(tree, query)
+			tree, err := treepkg.BuildMonorepoTreeCached(ctx, treepkg.TreeBuildOptions{IncludeSections: true, Progress: progress})
+			if err != nil {
+				return err
+			}
+			matched, err := treepkg.SearchMonorepoTreeWithCache(ctx, tree, query)
+			if err != nil {
+				return err
+			}
 			var nodes []*treepkg.TreeNode
 			flattenTreeNodes(matched, &nodes)
 			for _, n := range nodes {

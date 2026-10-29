@@ -103,7 +103,7 @@ export function createSliceCustodyV1({root,fs,lease,now=()=>Date.now(),token=()=
 
  /** 🚪️ Queues a claim on `owners` (every owner when `structural`) and resolves with its handle once no held or earlier live claim conflicts; `say` tells at once and then every notice interval which claims go first. */
  async function hold({owners=[],structural=false,signal,say=()=>{}}={}){
-  const name=token(),lock=await lease.tryHold(resource.claim(name));
+  const name=token(),lock=await lease.tryHold(resource.claim(name),{fresh:true});
   if(!lock)throw fail("A fresh custody lease is free","CUSTODY_LEASE_TAKEN");
   const mine={owners:ownersOf(owners),structural:structural===true},started=now();let claim,noticed=-Infinity;
   try{

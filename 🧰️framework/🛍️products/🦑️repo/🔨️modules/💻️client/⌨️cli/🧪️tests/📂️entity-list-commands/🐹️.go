@@ -9,6 +9,7 @@
 package client
 
 import (
+	"context"
 	"os"
 	"path/filepath"
 	"testing"
@@ -50,7 +51,7 @@ func TestExhaustiveBundleTreeCommand(t *testing.T) {
 		t.Skip("skipping slow bundle tree test in short mode")
 	}
 	withExhaustiveRepo(t)
-	result := ToolTechnologyTree()
+	result := ToolTechnologyTree(context.Background())
 	if result.Error != "" {
 		t.Errorf("ToolTechnologyTree returned error: %s", result.Error)
 	}

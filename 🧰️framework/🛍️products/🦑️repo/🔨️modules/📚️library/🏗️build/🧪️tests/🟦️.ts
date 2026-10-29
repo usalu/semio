@@ -1,6 +1,6 @@
 import "../../../../../../🔨️modules/🌱️value/📦️packages/🟦️typescript/♻️retirement/🌀️support/🧪️tests/🟦️.ts";
 import {ticketScopeVectorLawV1} from "../../../🔗️graphql/🧪️tests/🌿️tickets/📁️scope/🟦️.ts";
-import {withBuildTestInvocationV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧪️testing/📥️invocation/🟦️.ts";
+import {privateRepositoryWorkspaceV1} from "../../🧪️testing/🧫️private-repository/🟦️.ts";
 import {createIssuedResourceControlV1} from "./../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "@semio-tech/process/compiler-capacity";
 import {withRepositoryTestArtifactsV1,repositoryTestArtifactRootV1} from "@semio-tech/repo-test/storage";
@@ -14,6 +14,7 @@ import { BuildScript } from "../📜️script.ts";
 import { findWorkspaceRoot } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { createScriptProcessEnvelope, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 const root = findWorkspaceRoot(import.meta.dir);
+const repository=await privateRepositoryWorkspaceV1("graph");
 
 test("workspace build entry loads without the audit monolith under the independent bundler", async () => {
   const compiled = await build({ absWorkingDir: root, entryPoints: [fixture.entry], bundle: true, write: false, platform: "node", format: "esm", packages: "external", metafile: true, logLevel: "silent" });
@@ -48,7 +49,7 @@ test("workspace build gate requires compiler intent and emits the completed grap
 
 
 
-test("actual lease admission refusal retains bounded context and genuine continuation",async()=>withBuildTestInvocationV1(async original=>withRepositoryTestArtifactsV1(root,original,createIssuedResourceControlV1(original,"test:artifact-entry",0),async()=>testResourceLeaseAdmissionTimeoutV1(repositoryTestArtifactRootV1(root),scriptCompilerAdmissionControlV1(original,"test:resource-leases",30000)))));
+test("actual lease admission refusal retains bounded context and genuine continuation",async()=>repository.invoke(async original=>withRepositoryTestArtifactsV1(repository.root,original,createIssuedResourceControlV1(original,"test:artifact-entry",0),async()=>testResourceLeaseAdmissionTimeoutV1(repositoryTestArtifactRootV1(repository.root),scriptCompilerAdmissionControlV1(original,"test:resource-leases",30000)))));
 
 test("rooted ticket lifecycle neutral vectors preserve independent repository projections",()=>ticketScopeVectorLawV1());
 

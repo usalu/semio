@@ -11,6 +11,7 @@ package cli
 import (
 	json "encoding/json"
 	fmt "fmt"
+	search "github.com/usalu/semio/repo/search"
 	os "os"
 	filepath "path/filepath"
 	strings "strings"
@@ -260,16 +261,24 @@ func treeCommand(factory EngineFactory, config *Config) *Command {
 			if queryFlag, _ := cmd.Flags().GetString("query"); queryFlag != "" && filter.Query == "" {
 				filter.Query = queryFlag
 			}
+			progress := search.NewProgressReporter(cmd.ErrOrStderr())
+			progress(search.Progress{Step: "tree-discovery"})
 			scope, _ := cmd.Flags().GetString("scope")
 			includeSections := filter.OnlyKinds[treepkg.TreeNodeSection] || filter.OnlyKinds[treepkg.TreeNodeDefinition]
 			source := LoadFsTreeSource(graphqlpkg.NewRepoContext(repoRootOf(config)), includeSections, scope)
 			node := treepkg.BuildMonorepoTree(source, treepkg.TreeBuildOptions{IncludeSections: includeSections})
 			if filter.Query != "" {
-				node = treepkg.SearchTreeInMemory(node, filter.Query)
+				limit, _ := cmd.Flags().GetInt("limit")
+				matched, err := treepkg.SearchMonorepoTreeWithOptions(cmd.Context(), node, filter.Query, treepkg.TreeSearchOptions{Limit: limit, Scope: scope, Filter: &filter, Progress: progress})
+				if err != nil {
+					return err
+				}
+				node = matched
 			}
 			return writeTreeNode(cmd, config, treepkg.FilterMonorepoTree(node, &filter))
 		},
 	}
+	monorepo.Flags().Int("limit", 100, "Maximum ranked search hits (1–10000)")
 	monorepo.Flags().String("scope", "", "Restrict the projection to this repository-relative path")
 	bindTreeFlags(monorepo)
 	goal := &Command{

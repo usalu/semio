@@ -355,14 +355,24 @@ export function unitOutputBytesV1(artifact: string, entries: readonly string[], 
   return entries.filter((name) => name.startsWith(stem + ".") || name.startsWith("lib" + stem + ".")).reduce((sum, name) => sum + size(name), 0);
 }
 
-/** 🛠️ Compiles the scheduler crate (host, release) and returns its executables by name, examples included on request. */
-export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDirectory: string; buildDirectory: string; environment: Readonly<Record<string, string | undefined>>; examples?: boolean; toolchain?: string; control: CompilerAdmissionControl; storage:NativeStorageReservationV1;sourceBoundary:CargoSourceBoundaryPolicyV1 }>): Promise<ReadonlyMap<string, string>> {
+/** 🧰️ Declares the complete locked host selection for scheduler provisioning and offline planning. */
+export function schedulerCargoSelectionV1(examples=false,mode:"prototype"|"release"="release"):Readonly<{manifest:string;args:readonly string[]}>{
+ const manifest=fileURLToPath(new URL("./📦️packages/🦀️rust/Cargo.toml",import.meta.url));return Object.freeze({manifest,args:Object.freeze(["build","--locked",...(mode==="release"?["--release"]:["--profile",mode]),"--manifest-path",manifest,"--bins",...(examples?["--examples"]:[])])});
+}
+
+/** 🔖️ Returns only executables held by the current toolchain, environment and scheduler source receipt. */
+export function readSchedulerExecutablesV1(targetDirectory:string,toolchain:string,environment:Readonly<Record<string,string|undefined>>):ReadonlyMap<string,string>|undefined{
+ const {manifest}=schedulerCargoSelectionV1();return schedulerReceiptHoldsV1(readSchedulerReceiptV1(join(targetDirectory,schedulerReceiptFileV1())),schedulerIdentityV1(toolchain,environment),manifest);
+}
+
+/** 🛠️ Compiles the scheduler crate for its admitted host profile and returns its executables by name, examples included on request. */
+export async function buildSchedulerV1(options: Readonly<{ cwd: string; targetDirectory: string; buildDirectory: string; environment: Readonly<Record<string, string | undefined>>; examples?: boolean; arguments?:readonly string[]; toolchain?: string; control: CompilerAdmissionControl; storage:NativeStorageReservationV1;sourceBoundary:CargoSourceBoundaryPolicyV1 }>): Promise<ReadonlyMap<string, string>> {
   requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();for(const path of [options.targetDirectory,options.buildDirectory,...["CARGO_HOME","TMPDIR","TMP","TEMP"].map(name=>{const path=options.environment[name];if(!path)throw Error("Bounded scheduler environment required: "+name);return path;})])requireNativeStoragePathV1(options.storage.backing.root,path);
   compilerAdmissionBudgetV1(options.control);const signal = options.control.signal;
-  const manifest = fileURLToPath(new URL("./📦️packages/🦀️rust/Cargo.toml", import.meta.url));
+  const selection=schedulerCargoSelectionV1(options.examples),manifest=selection.manifest,args=options.arguments??selection.args;
   const receiptFile=join(options.targetDirectory,schedulerReceiptFileV1()),identity=options.toolchain&&!options.examples?schedulerIdentityV1(options.toolchain,options.environment):undefined,held=identity?schedulerReceiptHoldsV1(readSchedulerReceiptV1(receiptFile),identity,manifest):undefined;if(held)return held;
-  const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args:["build","--locked","--release","--manifest-path",manifest,"--bins",...(options.examples?["--examples"]:[])],environment:options.environment,maximumOutputBytes:cargoPlanningOutputBytesV1},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
-  const child = spawn("cargo", ["build", "--locked", "--release", "--manifest-path", manifest, "--bins", ...(options.examples ? ["--examples"] : []), "--message-format=json-render-diagnostics"], { cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
+  const graph=await captureCargoCompilationGraphV1({workspaceRoot:options.cwd,cwd:options.cwd,program:"cargo",prefix:[],args,environment:options.environment,maximumOutputBytes:cargoPlanningOutputBytesV1},options.control,actualCargoCompilerPlanningPortV1());await admitCargoSourceBoundariesV1(graph,options.cwd,options.sourceBoundary,options.control,actualCargoSourceAdmissionPortV1(options.environment,options.cwd,options.storage));await options.storage.recheck();
+  const child = spawn("cargo", [...args,"--message-format=json-render-diagnostics"], { cwd: options.cwd, env: { ...options.environment, CARGO_TARGET_DIR: options.targetDirectory, CARGO_BUILD_BUILD_DIR: options.buildDirectory, RUSTC_WRAPPER: "", CARGO_BUILD_RUSTC_WRAPPER: "" }, stdio: ["ignore", "pipe", "pipe"], detached: process.platform !== "win32" });
   const cancel = (): void => terminateOwnedChildTree(child);
   const stopDeadline = watchResourceLeaseControlDeadlineV1(options.control, () => cancel());
   signal.addEventListener("abort", cancel, { once: true });

@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1} from "../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import{sayBuildV1}from"../../📖️texts/🟦️.ts";
 import {type BazelImplementationV1,type BazelRuntimeV1,type BazelTaskManifestV1,bazelBirthParametersAllowedV1,bazelCapturedImplementationV1,bazelTaskBaseEnvironmentV1,fileHash,initializeBazelControlTextV1,installBazelOrchestrationV1,issueBazelTaskEnvironmentV1,readBazelBirthFileV1,requireBazelImplementationV1,restoreBazelSnapshotV1,runBazelActionEntryV1,withBazelTaskCleanupV1} from "./🎬️executor/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1}from"../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -214,7 +215,7 @@ export function bazelInputTraversalRootsV1(patterns:readonly string[]):string[]{
 /** 🌳️ Enumerates selected inputs without opening unrelated directories when Git is unavailable. */
 export async function bazelFilesystemSourceFilesV1(root:string,invocation:ScriptInvocation,patterns:readonly string[]):Promise<string[]>{
  const excluded=BAZEL_SOURCE_EXCLUDED_V1,pending=bazelInputTraversalRootsV1(patterns),files:string[]=[];
- while(pending.length){checkScriptInvocation(invocation);const directory=pending.pop()!;if(directory.split("/").some(part=>excluded.has(part)))continue;let info;try{info=await lstat(join(root,directory));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")continue;throw error;}if(info.isSymbolicLink()||info.isFile()){files.push(directory);continue;}if(!info.isDirectory())continue;for(const entry of await readdir(join(root,directory),{withFileTypes:true})){const path=slash(join(directory,entry.name));if(entry.isDirectory()&&!excluded.has(entry.name))pending.push(path);else if(entry.isFile()||entry.isSymbolicLink())files.push(path);}await invocation.control.yieldContinuation();}return [...new Set(files)].sort();
+ while(pending.length){checkScriptInvocation(invocation);const directory=pending.pop()!;if(isOpaqueSourcePathV1(directory)||directory.split("/").some(part=>excluded.has(part)))continue;let info;try{info=await lstat(join(root,directory));}catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")continue;throw error;}if(info.isSymbolicLink()||info.isFile()){files.push(directory);continue;}if(!info.isDirectory())continue;for(const entry of await readdir(join(root,directory),{withFileTypes:true})){const path=slash(join(directory,entry.name));if(isOpaqueSourcePathV1(path))continue;if(entry.isDirectory()&&!excluded.has(entry.name))pending.push(path);else if(entry.isFile()||entry.isSymbolicLink())files.push(path);}await invocation.control.yieldContinuation();}return [...new Set(files)].sort();
 }
 
 /** 🚫️ The directory names of build outputs and bookkeeping: the filesystem fallback never enters one; the witness of the git universe enters one exactly when git does not ignore it ({@link bazelIgnoredAmongV1}), because git's listing, not the name, decides what the planner admits (a nested `.🧬semio` a tool left in a package, a `target` below `🧫️fixtures` that `.gitignore` un-ignores). */
@@ -278,12 +279,12 @@ async function bazelIgnoredAmongV1(root:string,paths:readonly string[],signal:Ab
 const BAZEL_UNADMITTED_PREFIXES_V1=[".🧬semio/",".git/"] as const,BAZEL_UNADMITTED_BYTES_V1=BAZEL_UNADMITTED_PREFIXES_V1.map(prefix=>Buffer.from(prefix));
 
 /** 🚪️ Whether a path git lists is a source the planner admits: everything except the checkout's own bookkeeping (`.🧬semio/`, `.git/`), which no task can declare. */
-export function bazelAdmittedSourceV1(path:string):boolean{return !BAZEL_UNADMITTED_PREFIXES_V1.some(prefix=>path.startsWith(prefix));}
+export function bazelAdmittedSourceV1(path:string):boolean{return !isOpaqueSourcePathV1(path)&&!BAZEL_UNADMITTED_PREFIXES_V1.some(prefix=>path.startsWith(prefix));}
 
 /** ✂️ The admitted entries of a NUL-terminated listing, in git's order and bytes: what the planner can see of it ({@link bazelAdmittedSourceV1}). */
 export function bazelAdmittedListingV1(listing:Buffer):Buffer{
  const kept:Buffer[]=[];
- for(let at=0;at<listing.length;){let end=listing.indexOf(0,at);if(end<0)end=listing.length-1;const entry=listing.subarray(at,end+1);if(!BAZEL_UNADMITTED_BYTES_V1.some(prefix=>entry.length>prefix.length&&entry.subarray(0,prefix.length).equals(prefix)))kept.push(entry);at=end+1;}
+ for(let at=0;at<listing.length;){let end=listing.indexOf(0,at);if(end<0)end=listing.length-1;const entry=listing.subarray(at,end+1);if(!isOpaqueSourcePathV1(entry.subarray(0,entry.length-1).toString("utf8"))&&!BAZEL_UNADMITTED_BYTES_V1.some(prefix=>entry.length>prefix.length&&entry.subarray(0,prefix.length).equals(prefix)))kept.push(entry);at=end+1;}
  return Buffer.concat(kept);
 }
 

@@ -1,0 +1,91 @@
+{
+  "name": "repo-cache-retirement",
+  "projectType": "library",
+  "targets": {
+    "cache-retire-inactive-preview": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+        "command": "repo ./📜️script.ts cache-retire-inactive preview",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "verb": "clean",
+            "title": {
+              "en": "Preview Inactive Compiler Units",
+              "de": "Inaktive Compiler-Einheiten prüfen"
+            },
+            "description": {
+              "en": "Inspect the current compiler store and its guarded retirement plan without deleting units.",
+              "de": "Aktuellen Compilerspeicher und geschützten Freigabeplan ohne Löschen von Einheiten prüfen."
+            },
+            "parameters": []
+          },
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
+        }
+      }
+    },
+    "cache-retire-inactive": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
+        "command": "repo ./📜️script.ts cache-retire-inactive retire",
+        "forwardAllArgs": false
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "dashboard": {
+            "verb": "clean",
+            "title": {
+              "en": "Retire Inactive Compiler Units",
+              "de": "Inaktive Compiler-Einheiten freigeben"
+            },
+            "description": {
+              "en": "Free only inactive units in the current compiler store under physical locks, descriptor checks and byte limits.",
+              "de": "Nur inaktive Einheiten des aktuellen Compilerspeichers unter physischen Sperren, Deskriptorprüfungen und Bytegrenzen freigeben."
+            },
+            "parameters": []
+          },
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
+        }
+      }
+    }
+  },
+  "namedInputs": {
+    "reads": [
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/**/*"
+    ]
+  }
+}

@@ -1,0 +1,56 @@
+[
+  {
+    "id": "cold-online",
+    "offline": false,
+    "cached": false,
+    "compileFails": false,
+    "events": [
+      "inputs",
+      "metadata",
+      "source",
+      "writer",
+      "compile",
+      "consume",
+      "retire"
+    ]
+  },
+  {
+    "id": "warm-offline",
+    "offline": true,
+    "cached": true,
+    "compileFails": false,
+    "events": [
+      "inputs",
+      "metadata",
+      "source",
+      "writer",
+      "compile",
+      "consume",
+      "retire"
+    ]
+  },
+  {
+    "id": "cold-offline",
+    "offline": true,
+    "cached": false,
+    "compileFails": false,
+    "events": [
+      "inputs",
+      "retire"
+    ]
+  },
+  {
+    "id": "failed-compile",
+    "offline": false,
+    "cached": false,
+    "compileFails": true,
+    "events": [
+      "inputs",
+      "metadata",
+      "source",
+      "writer",
+      "compile",
+      "retire"
+    ]
+  }
+]

@@ -1,0 +1,24 @@
+{
+  "cases": [
+    {
+      "outcome": "held",
+      "result": "held"
+    },
+    {
+      "outcome": "busy",
+      "result": "unavailable"
+    },
+    {
+      "outcome": "admission",
+      "result": "error"
+    },
+    {
+      "outcome": "failure",
+      "result": "error"
+    },
+    {
+      "outcome": "foreign-timeout",
+      "result": "error"
+    }
+  ]
+}

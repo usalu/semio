@@ -117,7 +117,11 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 			queryTextParts = append(queryTextParts, c.Githubs...)
 			queryTextParts = append(queryTextParts, c.Names...)
 			queryTextParts = append(queryTextParts, c.Emails...)
-			if !matchesQuery(strings.Join(queryTextParts, " "), options) {
+			queryMatches, queryErr := matchesQuery(ctx, strings.Join(queryTextParts, " "), options)
+			if queryErr != nil {
+				return queryErr
+			}
+			if !queryMatches {
 				continue
 			}
 			if len(options.IncludeContributors) > 0 {

@@ -1,0 +1,39 @@
+      "thermal": {
+        "environment": { "airTempC": 20, "meanRadiantTempC": 20, "relativeHumidity": 0.5, "windMS": 0.2, "windDirectionDeg": 180, "solarWM2": 0, "pressurePa": 101325 },
+        "baseMet": 0.8,
+        "regions": [
+          { "id": "coat-trunk", "title": { "en": "Trunk coat", "de": "Rumpffell" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.113, "characteristicLengthM": 0.2, "coreTempC": 38.6, "insulationM2KW": 0.22, "metabolicShare": 0.59, "source": "authored-estimate", "reference": "scholander-1950" },
+          { "id": "coat-head-neck", "title": { "en": "Head and neck coat", "de": "Fell von Kopf und Hals" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.024, "characteristicLengthM": 0.09, "coreTempC": 38.6, "insulationM2KW": 0.16, "metabolicShare": 0.1, "source": "authored-estimate", "reference": "scholander-1950" },
+          { "id": "coat-limbs", "title": { "en": "Limb coat", "de": "Fell der Gliedmaßen" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.077, "characteristicLengthM": 0.04, "coreTempC": 38.6, "insulationM2KW": 0.15, "metabolicShare": 0.26, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "coat-tail", "title": { "en": "Tail coat", "de": "Schwanzfell" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.03, "characteristicLengthM": 0.035, "coreTempC": 38.6, "insulationM2KW": 0.14, "metabolicShare": 0.015, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "ears", "title": { "en": "Ears", "de": "Ohren" }, "kind": "fur", "material": "short-fur", "model": "core-resistance", "areaM2": 0.005, "characteristicLengthM": 0.04, "coreTempC": 38.6, "insulationM2KW": 0.08, "metabolicShare": 0.005, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "nose-skin", "title": { "en": "Nose leather", "de": "Nasenspiegel" }, "kind": "skin", "material": "bare-skin", "model": "core-resistance", "areaM2": 0.0005, "characteristicLengthM": 0.012, "coreTempC": 38.6, "insulationM2KW": 0.06, "wettedness": 0.3, "metabolicShare": 0.004, "source": "authored-estimate", "reference": "ashrae-2021" },
+          { "id": "eyes", "title": { "en": "Eyes", "de": "Augen" }, "kind": "skin", "material": "cornea", "model": "core-resistance", "areaM2": 0.0005, "characteristicLengthM": 0.015, "coreTempC": 37.5, "insulationM2KW": 0.05, "wettedness": 0.6, "metabolicShare": 0.003, "source": "authored-estimate", "reference": "ashrae-2021" },
+          { "id": "tongue", "title": { "en": "Tongue", "de": "Zunge" }, "kind": "skin", "material": "tongue-mucosa", "model": "core-resistance", "areaM2": 0.0015, "characteristicLengthM": 0.04, "coreTempC": 38.6, "insulationM2KW": 0.01, "wettedness": 0.9, "metabolicShare": 0.003, "source": "authored-estimate", "reference": "gebremedhin-2001" },
+          { "id": "pads", "title": { "en": "Paw pads", "de": "Pfotenballen" }, "kind": "skin", "material": "bare-skin", "model": "core-resistance", "areaM2": 0.0085, "characteristicLengthM": 0.025, "coreTempC": 38.6, "insulationM2KW": 0.1, "metabolicShare": 0.02, "source": "authored-estimate", "reference": "ashrae-2021" }
+        ],
+        "emitters": [
+          { "id": "breath-nose", "kind": "breath", "title": { "en": "Nasal breathing", "de": "Nasenatmung" }, "anchor": "nose", "directionDeg": -10, "carries": "vapour", "temperatureC": 31, "velocityMS": 1.0, "diameterM": 0.008, "vapourKgPerKg": 0.026, "periodS": 2.5, "dutyFrom": 0.5, "dutyTo": 1, "source": "authored-estimate", "reference": "ashrae-2021" },
+          { "id": "yawn-mouth", "kind": "breath", "title": { "en": "Yawning through the mouth", "de": "Gähnen durch das Maul" }, "anchor": "mouth", "directionDeg": -20, "carries": "vapour", "temperatureC": 33, "velocityMS": 1.5, "diameterM": 0.025, "vapourKgPerKg": 0.03, "periodS": 4, "dutyFrom": 0.4, "dutyTo": 1, "source": "authored-estimate", "reference": "ashrae-2021" }
+        ],
+        "assumptions": [
+          { "en": "Total coat area follows Meeh's law A = 0.1·M^(2/3) = 0.26 m² for 4.2 kg (k = 10 cm²/g^(2/3), Spector 1956); the regions sum to 0.26 m².", "de": "Die gesamte Fellfläche folgt dem Meeh-Gesetz A = 0,1·M^(2/3) = 0,26 m² für 4,2 kg (k = 10 cm²/g^(2/3), Spector 1956); die Regionen summieren sich zu 0,26 m²." },
+          { "en": "Insulation values run from the core (38.6 °C) to the outer coat surface and include tissue and coat; they are authored estimates guided by Scholander et al. (1950) and Cena and Monteith (1975).", "de": "Dämmwerte laufen vom Körperkern (38,6 °C) zur Felloberfläche und umfassen Gewebe und Fell; sie sind Schätzwerte nach Scholander et al. (1950) und Cena und Monteith (1975)." },
+          { "en": "Activity is expressed in the engine's 58.15 W/m² unit, i.e. 15.1 W per met for 0.26 m²: resting heat production is Kleiber's 3.4 W per kg^0.75 = 10 W, times 1.2 for a resting awake cat = 12 W = 0.8 met; walking 2.0, stalking 1.6 and stretching 1.0 to 1.2 met are authored estimates.", "de": "Die Aktivität wird in der 58,15-W/m²-Einheit der Engine angegeben, also 15,1 W je met bei 0,26 m²: die Ruhewärmeproduktion ist Kleibers 3,4 W je kg^0,75 = 10 W, mal 1,2 für eine wache ruhende Katze = 12 W = 0,8 met; Gehen 2,0, Pirschen 1,6 und Strecken 1,0 bis 1,2 met sind Schätzwerte." },
+          { "en": "Resting nasal breathing is 24 breaths per minute (period 2.5 s); the yawn emitter is only active in the stretch clip and the tongue is exposed only with an open jaw.", "de": "Die Ruheatmung durch die Nase beträgt 24 Atemzüge pro Minute (Periode 2,5 s); der Gähn-Emitter ist nur im Streckclip aktiv und die Zunge ist nur bei offenem Kiefer sichtbar." }
+        ]
+      },
+      "structure": {
+        "gravityMS2": 9.80665,
+        "dynamics": "quasi-static",
+        "supports": [],
+        "assumptions": [
+          { "en": "Segments are rigid with authored masses summing to 4.2 kg; the paw pads carry the load in stance and share it by position, the sitting bones add a fifth support in the sitting pose.", "de": "Segmente sind starr mit Massen von zusammen 4,2 kg; die Pfotenballen tragen im Stand und teilen die Last nach Lage, die Sitzbeinhöcker bilden in der Sitzpose ein fünftes Auflager." },
+          { "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle model is assumed.", "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; ein Muskelmodell wird nicht angenommen." }
+        ],
+        "clinical": false
+      },
+      "presentation": { "defaultPose": "standing-alert", "defaultClip": "walk-cycle", "viewpoints": ["elevation"] },
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "completion": "authored"
+    }

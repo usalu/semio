@@ -1,0 +1,264 @@
+[
+  {
+    "name": "whole numeral",
+    "input": {
+      "runs": [
+        {
+          "text": "Research Question",
+          "color": "#001117"
+        },
+        {
+          "text": "1.1",
+          "color": "#001117"
+        },
+        {
+          "text": "Body text",
+          "color": "#3e494a"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": true
+  },
+  {
+    "name": "split prefix and leaf",
+    "input": {
+      "runs": [
+        {
+          "text": "Research",
+          "color": "#001117"
+        },
+        {
+          "text": " Question",
+          "color": "#001117"
+        },
+        {
+          "text": "1.",
+          "color": "#001117"
+        },
+        {
+          "text": "1",
+          "color": "#001117"
+        },
+        {
+          "text": "Body text",
+          "color": "#91968f"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": true
+  },
+  {
+    "name": "multiple leaf glyph runs",
+    "input": {
+      "runs": [
+        {
+          "text": "Scope",
+          "color": "#001117"
+        },
+        {
+          "text": "10.",
+          "color": "#001117"
+        },
+        {
+          "text": "1",
+          "color": "#001117"
+        },
+        {
+          "text": "2",
+          "color": "#001117"
+        },
+        {
+          "text": "Body text",
+          "color": "#91968f"
+        }
+      ],
+      "heading": {
+        "title": "Scope",
+        "number": "10.12"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": true
+  },
+  {
+    "name": "observed light muted prefix",
+    "input": {
+      "runs": [
+        {
+          "text": "ResearchQuestion",
+          "color": "#001117"
+        },
+        {
+          "text": "1.",
+          "color": "#3e494a"
+        },
+        {
+          "text": "1",
+          "color": "#001117"
+        },
+        {
+          "text": "How does the model work?",
+          "color": "#3e494a"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": false
+  },
+  {
+    "name": "observed dark muted prefix and cream leaf",
+    "input": {
+      "runs": [
+        {
+          "text": "ResearchQuestion",
+          "color": "#001117"
+        },
+        {
+          "text": "1.",
+          "color": "#91968f"
+        },
+        {
+          "text": "1",
+          "color": "#f7f3e3"
+        },
+        {
+          "text": "How does the model work?",
+          "color": "#91968f"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": false
+  },
+  {
+    "name": "cream leaf alone",
+    "input": {
+      "runs": [
+        {
+          "text": "ResearchQuestion",
+          "color": "#001117"
+        },
+        {
+          "text": "1.",
+          "color": "#001117"
+        },
+        {
+          "text": "1",
+          "color": "#f7f3e3"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": false
+  },
+  {
+    "name": "missing numeral",
+    "input": {
+      "runs": [
+        {
+          "text": "ResearchQuestion",
+          "color": "#001117"
+        },
+        {
+          "text": "Body text",
+          "color": "#3e494a"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": false
+  },
+  {
+    "name": "wrong numeral",
+    "input": {
+      "runs": [
+        {
+          "text": "ResearchQuestion",
+          "color": "#001117"
+        },
+        {
+          "text": "1.2",
+          "color": "#001117"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": false
+  },
+  {
+    "name": "extra numeral run",
+    "input": {
+      "runs": [
+        {
+          "text": "ResearchQuestion",
+          "color": "#001117"
+        },
+        {
+          "text": "1.1",
+          "color": "#001117"
+        },
+        {
+          "text": "1",
+          "color": "#001117"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": false
+  },
+  {
+    "name": "wrong title foreground",
+    "input": {
+      "runs": [
+        {
+          "text": "ResearchQuestion",
+          "color": "#f7f3e3"
+        },
+        {
+          "text": "1.1",
+          "color": "#001117"
+        }
+      ],
+      "heading": {
+        "title": "Research Question",
+        "number": "1.1"
+      },
+      "foreground": "#001117"
+    },
+    "accepted": false
+  }
+]

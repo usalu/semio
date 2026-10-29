@@ -1,0 +1,71 @@
+[
+  {
+    "name": "fresh declared infrastructure",
+    "argv": [
+      "test",
+      "cache",
+      "daemon-output-observation"
+    ],
+    "received": false,
+    "expected": "build"
+  },
+  {
+    "name": "fresh unknown selection",
+    "argv": [
+      "test",
+      "cache",
+      "unknown"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "fresh extra argument",
+    "argv": [
+      "test",
+      "cache",
+      "daemon-output-observation",
+      "extra"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "fresh missing selection",
+    "argv": [
+      "test",
+      "cache"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "fresh other Root command",
+    "argv": [
+      "schema",
+      "generate"
+    ],
+    "received": false,
+    "expected": "workspace"
+  },
+  {
+    "name": "received declared infrastructure",
+    "argv": [
+      "test",
+      "cache",
+      "daemon-output-observation"
+    ],
+    "received": true,
+    "expected": "received"
+  },
+  {
+    "name": "received unknown selection",
+    "argv": [
+      "test",
+      "cache",
+      "unknown"
+    ],
+    "received": true,
+    "expected": "received"
+  }
+]

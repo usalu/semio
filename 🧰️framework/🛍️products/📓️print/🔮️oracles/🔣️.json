@@ -11,6 +11,7 @@
       "version": "8.20.0",
       "capabilities": [
         "parametrization-assignment",
+        "thesis-declaration",
         "viz-catalog-coverage",
         "viz-catalog-schema",
         "viz-catalog-validity",

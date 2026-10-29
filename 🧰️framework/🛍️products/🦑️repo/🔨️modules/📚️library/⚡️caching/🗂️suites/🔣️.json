@@ -1575,6 +1575,40 @@
         "linux",
         "win32"
       ]
+    },
+    {
+      "id": "nx-output-observation",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧪️tests/🟦️.ts",
+        "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧪️tests/🔑️kernel/🟦️.ts",
+        "../../../../../🔨️modules/📁️filesystem/📂️paths/🪟️windows/🧪️tests/🟦️.ts",
+        "🩹️patches/🧪️tests/🟦️.ts",
+        "🕸️graph/🏁️startup/🚦️service/🧪️tests/👁️outputs/🟦️.ts",
+        "../🎛️commands/🧪️test/🌱️birth/🧪️tests/🟦️.ts"
+      ],
+      "fileLaunchers": {
+        "💾️storage/🔒️enforcement/🔌️nx/📦️outputs/👁️observation/🧪️tests/🔑️kernel/🟦️.ts": "setup-sdk"
+      },
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
+      "id": "source-discovery",
+      "budgetMs": 300000,
+      "typecheck": "none",
+      "files": [
+        "🔍️discovery/📂️source/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     }
   ],
   "codeSuites": [
@@ -1598,7 +1632,8 @@
     "runtime-bootstrap",
     "native-dependencies",
     "workspace-ownership",
-    "sdk-material"
+    "sdk-material",
+    "daemon-output-observation"
   ],
   "helpers": []
 }

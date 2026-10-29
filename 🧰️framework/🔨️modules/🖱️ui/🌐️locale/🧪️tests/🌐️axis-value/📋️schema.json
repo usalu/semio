@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "bodyBytes",
+    "maximumTurns",
+    "deniedCurrencies",
+    "cancellation",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "const": "actual-borrowed-fields"
+    },
+    "bodyBytes": {
+      "const": 4096
+    },
+    "maximumTurns": {
+      "const": 4096
+    },
+    "deniedCurrencies": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "cancellation": {
+      "const": "every-receiving-prefix"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "input",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "locale",
+              "terminology",
+              "label"
+            ]
+          },
+          "input": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "object"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

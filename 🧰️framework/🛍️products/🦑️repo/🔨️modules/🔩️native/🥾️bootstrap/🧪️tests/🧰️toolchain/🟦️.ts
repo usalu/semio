@@ -98,3 +98,19 @@ test("container graphics has a Vulkan loader and software ICD", () => {
     expect(new Ajv().validate({ type: "array", contains: { const: required } }, packages)).toBe(true);
   }
 });
+
+test("container dependency projections stay on the Source filesystem", () => {
+  const source = readFileSync(join(root, ".devcontainer/devcontainer.json"), "utf8");
+  const config = Bun.JSONC.parse(source);
+  expect(config).toEqual(JSON.parse(source));
+  const fixture = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧪️tests/🧫️fixtures/🚀️runtime-bootstrap/🔣️.json"), "utf8"));
+  const schema = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🐳️containers/🧬️schema/🔣️.json"), "utf8"));
+  expect(new Ajv().validate(schema.$defs.SourceDependencyProjection, { sourceEndpointBasename: fixture.sourceEndpointBasename })).toBe(true);
+  const targets = config.mounts.map((mount: string) => Object.fromEntries(mount.split(",").map(pair => pair.split("=")))).map((mount: Record<string, string>) => mount.target);
+  for (const target of targets) {
+    const basename = target.split("/").at(-1);
+    expect(basename).not.toBe(fixture.sourceEndpointBasename);
+    expect(new Ajv().validate({ not: { const: fixture.sourceEndpointBasename } }, basename)).toBe(true);
+  }
+  expect(config.onCreateCommand).not.toContain(config.workspaceFolder + "/" + fixture.sourceEndpointBasename);
+});

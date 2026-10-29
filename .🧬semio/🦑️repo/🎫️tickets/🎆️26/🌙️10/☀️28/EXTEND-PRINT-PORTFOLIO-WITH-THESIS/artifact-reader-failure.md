@@ -1,0 +1,19 @@
+# Artifact Reader Failure Propagation
+
+Actual negative24510 conclusively registered1323bytes of compilerlog under the real status1/signalnull OwnedCommandFailure with compilerCancelled=false. At final inspector boundary, owned=false/diagnosticFound=false while Original remained uncancelled and had>3590seconds. Thus capture and cancellation were not the fault; the actual error was replaced during outer owner settlement.
+
+Shared repository artifact reader always admitted a final recheck after its consumer failed. That inspection attempted new Original work after firstfailure had closed admission, produced OriginalAdmissionClosed, and was aggregated with the actual compiler primary. Nested material readers repeated the consequence. The inspector correctly refused an AggregateError; it must not search arbitrary causes or loosen its terminal guards.
+
+Authorized narrow correction: all accepted consumers still drain, then new final recheck is admitted only when body and accepted consumers have succeeded. Successful reads retain all identity/byte/control validation. Single failures retain exact identity, including undefined. Genuine independent multiple failures remain AggregateError. Reader retirement and shared lease finally release remain. No issuance, deadline, cancellation, native storage, accepted work or cache guard changed.
+
+The existing lifecycle block was moved intact to adjacent reading/📥️settlement/🟦️.ts so behavior can be tested directly without constructing fake Original/capabilities. Its only semantic difference is the nofailure condition around final recheck. Language-neutral6case JSON+schema covers successfuldrain, failedbody, undefinedfailure, failedacceptedconsumer, independentmultiplefailures and failedfinalvalidation. Independent AJV admits corpus; SQLite derives whether finalrecheck is admissible. Tests check allaccepted work joined, reader retired, exactprimary retained and independentaggregation unchanged.
+
+TDD: tests first failed for missingmodule; temporarily restoring prior unconditional recheck then reproduces behavior failure (expectedrechecks0, actual1). Corrected helper passes1test/58assertions. Existing reader manifest and scope/authority checks plus newhelper pass3tests/81assertions. Existing ownership test now includes adjacent helper in its sourceclosure; no new implementationname assertions were added. New absolute sourcepaths max138characters.
+
+Shared file attribution: repo library ⚡️caching/📦️artifacts/👓️reading/🟦️.ts, reading/🧪️tests/🔒️scope/🟦️.ts; new reading/📥️settlement/🟦️.ts, 📥️settlement/🧬️schema/🔣️.json, 📥️settlement/🧪️tests/🔣️.json and 🟦️.ts.
+
+Existing physical reader prover shares one Original across many successes and cannot deliberately poison it midproof; no fake failed-owner integration was added there. Parent-owned actual sixnegative replay under a genuine adopted private Original is the required end-to-end integration gate. Temporary bounded refusalDEBUG diagnostics remain solely until concrete confirmation and will be removed before final source/canonical validation. No heavy job launched by this agent.
+
+Actual replay19272 confirms reader primary correction: terminal nowowned=true anddiagnosticFound=true. Its next failure is the narrower storage signal aborted during propagation with reason printed OwnedCommandFailure Printcompilerfailed1, while Original remains live and>3590seconds. The reader fix therefore restored actual primaryidentity; no cause-chain recovery was added.
+
+End-to-end confirmation: actualsixnegative replay75383 passedall6 with exit0, proving genuine failed-owner integration and exactcompilerprimary preservation. Final postDEBUG-removal focused reader/refusal suite14pass208assertions exit0; no temporaryproductlogs remain. Independent successvalidation/SHguard tests stillpass.

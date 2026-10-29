@@ -11,7 +11,7 @@ use protocol::codec::{OriginalWireSourceIdentity,RetainedWireByteSource};
 use crate::ToolRunReceivingLimits;
 type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
 struct Pages<'a>(&'a[u8]);
-impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.0.as_ptr()as usize,extent:self.0.len(),authority:Some((42,7))}}fn byte_at(&self,index:usize)->Option<u8>{self.0.chunks(7).nth(index/7)?.get(index%7).copied()}}
+impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.0.as_ptr()as usize,extent:self.0.len(),authority:Some((42,7))}}fn byte_at(&self,index:usize)->Option<u8>{self.0.chunks(7).nth(index/7)?.get(index%7).copied()}}
 fn observe<T>(body:impl FnOnce()->T)->(T,(usize,usize)){let(v,h)=semio_framework_trace::observe_heap_allocations_on_this_thread(body);(v,(h.requested_bytes,h.released_bytes))}
 fn received(g:RetainedCloneGrant,p:RetainedCloneProgress,r:Receipt,h:(usize,usize)){assert_eq!(r,Some((g,p)));assert!(p.fits(g));assert_eq!((p.retained_capacity_bytes,p.released_bytes),h)}
 #[test]

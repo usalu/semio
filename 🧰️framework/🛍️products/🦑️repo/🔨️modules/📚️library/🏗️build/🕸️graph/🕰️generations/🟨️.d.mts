@@ -39,8 +39,8 @@ export interface GenerationStoreV1{
  refresh(options:GenerationRefreshOptionsV1):Promise<GenerationRefreshResultV1>;
  refreshClosure(options:Omit<GenerationRefreshOptionsV1,"only"|"policy">&{roots:readonly string[];neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];policy?:GenerationGraphPolicyV1}):Promise<GenerationRefreshResultV1&{names:Set<string>}>;
  closureOf(current:GenerationSealedV1|undefined,roots:readonly string[],options?:{neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];signal?:AbortSignal}):Promise<Set<string>>;
- assembleStream(current:GenerationSealedV1,options?:{names?:readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):{nodes():AsyncGenerator<[string,unknown],void,undefined>;finish():Promise<Omit<GenerationAssembledV1,"projects">>};
- assemble(current:GenerationSealedV1,options?:{names?:readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<GenerationAssembledV1>;
+ assembleStream(current:GenerationSealedV1,options?:{names?:readonly string[];externalInputs?:readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):{nodes():AsyncGenerator<[string,unknown],void,undefined>;finish():Promise<Omit<GenerationAssembledV1,"projects">>};
+ assemble(current:GenerationSealedV1,options?:{names?:readonly string[];externalInputs?:readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<GenerationAssembledV1>;
  snapshot(options?:{roots?:readonly string[];neighbors?:(fragment:GenerationFragmentV1)=>readonly string[];compare?:(a:string,b:string)=>number;signal?:AbortSignal;progress?:GenerationRefreshOptionsV1["progress"]}):Promise<{current:GenerationSealedV1;graph:GenerationAssembledV1}>;
  retire(options?:{signal?:AbortSignal}):Promise<void>;invalidate(options?:{reason?:string;signal?:AbortSignal}):Promise<boolean>;
  publish(options:{manifestDigest:string|null;expectedGeneration:number;reason?:string;verified?:import("./🔭️coverage/🟨️.mjs").VerifiedStampV1;signal?:AbortSignal}):Promise<{published:boolean;pointer?:GenerationPointerV1}>;
@@ -78,3 +78,8 @@ export function diffFrontiersV1(before:FrontierV1,after:FrontierV1):MembershipCh
 export function stableDirectoriesV1(before:FrontierV1,after:FrontierV1,options?:{racyMilliseconds?:number}):Set<string>;
 /** 🚧️ The untagged withheld owners that hold no fact about the source that withholds them, so they must be inferred again. */
 export function unfoundedWithheldOwnersV1(index:Pick<FactIndexV1,"owners"|"rows"|"classes">,owners:Readonly<Record<string,{kind:string;tag?:string;config?:string}>>,separator?:string):string[];
+
+/** 🔌️ Admits bounded consumer external input references. */
+export function readGenerationExternalInputsV1(value:unknown):readonly string[];
+/** 🏷️ Resolves one reference to its exact sealed external node key. */
+export function resolveGenerationExternalInputV1(nodes:Readonly<Record<string,unknown>>|undefined,name:string):string|undefined;

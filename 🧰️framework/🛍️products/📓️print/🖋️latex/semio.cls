@@ -15,21 +15,26 @@
 \DeclareStringOption[light]{theme}
 \DeclareStringOption[]{language}
 \DeclareStringOption[numeric]{citestyle}
+\DeclareStringOption[]{bindingoffset}
 \ProcessKeyvalOptions*
 
 \ExplSyntaxOn
-\tl_if_blank:VTF \semio@language {
-  \str_if_eq:VnTF \semio@type { assignment }
-    { \ClassError { semio } { Assignment~language~is~required } { Select~language=en~or~language=de. } }
-    { \tl_set:Nn \semio@language { de } }
-} { }
-\str_if_eq:VnT \semio@type { assignment } {
-  \str_case:VnF \semio@language { { en } { } { de } { } }
-    { \ClassError { semio } { Unsupported~assignment~language } { Select~language=en~or~language=de. } }
+\clist_if_in:nVTF { assignment, thesis, phd } \semio@type {
+  \tl_if_blank:VTF \semio@language
+    { \ClassError{semio}{Document~language~is~required}{Select~language=en~or~language=de.} }
+    { \str_case:VnF \semio@language { { en } {} { de } {} }
+        { \ClassError{semio}{Unsupported~document~language}{Select~language=en~or~language=de.} } }
+} {
+  \tl_if_blank:VT \semio@language { \tl_set:Nn \semio@language { de } }
 }
 \ExplSyntaxOff
 
 \ExplSyntaxOn
+\tl_if_blank:VT \semio@bindingoffset {
+  \str_if_eq:VnTF \semio@type { phd }
+    { \tl_set:Nn \semio@bindingoffset { 15mm } }
+    { \tl_set:Nn \semio@bindingoffset { 8mm } }
+}
 \str_case:VnF \semio@type {
   { assignment } {
     \providecommand { \semio@page@margin } { 2cm }
@@ -41,25 +46,30 @@
   }
   { paper } {
     \providecommand { \semio@page@margin } { 2.5cm }
-    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
+    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=\semio@bindingoffset]{geometry}
   }
   { report } {
     \providecommand { \semio@page@margin } { 2.5cm }
-    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
+    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=\semio@bindingoffset]{geometry}
   }
   % 🎓 A dissertation is archived as a bound hardcover copy, so its gutter is
   % wider than the 8mm every stapled or glued semio document uses.
+  { thesis } {
+    \providecommand { \semio@page@margin } { 2.5cm }
+    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=\semio@bindingoffset]{geometry}
+  }
   { phd } {
     \providecommand { \semio@page@margin } { 2.5cm }
-    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=15mm]{geometry}
+    \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=\semio@bindingoffset]{geometry}
   }
 } {
   \providecommand { \semio@page@margin } { 2.5cm }
-  \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
+  \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=\semio@bindingoffset]{geometry}
 }
 \str_case:VnF \semio@type {
   { assignment } { \LoadClass[twoside=false]{scrartcl} }
   { report } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
+  { thesis } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
   { phd } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
   { paper } { \LoadClass[twoside=true,open=any]{scrartcl} }
   { flyer } { \LoadClass{scrartcl} }
@@ -107,4 +117,4 @@
 \RequirePackage{semio-tree}
 \RequirePackage{semio-viz}
 \RequirePackage{hyperref}
-\hypersetup{colorlinks,linkcolor=semio-primary,citecolor=semio-primary,urlcolor=semio-primary,filecolor=semio-primary}
+\hypersetup{colorlinks,linkcolor=semio-chrome-foreground,citecolor=semio-chrome-foreground,urlcolor=semio-chrome-foreground,filecolor=semio-chrome-foreground}

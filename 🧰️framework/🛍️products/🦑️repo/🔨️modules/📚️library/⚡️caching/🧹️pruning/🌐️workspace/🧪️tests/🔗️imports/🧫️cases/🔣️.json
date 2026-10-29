@@ -3,16 +3,16 @@
   "subject": "../../🟦️.ts",
   "routes": [
     {
-      "symbol": "collectGarbage",
-      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/🗑️retention/🟦️.ts"
+      "symbol": "retainRepositoryTestArtifactsV1",
+      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts"
     },
     {
-      "symbol": "formatGcReport",
-      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/🗑️retention/🟦️.ts"
+      "symbol": "repositoryTestRetentionReportV1",
+      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🟦️.ts"
     },
     {
-      "symbol": "loadOracleRegistry",
-      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/🤝️contributions/🟦️.ts"
+      "symbol": "default",
+      "owner": "../../../../🧪️test/📦️packages/🟦️typescript/💾️storage/🔣️policy/🔣️json/🟦️.ts"
     }
   ],
   "forbidden": "../../../../🧪️test/📦️packages/🟦️typescript/🟦️.ts"

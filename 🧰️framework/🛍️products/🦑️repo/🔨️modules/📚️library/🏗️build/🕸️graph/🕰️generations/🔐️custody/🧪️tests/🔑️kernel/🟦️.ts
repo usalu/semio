@@ -1,9 +1,10 @@
 /** 🔑️ Contract: beneath a real issued lease control, the waits of the slice custody and of the prefetch claims go through the REAL queued lease kernel, which admits only the control's own signal: a waiter behind an overlapping claim, and a prefetch that joins a running peer claim, wait and move on when the holder releases (no derived abort signal ever reaches the kernel), and cancelling the control ends a waiter promptly and leaves no claim behind. */
 import {afterAll,expect,test} from "bun:test";
-import {mkdtempSync,realpathSync,rmSync} from "node:fs";
-import {tmpdir} from "node:os";
+import {mkdirSync,mkdtempSync,realpathSync,rmSync} from "node:fs";
 import {join} from "node:path";
-import {acquireQueuedResourceLease} from "@semio-tech/process/leases";
+import {acquireQueuedResourceLease,acquireResourceLease,acquireFreshResourceLeaseV1} from "@semio-tech/process/leases";
+import{resourceLeasePathV1}from"@semio-tech/process/leases";
+import{Database}from"bun:sqlite";
 import {createIssuedResourceControlV1} from "@semio-tech/process/routing";
 import {declareBuildTestEnvelopeV1,withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {createNodeFilePortV1} from "../../../🟨️.mjs";
@@ -14,14 +15,28 @@ const roots:string[]=[];
 afterAll(()=>{for(const root of roots)rmSync(root,{recursive:true,force:true});});
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 const settled=async(promise:Promise<unknown>,ms:number)=>Promise.race([promise.then(()=>true,(error:unknown)=>String((error as Error)?.message??error)),sleep(ms).then(()=>false)]);
-declareBuildTestEnvelopeV1({owner:"test:graph-slice-custody-kernel",maximumElapsedMilliseconds:300000,capabilities:{}});
+declareBuildTestEnvelopeV1({owner:"test:build-workspace-graph-laws",maximumElapsedMilliseconds:300000,capabilities:{}});
 type Original=Parameters<Parameters<typeof withBuildTestInvocationV1>[0]>[0];
 /** 🎛️ One control issued beneath the real test invocation (as every repository command issues one per lease user) and the kernel-backed lease port bound to it; aborting `controller` cancels that control only. */
 function issued(original:Original,directory:string,name:string){
  const controller=new AbortController(),control=createIssuedResourceControlV1(original,"test:custody-kernel:"+name,120000,controller.signal);
- return{controller,control,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,directory,control})};
+ return{controller,control,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never,directory,control})};
 }
-const scratch=()=>{const root=realpathSync(mkdtempSync(join(tmpdir(),"custody-kernel-")));roots.push(root);return root;};
+const scratch=()=>{const artifacts=process.env.SEMIO_TEST_ARTIFACT_DIR;if(!artifacts)throw Error("Owned test artifacts directory required");mkdirSync(artifacts,{recursive:true});const root=realpathSync(mkdtempSync(join(artifacts,"custody-kernel-")));roots.push(root);return root;};
+
+test("fresh custody waits only for directory admission and preserves immediate real collision refusal",async()=>withBuildTestInvocationV1(async original=>{
+ const root=scratch(),directory=join(root,"leases"),controller=new AbortController(),control=createIssuedResourceControlV1(original,"test:fresh-custody-admission",30000,controller.signal),lease=createQueuedClaimLeasePortV1({directory,control,acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never});
+ (await lease.hold("initialize")).release();const gate=new Database(resourceLeasePathV1(directory,"resource-directory-admission:v1"),{readwrite:true,create:false});let locked=false,held:any;
+ try{gate.exec("PRAGMA busy_timeout=0;BEGIN EXCLUSIVE");locked=true;const custody=createSliceCustodyV1({root:join(root,"generations"),fs:createNodeFilePortV1(),lease}),pending=custody.hold({owners:["fresh"],signal:control.signal}).then(value=>({value}),error=>({error})),early=await Promise.race([pending.then(()=>true),sleep(50).then(()=>false)]);gate.exec("ROLLBACK");locked=false;const outcome=await pending;held="value"in outcome?outcome.value:undefined;expect(early).toBe(false);if("error"in outcome)throw outcome.error;expect(held.owners).toEqual(["fresh"]);await held.release();held=undefined;const collision=await lease.tryHold("real-collision",{fresh:true});expect(collision).toBeDefined();try{const peer=issued(original,directory,"fresh-peer");expect(await peer.lease.tryHold("real-collision",{fresh:true})).toBeUndefined();}finally{collision!.release();}}
+ finally{if(locked)gate.exec("ROLLBACK");gate.close(true);await held?.release();}
+}),60000);
+
+test("fresh directory admission observes its original cancellation and leaves no claim",async()=>withBuildTestInvocationV1(async original=>{
+ const root=scratch(),directory=join(root,"leases"),requester=issued(original,directory,"fresh-cancel"),observer=issued(original,directory,"fresh-observer"),make=(lease:ReturnType<typeof issued>["lease"])=>createSliceCustodyV1({root:join(root,"generations"),fs:createNodeFilePortV1(),lease});
+ (await requester.lease.hold("initialize")).release();const gate=new Database(resourceLeasePathV1(directory,"resource-directory-admission:v1"),{readwrite:true,create:false}),reason=Error("Fresh admission cancelled");let locked=false;
+ try{gate.exec("PRAGMA busy_timeout=0;BEGIN EXCLUSIVE");locked=true;const pending=make(requester.lease).hold({owners:["cancelled"],signal:requester.control.signal}).then(value=>({value}),error=>({error}));await sleep(25);const started=performance.now();requester.controller.abort(reason);const outcome=await pending;expect(performance.now()-started).toBeLessThan(1000);if("value"in outcome){await outcome.value.release();throw Error("Cancelled fresh claim admitted");}expect(outcome.error).toBe(reason);gate.exec("ROLLBACK");locked=false;expect(await make(observer.lease).list()).toEqual([]);}
+ finally{if(locked)gate.exec("ROLLBACK");gate.close(true);}
+}),60000);
 
 test("an overlapping claim waits through the real kernel with the control's own signal and holds once the first is released",async()=>withBuildTestInvocationV1(async original=>{
  const root=scratch(),leases=join(root,"leases"),first=issued(original,leases,"c1"),second=issued(original,leases,"c2");
@@ -66,4 +81,10 @@ test("cancelling the control ends a waiting claim promptly and leaves only the h
  await expect(waiting).rejects.toThrow();expect(Date.now()-started).toBeLessThan(5000);
  expect((await one.list()).map(claim=>claim.token)).toEqual([a.token]);
  await a.release();
+}),60000);
+
+test("nonwaiting custody probes preserve concurrent extend and alone decisions beneath the real kernel",async()=>withBuildTestInvocationV1(async original=>{
+ const root=scratch(),leases=join(root,"leases"),a=issued(original,leases,"extend-a"),b=issued(original,leases,"extend-b"),make=(port:ReturnType<typeof issued>)=>createSliceCustodyV1({root:join(root,"generations"),fs:createNodeFilePortV1(),lease:port.lease});
+ const one=make(a),two=make(b),[first,second]=await Promise.all([one.hold({owners:["a"],signal:a.control.signal}),two.hold({owners:["b"],signal:b.control.signal})]);
+ try{const results=await Promise.all([first.extend({owners:["b"],signal:a.control.signal}),second.alone({signal:b.control.signal})]);expect(results[0].held).toBe(false);expect(results[1]).toBe(false);expect(first.owners).toEqual(["a"]);expect(second.structural).toBe(false);await second.release();expect((await first.extend({owners:["b"],signal:a.control.signal})).held).toBe(true);expect(await first.alone({signal:a.control.signal})).toBe(true);expect(first.structural).toBe(true);}finally{await first.release();await second.release();}
 }),60000);

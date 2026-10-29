@@ -617,6 +617,22 @@
     "watcher.output-root-not-mounted": {
       "en": "The watcher output root is an image that is not mounted: {path}; it is installed once a build has mounted the tools partition",
       "de": "Die Ausgabewurzel des Beobachters ist ein nicht eingehängtes Image: {path}; er wird installiert, sobald ein Build die Werkzeugpartition eingehängt hat"
+    },
+    "task.arguments-refused": {
+      "en": "Task {task} accepts no additional arguments.",
+      "de": "Task {task} erlaubt keine zusätzlichen Argumente."
+    },
+    "test.aggregate-refused": {
+      "en": "Canonical test aggregate {owner} refused ({reason}).",
+      "de": "Kanonisches Testaggregat {owner} abgelehnt ({reason})."
+    },
+    "test.aggregate-stale": {
+      "en": "Canonical test aggregate {owner} is stale; run generate config.",
+      "de": "Kanonisches Testaggregat {owner} ist veraltet; generate config ausführen."
+    },
+    "task.arguments-policy": {
+      "en": "Task {task} has an invalid argument policy.",
+      "de": "Task {task} hat eine ungültige Argumentrichtlinie."
     }
   }
 }

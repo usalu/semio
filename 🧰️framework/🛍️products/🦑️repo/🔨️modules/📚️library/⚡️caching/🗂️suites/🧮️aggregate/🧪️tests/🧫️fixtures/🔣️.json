@@ -1,0 +1,28 @@
+{
+  "project": {
+    "name": "repo",
+    "root": "cache",
+    "targets": {
+      "test": {"executor": "repo:noop", "dependsOn": []},
+      "test-alpha-exception": {"executor": "repo:script", "options": {"command": "repo ./📜️script.ts test alpha"}},
+      "test-proof": {"executor": "repo:script", "options": {"cwd": ".", "command": "repo ./📜️script.ts test cache proof"}},
+      "test-proof-workspace": {"executor": "repo:script", "options": {"command": "repo ./📜️script.ts test proof workspace"}},
+      "foreign-helper": {"executor": "repo:script", "options": {"cwd": "other", "command": "repo ./📜️script.ts test alpha"}},
+      "test-contracts": {"executor": "repo:script", "options": {"command": "repo ./📜️script.ts test contracts"}}
+    }
+  },
+  "routes": [
+    {"id": "alpha", "commands": [{"entry": "cache/📜️script.ts", "arguments": ["test", "alpha"]}]},
+    {"id": "proof", "commands": [
+      {"entry": "cache/📜️script.ts", "arguments": ["test", "proof"]},
+      {"entry": "📜️script.ts", "arguments": ["test", "cache", "proof"]}
+    ]}
+  ],
+  "candidates": [
+    {"target": "test-alpha-exception", "entry": "cache/📜️script.ts", "arguments": ["test", "alpha"]},
+    {"target": "test-proof", "entry": "📜️script.ts", "arguments": ["test", "cache", "proof"]},
+    {"target": "test-proof-workspace", "entry": "cache/📜️script.ts", "arguments": ["test", "proof", "workspace"]},
+    {"target": "foreign-helper", "entry": "other/📜️script.ts", "arguments": ["test", "alpha"]}
+  ],
+  "expected": ["test-alpha-exception", "test-contracts", "test-proof"]
+}

@@ -1,0 +1,74 @@
+{
+ "case": "🏗️cantilever",
+ "gravityMS2": 9.81,
+ "dynamics": "quasi-static",
+ "kind": "structural",
+ "materials": [
+  {
+   "id": "steel",
+   "elasticModulusPa": 210000000000.0
+  }
+ ],
+ "root": {
+  "x": 0,
+  "y": 0,
+  "angleDeg": 0
+ },
+ "bones": [
+  {
+   "id": "beam",
+   "parent": null,
+   "x": 0,
+   "y": 0,
+   "angleDeg": 0,
+   "lengthM": 2.0,
+   "section": {
+    "areaM2": 0.00285,
+    "secondMomentM4": 1.943e-05,
+    "extremeFibreM": 0.1,
+    "material": "steel"
+   }
+  }
+ ],
+ "anchors": [
+  {
+   "id": "wall",
+   "bone": "beam",
+   "x": 0,
+   "y": 0,
+   "kind": "support",
+   "support": "fixed"
+  }
+ ],
+ "contacts": [],
+ "supports": [
+  "wall"
+ ],
+ "loads": [
+  {
+   "id": "tip",
+   "bone": "beam",
+   "at": {
+    "x": 2.0,
+    "y": 0
+   },
+   "fxN": 0,
+   "fyN": -1000.0
+  }
+ ],
+ "scenarios": [],
+ "oracle": {
+  "tool": "anastruct",
+  "version": "1.7.0",
+  "values": {
+   "reactionFxN": -0.0,
+   "reactionFyN": 999.9999999999998,
+   "reactionMomentNm": 1999.9999999999995,
+   "tipDeflectionM": -0.0006535467163362171,
+   "rootMomentNm": -1999.9999999999995,
+   "shearN": 999.9999999999974,
+   "rootStressPa": 10293360.782295419,
+   "analyticTipDeflectionM": -0.0006535467163362171
+  }
+ }
+}

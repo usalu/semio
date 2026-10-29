@@ -16,7 +16,7 @@ impl RetainedHistoryDeflatePayload{
  pub fn terminal_is_empty(&self)->bool{self.pages.terminal_is_empty()}
 }
 impl RetainedWireByteSource for RetainedHistoryDeflatePayload{
- fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.pages.backing_ptr(0).map_or(0,|pointer|pointer as usize),extent:self.pages.len(),authority:self.original.authority}}
+ fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.pages.backing_ptr(0).map_or(0,|pointer|pointer as usize),extent:self.pages.len(),authority:self.original.authority}}
  fn byte_at(&self,index:usize)->Option<u8>{self.pages.get(index).copied()}
 }
 impl Drop for RetainedHistoryDeflatePayload{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original Deflate payload abandoned paid pages");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.pages)}}}}

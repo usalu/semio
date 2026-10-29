@@ -1,0 +1,3 @@
+[{"id":"base-support","bone":"root-plate","x":0,"y":0,"kind":"support","title":{"en":"Rhizome mat anchorage","de":"Verankerung des Rhizomfilzes"},"support":"fixed","normalDeg":90,"footprintLengthM":0.5,"footprintWidthM":0.5,"frictionCoefficient":0.6},
+{"id":"crown-top","bone":"plume-2","x":0.3,"y":0,"kind":"emitter","title":{"en":"Transpiration above the clump","de":"Transpiration über dem Horst"}},
+{"id":"crown-side","bone":"bl-R2b","x":0.8,"y":0.05,"kind":"emitter","title":{"en":"Transpiration above the right blades","de":"Transpiration über den rechten Blättern"}}]

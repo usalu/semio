@@ -1,0 +1,45 @@
+{
+  "name": "@teaching/staffage",
+  "$schema": "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
+  "namedInputs": {
+    "default": [
+      "{projectRoot}/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧬️schema/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🔨️modules/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🗂️catalog/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧪️tests/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🧍️staffage/🧫️fixtures/**/*",
+      "sharedGlobals"
+    ],
+    "testEnv": [
+      { "env": "SEMIO_TEST_LEVEL" },
+      { "env": "SEMIO_TEST_BUDGET_MS" },
+      { "env": "SEMIO_BUILD_BUDGET_MS" }
+    ]
+  },
+  "targets": {
+    "test": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": ["default", "^default", "testEnv"],
+      "outputs": [],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test",
+        "forwardAllArgs": true
+      }
+    },
+    "typecheck": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": ["default", "^default"],
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/🧍️staffage/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts typecheck",
+        "forwardAllArgs": true
+      }
+    }
+  }
+}

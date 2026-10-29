@@ -18,7 +18,8 @@
         "fuzziness": {
           "type": "integer",
           "minimum": 0,
-          "description": "🎚️ The largest edit distance a word may be away from the term."
+          "description": "🎚️ The largest edit distance a word may be away from the term.",
+          "maximum": 32
         }
       }
     },
@@ -49,10 +50,23 @@
         },
         "id": {
           "type": "string",
-          "minLength": 1
+          "minLength": 1,
+          "maxLength": 4096
         },
         "text": {
           "type": "string"
+        },
+        "attributes": {
+          "type": "object",
+          "maxProperties": 16,
+          "propertyNames": {
+            "maxLength": 4096
+          },
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 4096
+          },
+          "description": "🏷️ Domain-neutral eligibility fields; total UTF-8 key and value bytes cannot exceed 4096."
         }
       }
     },
@@ -70,6 +84,495 @@
           },
           "description": "🎯️ `<vector name>=<total>:<id>@<score>,<id>@<score>…` — the total counted before truncation, then the retained hits best first."
         }
+      }
+    },
+    "StorageProtocol": {
+      "const": {
+        "version": 1,
+        "shards": 64,
+        "residentShards": 1,
+        "maximumDocumentBytes": 1048576,
+        "maximumShardDocuments": 250000,
+        "maximumShardEvents": 500000,
+        "maximumShardBytes": 268435456,
+        "maximumManifestBytes": 65536,
+        "maximumQueryResults": 10000,
+        "defaultTreeHits": 100,
+        "maximumTreeResultNodes": 10000,
+        "maximumTreeResultBytes": 16777216,
+        "maximumTraversalDepth": 256,
+        "streamBufferBytes": 65536,
+        "partition": "sha256-first-byte-mod-shards",
+        "maximumAttributeFields": 16,
+        "maximumAttributeBytes": 4096,
+        "cursorBinding": "generation-query-eligibility",
+        "maximumFuzziness": 32,
+        "maximumSnapshotBytes": 256,
+        "lease": {
+          "read": "shared",
+          "publish": "exclusive",
+          "inode": "persistent",
+          "release": "kernel-owner-exit",
+          "pollMilliseconds": 200,
+          "deadline": "caller-context"
+        },
+        "maximumIdentifierBytes": 4096,
+        "maximumResidentDocumentBytes": 268435456,
+        "maximumPendingEventBytes": 268435456,
+        "maximumRetainedIdentifierBytes": 40960000
+      }
+    },
+    "ShardedFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "small",
+        "large",
+        "eligibility",
+        "scopes"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.search.shards/1"
+        },
+        "small": {
+          "type": "object",
+          "required": [
+            "documents",
+            "query",
+            "size",
+            "total",
+            "hits",
+            "next"
+          ],
+          "properties": {
+            "documents": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "query": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "hits": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "next": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "large": {
+          "type": "object",
+          "required": [
+            "documents",
+            "query",
+            "size",
+            "total",
+            "hits",
+            "last"
+          ],
+          "properties": {
+            "documents": {
+              "type": "integer",
+              "minimum": 250001
+            },
+            "query": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "hits": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "last": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "eligibility": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "documents",
+            "query",
+            "kind",
+            "size",
+            "total",
+            "hits"
+          ],
+          "properties": {
+            "documents": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "text",
+                  "kind"
+                ],
+                "properties": {
+                  "text": {
+                    "type": "string"
+                  },
+                  "kind": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "query": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "size": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 10000
+            },
+            "total": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "hits": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "scopes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "scope",
+              "documents",
+              "hits"
+            ],
+            "properties": {
+              "scope": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "documents": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "hits": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Shard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "bytes",
+        "sha256",
+        "documents",
+        "events"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^s[0-5][0-9]$|^s6[0-3]$"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 268435456
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "documents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 250000
+        },
+        "events": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500000
+        }
+      }
+    },
+    "ShardManifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "documents",
+        "shards",
+        "snapshot"
+      ],
+      "properties": {
+        "schema": {
+          "const": "semio.search.shards/1"
+        },
+        "documents": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16000000
+        },
+        "shards": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "$ref": "#/$defs/Shard"
+          }
+        },
+        "snapshot": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "description": "🧵️ Canonically sorted unique hash partitions; bytes, SHA-256, gapless events and active document count must verify before publication or query."
+    },
+    "SearchCursor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fingerprint",
+        "id",
+        "score"
+      ],
+      "properties": {
+        "fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "score": {
+          "type": "number"
+        }
+      },
+      "description": "📑️ Binds manifest generation, ordered case-folded terms and fuzziness, and the eligibility key; continuation retains score-descending, identifier-ascending ordering."
+    },
+    "SnapshotCacheProtocol": {
+      "const": {
+        "schema": "semio.search.snapshot/1",
+        "maximumPayloadBytes": 268435456,
+        "maximumCompressedBytes": 67108864,
+        "maximumMetadataBytes": 65536,
+        "lease": "kernel-generation",
+        "publication": "staged-generation"
+      }
+    },
+    "SnapshotFixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "value",
+        "nodeGzip",
+        "cases",
+        "sourceCases",
+        "domainRefresh",
+        "projectionText"
+      ],
+      "properties": {
+        "value": {
+          "type": "object"
+        },
+        "nodeGzip": {
+          "type": "string"
+        },
+        "cases": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "fingerprint",
+              "builds"
+            ],
+            "properties": {
+              "fingerprint": {
+                "type": "string"
+              },
+              "builds": {
+                "type": "integer",
+                "minimum": 1
+              }
+            }
+          }
+        },
+        "sourceCases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "files",
+              "excluded",
+              "sha256"
+            ],
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "files": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              },
+              "excluded": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
+        },
+        "domainRefresh": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "titles",
+            "cachedProjection",
+            "domainProjection"
+          ],
+          "properties": {
+            "titles": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string"
+              }
+            },
+            "cachedProjection": {
+              "const": "authored-codebase"
+            },
+            "domainProjection": {
+              "const": "fresh-per-request"
+            }
+          }
+        },
+        "projectionText": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "data",
+            "expected",
+            "alias",
+            "repeats"
+          ],
+          "properties": {
+            "data": {
+              "type": "object",
+              "additionalProperties": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "expected": {
+              "type": "string"
+            },
+            "alias": {
+              "type": "string"
+            },
+            "repeats": {
+              "type": "integer",
+              "minimum": 32,
+              "maximum": 1024
+            }
+          }
+        }
+      }
+    },
+    "SourceFingerprintProtocol": {
+      "const": {
+        "version": 1,
+        "order": "lexical-relative-path",
+        "pathSeparators": "forward-slash",
+        "directories": true,
+        "regularFileBytes": true,
+        "symlinks": false,
+        "generatedDirectories": "canonical-cache-policy",
+        "digest": "sha256",
+        "cancellation": "each-entry-and-read"
+      }
+    },
+    "ProjectionTextProtocol": {
+      "const": {
+        "fieldOrder": "lexical-key",
+        "sequenceOrder": "declared",
+        "snapshotIdentity": "flat-json-fields-and-sequences",
+        "scalarTerms": "preserved",
+        "nullText": ""
       }
     }
   }

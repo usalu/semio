@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import{applyBuildGeneratedTaskDependenciesV1,buildInputSourceRoleV1,buildNativeSourceObservationV1}from"../../🚪️admission/🟦️.ts";
 import {createRequire} from "node:module";
 const javascriptManagerV1 = createRequire(import.meta.url)("../../../../⚡️caching/🚀️bootstrap/📦️dependencies/🔌️managers/🟨️.cjs").selectedManagerV1("javascript");
@@ -15,7 +16,7 @@ const { existsSync, readFileSync } = observedFs;
 /** 🏷️ Names this component as its roster entry does. */
 export const component = "project-nodes";
 import { createGraphPhaseClockV1, writeGraphPhaseRowV1, writeGraphSettleRowV1 } from "../../⏱️phases/🟨️.mjs";
-import { createMemoryGovernorV1, graphMemoryBudgetBytesV1, measureMemoryBaselineV1 } from "../../../🧠️memory/🟨️.mjs";
+import { createGraphParentMemoryGovernorV1 } from "../../../🧠️memory/🟨️.mjs";
 import { createErrorCollectorFromEnvV1 } from "../../🧾️collect-errors/🟨️.mjs";
 import { openProjectFarmV1 } from "./🏊️project-farm/🟨️.mjs";
 import { awaitGrowingV1 } from "./🏊️project-farm/🏊️pool/🟨️.mjs";
@@ -144,7 +145,7 @@ export async function sharedSetupV1(share, key, compute, checkpoint) {
 export async function emojiProjectJsonNodes(configFiles, options, context) {
   const { workspaceRoot } = context, unavailable = new Map(), wantedRoots = options?.ownerRoots, wanted = root => !wantedRoots || wantedRoots.has(root);
   const collector = createErrorCollectorFromEnvV1({ workspaceRoot, signal: context.invocation?.control.signal });
-  const isAuthoredProjectConfigV1 = configFile => configFile.endsWith(PROJECT_BASENAME) && !configFile.includes("\uFFFD") && !configFile.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => configFile.split("/").includes(name));
+  const isAuthoredProjectConfigV1 = configFile => !isOpaqueSourcePathV1(configFile) && configFile.endsWith(PROJECT_BASENAME) && !configFile.includes("\uFFFD") && !configFile.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => configFile.split("/").includes(name));
   const sharedSetup=!options?.ownerAdmission&&context.setupShare?.cache instanceof Map?context.setupShare:undefined;
   const setupPass=async()=>{
     const catalog=await catalogBuildContributionsV1(workspaceRoot,options?.catalogProviders??[]);
@@ -159,7 +160,7 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   const contracts = projectGeneratorContractsV1(workspaceRoot);
   scripts.generatedOutput=path=>readBuildGeneratedCompileOutputV1(path,workspaceRoot,contracts,context.registry);
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","running");
-  const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await closureApiV1(scripts, workspaceRoot).nativeCommandInputs() : undefined;
+  const commandInputs = !options?.ownerAdmission&&configFiles.some((path) => !isOpaqueSourcePathV1(path) && path.endsWith("Cargo.toml") && !path.includes(".🧬semio") && !POLICY.generatedDirectories.some((name) => path.split("/").includes(name))) ? await closureApiV1(scripts, workspaceRoot).nativeCommandInputs() : undefined;
   if(context.invocation)await advanceScriptInvocation(context.invocation,"build:commands","complete");
   const projectAuthority=createHash("sha256").update(JSON.stringify([contracts])).digest("hex");
   const commandRevision=createHash("sha256").update(JSON.stringify(closureHandleOfV1(commandInputs)?.key??commandInputs??null)).digest("hex"),registryDigest=createHash("sha256").update(JSON.stringify(options?.ownerAdmission?context.registry??null:context.registry?.catalogProviders?.map(({ownerRoot,sourcePath})=>[ownerRoot,sourcePath])??null)).digest("hex");
@@ -197,7 +198,7 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   const declaredRoots = new Set([...rootsByName.values()]);let cargoIndex=0;
   for (const configFile of configFiles.filter((file) => file.endsWith("Cargo.toml"))) {
     await yieldInferenceV1(context,"build:cargo-targets",++cargoIndex);
-    if (configFile.includes("\uFFFD") || configFile.startsWith("compose/") || configFile.startsWith("temp/compose/") || configFile.includes(".🧬semio") || POLICY.generatedDirectories.some((name) => configFile.split("/").includes(name))) continue;
+    if (isOpaqueSourcePathV1(configFile) || configFile.includes("\uFFFD") || configFile.startsWith("compose/") || configFile.startsWith("temp/compose/") || configFile.includes(".🧬semio") || POLICY.generatedDirectories.some((name) => configFile.split("/").includes(name))) continue;
     if (!existsSync(join(workspaceRoot, configFile))) continue;
     const projectDir = dirname(join(workspaceRoot, configFile));
     const root = buildPath(relative(workspaceRoot, projectDir)) || ".";
@@ -246,7 +247,7 @@ export async function emojiProjectJsonNodes(configFiles, options, context) {
   const phases=context.invocation?createGraphPhaseClockV1({publish:async resource=>{context.invocation.control.signal.throwIfAborted();await context.invocation.control.publish({owner:context.invocation.policy.owner,command:"build:projects",stage:"running",activity:{resource,mode:"shared",elapsedMs:0}});},write:writeGraphPhaseRowV1}):undefined;let finished=0;
   await phases?.begin("inference",jobs.length);
   const farm=options?.ownerAdmission?undefined:openProjectFarmV1({workspaceRoot,context,contracts,projects:jobs.length,lateClosures:late,commandInputs:closureHandleOfV1(commandInputs)?{closureRecipe:closureHandleOfV1(commandInputs).recipe}:commandInputs,projectsByRoot,componentRoots,signal:context.invocation?.control.signal,processed:()=>projectIndex});
-  const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createMemoryGovernorV1({budgetBytes:graphMemoryBudgetBytesV1(process.env),baselineBytes:measureMemoryBaselineV1(),workers:limit,signal:context.phaseControl?.signal,report:line=>process.stderr.write(line+"\n"),environment:process.env}):undefined;
+  const limit=Math.min(projectConcurrencyV1(options),jobs.length),governor=limit>0?createGraphParentMemoryGovernorV1({workers:limit,signal:context.phaseControl?.signal,report:line=>process.stderr.write(line+"\n"),environment:process.env}):undefined;
   const active=new Map(),publishRunning=()=>{const at=performance.now();return phases?.running("inference",[...active].sort((a,b)=>a[1]-b[1]).map(([name,since])=>({name,seconds:(at-since)/1000})));};
   const loop=async()=>{while(!stopped&&cursor<jobs.length){{const job=jobs[cursor++];await governor.run(async()=>{active.set(job.name,performance.now());await publishRunning();try{if(collector)await collector.guard({project:job.name,root:job.json.root,phase:"project"},()=>inferProject(job));else await inferProject(job);}finally{active.delete(job.name);}});}await publishRunning();await phases?.advance("inference",++finished);}};
   const ticker=phases?setInterval(()=>{Promise.resolve(publishRunning()).catch(()=>{});},RUNNING_TICK_MS):undefined;ticker?.unref?.();

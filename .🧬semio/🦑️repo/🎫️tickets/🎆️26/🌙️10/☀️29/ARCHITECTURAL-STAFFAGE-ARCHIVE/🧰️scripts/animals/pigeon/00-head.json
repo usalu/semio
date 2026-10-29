@@ -1,0 +1,45 @@
+    {
+      "id": "pigeon",
+      "category": "animals",
+      "title": { "en": "Rock Pigeon", "de": "Felsentaube" },
+      "summary": {
+        "en": "An adult city pigeon (Columba livia) of 0.35 kg: bipedal skeleton with S-curved neck, small head with cere and beak, wedge tail, tarsometatarsus legs with toes and folded wings of humerus, forearm and hand that open for flight; walking with head-bob, pecking, wing display and a take-off into flight, with a feathered thermal model and 41 °C body temperature.",
+        "de": "Eine erwachsene Stadttaube (Columba livia) von 0,35 kg: zweibeiniges Skelett mit S-förmigem Hals, kleinem Kopf mit Wachshaut und Schnabel, Keilschwanz, Laufbeinen mit Zehen und angelegten Flügeln aus Ober-, Unterarm und Hand, die sich zum Flug öffnen; Gehen mit Kopfnicken, Picken, Flügelspreizen und Abflug, mit Gefiederwärmemodell und 41 °C Körpertemperatur."
+      },
+      "tags": ["animal", "bird", "pigeon", "biped", "head-bob", "wings", "flight", "urban", "gait"],
+      "provenance": {
+        "author": "Semio staffage content worker (animals)",
+        "method": "handcrafted",
+        "created": "2026-10-29",
+        "references": [
+          { "id": "johnston-janiga-1995", "citation": "Johnston, R. F., Janiga, M. (1995). Feral Pigeons. Oxford University Press, New York. Body length 29-36 cm, mass 230-380 g, wingspan about 65 cm." },
+          { "id": "baumel-1993", "citation": "Baumel, J. J., King, A. S., Breazile, J. E., Evans, H. E., Vanden Berge, J. C. (eds) (1993). Handbook of Avian Anatomy: Nomina Anatomica Avium, 2nd edn. Publications of the Nuttall Ornithological Club 23. Skeletal nomenclature; segment lengths and joint ranges here are authored estimates." },
+          { "id": "gatesy-biewener-1991", "citation": "Gatesy, S. M., Biewener, A. A. (1991). Bipedal locomotion: effects of speed, size and limb posture in birds and humans. Journal of Zoology 224, 127-147." },
+          { "id": "frost-1978", "citation": "Frost, B. J. (1978). The optokinetic basis of head-bobbing in the pigeon. Journal of Experimental Biology 74, 187-195." },
+          { "id": "davies-green-1988", "citation": "Davies, M. N. O., Green, P. R. (1988). Head-bobbing during walking, running and flying: relative motion perception in the pigeon. Journal of Experimental Biology 138, 71-91." },
+          { "id": "dunlap-mowrer-1930", "citation": "Dunlap, K., Mowrer, O. H. (1930). Head movements and eye functions of birds. Journal of Comparative Psychology 11, 99-113." },
+          { "id": "tobalske-dial-1996", "citation": "Tobalske, B. W., Dial, K. P. (1996). Flight kinematics of black-billed magpies and pigeons over a wide range of speeds. Journal of Experimental Biology 199, 263-280." },
+          { "id": "berg-biewener-2010", "citation": "Berg, A. M., Biewener, A. A. (2010). Wing and body kinematics of takeoff and landing flight in the pigeon (Columba livia). Journal of Experimental Biology 213, 1651-1658." },
+          { "id": "pennycuick-2008", "citation": "Pennycuick, C. J. (2008). Modelling the Flying Bird. Academic Press. Flight muscle fractions of pigeons guide the authored segment masses; the segment fractions are authored estimates." },
+          { "id": "aschoff-pohl-1970", "citation": "Aschoff, J., Pohl, H. (1970). Der Ruheumsatz von Vögeln als Funktion der Tageszeit und der Körpergröße. Journal für Ornithologie 111, 38-47." },
+          { "id": "butler-1977", "citation": "Butler, P. J., West, N. H., Jones, D. R. (1977). Respiratory and cardiovascular responses of the pigeon to sustained, level flight in a wind-tunnel. Journal of Experimental Biology 71, 7-26. Flight metabolism here is an authored estimate guided by this study." },
+          { "id": "calder-king-1974", "citation": "Calder, W. A., King, J. R. (1974). Thermal and caloric relations of birds. In: Farner, D. S., King, J. R. (eds), Avian Biology IV, Academic Press, pp. 259-413; body temperature about 41 °C, resting respiration of pigeons about 25-30 breaths per minute." },
+          { "id": "walsberg-king-1978", "citation": "Walsberg, G. E., King, J. R. (1978). The relationship of the external surface area of birds to body mass. Journal of Experimental Biology 76, 185-189; A = 8.11·M^0.667 cm² for M in g, about 0.040 m² for 350 g." },
+          { "id": "scholander-1950", "citation": "Scholander, P. F., Walters, V., Hock, R., Irving, L. (1950). Body insulation of some arctic and tropical mammals and birds. Biological Bulletin 99, 225-236." },
+          { "id": "cena-monteith-1975", "citation": "Cena, K., Monteith, J. L. (1975). Transfer processes in animal coats. I. Radiative transfer. Proceedings of the Royal Society B 188, 377-393." },
+          { "id": "ashrae-2021", "citation": "ASHRAE Handbook Fundamentals (2021), Chapter 9 Thermal Comfort, emissivity of skin and respiratory heat loss." }
+        ],
+        "notes": {
+          "en": "Side elevation drawn for the near (left) side of a pigeon facing right. Far-side legs, wing and tail feathers are separate bone chains drawn darker and behind. Wings are modelled as symmetric blades turning in the sagittal plane, which is the side-view projection of the flapping wing; the folded wing is the Z-fold of humerus, forearm and hand. Real standing height of a feral pigeon is about 0.25 m with the head up, a little less than commonly assumed.",
+          "de": "Seitenansicht der nahen (linken) Seite einer nach rechts blickenden Taube. Beine, Flügel und Schwanzfedern der fernen Seite sind eigene Knochenketten, dunkler und weiter hinten gezeichnet. Die Flügel sind als symmetrische Blätter modelliert, die sich in der Sagittalebene drehen, was der Seitenprojektion des Flügelschlags entspricht; der angelegte Flügel ist die Z-Faltung aus Ober-, Unterarm und Hand. Die tatsächliche Standhöhe einer Stadttaube mit erhobenem Kopf beträgt etwa 0,25 m, etwas weniger als oft angenommen."
+        }
+      },
+      "dimensions": { "heightM": 0.244, "widthM": 0.317, "depthM": 0.15, "massKg": 0.35 },
+      "materials": [
+        { "id": "plumage", "title": { "en": "Contour plumage with down", "de": "Konturgefieder mit Daunen" }, "emissivity": 0.95, "solarAbsorptivity": 0.7, "densityKgM3": 90, "conductivityWmK": 0.035, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+        { "id": "bare-skin", "title": { "en": "Scaled bare skin (tarsus, toes)", "de": "Beschuppte nackte Haut (Lauf, Zehen)" }, "emissivity": 0.96, "solarAbsorptivity": 0.75, "source": "literature", "reference": "ashrae-2021" },
+        { "id": "beak-keratin", "title": { "en": "Beak keratin", "de": "Schnabelhorn" }, "emissivity": 0.92, "solarAbsorptivity": 0.7, "source": "authored-estimate", "reference": "ashrae-2021" },
+        { "id": "cere-wax", "title": { "en": "Waxy white cere", "de": "Weiße Wachshaut" }, "emissivity": 0.95, "solarAbsorptivity": 0.3, "source": "authored-estimate", "reference": "ashrae-2021" },
+        { "id": "eye-tissue", "title": { "en": "Eye and bare eye ring", "de": "Auge und nackter Augenring" }, "emissivity": 0.96, "solarAbsorptivity": 0.6, "source": "authored-estimate", "reference": "ashrae-2021" },
+        { "id": "claw-horn", "title": { "en": "Claw horn", "de": "Krallenhorn" }, "emissivity": 0.9, "solarAbsorptivity": 0.8, "source": "authored-estimate" }
+      ],

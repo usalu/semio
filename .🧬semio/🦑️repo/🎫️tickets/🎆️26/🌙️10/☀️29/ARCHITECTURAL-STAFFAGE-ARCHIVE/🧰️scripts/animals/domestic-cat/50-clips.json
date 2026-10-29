@@ -1,0 +1,106 @@
+      "clips": [
+        {
+          "id": "walk-cycle",
+          "title": { "en": "Walking, four-beat", "de": "Schritt im Viertakt" },
+          "description": { "en": "Lateral-sequence walk after Muybridge and Halbertsma: near hind, near fore, far hind, far fore touch down at quarter-cycle intervals; each paw is on the ground 62.5 % of the cycle, so three or four paws always carry.", "de": "Schritt in Seitenfolge nach Muybridge und Halbertsma: nahes Hinterbein, nahes Vorderbein, fernes Hinterbein, fernes Vorderbein setzen im Viertelzyklus auf; jede Pfote steht 62,5 % des Zyklus am Boden, sodass stets drei oder vier Pfoten tragen." },
+          "durationS": 0.8, "fps": 30, "loop": true, "rootMotion": "plant", "advanceM": 0.352,
+          "keys": [
+            { "t": 0.0, "pose": "walk-phase-0", "ease": "smooth" }, { "t": 0.1, "pose": "walk-phase-1", "ease": "smooth" }, { "t": 0.2, "pose": "walk-phase-2", "ease": "smooth" }, { "t": 0.3, "pose": "walk-phase-3", "ease": "smooth" }, { "t": 0.4, "pose": "walk-phase-4", "ease": "smooth" }, { "t": 0.5, "pose": "walk-phase-5", "ease": "smooth" }, { "t": 0.6, "pose": "walk-phase-6", "ease": "smooth" }, { "t": 0.7, "pose": "walk-phase-7", "ease": "smooth" }
+          ],
+          "contacts": [
+            { "anchor": "contact-hn", "fromS": 0, "toS": 0.5 }, { "anchor": "contact-fn", "fromS": 0.2, "toS": 0.7 },
+            { "anchor": "contact-hf", "fromS": 0.4, "toS": 0.8 }, { "anchor": "contact-hf", "fromS": 0, "toS": 0.1 },
+            { "anchor": "contact-ff", "fromS": 0.6, "toS": 0.8 }, { "anchor": "contact-ff", "fromS": 0, "toS": 0.3 }
+          ],
+          "phases": [
+            { "id": "near-hind-strike", "fromS": 0, "toS": 0.2, "title": { "en": "Near hind strikes first", "de": "Nahes Hinterbein setzt zuerst auf" } },
+            { "id": "near-fore-strike", "fromS": 0.2, "toS": 0.4, "title": { "en": "Near fore follows", "de": "Nahes Vorderbein folgt" } },
+            { "id": "far-hind-strike", "fromS": 0.4, "toS": 0.6, "title": { "en": "Far hind strikes", "de": "Fernes Hinterbein setzt auf" } },
+            { "id": "far-fore-strike", "fromS": 0.6, "toS": 0.8, "title": { "en": "Far fore closes the sequence", "de": "Fernes Vorderbein schließt die Folge" } }
+          ],
+          "events": [
+            { "t": 0, "kind": "contact-on", "title": { "en": "Near hind paw touches down", "de": "Nahe Hinterpfote setzt auf" }, "target": "contact-hn" },
+            { "t": 0.2, "kind": "contact-on", "title": { "en": "Near fore paw touches down", "de": "Nahe Vorderpfote setzt auf" }, "target": "contact-fn" },
+            { "t": 0.4, "kind": "contact-on", "title": { "en": "Far hind paw touches down", "de": "Ferne Hinterpfote setzt auf" }, "target": "contact-hf" },
+            { "t": 0.6, "kind": "contact-on", "title": { "en": "Far fore paw touches down", "de": "Ferne Vorderpfote setzt auf" }, "target": "contact-ff" },
+            { "t": 0.5, "kind": "contact-off", "title": { "en": "Near hind paw lifts", "de": "Nahe Hinterpfote hebt ab" }, "target": "contact-hn" },
+            { "t": 0.7, "kind": "contact-off", "title": { "en": "Near fore paw lifts", "de": "Nahe Vorderpfote hebt ab" }, "target": "contact-fn" },
+            { "t": 0.1, "kind": "contact-off", "title": { "en": "Far hind paw lifts", "de": "Ferne Hinterpfote hebt ab" }, "target": "contact-hf" },
+            { "t": 0.3, "kind": "contact-off", "title": { "en": "Far fore paw lifts", "de": "Ferne Vorderpfote hebt ab" }, "target": "contact-ff" },
+            { "t": 0, "kind": "inhale", "title": { "en": "Inhalation", "de": "Einatmen" } },
+            { "t": 0.4, "kind": "exhale", "title": { "en": "Exhalation", "de": "Ausatmen" } }
+          ],
+          "tracks": [
+            { "target": "emitter:breath-nose", "ease": "smooth", "keys": [{ "t": 0, "v": 0.7 }, { "t": 0.4, "v": 0.9 }, { "t": 0.8, "v": 0.7 }] }
+          ]
+        },
+        {
+          "id": "stalk-cycle",
+          "title": { "en": "Stalking, low and slow", "de": "Pirschen, tief und langsam" },
+          "description": { "en": "Crouched stalk after Leyhausen: belly close to the ground, shoulder blades raised, head low, ears turned aside and the tail trailing with a twitching tip; the lateral-sequence walk is slowed to 2.4 s per cycle with each paw on the ground 75 % of the time so that three paws carry almost all of the time.", "de": "Geduckte Pirsch nach Leyhausen: Bauch dicht am Boden, Schulterblätter erhoben, Kopf tief, Ohren seitlich gedreht und der Schwanz schleppt mit zuckender Spitze; der Schritt in Seitenfolge ist auf 2,4 s pro Zyklus verlangsamt, jede Pfote steht 75 % der Zeit am Boden, sodass fast immer drei Pfoten tragen." },
+          "durationS": 2.4, "fps": 30, "loop": true, "rootMotion": "plant", "advanceM": 0.1467,
+          "keys": [
+            { "t": 0.0, "pose": "stalk-phase-0", "ease": "smooth" }, { "t": 0.3, "pose": "stalk-phase-1", "ease": "smooth" }, { "t": 0.6, "pose": "stalk-phase-2", "ease": "smooth" }, { "t": 0.9, "pose": "stalk-phase-3", "ease": "smooth" }, { "t": 1.2, "pose": "stalk-phase-4", "ease": "smooth" }, { "t": 1.5, "pose": "stalk-phase-5", "ease": "smooth" }, { "t": 1.8, "pose": "stalk-phase-6", "ease": "smooth" }, { "t": 2.1, "pose": "stalk-phase-7", "ease": "smooth" }
+          ],
+          "contacts": [
+            { "anchor": "contact-hn", "fromS": 0, "toS": 1.8 }, { "anchor": "contact-fn", "fromS": 0.6, "toS": 2.4 },
+            { "anchor": "contact-hf", "fromS": 1.2, "toS": 2.4 }, { "anchor": "contact-hf", "fromS": 0, "toS": 0.6 },
+            { "anchor": "contact-ff", "fromS": 1.8, "toS": 2.4 }, { "anchor": "contact-ff", "fromS": 0, "toS": 1.2 }
+          ],
+          "phases": [
+            { "id": "near-hind-step", "fromS": 0, "toS": 0.6, "title": { "en": "Near hind steps", "de": "Nahes Hinterbein tritt" } },
+            { "id": "near-fore-step", "fromS": 0.6, "toS": 1.2, "title": { "en": "Near fore steps", "de": "Nahes Vorderbein tritt" } },
+            { "id": "far-hind-step", "fromS": 1.2, "toS": 1.8, "title": { "en": "Far hind steps", "de": "Fernes Hinterbein tritt" } },
+            { "id": "far-fore-step", "fromS": 1.8, "toS": 2.4, "title": { "en": "Far fore steps", "de": "Fernes Vorderbein tritt" } }
+          ],
+          "events": [
+            { "t": 0, "kind": "contact-on", "title": { "en": "Near hind paw touches down", "de": "Nahe Hinterpfote setzt auf" }, "target": "contact-hn" },
+            { "t": 0.6, "kind": "contact-on", "title": { "en": "Near fore paw touches down", "de": "Nahe Vorderpfote setzt auf" }, "target": "contact-fn" },
+            { "t": 1.2, "kind": "contact-on", "title": { "en": "Far hind paw touches down", "de": "Ferne Hinterpfote setzt auf" }, "target": "contact-hf" },
+            { "t": 1.8, "kind": "contact-on", "title": { "en": "Far fore paw touches down", "de": "Ferne Vorderpfote setzt auf" }, "target": "contact-ff" },
+            { "t": 1.8, "kind": "contact-off", "title": { "en": "Near hind paw lifts", "de": "Nahe Hinterpfote hebt ab" }, "target": "contact-hn" },
+            { "t": 0.6, "kind": "contact-off", "title": { "en": "Far hind paw lifts", "de": "Ferne Hinterpfote hebt ab" }, "target": "contact-hf" },
+            { "t": 1.2, "kind": "contact-off", "title": { "en": "Far fore paw lifts", "de": "Ferne Vorderpfote hebt ab" }, "target": "contact-ff" },
+            { "t": 0, "kind": "contact-off", "title": { "en": "Near fore paw lifts", "de": "Nahe Vorderpfote hebt ab" }, "target": "contact-fn" },
+            { "t": 0, "kind": "inhale", "title": { "en": "Inhalation", "de": "Einatmen" } },
+            { "t": 1.2, "kind": "exhale", "title": { "en": "Exhalation", "de": "Ausatmen" } }
+          ],
+          "tracks": [
+            { "target": "emitter:breath-nose", "ease": "smooth", "keys": [{ "t": 0, "v": 0.4 }, { "t": 1.2, "v": 0.5 }, { "t": 2.4, "v": 0.4 }] },
+            { "target": "activityMet", "ease": "smooth", "keys": [{ "t": 0, "v": 1.6 }, { "t": 1.2, "v": 1.7 }, { "t": 2.4, "v": 1.6 }] }
+          ]
+        },
+        {
+          "id": "stretch",
+          "title": { "en": "Stretching with a play bow and yawn", "de": "Strecken mit Spielverbeugung und Gähnen" },
+          "description": { "en": "From a long stance the cat sinks into the play bow, stretches fully with the forelegs reaching forward and the back swayed, yawns, and returns. All four paws stay planted in place for the whole clip; only the body above them moves.", "de": "Aus einer langen Standposition sinkt die Katze in die Spielverbeugung, streckt sich mit nach vorn greifenden Vorderbeinen und durchgebogenem Rücken ganz aus, gähnt und kehrt zurück. Alle vier Pfoten bleiben während des ganzen Clips an Ort und Stelle; nur der Körper darüber bewegt sich." },
+          "durationS": 8, "fps": 30, "loop": false, "rootMotion": "none",
+          "keys": [
+            { "t": 0, "pose": "stretch-stance", "ease": "smooth" }, { "t": 2.2, "pose": "play-bow", "ease": "smooth" },
+            { "t": 4.2, "pose": "stretch-deep", "ease": "smooth" }, { "t": 5.8, "pose": "stretch-deep", "ease": "smooth", "bones": { "jaw": { "angleDeg": -4 } } },
+            { "t": 7, "pose": "play-bow", "ease": "smooth" }, { "t": 8, "pose": "stretch-stance", "ease": "smooth" }
+          ],
+          "contacts": [
+            { "anchor": "contact-hn", "fromS": 0, "toS": 8 }, { "anchor": "contact-hf", "fromS": 0, "toS": 8 },
+            { "anchor": "contact-fn", "fromS": 0, "toS": 8 }, { "anchor": "contact-ff", "fromS": 0, "toS": 8 }
+          ],
+          "phases": [
+            { "id": "bow", "fromS": 0, "toS": 2.2, "title": { "en": "Sinking into the bow", "de": "Absenken in die Verbeugung" } },
+            { "id": "reach", "fromS": 2.2, "toS": 4.2, "title": { "en": "Reaching forward", "de": "Nach vorn strecken" } },
+            { "id": "yawn", "fromS": 4.2, "toS": 5.8, "title": { "en": "Held stretch with yawn", "de": "Gehaltenes Strecken mit Gähnen" } },
+            { "id": "release", "fromS": 5.8, "toS": 8, "title": { "en": "Release", "de": "Lösen" } }
+          ],
+          "events": [
+            { "t": 0, "kind": "inhale", "title": { "en": "Inhalation", "de": "Einatmen" } },
+            { "t": 4.2, "kind": "thermal", "title": { "en": "Yawn begins, mouth open", "de": "Gähnen beginnt, Maul offen" } },
+            { "t": 5.4, "kind": "exhale", "title": { "en": "Long exhalation at the end of the yawn", "de": "Langes Ausatmen am Ende des Gähnens" } },
+            { "t": 5.8, "kind": "motion", "title": { "en": "Jaw closes, release begins", "de": "Kiefer schließt, Lösen beginnt" } }
+          ],
+          "tracks": [
+            { "target": "emitter:yawn-mouth", "ease": "smooth", "keys": [{ "t": 0, "v": 0 }, { "t": 3.8, "v": 0 }, { "t": 4.4, "v": 1 }, { "t": 5.4, "v": 1 }, { "t": 6, "v": 0 }, { "t": 8, "v": 0 }] },
+            { "target": "region:tongue:exposedFraction", "ease": "smooth", "keys": [{ "t": 0, "v": 0.02 }, { "t": 3.8, "v": 0.02 }, { "t": 4.4, "v": 0.6 }, { "t": 5.4, "v": 0.6 }, { "t": 6, "v": 0.02 }, { "t": 8, "v": 0.02 }] },
+            { "target": "emitter:breath-nose", "ease": "smooth", "keys": [{ "t": 0, "v": 0.55 }, { "t": 4.2, "v": 1 }, { "t": 5.8, "v": 0.3 }, { "t": 8, "v": 0.55 }] },
+            { "target": "activityMet", "ease": "smooth", "keys": [{ "t": 0, "v": 1 }, { "t": 4.2, "v": 1.2 }, { "t": 8, "v": 1 }] }
+          ]
+        }
+      ],

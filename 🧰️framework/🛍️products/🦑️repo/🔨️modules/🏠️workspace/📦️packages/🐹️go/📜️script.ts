@@ -7,6 +7,8 @@ import { goLevelTestArgs, goCoverageArgs, runCanonicalGoTests } from "../../../�
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 
+import { GenerateSourceOpacityScript } from "../../🙈️source-opacity/🟦️.ts";
+
 const moduleRoot = import.meta.dirname;
 const ownerRoot = join(dirname(dirname(moduleRoot)));
 
@@ -17,6 +19,6 @@ class TestScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dirname).register("test", TestScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("generate-source-policy",GenerateSourceOpacityScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

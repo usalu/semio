@@ -1,0 +1,38 @@
+      "thermal": {
+        "environment": { "airTempC": 20, "meanRadiantTempC": 20, "relativeHumidity": 0.5, "windMS": 0.2, "windDirectionDeg": 180, "solarWM2": 0, "pressurePa": 101325 },
+        "baseMet": 1,
+        "regions": [
+          { "id": "plumage-body", "title": { "en": "Body plumage (breast, back, belly, thighs)", "de": "Körpergefieder (Brust, Rücken, Bauch, Schenkel)" }, "kind": "feather", "material": "plumage", "model": "core-resistance", "areaM2": 0.022, "characteristicLengthM": 0.1, "coreTempC": 41, "insulationM2KW": 0.3, "metabolicShare": 0.66, "source": "authored-estimate", "reference": "scholander-1950" },
+          { "id": "plumage-neck-head", "title": { "en": "Neck and head plumage", "de": "Hals- und Kopfgefieder" }, "kind": "feather", "material": "plumage", "model": "core-resistance", "areaM2": 0.0035, "characteristicLengthM": 0.04, "coreTempC": 41, "insulationM2KW": 0.2, "metabolicShare": 0.09, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "plumage-wings", "title": { "en": "Wing plumage (coverts, secondaries, primaries)", "de": "Flügelgefieder (Decken, Armschwingen, Handschwingen)" }, "kind": "feather", "material": "plumage", "model": "core-resistance", "areaM2": 0.02, "characteristicLengthM": 0.12, "coreTempC": 41, "insulationM2KW": 0.22, "metabolicShare": 0.12, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "plumage-tail", "title": { "en": "Tail plumage", "de": "Schwanzgefieder" }, "kind": "feather", "material": "plumage", "model": "core-resistance", "areaM2": 0.0035, "characteristicLengthM": 0.1, "coreTempC": 41, "insulationM2KW": 0.12, "metabolicShare": 0.02, "source": "authored-estimate", "reference": "cena-monteith-1975" },
+          { "id": "legs-feet", "title": { "en": "Bare legs and feet", "de": "Nackte Läufe und Füße" }, "kind": "skin", "material": "bare-skin", "model": "core-resistance", "areaM2": 0.002, "characteristicLengthM": 0.03, "coreTempC": 41, "insulationM2KW": 0.25, "metabolicShare": 0.06, "source": "authored-estimate", "reference": "calder-king-1974" },
+          { "id": "beak", "title": { "en": "Beak", "de": "Schnabel" }, "kind": "skin", "material": "beak-keratin", "model": "core-resistance", "areaM2": 0.0003, "characteristicLengthM": 0.02, "coreTempC": 41, "insulationM2KW": 0.15, "metabolicShare": 0.02, "source": "authored-estimate", "reference": "calder-king-1974" },
+          { "id": "cere", "title": { "en": "Cere and nostrils", "de": "Wachshaut und Nasenlöcher" }, "kind": "skin", "material": "cere-wax", "model": "core-resistance", "areaM2": 0.0001, "characteristicLengthM": 0.008, "coreTempC": 41, "insulationM2KW": 0.08, "wettedness": 0.2, "metabolicShare": 0.01, "source": "authored-estimate", "reference": "ashrae-2021" },
+          { "id": "eye", "title": { "en": "Eye and bare eye ring", "de": "Auge und nackter Augenring" }, "kind": "skin", "material": "eye-tissue", "model": "core-resistance", "areaM2": 0.00015, "characteristicLengthM": 0.01, "coreTempC": 41, "insulationM2KW": 0.05, "wettedness": 0.3, "metabolicShare": 0.02, "source": "authored-estimate", "reference": "ashrae-2021" }
+        ],
+        "emitters": [
+          { "id": "breath-nostril", "kind": "breath", "title": { "en": "Resting breathing through the nostrils", "de": "Ruheatmung durch die Nasenlöcher" }, "anchor": "nostril", "directionDeg": -20, "carries": "vapour", "temperatureC": 32, "velocityMS": 0.6, "diameterM": 0.003, "vapourKgPerKg": 0.028, "periodS": 2.2, "dutyFrom": 0.5, "dutyTo": 1, "source": "authored-estimate", "reference": "calder-king-1974" },
+          { "id": "breath-exertion", "kind": "breath", "title": { "en": "Fast breathing in exertion and flight", "de": "Schnelle Atmung bei Anstrengung und Flug" }, "anchor": "nostril", "directionDeg": -20, "carries": "vapour", "temperatureC": 35, "velocityMS": 3, "diameterM": 0.003, "vapourKgPerKg": 0.034, "periodS": 0.3, "dutyFrom": 0.5, "dutyTo": 1, "source": "authored-estimate", "reference": "butler-1977" }
+        ],
+        "assumptions": [
+          { "en": "Total plumage and skin area follows Walsberg and King (1978), A = 8.11·M^0.667 cm² = 0.040 m² for 350 g; the regions sum to 0.051 m² because the wing region includes the axilla and underwing that are covered only while the wings are folded (exposed fraction 0.45 folded, 1 open).", "de": "Die gesamte Gefieder- und Hautfläche folgt Walsberg und King (1978), A = 8,11·M^0,667 cm² = 0,040 m² für 350 g; die Regionen summieren sich zu 0,051 m², weil die Flügelregion Achsel und Flügelunterseite enthält, die nur bei angelegten Flügeln bedeckt sind (freie Fläche 0,45 angelegt, 1 offen)." },
+          { "en": "Body temperature is 41 °C (Calder and King 1974). Insulation values run from the core to the outer plumage surface including tissue and are authored estimates guided by Scholander et al. (1950) and Cena and Monteith (1975); the bare legs carry a high value because countercurrent heat exchange keeps tarsus and toes near 25 to 30 °C at 20 °C air.", "de": "Die Körpertemperatur beträgt 41 °C (Calder und King 1974). Dämmwerte laufen vom Körperkern zur Gefiederoberfläche und umfassen Gewebe; sie sind Schätzwerte nach Scholander et al. (1950) und Cena und Monteith (1975); die nackten Läufe haben einen hohen Wert, weil der Gegenstromwärmetauscher Lauf und Zehen bei 20 °C Luft auf etwa 25 bis 30 °C hält." },
+          { "en": "Activity is expressed in the engine's 58.15 W/m² unit: 1.0 met is resting heat production (basal rate about 2 W after Aschoff and Pohl 1970 plus thermoregulation), 1.3 pecking, 1.8 walking and 2.5 crouching are authored estimates; flight metabolism of 12 met (about 28 W) is an authored estimate guided by Butler et al. (1977), not a measured value of this asset.", "de": "Die Aktivität wird in der 58,15-W/m²-Einheit der Engine angegeben: 1,0 met ist die Ruhewärmeproduktion (Grundumsatz etwa 2 W nach Aschoff und Pohl 1970 plus Thermoregulation), 1,3 Picken, 1,8 Gehen und 2,5 Ducken sind Schätzwerte; der Flugstoffwechsel von 12 met (etwa 28 W) ist ein Schätzwert nach Butler et al. (1977), kein Messwert dieses Assets." },
+          { "en": "Resting respiration is 27 breaths per minute (period 2.2 s) through two 3 mm nostrils; the exertion emitter breathes at 3.3 Hz and is bound only in the crouch, the take-off and flight.", "de": "Die Ruheatmung beträgt 27 Atemzüge pro Minute (Periode 2,2 s) durch zwei 3-mm-Nasenlöcher; der Anstrengungs-Emitter atmet mit 3,3 Hz und ist nur beim Ducken, Abflug und Flug aktiv." }
+        ]
+      },
+      "structure": {
+        "gravityMS2": 9.80665,
+        "dynamics": "quasi-static",
+        "supports": [],
+        "assumptions": [
+          { "en": "Segments are rigid with authored masses summing to 0.35 kg; both feet carry the weight in stance and share it by position. During the flight phase of the take-off no support exists and the quasi-static check reports it.", "de": "Segmente sind starr mit Massen von zusammen 0,35 kg; beide Füße tragen im Stand und teilen die Last nach Lage. In der Flugphase des Abflugs gibt es kein Auflager, was die quasi-statische Prüfung meldet." },
+          { "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle model is assumed.", "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; ein Muskelmodell wird nicht angenommen." }
+        ],
+        "clinical": false
+      },
+      "presentation": { "defaultPose": "standing-alert", "defaultClip": "walk-cycle", "viewpoints": ["elevation"] },
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "completion": "authored"
+    }

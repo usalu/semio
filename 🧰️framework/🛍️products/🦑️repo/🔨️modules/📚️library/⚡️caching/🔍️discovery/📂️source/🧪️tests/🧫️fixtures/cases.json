@@ -1,0 +1,237 @@
+{
+  "cases": [
+    {
+      "name": ".p00000000",
+      "opaque": true
+    },
+    {
+      "name": ".pdeadbeef",
+      "opaque": true
+    },
+    {
+      "name": ".ddeadbeef",
+      "opaque": true
+    },
+    {
+      "name": ".pDEADBEEF",
+      "opaque": false
+    },
+    {
+      "name": ".pdeadbee",
+      "opaque": false
+    },
+    {
+      "name": ".pdeadbeeff",
+      "opaque": false
+    },
+    {
+      "name": ".prettierignore",
+      "opaque": false
+    },
+    {
+      "name": ".prettierrc.json",
+      "opaque": false
+    },
+    {
+      "name": ".proto",
+      "opaque": false
+    }
+  ],
+  "pathCases": [
+    {
+      "name": "src/.pdeadbeef/p/module.go",
+      "opaque": true
+    },
+    {
+      "name": "src/.ddeadbeef",
+      "opaque": true
+    },
+    {
+      "name": "src\\.pdeadbeef\\p\\module.go",
+      "opaque": true
+    },
+    {
+      "name": "C:\\repo\\.d01234567",
+      "opaque": true
+    },
+    {
+      "name": "/repo/src/.p00000000/p/data.json",
+      "opaque": true
+    },
+    {
+      "name": "src/.pDEADBEEF/p/module.go",
+      "opaque": false
+    },
+    {
+      "name": "src/.dDEADBEEF",
+      "opaque": false
+    },
+    {
+      "name": "src/.pdeadbee",
+      "opaque": false
+    },
+    {
+      "name": "src/.pdeadbeeff",
+      "opaque": false
+    },
+    {
+      "name": "src/.pdeadbeef-extra/data",
+      "opaque": false
+    },
+    {
+      "name": "src/.prettierrc.json",
+      "opaque": false
+    },
+    {
+      "name": "src/.proto/schema.json",
+      "opaque": false
+    },
+    {
+      "name": "src/file.pdeadbeef",
+      "opaque": false
+    },
+    {
+      "name": "src/.d0123456",
+      "opaque": false
+    },
+    {
+      "name": "src/.d012345678",
+      "opaque": false
+    },
+    {
+      "name": ".d01234567",
+      "opaque": true
+    },
+    {
+      "name": "src/.pdeadbeef/",
+      "opaque": true
+    },
+    {
+      "name": "src/.p0000000g/p/data",
+      "opaque": false
+    },
+    {
+      "name": "",
+      "opaque": false
+    }
+  ],
+  "generatedCases": [
+    {
+      "name": ".cache",
+      "opaque": true
+    },
+    {
+      "name": "src/.cache/state.json",
+      "opaque": true
+    },
+    {
+      "name": "src\\.cache\\state.json",
+      "opaque": true
+    },
+    {
+      "name": "dist",
+      "opaque": true
+    },
+    {
+      "name": "src/dist",
+      "opaque": true
+    },
+    {
+      "name": "src/dist/file.go",
+      "opaque": true
+    },
+    {
+      "name": ".venv",
+      "opaque": true
+    },
+    {
+      "name": "src/out/file.go",
+      "opaque": true
+    },
+    {
+      "name": "coverage",
+      "opaque": true
+    },
+    {
+      "name": "🗑️generated",
+      "opaque": true
+    },
+    {
+      "name": "ticket/🗑️generated/output.go",
+      "opaque": true
+    },
+    {
+      "name": "src/node_modules",
+      "opaque": true
+    },
+    {
+      "name": "src/.nx/project.json",
+      "opaque": true
+    },
+    {
+      "name": "src/bin/tool",
+      "opaque": true
+    },
+    {
+      "name": "src/pkg/module.go",
+      "opaque": true
+    },
+    {
+      "name": "source/cache/file.go",
+      "opaque": false
+    },
+    {
+      "name": "src/.cache-source/file.go",
+      "opaque": false
+    },
+    {
+      "name": "src/outcome/file.go",
+      "opaque": false
+    },
+    {
+      "name": "src/pkg-source/file.go",
+      "opaque": false
+    },
+    {
+      "name": "src/.gitignore",
+      "opaque": false
+    }
+  ],
+  "coordinateCases": [
+    {
+      "root": "build/semio",
+      "path": "src/main.go",
+      "opaque": false
+    },
+    {
+      "root": "pkg/repo",
+      "path": "src/main.go",
+      "opaque": false
+    },
+    {
+      "root": "out/semio",
+      "path": "src/main.go",
+      "opaque": false
+    },
+    {
+      "root": ".pdeadbeef/repo",
+      "path": "src/main.go",
+      "opaque": false
+    },
+    {
+      "root": "build/semio",
+      "path": "src/.cache/state.go",
+      "opaque": true
+    },
+    {
+      "root": "pkg/repo",
+      "path": "src/.pdeadbeef/data.go",
+      "opaque": true
+    },
+    {
+      "root": "build\\semio",
+      "path": "src\\main.go",
+      "opaque": false
+    }
+  ]
+}

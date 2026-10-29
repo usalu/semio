@@ -1,0 +1,14 @@
+      "structure": {
+        "gravityMS2": 9.80665,
+        "dynamics": "quasi-static",
+        "supports": [],
+        "assumptions": [
+          { "en": "Segments are rigid with authored masses summing to 650 kg, dominated by the trunk with its rumen; ground contacts come only from the pose and clip contact lists; hooves, carpi, hocks and the sternum carry the load unilaterally and share it by position.", "de": "Segmente sind starr mit Massen von zusammen 650 kg, überwiegend im Rumpf mit dem Pansen; Bodenkontakte ergeben sich nur aus den Kontaktlisten der Posen und Clips; Klauen, Vorderfußwurzel, Sprunggelenke und Brustbein tragen einseitig und teilen die Last nach Lage." },
+          { "en": "Joint moments are the moments of all distal weights and reactions about each joint; no muscle model is assumed.", "de": "Gelenkmomente sind die Momente aller distalen Gewichte und Reaktionen um jedes Gelenk; ein Muskelmodell wird nicht angenommen." }
+        ],
+        "clinical": false
+      },
+      "presentation": { "defaultPose": "standing-chewing", "defaultClip": "walk-cycle", "viewpoints": ["elevation"] },
+      "exports": ["svg", "pdf", "dxf", "dwg", "png-sequence", "mp4", "webm", "component"],
+      "completion": "authored"
+    }

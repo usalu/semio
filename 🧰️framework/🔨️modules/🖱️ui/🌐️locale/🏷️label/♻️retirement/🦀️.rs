@@ -36,3 +36,6 @@ impl RetireOwned for LocalizedLabel{
 #[cfg(test)]
 #[path="../../🧪️tests/♻️localized-label-retirement/🦀️.rs"]
 mod localized_label_retirement_tests;
+
+#[cfg(test)]
+pub(crate) use localized_label_retirement_tests::observed;

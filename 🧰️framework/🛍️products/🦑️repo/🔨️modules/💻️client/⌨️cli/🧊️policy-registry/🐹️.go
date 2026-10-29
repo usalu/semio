@@ -11,7 +11,6 @@ package client
 import (
 	"context"
 	"strings"
-
 )
 
 type PolicyFunc func(ctx *PolicyContext) []Breach
@@ -403,7 +402,11 @@ func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOpt
 			if !matchesFilter(p.ID, options) && !matchesFilter(p.Name, options) {
 				continue
 			}
-			if !matchesQuery(p.ID+" "+p.Name+" "+p.Description, options) {
+			queryMatches, queryErr := matchesQuery(ctx, p.ID+" "+p.Name+" "+p.Description, options)
+			if queryErr != nil {
+				return queryErr
+			}
+			if !queryMatches {
 				continue
 			}
 			if len(options.IncludePolicies) > 0 {

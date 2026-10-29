@@ -65,7 +65,8 @@
       \colorlet{semio-chrome-active-base}{semio-chrome-dark-active-base}
       \colorlet{semio-chrome-active-foreground}{semio-chrome-dark-active-foreground}
       \colorlet{semio-chrome-foreground}{semio-chrome-dark-foreground}
-      \colorlet{semio-chrome-text-normal}{semio-chrome-dark-border-normal}
+      \colorlet{semio-chrome-text-normal}{semio-chrome-dark-muted-foreground}
+      \colorlet{semio-chrome-accent-foreground}{semio-chrome-dark-accent-foreground}
     }
   } {
     \colorlet{semio-chrome-base}{semio-chrome-light-base}
@@ -77,7 +78,8 @@
     \colorlet{semio-chrome-active-base}{semio-chrome-light-active-base}
     \colorlet{semio-chrome-active-foreground}{semio-chrome-light-active-foreground}
     \colorlet{semio-chrome-foreground}{semio-chrome-light-foreground}
-    \colorlet{semio-chrome-text-normal}{semio-chrome-light-border-normal}
+    \colorlet{semio-chrome-text-normal}{semio-chrome-light-muted-foreground}
+    \colorlet{semio-chrome-accent-foreground}{semio-chrome-light-accent-foreground}
   }
 }
 
@@ -135,6 +137,7 @@
   \tl_if_empty:NT \l_semio_appendix_level_tl {
     \str_case:VnF \l_semio_type_tl {
       { report } { \tl_set:Nn \l_semio_appendix_level_tl { chapter } }
+      { thesis } { \tl_set:Nn \l_semio_appendix_level_tl { chapter } }
       { phd } { \tl_set:Nn \l_semio_appendix_level_tl { chapter } }
     } { \tl_set:Nn \l_semio_appendix_level_tl { section } }
   }
@@ -491,9 +494,11 @@
 % `semio-tocline-` prefix literally, exactly like the `semio-toc-` /
 % `semio-register-` label prefixes elsewhere.
 \newcommand{\semio@tocline@anchor}[1]{%
+  \if\relax\detokenize{#1}\relax\else
   \ifcsname semio@tocline@seen@#1\endcsname\else
     \expandafter\gdef\csname semio@tocline@seen@#1\endcsname{}%
     \phantomsection\label{semio-tocline-#1}%
+  \fi
   \fi
 }
 % 🔗 Wraps chip content #2 in a jump to the TOC line for number #1 when that
@@ -531,7 +536,8 @@
 }
 % 🪆 Composed identifiers nest one separator only — "." between every level,
 % whether appendix→chapter (BB.M), heading→window slot (H.a), or
-% chapter→subsection (SB.B.1) — and every level but the last renders muted.
+% chapter→subsection (SB.B.1). Nonheading keys mute ancestors; headings
+% supply their selected foreground for every segment.
 % \l_tmpa_int is set to the character count of everything up to & including
 % the *last* "." (0 if there is none); the muted head and bright tail are
 % then sliced out of \l_tmpa_tl by that offset.
@@ -546,14 +552,20 @@
 % into a jump to its Inhaltsverzeichnis line — see the TocLineLinks region.
 % #1 always arrives fully expanded (\exp_args:Ne at both call sites), so the
 % number doubles as the anchor key.
-\cs_new_protected:Npn \semio_hierarchy_chip_number:n #1 {
+\cs_new_protected:Npn \semio_hierarchy_chip_number:nnn #1 #2 #3 {
   \semio@tocline@link {#1} {
     \semio_identifier_split_point:n {#1}
     \int_compare:nNnF \l_tmpa_int = \c_zero_int {
-      \textcolor { semio-chrome-text-normal } { \tl_range:Nnn \l_tmpa_tl { 1 } { \l_tmpa_int } }
+      \textcolor {#2} { \tl_range:Nnn \l_tmpa_tl { 1 } { \l_tmpa_int } }
     }
-    \textcolor { semio-chrome-foreground } { \tl_range:Nnn \l_tmpa_tl { \l_tmpa_int + 1 } { -1 } }
+    \textcolor {#3} { \tl_range:Nnn \l_tmpa_tl { \l_tmpa_int + 1 } { -1 } }
   }
+}
+\cs_new_protected:Npn \semio_hierarchy_chip_number:n #1 {
+  \semio_hierarchy_chip_number:nnn {#1} {semio-chrome-text-normal} {semio-chrome-foreground}
+}
+\cs_new_protected:Npn \semio_heading_chip_number:nn #1 #2 {
+  \semio_hierarchy_chip_number:nnn {#1} {#2} {#2}
 }
 \cs_new_protected:Npn \semio_toc_number:n #1 {
   \semio_identifier_split_point:n {#1}
@@ -581,6 +593,7 @@
 \NewDocumentCommand \semio@kind@label@plural { m } { \semio_kind_label_plural_document:n {#1} }
 \NewDocumentCommand \semio@kind@number { m m } { \semio_kind_chip_number:nn {#1} {#2} }
 \NewDocumentCommand \semio@kind@number@bare { m } { \exp_args:Ne \semio_kind_chip_bare:n {#1} }
+\NewDocumentCommand \semio@heading@number { m m } { \exp_args:Ne \semio_heading_chip_number:nn {#1} {#2} }
 \NewDocumentCommand \semio@toc@number { m } { \exp_args:Ne \semio_toc_number:n {#1} }
 \NewDocumentCommand \semio@register@title { m } { \semio_register_title:n {#1} }
 \NewExpandableDocumentCommand \SemioRegisterTitle { m } { \semio_register_title_text:n {#1} }
@@ -614,10 +627,6 @@
 %endregion Hyphenation Safety
 
 \makeatletter
-
-\newcommand{\semio@heading@kind@number}[2]{%
-  \semio@kind@number@bare{\csname the#2\endcsname}%
-}
 
 \newcommand{\semio@window@kind@number}[1]{%
   \refstepcounter{semio@window@slot}%

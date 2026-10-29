@@ -60,6 +60,9 @@ if (import.meta.main) {
   }
   else {
     const { dispatchPolicyArgv, runWorkspaceScriptMain } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🚨️policy/🧭️entrypoints/🟦️.ts");
-    if (!(await dispatchPolicyArgv(args, import.meta.url))) await runWorkspaceScriptMain(router);
+    if (!(await dispatchPolicyArgv(args, import.meta.url))) {
+      const {rootTestFreshCapabilitiesV1}=await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🎛️commands/🧪️test/🌱️birth/🟦️.ts");
+      await runWorkspaceScriptMain(router,{freshCapabilities:()=>rootTestFreshCapabilitiesV1(WORKSPACE_ROOT,args,process.env)});
+    }
   }
 }

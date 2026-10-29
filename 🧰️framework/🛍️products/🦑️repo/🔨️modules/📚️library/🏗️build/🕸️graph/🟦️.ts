@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1} from "../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 import type { BuildExecutionV1, BuildGraphInvalidationInventoryV1, BuildGraphModuleAuthorityV1, BuildGraphPartStubV1, BuildGraphPartV1, BuildGraphRowV1, BuildGraphV1, BuildProjectV1, BuildTargetV1, BuildUnavailableProjectV1 } from "./📋️model/🟦️.ts";
 import{refuseBuildV1}from"../📖️texts/🟦️.ts";
 import graphSchema from"./🧬️schema/🔣️.json"with{type:"json"};
@@ -29,12 +30,12 @@ import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { validateJsonSchemaSubset } from "../../../../../../🔨️modules/🧬️schema/✅️validator/📦️packages/🟦️typescript/🟦️.ts";
 import { checkScriptInvocation, advanceScriptInvocation, requireIssuedResourceControlInvocationV1, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {repositoryCachePartitionRootV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🟦️.ts";
-import {acquireQueuedResourceLease,acquireResourceLease} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
+import {acquireQueuedResourceLease,acquireResourceLease,acquireFreshResourceLeaseV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
 import {buildGraphWriterResourceV1} from "../📥️inputs/💾️storage/🔒️writer/🟨️.mjs";
 import {withRepositoryCacheStoreV1,type RepositoryCacheStoreV1} from "../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/🏪️store/🟦️.ts";
 import {requireNativeStoragePathV1} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/📋️contract/🟦️.ts";
 import{decodeGraphRecordsV1}from"../../⚡️caching/💾️storage/🔒️enforcement/📦️budget/🕸️graph/📇️records/🟨️.mjs";
-import{GENERATION_POLICY_V1,createGenerationStoreV1,createNodeFilePortV1,createFrontierV1,diffFrontiersV1,frontierHoldsV1,readGenerationPointerV1,stableDirectoriesV1,canonicalJsonV1 as canonicalGenerationJsonV1}from"./🕰️generations/🟨️.mjs";
+import{GENERATION_POLICY_V1,createGenerationStoreV1,readGenerationExternalInputsV1,resolveGenerationExternalInputV1,createNodeFilePortV1,createFrontierV1,diffFrontiersV1,frontierHoldsV1,readGenerationPointerV1,stableDirectoriesV1,canonicalJsonV1 as canonicalGenerationJsonV1}from"./🕰️generations/🟨️.mjs";
 import{advanceFrontierV1}from"./🕰️generations/🌿️frontier-walk/🟨️.mjs";
 import{discoverTestOwnersV1,selectTestFeaturesV1}from"./🎯️test-owners/🟨️.mjs";
 import{CLAIMS_POLICY_V1,createClaimRegistryV1,createQueuedClaimLeasePortV1,prepareStaleProjectsV1,renderClaimMessageV1,slotCountV1,type ClaimMessageKeyV1}from"./🕰️generations/🧩️claims/🟨️.mjs";
@@ -148,7 +149,7 @@ async function withBuildGraphStateV1<T>(root:string,invocation:ScriptInvocation,
 
 /** 🛡️ The slice custody of the generation builders of one graph image (see `./🕰️generations/🔐️custody`): claim documents beside the generations, leases in the repository lease directory. */
 function generationCustodyV1(root:string,store:RepositoryCacheStoreV1,control:ResourceLeaseControl):SliceCustodyV1{
-  return createSliceCustodyV1({root:join(store.root,"generations"),fs:generationFilesV1(store) as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,directory:join(root,".cache/b/l/m/data"),control})});
+  return createSliceCustodyV1({root:join(store.root,"generations"),fs:generationFilesV1(store) as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never,directory:join(root,".cache/b/l/m/data"),control})});
 }
 
 /** 🧑‍🤝‍🧑️ Builds inside the shared cohort of the generation namespace (sweeps stay out) under a slice claim on the owners `request` writes (every owner when it is undefined or structural): refreshes of disjoint projects build at the same time, overlapping ones one after the other in ticket order. */
@@ -234,7 +235,7 @@ export async function workspaceBuildFilesV1(root:string,invocation?:ScriptInvoca
 /** 🚶️ Whether the workspace walk enters a directory: not a generated, cache or dependency directory, not a build artifact directory of an extension host, not a collection directory below anything but a module member and not the composition directory. The one rule of the walk of every file inventory and of the advance of the membership frontier. */
 export function buildWalkDescendsV1():(name:string,path:string,parent:string)=>boolean {
   const cachePolicy=graphDeclarationV1("../../⚡️caching/🔣️policy.json"),ownership=graphDeclarationV1("../../🗂️workspaces/🔣️policy.json"),excluded=new Set([...cachePolicy.generatedDirectories,".git",".🧬semio",".nx",".cache","node_modules","dist","target",".venv","venv","__pycache__",".pytest_cache",".next",".turbo","temp","🗑️generated"]);
-  return (name,path,parent)=>!excluded.has(name)&&!name.startsWith("extension-host-build-")&&!(ownership.collections.names.includes(name)&&parent.split("/").at(-1)!==ownership.collections.moduleMember)&&path!=="compose";
+  return (name,path,parent)=>!isOpaqueSourcePathV1(path)&&!excluded.has(name)&&!name.startsWith("extension-host-build-")&&!(ownership.collections.names.includes(name)&&parent.split("/").at(-1)!==ownership.collections.moduleMember)&&path!=="compose";
 }
 
 /** 📥️ Expands private input compaction into portable source declarations. */
@@ -526,7 +527,7 @@ async function prefetchStaleGenerationV1(input:{root:string;invocation:ScriptInv
   const say=(key:ClaimMessageKeyV1,fields:Record<string,string|number>)=>{process.stderr.write(renderClaimMessageV1(key,fields,input.language)+"\n");};
   try{await withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>{
     const files=generationFilesV1(store),directory=join(store.root,"generations"),clock=createGraphPhaseClockV1({publish:resource=>control.publish({resource,mode:"shared",elapsedMs:0}),write:writeGraphPhaseRowV1});
-    const claims=createClaimRegistryV1({root:directory,fs:files as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,directory:join(root,".cache/b/l/m/data"),control})});
+    const claims=createClaimRegistryV1({root:directory,fs:files as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never,directory:join(root,".cache/b/l/m/data"),control})});
     let begun=false,booked=false;
     try{
       await prepareStaleProjectsV1({registry:claims,base:request.generation,implementation:request.implementation,wanted:request.dirty,stamps:await ownerContentStampsV1(root,input.files(),request.roots,request.dirty),slots:await rebuildSlotsV1(),signal:invocation.control.signal,say,
@@ -556,7 +557,7 @@ async function builderIdleV1(input:{root:string;invocation:ScriptInvocation;phas
   try{
     requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
     return await withRepositoryBuildGraphSelectionV1(root,invocation,phaseControl,generationScopeV1,async(store,control)=>{
-      const claims=createClaimRegistryV1({root:join(store.root,"generations"),fs:generationFilesV1(store) as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,directory:join(root,".cache/b/l/m/data"),control})});
+      const claims=createClaimRegistryV1({root:join(store.root,"generations"),fs:generationFilesV1(store) as never,lease:createQueuedClaimLeasePortV1({acquire:acquireQueuedResourceLease as never,tryAcquire:acquireResourceLease as never,acquireFresh:acquireFreshResourceLeaseV1 as never,directory:join(root,".cache/b/l/m/data"),control})});
       return claims.idle({base:request.generation,implementation:request.implementation,wanted:request.dirty,builderFree:()=>generationCustodyV1(root,store,control).idle({owners:request.dirty,structural:request.structural,signal:invocation.control.signal}),signal:invocation.control.signal});
     },{optionalCaches:false,shared:true});
   }catch(error){if(invocation.control.signal.aborted)throw error;return false;}
@@ -726,6 +727,9 @@ async function readSealedBuildGraphV1(root:string,invocation:ScriptInvocation,ph
   return withRepositoryCacheStoreV1(root,"graph",invocation,phaseControl,async(store,actualControl)=>{await store.recheck();checkResourceLeaseControl(actualControl);return loadBuildGraphAttemptV1(root,invocation,actualControl,{...options,sealedOnly:true},registry,undefined);});
 }
 
+/** 🔌️ Requires the pinned selected view to carry exactly the requested canonical external roots. */
+export function requireBuildGraphExternalInputsV1(graph:BuildGraphV1,inputs:readonly string[]):readonly string[]{const requested=[...new Set(readGenerationExternalInputsV1(inputs).map(name=>{const key=resolveGenerationExternalInputV1(graph.externalNodes,name);if(key===undefined)throw Error("Pinned build graph lacks external input: "+name);return key;}))].sort();if(JSON.stringify(requested)!==JSON.stringify(graph.admission?.externalInputs??[]))throw Error("Original selected external input admission required");return requested;}
+
 /** 💾️ Publishes only a current graph and releases each invalidated candidate before retrying. */
 export async function loadBuildGraphV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:BuildGraphLoadOptionsV1):Promise<BuildGraphV1> {
   if(options.selection?.kind&&!options.baseline&&!options.reuse&&invocation){
@@ -745,7 +749,7 @@ async function loadBuildGraphSliceV1(root:string,invocation:ScriptInvocation,pha
   const producer=await import("./📥️inference/🟨️.mjs"),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root))),selection=readBuildGraphSelectionV1(options.selection);
   if(selection.kind==="all")throw Error("Selected build graph scope required");
   const roots=selection.kind==="tasks"?[...new Set(selection.tasks.map(task=>task.project))]:selectLiteralBuildProjectsV1(registry.owners,selection.projects,selection.exclude);
-  return await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry,options.graph?.compact===true),{policy:options.graph?.policy??"fresh",selection,slice:{selection,roots,providers:registry.catalogProviders.map(({consumerRoots,sourcePath})=>({consumerRoots,sourcePath}))},pin:boundGenerationPinV1()}) as BuildGraphV1;
+  return await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry,options.graph?.compact===true),{policy:options.graph?.policy??"fresh",selection,slice:{selection,roots,providers:registry.catalogProviders.map(({consumerRoots,sourcePath})=>({consumerRoots,sourcePath}))},externalInputs:options.graph?.externalInputs,pin:boundGenerationPinV1()}) as BuildGraphV1;
 }
 
 /** 🪶️ Admits the lean graph of `show projects|targets`: project and target names, unavailable projects, no inputs. */
@@ -766,17 +770,17 @@ function requireSelectedSubgraphV1(slice:BuildGraphV1,selected:BuildGraphV1):voi
   for(const[key,node]of Object.entries(selected.externalNodes??{}))if(!same(slice.externalNodes?.[key],node))throw Error(`Graph slice differs from the selected graph at external node ${key}`);
 }
 
-type BuildGraphLoadOptionsV1={selection:BuildGraphSelectionV1;reuse?:boolean;baseline?:boolean;graph?:{policy?:"fresh"|"current";closure?:readonly string[];lean?:boolean;compact?:boolean}};
+type BuildGraphLoadOptionsV1={selection:BuildGraphSelectionV1;reuse?:boolean;baseline?:boolean;graph?:{policy?:"fresh"|"current";closure?:readonly string[];lean?:boolean;compact?:boolean;externalInputs?:readonly string[]}};
 
 /** 🕸️ Loads the graph with the strict self-checks of the loaded implementation; the generation path runs pinned and completes with what it loaded. */
 async function loadBuildGraphUnpinnedV1(root:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,options:BuildGraphLoadOptionsV1):Promise<BuildGraphV1> {
   requireIssuedResourceControlInvocationV1(phaseControl,invocation);checkResourceLeaseControl(phaseControl);checkScriptInvocation(invocation);requireCurrentGraphModuleV1();
   options={...options,selection:readBuildGraphSelectionV1(options.selection)};
-  if(options.reuse)return withRepositoryBuildGraphPublicationV1(root,phaseControl,async graph=>{checkScriptInvocation(invocation);if(!graph.admission||JSON.stringify(readBuildGraphSelectionV1(graph.admission.selection))!==JSON.stringify(readBuildGraphSelectionV1(options.selection)))throw Error("Original selected build graph admission required");return graph;});
+  if(options.reuse)return withRepositoryBuildGraphPublicationV1(root,phaseControl,async graph=>{checkScriptInvocation(invocation);if(!graph.admission||JSON.stringify(readBuildGraphSelectionV1(graph.admission.selection))!==JSON.stringify(readBuildGraphSelectionV1(options.selection)))throw Error("Original selected build graph admission required");if(options.graph?.externalInputs!==undefined)requireBuildGraphExternalInputsV1(graph,options.graph.externalInputs);return graph;});
   if(!invocation)throw Error("Original build graph producer invocation required");
   if(options.selection.kind==="all"&&!options.baseline){
     const producer=await import("./📥️inference/🟨️.mjs"),registry=readBuildOwnerRegistryV1(JSON.parse(producer.readBuildOwnerRegistrySourceV1(root)));
-    const graph=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure,lean:options.graph?.lean,pin:boundGenerationPinV1()}) as BuildGraphV1;
+    const graph=await loadGenerationGraphV1(generationHostV1(root,invocation,phaseControl,registry),{policy:options.graph?.policy??"fresh",closure:options.graph?.closure,lean:options.graph?.lean,externalInputs:options.graph?.externalInputs,pin:boundGenerationPinV1()}) as BuildGraphV1;
     if(process.env.SEMIO_BUILD_GRAPH_VERIFY==="1"&&!options.graph?.closure&&!options.graph?.lean)requireEqualBuildGraphsV1(graph,await loadBuildGraphV1(root,invocation,phaseControl,{selection:options.selection,baseline:true}));
     checkScriptInvocation(invocation);return graph;
   }

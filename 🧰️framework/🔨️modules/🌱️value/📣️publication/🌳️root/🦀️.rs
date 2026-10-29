@@ -56,9 +56,7 @@ impl<T> RetainedPublicationRoot<T>{
 impl<T> Deref for RetainedPublicationRoot<T>{type Target=T;fn deref(&self)->&T{if let Some(candidate)=self.candidate.as_ref(){if candidate.decision.as_ref().unwrap().committed(){return candidate.root.as_ref().unwrap()}}self.original.as_ref().unwrap().get()}}
 impl<T> DerefMut for RetainedPublicationRoot<T>{fn deref_mut(&mut self)->&mut T{if self.candidate.as_ref().is_some_and(|candidate|candidate.decision.as_ref().unwrap().committed()){return self.candidate.as_mut().unwrap().root.as_mut().unwrap()}self.original.as_mut().unwrap().get_mut_unissued().expect("retained publication root mutation requires every original read returned")}}
 impl<T> Drop for RetainedPublicationRoot<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.candidate.is_none(),"retained publication root requires funded original candidate settlement");if self.candidate.is_none(){unsafe{ManuallyDrop::drop(&mut self.candidate)}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
 
 impl<T:Default> Default for RetainedPublicationRoot<T>{fn default()->Self{Self::new(T::default())}}
 impl<T:Clone> Clone for RetainedPublicationRoot<T>{fn clone(&self)->Self{Self::new((**self).clone())}}

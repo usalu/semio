@@ -1,0 +1,8 @@
+      "anchors": [
+        { "id": "contact-hn", "bone": "hoof-hn", "x": 0.0514, "y": -0.046, "kind": "contact", "title": { "en": "Near hind hoof sole", "de": "Sohle des nahen Hinterhufs" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.12, "footprintWidthM": 0.11, "frictionCoefficient": 0.6 },
+        { "id": "contact-hf", "bone": "hoof-hf", "x": 0.0514, "y": -0.046, "kind": "contact", "title": { "en": "Far hind hoof sole", "de": "Sohle des fernen Hinterhufs" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.12, "footprintWidthM": 0.11, "frictionCoefficient": 0.6 },
+        { "id": "contact-fn", "bone": "hoof-fn", "x": 0.055, "y": -0.0512, "kind": "contact", "title": { "en": "Near fore hoof sole", "de": "Sohle des nahen Vorderhufs" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.13, "footprintWidthM": 0.125, "frictionCoefficient": 0.6 },
+        { "id": "contact-ff", "bone": "hoof-ff", "x": 0.055, "y": -0.0512, "kind": "contact", "title": { "en": "Far fore hoof sole", "de": "Sohle des fernen Vorderhufs" }, "support": "contact", "normalDeg": 90, "footprintLengthM": 0.13, "footprintWidthM": 0.125, "frictionCoefficient": 0.6 },
+        { "id": "nose", "bone": "head", "x": 0.575, "y": 0.035, "kind": "emitter", "title": { "en": "Nostrils", "de": "Nüstern" } },
+        { "id": "halter-ring", "bone": "head", "x": 0.36, "y": -0.115, "kind": "load", "title": { "en": "Halter ring under the chin for the lead rope", "de": "Halfterring unter dem Kinn für den Strick" } }
+      ],

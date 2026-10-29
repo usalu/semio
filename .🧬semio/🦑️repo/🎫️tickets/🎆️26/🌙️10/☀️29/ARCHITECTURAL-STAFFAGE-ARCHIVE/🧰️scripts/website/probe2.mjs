@@ -1,0 +1,10 @@
+import { chromium } from "playwright";
+const browser = await chromium.launch();
+const page = await (await browser.newContext({ viewport: { width: 1440, height: 900 }, locale: "en-US" })).newPage();
+await page.goto("http://localhost:6071/#/", { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(6000);
+await page.click("button[aria-controls=staffage-settings]");
+await page.waitForTimeout(500);
+console.log("panel", JSON.stringify(await page.evaluate(() => { const e = document.querySelector("#staffage-settings"); if (!e) return null; const r = e.getBoundingClientRect(); const s = getComputedStyle(e); return { r: [r.x, r.y, r.width, r.height], z: s.zIndex, vis: s.visibility, clip: e.closest("header") ? getComputedStyle(e.closest("header")).overflow : null }; })));
+await page.screenshot({ path: process.argv[2] });
+await browser.close();

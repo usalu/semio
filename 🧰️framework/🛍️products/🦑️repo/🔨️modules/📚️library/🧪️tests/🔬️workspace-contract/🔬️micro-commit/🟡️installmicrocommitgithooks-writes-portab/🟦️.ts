@@ -22,7 +22,7 @@ export function registerInstallmicrocommitgithooksWritesPortableHooksTests(): vo
       const hook = readFileSync(join(root, ".git/hooks/post-commit"), "utf8");
       expect(hook).toContain("compose_micro_commit_wipe");
       expect(hook).not.toContain("\r");
-      expect(hook).toContain("native-repo-path");
+      expect(hook).not.toContain("native-repo-path");
       expect(renderMicroCommitGitHook("prepare-commit-msg")).toContain('"$CLI" micro-commit prepare-commit-msg "$1" "$2"');
       expect(hook).not.toContain("compose_resolve_bun");
       expect(renderMicroCommitGitHook("post-commit")).toContain("#!/usr/bin/env sh");

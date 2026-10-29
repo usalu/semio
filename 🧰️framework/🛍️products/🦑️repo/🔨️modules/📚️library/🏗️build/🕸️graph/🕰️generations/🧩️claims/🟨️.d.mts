@@ -1,5 +1,5 @@
 /** 🧩️ The declared constants of the claim registry. */
-export interface ClaimsPolicyV1{readonly version:1;readonly directory:string;readonly chunkOwners:number;readonly tailOwners:number;readonly pollMilliseconds:number;readonly noticeMilliseconds:number;readonly maximumClaims:number;readonly maximumOwners:number;readonly slotMegabytes:number;readonly slotMemoryBasisPoints:number;readonly maximumSlots:number;readonly environmentSlots:string;readonly failedRetryMilliseconds:number;readonly failureReasonCharacters:number;readonly lockNameCharacters:number}
+export interface ClaimsPolicyV1{readonly version:1;readonly probe:"nonwaiting-kernel";readonly freshProbe:"bounded-directory-admission";readonly directory:string;readonly chunkOwners:number;readonly tailOwners:number;readonly pollMilliseconds:number;readonly noticeMilliseconds:number;readonly maximumClaims:number;readonly maximumOwners:number;readonly slotMegabytes:number;readonly slotMemoryBasisPoints:number;readonly maximumSlots:number;readonly environmentSlots:string;readonly failedRetryMilliseconds:number;readonly failureReasonCharacters:number;readonly lockNameCharacters:number}
 /** 📐️ The declared constants of the claim registry. */
 export const CLAIMS_POLICY_V1:ClaimsPolicyV1;
 /** 🔑️ The keys of the bilingual prefetch texts. */
@@ -23,7 +23,7 @@ export function slotCountV1(options:{memoryMegabytes:number;environment?:Record<
 /** ✋️ A held lease that is given back by `release`. */
 export interface ClaimLeaseHoldV1{release():void}
 /** 🔐️ The lease operations the registry needs: try, hold and wait for a resource. */
-export interface ClaimLeasePortV1{tryHold(resource:string):Promise<ClaimLeaseHoldV1|undefined>;hold(resource:string,options?:{signal?:AbortSignal}):Promise<ClaimLeaseHoldV1>;wait(resource:string,options?:{signal?:AbortSignal;timeoutMs?:number}):Promise<boolean>}
+export interface ClaimLeasePortV1{tryHold(resource:string,options?:{fresh:true}):Promise<ClaimLeaseHoldV1|undefined>;hold(resource:string,options?:{signal?:AbortSignal}):Promise<ClaimLeaseHoldV1>;wait(resource:string,options?:{signal?:AbortSignal;timeoutMs?:number}):Promise<boolean>}
 /** ⏳️ Answers true as soon as one of the leases has no exclusive holder, false after `timeoutMs`; every wait carries the caller's own signal. */
 export function waitAnyLeaseV1(lease:ClaimLeasePortV1,resources:readonly string[],options:{signal?:AbortSignal;timeoutMs:number}):Promise<boolean>;
 /** 🗄️ The file operations the registry needs: read, exclusive write, list and remove. */
@@ -36,7 +36,11 @@ export interface ClaimRegistryV1{prefetch(options:ClaimPrefetchOptionsV1):Promis
 export function createClaimRegistryV1(options:{root:string;fs:ClaimFilePortV1;lease:ClaimLeasePortV1;now?:()=>number;token?:()=>string}):ClaimRegistryV1;
 /** 🛡️ Runs a prefetch that can never fail its command: a failure is told through `say` and answered as `failed`, a cancellation is rethrown. */
 export function prepareStaleProjectsV1(options:ClaimPrefetchOptionsV1&{registry:ClaimRegistryV1}):Promise<{computed:number;served:boolean;failed?:true}>;
-/** 🔗️ The lease port of the registry over the queued lease acquisition of the process module, which the caller injects. */
-export function createQueuedClaimLeasePortV1(options:{acquire:(request:{directory:string;resource:string;mode:"shared"|"exclusive";sharedCohort?:boolean;owner:string;control?:unknown;signal:AbortSignal;timeoutMs?:number})=>Promise<ClaimLeaseHoldV1>;directory:string;control?:{readonly signal:AbortSignal}}):ClaimLeasePortV1;
+/** 📨️ The owned request shared by queued acquisitions and nonwaiting probes. */
+export interface ClaimLeaseRequestV1{directory:string;resource:string;mode:"shared"|"exclusive";sharedCohort?:boolean;owner:string;control?:unknown;signal:AbortSignal;timeoutMs?:number}
+/** 🔌️ Acquisition supplied by the process kernel. */
+export type ClaimLeaseAcquireV1=(request:ClaimLeaseRequestV1)=>Promise<ClaimLeaseHoldV1>;
+/** 🔗️ Queued holds and nonwaiting kernel probes retain their separate admission semantics. */
+export function createQueuedClaimLeasePortV1(options:{acquire:ClaimLeaseAcquireV1;tryAcquire:ClaimLeaseAcquireV1;acquireFresh:ClaimLeaseAcquireV1;directory:string;control?:{readonly signal:AbortSignal}}):ClaimLeasePortV1;
 /** 🔒️ A reference lease port over lock files for tests and non repository runtimes. */
 export function createFileClaimLeasePortV1(directory:string,options?:{sleep?:(milliseconds:number,signal?:AbortSignal)=>Promise<void>}):ClaimLeasePortV1;

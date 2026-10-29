@@ -30,3 +30,6 @@ semio-s-plugin-energy-engine-error = { workspace = true }
 semio-s-plugin-energy-engine-geometry = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
 serde = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -90,9 +90,21 @@ export async function verifyPrintPipelineSourcesV1(): Promise<void> {
   assert.match(classSource, /\{ phd \} \{ \\LoadClass\[twoside=true,open=right,cleardoublepage=empty\]\{scrreprt\} \}/);
   assert.match(classSource, /\\RequirePackage\{semio-phd\}/);
   assert.match(readFileSync(join(latexRoot, "semio-core.sty"), "utf8"), /\{ phd \} \{ \\tl_set:Nn \\l_semio_appendix_level_tl \{ chapter \} \}/);
+  assert.match(classSource, /\\DeclareStringOption\[\]\{bindingoffset\}/);
+  assert.match(classSource, /\\tl_if_blank:VT \\semio@bindingoffset \{\s*\\str_if_eq:VnTF \\semio@type \{ phd \}\s*\{ \\tl_set:Nn \\semio@bindingoffset \{ 15mm \} \}\s*\{ \\tl_set:Nn \\semio@bindingoffset \{ 8mm \} \}/);
+  assert.equal((classSource.match(/bindingoffset=\\semio@bindingoffset/g) ?? []).length, 5);
   const phdSource = readFileSync(join(latexRoot, "semio-phd.sty"), "utf8");
-  assert.match(phdSource, /\\NewDocumentCommand\{\\makedissertationtitle\}\{\}\{\\semio_phd_title_page:\}/);
-  for (const environment of ["Abstract", "Kurzfassung", "Acknowledgements"]) assert.match(phdSource, new RegExp(`\\\\NewDocumentEnvironment\\{${environment}\\}`), environment);
+  assert.match(phdSource, /\\NewDocumentCommand\{\\makedissertationtitle\}\{\}\{\\makethesistitle\}/);
+  assert.match(phdSource, /\\RequirePackage\{semio-thesis\}/);
+  const thesisSource = readFileSync(join(latexRoot, "semio-thesis.sty"), "utf8");
+  for (const environment of ["Abstract", "Kurzfassung", "Acknowledgements", "Dedication", "Abbreviations"]) assert.match(thesisSource, new RegExp(`\\\\NewDocumentEnvironment\\{${environment}\\}`), environment);
+
+  assert.match(thesisSource, /\\bool_if:NF \\g_semio_thesis_frontmatter_bool \{ \\setcounter\{page\}\{1\} \}/);
+  assert.match(thesisSource, /\\clist_if_in:nVT \{ thesis, phd \} \\l_semio_type_tl \{ \\semio_thesis_validate: \}/);
+  assert.match(thesisSource, /\\AddToHook\{cmd\/makemainmatter\/before\}\{[\s\S]*?\\semio_thesis_numbering_restore:/);
+
+  assert.match(thesisSource, /\\bool_gset_true:N \\g_semio_cover_geometry_bool\s*\\group_begin:[\s\S]*?\\setlength\{\\parskip\}\{0pt\}[\s\S]*?\\end\{WindowArrangement\}\s*\\par\s*\\group_end:\s*\\semio_cover_geometry_restore:/);
+  assert.match(thesisSource, /\\cs_new_protected:Npn \\semio_thesis_signature_line: \{\s*\\par\s*\\group_begin:[\s\S]*?\\SemioSans[\s\S]*?\\@author\s*\\par\s*\\group_end:/);
 
   const loader = readFileSync(join(latexRoot, "semio-viz-charts.sty"), "utf8");
   for (const match of loader.matchAll(/\\RequirePackage\{([^}]+)\}/g)) assert.ok(existsSync(join(latexRoot, `${match[1]}.sty`)), `missing chart package ${match[1]}`);

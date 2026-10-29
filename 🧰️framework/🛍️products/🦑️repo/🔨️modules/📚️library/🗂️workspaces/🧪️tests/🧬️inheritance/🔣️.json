@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "dependency": {
+    "name": "semio-framework-diagnostic",
+    "path": "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust",
+    "workspace": "🧰️framework/Cargo.toml"
+  },
+  "chain": [
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust/Cargo.toml",
+      "workspace": "Cargo.toml",
+      "inherited": 8
+    },
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/📦️packages/🦀️rust/Cargo.toml",
+      "workspace": "Cargo.toml",
+      "inherited": 4
+    },
+    {
+      "manifest": "✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/✏️editing/📦️packages/🦀️rust/Cargo.toml",
+      "workspace": "✏️s/🔌️plugins/🗄️stdio/Cargo.toml",
+      "inherited": 3
+    }
+  ],
+  "baselineMissing": [
+    {
+      "manifest": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧩️composition/📬️publication/📦️packages/🦀️rust/Cargo.toml",
+      "table": "dependencies",
+      "name": "semio-framework-diagnostic"
+    }
+  ]
+}

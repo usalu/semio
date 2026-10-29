@@ -63,9 +63,7 @@ impl<K:RetireOwned> RetireOwned for ScratchHashSet<K>{
  fn retirement_birth_bytes(&self)->Option<usize>{self.map.retirement_birth_bytes()}
  fn controlled_retirement_supported()->bool{ScratchHashMap::<K,()>::controlled_retirement_supported()}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
 
 /// 👁️ A fixed-address immutable scratch view supports one original-funded probe per turn.
 pub struct ScratchHashSlots<'a,K,V>{slots:&'a [Slot<K,V>]}

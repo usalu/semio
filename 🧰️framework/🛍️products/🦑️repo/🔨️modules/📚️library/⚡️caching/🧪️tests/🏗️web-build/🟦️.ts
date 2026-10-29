@@ -7,7 +7,7 @@ import {type ResourceLeaseControl} from "@semio-tech/process/leases";
 /** 🛟️ Keeps each compiler fixture inside its actual accepted product sink through consumption. */
 async function withWebCompilerFixtureV1<T>(workspace:string,invocation:ScriptInvocation,phaseControl:ResourceLeaseControl,mode:"prototype"|"release",body:(destination:ArtifactDestinationV1,sink:ArtifactDestinationContextV1)=>Promise<T>):Promise<T>{requireIssuedResourceControlInvocationV1(phaseControl,invocation);return withRepositoryCacheStoreV1(workspace,"products",invocation,phaseControl,(store,actualPhase)=>withArtifactScratchV1({workspace,invocation,storage:store.storage,control:store.control,phaseControl:actualPhase,request:{version:1,mode,owner:relative(workspace,import.meta.dir).replaceAll("\\","/")}},destination=>withArtifactDestinationTaskV1(destination,invocation,sink=>body(destination,sink))));}
 import { acquireCompilerCapacityLeaseV1, compilerAdmissionBudgetV1, scriptCompilerAdmissionControlV1 } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
-import { nextPublicationFiles } from "@semio-tech/repo-coordinator/builder/publication";
+import { nextPublicationFiles } from "../../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🏗️builder/📦️publication/🟦️.ts";
 import bunWorkerSchema from "../../📦️bundle/🟦️bun/🧬️schema/🔣️.json" with { type: "json" };
 import type { ScriptInvocation } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import bundleSchema from "../../📦️bundle/🧬️schema/🔣️.json" with { type: "json" };
@@ -16,7 +16,7 @@ import { scriptInvocationEnvironment } from "../../../../../../../🔨️modules
 import { runInNewContext } from "node:vm";
 import { availableParallelism } from "node:os";
 import { buildModePolicy } from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
-import { coordinatorBuildPolicy } from "@semio-tech/repo-coordinator/builder/mode";
+import { coordinatorBuildPolicy } from "../../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/🏗️builder/🎚️mode/🟦️.ts";
 import assert from "node:assert/strict";
 import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile, symlink } from "node:fs/promises";
@@ -37,7 +37,7 @@ export async function proveWebBuild(workspace: string, output: string, invocatio
  await testWebFixtureContractsV1(invocation,phaseControl);testWebDeclarationDataV1();
  const vitePhase=phaseControl;
   const fixture = JSON.parse(readFileSync(join(import.meta.dir, "🧫️cases.json"), "utf8"));
-  const { semioViteBuild } = await import("@semio-tech/ui-styling/builder/vite");
+  const { semioViteBuild } = await import("../../../../../../../🔨️modules/🖱️ui/🎨️styling/📦️packages/🟦️typescript/🏗️builder/🌐️vite/🟦️.ts");
   for (const row of fixture.modes) {
     const policy = semioViteBuild(undefined, buildModePolicy(row.mode)), coordinator = coordinatorBuildPolicy(row.mode, 2);
     assert.equal(policy.rollupOptions.treeshake, row.mode === "release");

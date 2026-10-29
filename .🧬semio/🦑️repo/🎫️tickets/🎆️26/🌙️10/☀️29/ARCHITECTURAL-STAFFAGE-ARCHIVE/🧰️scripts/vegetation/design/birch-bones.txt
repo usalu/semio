@@ -1,0 +1,22 @@
+root-plate|-|Stool base|Stockbasis|0|90|0.3|fixed|0|120|0.15|uniform|wood-handbook-2021|0.4
+stem-l-1|root-plate|Left stem, lower|Linker Stamm, unten|0.3|14|5|-2.5|2.5|74|2.5|uniform|wood-handbook-2021|0.145
+stem-l-2|stem-l-1|Left stem, upper|Linker Stamm, oben|5|-8|4.5|-3.5|3.5|29|2.25|uniform|wood-handbook-2021|0.095
+stem-c-1|root-plate|Centre stem, lower|Mittlerer Stamm, unten|0.3|1|5.5|-2.5|2.5|126|2.75|uniform|wood-handbook-2021|0.18
+stem-c-2|stem-c-1|Centre stem, upper|Mittlerer Stamm, oben|5.5|2|4.8|-3.5|3.5|34|2.4|uniform|wood-handbook-2021|0.1
+stem-r-1|root-plate|Right stem, lower|Rechter Stamm, unten|0.3|-16|5|-2.5|2.5|85|2.5|uniform|wood-handbook-2021|0.155
+stem-r-2|stem-r-1|Right stem, upper|Rechter Stamm, oben|5|10|4.5|-3.5|3.5|29|2.25|uniform|wood-handbook-2021|0.095
+br-l-a|stem-l-2|Left upper branch|Linker oberer Ast|1.5|50|2.4|-8|8|8|1.2|uniform|wood-handbook-2021|0.05
+br-l-b|stem-l-1|Left lower branch|Linker unterer Ast|3.5|45|2.2|-8|8|7|1.1|uniform|wood-handbook-2021|0.05
+br-c-a|stem-c-2|Centre branch, west|Mittlerer Ast, West|1.2|50|2.2|-8|8|7|1.1|uniform|wood-handbook-2021|0.05
+br-c-b|stem-c-2|Centre branch, east|Mittlerer Ast, Ost|2.8|-50|2.2|-8|8|7|1.1|uniform|wood-handbook-2021|0.05
+br-r-a|stem-r-2|Right upper branch|Rechter oberer Ast|1.5|-50|2.4|-8|8|8|1.2|uniform|wood-handbook-2021|0.05
+br-r-b|stem-r-1|Right lower branch|Rechter unterer Ast|3.5|-40|2.2|-8|8|7|1.1|uniform|wood-handbook-2021|0.05
+fol-l-a|br-l-a|Foliage, left upper|Laub links oben|2.4|-30|1.5|-14|14|12|1.5|point|jones-2014
+fol-l-b|br-l-b|Foliage, left lower|Laub links unten|2.2|-30|1.5|-14|14|12|1.5|point|jones-2014
+fol-c-a|br-c-a|Foliage, centre west|Laub Mitte West|2.2|-30|1.5|-14|14|12|1.5|point|jones-2014
+fol-c-b|br-c-b|Foliage, centre east|Laub Mitte Ost|2.2|30|1.5|-14|14|12|1.5|point|jones-2014
+fol-r-a|br-r-a|Foliage, right upper|Laub rechts oben|2.4|30|1.5|-14|14|12|1.5|point|jones-2014
+fol-r-b|br-r-b|Foliage, right lower|Laub rechts unten|2.2|30|1.5|-14|14|12|1.5|point|jones-2014
+fol-l-top|stem-l-2|Foliage, left stem top|Laub Spitze links|4.5|0|1.8|-14|14|12|1.5|point|jones-2014
+fol-c-top|stem-c-2|Foliage, centre stem top|Laub Spitze Mitte|4.8|0|2|-14|14|13|1.7|point|jones-2014
+fol-r-top|stem-r-2|Foliage, right stem top|Laub Spitze rechts|4.5|0|1.8|-14|14|12|1.5|point|jones-2014

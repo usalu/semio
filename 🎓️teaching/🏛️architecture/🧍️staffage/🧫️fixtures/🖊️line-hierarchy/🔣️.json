@@ -1,0 +1,9 @@
+{
+  "unit": "mm",
+  "scales": {
+    "500": { "body": 0.18, "detail": 0.13, "texture": null, "glazing": 0.13, "ground": 0.25 },
+    "200": { "body": 0.25, "detail": 0.13, "texture": 0.13, "glazing": 0.13, "ground": 0.35 },
+    "100": { "body": 0.35, "detail": 0.18, "texture": 0.13, "glazing": 0.18, "ground": 0.5 },
+    "50": { "body": 0.5, "detail": 0.25, "texture": 0.13, "glazing": 0.25, "ground": 0.7 }
+  }
+}

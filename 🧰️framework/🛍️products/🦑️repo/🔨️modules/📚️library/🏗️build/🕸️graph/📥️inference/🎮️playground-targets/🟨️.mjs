@@ -1,3 +1,4 @@
+import {isOpaqueSourcePathV1,opaqueSourceInputExclusionsV1} from "../../../../⚡️caching/🔍️discovery/📂️source/🟦️.ts";
 /** 🎮️ Projects playground catalog rows into session, preparation, activation, serving and site targets. */
 import { advanceScriptInvocation, checkScriptInvocation, requireIssuedResourceControlInvocationV1 } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { checkResourceLeaseControl } from "../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🔒️leases/🟦️.ts";
@@ -33,7 +34,7 @@ export function collectPlaygroundCatalog(configFiles, workspaceRoot,catalogContr
   if(!catalogContributions.length)return [];
   const components = new Map(), playgrounds = [], nativeFiles = new Map(), nativeClosures = new Map();
   for (const path of configFiles) {
-    if (!path.endsWith("Cargo.toml") || path.includes("\uFFFD") || path.includes(".🧬semio") || path.startsWith("compose/") || path.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))) continue;
+    if (isOpaqueSourcePathV1(path) || !path.endsWith("Cargo.toml") || path.includes("\uFFFD") || path.includes(".🧬semio") || path.startsWith("compose/") || path.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))) continue;
     const buildCatalog=catalogBuildContributionForManifestV1(catalogContributions,path);if(!buildCatalog)continue;
     const manifest = readToml(join(workspaceRoot, path)), metadata = manifest.package?.metadata;
     if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) continue;
@@ -100,7 +101,7 @@ export function playgroundSessionTargets(configFiles, workspaceRoot,catalogContr
   if(!catalogContributions.length)return {};
   const components = new Map(), playgrounds = new Map();
   for (const file of configFiles) {
-    if (!file.endsWith("Cargo.toml") || file.includes("\uFFFD") || file.includes(".🧬semio") || file.startsWith("compose/") || file.startsWith("temp/compose/") || POLICY.generatedDirectories.some(directory => file.split("/").includes(directory))) continue;
+    if (isOpaqueSourcePathV1(file) || !file.endsWith("Cargo.toml") || file.includes("\uFFFD") || file.includes(".🧬semio") || file.startsWith("compose/") || file.startsWith("temp/compose/") || POLICY.generatedDirectories.some(directory => file.split("/").includes(directory))) continue;
     const buildCatalog=catalogBuildContributionForManifestV1(catalogContributions,file);if(!buildCatalog)continue;
     const manifest=readToml(join(workspaceRoot,file)), metadata=manifest.package?.metadata;
     if(!metadata?.component?.package || !["plugin","extension"].includes(metadata.semio?.["component-kind"])) continue;
@@ -148,7 +149,7 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
   const projectOwners = new Map(), nativeHostOwners = new Map(), nativePlans = new Map();
   const componentPrerequisites=async id=>{if(!nativePlans.has(id)){await advance("build:playground-native");nativePlans.set(id,nativePreparation(components.get(id).cratePath,workspaceRoot,contracts,false,nativeFiles,nativeClosures).map(contract=>contract.target));}return nativePlans.get(id);};
   const componentTargetsOf=async ids=>{const targets=[];for(const id of [...ids].sort()){await componentPrerequisites(id);targets.push(`${components.get(id).project}:component`);}return targets;};
-  const ownerSources=ids=>[...new Set([...ids].map(id=>{const parts=components.get(id).cratePath.split("/");return parts.length>=4&&parts.slice(-3).join("/")==="🧩️component/📦️packages/🦀️rust"?parts.slice(0,-3).join("/"):parts.join("/");}))].sort().flatMap(owner=>[`{workspaceRoot}/${owner}/**/*`,...POLICY.generatedDirectories.map(directory=>`!{workspaceRoot}/${owner}/**/${directory}/**/*`)]);
+  const ownerSources=ids=>[...new Set([...ids].map(id=>{const parts=components.get(id).cratePath.split("/");return parts.length>=4&&parts.slice(-3).join("/")==="🧩️component/📦️packages/🦀️rust"?parts.slice(0,-3).join("/"):parts.join("/");}))].sort().flatMap(owner=>[`{workspaceRoot}/${owner}/**/*`,...opaqueSourceInputExclusionsV1(`{workspaceRoot}/${owner}`),...POLICY.generatedDirectories.map(directory=>`!{workspaceRoot}/${owner}/**/${directory}/**/*`)]);
   const transitiveOutputs={ dependentTasksOutputFiles: "**/*", transitive: true };
   const orchestrator = { semio: { orchestrator: true } };
   const projectAt = (root) => {
@@ -158,7 +159,7 @@ export async function playgroundPreparationTargets(configFiles, workspaceRoot, p
   };
   let manifestIndex=0;for (const path of configFiles) {
     if(++manifestIndex%16===0)await advance("build:playground-components");
-    if (!path.endsWith("Cargo.toml") || path.includes("\uFFFD") || path.includes(".🧬semio") || path.startsWith("compose/") || path.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))) continue;
+    if (isOpaqueSourcePathV1(path) || !path.endsWith("Cargo.toml") || path.includes("\uFFFD") || path.includes(".🧬semio") || path.startsWith("compose/") || path.startsWith("temp/compose/") || POLICY.generatedDirectories.some((directory) => path.split("/").includes(directory))) continue;
     const buildCatalog=catalogBuildContributionForManifestV1(catalogContributions,path);if(!buildCatalog)continue;
     const manifest = readToml(join(workspaceRoot, path)), metadata = manifest.package?.metadata;
     if (!metadata?.component?.package || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) continue;

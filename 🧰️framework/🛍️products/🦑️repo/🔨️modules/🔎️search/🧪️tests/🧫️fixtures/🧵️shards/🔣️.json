@@ -1,0 +1,76 @@
+{
+  "schema": "semio.search.shards/1",
+  "small": {
+    "documents": {
+      "z": "needle blue",
+      "a": "needle red",
+      "b": "needle green",
+      "n": "unrelated"
+    },
+    "query": "needle",
+    "size": 2,
+    "total": 3,
+    "hits": [
+      "a",
+      "b"
+    ],
+    "next": [
+      "z"
+    ]
+  },
+  "large": {
+    "documents": 250001,
+    "query": "needle",
+    "size": 1,
+    "total": 2,
+    "hits": [
+      "d-0000000"
+    ],
+    "last": "d-0250000"
+  },
+  "eligibility": {
+    "documents": {
+      "a": {
+        "text": "needle",
+        "kind": "hidden"
+      },
+      "b": {
+        "text": "needle",
+        "kind": "hidden"
+      },
+      "c": {
+        "text": "needle",
+        "kind": "visible"
+      },
+      "d": {
+        "text": "needle",
+        "kind": "visible"
+      }
+    },
+    "query": "needle",
+    "kind": "visible",
+    "size": 1,
+    "total": 2,
+    "hits": [
+      "c"
+    ]
+  },
+  "scopes": [
+    {
+      "scope": "matching",
+      "documents": {
+        "same": "needle"
+      },
+      "hits": [
+        "same"
+      ]
+    },
+    {
+      "scope": "empty",
+      "documents": {
+        "same": "plain"
+      },
+      "hits": []
+    }
+  ]
+}

@@ -6962,6 +6962,7 @@
       "groups": [
         "default",
         "sharedGlobals",
+        "testEnv",
         "schemaSources",
         "production",
         "testSourceExclusions",

@@ -97,6 +97,17 @@
    ],
    "computed": 0,
    "extra": []
+  },
+  {
+   "id": "lazy-parser-require",
+   "path": "parser.mjs",
+   "source": "import { createRequire } from \"node:module\";\nconst own = createRequire(import.meta.url);\nexport const parserTypescriptV1 = () => own(\"typescript\");",
+   "specifiers": [
+    "node:module",
+    "typescript"
+   ],
+   "computed": 0,
+   "extra": []
   }
  ]
 }

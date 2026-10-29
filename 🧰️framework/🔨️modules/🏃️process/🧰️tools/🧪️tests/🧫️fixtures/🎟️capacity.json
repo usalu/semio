@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "command": "gofmt",
+      "arguments": [
+        "file.go"
+      ],
+      "operation": "tool-format",
+      "kind": "script"
+    },
+    {
+      "command": "gofmt",
+      "arguments": [
+        "-w",
+        "file.go"
+      ],
+      "operation": "tool-format",
+      "kind": "script"
+    },
+    {
+      "command": "go",
+      "arguments": [
+        "fmt",
+        "./..."
+      ],
+      "operation": "tool-format",
+      "kind": "script"
+    },
+    {
+      "command": "go",
+      "arguments": [
+        "version"
+      ],
+      "operation": "tool-query",
+      "kind": "script"
+    },
+    {
+      "command": "go",
+      "arguments": [
+        "env",
+        "GOVERSION"
+      ],
+      "operation": "tool-query",
+      "kind": "script"
+    },
+    {
+      "command": "go",
+      "arguments": [
+        "test",
+        "./..."
+      ],
+      "operation": "command",
+      "kind": "build"
+    },
+    {
+      "command": "go",
+      "arguments": [
+        "build",
+        "."
+      ],
+      "operation": "command",
+      "kind": "build"
+    },
+    {
+      "command": "go",
+      "arguments": [
+        "run",
+        "file.go"
+      ],
+      "operation": "command",
+      "kind": "build"
+    },
+    {
+      "command": "go",
+      "arguments": [
+        "-C",
+        "dir",
+        "version"
+      ],
+      "operation": "command",
+      "kind": "build"
+    }
+  ]
+}

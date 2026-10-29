@@ -6,7 +6,8 @@
     "keys",
     "multiplier",
     "minimumDepth",
-    "maximumDepth"
+    "maximumDepth",
+    "pageItems"
   ],
   "additionalProperties": false,
   "properties": {
@@ -25,6 +26,9 @@
     "maximumDepth": {
       "type": "integer",
       "minimum": 5
+    },
+    "pageItems": {
+      "const": 16
     }
   },
   "$defs": {

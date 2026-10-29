@@ -15,7 +15,15 @@ import {runProbe} from "../../../../../🏃️process/🔍️probe/🟦️.ts";
 import {withBuildTestInvocationV1} from "@semio-tech/process/testing/invocation";
 import {lstatSync,readdirSync,readFileSync} from "node:fs";
 import{privateRepositoryWorkspaceV1}from"../../../../../🧪️testing/🧫️private-repository/🟦️.ts";
+import{nativePlatformImageBackendV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🟦️.ts";
+import{nativeStorageBackendsV1,nativeStorageBackingFilenameV1,nativeStorageMountedAtV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/📦️artifacts/🏗️native-build/💾️storage/🔌️backends/📋️contract/🟦️.ts";
 const repository=await privateRepositoryWorkspaceV1();
+
+test("cache backing and mount expectations agree with the neutral backend corpus",()=>{
+ const db=new Database(":memory:"),validate=new Ajv({strict:true}).compile(schema.$defs.imageBackendCase);
+ try{expect(fixture.imageBackends.map(row=>row.id).sort()).toEqual(nativeStorageBackendsV1.map(row=>row.id).sort());for(const row of fixture.imageBackends){expect(validate(row)).toBe(true);const declared=nativeStorageBackendsV1.find(backend=>backend.id===row.id)!,oracle=db.query("SELECT json_extract(?1,'$.backingFilename') backing,EXISTS(SELECT 1 FROM json_each(?1,'$.capabilities') WHERE value='mounted-volume') mounted").get(JSON.stringify(declared))as{backing:string;mounted:number};expect(nativeStorageBackingFilenameV1(row.id)).toBe(row.backing);expect(oracle.backing).toBe(row.backing);expect(Boolean(oracle.mounted)).toBe(row.mounted);}}
+ finally{db.close();}
+});
 
 /** 🎚️ Keeps authored logical observation limits independent of every physical capacity charge. */
 test("closed repository publication logical observation policy leaves the physical ledger unchanged",()=>{
@@ -51,12 +59,12 @@ test("the nx cache is a declared top-level partition with a funded namespace env
  }finally{database.close();}
 });
 
-/** 🏗️ Provisions the real nx image end to end and proves its separate mount and exact artifact charge. */
-test("the nx partition provisions its own mounted image and charges the artifact envelope",async()=>{
+/** 🏗️ Provisions the real nx partition and proves its declared backing, mount capability and artifact charge. */
+test("the nx partition provisions its own backing and charges the artifact envelope",async()=>{
  await withBuildTestInvocationV1(async original=>withRepositoryCacheStoreV1(repository.root,"nx",original,createIssuedResourceControlV1(original,"cache:store-entry",0),async store=>{
-  const declared=policy.partitions.nx,directory=resolve(process.cwd(),declared.directory);
-  expect(store.image.image).toBe(join(directory,"fixed.dmg"));expect(store.root).toBe(join(directory,"m"));
-  const backing=lstatSync(store.image.image);expect(backing.blocks*512).toBeGreaterThanOrEqual(backing.size);expect(backing.size).toBeLessThanOrEqual(declared.capacityBytes);expect(lstatSync(store.root).dev).not.toBe(lstatSync(directory).dev);
+  const declared=policy.partitions.nx,directory=resolve(repository.root,declared.directory),backend=nativePlatformImageBackendV1(store.image),expected=fixture.imageBackends.find(row=>row.id===backend)!;
+  expect(expected).toBeDefined();expect(store.image.image).toBe(join(directory,expected.backing));expect(store.root).toBe(join(directory,"m"));
+  const backing=lstatSync(store.image.image);expect(backing.blocks*512).toBeGreaterThanOrEqual(backing.size);expect(backing.size).toBeLessThanOrEqual(declared.capacityBytes);expect(nativeStorageMountedAtV1(directory)).toBe(expected.mounted);expect(lstatSync(store.root).dev===lstatSync(directory).dev).toBe(!expected.mounted);
   const receipt=JSON.parse(readFileSync(join(store.root,"nx.json"),"utf8"));expect(receipt.owner).toBe("repository:nx-store");expect(receipt.bytes).toBe(declared.maximumArtifactBytes);expect(store.storage.allocation.bytes).toBe(declared.maximumArtifactBytes);
   await store.recheck();
  }));

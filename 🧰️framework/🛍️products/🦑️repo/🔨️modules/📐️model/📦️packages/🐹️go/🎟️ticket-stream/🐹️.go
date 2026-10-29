@@ -39,7 +39,15 @@ func FormatTicketRelPath(year, month, day int, slug string) string {
 }
 
 // 🟣️StreamOptions holds the data fields for a stream options record.
+// 👣️ StreamProgress reports bounded repository discovery work.
+type StreamProgress struct {
+	Current int
+	Phase   string
+}
+
 type StreamOptions struct {
+	Layout         *ArtifactLayout      `json:"-"`
+	Progress       func(StreamProgress) `json:"-"`
 	ShowIgnored    bool
 	ShowGenerated  bool
 	ExcludeKinds   []string

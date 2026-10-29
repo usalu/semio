@@ -1,0 +1,176 @@
+ARCHITECTURAL STAFFAGE ARCHIVE — COMPLETE IMPLEMENTATION BRIEF
+
+Build the working product in the current repository. Inspect the existing application, project instructions, available design references, dependencies, and unfinished work first. Preserve the established stack and useful existing work. Make reasonable implementation decisions and proceed through implementation, integration, content authoring, and verification. A plan, visual mockup, empty framework, or a catalog of placeholder cards is not the deliverable.
+
+PRODUCT
+
+Create a rich architectural staffage archive covering humans, animals, trees and other vegetation, furniture and objects, vehicles and machines, and building components. Assets must be useful in architectural drawings, animated clips, and reusable UI components. Build a polished website for browsing, inspecting, comparing, animating, composing, and exporting this material.
+
+Treat this as one coherent system: the website, graphics, rig, pose, animation, physical fields, diagrams, and exports must all use the same canonical asset data and evaluation pipeline.
+
+AGENT ORCHESTRATION
+
+The main coordinator is Opus 5.5 at medium effort. Use the configured worker types:
+- sonnet-worker: Sonnet 5.5 at medium effort for medium- and high-complexity implementation.
+- haiku-reader: Haiku 5.5 at medium effort for read-only exploration, targeted research, data checks, and audits.
+- haiku-helper: Haiku 5.5 at medium effort for bounded, low-complexity implementation or content tasks.
+
+Launch multiple instances of both Sonnet and Haiku workers in parallel when their tasks are independent. Use actual subagent calls, preserve their configured model assignments, and do not merely simulate a team in prose. Do not use forked workers that inherit the coordinator's model when a configured Sonnet or Haiku worker is required. Use ordinary subagents suitable for this headless run; do not rely on the interactive Agent Teams feature.
+
+Keep Opus responsible for architecture, the shared data contracts, planning, delegation, integration, difficult decisions, and final acceptance. Start with parallel repository and reference exploration, define the common contracts, then distribute concrete work across:
+1. Canonical geometry, scale handling, rigging, poses, and animation.
+2. Thermal and structural models, diagrams, and physical verification.
+3. Handcrafted catalog content and asset-specific physical parameters.
+4. Website hierarchy, visual design, browsing, viewer, and playground.
+5. Drawing, CAD, video, and component exports.
+6. Independent content, usability, accessibility, and integration audits.
+
+Give every worker a bounded task, relevant context, expected files, dependencies, acceptance checks, and an integration handoff. Establish ownership for shared interfaces and coordinate overlapping edits. Reuse workers where useful. Keep a durable task board and implementation checkpoints so work can resume after context or execution limits. Respect existing permissions and configured spending/rate limits. Do not change billing, credentials, subscription settings, or account limits.
+
+1. CATALOG AND AUTHORING QUALITY
+
+Before bulk implementation, create a concrete asset manifest with stable IDs, categories, real dimensions, supported poses, clips, analytic definitions, viewpoints, export capabilities, and completion status.
+
+Editable initial scope assumption: deliver at least 48 genuinely distinct, carefully authored assets:
+- 12 humans with varied proportions, clothing, activities, mobility, and carried objects.
+- 8 trees or other vegetation with distinct growth forms and branching.
+- 6 animals.
+- 8 furniture items or other objects.
+- 6 vehicles or machines.
+- 8 building components or structural assemblies.
+
+If the repository already contains a larger agreed manifest, preserve that scope. Count meaningful differences in geometry, rig, function, and physical data; recolors, renamed duplicates, and trivial parameter changes do not establish archive breadth.
+
+Use a typed, validated, versioned schema for identity, taxonomy, provenance, dimensions, geometry, materials, rig, contact/support anchors, poses, animations, thermal parameters, load cases, presentation, export support, and validation status. Author recognizable silhouettes and useful detail rather than generic geometric placeholders. Reuse engineering primitives where appropriate while retaining individually authored assets and parameters.
+
+Every asset needs at least three meaningful poses/configurations/load states and two meaningful animation or state-transition clips. Rigid components must use physically appropriate transforms, moving subcomponents, loading transitions, or explicitly modeled deformation; do not invent anatomical joints for a static object. Validate all manifest entries. Do not count an asset as complete while any required view, pose, clip, model, or export is missing.
+
+2. REAL DIMENSIONS AND DRAWING SCALES
+
+Keep canonical geometry and physical parameters in declared real-world units, using SI internally. Implement 1:500, 1:200, 1:100, and 1:50 presets plus configurable additional scales.
+
+Changing drawing scale affects paper-space size, line weights, level of detail, and annotations. It must not change the asset's real dimensions, mass, temperature, thermal output, or structural properties. Separate viewport zoom, real dimensions, and print scale.
+
+Acceptance example: a 1.80 m person must occupy 3.6 mm at 1:500, 9 mm at 1:200, 18 mm at 1:100, and 36 mm at 1:50 in a dimensionally correct print export. Verify at 100% print size. CAD exports use explicitly declared model-space units.
+
+3. SEVEN SYNCHRONIZED VIEWS
+
+Implement four graphic styles and three analytic views:
+1. Dark line.
+2. Dark solid.
+3. Light line.
+4. Light solid.
+5. Thermodynamic.
+6. Structural forces/loads.
+7. Structural moments.
+
+All seven views must share the same geometry, dimensions, rig, pose, and animation time. Dark/light describe actual output styling and must work against suitable backgrounds and transparent exports. Provide deliberate line hierarchy, small-scale simplification, and legibility at each scale.
+
+Analytic views use clear legends, explicit units and sign conventions, adjustable display ranges, and inspection of actual values. Use warm colors for compression and cool colors for tension, consistently with the thermal palette, while clearly identifying the different physical quantities. Include an accessible alternative to color-only interpretation.
+
+4. RIGS, POSES, AND ANIMATION
+
+Every asset has a reusable bone/transform hierarchy appropriate to its category:
+- Humans and animals: anatomical articulation and contact anchors.
+- Vegetation: trunk, branch, and foliage hierarchies.
+- Machines and objects: relevant rigid assemblies, joints, moving parts, and attachments.
+- Building components: rigid roots, structural nodes, connection/support anchors, and valid moving or deforming parts.
+
+Implement deterministic pose evaluation, named poses, keyframes, interpolation, transitions, looping, playback rate, frame stepping, and arbitrary-time scrubbing. Preserve plausible proportions, joint limits, and contact behavior. Derive graphics and analytical overlays from the evaluated state; do not synchronize independently animated decorations by eye.
+
+Each clip records duration, frame/time conventions, meaningful action phases, contact changes, and relevant thermal/load events. Prevent uncontrolled random jitter, disconnected extremities, and visibly sliding planted feet. Distinguish authoring geometry from generated display meshes/paths.
+
+5. THERMODYNAMIC MODELING
+
+The thermodynamic view is a solid representation with asset-specific surface fields and explicit environmental exchange.
+
+For each asset, define thermal regions, material/emissivity, surface temperatures or the parameters from which they are calculated, exposed versus covered areas, ambient conditions, activity/operating state, and source strengths. Clearly distinguish surface temperature from emitted or net radiant heat flux; give each display its own units, legend, and model assumptions.
+
+For humans and animals, account for clothing, exposed skin, activity, and relevant body regions under stated conditions. Do not assume every exposed part is always hotter or every clothed part is always cooler. For machinery, model relevant operating temperatures and exhaust sources. For vegetation, distinguish solar/ambient surface effects from transpiration.
+
+Separate:
+- Radiation.
+- Convection and sensible heat transfer.
+- Evaporation/transpiration and latent heat or water-vapor transfer.
+
+Model breath and exhaust with source location, direction, temperature, flow assumptions, and temporal emission phases. Model tree transpiration as an evaporative/latent-heat process rather than a generic hot plume. Provide an explicit interpretation of curves, streamlines, and particles: whether they represent airflow, temperature, or vapor transport.
+
+For every pose and animation, explicitly author thermal-region bindings, emitter attachments, time-dependent parameters, and event phases. Evaluate the fields throughout the timeline. Source positions and fields must follow the rig and respond to activity, wind, ambient conditions, and other modeled inputs. Reusing a shared solver is appropriate; attaching an identical decorative gradient or plume to every asset and frame is not.
+
+Use physically defensible equations and reference cases. Document the distinction between measured parameters, literature-based assumptions, authored estimates, and illustrative approximations. Do not claim measured accuracy, CFD validation, or physiological accuracy that has not been established.
+
+6. STRUCTURAL FORCES AND MOMENTS
+
+Use the term "moment" for leverage multiplied by force. The requested structural quantity is torque/bending moment, not momentum.
+
+Define segment masses, centers of mass, applied loads, contacts, supports, joint constraints, section properties, and material properties where needed. Derive reactions and internal loads from these inputs and the evaluated pose.
+
+Keep these quantities distinct:
+- Axial force and compression/tension.
+- Contact force and contact pressure.
+- Stress.
+- Shear force.
+- Bending moment or joint torque.
+
+For a force F, calculate moment using the perpendicular lever arm, or the vector cross product when appropriate. Display N, Pa, and N·m consistently. Do not hardcode that feet always have the largest force or shoulders always have the greatest moment; calculate the actual pose, support sharing, carried load, and lever arms.
+
+Provide synchronized free-body diagrams, applied-force and reaction arrows, centers of mass, support/contact markers, and applicable axial-force, shear-force, and bending-moment diagrams. A cantilever reference case must show the correct reaction and moment behavior.
+
+For animations, recalculate as poses, loads, and contacts change. Where inertia is included, state the dynamic model. Where a quasi-static approximation is used, label it. Simplified human joint calculations must not be presented as clinically validated internal bone or muscle forces.
+
+Validate force and moment balance in static reference cases and appropriate consistency conditions for dynamic cases. Ensure stress colors, internal-force diagrams, and numerical values agree with the same model.
+
+7. WEBSITE EXPERIENCE
+
+Build a complete, polished, multi-level website:
+- Editorial overview and category pages.
+- Collections and nested cards.
+- Live asset previews that remain visible in the background or surrounding context while navigating deeper.
+- Search, filters, sorting, and shareable URLs for meaningful states.
+- Detail pages with dimensions, metadata, poses, clips, model assumptions, and export controls.
+- A synchronized viewer with scale, view mode, pose, time, background, zoom/pan, and playback controls.
+- Side-by-side comparison of assets, styles, or analytic states.
+- A playground for placing several assets at consistent real-world scale.
+- Saved collections or favorites with appropriate persistence.
+- Usable empty, loading, error, unsupported, and unavailable-dependency states.
+
+Use the referenced architecture-course website and quiz-pet interactions if their source or design references are available in this repository. If they are unavailable, preserve the intended nested-card navigation, contextual background previews, expressive motion, and playfulness in a coherent original design. Do not claim fidelity to a reference you could not inspect.
+
+Make the visual treatment architectural and editorial: disciplined spacing and typography, excellent silhouettes, thoughtful scale presentation, generous previews, and restrained animation. Build responsive layouts, keyboard navigation, visible focus, reduced-motion behavior, and accessible labels. Keep implementation internals out of ordinary browsing flows, while making physical assumptions accessible in an inspector.
+
+8. REAL EXPORTS AND REUSABLE OUTPUTS
+
+Generate all outputs from the same asset evaluator and selected time/state:
+- SVG with correct dimensions, useful groups/layers, strokes, fills, and transparency.
+- PDF with actual vector output where supported, print scale, and optional scale bars/legends.
+- DXF with correct model-space units, layers, and usable geometry.
+- Genuine DWG through a supported writer or conversion pipeline when the environment provides it.
+- Animation clips in supported video formats and frame sequences where useful, with deterministic timing and documented transparency support.
+- Reusable UI components or a small framework adapter exposing asset ID, scale, style, pose, time/playback, and analytic options.
+
+Do not label screenshots as vector exports or rename SVG/DXF files to DWG. Independently reopen representative exported files and check dimensions, appearance, animation timing, and metadata.
+
+DWG is a required capability to investigate and implement honestly. If a genuine writer/converter or license is unavailable, complete the export architecture and DXF path, identify the exact missing dependency, and report DWG as incomplete. Do not purchase licenses or enable paid external services. Likewise, expose actual codec support instead of presenting unavailable video formats as successful downloads.
+
+9. COMPLETION AND VERIFICATION
+
+Maintain a live acceptance matrix across assets, four required scales, seven views, poses, clips, analytical models, and export formats.
+
+Complete and verify:
+- A populated manifest meeting the content target.
+- Shared, validated data and rendering contracts.
+- Correct printed dimensions and consistent real-world units.
+- Deterministic animation and analytic evaluation at arbitrary times.
+- Rig-attached, asset-specific thermal and structural fields.
+- Thermal and structural reference cases with documented tolerances.
+- Working search, filters, navigation, comparison, playback, and playground controls.
+- Genuine exports that reopen successfully.
+- Responsive and accessible interactions.
+- No placeholder data, inert controls, fabricated measurements, or misleading completion claims.
+
+Use meaningful numerical tests, export round trips, integration tests, and browser inspection. Inspect representative assets from every category at all required scales and view modes, and validate the complete manifest programmatically. Fix defects found in those checks. Do not spend effort on tests that merely restate implementation details.
+
+Start implementation after the initial inspection and shared-contract decisions; do not stop after proposing a plan. Continue through integration and verification. Keep concise progress updates with completed work, current parallel tasks, concrete blockers, and the next acceptance gate.
+
+At handoff, provide the runnable project and preview/start instructions, the completed asset and feature matrix, the physical model and provenance notes, export verification results, and an exact list of any unmet requirements. Preserve checkpoints and outstanding tasks if an external dependency or configured execution budget prevents completion.
+

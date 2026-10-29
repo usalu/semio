@@ -1,0 +1,1 @@
+{"shots": [{"name": "re-overview", "hash": "#/", "wait": 25000}, {"name": "re-animals", "hash": "#/animals", "wait": 20000}, {"name": "re-vehicles", "hash": "#/vehicles", "wait": 20000}, {"name": "re-crane", "hash": "#/vehicles/tower-crane", "wait": 15000, "height": 1000}, {"name": "re-oak-thermal", "hash": "#/vegetation/english-oak?view=thermal", "wait": 15000, "height": 1000}]}

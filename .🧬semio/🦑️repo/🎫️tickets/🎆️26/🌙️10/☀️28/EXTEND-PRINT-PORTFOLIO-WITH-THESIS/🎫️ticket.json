@@ -1,0 +1,31 @@
+{
+  "title": "Extend Print Portfolio With Thesis",
+  "emoji": "🎓️",
+  "status": "closed",
+  "description": "Extend the print portfolio with a full featured thesis document including PhD and other academic degrees; implement and verify using parallel agents.",
+  "summary": "Implemented full thesis and PhD portfolio support for bachelor, master, doctoral and custom degrees, explicit English/German, light/dark themes, academic metadata and apparatus, schema/TypeScript API, worked manuscript, catalog and build/test integration. Verified 27 composed actual feature scenarios (21 positive rendering probes and six real compiler refusals), 84 declaration/contrast/paint tests with 282 assertions, 14 focused lifecycle/refusal tests with 208 assertions, and strict typing across 2,190 Source files with zero diagnostics. Corrected ordinary canonical build 54764 passed all seven tasks; current-root inspection 16985 passed all four thesis/PhD PDFs including complete hierarchical numeral paint, references and page numbering. All eight fresh cover/body visual reviews passed. Managed private cleanup smoke passed and absence was independently verified; exact ticket-generated directory removed after durable audit/hash preservation, canonical products and authored inputs retained. Shared reader/retirement contributions are narrowly attributed in files.md. Actual runtime validation was Linux; portable native interfaces remain in use.",
+  "goal": "🎯runningprint",
+  "sessions": [
+    "7e04c1e9-bb33-4d2e-b589-5096f2b585d8"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-28 17:28:42",
+      "author": "",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Extend the print portfolio with a full featured thesis document including PhD and other academic degrees; implement and verify using parallel agents."
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-29 01:18:19",
+      "author": "ueli",
+      "system": "linux",
+      "client": "codex",
+      "checkpoint": "82dd1da20064a425cd3683d591cae50f86b68da5",
+      "summary": "Implemented full thesis and PhD portfolio support for bachelor, master, doctoral and custom degrees, explicit English/German, light/dark themes, academic metadata and apparatus, schema/TypeScript API, worked manuscript, catalog and build/test integration. Verified 27 composed actual feature scenarios (21 positive rendering probes and six real compiler refusals), 84 declaration/contrast/paint tests with 282 assertions, 14 focused lifecycle/refusal tests with 208 assertions, and strict typing across 2,190 Source files with zero diagnostics. Corrected ordinary canonical build 54764 passed all seven tasks; current-root inspection 16985 passed all four thesis/PhD PDFs including complete hierarchical numeral paint, references and page numbering. All eight fresh cover/body visual reviews passed. Managed private cleanup smoke passed and absence was independently verified; exact ticket-generated directory removed after durable audit/hash preservation, canonical products and authored inputs retained. Shared reader/retirement contributions are narrowly attributed in files.md. Actual runtime validation was Linux; portable native interfaces remain in use."
+    }
+  ]
+}

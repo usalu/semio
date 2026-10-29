@@ -93,6 +93,4 @@ impl HeapSortCursor {
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+

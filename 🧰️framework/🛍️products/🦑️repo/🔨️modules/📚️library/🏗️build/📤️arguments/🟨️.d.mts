@@ -19,3 +19,5 @@ export function consumeOwnerArgumentsV1(environment:Readonly<Record<string,strin
 
 /** 🔏️ Binds the evaluated first-party argument implementation to current Source. */
 export function ownerArgumentsSourceIdentityV1():string;
+/** 🧾️ Physical Source revisions of the evaluated private argument owner. */
+export function ownerArgumentsSourceRevisionsV1():readonly Readonly<{path:string;sha256:string}>[];

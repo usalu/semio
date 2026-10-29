@@ -23,6 +23,7 @@ semio-framework-value-derive = { path = "../../../../../../../../🧰️framewor
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-semio-s-artifact-stdio-contract-testing = { path = "../../../🧰️testing/📦️packages/🦀️rust" }
+semio-framework-io-control-testing = { path = "../../../../../../../../🧰️framework/🔨️modules/🚪️io/⏱️control/🧪️testing/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust", features = ["testkit"] }
 serde_json = { workspace = true }
 semio-s-artifact-stdio-step-test-oracle = { path = "../../../../../🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust" }

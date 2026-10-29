@@ -1,4 +1,10 @@
 import "../../🔍️discovery/📤️schema-registry/🧪️tests/🟦️.ts";
+import "../../🧼️workspace-cleanup/🎮️command/🧪️tests/🟦️.ts";
+import "../../⚡️caching/🧹️pruning/🌐️workspace/🧪️tests/🟦️.ts";
+import "../../⚡️caching/🧹️pruning/🌐️workspace/🧪️tests/🔗️imports/🟦️.ts";
+import "../../⚡️caching/🔍️discovery/📂️source/🧪️tests/🟦️.ts";
+import "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🧹️retirement/🧪️tests/🟦️.ts";
+import "../../🏗️build/🕸️graph/📥️inference/🦀️native-manifests/🧪️tests/📋️build-script/🟦️.ts";
 import "../🧬️mutation-authority/🟦️.ts";
 import "../🧾️canonical-json/🟦️.ts";
 import "../../🧹️normalization/🧪️tests/📦️package-boundary-classification/🟦️";

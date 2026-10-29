@@ -55,6 +55,5 @@ semio-framework-trace = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 
-semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
 blake3 = { version = "1.8", features = ["pure"] }

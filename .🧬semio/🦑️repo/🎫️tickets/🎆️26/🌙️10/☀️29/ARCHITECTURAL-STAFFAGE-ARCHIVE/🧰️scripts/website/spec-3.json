@@ -1,0 +1,3 @@
+{ "shots": [
+ { "name": "detail-20s", "hash": "#/humans/walking-commuter", "wait": 25000 }
+] }

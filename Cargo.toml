@@ -840,6 +840,7 @@ semio-framework-ui-contract-validation = { path = "🧰️framework/🔨️modul
 semio-framework-ui-contract-text-edit = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🪢️text-edit/📦️packages/🦀️rust" }
 semio-framework-ui-contract-typegen = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🧬️schema/🟦️projection/📦️packages/🦀️rust" }
 
+semio-framework-diagnostic = { path = "🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { path = "🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-schema-composition = { path = "🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }

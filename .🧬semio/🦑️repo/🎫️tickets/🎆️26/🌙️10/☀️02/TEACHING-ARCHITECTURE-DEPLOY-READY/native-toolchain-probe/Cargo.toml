@@ -1,0 +1,10 @@
+[package]
+name = "native-toolchain-probe"
+version = "0.0.0"
+edition = "2024"
+
+[[bin]]
+name = "native-toolchain-probe"
+path = "../native-toolchain-probe.rs"
+
+[workspace]

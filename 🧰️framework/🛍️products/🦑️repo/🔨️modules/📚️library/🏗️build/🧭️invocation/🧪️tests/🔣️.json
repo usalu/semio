@@ -643,5 +643,66 @@
       "@semio-tech/mit-bestand-demonstrator:build"
     ],
     "mode": "release"
-  }
+  },
+  "cargoModes": [
+    {
+      "id": "release-equals",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--parallelism=1",
+        "--",
+        "build",
+        "-p",
+        "teaching-proctor"
+      ],
+      "authored": null,
+      "inherited": null,
+      "expected": "release"
+    },
+    {
+      "id": "prototype-split",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration",
+        "prototype",
+        "--",
+        "check",
+        "-p",
+        "teaching-proctor"
+      ],
+      "authored": null,
+      "inherited": null,
+      "expected": "prototype"
+    },
+    {
+      "id": "original-conflict",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--",
+        "build"
+      ],
+      "authored": null,
+      "inherited": "prototype",
+      "expected": null
+    },
+    {
+      "id": "cargo-tail-opaque",
+      "args": [
+        "cargo",
+        "--store=shared",
+        "--configuration=release",
+        "--",
+        "build",
+        "--configuration=prototype"
+      ],
+      "authored": null,
+      "inherited": "release",
+      "expected": "release"
+    }
+  ]
 }

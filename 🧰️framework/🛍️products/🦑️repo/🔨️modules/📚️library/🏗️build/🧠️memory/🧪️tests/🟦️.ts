@@ -143,7 +143,7 @@ test("the default sample reads constant-time counters, never a heap walk, and th
  const started=performance.now();let last=0;for(let round=0;round<200;round++)last=ports.sample();
  const perCall=(performance.now()-started)/200,counters=process.memoryUsage();
  expect(perCall).toBeLessThan(5);
- expect(Math.abs(last-(counters.heapUsed+counters.external))/last).toBeLessThan(0.25);
+ expect(Math.abs(last-memory.graphMemoryPressureBytesV1(counters))/last).toBeLessThan(0.25);expect(last).toBeGreaterThanOrEqual(counters.rss*0.75);
  expect(retained.length).toBe(400000);
  const order:string[]=[];
  expect(memory.measureMemoryBaselineV1({collect:()=>{order.push("collect");},sample:()=>{order.push("sample");return 7;}})).toBe(7);

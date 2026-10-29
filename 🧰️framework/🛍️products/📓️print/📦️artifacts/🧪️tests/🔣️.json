@@ -79,6 +79,66 @@
       },
       "relative": "print/release/measurements/gallery-evidence",
       "store": "products"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "tectonic",
+        "mode": "prototype",
+        "target": "x86_64-apple-darwin"
+      },
+      "relative": "print/tectonic/x86_64-apple-darwin",
+      "store": "tools"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "tectonic",
+        "mode": "prototype",
+        "target": "aarch64-unknown-linux-musl"
+      },
+      "relative": "print/tectonic/aarch64-unknown-linux-musl",
+      "store": "tools"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "tectonic",
+        "mode": "prototype",
+        "target": "x86_64-unknown-linux-musl"
+      },
+      "relative": "print/tectonic/x86_64-unknown-linux-musl",
+      "store": "tools"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "tectonic",
+        "mode": "prototype",
+        "target": "arm-unknown-linux-musleabihf"
+      },
+      "relative": "print/tectonic/arm-unknown-linux-musleabihf",
+      "store": "tools"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "tectonic",
+        "mode": "prototype",
+        "target": "i686-unknown-linux-gnu"
+      },
+      "relative": "print/tectonic/i686-unknown-linux-gnu",
+      "store": "tools"
+    },
+    {
+      "request": {
+        "version": 1,
+        "kind": "tectonic",
+        "mode": "prototype",
+        "target": "x86_64-pc-windows-msvc"
+      },
+      "relative": "print/tectonic/x86_64-pc-windows-msvc",
+      "store": "tools"
     }
   ],
   "invalid": [
@@ -111,6 +171,42 @@
       "kind": "document",
       "mode": "release",
       "id": "overview"
+    },
+    {
+      "version": 1,
+      "kind": "tectonic",
+      "mode": "prototype",
+      "target": "_x86_64-unknown-linux-musl"
+    },
+    {
+      "version": 1,
+      "kind": "tectonic",
+      "mode": "prototype",
+      "target": "x86__64-unknown-linux-musl"
+    },
+    {
+      "version": 1,
+      "kind": "tectonic",
+      "mode": "prototype",
+      "target": "x86_64_-unknown-linux-musl"
+    },
+    {
+      "version": 1,
+      "kind": "tectonic",
+      "mode": "prototype",
+      "target": "x86_64--unknown-linux-musl"
+    },
+    {
+      "version": 1,
+      "kind": "tectonic",
+      "mode": "prototype",
+      "target": "x86_64/unknown-linux-musl"
+    },
+    {
+      "version": 1,
+      "kind": "tectonic",
+      "mode": "prototype",
+      "target": "X86_64-unknown-linux-musl"
     }
   ]
 }

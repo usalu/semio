@@ -1,0 +1,26 @@
+{
+  "widthMm": 80,
+  "heightMm": 50,
+  "background": "#ffffff",
+  "layers": [
+    { "id": "ground", "title": { "en": "Ground", "de": "Gelände" }, "items": [
+      { "kind": "path", "id": "ground-line", "commands": [{ "op": "M", "x": 5, "y": 33 }, { "op": "L", "x": 75, "y": 33 }], "stroke": { "color": "#000000", "widthMm": 0.7 } }
+    ] },
+    { "id": "fill", "title": { "en": "Fill", "de": "Füllung" }, "items": [
+      { "kind": "path", "id": "figure", "commands": [{ "op": "M", "x": 20, "y": 15 }, { "op": "L", "x": 26, "y": 15 }, { "op": "L", "x": 26, "y": 33 }, { "op": "L", "x": 20, "y": 33 }, { "op": "Z" }], "fill": { "color": "#ff0000" } },
+      { "kind": "path", "id": "compression", "commands": [{ "op": "M", "x": 40, "y": 15 }, { "op": "L", "x": 50, "y": 15 }, { "op": "L", "x": 50, "y": 33 }, { "op": "L", "x": 40, "y": 33 }, { "op": "Z" }], "fill": { "color": "#d7301f", "pattern": "compression" }, "stroke": { "color": "#000000", "widthMm": 0.25, "join": "round" } },
+      { "kind": "path", "id": "translucent", "commands": [{ "op": "M", "x": 55, "y": 15 }, { "op": "L", "x": 65, "y": 15 }, { "op": "L", "x": 65, "y": 33 }, { "op": "L", "x": 55, "y": 33 }, { "op": "Z" }], "fill": { "color": "#0000ff", "opacity": 0.5 }, "stroke": { "color": "#0000ff", "widthMm": 0.35, "opacity": 0.5 } },
+      { "kind": "path", "id": "tension", "commands": [{ "op": "M", "x": 30, "y": 15 }, { "op": "L", "x": 36, "y": 15 }, { "op": "L", "x": 36, "y": 33 }, { "op": "L", "x": 30, "y": 33 }, { "op": "Z" }], "fill": { "color": "#2c7bb6", "pattern": "tension" } }
+    ] },
+    { "id": "detail", "title": { "en": "Detail", "de": "Detail" }, "items": [
+      { "kind": "path", "id": "dashed-curve", "commands": [{ "op": "M", "x": 5, "y": 10 }, { "op": "C", "x1": 20, "y1": 2, "x2": 40, "y2": 18, "x": 75, "y": 10 }], "stroke": { "color": "#333333", "widthMm": 0.35, "dashMm": [2, 1], "cap": "round", "join": "round" } }
+    ] },
+    { "id": "annotations", "title": { "en": "Annotations", "de": "Beschriftungen" }, "items": [
+      { "kind": "text", "id": "label", "x": 5, "y": 40, "text": "1,80 m · 2,5 m² 20 °C −5 ≤ ü", "sizeMm": 2.5, "color": "#000000", "anchor": "start" },
+      { "kind": "text", "id": "centre", "x": 40, "y": 45, "text": "Mitte", "sizeMm": 2.5, "color": "#000000", "anchor": "middle", "weight": "bold" },
+      { "kind": "text", "id": "end", "x": 75, "y": 48, "text": "Ende", "sizeMm": 1.8, "color": "#000000", "anchor": "end" }
+    ] }
+  ],
+  "legends": [],
+  "metadata": { "asset": "walking-commuter", "title": { "en": "Walking commuter", "de": "Gehender Pendler" }, "query": { "kind": "pose", "pose": "walking" }, "timeS": 1.25, "view": "dark-line", "viewpoint": "side", "scale": { "denominator": 100 }, "paperUnits": "mm", "modelUnits": "m", "mmPerMetre": 10, "origin": { "xMm": 0, "yMm": 33 } }
+}

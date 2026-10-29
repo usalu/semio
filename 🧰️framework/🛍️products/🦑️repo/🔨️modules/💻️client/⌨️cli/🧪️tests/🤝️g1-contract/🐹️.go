@@ -12,19 +12,18 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/usalu/semio/repo/client/internal/command"
+	"github.com/usalu/semio/repo/client/internal/eventstore"
+	"github.com/usalu/semio/repo/client/internal/glob"
+	"github.com/usalu/semio/repo/client/internal/templatefunc"
+	"github.com/usalu/semio/repo/search"
+	"github.com/usalu/semio/repo/yaml"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 	"text/template"
-	"github.com/usalu/semio/repo/client/internal/command"
-	"github.com/usalu/semio/repo/client/internal/eventstore"
-	"github.com/usalu/semio/repo/client/internal/glob"
-	"github.com/usalu/semio/repo/search"
-	"github.com/usalu/semio/repo/client/internal/templatefunc"
-	"github.com/usalu/semio/repo/yaml"
-
 )
 
 // #region 📜️Fixture
@@ -226,7 +225,7 @@ func TestG1ReindexCancellationPreservesLastValidIndex(t *testing.T) {
 			invalidateG1SearchFingerprint(t, GetRootDir(), phase)
 			ctx, cancel := context.WithCancel(context.Background())
 			tree := g1SearchTree("replacement", "second")
-			_, err := ensureCacheIndexed(ctx, tree, func(value search.Progress) {
+			_, err := ensureCacheIndexed(ctx, tree, "", func(value search.Progress) {
 				if value.Step == phase {
 					cancel()
 				}
@@ -234,7 +233,7 @@ func TestG1ReindexCancellationPreservesLastValidIndex(t *testing.T) {
 			if !errors.Is(err, context.Canceled) {
 				t.Fatalf("%s cancellation = %v", phase, err)
 			}
-			assertFileBytes(t, filepath.Join(indexPath, "events.jsonl"), beforeEvents)
+			assertSearchIndexBytes(t, indexPath, beforeEvents)
 			assertFileBytes(t, filepath.Join(indexPath, "meta.json"), beforeMeta)
 			if _, err := os.Stat(indexPath + ".next"); !os.IsNotExist(err) {
 				t.Fatalf("%s cancellation left staged index: %v", phase, err)
@@ -251,10 +250,10 @@ func TestG1ReindexMaximumPlusOnePreservesLastValidIndex(t *testing.T) {
 	_, indexPath, beforeEvents, beforeMeta := prepareG1SearchCache(t)
 	invalidateG1SearchFingerprint(t, GetRootDir(), "maximum")
 	oversized := g1SearchTree(strings.Repeat("x", fixture.Search.MaxDocumentBytes+1))
-	if _, err := ensureCacheIndexed(context.Background(), oversized, nil); !errors.Is(err, search.ErrTooLarge) {
+	if _, err := ensureCacheIndexed(context.Background(), oversized, "", nil); !errors.Is(err, search.ErrTooLarge) {
 		t.Fatalf("maximum + 1 reindex = %v", err)
 	}
-	assertFileBytes(t, filepath.Join(indexPath, "events.jsonl"), beforeEvents)
+	assertSearchIndexBytes(t, indexPath, beforeEvents)
 	assertFileBytes(t, filepath.Join(indexPath, "meta.json"), beforeMeta)
 	if _, err := os.Stat(indexPath + ".next"); !os.IsNotExist(err) {
 		t.Fatalf("maximum + 1 left staged index: %v", err)
@@ -263,7 +262,7 @@ func TestG1ReindexMaximumPlusOnePreservesLastValidIndex(t *testing.T) {
 
 func TestG1CorruptCurrentIndexErrorPropagates(t *testing.T) {
 	tree, indexPath, _, _ := prepareG1SearchCache(t)
-	eventPath := filepath.Join(indexPath, "events.jsonl")
+	eventPath := firstSearchShardPath(t, indexPath)
 	file, err := os.OpenFile(eventPath, os.O_APPEND|os.O_WRONLY, 0o644)
 	if err != nil {
 		t.Fatal(err)
@@ -275,7 +274,7 @@ func TestG1CorruptCurrentIndexErrorPropagates(t *testing.T) {
 	if err := file.Close(); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := ensureCacheIndexed(context.Background(), tree, nil); !errors.Is(err, search.ErrCorrupt) {
+	if _, err := ensureCacheIndexed(context.Background(), tree, "", nil); !errors.Is(err, search.ErrCorrupt) {
 		t.Fatalf("corrupt current index = %v", err)
 	}
 }
@@ -284,11 +283,13 @@ func TestG1ReindexLockWaitCancellation(t *testing.T) {
 	tree, indexPath, beforeEvents, beforeMeta := prepareG1SearchCache(t)
 	invalidateG1SearchFingerprint(t, GetRootDir(), "lock")
 	lockPath := filepath.Join(filepath.Dir(indexPath), ".lock")
-	if err := os.WriteFile(lockPath, []byte("held"), 0o644); err != nil {
+	held, err := search.AcquireGenerationLease(context.Background(), lockPath, false, nil)
+	if err != nil {
 		t.Fatal(err)
 	}
+	defer held.Close()
 	ctx, cancel := context.WithCancel(context.Background())
-	_, err := ensureCacheIndexed(ctx, tree, func(value search.Progress) {
+	_, err = ensureCacheIndexed(ctx, tree, "", func(value search.Progress) {
 		if value.Step == "waiting-lock" {
 			cancel()
 		}
@@ -296,7 +297,7 @@ func TestG1ReindexLockWaitCancellation(t *testing.T) {
 	if !errors.Is(err, context.Canceled) {
 		t.Fatalf("lock wait cancellation = %v", err)
 	}
-	assertFileBytes(t, filepath.Join(indexPath, "events.jsonl"), beforeEvents)
+	assertSearchIndexBytes(t, indexPath, beforeEvents)
 	assertFileBytes(t, filepath.Join(indexPath, "meta.json"), beforeMeta)
 }
 
@@ -314,7 +315,7 @@ func prepareG1SearchCache(t *testing.T) (*TreeNode, string, []byte, []byte) {
 	t.Cleanup(func() { SetRootDir(previousRoot) })
 	tree := g1SearchTree("last-valid", "stable")
 	steps := map[string]bool{}
-	indexValue, err := ensureCacheIndexed(context.Background(), tree, func(value search.Progress) { steps[value.Step] = true })
+	indexValue, err := ensureCacheIndexed(context.Background(), tree, "", func(value search.Progress) { steps[value.Step] = true })
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -327,10 +328,7 @@ func prepareG1SearchCache(t *testing.T) (*TreeNode, string, []byte, []byte) {
 		}
 	}
 	indexPath := filepath.Join(getCacheDir(), "index.search")
-	events, err := os.ReadFile(filepath.Join(indexPath, "events.jsonl"))
-	if err != nil {
-		t.Fatal(err)
-	}
+	events := snapshotSearchIndex(t, indexPath)
 	meta, err := os.ReadFile(filepath.Join(indexPath, "meta.json"))
 	if err != nil {
 		t.Fatal(err)
@@ -639,3 +637,71 @@ func TestG1YAMLFixture(t *testing.T) {
 }
 
 // #endregion ⚙️Config
+
+func snapshotSearchIndex(t *testing.T, path string) []byte {
+	t.Helper()
+	files := map[string][]byte{}
+	err := filepath.WalkDir(path, func(name string, entry os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if entry.IsDir() {
+			return nil
+		}
+		relative, err := filepath.Rel(path, name)
+		if err != nil {
+			return err
+		}
+		if relative == "meta.json" {
+			return nil
+		}
+		data, err := os.ReadFile(name)
+		if err != nil {
+			return err
+		}
+		files[relative] = data
+		return nil
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.Marshal(files)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return data
+}
+func assertSearchIndexBytes(t *testing.T, path string, before []byte) {
+	t.Helper()
+	if !bytes.Equal(before, snapshotSearchIndex(t, path)) {
+		t.Fatal("committed search manifest or shard bytes changed")
+	}
+}
+func firstSearchShardPath(t *testing.T, path string) string {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(path, "manifest.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest search.ShardManifest
+	if err = json.Unmarshal(data, &manifest); err != nil || len(manifest.Shards) == 0 {
+		t.Fatalf("manifest: %+v %v", manifest, err)
+	}
+	return filepath.Join(path, manifest.Shards[0].Name, "events.jsonl")
+}
+
+func TestStreamQueryPropagatesBoundsAndCancellation(t *testing.T) {
+	matched, err := matchesQuery(context.Background(), "needle", StreamOptions{Query: strings.Repeat("x", search.MaxQueryBytes+1)})
+	if matched || !errors.Is(err, search.ErrTooLarge) {
+		t.Fatalf("invalid query failed open: %v %v", matched, err)
+	}
+	matched, err = matchesQuery(context.Background(), strings.Repeat("x", search.MaxDocumentBytes+1), StreamOptions{Query: "needle"})
+	if matched || !errors.Is(err, search.ErrTooLarge) {
+		t.Fatalf("oversized document failed open: %v %v", matched, err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err = matchesQuery(ctx, "needle", StreamOptions{Query: "needle"}); !errors.Is(err, context.Canceled) {
+		t.Fatalf("cancellation: %v", err)
+	}
+}

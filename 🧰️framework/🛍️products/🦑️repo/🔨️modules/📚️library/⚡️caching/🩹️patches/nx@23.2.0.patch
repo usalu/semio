@@ -1450,7 +1450,7 @@ diff --git a/dist/src/project-graph/project-graph.js b/dist/src/project-graph/pr
 diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.js
 --- a/dist/src/daemon/server/watcher.js
 +++ b/dist/src/daemon/server/watcher.js
-@@ -1,6 +1,10 @@
+@@ -1,8 +1,13 @@
  "use strict";
  Object.defineProperty(exports, "__esModule", { value: true });
  exports.watchWorkspace = watchWorkspace;
@@ -1460,8 +1460,11 @@ diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.
 +exports.getSemioChangedFileHashesV1 = getSemioChangedFileHashesV1;
  exports.flushPendingWorkspaceChanges = flushPendingWorkspaceChanges;
  exports.watchOutputFiles = watchOutputFiles;
++exports.registerSemioOutputExpressionsV1 = registerSemioOutputExpressionsV1;
  exports.convertChangeEventsToLogMessage = convertChangeEventsToLogMessage;
-@@ -15,9 +19,99 @@
+ const workspace_root_1 = require("../../utils/workspace-root");
+ const path_1 = require("path");
+@@ -15,9 +20,130 @@
  // force-flushed events through the same handling as the async callback.
  // Definite-assignment: dispatchWorkspaceChanges only runs after
  // watchWorkspace has set both, so reading them as non-nullable is safe.
@@ -1552,17 +1555,48 @@ diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.
 +    catch (error) { if (control) { control.signal.throwIfAborted(); const budget = control.remainingMilliseconds(); if (budget !== null && budget <= 0) throw error; } return null; }
 +}
 +function getSemioFilesystemJournalToolingIdentityV1() { return semioToolingIdentity || null; }
++let semioOutputObserver, semioOutputReady, semioMarkerObserver;
++async function semioOutputObservationV1() {
++    if (!semioOutputReady) semioOutputReady = (async () => {
++        const loaded = await require('../../utils/workspace-context').loadSemioGraphAuthorizersV1();
++        if (!loaded) throw Error('Original daemon output observation owner required');
++        const { Watcher } = await (0, handle_import_1.handleImport)('../../native/index.js', __dirname);
++        const observer = loaded.authorizers.createNxDaemonOutputObservationV1(async (scope, receive) => {
++            const prefix = (0, path_2.normalizePath)((0, path_1.relative)(workspace_root_1.workspaceRoot, scope.path));
++            const project = events => (events || []).map(event => { if (typeof event.path !== 'string' || (0, path_1.isAbsolute)(event.path)) throw Error('Relative Native output event required'); const path = (0, path_2.normalizePath)(event.path); return { type: event.type, path: prefix ? prefix + '/' + path : path }; });
++            const watcher = new Watcher(scope.path, [], false);
++            let stopped = false;
++            try { watcher.watch((error, events) => { if (stopped) return; try { receive(error, project(events)); } catch (failure) { receive(failure, []); } }); }
++            catch (error) { stopped = true; try { await watcher.stop(); } catch (stop) { throw new AggregateError([error, stop], 'Daemon output watcher startup and stop failed'); } throw error; }
++            return { flush: () => project(watcher.forceFlushPending()), stop: async () => { stopped = true; await watcher.stop(); } };
++        }, (error, events) => require('./handle-outputs-changes').handleOutputsChanges(error, events));
++        semioOutputObserver = observer;
++        return observer;
++    })();
++    return semioOutputReady;
++}
++async function registerSemioOutputExpressionsV1(expressions) {
++    await (await semioOutputObservationV1()).register(expressions);
++}
++async function flushSemioOutputChangesV1() {
++    if (semioOutputReady) await (await semioOutputReady).flush();
++    if (semioMarkerObserver) await semioMarkerObserver.flush();
++    const error = require('./handle-outputs-changes').getOutputsWatcherTerminalError();
++    if (error) throw error;
++}
++
  let activeServer;
  let workspaceChangesCallback;
 -function dispatchWorkspaceChanges(events) {
 +function dispatchWorkspaceChanges(events, observe = true) {
++    if (semioOutputObserver) semioOutputObserver.receiveSource(events);
 +    events = events.filter(event => !semioExcluded(event.path));
 +    if (!events.length) return;
 +    if (observe) semioReceive(null, events);
      for (const event of events) {
          if (event.path.endsWith('.gitignore') || event.path === '.nxignore') {
              // If the ignore files themselves have changed we need to dynamically
-@@ -29,15 +123,31 @@
+@@ -29,15 +155,31 @@
              });
          }
      }
@@ -1596,6 +1630,67 @@ diff --git a/dist/src/daemon/server/watcher.js b/dist/src/daemon/server/watcher.
              return cb(err, null);
          }
          dispatchWorkspaceChanges(events);
+@@ -52,36 +194,35 @@
+  */
+ async function flushPendingWorkspaceChanges() {
+     const watcher = (0, shutdown_utils_1.getWatcherInstance)();
+-    if (!watcher)
+-        return;
+-    const events = watcher.forceFlushPending();
+-    if (events.length === 0)
+-        return;
+-    await dispatchWorkspaceChanges(events);
++    if (watcher) {
++        const events = watcher.forceFlushPending();
++        if (events.length) await dispatchWorkspaceChanges(events);
++    }
++    await flushSemioOutputChangesV1();
+ }
+ async function watchOutputFiles(server, cb) {
+-    const { Watcher } = await (0, handle_import_1.handleImport)('../../native/index.js', __dirname);
+-    const relativeServerProcess = (0, path_2.normalizePath)((0, path_1.relative)(workspace_root_1.workspaceRoot, cache_1.serverProcessJsonPath));
+-    const watcher = new Watcher(workspace_root_1.workspaceRoot, [`!${relativeServerProcess}`], false);
+-    watcher.watch((err, events) => {
+-        if (err) {
+-            return cb(err, null);
++    const loaded = await require('../../utils/workspace-context').loadSemioGraphAuthorizersV1();
++    if (!loaded) throw Error('Original daemon output observation owner required');
++    const observer = await semioOutputObservationV1();
++    const marker = await loaded.authorizers.createNxDaemonProcessMarkerObservationV1(cache_1.serverProcessJsonPath, (error, events) => {
++        if (error) {
++            loaded.authorizers.requestNxDaemonShutdownV1('Daemon process marker observation failed');
++            return cb(error, null);
+         }
+-        for (const event of events) {
+-            if (event.path == relativeServerProcess &&
+-                (0, cache_1.getDaemonProcessIdSync)() !== process.pid) {
+-                return (0, shutdown_utils_1.handleServerProcessTermination)({
+-                    server,
+-                    reason: 'this process is no longer the current daemon (native)',
+-                    sockets: server_1.openSockets,
+-                });
+-            }
++        if (events.length && (0, cache_1.getDaemonProcessIdSync)() !== process.pid) {
++            const failure = Error('This process is no longer the current daemon');
++            loaded.authorizers.requestNxDaemonShutdownV1(failure.message);
++            return cb(failure, null);
+         }
+-        if (events.length !== 0) {
+-            cb(null, events);
+-        }
+     });
+-    return watcher;
++    semioMarkerObserver = marker;
++    let closing;
++    return { stop: () => closing ??= (async () => {
++        const results = await Promise.allSettled([observer.stop(), marker.stop()]);
++        semioOutputObserver = undefined; semioOutputReady = undefined; semioMarkerObserver = undefined;
++        const errors = results.filter(result => result.status === 'rejected').map(result => result.reason);
++        if (errors.length) throw errors.length === 1 ? errors[0] : new AggregateError(errors, 'Daemon output observations failed to stop');
++    })() };
+ }
+ /**
+  * NOTE: An event type of "create" will also apply to the case where the user has restored
 diff --git a/dist/src/daemon/server/server.js b/dist/src/daemon/server/server.js
 --- a/dist/src/daemon/server/server.js
 +++ b/dist/src/daemon/server/server.js
@@ -1679,6 +1774,14 @@ diff --git a/dist/src/daemon/server/server.js b/dist/src/daemon/server/server.js
                      // register file change listener to invalidate sync generator cache
                      (0, file_change_events_1.registerFileChangeListener)(sync_generators_1.clearSyncGeneratorsCache);
                      // trigger an initial project graph recomputation
+@@ -455,6 +480,7 @@
+                 }
+                 catch (err) {
+                     await handleWorkspaceChanges(err, []);
++                    reject(err);
+                 }
+             });
+         }
 diff --git a/dist/src/daemon/tmp-dir.js b/dist/src/daemon/tmp-dir.js
 --- a/dist/src/daemon/tmp-dir.js
 +++ b/dist/src/daemon/tmp-dir.js
@@ -2090,7 +2193,7 @@ diff --git a/dist/src/daemon/server/shutdown-utils.js b/dist/src/daemon/server/s
  let watcherInstance;
  function storeWatcherInstance(instance) {
      watcherInstance = instance;
-@@ -78,42 +38,33 @@
+@@ -78,42 +38,38 @@
  async function handleServerProcessTermination({ server, reason, sockets, }) {
      await performShutdown(server, reason, sockets);
  }
@@ -2112,6 +2215,7 @@ diff --git a/dist/src/daemon/server/shutdown-utils.js b/dist/src/daemon/server/s
 +        const frozen = await require('../../utils/handle-import').loadSemioGraphAuthorizersV1();
 +        if (!frozen) throw Error('Original immutable daemon shutdown owner required');
 +        frozen.authorizers.beginNxDaemonShutdownV1();
++        let primary;
 +        try {
 +            await new Promise(resolve => {
 +                server.close(() => resolve());
@@ -2132,8 +2236,12 @@ diff --git a/dist/src/daemon/server/shutdown-utils.js b/dist/src/daemon/server/s
 +            await (0, latest_nx_1.cleanupLatestNx)();
 +            await (0, analytics_1.flushAnalytics)();
 +            logger_1.serverLogger.log(`Server stopped because: "${reason}"`);
++        } catch (error) {
++            primary = error;
 +        } finally {
-+            await frozen.authorizers.completeNxDaemonShutdownV1();
++            try { await frozen.authorizers.completeNxDaemonShutdownV1(); }
++            catch (error) { if (!primary) primary = error; else if (primary !== error) primary = new AggregateError([primary, error], 'Daemon shutdown and observation stop failed'); }
++            if (primary) { console.error(primary); process.exit(1); }
 +            process.exit(0);
          }
 -        if (outputWatcherInstance) {
@@ -2155,7 +2263,7 @@ diff --git a/dist/src/daemon/server/shutdown-utils.js b/dist/src/daemon/server/s
  }
  let serverInactivityTimerId;
  function resetInactivityTimeout(cb) {
-@@ -154,6 +105,8 @@
+@@ -154,6 +110,8 @@
      await respondWithError(socket, description, error);
      // Project Graph errors are okay. Restarting the daemon won't help with this.
      if (!(error instanceof error_types_1.DaemonProjectGraphError)) {
@@ -2172,3 +2280,120 @@ diff --git a/dist/src/command-line/daemon/daemon.js b/dist/src/command-line/daem
 -        const pid = await daemonClient.startInBackground();
 +        await daemonClient.startDaemonIfNecessary();
 +        const pid = (0, cache_1.getDaemonProcessIdSync)();
+diff --git a/dist/src/daemon/server/outputs-tracking.js b/dist/src/daemon/server/outputs-tracking.js
+--- a/dist/src/daemon/server/outputs-tracking.js
++++ b/dist/src/daemon/server/outputs-tracking.js
+@@ -10,6 +10,7 @@
+ const native_1 = require("../../native");
+ const collapse_expanded_outputs_1 = require("../../utils/collapse-expanded-outputs");
+ const workspace_root_1 = require("../../utils/workspace-root");
++const watcher_1 = require("./watcher");
+ let disabled = false;
+ const dirsContainingOutputs = {};
+ const recordedHashes = {};
+@@ -52,7 +53,7 @@
+         // the path is either an output itself or a parent
+         if (dirsContainingOutputs[current]) {
+             dirsContainingOutputs[current].forEach((output) => {
+-                if (now - timestamps[output] > 2000) {
++                {
+                     recordedHashes[output] = undefined;
+                 }
+             });
+@@ -60,7 +61,7 @@
+         }
+         // the path is a child of some output or unrelated
+         while (current != (0, path_1.dirname)(current)) {
+-            if (recordedHashes[current] && now - timestamps[current] > 2000) {
++            if (recordedHashes[current]) {
+                 recordedHashes[current] = undefined;
+                 break;
+             }
+@@ -73,7 +74,8 @@
+  * the daemon recorded for them. Uses Rayon-parallel filesystem scanning
+  * for uncached entries.
+  */
+-function outputsHashesMatchBatch(entries) {
++async function outputsHashesMatchBatch(entries) {
++    await (0, watcher_1.flushPendingWorkspaceChanges)();
+     if (disabled)
+         return entries.map(() => false);
+     // Fast path: skip filesystem scan for entries with no recorded hash.
+@@ -105,7 +107,9 @@
+  * outputsHashesMatchBatch calls can skip redundant cache copies.
+  * Uses Rayon-parallel filesystem scanning.
+  */
+-function recordOutputsHashBatch(entries) {
++async function recordOutputsHashBatch(entries) {
++    await (0, watcher_1.registerSemioOutputExpressionsV1)(entries.flatMap(entry => entry.outputs));
++    await (0, watcher_1.flushPendingWorkspaceChanges)();
+     if (disabled)
+         return;
+     const outputsBatch = entries.map((e) => e.outputs);
+diff --git a/dist/src/daemon/server/handle-outputs-tracking.js b/dist/src/daemon/server/handle-outputs-tracking.js
+--- a/dist/src/daemon/server/handle-outputs-tracking.js
++++ b/dist/src/daemon/server/handle-outputs-tracking.js
+@@ -5,7 +5,7 @@
+ const outputs_tracking_1 = require("./outputs-tracking");
+ async function handleRecordOutputsHashBatch(payload) {
+     try {
+-        (0, outputs_tracking_1.recordOutputsHashBatch)(payload.data);
++        await (0, outputs_tracking_1.recordOutputsHashBatch)(payload.data);
+         return {
+             description: 'recordOutputsHashBatch',
+             response: '{}',
+@@ -20,7 +20,7 @@
+ }
+ async function handleOutputsHashesMatchBatch(payload) {
+     try {
+-        const results = (0, outputs_tracking_1.outputsHashesMatchBatch)(payload.data);
++        const results = await (0, outputs_tracking_1.outputsHashesMatchBatch)(payload.data);
+         return {
+             response: results,
+             description: 'outputsHashesMatchBatch',
+diff --git a/dist/src/daemon/server/outputs-tracking.d.ts b/dist/src/daemon/server/outputs-tracking.d.ts
+--- a/dist/src/daemon/server/outputs-tracking.d.ts
++++ b/dist/src/daemon/server/outputs-tracking.d.ts
+@@ -10,7 +10,7 @@
+ export declare function outputsHashesMatchBatch(entries: {
+     outputs: string[];
+     hash: string;
+-}[]): boolean[];
++}[]): Promise<boolean[]>;
+ /**
+  * Record the hash of each entry's on-disk outputs so future
+  * outputsHashesMatchBatch calls can skip redundant cache copies.
+@@ -19,5 +19,5 @@
+ export declare function recordOutputsHashBatch(entries: {
+     outputs: string[];
+     hash: string;
+-}[]): void;
++}[]): Promise<void>;
+ export declare function disableOutputsTracking(): void;
+diff --git a/dist/src/daemon/server/watcher.d.ts b/dist/src/daemon/server/watcher.d.ts
+--- a/dist/src/daemon/server/watcher.d.ts
++++ b/dist/src/daemon/server/watcher.d.ts
+@@ -9,7 +9,8 @@
+  * already seen invalidated but hasn't flushed yet.
+  */
+ export declare function flushPendingWorkspaceChanges(): Promise<void>;
+-export declare function watchOutputFiles(server: Server, cb: FileWatcherCallback): Promise<any>;
++export declare function registerSemioOutputExpressionsV1(expressions: string[]): Promise<void>;
++export declare function watchOutputFiles(server: Server, cb: FileWatcherCallback): Promise<{ stop(): Promise<void> }>;
+ /**
+  * NOTE: An event type of "create" will also apply to the case where the user has restored
+  * an original version of a file after modifying/deleting it by using git, so we adjust
+diff --git a/dist/src/daemon/server/shutdown-utils.d.ts b/dist/src/daemon/server/shutdown-utils.d.ts
+--- a/dist/src/daemon/server/shutdown-utils.d.ts
++++ b/dist/src/daemon/server/shutdown-utils.d.ts
+@@ -3,8 +3,8 @@
+ export declare const SERVER_INACTIVITY_TIMEOUT_MS: 10800000;
+ export declare function storeWatcherInstance(instance: Watcher): void;
+ export declare function getWatcherInstance(): Watcher;
+-export declare function storeOutputWatcherInstance(instance: Watcher): void;
+-export declare function getOutputWatcherInstance(): Watcher;
++export declare function storeOutputWatcherInstance(instance: { stop(): Promise<void> }): void;
++export declare function getOutputWatcherInstance(): { stop(): Promise<void> };
+ interface HandleServerProcessTerminationParams {
+     server: Server;
+     reason: string;

@@ -1,3 +1,4 @@
+import{withRepositoryRuntimeEntriesV1}from"../../../../../🏗️build/📥️source/🔏️closure/🚪️command/🔌️runtime/🟦️.ts";
 import{createNxGraphReadLifetimeV1,type NxGraphReadLifetimeV1}from"./👓️reading/🟦️.ts";
 import{graphPublicationFileAllocationV1}from"./📒️journal/🟦️.ts";
 import{createIssuedResourceControlV1,requireIssuedResourceControlInvocationV1,requireIssuedResourceControlV1,requireIssuedResourceControlRefinementV1,withIssuedResourceOperationV1,withRequestedIssuedResourceControlV1}from"../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
@@ -50,16 +51,17 @@ async function openNxGraphNativeChildV1<T>(store:NxGraphCacheStoreV1,options:Par
   return withRepositoryCacheStoreFundedChildStorageV1(parent,options,{policy:pool,invocation:store.invocation,owner:nativePolicy.fundingOwner,metadataBytes:nativePolicy.fundingMetadataBytes,policySha256:nativeFundingDigestV1},async(image,reservation,control)=>{await reservation.recheck();if(reservation.allocation.phase==="reserved")await reservation.commit();return body(image,control);});
 }
 /** ♻️ Retires one idle namespace native image together with its persisted parent charge; a missing image is already retired. */
-async function retireNxGraphNativeChildV1(store:NxGraphCacheStoreV1,directory:string):Promise<void>{
+async function retireNxGraphNativeChildV1(store:NxGraphCacheStoreV1,directory:string):Promise<boolean>{
   const parent=poolBases.get(store),pool=poolPolicies.get(store);check(store);if(!parent||!pool)throw Error("Actual nx partition owner required");
   const control=nxGraphOperationControlV1(store.storage,store.control),rows=(await observeNativeStorageStateV1({policy:pool,control,port:store.image.port})).allocations.filter(row=>row.child?.directory===directory);if(rows.length>1||!rows.length&&existsSync(dirname(directory)))throw Error("Exact funded Nx native shard required");
-  if(rows[0])await retireRepositoryCacheStoreFundedChildStorageV1(parent,await recoverNativeStorageReservationV1({policy:pool,control,port:store.image.port,id:rows[0].id}),control,control);
+  if(rows[0]&&rows[0].phase!=="committed")return false;
+  if(rows[0])await retireRepositoryCacheStoreFundedChildStorageV1(parent,await recoverNativeStorageReservationV1({policy:pool,control,port:store.image.port,id:rows[0].id}),control,control);return true;
 }
 /** 🪦️ Retires one idle namespace with its funded native image and returns false while another user still holds the namespace. */
 export async function retireNxGraphNamespaceV1(store:NxGraphCacheStoreV1,value:NxGraphNamespaceV1):Promise<boolean>{
   descriptor(value);check(store);const directory=nxGraphNamespaceDirectoryV1(store.root,value),resource=nxGraphNamespaceResourceV1(directory),control=nxGraphOperationControlV1(store.storage,store.control);let lease:ResourceLease;
   try{lease=await acquireResourceLease({directory:poolPolicies.get(store)!.leaseDirectory,resource,mode:"exclusive",signal:control.signal,control,timeoutMs:0});}catch(error){check(store);if(error instanceof Error&&error.message==="Resource lease timed out: "+resource)return false;throw error;}
-  try{await retireNxGraphNativeChildV1(store,nxGraphNativeImageDirectoryV1(store.root,value));rmSync(directory,{recursive:true,force:true});if(!readdirSync(dirname(directory)).length)rmdirSync(dirname(directory));return true;}finally{lease.release();}
+  try{if(!await retireNxGraphNativeChildV1(store,nxGraphNativeImageDirectoryV1(store.root,value)))return false;rmSync(directory,{recursive:true,force:true});if(!readdirSync(dirname(directory)).length)rmdirSync(dirname(directory));return true;}finally{lease.release();}
 }
 /** ⏏️ Settles like `work`, or with `forced()` as soon as `signal` aborts first; the abort listener never outlives the wait. */
 function untilAbortedV1<T>(work:Promise<T>,signal:AbortSignal,forced:()=>T):Promise<T>{return new Promise<T>((accept,refuse)=>{const stop=()=>{signal.removeEventListener("abort",stop);accept(forced());};signal.addEventListener("abort",stop,{once:true});if(signal.aborted)stop();work.then(value=>{signal.removeEventListener("abort",stop);accept(value);},error=>{signal.removeEventListener("abort",stop);refuse(error);});});}
@@ -126,7 +128,7 @@ export async function withRepositoryNxGraphNativeStorageV1<T>(workspace:string,o
 }
 /** 💻️ Retains genuine received graph image custody around the installed engine's complete native lifetime. */
 export async function withOriginalNxGraphNativeStorageV1<T>(workspaceRoot:string,environment:Readonly<Record<string,string|undefined>>,body:()=>Promise<T>):Promise<T>{
- const {receiveScriptProcessInvocation}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");return receiveScriptProcessInvocation(environment,original=>withRepositoryNxGraphNativeStorageV1(callerRepositoryRootV1(original.capabilities),original,createIssuedResourceControlV1(original,"nx:received-graph",0),async bind=>{const binding=await bind({version:1,toolingIdentity:environment.SEMIO_NX_TOOLING_IDENTITY!,workspaceRoot,graphIdentity:environment.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity:environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!},environment.SEMIO_NX_WATCHER_IDENTITY);for(const[name,value]of Object.entries(binding))if(environment[name]!==value)throw Error("Original received native graph namespace required");requireNxGraphNativeDirectoryV1(workspaceRoot,environment);return body();}));
+ const {receiveScriptProcessInvocation}=await import("../../../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts");return receiveScriptProcessInvocation(environment,original=>{const root=callerRepositoryRootV1(original.capabilities),control=createIssuedResourceControlV1(original,"nx:received-graph",0);return withRepositoryRuntimeEntriesV1(root,original,control,()=>withRepositoryNxGraphNativeStorageV1(root,original,control,async bind=>{const binding=await bind({version:1,toolingIdentity:environment.SEMIO_NX_TOOLING_IDENTITY!,workspaceRoot,graphIdentity:environment.SEMIO_BUILD_GRAPH_DIGEST??null,implementationIdentity:environment.SEMIO_NX_IMPLEMENTATION_IDENTITY!},environment.SEMIO_NX_WATCHER_IDENTITY);for(const[name,value]of Object.entries(binding))if(environment[name]!==value)throw Error("Original received native graph namespace required");requireNxGraphNativeDirectoryV1(workspaceRoot,environment);return body();}));});
 }
 
 /** 🆕️ Gives all initial admissions and retirements the same exact namespace resource. */
@@ -211,7 +213,7 @@ async function evictIdleNamespacesV1(store:NxGraphCacheStoreV1,need:NxGraphRoomN
    try{
     await store.recheck();let current:string;try{current=stamp(join(row.directory,".namespace.json"));}catch{continue;}
     if(current!==row.stamp)continue;
-    try{await bytes(row.directory,store);await retireNxGraphNativeChildV1(store,nxGraphNativeImageDirectoryV1(store.root,row.identity));rmSync(requireNativeStoragePathV1(store.root,row.directory),{recursive:true,force:true});removeEmptyToolkitDirectoryV1(dirname(row.directory));}
+    try{await bytes(row.directory,store);if(!await retireNxGraphNativeChildV1(store,nxGraphNativeImageDirectoryV1(store.root,row.identity)))continue;rmSync(requireNativeStoragePathV1(store.root,row.directory),{recursive:true,force:true});removeEmptyToolkitDirectoryV1(dirname(row.directory));}
     catch(error){control.signal.throwIfAborted();check(store);unretirable??=error;continue;}
    }finally{lease.release();}
    await control.publish({resource,mode:"exclusive",elapsedMs:0});await control.yieldContinuation();
