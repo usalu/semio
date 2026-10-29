@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "id": "context-menu-preflight",
+      "args": {
+        "issue": {
+          "severity": "error",
+          "code": "missing-link",
+          "message": "Missing asset",
+          "objectId": "frame-1",
+          "pageId": "page-2"
+        }
+      },
+      "expected": {
+        "objectId": "frame-1",
+        "pageId": "page-2"
+      }
+    },
+    {
+      "id": "panel-preflight",
+      "args": {
+        "objectId": "frame-1",
+        "pageId": "page-2"
+      },
+      "expected": {
+        "objectId": "frame-1",
+        "pageId": "page-2"
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "issue": null
+    },
+    {
+      "issue": "frame-1"
+    },
+    {
+      "issue": []
+    }
+  ]
+}

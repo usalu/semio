@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "text",
+    "operation",
+    "generation",
+    "work",
+    "totalGrant",
+    "callPolicy",
+    "phases",
+    "expectedPhases",
+    "refusedAxes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "work": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fuel",
+        "absoluteDeadlineUs",
+        "clockBinding"
+      ],
+      "properties": {
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "absoluteDeadlineUs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "clockBinding": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "totalGrant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "callPolicy": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "phases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "cancelled"
+          ],
+          "properties": {
+            "name": {
+              "const": "live-maintenance"
+            },
+            "cancelled": {
+              "const": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "cancelled"
+          ],
+          "properties": {
+            "name": {
+              "const": "close-drain"
+            },
+            "cancelled": {
+              "const": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "cancelled"
+          ],
+          "properties": {
+            "name": {
+              "const": "cancelled-drain"
+            },
+            "cancelled": {
+              "const": true
+            }
+          }
+        }
+      ]
+    },
+    "expectedPhases": {
+      "const": [
+        "live-maintenance",
+        "close-drain",
+        "cancelled-drain"
+      ]
+    },
+    "refusedAxes": {
+      "const": [
+        "operation",
+        "generation",
+        "clock",
+        "deadline",
+        "fuel",
+        "stock"
+      ]
+    }
+  }
+}

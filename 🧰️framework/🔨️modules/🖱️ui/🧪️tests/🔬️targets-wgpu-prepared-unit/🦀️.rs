@@ -45,34 +45,6 @@ fn prepared_animation_receipt_measures_actual_normal_and_overlay_primitives() {
     }
 }
 
-fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
-    let mut directives = PreparedRenderDirectives::default();
-    assert!(directives.try_push(RenderDirective::PreservePreviousOnFailure).is_ok());
-    let packet = PreparedRenderPacket {
-        has_animated_primitives: false,
-        scene_revision: revision,
-        preview_generation: generation,
-        damage: PreparedRenderScissors::default(),
-        clips: PreparedRenderScissors::default(),
-        directives,
-        uploads: PreparedRenderUploads::default(),
-        evictions: PreparedRenderEvictions::default(),
-        draw: DrawList::default(),
-        overlay: None,
-        commands: PreparedRenderCommandPages::default(),
-        time_seconds: 0.0,
-        usage: PreparedRenderUsage::default(),
-        limits: PreparedRenderLimits::default(),
-        permit: PreparedRenderProcessPermit::try_reserve(0, 0),
-        retirement_phase: 0,
-        abandonment_slot: u8::MAX,
-    };
-    match packet.try_arm_abandonment() {
-        Ok(packet) => packet,
-        Err(_) => panic!("test packet abandonment slot"),
-    }
-}
-
 
 
 
@@ -606,7 +578,7 @@ fn worker_panic_hands_back_the_exact_job_and_mailbox_owners() {
     }
     assert!(turns > 4);
     assert_eq!(PREPARED_RENDER_PROCESS_PERMITS.load(Ordering::Acquire), 0);
-    assert!(PREPARED_RENDER_MAILBOX.iter().all(|slot| slot.packet.load(Ordering::Acquire).is_null()));
+    assert!(render_mailbox_is_empty());
 }
 
 #[test]

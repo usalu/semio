@@ -1,7 +1,7 @@
 //! 🧷️ Concrete empty operation registration retains actual definition/catalog aliases and its native inference owner.
 use super::*;
 use semio_framework_job::*;
-use semio_framework_plugin_decl_views::tool_contract::{ArtifactInstanceOperationOwnerHandle,ArtifactInstanceOperationOwnerAliasRetirement};
+use semio_framework_plugin_decl_tool_contract::{ArtifactInstanceOperationOwnerHandle,ArtifactInstanceOperationOwnerAliasRetirement};
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}
 fn fixed<T>()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<T>(),depth:1,..Default::default()}}
 fn construction(d:RetirementDemand)->OriginalConstructionDemand{OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:d.release_bytes,depth:d.depth}}

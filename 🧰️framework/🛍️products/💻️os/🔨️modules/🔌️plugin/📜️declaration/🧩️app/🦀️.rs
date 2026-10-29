@@ -7,8 +7,13 @@ extern crate semio_framework_os_kernel as store;
 #[path="🌱️original/🦀️.rs"]
 pub mod original_admission;
 pub use original_admission::OriginalArtifactAppBirth;
-/// 🌱️ A genuine reference producer is optional; retained native construction uses its original source owner.
-pub type ReferenceArtifactAppBirth<P> = fn()->P;
+/// 🌱️ A genuine reference producer is optional; retained native construction uses its original source owner. A producer that cannot birth its snapshot returns the typed fault instead of panicking.
+pub type ReferenceArtifactAppBirth<P> = fn()->Result<P,semio_framework::Fault>;
+
+/// 🛑️ Names one refused reference birth as a typed app fault carrying the failed birth step and its cause.
+pub fn reference_birth_fault(step:&str,cause:impl core::fmt::Display)->semio_framework::Fault{
+    semio_framework::Fault::new(semio_framework::FaultOrigin::App,semio_framework::FaultCode::new("app.reference-birth.refused"),format!("reference birth refused ({step}): {cause}"))
+}
 
 #[doc(hidden)]
 #[path = "../👷️job/🦀️.rs"]
@@ -133,13 +138,13 @@ use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disp
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
 use crate::tool_contract::ArtifactBoundedFirstStepProof;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 use crate::tool_contract::ArtifactOwnedToolJobRequest;
 use crate::tool_contract::ArtifactReservedToolJobRequest;
 use crate::tool_contract::ArtifactToolCompletionValue;
 use crate::tool_contract::ArtifactToolFactoryRegistry;
-use semio_framework_plugin_decl_views::tool_contract::EmptyArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::EmptyArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJob;
 use crate::tool_run_contract::ToolRunJobRequest;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;

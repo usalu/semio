@@ -80,7 +80,7 @@ fn owned_operation_byte_pages_borrowed_reader_keeps_the_same_8194_source_without
         let span = ByteSpan::from_source(&owner);
         assert_eq!(span.len(), expected.len());
         assert!(span.iter().eq(expected.iter().copied()));
-        assert!(std::ptr::eq(span.get(4096).unwrap(), owner.byte_ref(4096).unwrap()));
+        assert_eq!(span.get(4096), owner.byte_at(4096));
         let mut reader = ByteReader::from_source(&owner);
         assert_eq!(reader.read_u16_le().unwrap(), 0x3731);
         reader.read_span(4092).unwrap();
@@ -328,8 +328,8 @@ fn child_paged_operation_carrier_borrows_exact8194_and_returns_actual_pages_with
     let collection_bytes=collection.allocated_bytes();
     let ((),allocated,released)=semio_framework_trace_memory_testing::observe_backing(||{
         let sources:&dyn OperationSourceCollection=&collection;assert_eq!(sources.len(),1);assert!(!sources.is_empty());assert!(sources.source_at(1).is_none());
-        let span=sources.source_at(0).unwrap();assert_eq!(span.len(),8194);assert_eq!(span.get(0),Some(&49));assert_eq!(span.get(1),Some(&55));
-        for index in 2..8194{assert_eq!(span.get(index),Some(&32));assert!(std::ptr::eq(span.get(index).unwrap(),collection.get(0).unwrap().byte_ref(index).unwrap()));}
+        let span=sources.source_at(0).unwrap();assert_eq!(span.len(),8194);assert_eq!(span.get(0),Some(49));assert_eq!(span.get(1),Some(55));
+        for index in 2..8194{assert_eq!(span.get(index),Some(32));assert_eq!(span.get(index),collection.get(0).unwrap().byte_at(index));}
     });assert_eq!((allocated,released),(0,0));
     let mut parent=ParentAllocationReturn::<1>::try_new(max,f["maximumAllocationBytes"].as_u64().unwrap()as usize).unwrap();
     let owner=collection.get_mut(0).unwrap();

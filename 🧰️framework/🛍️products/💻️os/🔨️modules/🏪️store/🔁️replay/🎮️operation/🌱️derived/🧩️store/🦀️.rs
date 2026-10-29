@@ -9,7 +9,7 @@ fn refusal(message:&'static str)->ValueError { ValueError::literal(ValueRefusalK
 #[path="../🧪️tests/🦀️.rs"]
 mod tests;
 impl<P,M> ArtifactStore<P,M>
-where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static {
+where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P> {
     /// 🎟️ Quotes the installed original producer before any projection alias transfers.
     pub fn derived_operation_birth_demand(&self,source:&ArtifactDerivedSnapshot<P>)->Result<RetirementDemand,ValueError> {
         self.admit_derived_source(&source.registry,source.generation,source.revision).map_err(|_|refusal("derived operation requires this Store's current original source"))?;

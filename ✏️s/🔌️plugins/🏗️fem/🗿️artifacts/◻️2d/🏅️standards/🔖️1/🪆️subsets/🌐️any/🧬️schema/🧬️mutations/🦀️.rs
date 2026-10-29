@@ -216,3 +216,14 @@ pub(crate) const PLANAR_DOFS: [&str; 3] = ["Tx", "Ty", "Rz"];
 #[path = "🧪️tests/🔬️kinds-conformance/🦀️.rs"]
 mod kinds_conformance;
 //#endregion 🧪️KindsConformance
+
+/// ❄️ Cold algebra over the persistent snapshot runs on the explicit reference projection of its rows.
+impl protocol::ColdMutation<Fem2dSnapshot> for Fem2dMutation {
+    type ReferenceDiff = Fem2dDiff;
+    fn diff(&self, base: &Fem2dSnapshot) -> protocol::MutationOutcome<Fem2dDiff> {
+        <Self as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(self, &base.to_reference())
+    }
+    fn inverse(&self, base: &Fem2dSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        <Self as protocol::ColdMutation<Fem2dSnapshotValue>>::inverse(self, &base.to_reference())
+    }
+}

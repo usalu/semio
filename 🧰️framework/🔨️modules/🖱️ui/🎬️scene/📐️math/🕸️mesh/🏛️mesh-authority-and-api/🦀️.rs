@@ -3,7 +3,7 @@
 use super::*;
 
 //#region Mesh
-struct Mesh3dSlot {
+pub(super) struct Mesh3dSlot {
     pub(super) epoch: u64,
     pub(super) reserved_pages: u16,
     pub(super) state: Mesh3dSlotState,

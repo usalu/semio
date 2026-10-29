@@ -18,7 +18,7 @@ async fn original_layout_export_download(command:semio_s_artifact_layout_layout_
     let before=app.0.document_pack().await.expect("original document pack before export");
     let view = ViewModel { window_instances: vec![ViewWindowInstance { id: "layout-blueprint".into(), window_kind_id: LayoutBlueprintWindowConfigOwner::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let meta = ActionMeta { view_state: Some(view.for_window_instance("layout-blueprint").expect("blueprint window instance")), ..artifact_app_laws::meta("local") };
-    let result = app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("exportPdf dispatch");
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("exportPdf dispatch");
     assert!(result.mutations.is_empty(), "an export never mutates the document");
     let mut download: Option<(u64, String, String, Option<String>, usize)> = None;
     let mut turns = 0usize;

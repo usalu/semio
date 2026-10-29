@@ -119,7 +119,7 @@ impl Fem3dNumericalChild {
         };
         let target = if self.load_triangle_cursor == 0 { start } else { end };
         let Some(node) = doc.nodes.get(self.load_node_cursor) else { return Err((b"fem3d.numerical-member-load-node".to_vec()).into()) };
-        if &node.id == target {
+        if node.id.as_str() == target.as_str() {
             self.load_node_indices[self.load_triangle_cursor] = self.load_node_cursor;
             self.load_positions[self.load_triangle_cursor] = [node.x, node.y, node.z];
             self.load_triangle_cursor += 1;
@@ -174,7 +174,7 @@ impl Fem3dNumericalChild {
             return Err((b"fem3d.numerical-load-kind".to_vec()).into());
         };
         let Some(solid) = self.meshed_solids.get(self.load_solid_cursor) else { return Err((b"fem3d.numerical-area-load-solid".to_vec()).into()) };
-        if doc.solids.get(solid.solid_index).is_some_and(|candidate| &candidate.id == solid_id) {
+        if doc.solids.get(solid.solid_index).is_some_and(|candidate| candidate.id == *solid_id) {
             self.load_triangle_cursor = 0;
             self.load_vertex_cursor = 0;
             self.load_node_cursor = 0;
@@ -238,7 +238,7 @@ impl Fem3dNumericalChild {
         };
         let target = if self.load_triangle_cursor == 0 { start } else { end };
         let Some(node) = doc.nodes.get(self.load_node_cursor) else { return Err((b"fem3d.numerical-self-weight-node".to_vec()).into()) };
-        if &node.id == target {
+        if node.id.as_str() == target.as_str() {
             self.load_node_indices[self.load_triangle_cursor] = self.load_node_cursor;
             self.load_positions[self.load_triangle_cursor] = [node.x, node.y, node.z];
             self.load_triangle_cursor += 1;

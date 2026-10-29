@@ -5,7 +5,6 @@ use flow_extension_sdk::mesh::*;
 use neural_engine::Dictionary;
 use neural_engine::EvalError;
 use neural_engine::Value;
-use neural_engine::OperatorJob;
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
@@ -17,6 +16,7 @@ use semio_framework_3d::mesh::MeshKernelError;
 use semio_framework_3d::mesh::Vec3 as MeshVector;
 use semio_framework_3d::mesh::VertexId;
 use semio_framework_3d::mesh::MeshModelingJob;
+use semio_framework_3d::mesh::MeshModelingOps;
 use semio_framework_3d::mesh::MeshModelingStep;
 use semio_framework_3d::mesh::MeshModelingProgress;
 use semio_framework_3d::mesh::MeshTessellationJob;
@@ -171,10 +171,19 @@ pub fn read_mesh(input: &Dictionary, name: &str) -> Result<HalfedgeMesh, EvalErr
     let data = mesh.get("data").and_then(|value| value.as_atom()).and_then(|atom| atom.as_str()).ok_or_else(|| invalid("mesh data is missing"))?;
     decode_mesh(data)
 }
+pub fn work_error(failure:neural_engine::OperatorWorkFailure)->EvalError {
+    match failure {
+        neural_engine::OperatorWorkFailure::Evaluation{primary,..}=>primary,
+        neural_engine::OperatorWorkFailure::Original(original)=>invalid(original.primary.message()),
+    }
+}
 pub fn drive_job(mut job:MeshOperatorJob)->Result<Dictionary,EvalError> {
     use neural_engine::{OperatorJob,OperatorJobStep};
+    let mut sequence=0;
     let output=loop {
-        match job.step(4096,sync_grant())?.0 {
+        let mut receipt=RetainedCloneProgress::default();
+        let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(u64::MAX,u64::MAX,sync_grant()),semio_framework_job::root_cancel_token(),||Some(0),&mut sequence,&mut receipt);
+        match job.step(&mut cx).map_err(work_error)?.0 {
             OperatorJobStep::Done(output)=>break output,
             OperatorJobStep::Cancelled(_)=>return Err(invalid("mesh operation cancelled")),
             OperatorJobStep::Working(_)=>{},

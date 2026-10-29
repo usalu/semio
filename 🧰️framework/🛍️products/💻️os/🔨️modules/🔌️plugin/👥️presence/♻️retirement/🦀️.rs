@@ -50,7 +50,7 @@ pub fn no_presence_store_disposer() -> Box<dyn ArtifactOwnedDisposer<PresenceSto
 pub fn bounded_presence_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<PresenceStore<P, M>>>
 where
     P: Clone + Default + PartialEq + Send + Sync + 'static,
-    M: Mutation<P> + crate::store::ColdMutation<P> + 'static,
+    M: Mutation<P> + 'static,
 {
     match PresenceStoreOwnedDisposer::new(Arc::new(P::default()), presence_root_is_its_own_default::<P>) {
         Ok(disposer) => Box::new(disposer),
@@ -186,12 +186,12 @@ impl<P> PresenceStoreOwnedDisposer<P> {
 }
 
 impl<P: Clone + Send + Sync + 'static> PresenceStoreOwnedDisposer<P> {
-    fn owns_terminal<M: Mutation<P> + crate::store::ColdMutation<P>>(&self, owner: &PresenceStore<P, M>) -> bool {
+    fn owns_terminal<M: Mutation<P> + 'static>(&self, owner: &PresenceStore<P, M>) -> bool {
         self.terminal_generation == Some(owner.generation_now()) && owner.detached_terminal_is_empty()
     }
 }
 
-impl<P: Clone + Send + Sync + 'static, M: Mutation<P> + crate::store::ColdMutation<P>> ArtifactOwnedDisposer<PresenceStore<P, M>> for PresenceStoreOwnedDisposer<P> {
+impl<P: Clone + Send + Sync + 'static, M: Mutation<P> + 'static> ArtifactOwnedDisposer<PresenceStore<P, M>> for PresenceStoreOwnedDisposer<P> {
     fn close_step(&mut self, owner: &mut PresenceStore<P, M>, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> {
         if self.retirement.is_some() && !self.owns_terminal(owner) {
             return Err(Fault::from("presence close terminal root or generation changed"));

@@ -11,6 +11,9 @@
 //! `### protocol (facade) — additional re-exports`).
 
 //#region 🔖️Modules
+#[path = "📏️store-bounds/🦀️.rs"]
+mod store_bounds;
+pub use store_bounds::{StoreMutationFor, StoreState};
 // 📡️ The replication contract itself (frames, envelopes, mutation traits, conflict vocabulary, `.spr` format) lives in
 // `🧰️framework/🔨️modules/📡️replication`; the kernel speaks it but no longer owns it. This crate keeps every historical
 // `protocol::`/`os_spr::` path working.
@@ -80,7 +83,7 @@ pub use crate::channel::{
     AppDocumentIdentity, DocumentArchiveLoadHost, DocumentArchiveLoadOutcome, DocumentArchiveLoadRefusal, DocumentArchiveLoadState, DocumentArchiveLoadStatus, DocumentArchiveLoadStep, DocumentArchiveOwnerRef, DocumentArchivePack, MediaExportHandleWire, MediaExportStateWire, OwnedDocumentMemberPackEntry, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,
 };
 pub use crate::command::{
-    RetainedMutation, RetainedMutationPreparation, RetainedMutationLeaf, RetainedMutationLeafPreparation, RetainedMutationOwner, RetainedMutationCloseContext, RetainedFieldPreparation,    RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field, RetainedByteSpan, RetainedKeyLookup, RetainedKeyMatch, RetainedRowPatch, RetainedRowPatchFields, RetainedPatchSource, RetainedDiagnosticSpec, RetainedDiagnosticTarget, RetainedDiagnosticPreparation, RetainedMutationDecisionStep, RetainedMutationInverseStep, RetainedMutationAdvance, RetainedMutationDecision, RetainedDiff, RetainedDiffApply, RetainedDiffOwner, RetainedDiffAdmission, RetainedDiffPreflightAdvance, RetainedDiffPreflightStep, retained_diff_birth_demand, begin_retained_diff, preflight_retained_diff, commit_retained_diff, retained_mutation_birth_demand, begin_retained_mutation, decide_retained_mutation, inverse_retained_mutation, retained_mutation_demand_fits,
+    RetainedMutation, RetainedMutationPreparation, RetainedMutationLeaf, RetainedMutationLeafPreparation, RetainedMutationOwner, RetainedMutationCloseContext, RetainedFieldPreparation,    RetainedFieldChange, RetainedRecordChange, RetainedRecordChangeField, RetainedRecordFieldChange, RetainedRecordChangeOwner, boxed_record_field, RetainedByteSpan, RetainedKeyLookup, RetainedKeyMatch, RetainedRowPatch, RetainedRowPatchFields, RetainedPatchSource, RetainedDiagnosticSpec, RetainedDiagnosticTarget, RetainedDiagnosticPreparation, RetainedMutationDecisionStep, RetainedMutationInverseStep, RetainedMutationAdvance, RetainedMutationDecision, RetainedDiff, RetainedDiffFragment, RetainedRowPatchApply, RetainedDiffApply, RetainedDiffOwner, RetainedDiffAdmission, RetainedDiffPreflightAdvance, RetainedDiffPreflightStep, retained_diff_birth_demand, begin_retained_diff, preflight_retained_diff, commit_retained_diff, retained_mutation_birth_demand, begin_retained_mutation, decide_retained_mutation, inverse_retained_mutation, retained_mutation_demand_fits,
 };
 pub use crate::command::{
     apply_diff_cold, apply_diff_cold_into, indexed_apply, is_approved_verb, mutation_descriptor, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures,

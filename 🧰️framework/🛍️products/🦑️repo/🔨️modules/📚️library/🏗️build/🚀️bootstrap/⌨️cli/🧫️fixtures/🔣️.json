@@ -395,7 +395,7 @@
       "name": "other-owner",
       "args": [
         "run",
-        "other:cache-retire-inactive-preview"
+        "other:inactive-preview"
       ],
       "fault": "none",
       "target": null
@@ -404,8 +404,8 @@
       "name": "many",
       "args": [
         "run-many",
-        "--projects=repo",
-        "--targets=cache-retire-inactive"
+        "--projects=repo-cache-retire",
+        "--targets=inactive"
       ],
       "fault": "none",
       "target": null
@@ -597,7 +597,7 @@
       "name": "no-other-owner",
       "args": [
         "run",
-        "other:cache-reset-nx"
+        "other:nx"
       ],
       "fault": "none",
       "target": null
@@ -606,8 +606,8 @@
       "name": "no-run-many",
       "args": [
         "run-many",
-        "--projects=repo",
-        "--targets=cache-reset-nx"
+        "--projects=repo-cache-reset",
+        "--targets=nx"
       ],
       "fault": "none",
       "target": null
@@ -815,7 +815,7 @@
       "name": "graph-no-other-owner",
       "args": [
         "run",
-        "other:cache-reset-graph"
+        "other:graph"
       ],
       "fault": "none",
       "target": null
@@ -824,8 +824,8 @@
       "name": "graph-no-run-many",
       "args": [
         "run-many",
-        "--projects=repo",
-        "--targets=cache-reset-graph"
+        "--projects=repo-cache-reset",
+        "--targets=graph"
       ],
       "fault": "none",
       "target": null
@@ -960,6 +960,24 @@
       "target": null
     },
     {
+      "name": "rust-fixed-owner",
+      "args": [
+        "run",
+        "repo-cache-reset:rust"
+      ],
+      "fault": "none",
+      "target": "rust"
+    },
+    {
+      "name": "products-fixed-owner",
+      "args": [
+        "run",
+        "repo-cache-reset:products"
+      ],
+      "fault": "none",
+      "target": "products"
+    },
+    {
       "name": "closed-partition-roster",
       "args": [
         "run",
@@ -1001,6 +1019,20 @@
         "nx"
       ],
       "profile": "nx"
+    },
+    {
+      "name": "products-profile",
+      "args": [
+        "products"
+      ],
+      "profile": "products"
+    },
+    {
+      "name": "rust-profile",
+      "args": [
+        "rust"
+      ],
+      "profile": "rust"
     },
     {
       "name": "no-profile",
@@ -1411,6 +1443,12 @@
         "request": "repo-cache-reset:cache-reset-graph",
         "kind": "cache-reset",
         "target": "graph"
+      },
+      {
+        "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget/📋️project.json",
+        "request": "repo-cache-retire:inactive-preview",
+        "kind": "maintenance",
+        "target": "preview"
       },
       {
         "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/🔌️mcp/📋️project.json",

@@ -1,4 +1,10 @@
-use super::*;
+use semio_framework_os_kernel::{MutationMessage,MutationMessageLedgerRetirement};
+use crate::LayoutMutation;
+use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
+use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_s_artifact_layout_layout_mutations_decisions::batch_message::*;
+use semio_framework_diagnostic::Severity;
+
 use semio_framework_value::{RetireOwned,retained_clone::RetainedCloneSource};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn decode<T:semio_framework_value::FromValue>(v:&serde_json::Value)->T{semio_framework_pack_json::from_json_str(&v.to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
@@ -7,7 +13,7 @@ fn close_source<T:RetireOwned+Sync>(s:&mut RetainedCloneSource<T>){while !s.term
 fn literal(value:&str)->&'static str{match value{"targets must not repeat \""=>"targets must not repeat \"","\""=>"\""," of "=>" of "," target(s) skipped (not on this page): "=>" target(s) skipped (not on this page): "," target(s) skipped (locked): "=>" target(s) skipped (locked): ",", "=>", ","The transform moves no frame."=>"The transform moves no frame.","None of the "=>"None of the "," target(s) is an unlocked frame of page \""=>" target(s) is an unlocked frame of page \"","\"."=>"\".","A drag offset must be finite."=>"A drag offset must be finite.",_=>panic!("unregistered finite diagnostic literal")}}
 struct Source<'a>{row:&'a serde_json::Value,m:RetainedCloneRef<'a,LayoutMutation>,b:RetainedCloneRef<'a,LayoutSnapshot>}
 impl Source<'_>{fn original(&self,index:usize)->RetainedCloneRef<'_,String>{self.m.project(74,|m|match m{LayoutMutation::DragFrames(p)=>&p.targets,_=>unreachable!()}).project(index,move|rows|&rows[index])}}
-impl DynamicMessageSource for Source<'_>{
+impl DynamicMessageSource for Source<'_>{type Mutation=LayoutMutation;
  fn mutation(&self)->RetainedCloneRef<'_,LayoutMutation>{self.m}fn baseline(&self)->RetainedCloneRef<'_,LayoutSnapshot>{self.b}fn identity(&self)->usize{1}
  fn level(&self)->Severity{match self.row["level"].as_str().unwrap(){"warning"=>Severity::Warning,"error"=>Severity::Error,"fatal"=>Severity::Fatal,_=>unreachable!()}}
  fn code(&self)->&'static str{match self.row["code"].as_str().unwrap(){"mutation.partial"=>"mutation.partial","mutation.no-op"=>"mutation.no-op","mutation.invariant"=>"mutation.invariant","mutation.target-missing"=>"mutation.target-missing",_=>unreachable!()}}

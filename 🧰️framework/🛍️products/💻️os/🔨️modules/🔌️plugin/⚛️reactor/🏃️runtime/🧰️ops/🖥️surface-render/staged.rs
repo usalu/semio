@@ -8,11 +8,11 @@ use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
 #[derive(Clone,Copy,PartialEq,Eq)]
 pub struct StagedWindowContextLease {key:NativeCloseKey,source:SurfaceWindowLease,original:OriginalContext}
 semio_framework_value::artifact_retire_leaf!(StagedWindowContextLease);
-#[derive(Default)]
+#[derive(Default,semio_framework_value::RetireOwned)]
 pub struct StagedWindowContextCapture {key:Option<NativeCloseKey>,cursor:SurfaceWindowLeaseCursor,original:Option<OriginalContext>}
-semio_framework_value::artifact_retire_leaf!(StagedWindowContextCapture);
 #[derive(Clone,Copy,PartialEq,Eq)]
 struct OriginalContext{binding:OriginalSourceBinding,parent:usize,recipient:usize,cancel:usize,epoch:Option<u64>,observed:u64,deadline:u64}
+semio_framework_value::artifact_retire_leaf!(OriginalContext);
 impl OriginalContext{
     fn read(cx:&StepContext<'_>)->Result<Self,OriginalTurnFailure>{Ok(Self{binding:OriginalSourceBinding::borrow(cx),parent:cx.original_source_parent()?.source_identity()?,recipient:cx.original_recipient_identity(),cancel:cx.original_cancel_token()as*const _ as usize,epoch:cx.original_source_epoch(),observed:cx.now_us().ok_or_else(invalid)?,deadline:cx.deadline_us()})}
     fn validate(self,cx:&StepContext<'_>)->Result<Self,OriginalTurnFailure>{

@@ -94,7 +94,7 @@ store::config_diff! { record: Generation2dConfig, diff: Generation2dConfigDiff, 
 //#region 🔖️ConfigOperations
 /// 🧮️ [`Generation2dConfig`]'s operation enum — one variant per settled config write; each variant's inverse is the same
 /// variant carrying the base value of exactly the field it owns.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum Generation2dConfigMutation {
     #[dsl(key = "show-mode")]
@@ -104,7 +104,7 @@ pub enum Generation2dConfigMutation {
 }
 
 /// 👁️ The display mode a show-mode write sets; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "show-mode")]
 pub struct SetShowModeSetting {
@@ -112,7 +112,7 @@ pub struct SetShowModeSetting {
 }
 
 /// 👁️ The generation selection a selection write sets; its wire record is exactly the former variant's fields.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[dsl(keyword = "selected-generation")]
 pub struct SetSelectedGenerationSetting {

@@ -258,8 +258,3 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: DocxStrictAnalyzer,
     composer: DocxStrictComposer,
 );
-
-#[path = "📝️text"]
-pub mod text { #[path = "🧬️mutations/🦀️.rs"] pub mod mutations; }
-#[path = "💾️binary"]
-pub mod binary { #[path = "🧬️mutations/🦀️.rs"] pub mod mutations; }

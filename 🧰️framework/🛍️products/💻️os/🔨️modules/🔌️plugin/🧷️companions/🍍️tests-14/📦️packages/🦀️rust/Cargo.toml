@@ -47,7 +47,7 @@ semio-framework-plugin-testing-fixtures = { path = "../../../../🧪️testing/�
 semio-framework-plugin-testing-fixtures-publication = { path = "../../../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }
 semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-tests-03 = { path = "../../../🍊️tests-03/📦️packages/🦀️rust" }
-semio-framework-plugin-tests-05 = { path = "../../../🍌️tests-05/📦️packages/🦀️rust" }
+semio-framework-plugin-tests-05 = { path = "../../../🍌️tests-05/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-tool-run = { path = "../../../../⏯️tool-run/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-framework-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

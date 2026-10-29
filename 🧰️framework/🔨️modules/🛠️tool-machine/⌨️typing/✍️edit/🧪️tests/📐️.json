@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contract",
+    "states",
+    "cases",
+    "denials",
+    "cancelAfter",
+    "foreignCallerRefused",
+    "foreignDecoderRefused",
+    "sameMutationBacking",
+    "originalOldRowUntilPublication"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.original-typing-edit.v1"
+    },
+    "states": {
+      "const": [
+        "root",
+        "typing"
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "before",
+          "input",
+          "fold",
+          "expected"
+        ],
+        "properties": {
+          "fold": {
+            "enum": [
+              "split",
+              "replace",
+              "net"
+            ]
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "steps",
+              "committed",
+              "open"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

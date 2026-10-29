@@ -16,8 +16,11 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-energy-model-native-derive = { workspace = true }
 semio-s-artifact-energy-model-native-mutations = { workspace = true }
+semio-s-artifact-energy-model-native-mutations-lifecycle = { workspace = true }
+semio-s-artifact-energy-model-native-mutations-singletons = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
@@ -31,6 +34,7 @@ semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-mut-air-loop = { workspace = true }
+semio-s-artifact-energy-model-mut-air-loop-nodes = { workspace = true }
 semio-s-artifact-energy-model-mut-battery = { workspace = true }
 semio-s-artifact-energy-model-mut-boundary = { workspace = true }
 semio-s-artifact-energy-model-mut-construction = { workspace = true }
@@ -40,20 +44,26 @@ semio-s-artifact-energy-model-mut-enclosure = { workspace = true }
 semio-s-artifact-energy-model-mut-equipment-gain = { workspace = true }
 semio-s-artifact-energy-model-mut-fault = { workspace = true }
 semio-s-artifact-energy-model-mut-fenestration = { workspace = true }
+semio-s-artifact-energy-model-mut-fenestration-geometry = { workspace = true }
 semio-s-artifact-energy-model-mut-finish = { workspace = true }
 semio-s-artifact-energy-model-mut-fixed-schedule = { workspace = true }
 semio-s-artifact-energy-model-mut-glazing = { workspace = true }
 semio-s-artifact-energy-model-mut-humidistat = { workspace = true }
 semio-s-artifact-energy-model-mut-ideal-loads = { workspace = true }
+semio-s-artifact-energy-model-mut-ideal-loads-limits = { workspace = true }
 semio-s-artifact-energy-model-mut-infiltration = { workspace = true }
 semio-s-artifact-energy-model-mut-leakage = { workspace = true }
 semio-s-artifact-energy-model-mut-lighting-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-lighting-gain-emission = { workspace = true }
 semio-s-artifact-energy-model-mut-load-center = { workspace = true }
 semio-s-artifact-energy-model-mut-material = { workspace = true }
 semio-s-artifact-energy-model-mut-model = { workspace = true }
+semio-s-artifact-energy-model-mut-model-simulation = { workspace = true }
 semio-s-artifact-energy-model-mut-outdoor-air = { workspace = true }
 semio-s-artifact-energy-model-mut-people-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-people-gain-fractions = { workspace = true }
 semio-s-artifact-energy-model-mut-plant-loop = { workspace = true }
+semio-s-artifact-energy-model-mut-plant-loop-design = { workspace = true }
 semio-s-artifact-energy-model-mut-pv-system = { workspace = true }
 semio-s-artifact-energy-model-mut-pv-system-performance = { workspace = true }
 semio-s-artifact-energy-model-mut-refrigeration = { workspace = true }
@@ -64,11 +74,13 @@ semio-s-artifact-energy-model-mut-shading = { workspace = true }
 semio-s-artifact-energy-model-mut-shading-device = { workspace = true }
 semio-s-artifact-energy-model-mut-shw-system = { workspace = true }
 semio-s-artifact-energy-model-mut-site = { workspace = true }
+semio-s-artifact-energy-model-mut-site-ground = { workspace = true }
 semio-s-artifact-energy-model-mut-sizing = { workspace = true }
 semio-s-artifact-energy-model-mut-solar-thermal = { workspace = true }
 semio-s-artifact-energy-model-mut-space = { workspace = true }
 semio-s-artifact-energy-model-mut-space-list = { workspace = true }
 semio-s-artifact-energy-model-mut-surface = { workspace = true }
+semio-s-artifact-energy-model-mut-surface-properties = { workspace = true }
 semio-s-artifact-energy-model-mut-thermostat = { workspace = true }
 semio-s-artifact-energy-model-mut-time-series = { workspace = true }
 semio-s-artifact-energy-model-mut-ventilation = { workspace = true }
@@ -76,7 +88,9 @@ semio-s-artifact-energy-model-mut-water-system = { workspace = true }
 semio-s-artifact-energy-model-mut-week-schedule = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer-optics = { workspace = true }
+semio-s-artifact-energy-model-mut-window-layer-optics-visible = { workspace = true }
 semio-s-artifact-energy-model-mut-year-schedule = { workspace = true }
+semio-s-artifact-energy-model-mut-year-schedule-holidays = { workspace = true }
 semio-s-artifact-energy-model-mut-zone = { workspace = true }
 semio-s-artifact-energy-model-mut-zone-equipment = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
@@ -86,4 +100,3 @@ semio-s-plugin-energy-engine-model = { path = "../../../../../../../../../../�
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde_json = { workspace = true }
-semio-framework-value-native-owned = { workspace = true }

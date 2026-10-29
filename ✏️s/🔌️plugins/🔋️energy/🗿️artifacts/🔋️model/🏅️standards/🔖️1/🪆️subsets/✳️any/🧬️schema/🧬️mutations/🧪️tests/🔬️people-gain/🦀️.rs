@@ -5,6 +5,7 @@ extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_mut_people_gain as people_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_people_gain_fractions as people_gain_fractions_mutations;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
@@ -19,7 +20,7 @@ mod change_people_gain_schedule {
 
 #[path = "."]
 mod change_people_gain_sensible_fraction {
-    pub use crate::people_gain_mutations::change_people_gain_sensible_fraction::*;
+    pub use crate::people_gain_fractions_mutations::change_people_gain_sensible_fraction::*;
     #[path = "../../👥️people-gain/🌞️change-sensible-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../👥️people-gain/🌞️change-sensible-fraction/🧪️tests/✅️applies/🦀️.rs"]
@@ -55,7 +56,7 @@ mod change_people_gain_people_per_area {
 
 #[path = "."]
 mod change_people_gain_latent_fraction {
-    pub use crate::people_gain_mutations::change_people_gain_latent_fraction::*;
+    pub use crate::people_gain_fractions_mutations::change_people_gain_latent_fraction::*;
     #[path = "../../👥️people-gain/💧️change-latent-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../👥️people-gain/💧️change-latent-fraction/🧪️tests/✅️applies/🦀️.rs"]
@@ -64,7 +65,7 @@ mod change_people_gain_latent_fraction {
 
 #[path = "."]
 mod change_people_gain_radiant_fraction {
-    pub use crate::people_gain_mutations::change_people_gain_radiant_fraction::*;
+    pub use crate::people_gain_fractions_mutations::change_people_gain_radiant_fraction::*;
     #[path = "../../👥️people-gain/📡️change-radiant-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../👥️people-gain/📡️change-radiant-fraction/🧪️tests/✅️applies/🦀️.rs"]

@@ -1,6 +1,6 @@
 //! 📦️ FEM 3D artifact — binary document surface + laws (constitutional: pack).
 
-use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::{Fem3dSnapshot, Fem3dSnapshotValue};
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -82,7 +82,7 @@ impl store::ArtifactNativeSnapshot for Fem3dSnapshot {
 impl store::ArtifactPackReceiving for Fem3dSnapshot{
  /// 🫴️ The original pack parser, field graph, authoring rows and persistent output share the caller's receiving and retirement frames.
  fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,semio_framework_value::ValueError>{
-  use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+  use semio_framework_value::{ValueError,ValueRefusalKind};
   use semio_framework_dsl_record::{BorrowedDslRecord,RecordValue};
   use pack::record::RetainedRecordReceiving;
   owner.receive_nested::<RecordValue,Self>(|slot,original|{

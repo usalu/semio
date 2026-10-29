@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-energy-model-mut-fenestration-geometry"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model mutation domain fenestration geometry: payloads, builders, diff and inverse of its operations"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-artifact-energy-model-native-derive = { workspace = true }
+semio-s-artifact-energy-model-native-mutations = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-energy-model-diff = { workspace = true }
+semio-s-artifact-energy-model-diff-patch = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-plugin-energy-engine-geometry = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }

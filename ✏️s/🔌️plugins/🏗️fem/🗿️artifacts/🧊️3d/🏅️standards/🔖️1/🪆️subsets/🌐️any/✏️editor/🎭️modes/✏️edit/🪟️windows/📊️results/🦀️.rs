@@ -26,21 +26,7 @@ use semio_framework_ui_contract::HasChildren;
 use semio_framework_ui_contract::HasStackLayout;
 use std::collections::HashMap;
 
-/// 🧮️ Source and mode indices belong to the admitted generation original document.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct Fem3dResultRequest {
-    pub source: Fem3dResultSource,
-    pub mode: Option<usize>,
-    pub buckling: Option<usize>,
-}
-
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum Fem3dResultSource {
-    #[default]
-    FirstCase,
-    Case(usize),
-    Combination(usize),
-}
+pub use semio_s_artifact_fem_3d_editor_visual_job::editor::fem3d::session::visual_job::{Fem3dResultRequest, Fem3dResultSource};
 
 /// 🎯️ Resolves the displayed source and mode against the admitted document.
 pub fn result_request(doc: &Fem3dSnapshot, source: Option<&str>, mode: Option<usize>) -> Result<Fem3dResultRequest, &'static str> {

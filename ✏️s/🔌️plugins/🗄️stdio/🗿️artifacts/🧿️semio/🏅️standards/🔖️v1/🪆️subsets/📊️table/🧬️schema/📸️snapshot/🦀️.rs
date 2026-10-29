@@ -38,7 +38,7 @@ pub const STDIO_SEMIOTABLE_DOCUMENT_SCHEMA: &str = "s.stdio.semio.table";
 /// 🏷️ The declared column-type tag — mirrors `SemioValue`'s SCALAR variant names only (`Null`/
 /// `Bool`/`Int`/`Float`/`Str`/`Bytes`; no `List`/`Map`/`Ref` — a column's cells are meant to be
 /// scalar). Text tags: `n`/`b`/`i`/`f`/`s`/`y`. Binary tags: `0`-`5` in declaration order.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslScalar)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SemioTableCellKind {
@@ -55,7 +55,7 @@ pub enum SemioTableCellKind {
 //#region 🔖️Column
 /// 🏛️ One declared column: `name` is the NATIVE KEY (name-keyed collection — like cad layers/xlsx
 /// sheets, `📓️taxonomy.md`'s addressing rule #2) plus its declared `kind` tag.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct SemioTableColumn {
     pub name: String,
@@ -69,17 +69,19 @@ pub struct SemioTableColumn {
 /// ordered, anonymous collection, `📓️taxonomy.md` addressing rule #3), the same shape
 /// `insert-row`/`remove-row`/`reorder-rows` operate on. `SemioValue` (from `🔢️value`) is reused
 /// verbatim for cell data — real reuse, not reinvention.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioTableRow {
     #[value(default)]
+    #[dsl(statements, block)]
     pub cells: Vec<SemioValue>,
 }
 //#endregion 🔖️Row
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.table")]
 pub struct SemioTableSnapshot {

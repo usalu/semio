@@ -221,7 +221,7 @@ fn the_initial_snapshot_costs_only_its_document() {
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
     let document = peak_of(&|| drop(Puzzle2dPlaySnapshot::new(semio_framework_value::FromValue::from_value(semio_framework_value::ToValue::to_value(&(semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&(empty_board_snapshot())))))).expect("typed fixture admits"))));
-    let snapshot = peak_of(&|| drop(<Puzzle2dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")()));
+    let snapshot = peak_of(&|| drop(<Puzzle2dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births")));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");
 }

@@ -31,6 +31,7 @@ semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/
 semio-framework-plugin-decl-registry = { path = "../../../../📜️declaration/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-surface = { path = "../../../../📜️declaration/🪟️surface/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust", features = ["media-turn-testing"] }
+semio-framework-plugin-decl-tool-contract = { path = "../../../../📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
 semio-framework-plugin-document-media = { path = "../../../../🗃️document/📦️packages/🦀️rust", features = ["artifact-app-testing", "media-turn-testing"] }
 semio-framework-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust", features = ["original-actor-context-testing"] }
 semio-framework-plugin-instance-app = { path = "../../../../🧵️instance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

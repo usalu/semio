@@ -1,5 +1,5 @@
 use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin_window_config::WindowConfigSnapshot;
 use crate::ArtifactApp;
 use semio_framework_tool_run::ToolRunDefinition;

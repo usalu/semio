@@ -336,8 +336,8 @@ impl ArtifactEditor for MdEditor {
         md_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        MdSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(MdSnapshot::default())
     })}
 
     fn handle(

@@ -79,6 +79,7 @@ impl<I:NativeValueSource+?Sized,T:NativeScalarValue<I>> Drop for NativeScalarRec
 macro_rules! scalar {($t:ty,$input:ident,$value:expr)=>{impl<I:NativeValueSource+?Sized> NativeScalarValue<I> for $t{fn read($input:&I)->Result<Self,ValueError>{$value}fn read_copy_bytes(_: &I)->Result<usize,ValueError>{Ok(size_of::<Self>())}}impl<I:NativeValueSource+?Sized> NativeReceive<I> for $t{type Receiver=NativeScalarReceiver<I,Self>;fn receive_birth_demand()->RetirementDemand{Self::Receiver::birth()}fn begin_receive(g:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError>{Self::Receiver::begin(g)}}};}
 scalar!(bool,input,input.boolean());scalar!((),input,if input.is_null(){Ok(())}else{Err(invalid())});
 scalar!(f64,input,{let n=input.number()?.as_f64();if n.is_finite(){Ok(n)}else{Err(invalid())}});
+scalar!(f32,input,{let n=input.number()?.as_f64();if n.is_finite()&&n.abs()<=f32::MAX as f64{Ok(n as f32)}else{Err(invalid())}});
 macro_rules! unsigned {($($t:ty),*)=>{$(scalar!($t,input,match input.number()?{Number::UInt(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Int(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Float(n)if n.is_finite()&&n.fract()==0.0&&n>=0.0&&(n as u128)<=<$t>::MAX as u128&&n<18446744073709551616.0=>Ok(n as $t),_=>Err(invalid())});)*};}
 unsigned!(u8,u16,u32,u64,usize);
 macro_rules! signed {($($t:ty),*)=>{$(scalar!($t,input,match input.number()?{Number::UInt(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Int(n)=><$t>::try_from(n).map_err(|_|invalid()),Number::Float(n)if n.is_finite()&&n.fract()==0.0&&n>=<$t>::MIN as f64&&n<=<$t>::MAX as f64&&n<9223372036854775808.0=>Ok(n as $t),_=>Err(invalid())});)*};}
@@ -150,6 +151,7 @@ impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>> NativeRe
 impl<I:NativeValueSource+?Sized,T:NativeReceive<dyn NativeValueSource>,const N:usize> NativeReceive<I> for [T;N]{type Receiver=NativeSequenceReceiver<I,T,Self>;fn receive_birth_demand()->RetirementDemand{Self::Receiver::birth()}fn begin_receive(g:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError>{Self::Receiver::begin(g)}}
 
 #[path="👥️tuple/🦀️.rs"]pub mod tuple;
+#[path="🧱️bulk/🦀️.rs"]pub mod bulk;
 
 #[cfg(test)]#[path="📖️source/🧪️tests/🦀️.rs"]mod source_tests;
 

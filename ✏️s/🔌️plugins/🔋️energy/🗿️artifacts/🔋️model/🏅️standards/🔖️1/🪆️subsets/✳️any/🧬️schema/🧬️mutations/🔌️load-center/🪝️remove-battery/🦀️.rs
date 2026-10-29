@@ -21,5 +21,3 @@ pub fn remove_electrical_load_center_battery<Op: From<RemoveElectricalLoadCenter
 }
 
 //#endregion 🔖️Mutation
-
-#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

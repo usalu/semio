@@ -263,10 +263,9 @@ static PUZZLE3D_WORLD3D_LANE_CONTRACT: std::sync::LazyLock<String> = std::sync::
 /// drives it to quiescence, exactly as the navbar picker does.
 async fn nakagin_app() -> Puzzle3dApp {
     let mut app = app().await;
-    let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), None).expect("setActiveExample is a declared puzzle3d command");
     let action_meta = app.meta("local");
     let (raw, cx) = app.parts();
-    raw.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("setActiveExample mints its retained whole-document operation");
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, "setActiveExample", Some(semio_framework_pack_json::to_dsl_value(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN }))), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample mints its retained whole-document operation");
     settle(&mut app).await;
     app
 }

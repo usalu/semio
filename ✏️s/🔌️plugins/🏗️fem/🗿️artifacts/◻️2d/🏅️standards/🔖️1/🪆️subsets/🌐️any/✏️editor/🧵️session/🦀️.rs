@@ -20,6 +20,7 @@ use semio_s_fem_mesh::MeshOpts;
 use semio_s_fem_mesh::PlanarDomain;
 use semio_s_fem_mesh::TriMesh2;
 use semio_s_fem_model::Element;
+use semio_s_fem_sparse::Csr;
 use semio_s_fem_sparse::MountedScalarSlots;
 use semio_s_fem_sparse_pcg::PcgJob;
 use semio_s_fem_sparse_pcg::PcgJobConstruction;

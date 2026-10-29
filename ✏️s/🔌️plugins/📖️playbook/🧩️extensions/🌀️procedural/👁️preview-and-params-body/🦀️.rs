@@ -3,6 +3,23 @@
 use super::*;
 
 //#region 🔖️Preview
+/// 🧵️ Drives one session tessellation turn by turn to its terminal mesh and renders that mesh as the canonical mesh JSON the world3d scene carries; any non-terminal outcome yields no mesh.
+fn tessellated_mesh_json(session: &SessionCapture, handle: &str, tolerance: f64) -> Option<String> {
+    let identity = flow::geometry::GeometryWorkIdentity { operation: 1, generation: 1 };
+    let grant = RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 30, maximum_capacity_bytes: 1 << 30, maximum_release_bytes: 1 << 30, maximum_depth: 256 };
+    let mut sequence = 0;
+    for _ in 0..1_000_000 {
+        let mut receipt = RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(identity.operation), semio_framework_job::Generation(identity.generation), semio_framework_job::StepBudget::new(u64::MAX, u64::MAX, grant), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, &mut receipt);
+        match session.tessellate_step(identity, handle, tolerance, &mut cx).ok()?.0 {
+            flow::geometry::GeometryStep::Ready(mesh) => return Some(semio_framework_pack_json::to_json_string(&mesh)),
+            flow::geometry::GeometryStep::Working { .. } => {}
+            _ => return None,
+        }
+    }
+    None
+}
+
 pub(super) fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_snapshot: &FlowHostSnapshot, params: &Value) -> (String, String) {
     let mut host = match owner.host(host_snapshot.clone()) {
         Ok(host) => host,
@@ -27,8 +44,8 @@ pub(super) fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_sn
         preview_handles.push(handle.clone());
         let mesh_id = format!("eval-{id}");
         if !meshes.iter().any(|entry| entry.get("id").and_then(|value| value.as_str()) == Some(mesh_id.as_str())) {
-            let tessellated = owner.session.tessellate_geometry(&handle, 0.05);
-            if let Ok(data) = tessellated {
+            let tessellated = tessellated_mesh_json(&owner.session, &handle, 0.05);
+            if let Some(data) = tessellated {
                 meshes.push(semio_framework_pack_json::json!({ "id": mesh_id, "data": data }));
             }
         }
@@ -47,7 +64,7 @@ pub(super) fn evaluated_preview_payload(owner: &mut ModuleGeometryOwner, host_sn
     }
     if let Ok(handles) = imported_geometry_handles(owner, params) {
         for (index, handle) in handles.iter().enumerate() {
-            if let Ok(data) = owner.session.tessellate_geometry(handle, 0.05) {
+            if let Some(data) = tessellated_mesh_json(&owner.session, handle, 0.05) {
                 let id = format!("import-{index}");
                 meshes.push(semio_framework_pack_json::json!({ "id": id, "data": data }));
                 instances.push(semio_framework_pack_json::json!({ "id": id, "meshId": id, "position": [0.0, 0.0, 0.0], "rotation": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0], "label": id, "selected": false, "hovered": false }));

@@ -227,9 +227,11 @@ self.addEventListener("message", async (event) => {
           const events = spliceInstanceOpenAssets(actor, result.envelopes.map((envelope) => envelope.payload));
           timings.events = events.length;
           timings.guestEnteredAtEpochMs = hopEpochNow();
-          const polled = await actor.api.poll(events, undefined, undefined, result.budget);
+          // One guest turn per envelope, in frame order, like the native ShardLoop: a reactor turn admits at most one event. A frame of several envelopes answers one turn result per envelope.
+          const polls = [];
+          for (const batch of events.length === 0 ? [[]] : events.map((event) => [event])) polls.push(await actor.api.poll(batch, undefined, undefined, result.budget));
           timings.guestLeftAtEpochMs = hopEpochNow();
-          reply(requestId, polled, timings);
+          reply(requestId, polls.length === 1 ? polls[0] : polls, timings);
         } finally {
           inFlightTurnActors.delete(actorId);
         }

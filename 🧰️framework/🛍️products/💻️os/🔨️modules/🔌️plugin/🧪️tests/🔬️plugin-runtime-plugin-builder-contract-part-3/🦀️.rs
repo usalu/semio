@@ -6,7 +6,7 @@
 //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
 //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
 
-use semio_framework_plugin_decl_views::media_contract::ARTIFACT_OUTPUT_CHUNK_BYTES;
+use semio_framework_plugin_decl_media::ARTIFACT_OUTPUT_CHUNK_BYTES;
 use semio_framework_plugin_plugin_program::AppInstance;
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_plugin_operation::ArtifactDocumentAuthority;
@@ -46,7 +46,7 @@ use semio_framework_plugin_abi::ArtifactComposer;
 use semio_framework_plugin_abi::ArtifactComposition;
 use semio_framework_plugin_abi::ArtifactDecomposer;
 use semio_framework_plugin_decl_surface::ArtifactEditor;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use store::ArtifactStoreInitializationAuthority;
@@ -84,8 +84,8 @@ use semio_framework_ui_locale::Locale;
 use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput;
-use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
+use semio_framework_plugin_decl_media::ArtifactOutputChunks;
 use semio_framework_plugin_decl_views::{NoPresence, NoPresenceMutation};
 use semio_framework_plugin_decl_views::PeerPresence;
 use semio_framework_plugin_instance_app::VcsArtifactApp;

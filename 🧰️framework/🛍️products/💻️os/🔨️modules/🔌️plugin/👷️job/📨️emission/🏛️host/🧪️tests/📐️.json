@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Host Configuration Cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "policies",
+    "classification",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "policies": {
+      "type": "object",
+      "required": [
+        "raw",
+        "process",
+        "sourcing"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "raw": {
+          "$ref": "#/$defs/policy"
+        },
+        "process": {
+          "$ref": "#/$defs/policy"
+        },
+        "sourcing": {
+          "$ref": "#/$defs/policy"
+        }
+      }
+    },
+    "classification": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action",
+          "expected"
+        ],
+        "properties": {
+          "action": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "policy",
+          "input",
+          "expected"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "policy": {
+            "enum": [
+              "raw",
+              "process",
+              "sourcing"
+            ]
+          },
+          "input": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "bound": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "policy": {
+      "type": "object",
+      "required": [
+        "maximumInputBytes",
+        "maximumOutputBytes",
+        "projection"
+      ],
+      "properties": {
+        "maximumInputBytes": {
+          "$ref": "#/$defs/bound"
+        },
+        "maximumOutputBytes": {
+          "$ref": "#/$defs/bound"
+        },
+        "projection": {
+          "enum": [
+            "raw",
+            "contributions"
+          ]
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumStringBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "topic": {
+          "type": "string"
+        },
+        "appId": {
+          "type": "string"
+        },
+        "payloadFields": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "excludedModuleIds": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "deduplicateModules": {
+          "type": "boolean"
+        },
+        "maximumModules": {
+          "$ref": "#/$defs/bound"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

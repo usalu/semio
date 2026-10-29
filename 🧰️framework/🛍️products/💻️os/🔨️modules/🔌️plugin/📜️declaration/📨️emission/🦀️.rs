@@ -1,4 +1,7 @@
 //! 📨️ What an app emits: edits, tasks, child emissions, actions and the command macros.
+#[path="🏛️host/🦀️.rs"]
+mod original_host_configuration;
+pub use original_host_configuration::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;

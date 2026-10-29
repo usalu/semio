@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-layout-layout-editor-transform-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Native transform preview, publication and original follower lifecycle laws"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-job = { workspace = true, features = ["testkit"] }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-layout-layout-editor-commands = { workspace = true }
+semio-s-artifact-layout-layout-model = { workspace = true }
+semio-s-artifact-layout-layout-mutations = { workspace = true }
+semio-s-artifact-layout-layout-mutations-frames = { workspace = true }
+serde_json = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-layout-layout-editor = { workspace = true, features = ["testkit"] }
+semio-framework-tool-machine = { workspace = true }
+semio-s-artifact-layout-layout-mutations-content = { workspace = true }
+semio-framework-plugin-tool-run = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⏯️tool-run/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-emission = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-scrub-host = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/🫧️host/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-typed-ops = { path = "../../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧾️typed-operations/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-ui-contract = { workspace = true }
+semio-framework-async = { workspace = true }

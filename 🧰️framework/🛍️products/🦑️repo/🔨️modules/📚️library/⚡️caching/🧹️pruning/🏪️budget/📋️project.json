@@ -1,6 +1,10 @@
 {
   "name": "repo-cache-retirement",
   "projectType": "library",
+  "tags": [
+    "scope:repo",
+    "language:typescript"
+  ],
   "targets": {
     "cache-retire-inactive-preview": {
       "executor": "repo:script",

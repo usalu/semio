@@ -1,5 +1,6 @@
 //! 🧪️ Genuine Draw issuance, independent serde witnesses and exact original allocator receipts exercise every cancellation cut.
-use super::*;
+use crate::*;
+fn g(g:VectorSceneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:g.maximum_source_items,maximum_copy_bytes:g.maximum_copy_bytes,maximum_capacity_bytes:g.maximum_capacity_bytes,maximum_release_bytes:g.maximum_release_bytes,maximum_depth:g.maximum_depth}}
 use semio_framework_value::retained_clone::RetainedCloneSource;
 use semio_s_artifact_draw_drawing_model::{snapshot::DrawingSnapshot,validation::DRAWING_ADMITTER,vector_source::DRAWING_VECTOR_SOURCE};
 use semio_framework_value_testing_allocator::observe_retirement_allocations;

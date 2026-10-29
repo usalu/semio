@@ -24,6 +24,19 @@ fn persistent_shared_pages_preserve_readers_and_birth_only_changed_paths(){
   let mut candidate=original(candidate);close(&mut plan);let(_,h)=observe(||drop(plan));assert_eq!(h,(0,0));close_source(&mut candidate);close_source(&mut reader);close_source(&mut authored);close_source(&mut source);
  }
 }
+/// 🔗️ Cloning shares the page root as an alias without copying a row; each live alias retires through the ordinary owner protocol.
+#[test]
+fn persistent_list_clone_shares_the_root_alias_and_every_alias_retires() {
+ let mut first=original(list(40));
+ let root=first.borrow().get().root.as_ref().unwrap().identity();
+ let clone=first.borrow().get().clone();
+ assert_eq!(clone.root.as_ref().unwrap().identity(),root);
+ assert_eq!(clone.len(),40);
+ assert_eq!(clone.get(7).unwrap() as *const i64,first.borrow().get().get(7).unwrap() as *const i64);
+ let mut second=original(clone);
+ close_source(&mut second);
+ close_source(&mut first);
+}
 /// 🛑️ Every original path frontier closes without replacing or mutating published roots.
 #[test]
 fn persistent_shared_pages_cancel_every_changed_path_frontier(){for frontier in 0..45{let mut source=original(list(17));let mut authored=original(row(-7));let root=source.borrow().get().root.as_ref().unwrap().identity();let mut plan=PersistentSet::new(16);for _ in 0..frontier{let g=grant(plan.demand(source.borrow(),authored.borrow()).unwrap());if matches!(plan.advance(source.borrow(),authored.borrow(),g).unwrap(),RetainedCloneStep::Complete(_)){break;}}assert_eq!(source.borrow().get().root.as_ref().unwrap().identity(),root);assert_eq!(source.borrow().get().get(16),Some(&32));close(&mut plan);close_source(&mut authored);close_source(&mut source);}}

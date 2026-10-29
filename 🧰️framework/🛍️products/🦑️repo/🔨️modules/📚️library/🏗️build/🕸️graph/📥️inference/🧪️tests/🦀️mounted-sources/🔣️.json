@@ -223,6 +223,141 @@
     "nodes/schema/volumetric.rs",
     "nodes/tests.rs"
    ]
+  },
+  {
+   "name": "build-script-environment-only",
+   "mechanism": "build.rs that mounts its environment-only helper by include!",
+   "crate": "c9/crate",
+   "files": {
+    "c9/crate/Cargo.toml": "[package]\nname = \"c9\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c9/crate/build.rs": "include!(\"../shared/link.rs\");\n",
+    "c9/crate/src/lib.rs": "pub fn f() {}\n",
+    "c9/shared/link.rs": "use std::env;\n\nfn main() {\n    if env::var(\"CARGO_CFG_TARGET_OS\").as_deref() == Ok(\"windows\") {\n        println!(\"cargo:rustc-link-arg-bin=x=/STACK:8388608\");\n    }\n}\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "c9/crate/build.rs",
+    "c9/crate/src/lib.rs",
+    "c9/shared/link.rs"
+   ],
+   "outside": [
+    "c9/shared/link.rs"
+   ]
+  },
+  {
+   "name": "build-script-decoys-in-comments-and-literals",
+   "mechanism": "fs names in comments, nested comments, strings, raw strings and a quote character literal are not reads",
+   "crate": "c10/crate",
+   "files": {
+    "c10/crate/Cargo.toml": "[package]\nname = \"c10\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c10/crate/build.rs": "// std::fs::read(\"x\") is only mentioned here\n/* nested /* std::fs::read */ still a comment */\nfn main() {\n    let note = \"std::fs::read_to_string and File::open\";\n    let raw = r#\"use std::fs; // not a comment\"#;\n    let mark: char = '\"';\n    let ok = std::env::var(\"TARGET\").is_ok();\n    println!(\"cargo:rerun-if-env-changed=TARGET {note}{raw}{mark}{ok}\");\n}\n",
+    "c10/crate/src/lib.rs": "pub fn f() {}\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "c10/crate/build.rs",
+    "c10/crate/src/lib.rs"
+   ],
+   "outside": []
+  },
+  {
+   "name": "build-script-include-str-is-a-declared-input",
+   "mechanism": "include_str! in a build script is a static input like in the library",
+   "crate": "c11/crate",
+   "files": {
+    "c11/crate/Cargo.toml": "[package]\nname = \"c11\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c11/crate/build.rs": "fn main() {\n    let _ = include_str!(\"../shared/x.txt\");\n}\n",
+    "c11/crate/src/lib.rs": "pub fn f() {}\n",
+    "c11/shared/x.txt": "x\n"
+   },
+   "flavor": "named",
+   "resolved": true,
+   "expected": [
+    "c11/crate/build.rs",
+    "c11/crate/src/lib.rs",
+    "c11/shared/x.txt"
+   ],
+   "outside": [
+    "c11/shared/x.txt"
+   ]
+  },
+  {
+   "name": "build-script-reads-a-file",
+   "mechanism": "std::fs in the build script itself",
+   "crate": "c12/crate",
+   "files": {
+    "c12/crate/Cargo.toml": "[package]\nname = \"c12\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c12/crate/build.rs": "fn main() {\n    let _ = std::fs::read_to_string(\"../shared/x.txt\");\n}\n",
+    "c12/crate/src/lib.rs": "pub fn f() {}\n",
+    "c12/shared/x.txt": "x\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "build-script",
+   "outside": []
+  },
+  {
+   "name": "build-script-reads-through-a-mounted-file",
+   "mechanism": "the read sits in a file the build script mounts",
+   "crate": "c13/crate",
+   "files": {
+    "c13/crate/Cargo.toml": "[package]\nname = \"c13\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c13/crate/build.rs": "include!(\"../shared/reads.rs\");\n",
+    "c13/crate/src/lib.rs": "pub fn f() {}\n",
+    "c13/shared/reads.rs": "fn main() {\n    let _ = std::fs::read(\"x\");\n}\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "build-script",
+   "outside": [
+    "c13/shared/reads.rs"
+   ]
+  },
+  {
+   "name": "build-script-read-behind-a-lifetime",
+   "mechanism": "lifetimes are not character literals that could swallow the read behind them",
+   "crate": "c14/crate",
+   "files": {
+    "c14/crate/Cargo.toml": "[package]\nname = \"c14\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c14/crate/build.rs": "fn pick<'a>(left: &'a str, _right: &'a str) -> &'a str {\n    left\n}\n\nfn main() {\n    let _ = pick(\"x\", \"y\");\n    let _ = std::fs::read(\"z\");\n}\n",
+    "c14/crate/src/lib.rs": "pub fn f() {}\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "build-script",
+   "outside": []
+  },
+  {
+   "name": "build-script-aliases-fs",
+   "mechanism": "use std::fs as f then f::read",
+   "crate": "c15/crate",
+   "files": {
+    "c15/crate/Cargo.toml": "[package]\nname = \"c15\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n",
+    "c15/crate/build.rs": "use std::fs as f;\n\nfn main() {\n    let _ = f::read(\"x\");\n}\n",
+    "c15/crate/src/lib.rs": "pub fn f() {}\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "build-script",
+   "outside": []
+  },
+  {
+   "name": "build-script-with-build-dependencies",
+   "mechanism": "an environment-only script that links a build dependency, whose code is unknown here",
+   "crate": "c16/crate",
+   "files": {
+    "c16/crate/Cargo.toml": "[package]\nname = \"c16\"\nversion = \"0.1.0\"\nedition = \"2021\"\nbuild = \"build.rs\"\n\n[build-dependencies]\nhelper = { path = \"../helper\" }\n",
+    "c16/crate/build.rs": "use std::env;\n\nfn main() {\n    if env::var(\"CARGO_CFG_TARGET_OS\").as_deref() == Ok(\"windows\") {\n        println!(\"cargo:rustc-link-arg-bin=x=/STACK:8388608\");\n    }\n}\n",
+    "c16/crate/src/lib.rs": "pub fn f() {}\n",
+    "c16/helper/Cargo.toml": "[package]\nname = \"helper\"\nversion = \"0.1.0\"\nedition = \"2021\"\n",
+    "c16/helper/src/lib.rs": "pub fn h() {}\n"
+   },
+   "flavor": "named",
+   "resolved": false,
+   "reason": "build-script",
+   "outside": []
   }
  ]
 }

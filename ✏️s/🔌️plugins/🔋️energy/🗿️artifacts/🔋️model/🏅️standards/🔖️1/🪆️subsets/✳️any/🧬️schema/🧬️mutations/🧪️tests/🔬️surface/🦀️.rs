@@ -6,6 +6,7 @@ extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_mut_surface as surface_mutations;
+extern crate semio_s_artifact_energy_model_mut_surface_properties as surface_properties_mutations;
 
 #[path = "."]
 mod rename_surface {
@@ -18,7 +19,7 @@ mod rename_surface {
 
 #[path = "."]
 mod change_surface_multiplier {
-    pub use crate::surface_mutations::change_surface_multiplier::*;
+    pub use crate::surface_properties_mutations::change_surface_multiplier::*;
     #[path = "../../🧱️surface/🔁️change-multiplier/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🧱️surface/🔁️change-multiplier/🧪️tests/✅️repeats/🦀️.rs"]
@@ -27,7 +28,7 @@ mod change_surface_multiplier {
 
 #[path = "."]
 mod replace_surface_vertices {
-    pub use crate::surface_mutations::replace_surface_vertices::*;
+    pub use crate::surface_properties_mutations::replace_surface_vertices::*;
     #[path = "../../🧱️surface/🔺️replace-vertices/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🧱️surface/🔺️replace-vertices/🧪️tests/✅️narrows/🦀️.rs"]
@@ -54,7 +55,7 @@ mod create_surface {
 
 #[path = "."]
 mod change_surface_class {
-    pub use crate::surface_mutations::change_surface_class::*;
+    pub use crate::surface_properties_mutations::change_surface_class::*;
     #[path = "../../🧱️surface/🧩️change-class/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🧱️surface/🧩️change-class/🧪️tests/✅️turns/🦀️.rs"]
@@ -63,7 +64,7 @@ mod change_surface_class {
 
 #[path = "."]
 mod change_surface_construction {
-    pub use crate::surface_mutations::change_surface_construction::*;
+    pub use crate::surface_properties_mutations::change_surface_construction::*;
     #[path = "../../🧱️surface/🧰️change-construction/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🧱️surface/🧰️change-construction/🧪️tests/✅️swaps/🦀️.rs"]

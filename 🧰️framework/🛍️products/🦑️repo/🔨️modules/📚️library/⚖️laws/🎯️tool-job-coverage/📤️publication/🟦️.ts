@@ -5,6 +5,8 @@ import { readSourceFamilySource } from "../../../../../../../🔨️modules/📚
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { toolJobProductionSource, toolJobRustBlock } from "../📋️inventory/🟦️.ts";
 
+import {toolJobOriginalWorkerExact} from "../🔒️lifecycle/🧬️original-worker/🟦️.ts";
+
 const PLUGIN = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin";
 const STORE = "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store";
 
@@ -22,7 +24,7 @@ export function toolJobSourceMutation(source: string, owner: string, before: str
 
 /** 🔌️ Reads the text of the mounted-instance family the typed-command publication laws bind: the composer and every use-case crate of the instance, the retained command shell and the lifted full-operation job, each crate family in path order. */
 export function toolJobPluginInstanceSource(root: string): string {
-  return ["🧵️instance", "🪜️maintenance-ladder", "♻️cancellation", "🧵️retained-command", "👷️job"].map((folder) => readSourceFamilySource(`${root}/${PLUGIN}/${folder}`)).join("\n");
+  return ["🧵️instance", "🪜️maintenance-ladder", "♻️cancellation", "🧵️retained-command", "👷️job", "🎮️command"].map((folder) => readSourceFamilySource(`${root}/${PLUGIN}/${folder}`)).join("\n");
 }
 
 /** 🏪️ Reads the owning files of the Store one-item publication: the item fold first, then the engine bundle, the publication owner, its contract, the cursor and log operations and the ephemeral publications. The first match of a name is the production owner. */
@@ -96,50 +98,14 @@ export function toolJobTypedCaptureBody(source: string): string | undefined {
 
 /** ⌨️ The typed-command seam: dispatch admits the verb into the latest-wins queue behind the full-operation gate and the fixed slot admission, and the latest-wins advance is the only caller of the setup that captures the roots, reserves the operation slot and mounts the worker. Returns the setup body. */
 export function toolJobRetainedDispatchSetup(source: string): string | undefined {
-  const body = (name: string): string | undefined => {
-    const start = source.lastIndexOf(`async fn ${name}(`);
-    return start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start))?.body;
-  };
-  const dispatch = body("dispatch_typed_command_inner");
-  const setup = body("start_typed_command_operation");
-  const advance = body("advance_latest_wins_command_one");
-  if (!dispatch || !setup || !advance) return undefined;
-  const guard = dispatch.indexOf("self.media.require_complete_tool_operation_pipeline(&admission)?");
-  const slot = dispatch.indexOf("self.media.admit_typed_operation_slot(");
-  const retained = dispatch.indexOf("self.tools.latest_wins_commands.insert_admitted(");
-  const reservation = setup.indexOf("assert!(self.tools.tool_operations.can_insert(operation_id.0)");
-  const capture = toolJobTypedCaptureBody(source);
-  const prepare = setup.indexOf("self.capture_typed_command_roots(command.as_ref(), meta).await?");
-  const callers = source.split("start_typed_command_operation(").length - 1;
-  return guard >= 0 && slot > guard && retained > slot && !dispatch.includes("refresh_cache().await") && !dispatch.includes("start_typed_command_operation(") && !dispatch.includes("tool_jobs.dispatch")
-    && callers === 2 && advance.includes("self.as_dispatch().start_typed_command_operation(command, admission, &pending.meta, pending.operation.operation, lease, cx).await")
-    && !!capture && reservation >= 0 && prepare > reservation && setup.includes("self.tools.typed_operation_reservations[") ? setup : undefined;
+  if(!toolJobOriginalWorkerExact(source))return undefined;
+  const start=source.lastIndexOf("async fn start_typed_command_operation(");
+  return start<0?undefined:toolJobRustBlock(source,source.indexOf("{",start))?.body;
 }
 
-/** 🧵️ Typed dispatch performs no worker turn: it admits into the latest-wins queue, the setup mounts the dispatched job as a pending original worker admission behind its operation slot, and the mounted operation's `drive_worker_step` admits that session once and pumps it once through the exact work loan. */
-export function toolJobMountedDispatchOneTurnExact(raw: string): boolean {
-  const source = toolJobProductionSource(raw);
-  const count = (text: string, token: string): number => text.split(token).length - 1;
-  if (["dispatch_typed_command_inner", "start_typed_command_operation"].some((name) => count(source, `async fn ${name}(`) !== 1)) return false;
-  const start = source.lastIndexOf("async fn dispatch_typed_command_inner(");
-  const inner = start < 0 ? undefined : toolJobRustBlock(source, source.indexOf("{", start));
-  const setup = toolJobRetainedDispatchSetup(source);
-  const workerSignature = "pub fn drive_worker_step(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>";
-  if (!inner || !setup || count(source, workerSignature) !== 1) return false;
-  const driveOpen = source.indexOf("{", source.indexOf(workerSignature) + workerSignature.length);
-  const drive = toolJobRustBlock(source, driveOpen);
-  if (!drive) return false;
-  const stages = ["dispatch_wire_retained_with_spec", "RefusedWorkerSource::pending(", "self.tools.tool_operations.insert_admitted("];
-  const offsets = stages.map((token) => setup.indexOf(token));
-  const turns = ["drive_worker_step(", "admit_pending(", "pump_one", "run_to_completion"];
-  const forbidden = ["run_on_worker_async", "run_to_completion", "thread_local!", "A::handle(", "A::ephemeral(", "MountedWorkerJobSession::try_new"];
-  return stages.every((token) => count(setup, token) === 1) && count(setup, "self.tools.tool_jobs.dispatch(operation_spec)") === 1
-    && offsets.every((offset, index) => offset >= 0 && (index === 0 || offset > offsets[index - 1]!))
-    && !["tool_jobs.dispatch", "RefusedWorkerSource", ...turns].some((token) => inner.body.includes(token))
-    && !turns.some((token) => setup.includes(token))
-    && !forbidden.some((token) => inner.body.includes(token) || setup.includes(token) || drive.body.includes(token))
-    && count(drive.body, "rejected.admit_pending(config,cx)") === 1 && count(drive.body, "session.pump_one_for_interactive_turn(same)") === 1 && count(drive.body, "pump_one") === 1
-    && drive.body.includes("cx.with_original_work_loan(step_fuel,step_deadline_us,") && !/\b(?:while|loop)\b/.test(withoutStrings(drive.body));
+/** 🧵️ Typed dispatch retains the original request behind its reserved slot; the registered producer hands its actual job to one funded mounted worker turn. */
+export function toolJobMountedDispatchOneTurnExact(source: string): boolean {
+  return toolJobOriginalWorkerExact(source);
 }
 
 /** 💯️ The typed-command full operation is bounded end to end: dispatch only admits, the roots are captured by the retained setup, the generic bounded job prepares its roots under cancellation and yield checks and then faults, because only an app-owned retained job owns a reducer, and the mounted operation publishes one funded unit per turn through its pending publication, its result page and its ACK. */
@@ -166,12 +132,11 @@ export function toolJobFullOperationBounded(source: string): boolean {
   return !!(
     preparationWork.every((needle) => !block.body.includes(needle)) &&
     !!retainedSetup &&
-    retainedSetup.includes("RefusedWorkerSource::pending(") &&
-    retainedSetup.includes("dispatch_wire_retained_with_spec") &&
+    toolJobOriginalWorkerExact(source) &&
     retainedSetup.includes("self.tools.tool_operations.insert_admitted(") &&
     capturedRoots?.includes("draft_snapshot: self.stores.draft_store.snapshot_root()") &&
     capturedRoots?.includes("interaction_state: self.stores.interaction_store.snapshot_root()") &&
-    retainedSetup.includes("presence_local: Some(self.stores.presence_store.local_read().map_err(Fault::from)?)") &&
+    retainedSetup.includes("let presence_local = self.stores.presence_store.local_read().map_err(Fault::from)?") &&
     capturedRoots?.includes("presence_peers: self.stores.presence_store.peers_root()") &&
     capturedRoots?.includes("transient: self.stores.transient_store.current_root()") &&
     source.includes("MountedTypedCommandFullOperationStage::AwaitingAck") &&

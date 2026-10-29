@@ -82,7 +82,7 @@ impl Puzzle5dArtifactVcs {
             let mounted_policy = semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT;
             let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
             let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(PUZZLE5D_IDENTITY_CEILING_BYTES, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).map_err(js_fault)?;
-            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle5dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+            let app = VcsArtifactApp::with_registry(EditorApp::<Puzzle5dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.map_err(fault_bridge::fault_to_js)?;
             let caller = BrowserCaller::admit(mounted_policy.maintenance).map_err(value_to_js)?;
             Ok(Self { app: RefCell::new(app), caller: RefCell::new(caller), closed: Cell::new(false) }.into())
         })

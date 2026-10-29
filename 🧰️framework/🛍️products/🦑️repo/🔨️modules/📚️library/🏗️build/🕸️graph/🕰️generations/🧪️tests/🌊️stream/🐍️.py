@@ -39,7 +39,10 @@ def assemble(corpus, names):
     else:
         reached = {edge["target"] for edge in edges.values() if edge["target"] in external_nodes}
         for name in wanted:
-            reached.update(dependency for dependency in named_dependencies(owners[name]["node"]) if dependency in external_nodes)
+            for dependency in named_dependencies(owners[name]["node"]):
+                key = dependency if dependency in external_nodes else "npm:" + dependency
+                if key in external_nodes:
+                    reached.add(key)
         grown = True
         while grown:
             grown = False
@@ -72,6 +75,8 @@ def corpus():
     owners[-1]["node"]["targets"]["build"]["inputs"] = ["commandSources0"]
     owners.append({"name": "broken", "root": "pkg/broken", "kind": "unavailable", "node": {"root": "pkg/broken", "project": "broken", "source": "pkg/broken/project.json", "sha256": "0" * 64, "reason": "unparsable"}, "edges": []})
     owners.append({"name": "nested", "root": "pkg/d/inner/nested", "kind": "unavailable", "node": {"root": "pkg/d/inner/nested", "project": "nested", "source": "pkg/d/inner/nested/project.json", "sha256": "1" * 64, "reason": "unparsable"}, "edges": []})
+    owners.append(project("h", "pkg/h", ["build"]))
+    owners[-1]["node"]["targets"]["build"]["inputs"] = ["{projectRoot}/src.ts", {"externalDependencies": ["plain", "npm:named"]}]
     by = {row["name"]: row for row in owners}
     by["a"]["edges"] = [{"source": "a", "target": "b", "type": "static"}, {"source": "a", "target": "b", "type": "static"}, {"source": "a", "target": "npm:left", "type": "static"}]
     by["b"]["edges"] = [{"source": "b", "target": "c", "type": "static"}, {"source": "b", "target": "npm:right", "type": "static"}]
@@ -80,7 +85,7 @@ def corpus():
     return {
         "owners": owners,
         "global": {
-            "externalNodes": {"npm:left": {"type": "npm", "name": "npm:left"}, "npm:right": {"type": "npm", "name": "npm:right"}, "npm:unused": {"type": "npm", "name": "npm:unused"}, "npm:named": {"type": "npm", "name": "npm:named"}, "npm:below": {"type": "npm", "name": "npm:below"}, "npm:grouped": {"type": "npm", "name": "npm:grouped"}},
+            "externalNodes": {"npm:left": {"type": "npm", "name": "npm:left"}, "npm:right": {"type": "npm", "name": "npm:right"}, "npm:unused": {"type": "npm", "name": "npm:unused"}, "npm:named": {"type": "npm", "name": "npm:named"}, "npm:plain": {"type": "npm", "name": "npm:plain"}, "npm:below": {"type": "npm", "name": "npm:below"}, "npm:grouped": {"type": "npm", "name": "npm:grouped"}},
             "edges": [{"source": "npm:left", "target": "npm:right", "type": "static"}, {"source": "npm:right", "target": "npm:unused", "type": "static"}, {"source": "e", "target": "a", "type": "static"}, {"source": "npm:unused", "target": "c", "type": "static"}, {"source": "npm:named", "target": "npm:below", "type": "static"}],
             "unavailable": [{"root": "pkg/loose", "source": "pkg/loose/project.json", "sha256": "2" * 64, "reason": "unparsable"}],
         },
@@ -93,6 +98,7 @@ def corpus():
             {"name": "duplicates-in-the-selection-count-once", "names": ["a", "a", "b"]},
             {"name": "an-external-dependency-named-by-an-input-without-an-edge", "names": ["f"]},
             {"name": "an-external-dependency-named-by-an-input-group-without-an-edge", "names": ["g"]},
+            {"name": "an-external-dependency-named-by-its-package-name-without-an-edge", "names": ["h"]},
         ],
     }
 

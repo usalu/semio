@@ -66,8 +66,8 @@ impl ArtifactViewer for Mp3Viewer {
         registry.register(crate::standards::mpeg1_layer3::subsets::any::io::playback::Mp3MediaExportJobFactory::<ViewerApp<Self>>::new(registry.controller_id()))
     }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        Mp3Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Mp3Snapshot::default())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

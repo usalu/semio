@@ -71,8 +71,8 @@ impl ArtifactViewer for StepCc4Viewer {
     const DIALECT: Dialect = STEP_CC4_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STEP_CC4_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->StepSnapshot>{Some(||{
-        <semio_s_artifact_stdio_step_cc4::standards::v_ap214::subsets::cc4::io::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc4::standards::v_ap214::subsets::cc4::io::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc4 initial owner")
+    fn reference_birth()->Option<fn()->Result<StepSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        <semio_s_artifact_stdio_step_cc4::standards::v_ap214::subsets::cc4::io::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc4::standards::v_ap214::subsets::cc4::io::StepCc4BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).map_err(|error|semio_framework_plugin::reference_birth_fault("valid authored AP214 cc4 initial owner",format_args!("{error:?}")))
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

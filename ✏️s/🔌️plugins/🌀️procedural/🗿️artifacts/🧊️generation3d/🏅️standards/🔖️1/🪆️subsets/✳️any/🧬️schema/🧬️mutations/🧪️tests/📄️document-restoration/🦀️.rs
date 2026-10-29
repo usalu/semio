@@ -12,7 +12,7 @@ use semio_s_artifact_procedural_3d_mutations::central_apply::apply_generation3d_
 #[test]
 fn document_restoration_selection_preview_mutation_algebra_matches_neutral_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🧬️mutations/📄️document-restoration/🔣️.json")).unwrap();
-    let mut base = Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")());
+    let mut base = Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"));
     let before = serde_json::to_string(&fixture["before"]).unwrap();
     let state: semio_framework_artifact_playbook_playbook::GenerationPlayState = semio_framework_pack_json::from_json_str(&before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     std::mem::replace(&mut base.generation, state.into()).retire_cold();

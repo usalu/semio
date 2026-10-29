@@ -65,8 +65,8 @@ impl ArtifactViewer for VcsViewer {
     const DIALECT: Dialect = VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->VcsSnapshot>{Some(||{
-        crate::standards::v1::subsets::any::schema::empty_vcs_snapshot()
+    fn reference_birth()->Option<fn()->Result<VcsSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1::subsets::any::schema::empty_vcs_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `VcsViewCommand::Noop` variant never carries a config

@@ -2,7 +2,7 @@
 use crate::native_snapshot::EnergyModelSnapshot;
 use crate::native_state::{EnergyModelState,diff::{EnergyModelStatePatch,branches::PreparedEnergyBranchesApply}};
 use semio_framework_value::{ToValue,RetirementDemand,ValueError,ValueRefusalKind,shared_issuance::SealedShared,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneStep}};
-use protocol::{ApplyCapability,MutationMessage,DiffAlgebra,MutationDiff,mutation::retained::{RetainedDiff,RetainedDiffApply,RetainedDiffPreflightAdvance,retained_mutation_demand_fits,patch::RetainedRowPatchApply}};
+use protocol::{ApplyCapability,MutationMessage,DiffAlgebra,MutationDiff,RetainedDiff,RetainedDiffApply,RetainedDiffPreflightAdvance,retained_mutation_demand_fits,RetainedRowPatchApply};
 
 /// 🌳️ The semantic sparse path stage owns prepared immutable branches; unchanged fields remain absent.
 #[derive(Default,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::RetireOwned,framework_schema::ArtifactSchema)]

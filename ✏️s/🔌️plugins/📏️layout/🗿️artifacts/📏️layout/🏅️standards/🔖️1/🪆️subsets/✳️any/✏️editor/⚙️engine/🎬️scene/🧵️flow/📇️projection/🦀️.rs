@@ -78,9 +78,7 @@ impl FlowProjection{
 /// 🧭️ Borrows the prepared owner and original snapshot for one fixed scalar lookup.
 pub struct FlowProjectionView<'a>{owner:&'a FlowProjection,doc:&'a LayoutSnapshot}
 impl FlowFrameSource for FlowProjectionView<'_>{fn len(&self)->usize{self.owner.len()}fn get(&self,index:usize)->Option<FlowFrame>{self.owner.rows.get(&index)?;self.owner.resolved(self.doc,index).ok()}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
+
 
 semio_framework_value::artifact_retire_leaf!(Row,PageRange,FlowProjectionReceipt);
 semio_framework_value::artifact_retire_struct!(FlowProjection{metadata,rows,locations,pages,source,phase,cursor,page,parent,frame,ordinal,raw,walk,active_head,visited,cancelled,last});

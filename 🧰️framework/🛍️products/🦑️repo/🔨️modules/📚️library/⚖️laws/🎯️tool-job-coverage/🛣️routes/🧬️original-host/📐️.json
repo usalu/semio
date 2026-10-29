@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Reserved Host Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "sourceBinding": {
+      "const": true
+    },
+    "sourceValidation": {
+      "const": true
+    },
+    "callerParent": {
+      "const": true
+    },
+    "candidateCustody": {
+      "const": true
+    },
+    "producerContext": {
+      "const": true
+    },
+    "workerContext": {
+      "const": true
+    },
+    "workerBudget": {
+      "const": true
+    },
+    "pendingCustody": {
+      "const": true
+    },
+    "outcomeAck": {
+      "const": true
+    },
+    "terminalClose": {
+      "const": true
+    },
+    "cancellation": {
+      "const": true
+    },
+    "outputLimit": {
+      "const": true
+    },
+    "publicationFreshness": {
+      "const": true
+    },
+    "noReconstructedContext": {
+      "const": true
+    }
+  },
+  "required": [
+    "sourceBinding",
+    "sourceValidation",
+    "callerParent",
+    "candidateCustody",
+    "producerContext",
+    "workerContext",
+    "workerBudget",
+    "pendingCustody",
+    "outcomeAck",
+    "terminalClose",
+    "cancellation",
+    "outputLimit",
+    "publicationFreshness",
+    "noReconstructedContext"
+  ]
+}

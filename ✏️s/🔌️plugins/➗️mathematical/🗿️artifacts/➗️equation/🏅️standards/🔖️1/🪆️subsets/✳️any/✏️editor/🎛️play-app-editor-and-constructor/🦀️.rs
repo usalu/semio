@@ -127,8 +127,8 @@ impl ArtifactEditor for EquationPlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->EquationSnapshot>{Some(||{
-        EquationSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<EquationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(EquationSnapshot::default())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

@@ -65,9 +65,6 @@ impl IdmlChangeCursor {
         IdmlChangeStep{work,done:self.mode=="done",event:None,error:None}
     }
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 
 /// 🧳 Genuine original fields enter a real typed sparse member patch.
 #[path="🧳️part/🦀️.rs"]

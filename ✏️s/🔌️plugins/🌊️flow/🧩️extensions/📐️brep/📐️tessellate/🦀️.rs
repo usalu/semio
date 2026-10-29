@@ -10,6 +10,7 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeContinuatio
 use semio_framework_value::retirement::RetireOwned;
 use std::sync::{Mutex,TryLockError};
 
+type Wire=semio_framework_value::paged::PagedBytes<{isize::MAX as usize}>;
 fn invalid(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,reason)}
 fn invariant()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation projection ordinal is absent")}
 fn item()->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,..Default::default()}}
@@ -60,7 +61,7 @@ impl OriginalDomainFailure for TessellationFailure{
 
 struct TessellationInvokeCursor{
  identity:GeometryWorkIdentity,pointer:usize,length:usize,parser:Option<JsonGrammarCursor<Value>>,continuation:Option<NativeDecodeContinuation>,root:Option<Value>,member:Option<(String,Value)>,request:Option<TessellationRequest>,active:Option<Box<dyn ErasedSnapshotRetirement>>,
- wire:Option<OwnedProjectedPackWireCursor<TessellationCompleted>>,completed:Option<TessellationCompleted>,ready_wire:Option<Vec<u8>>,mesh:Option<semio_framework::MeshData>,fault:Option<TessellationFailure>,close_fault:Option<TessellationFailure>,required:u8,candidate:usize,position:usize,decoded:bool,query_active:bool,query_complete:bool,units:u64,closing:bool,normal_posted:bool,normal_progress:RetainedCloneProgress,
+ wire:Option<OwnedProjectedPackWireCursor<TessellationCompleted>>,completed:Option<TessellationCompleted>,ready_wire:Option<Wire>,mesh:Option<semio_framework::MeshData>,fault:Option<TessellationFailure>,close_fault:Option<TessellationFailure>,required:u8,candidate:usize,position:usize,decoded:bool,query_active:bool,query_complete:bool,units:u64,closing:bool,normal_posted:bool,normal_progress:RetainedCloneProgress,
 }
 impl TessellationInvokeCursor{
  fn new(source:&[u8],identity:GeometryWorkIdentity)->Self{Self{identity,pointer:source.as_ptr()as usize,length:source.len(),parser:None,continuation:None,root:None,member:None,request:None,active:None,wire:None,completed:None,ready_wire:None,mesh:None,fault:None,close_fault:None,required:0,candidate:0,position:0,decoded:false,query_active:false,query_complete:false,units:0,closing:false,normal_posted:false,normal_progress:Default::default()}}
@@ -73,7 +74,7 @@ impl TessellationInvokeCursor{
   if self.member.is_some(){return Ok(birth::<(String,Value)>())}if self.parser.is_some(){return Ok(birth::<JsonGrammarCursor<Value>>())}if self.root.is_some(){return Ok(birth::<Value>())}Ok(header())
  }
  fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
-  if let Some(wire)=&self.wire{return wire.next_demand(copy)}if !self.source_empty(){return self.source_demands(copy)}if self.completed.is_some(){return Ok(birth::<TessellationCompleted>())}if self.ready_wire.is_some(){return Ok(birth::<Vec<u8>>())}if self.request.is_some(){return Ok(birth::<TessellationRequest>())}if self.mesh.is_some(){return Ok(birth::<semio_framework::MeshData>())}if self.fault.is_some()||self.close_fault.is_some(){return Ok(birth::<TessellationFailure>())}Ok(header())
+  if let Some(wire)=&self.wire{return wire.next_demand(copy)}if !self.source_empty(){return self.source_demands(copy)}if self.completed.is_some(){return Ok(birth::<TessellationCompleted>())}if self.ready_wire.is_some(){return Ok(birth::<Wire>())}if self.request.is_some(){return Ok(birth::<TessellationRequest>())}if self.mesh.is_some(){return Ok(birth::<semio_framework::MeshData>())}if self.fault.is_some()||self.close_fault.is_some(){return Ok(birth::<TessellationFailure>())}Ok(header())
  }
  fn close_source(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   if self.active.is_some(){return semio_framework_value::close_factory_ticket(&mut self.active,grant).map(|step|step.progress())}
@@ -103,7 +104,7 @@ impl TessellationInvokeCursor{
   let original=self.request.as_ref().ok_or_else(invariant)?;self.normal_posted=true;
   match session.cancel_tessellation_step(self.identity,&original.handle,original.tolerance,cx){Ok((step,work))=>{if matches!(step,RetainedCloneStep::Complete(_)){self.query_active=false;}Ok(work.retained)},Err(original)=>{self.normal_progress=original.work.retained;Err(TessellationFailure::geometry(original))}}
  }
- fn step(&mut self,session:&Session,source:&[u8],cx:&mut StepContext<'_>)->Result<Option<Vec<u8>>,TessellationFailure>{
+ fn step(&mut self,session:&Session,source:&[u8],cx:&mut StepContext<'_>)->Result<Option<Wire>,TessellationFailure>{
   self.normal_posted=false;self.normal_progress=Default::default();let available=cx.retained_grant();let grant=RetainedCloneGrant{maximum_items:available.maximum_items.min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX)).min(1),..available};
   if !self.matches(source,cx){return Err(invalid("tessellation retains another original invocation").into())}cx.original_source_parent()?;
   if !permits(grant,header())||cx.should_yield()||self.close_fault.is_some(){return Ok(None)}if cx.is_cancelled(){self.begin_close();}
@@ -135,7 +136,7 @@ impl TessellationInvokeCursor{
 pub struct TessellationResources{cursor:Mutex<Option<TessellationInvokeCursor>>}
 impl TessellationResources{
  pub fn new()->Self{Self{cursor:Mutex::new(None)}}
- pub fn invoke(&mut self,session:&SessionCapture,source:&[u8],cx:&mut StepContext<'_>)->Result<semio_framework_plugin::ExtensionInvokeStep,semio_framework::Fault>{
+ pub fn invoke(&self,session:&SessionCapture,source:&[u8],cx:&mut StepContext<'_>)->Result<semio_framework_plugin::ExtensionInvokeStep,semio_framework::Fault>{
   let pending=||semio_framework_plugin::ExtensionInvokeStep{payload:None,retained_progress:Default::default(),refusal:None};
   let mut owner=match self.cursor.try_lock(){Ok(owner)=>owner,Err(TryLockError::WouldBlock)=>return Ok(pending()),Err(TryLockError::Poisoned(_))=>return Ok(semio_framework_plugin::ExtensionInvokeStep{refusal:Some(ValueError::literal(ValueRefusalKind::InvariantViolated,"original tessellation owner is poisoned").into()),..pending()})};
   if owner.as_ref().is_some_and(|cursor|!cursor.matches(source,cx)){return Ok(semio_framework_plugin::ExtensionInvokeStep{refusal:Some(ValueError::literal(ValueRefusalKind::OwnershipLimit,"tessellation invocation retains another original caller").into()),..pending()})}
@@ -147,7 +148,7 @@ impl TessellationResources{
   if !cursor.normal_posted{let refusal=cx.consume_retained(receipt).err();cx.consume_fuel(receipt.copied_items as u64);if let Some(original)=refusal{if let Some(failure)=&mut cursor.fault{failure.receipt_refusal=Some(original)}else{cursor.fail(original.into())}}}else{assert!(cx.fuel_remaining()<=before);}
   let mut refusal=None;if receipt==RetainedCloneProgress::default(){let selected=if cursor.close_fault.is_some(){Some(&mut cursor.close_fault)}else if cursor.closing&&!cursor.query_active&&cursor.wire.is_none()&&cursor.source_empty()&&cursor.request.is_none()&&cursor.completed.is_none()&&cursor.ready_wire.is_none()&&cursor.mesh.is_none()&&cursor.fault.is_some(){Some(&mut cursor.fault)}else{None};if let Some(selected)=selected{refusal=match semio_framework_job::admit_original_domain_failure(selected,cx){Ok(original)=>original,Err(original)=>Some(original)};}}let after=cx.retained_progress();let receipt=RetainedCloneProgress{copied_items:after.copied_items-incoming.copied_items,copied_bytes:after.copied_bytes-incoming.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-incoming.retained_capacity_bytes,released_bytes:after.released_bytes-incoming.released_bytes};
   if payload.is_some(){assert!(cursor.terminal_is_empty());*owner=None;}else if cursor.terminal_is_empty(){*owner=None;}
-  Ok(semio_framework_plugin::ExtensionInvokeStep{payload,retained_progress:receipt,refusal})
+  Ok(semio_framework_plugin::ExtensionInvokeStep{payload:payload.map(|wire|wire.to_vec_owner()),retained_progress:receipt,refusal})
  }
  pub fn begin_close(&mut self){if let Some(cursor)=self.cursor.get_mut().expect("exclusive tessellation owner").as_mut(){cursor.begin_close();}}
  pub fn terminal_is_empty(&self)->bool{self.cursor.lock().is_ok_and(|owner|owner.is_none())}

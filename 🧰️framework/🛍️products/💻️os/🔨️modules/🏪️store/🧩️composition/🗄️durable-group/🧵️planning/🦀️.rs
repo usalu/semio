@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DurableBorrowedValue,DurableBorrowedDecisionFields};
+use super::{DurableBorrowedValue,DurableBorrowedDecisionFields};
 /// 🪪️ Projects the same owned decision into canonical wire fields without cloning its payloads.
 pub trait DurableDecisionSource {
     fn fields(&self) -> DurableBorrowedDecisionFields<'_>;

@@ -36,3 +36,4 @@ semio-framework-replication = { workspace = true }
 semio-framework-os-store-engine-stage = { path = "../../../../../⚙️engine/🗄️stage/📦️packages/🦀️rust" }
 semio-framework-os-store-durable-group-wire = { path = "../../../../🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-live = { path = "../../../../../⚙️engine/🎞️live/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-bundle = { path = "../../../../../⚙️engine/🧳️bundle/📦️packages/🦀️rust" }

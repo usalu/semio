@@ -35,8 +35,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Composes map and terrain editors, viewers and native media capabilities.
 pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
-    let dependency = semio_hub_stdio_catalog::native_artifact_catalog_dependency()?;
-    let catalog = semio_hub_stdio_catalog::native_artifact_catalog_contribution()?;
+    let dependency = semio_hub_stdio_catalog_definition::native_artifact_catalog_dependency()?;
+    let catalog = semio_hub_stdio_catalog_definition::native_artifact_catalog_contribution()?;
     PluginBuilder::<_, GisApps>::new("gis")
         .label("GIS")
         .version("0.1.0")

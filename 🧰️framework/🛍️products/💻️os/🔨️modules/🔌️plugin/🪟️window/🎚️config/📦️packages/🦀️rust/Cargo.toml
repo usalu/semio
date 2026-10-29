@@ -32,6 +32,8 @@ semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/�
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
+semio-framework-plugin-window-config-mutation = { path = "../../📬️mutation/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-registry = { path = "../../🗂️registry/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config-replace = { path = "../../🧬️preparation/🔁️replace/📦️packages/🦀️rust" }
 semio-framework-plugin-ownership = { path = "../../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }

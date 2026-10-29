@@ -22,9 +22,9 @@ async fn surface_editor_controller_is_the_derived_id() {
 async fn editor_fixture_without_a_manifest_declaration_fails_closed() {
     let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    let error = app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("registry-less editor must fail closed");
-    assert_eq!(error.code.0, "interactive-job.unknown-key");
-    assert!(error.message.contains(SURFACE_TOOL_ID), "the refusal names the editor's own verb, not the generic placeholder: {}", error.message);
+    let error = crate::app_testing::artifact_app_laws::dispatch_original_fixture_command(&mut app, &SurfaceEditorCommand::Increment, &meta("local"), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.expect_err("registry-less editor must fail closed");
+    assert_eq!(error.primary_fault().expect("a diagnostic fault").code.0, "interactive-job.unknown-key");
+    assert!(error.primary_fault().expect("a diagnostic fault").message.contains(SURFACE_TOOL_ID), "the refusal names the editor's own verb, not the generic placeholder: {}", error.primary_fault().expect("a diagnostic fault").message);
     assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
     close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy(),cx).expect("original fixture terminal close");
 

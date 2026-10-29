@@ -687,7 +687,7 @@ async fn deleting_the_middle_time_series_schedule() {
 
 #[semio_framework_async_macros::async_test]
 async fn removing_the_middle_output_variable() {
-    holds(seed(), |m| m.output_variables = (1..=3).map(|n| crate::model::OutputVariableSpec { name: format!("VARIABLE {n}"), key: "KEY".to_string(), reporting_frequency: crate::model::OutputReportFrequency::Hourly }).collect(), crate::model_mutations::remove_output_variable("VARIABLE 2".to_string(), "KEY".to_string())).await;
+    holds(seed(), |m| m.output_variables = (1..=3).map(|n| crate::model::OutputVariableSpec { name: format!("VARIABLE {n}"), key: "KEY".to_string(), reporting_frequency: crate::model::OutputReportFrequency::Hourly }).collect(), crate::model_simulation_mutations::remove_output_variable("VARIABLE 2".to_string(), "KEY".to_string())).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -771,7 +771,7 @@ async fn reordering_the_middle_annual_schedule_rule() {
 
 #[semio_framework_async_macros::async_test]
 async fn removing_the_middle_annual_schedule_holiday() {
-    holds(seed(), |m| m.schedules.annual = vec![crate::schedule::AnnualSchedule { holiday_dates: vec![(2026, 1, 1), (2026, 5, 1), (2026, 12, 25)], ..annual(4) }], crate::year_schedule_mutations::remove_annual_schedule_holiday(schedule(4), 2026, 5, 1)).await;
+    holds(seed(), |m| m.schedules.annual = vec![crate::schedule::AnnualSchedule { holiday_dates: vec![(2026, 1, 1), (2026, 5, 1), (2026, 12, 25)], ..annual(4) }], crate::year_schedule_holidays_mutations::remove_annual_schedule_holiday(schedule(4), 2026, 5, 1)).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -786,7 +786,7 @@ async fn creating_a_thermostat_at_a_middle_index_is_undone_by_its_delete() {
 
 #[semio_framework_async_macros::async_test]
 async fn adding_an_output_variable_at_a_middle_index_is_undone_by_its_removal() {
-    holds(seed(), |m| m.output_variables = Vec::new(), crate::model_mutations::add_output_variable("VARIABLE".to_string(), "KEY".to_string(), crate::model::OutputReportFrequency::Hourly, Some(0))).await;
+    holds(seed(), |m| m.output_variables = Vec::new(), crate::model_simulation_mutations::add_output_variable("VARIABLE".to_string(), "KEY".to_string(), crate::model::OutputReportFrequency::Hourly, Some(0))).await;
 }
 
 #[semio_framework_async_macros::async_test]

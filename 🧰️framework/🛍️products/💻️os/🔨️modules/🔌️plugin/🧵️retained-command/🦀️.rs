@@ -5,7 +5,7 @@ use semio_framework_plugin_decl_views::{AppOperationContext, InteractionHoverSta
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobContext;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletion;
-use semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput;
+use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
 use semio_framework_plugin_decl_views::history_view::HistoryView;

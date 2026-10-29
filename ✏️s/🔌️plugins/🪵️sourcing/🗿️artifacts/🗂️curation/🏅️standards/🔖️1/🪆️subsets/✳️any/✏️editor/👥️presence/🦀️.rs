@@ -14,7 +14,9 @@ use pack::snapshot::ArtifactPack;
 #[artifact(extension = "sourcingcuration.presence")]
 #[dsl(layout = "lines")]
 pub struct SourcingCurationPresence {
+    #[value(required)]
     pub world_camera_position: [f64; 3],
+    #[value(required)]
     pub world_camera_target: [f64; 3],
     pub world_camera_fov: f64,
 }

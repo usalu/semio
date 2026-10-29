@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "Already Absent Namespace",
+      "mode": "absent",
+      "expectedSettlement": "absent",
+      "expectedFailure": null,
+      "events": [
+        "capture",
+        "body-child-stopped",
+        "absent-settled"
+      ],
+      "held": 0
+    },
+    {
+      "name": "Physical Child Retires Before Settlement",
+      "mode": "present",
+      "expectedSettlement": "successful",
+      "expectedFailure": null,
+      "events": [
+        "capture",
+        "physical-retired",
+        "body-child-stopped",
+        "success-settled"
+      ],
+      "held": 0
+    },
+    {
+      "name": "Failed Capture Retains Charge",
+      "mode": "capture-failed",
+      "expectedSettlement": "none",
+      "expectedFailure": "capture failed",
+      "events": [
+        "capture"
+      ],
+      "held": 1
+    },
+    {
+      "name": "First Physical Failure Survives Later Settlement Refusal",
+      "mode": "retirement-failed",
+      "expectedSettlement": "none",
+      "expectedFailure": "physical retirement failed",
+      "events": [
+        "capture",
+        "physical-refused",
+        "body-child-stopped",
+        "success-refused"
+      ],
+      "held": 1
+    },
+    {
+      "name": "Reappeared Namespace Cannot Settle As Absent",
+      "mode": "reappeared",
+      "expectedSettlement": "none",
+      "expectedFailure": "namespace is still present",
+      "events": [
+        "capture",
+        "namespace-reappeared",
+        "body-child-stopped",
+        "absence-refused"
+      ],
+      "held": 1
+    }
+  ]
+}

@@ -319,7 +319,7 @@ impl Drop for PreparedRenderInput {
 //#region ⚙️PreparationJob
 const PREPARED_RENDER_MAILBOX_SLOTS: usize = 64;
 
-struct PreparedRenderMailboxSlot {
+pub(super) struct PreparedRenderMailboxSlot {
     pub(super) state: AtomicU8,
     pub(super) generation: AtomicU64,
     references: AtomicUsize,

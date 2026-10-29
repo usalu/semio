@@ -36,7 +36,7 @@ pub fn inference_child_dependency(slot: &str, child_id: &str) -> String {
 
 /// 🧵️ The owned child at `slot`/`child_id` of the requesting composed document, decoded from the request's dependencies (design
 /// §20.15: readers compose on read; the requester injects every owned child under [`inference_child_dependency`]).
-pub fn inference_child<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot>(request: &ArtifactInferenceExecutionRequest<'_>, slot: &str, child_id: &str) -> Result<S, ArtifactInferenceExecutionError> {
+pub fn inference_child<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState>(request: &ArtifactInferenceExecutionRequest<'_>, slot: &str, child_id: &str) -> Result<S, ArtifactInferenceExecutionError> {
     let key = inference_child_dependency(slot, child_id);
     let (_, pack) = request.dependencies.iter().find(|(name, _)| *name == key).ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.child-missing", format!("the request carries no owned child {slot}/{child_id}")))?;
     S::decode_pack(pack).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.child-decode", format!("owned child {slot}/{child_id}: {error:?}")))
@@ -124,8 +124,8 @@ impl ArtifactDocumentPayload {
     /// an inference factory is a synchronous contract, so the settle happens at the call site.
     pub async fn snapshot<P, Mutation>(&self) -> Result<P, String>
     where
-        P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-        Mutation: OpText + OpBinary + store::Mutation<P> + store::ColdMutation<P> + 'static,
+        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+        Mutation: store::StoreMutationFor<P>,
     {
         let (pack, spr) = self.pair()?;
         artifact_pair_snapshot::<P, Mutation>(&pack, &spr).await.map_err(|error| format!("artifact-document-decode:{error}"))
@@ -140,8 +140,8 @@ impl ArtifactDocumentPayload {
     /// decode path instead of re-deriving it per kind.
     pub fn settled_snapshot<P, Mutation>(&self) -> Result<P, String>
     where
-        P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-        Mutation: OpText + OpBinary + store::Mutation<P> + store::ColdMutation<P> + 'static,
+        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+        Mutation: store::StoreMutationFor<P>,
     {
         ::semio_framework_async::poll::resolve_ready(self.snapshot::<P, Mutation>())
     }

@@ -135,7 +135,7 @@ use semio_framework_plugin::MediaType;
     }
     
     pub async fn dispatch(app: &mut OwnedFormsApp, command: FormsCommand) -> InvocationResult {
-        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -548,6 +548,7 @@ async fn two_instances_converge_disjoint_edits() {
             let steps = forms_steps(&projection);
             (steps.len(), steps[0].blocks.len())
         },
+        semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),
     )
     .await;
 }

@@ -23,6 +23,7 @@ path = "../../🦀️.rs"
 
 [dependencies]
 semio-framework-ui-render-packet = { path = "../../../📮️packet/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 # 🖋️ CPU-side text only: shaping/fallback (parley) and glyph rasterization into our own atlas (swash).
 # The GPU copy of that atlas belongs to whichever backend is active — this crate never touches a device.
 # Fonts are runtime bytes only, so parley runs `no_std` + `libm`: its default `system`/`std` features add

@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-mutation = { path = "../../../../🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
@@ -51,6 +52,7 @@ semio-framework-artifact-reference = { workspace = true }
 semio-framework-plugin-time-travel = { path = "../../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-tool-run = { workspace = true }
 semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
+semio-framework-os-store-engine-replay = { path = "../../../../../🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 

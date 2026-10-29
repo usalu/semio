@@ -313,7 +313,7 @@ pub enum Fem3dNumericalFailure {
 impl From<Vec<u8>> for Fem3dNumericalFailure { fn from(value: Vec<u8>) -> Self { Self::Diagnostic(value) } }
 impl From<semio_framework_job::OriginalTurnFailure> for Fem3dNumericalFailure { fn from(value: semio_framework_job::OriginalTurnFailure) -> Self { Self::Original(value) } }
 
-fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, semio_framework_job::OriginalTurnFailure>) -> Result<ChildEnd, semio_framework_job::OriginalTurnFailure> {
+pub(super) fn child_end(result: Result<Option<JobOutcomeBorrow<'_>>, semio_framework_job::OriginalTurnFailure>) -> Result<ChildEnd, semio_framework_job::OriginalTurnFailure> {
     Ok(match result? {
         None | Some(JobOutcomeBorrow::Yield { .. }) => ChildEnd::Yield,
         Some(JobOutcomeBorrow::PreviewReady { .. } | JobOutcomeBorrow::CheckpointReady { .. }) => ChildEnd::Lent,

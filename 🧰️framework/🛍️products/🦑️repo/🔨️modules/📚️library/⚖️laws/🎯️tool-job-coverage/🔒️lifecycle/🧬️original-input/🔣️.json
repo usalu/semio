@@ -1,0 +1,189 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "action-classification",
+      "owner": "async fn dispatch_action_received(",
+      "before": "validate_ui_dispatch_classification",
+      "after": "unchecked_dispatch_classification",
+      "gate": "actionRegistry",
+      "occurrence": "first"
+    },
+    {
+      "name": "manifest-mode",
+      "owner": "pub async fn dispatch_command(",
+      "before": "active_mode_id != Some(mode_id.as_str())",
+      "after": "false",
+      "gate": "commandOwnership",
+      "occurrence": "first"
+    },
+    {
+      "name": "host-admission",
+      "owner": "async fn drive_original_host_configuration(",
+      "before": ".admit_host(",
+      "after": ".admit_unchecked_host(",
+      "gate": "hostAdmission",
+      "occurrence": "first"
+    },
+    {
+      "name": "host-metadata",
+      "owner": "async fn drive_original_host_configuration(",
+      "before": ".pin_host_metadata(",
+      "after": ".skip_host_metadata(",
+      "gate": "hostAdmission",
+      "occurrence": "first"
+    },
+    {
+      "name": "host-dispatch",
+      "owner": "async fn drive_original_host_configuration(",
+      "before": ".prepare_original_tool_dispatch(",
+      "after": ".prepare_unchecked_dispatch(",
+      "gate": "hostAdmission",
+      "occurrence": "first"
+    },
+    {
+      "name": "host-settlement",
+      "owner": "async fn drive_original_host_configuration(",
+      "before": ".settle_press(",
+      "after": ".skip_press_settlement(",
+      "gate": "hostSettlement",
+      "occurrence": "first"
+    },
+    {
+      "name": "host-finish",
+      "owner": "async fn drive_original_host_configuration(",
+      "before": ".finish_host(",
+      "after": ".finish_unchecked_host(",
+      "gate": "hostSettlement",
+      "occurrence": "first"
+    },
+    {
+      "name": "producer-parent",
+      "owner": "pub fn produce_action(",
+      "before": ".admit_loan(cx)",
+      "after": ".unfunded_loan(cx)",
+      "gate": "typedProducer",
+      "occurrence": "first"
+    },
+    {
+      "name": "producer-factory",
+      "owner": "pub fn produce_action(",
+      "before": "factory.admit(",
+      "after": "factory.unfunded_admit(",
+      "gate": "typedProducer",
+      "occurrence": "first"
+    },
+    {
+      "name": "decoder-identity",
+      "owner": "impl<A:ArtifactApp> OriginalTypedCommandSource<A>",
+      "before": "self.decoder!=cx.native_receiving_identity()",
+      "after": "false",
+      "gate": "typedIdentity",
+      "occurrence": "first"
+    },
+    {
+      "name": "qualified-catalog",
+      "owner": "pub fn admit_wire(",
+      "before": "OriginalToolQualification::admit(",
+      "after": "OriginalToolQualification::unchecked(",
+      "gate": "qualifiedWire",
+      "occurrence": "first"
+    },
+    {
+      "name": "qualified-command",
+      "owner": "pub fn admit_wire(",
+      "before": "OriginalCommandAdmission::admit::<A>",
+      "after": "OriginalCommandAdmission::unchecked::<A>",
+      "gate": "qualifiedWire",
+      "occurrence": "first"
+    },
+    {
+      "name": "intent-version",
+      "owner": "async fn handle_intent_frame(",
+      "before": "intent.action.version!=1",
+      "after": "false",
+      "gate": "intentSource",
+      "occurrence": "first"
+    },
+    {
+      "name": "intent-tag",
+      "owner": "async fn handle_intent_frame(",
+      "before": ".capture_original_direct_tool_tag(",
+      "after": ".capture_unchecked_direct_tag(",
+      "gate": "intentSource",
+      "occurrence": "first"
+    },
+    {
+      "name": "reconstructed-context",
+      "owner": "async fn drive_original_host_configuration(",
+      "before": "let declaration=",
+      "after": "let _bad=StepContext::new();let declaration=",
+      "gate": "noReconstruction",
+      "occurrence": "first"
+    },
+    {
+      "name": "intent-tag-normal-entry",
+      "owner": "async fn handle_intent_frame(",
+      "before": ".capture_original_direct_tool_tag(",
+      "after": ".capture_unchecked_direct_tag(",
+      "gate": "intentSource",
+      "occurrence": "last"
+    },
+    {
+      "name": "direct-before-control",
+      "owner": "pub async fn capture_original_direct_tool_tag(",
+      "before": ".qualify_action(",
+      "after": ".qualify_unchecked_action(",
+      "gate": "directQualification",
+      "occurrence": "first"
+    },
+    {
+      "name": "direct-catalog-lease",
+      "owner": "pub fn qualify_action(",
+      "before": "self.catalog.is_some_and(|old|old!=identity)",
+      "after": "false",
+      "gate": "directQualification",
+      "occurrence": "first"
+    },
+    {
+      "name": "direct-owner-type",
+      "owner": "pub fn qualify_action(",
+      "before": "ToolOwnerWitness::of::<A>()",
+      "after": "ToolOwnerWitness::of::<Foreign>()",
+      "gate": "directQualification",
+      "occurrence": "first"
+    },
+    {
+      "name": "direct-canonical-action",
+      "owner": "pub fn qualify_action(",
+      "before": "row.key.tool_id!=action",
+      "after": "false",
+      "gate": "directQualification",
+      "occurrence": "first"
+    },
+    {
+      "name": "direct-original-qualification",
+      "owner": "pub fn qualify_action(",
+      "before": "OriginalToolQualification::admit(",
+      "after": "OriginalToolQualification::unchecked(",
+      "gate": "directQualification",
+      "occurrence": "first"
+    },
+    {
+      "name": "direct-pending-canonical-action",
+      "owner": "pub fn qualify_action(",
+      "before": "matches_registered_action(action)",
+      "after": "matches_any_action(action)",
+      "gate": "directQualification",
+      "occurrence": "first"
+    },
+    {
+      "name": "direct-reconstructed-context",
+      "owner": "pub fn qualify_action(",
+      "before": "self.validate(cx)?;",
+      "after": "self.validate(cx)?;let mut cx=StepContext::new();",
+      "gate": "noReconstruction",
+      "occurrence": "first"
+    }
+  ]
+}

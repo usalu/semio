@@ -234,8 +234,8 @@ impl ArtifactEditor for Wfc2dEditor {
         fill::build_tool_run_job(request)
     }
 
-    fn reference_birth()->Option<fn()->Wfc2dSnapshot>{Some(||{
-        crate::examples::two_room_corridor::document()
+    fn reference_birth()->Option<fn()->Result<Wfc2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::examples::two_room_corridor::document())
     })}
 
     fn command_id(command: &Self::Command) -> &'static str {

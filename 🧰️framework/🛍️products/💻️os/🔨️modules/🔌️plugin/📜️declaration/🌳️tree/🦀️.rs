@@ -116,7 +116,7 @@ pub struct SurfaceDeclaration<PA: PluginApp = NoPluginApp> {
     pub definition: AppDefinition,
     /// 🚫️async: E4 fn-pointer slot
     pub original_factory:Option<semio_framework_plugin_reactor_app::OriginalPluginAppFactory<PA>>,
-    pub factory: Option<for<'a, 'b> fn(&AppDefinition, ActorId, semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> PA>,
+    pub factory: Option<for<'a, 'b> fn(&AppDefinition, ActorId, semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> Result<PA, semio_framework::Fault>>,
     /// 🚫️async: E4 fn-pointer slot
     pub app_schema: fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>,
     pub document_schema: &'static str,

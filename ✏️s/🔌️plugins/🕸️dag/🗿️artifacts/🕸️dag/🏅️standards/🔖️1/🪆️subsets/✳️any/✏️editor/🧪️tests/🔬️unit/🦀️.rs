@@ -77,7 +77,7 @@ impl std::ops::DerefMut for DagApp {
 
     /// 🎛️ Dispatches one typed command and settles its publication.
     pub async fn dispatch(app: &mut DagApp, command: DagCommand) -> semio_framework_plugin::InvocationResult {
-        let result = app.0.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -338,9 +338,9 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
     let receiver = meta("actor-a").instance_id;
-    instance_a.0.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
     settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
-    instance_b.0.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &DagCommand::AddNode(add_node::AddNode { kind: "slider".into(), x: None, y: None }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
     settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
     instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
     instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");
@@ -371,7 +371,7 @@ async fn ingest_operations_is_idempotent_for_dag() {
     let (near, mut far) = MemoryBackbone::pair("mem://dag-idempotent", "mem://dag-idempotent").await;
     sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
     let genesis = crate::editor::dag::unit_tests::context::live_scene(&sender).await.nodes.len();
-    sender.0.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("apply command");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut sender.0, &DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("apply command");
     settle_registered_typed_operation(&mut sender.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("the add publishes");
     assert_eq!(crate::editor::dag::unit_tests::context::live_scene(&sender).await.nodes.len(), genesis + 1, "the sender applied its edit");
     let mut envelopes = Vec::new();

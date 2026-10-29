@@ -118,6 +118,3 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 use crate::snapshot::retire;
 use crate::PageMargins;
 use crate::PageColumns;
-
-
-#[cfg(test)]#[path="🧪️member/🦀️.rs"]mod member_tests;

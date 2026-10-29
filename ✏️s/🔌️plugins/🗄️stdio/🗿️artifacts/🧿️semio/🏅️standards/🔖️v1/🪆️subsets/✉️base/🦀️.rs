@@ -100,21 +100,75 @@ macro_rules! semio_snapshot_retirement {
     };
 }
 
-/// 🗝️ Implements one subset's member store owner: retained snapshots open through the framework's bounded pack decoder
-/// unless `open = <decoder>` names the subset's own streaming decoder; the crate that owns the mutation type invokes it.
+/// 🗝️ Implements one subset's member store owner: a retained snapshot opens by receiving its sealed pack record natively
+/// into the persisted owner unless `open = <operation>` names the subset's own opening operation; the crate that owns the
+/// mutation type invokes it.
 pub struct SemioMemberStoreProducer<P,M>(::std::marker::PhantomData<fn()->(P,M)>);
 impl<P,M> Copy for SemioMemberStoreProducer<P,M> {}
 impl<P,M> Clone for SemioMemberStoreProducer<P,M> {fn clone(&self)->Self{*self}}
 impl<P,M> SemioMemberStoreProducer<P,M> {pub const fn new()->Self{Self(::std::marker::PhantomData)}}
 
+/// 🌱️ Implements the native default of snapshot types whose omitted field receives their `Default` value; it copies no bytes
+/// beyond the value itself. The crate that owns each type invokes it.
+#[macro_export]
+macro_rules! semio_native_default {
+    ($($owner:ty),+ $(,)?) => {$(
+        impl ::semio_framework_value_native_owned::native_decoding::owned::NativeDefault for $owner {
+            fn native_default_demand() -> ::semio_framework_value::RetirementDemand {
+                ::semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2 * ::std::mem::size_of::<Self>())
+            }
+
+            fn native_default(grant: ::semio_framework_value::RetainedCloneGrant) -> Result<(Self, ::semio_framework_value::RetainedCloneProgress), ::semio_framework_value::ValueError> {
+                let demand = <Self as ::semio_framework_value_native_owned::native_decoding::owned::NativeDefault>::native_default_demand();
+                if !::semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) {
+                    return Err(::semio_framework_value_native_owned::native_decoding::owned::tree::invalid());
+                }
+                Ok((<Self as ::std::default::Default>::default(), ::semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
+            }
+        }
+    )+};
+}
+
+/// 📦️ Implements one subset snapshot's binary pack as its derived record document inside the semio pack envelope, so a
+/// member opens by receiving that record natively; the crate that owns the snapshot invokes it.
+#[macro_export]
+macro_rules! semio_snapshot_record_pack {
+    ($snapshot:ty) => {
+        impl ::pack::snapshot::ArtifactPack for $snapshot {
+            fn encode_pack_with(&self, options: &::semio_framework_os_kernel::os_store::PackEncodeOptions) -> Result<Vec<u8>, ::semio_framework_os_kernel::os_store::PackError> {
+                let inner = ::semio_framework_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
+                let envelope = ::semio_framework_os_kernel::os_store::semio_format::SemioEnvelope::from_envelope_id(<Self as ::pack::snapshot::ArtifactDsl>::envelope_id(), ::semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1).map_err(|error| ::semio_framework_os_kernel::os_store::PackError::from(error.into_value_error()))?;
+                Ok(::semio_framework_os_kernel::os_store::semio_format::wrap_binary(&envelope, &inner))
+            }
+
+            fn decode_pack_with(bytes: &[u8], options: &::semio_framework_os_kernel::os_store::PackDecodeOptions) -> Result<Self, ::semio_framework_os_kernel::os_store::PackError> {
+                let (envelope, inner) = ::semio_framework_os_kernel::os_store::semio_format::unwrap_binary(bytes).map_err(|error| ::semio_framework_os_kernel::os_store::PackError::from(error.into_value_error()))?;
+                if !envelope.matches_identity(<Self as ::pack::snapshot::ArtifactDsl>::envelope_id(), ::semio_framework_os_kernel::os_store::semio_format::Component::Pack, 1) {
+                    return Err(::semio_framework_os_kernel::os_store::PackError::from(::semio_framework_value::ValueError::new(::semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ::pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+                }
+                let (record, _report) = ::semio_framework_os_kernel::os_pack::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
+                Self::__dsl_from_record(&record).map_err(::semio_framework_os_kernel::os_store::serialization::text_error_to_pack_error)
+            }
+
+            fn record_spec() -> Option<::semio_framework_dsl_record::RecordSpec> {
+                Some(Self::__dsl_spec())
+            }
+        }
+    };
+}
+
 #[macro_export]
 macro_rules! semio_member_owner {
     ($snapshot:ty, $mutation:ty) => {
-        $crate::semio_member_owner!($snapshot, $mutation, open = ::semio_framework_os_kernel::ProducedMemberSnapshotOpen<$snapshot,::semio_framework_os_kernel::ArtifactPackSnapshotDecoder<$snapshot>>);
+        $crate::semio_member_owner!($snapshot, $mutation, open = ::semio_framework_os_kernel::os_store::OriginalRecordMemberSnapshotOpen<$snapshot>);
     };
     ($snapshot:ty, $mutation:ty, open = $open:ty) => {
         impl ::semio_framework_os_kernel::os_store::document_store_owners::MemberStoreProducer<$snapshot,$mutation> for $crate::SemioMemberStoreProducer<$snapshot,$mutation> {
             type SnapshotOpen = $open;
+
+            fn member_store_owners_copy_byte_demand(&self) -> Result<usize, ::semio_framework_value::ValueError> {
+                Ok(::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<$snapshot, $mutation>()?.copy_bytes)
+            }
 
             fn member_store_owners_birth_demand(&self) -> Result<::semio_framework_value::retained_clone::RetainedCloneBirthDemand, ::semio_framework_value::ValueError> {
                 ::semio_framework_os_kernel::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<$snapshot, $mutation>()

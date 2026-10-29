@@ -7,13 +7,13 @@ use semio_framework_os_store_ledger::edit_retirement;
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_os_store_replay::replay_preparation;
-use replay_preparation::ArtifactReplayPreparationProgress;
+use semio_framework_os_store_replay_operation::ArtifactReplayPreparationProgress;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
 use semio_framework_os_spr::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId, UndoPolicy};
 use semio_framework_os_spr::{Edit, Mutation, MutationMeta, OpBinary, OpText};
+use semio_framework_os_spr::{ColdMutation, MutationDiff};
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::marker::PhantomData;
@@ -33,7 +33,6 @@ use semio_framework_os_vcs::{Alternative, ArtifactHistoryKey, ArtifactHistoryLed
 use semio_framework_os_store_space_schema::{AcceptedArtifactProjection, ArtifactBackboneRef, ArtifactCommand, ArtifactCursor, ArtifactEnvelope, ArtifactProjectionCacheMode, ArtifactProjectionCause, ArtifactProjectionEvent, ArtifactProjectionInvalidation, ArtifactProjectionResult, ArtifactProjectionStamp, ArtifactRevision, HistoryLane, OpenToolTransaction, StaleArtifactProjection, SupersedeInput};
 use semio_framework_os_store_replay::ReplayTurnBudget;
 use semio_framework_os_store_replay::{PendingLocalStep, TailStep};
-//#region 🔖️EphemeralLanes
 
 use semio_framework_os_store_ephemeral::*;
 use semio_framework_os_store_text_io::ArtifactPackFiles;
@@ -57,8 +56,6 @@ use semio_framework_os_store_one_item::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, A
 use semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactStorePublication;
 use semio_framework_os_store_replay::{EditReplay, EditReplayResult, IndexedAppliedReplayEdits, EffectiveSupersessions, PairMerge, ReplayEdits, ReplayMode, ReplayProgress, ReplayStep};
 use semio_framework_os_store_replay::{PREFIX_SNAPSHOT_RING_CAPACITY, REPROJECTION_OWNER_SLOTS, fold_effective_edit, retire_shared_projection, same_effective_inputs};
-//#region 🔖️Backbone
-//#region 🔖️Backbone
 use semio_framework_os_store_backbone as backbone;
 use backbone::{Backbone, BackboneMessage, Backbones};
 #[cfg(target_arch = "wasm32")]
@@ -91,10 +88,7 @@ mod derived_operation_store;
 mod original_report_replay_store;
 #[path = "🗒️draft-config-store-and-checkpoint-identity/🦀️.rs"]
 mod draft_config_store_and_checkpoint_identity;
-pub use draft_config_store_and_checkpoint_identity::{
-    checkpoint_ancestors, checkpoint_identity, config_store_from_initialized_runtime_with_owners,
-    merge_base, reconcile_alternative, ArtifactStore, ConfigStore, DraftStore,
-};
+pub use draft_config_store_and_checkpoint_identity::{config_store_from_initialized_runtime_with_owners, ArtifactStore, ConfigStore, DraftStore};
 
 #[path = "🌱️runtime-seed-construction-and-owned-close/🦀️.rs"]
 mod runtime_seed_construction_and_owned_close;
@@ -113,23 +107,15 @@ mod delegating_operations_and_publication;
 
 #[path = "🧯️close-host-drop-and-pair-merge/🦀️.rs"]
 mod close_host_drop_and_pair_merge;
-pub use close_host_drop_and_pair_merge::{
-    merge_by_id, preflight_merge_by_id, retract_history_transitions_from_spr, HistoryFinalization,
-    SupersedeScope,
-};
-use semio_framework_os_store_replay::replay_preparation::{ArtifactDerivedOperation, ArtifactDerivedOperationMode, ArtifactReplayPreparationContext, ArtifactReplayPreparationMode, ArtifactReplayPreparationTask, ArtifactReplayPreparationRequest, ArtifactReplayPrepared};
-#[cfg(test)] use semio_framework_os_spr::ColdMutation;
-#[cfg(test)] use semio_framework_os_spr::MutationDiff;
+pub use close_host_drop_and_pair_merge::{HistoryFinalization, SupersedeScope};
+use semio_framework_os_store_replay_operation::{ArtifactDerivedOperation, ArtifactDerivedOperationMode, ArtifactReplayPreparationContext, ArtifactReplayPreparationMode, ArtifactReplayPreparationTask, ArtifactReplayPreparationRequest, ArtifactReplayPrepared};
 
-//#endregion 🔖️Backbone
-//#endregion 🔖️Backbone
-//#endregion 🔖️EphemeralLanes
 
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn admit_derived_source(&self, registry: &SnapshotReadRegistryHandle, generation: u64, revision: [u8; 32]) -> Result<(), VcsError> {
         self.cursor.admit_derived_source(&self.owners, &self.wire, registry, generation, revision)
@@ -151,6 +137,22 @@ where
     }
     fn convergence_checkpoints(&self, horizon: usize, equal: fn(&P, &P) -> bool) -> Result<ReplayConvergence<P>, VcsError> {
         self.live.convergence_checkpoints(&self.log, &self.cursor, horizon, equal)
+    }
+
+    pub fn finished_history_preview_read_demands(&self, source: &ArtifactDerivedHistoryPreview<P, Mutation>) -> Result<semio_framework_value::RetirementDemand, ValueError> where P: Sync {
+        if !source.finished || source.state.is_none() || !source.registry.ptr_eq(&self.owners.snapshot_read_leases) || source.generation != self.generation() || source.revision != self.content_revision() || !source.registry.authority_matches(source.generation, source.revision) { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "finished checkpoint read requires its unchanged original Store frontier")); }
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: SnapshotRead::<P>::capture_copy_byte_demand(), depth: 1, ..Default::default() })
+    }
+
+    pub fn admit_finished_history_preview_read(&self, source: &ArtifactDerivedHistoryPreview<P, Mutation>, output: &mut Option<SnapshotRead<P>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> where P: Sync {
+        if output.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "finished checkpoint read output is already occupied")); }
+        let demand = self.finished_history_preview_read_demands(source)?;
+        if grant.maximum_items == 0 || !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        let owner = Arc::clone(source.state.as_ref().unwrap());
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() };
+        let lease = match source.registry.try_issue_original(Arc::clone(&owner)) { Ok(lease) => lease, Err((error, alias)) => { drop(alias); return Err(error.into_value_error().with_retained_progress(progress)); } };
+        *output = Some(SnapshotRead::new(owner, lease));
+        Ok(RetainedCloneStep::Complete(progress))
     }
 
     pub fn retained_derived_read_demands(&self, source: &ArtifactDerivedSnapshot<P>) -> Result<semio_framework_value::RetirementDemand, ValueError>
@@ -209,9 +211,9 @@ where
         Ok(ArtifactDerivedReplay {replacement_wire:Default::default(),replacement_foreign:false,original_decode:None,original_selection:None,original_order:None,original_history_issuance:self.log.envelope.vcs.edits.retained_issuance(),target:Default::default(),target_operation:None,replacement:Default::default(),replacement_operation:None,replacement_phase:0,history_source:None,history_input:None,history_issuer:None,history_issuer_close:None,history_operation:None,failed_operation:None,preparation_receipt:Default::default(),replay: None, plan: Some(HistoryReadPlan::new(from, drafts, self.log.applied_edit_ids.len(), true)), plan_retirement:None, registry: self.owners.snapshot_read_leases.clone(), generation: self.generation(), revision: self.content_revision() })
     }
 
-    pub(crate) fn begin_checkpoint_report_replay(&self,order:&semio_framework_os_vcs::HistoryPageStack<semio_framework_os_vcs::ArtifactHistoryKey>,supersessions:&mut semio_framework_os_store_replay::EffectiveSupersessions)->Result<ArtifactDerivedReplay<P,Mutation>,VcsError>{let mut replay=self.begin_derived_report_replay(Default::default(),None)?;let identity=Some((order as*const _ as usize,order.len()));replay.original_order=identity;let plan=replay.plan.as_mut().unwrap();plan.original_order=identity;plan.supersessions=std::mem::take(supersessions);plan.original_supersessions=true;plan.first_input=0;Ok(replay)}
+    pub fn begin_checkpoint_report_replay(&self,order:&semio_framework_os_vcs::HistoryPageStack<semio_framework_os_vcs::ArtifactHistoryKey>,supersessions:&mut semio_framework_os_store_replay::EffectiveSupersessions)->Result<ArtifactDerivedReplay<P,Mutation>,VcsError>{let mut replay=self.begin_derived_report_replay(Default::default(),None)?;let identity=Some((order as*const _ as usize,order.len()));replay.original_order=identity;let plan=replay.plan.as_mut().unwrap();plan.original_order=identity;plan.supersessions=std::mem::take(supersessions);plan.original_supersessions=true;plan.first_input=0;Ok(replay)}
 
-    pub(crate) fn begin_selected_report_replay(&self,selection:semio_framework_os_vcs::OriginalHistoryEditSelection)->Result<ArtifactDerivedReplay<P,Mutation>,VcsError>{let selected=selection.selected_len(self.log.applied_edit_ids.len()).ok_or(VcsError::HistoryReplaying)?;if self.log.envelope.vcs.edits.get_key(selection.key).is_none(){return Err(VcsError::HistoryReplaying)}if !selection.restoring&&self.cursor.revision_accumulator.applied.get(selection.position).and_then(|record|record.ledger_key)!=Some(selection.key){return Err(VcsError::HistoryReplaying)}let mut replay=self.begin_derived_report_replay(Default::default(),None)?;replay.original_selection=Some(selection);let plan=replay.plan.as_mut().unwrap();plan.original_selection=Some(selection);plan.first_input=selection.position.min(selected);Ok(replay)}
+    pub fn begin_selected_report_replay(&self,selection:semio_framework_os_vcs::OriginalHistoryEditSelection)->Result<ArtifactDerivedReplay<P,Mutation>,VcsError>{let selected=selection.selected_len(self.log.applied_edit_ids.len()).ok_or(VcsError::HistoryReplaying)?;if self.log.envelope.vcs.edits.get_key(selection.key).is_none(){return Err(VcsError::HistoryReplaying)}if !selection.restoring&&self.cursor.revision_accumulator.applied.get(selection.position).and_then(|record|record.ledger_key)!=Some(selection.key){return Err(VcsError::HistoryReplaying)}let mut replay=self.begin_derived_report_replay(Default::default(),None)?;replay.original_selection=Some(selection);let plan=replay.plan.as_mut().unwrap();plan.original_selection=Some(selection);plan.first_input=selection.position.min(selected);Ok(replay)}
 
     pub fn retire_derived_history_preview(&mut self,owner:&mut Option<ArtifactDerivedHistoryPreview<P,Mutation>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>where P:Sync{self.retire_derived_history_preview_with_control(owner,grant,None)}
     pub fn retire_derived_history_preview_controlled(&mut self,owner:&mut Option<ArtifactDerivedHistoryPreview<P,Mutation>>,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>where P:Sync{self.retire_derived_history_preview_with_control(owner,grant,Some(control))}
@@ -303,7 +305,7 @@ where
         }
         if preview.operation==self.history_preview_edit(preview)?.forwards.len(){if let Some(source)=preview.history_source.as_mut(){source.begin_close();let step=source.close_step(&mut self.log.envelope.vcs.edits,retirement_grant).map_err(VcsError::InverseRefused)?;preview.preparation_receipt=step.progress();if source.terminal_is_empty(){preview.history_source=None;}return Ok(ReplayStep::Pending(preview.progress));}if retirement_grant.maximum_items==0||retirement_grant.maximum_copy_bytes<2*size_of::<usize>()||retirement_grant.maximum_depth==0{return Ok(ReplayStep::Pending(preview.progress));}preview.cursor+=1;preview.operation=0;if let Some(selection)=preview.checkpoint.as_mut(){selection.advance_edit();}preview.preparation_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<usize>(),..Default::default()};return Ok(ReplayStep::Pending(preview.progress));}
         if preview.history_issuer.is_none(){preview.preparation_receipt=self.admit_history_edit_read_issuer(&mut preview.history_issuer,retirement_grant).map_err(VcsError::InverseRefused)?.progress();return Ok(ReplayStep::Pending(preview.progress));}
-        if preview.history_source.is_none(){let slot=self.history_preview_edit_slot(preview)?;let key=self.log.envelope.vcs.edits.retained_read_key(slot).ok_or(VcsError::HistoryReplaying)?;if let Some((source,p))=replay_preparation::native::history::OriginalHistorySource::admit(key,self.log.envelope.vcs.edits.retained_read_issuer(key).map_err(VcsError::InverseRefused)?.unwrap_or(preview.history_issuer.as_ref().unwrap()),retirement_grant).map_err(VcsError::InverseRefused)?{preview.history_source=Some(source);preview.preparation_receipt=p;}return Ok(ReplayStep::Pending(preview.progress));}
+        if preview.history_source.is_none(){let slot=self.history_preview_edit_slot(preview)?;let key=self.log.envelope.vcs.edits.retained_read_key(slot).ok_or(VcsError::HistoryReplaying)?;if let Some((source,p))=semio_framework_os_store_replay_operation::native::history::OriginalHistorySource::admit(key,self.log.envelope.vcs.edits.retained_read_issuer(key).map_err(VcsError::InverseRefused)?.unwrap_or(preview.history_issuer.as_ref().unwrap()),retirement_grant).map_err(VcsError::InverseRefused)?{preview.history_source=Some(source);preview.preparation_receipt=p;}return Ok(ReplayStep::Pending(preview.progress));}
         if preview.history_input.is_none()&&preview.derived_operation.is_none(){let index=preview.operation;if self.history_preview_edit(preview)?.forwards.len()>index{let step=preview.history_source.as_mut().unwrap().advance(&mut self.log.envelope.vcs.edits,&mut preview.history_input,index+1,|edit|&edit.forwards[index],retirement_grant).map_err(VcsError::InverseRefused)?;preview.preparation_receipt=step.progress();return Ok(ReplayStep::Pending(preview.progress));}}
         let edit=self.history_preview_edit(preview)?;
         if preview.operation==edit.forwards.len(){if let Some(source)=preview.history_source.as_mut(){source.begin_close();let step=source.close_step(&mut self.log.envelope.vcs.edits,retirement_grant).map_err(VcsError::InverseRefused)?;preview.preparation_receipt=step.progress();if source.terminal_is_empty(){preview.history_source=None;}return Ok(ReplayStep::Pending(preview.progress));}if retirement_grant.maximum_copy_bytes<2*size_of::<usize>(){return Ok(ReplayStep::Pending(preview.progress));}preview.cursor+=1;preview.operation=0;if let Some(selection)=preview.checkpoint.as_mut(){selection.advance_edit();}preview.preparation_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<usize>(),..Default::default()};return Ok(ReplayStep::Pending(preview.progress));}
@@ -322,7 +324,7 @@ where
         self.step_derived_report_replay_in_order(owner,None,retirement_grant,control,deadline)
     }
 
-    pub(crate) fn step_derived_report_replay_in_order(&mut self, owner: &mut ArtifactDerivedReplay<P, Mutation>, order:Option<&semio_framework_os_vcs::HistoryPageStack<semio_framework_os_vcs::ArtifactHistoryKey>>,retirement_grant:RetainedCloneGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+    pub fn step_derived_report_replay_in_order(&mut self, owner: &mut ArtifactDerivedReplay<P, Mutation>, order:Option<&semio_framework_os_vcs::HistoryPageStack<semio_framework_os_vcs::ArtifactHistoryKey>>,retirement_grant:RetainedCloneGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
         if owner.original_order!=order.map(|o|(o as*const _ as usize,o.len())){return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Report changed its original selected order source")))}
         self.admit_derived_source(&owner.registry, owner.generation, owner.revision)?;
         let recipient=control.retirement_recipient_identity().ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native Report requires its actual original decoder recipient")))?;let identity=(control.ledger_identity(),recipient);if owner.original_decode.is_some_and(|original|original!=identity){return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native Report changed its original decoder continuation")))}if owner.original_decode.is_none(){let d=semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<(u64,u64)>>(),depth:1,..Default::default()};if semio_framework_value::retained_clone::retained_clone_grant_admits(retirement_grant,d){owner.original_decode=Some(identity);owner.preparation_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};}return Ok(ReplayStep::Pending(owner.replay.as_ref().map_or_else(ReplayProgress::default,|replay|replay.progress())))}
@@ -372,23 +374,13 @@ where
 
 }
 
-impl<P, Mutation> ArtifactStore<P, Mutation> where P: Clone + ToValue + FromValue + Send + Sync + 'static, Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static {
+impl<P, Mutation> ArtifactStore<P, Mutation> where P: semio_framework_os_spr::StoreState, Mutation: semio_framework_os_spr::StoreMutationFor<P> {
     pub fn publish_prepared_diagnostics(&mut self, diagnostics:&mut ArtifactStoreDiagnosticStage, grant:RetainedCloneGrant)->Result<RetainedCloneProgress,VcsError>{
         semio_framework_os_store_engine_live::lifted_store::publish_prepared_diagnostics(&mut self.parts(), diagnostics, grant)
     }
 
 }
 
-#[path = "../../../🔁️replay/🎮️operation/🌱️derived/🧩️store/🦀️.rs"]
-mod native_derived_operation_store;
-#[path = "../../../🔁️replay/🎮️operation/🧬️native/🔗️history/📜️report/🦀️.rs"]
-mod native_original_report_store;
-
-#[path = "../../../🕰️history/🎮️command/🦀️.rs"]
-mod native_vcs_command;
-pub use native_vcs_command::*;
-
 #[path="📸️checkpoint-read/🦀️.rs"]
 mod native_checkpoint_read;
-
-pub use native_checkpoint_read::OriginalCheckpointEditOrder;
+pub use native_checkpoint_read::CheckpointSource;

@@ -220,8 +220,8 @@ impl ArtifactEditor for PlyAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); ply_any_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->PlySnapshot>{Some(||{
-        PlySnapshot::default()
+    fn reference_birth()->Option<fn()->Result<PlySnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(PlySnapshot::default())
     })}
 
     fn handle(

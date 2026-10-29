@@ -18,7 +18,9 @@ pub async fn artifact_app_genesis_pair<A: ArtifactApp>(document_id: &str) -> Res
         return Err(store::VcsError::ValidationFailed("artifact genesis identity is not a server-minted artifact id".into()));
     }
     let codec=<A::Snapshot as store::os_store::serialization::ArtifactStoreSnapshot>::reference_snapshot_codec().ok_or_else(||store::VcsError::NativeEncoding(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native genesis requires the original retained constructor")))?;
-    let mut envelope = create_document_envelope::<A::Snapshot,A::Mutation>(A::DOCUMENT_SCHEMA,document_id,A::reference_birth().ok_or_else(||store::VcsError::NativeEncoding(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"genesis requires its explicit reference producer or retained native source")))?(),None,&codec).into_owners();
+    let birth=A::reference_birth().ok_or_else(||store::VcsError::NativeEncoding(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"genesis requires its explicit reference producer or retained native source")))?;
+    let snapshot=birth().map_err(|fault|store::VcsError::ValidationFailed(format!("{}: {}",fault.code.0,fault.message)))?;
+    let mut envelope = create_document_envelope::<A::Snapshot,A::Mutation>(A::DOCUMENT_SCHEMA,document_id,snapshot,None,&codec).into_owners();
     envelope.dialect = Some(dialect.clone());
     let zero_cursor = envelope.cursor.as_ref().is_some_and(|cursor| cursor.applied_edit_ids.is_empty() && cursor.redo_edit_ids.is_empty() && cursor.checkpoint_id.is_none());
     if envelope.id != document_id
@@ -49,8 +51,8 @@ pub async fn artifact_app_genesis_pair<A: ArtifactApp>(document_id: &str) -> Res
 /// under `ArtifactEnvelope` asserts its owners were retired first).
 pub async fn artifact_pair_snapshot<P, Mutation>(pack: &[u8], spr: &[u8]) -> Result<P, store::VcsError>
 where
-    P: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-    Mutation: OpText + OpBinary + store::Mutation<P> + store::ColdMutation<P> + 'static,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+    Mutation: store::StoreMutationFor<P>,
 {
     if pack.is_empty() || spr.is_empty() {
         return Err(store::VcsError::Deserialize("artifact pair carries no pack+spr baseline".into()));

@@ -30,6 +30,7 @@ use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepB
 use semio_framework_3d_brep_boolean::BooleanOp;
 use semio_framework_3d_brep_analysis::{manifold_report, topology_counts, validity, IssueSeverity, ManifoldReport, ShapeScope, ValidityReport, Watertightness};
 use semio_framework_3d::mesh::{HalfedgeMesh};
+use semio_framework_3d_mesh_quality::mesh_quality_report;
 use semio_framework_3d_mesh_quality::MeshQualityReport;
 use std::collections::BTreeMap;
 use std::panic::{catch_unwind, AssertUnwindSafe};
@@ -333,7 +334,7 @@ fn mesh_quality(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
         prepared,
         |state, index| {
             if index == 0 {
-                state.report = Some(state.mesh.quality_report());
+                state.report = Some(mesh_quality_report(&state.mesh));
             } else {
                 state.inconsistent = inconsistent_edges(&state.mesh.polygons());
             }

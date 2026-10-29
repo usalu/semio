@@ -1,0 +1,135 @@
+{
+ "$comment": "Language-agnostic law of the instance-side task-resume queue. Every scenario starts from an empty queue; each step applies one operation to it and, where it names `expect`, asserts what the operation answers. `push` queues a resolved follow-up whose command bytes are the id; `plan` is one funded publication unit (`cancelled`, `source` = the typed source still holds an owner, `busy` = another lane is about to take it) answering idle|close|drive; `lend` lends the front's command bytes (its id or null) and `restore` hands them back; `delivered` leaves the receipt for the host; `failed` makes the source close before the next resume; `outcome` claims the receipt.",
+ "scenarios": [
+  {"name": "delivers-in-queue-order-across-turns", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "push", "id": "b"},
+   {"op": "runnable", "expect": true},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "lend", "expect": "a"},
+   {"op": "restore"},
+   {"op": "lend", "expect": "a"},
+   {"op": "restore"},
+   {"op": "plan", "cancelled": false, "source": true, "busy": false, "expect": "drive"},
+   {"op": "plan", "cancelled": false, "source": true, "busy": false, "expect": "drive"},
+   {"op": "inflight", "expect": true},
+   {"op": "delivered", "receipt": 1},
+   {"op": "inflight", "expect": false},
+   {"op": "runnable", "expect": false},
+   {"op": "pending", "expect": true},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "idle"},
+   {"op": "outcome", "expect": 1},
+   {"op": "outcome", "expect": null},
+   {"op": "len", "expect": 1},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "lend", "expect": "b"},
+   {"op": "delivered", "receipt": 2},
+   {"op": "outcome", "expect": 2},
+   {"op": "len", "expect": 0},
+   {"op": "pending", "expect": false},
+   {"op": "runnable", "expect": false},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "idle"}
+  ]},
+  {"name": "waits-while-another-lane-holds-the-source", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "plan", "cancelled": false, "source": true, "busy": false, "expect": "idle"},
+   {"op": "plan", "cancelled": false, "source": false, "busy": true, "expect": "idle"},
+   {"op": "inflight", "expect": false},
+   {"op": "runnable", "expect": true},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "inflight", "expect": true}
+  ]},
+  {"name": "consumed-bytes-are-not-lent-twice", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "lend", "expect": "a"},
+   {"op": "lend", "expect": null},
+   {"op": "restore"},
+   {"op": "lend", "expect": null}
+  ]},
+  {"name": "cancel-before-the-first-turn", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "push", "id": "b"},
+   {"op": "plan", "cancelled": true, "source": false, "busy": false, "expect": "idle"},
+   {"op": "len", "expect": 0},
+   {"op": "runnable", "expect": false}
+  ]},
+  {"name": "cancel-leaves-another-lanes-source-alone", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "plan", "cancelled": true, "source": true, "busy": false, "expect": "idle"},
+   {"op": "len", "expect": 0},
+   {"op": "pending", "expect": false}
+  ]},
+  {"name": "cancel-after-one-turn", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "push", "id": "b"},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "plan", "cancelled": true, "source": true, "busy": false, "expect": "close"},
+   {"op": "plan", "cancelled": true, "source": false, "busy": false, "expect": "idle"},
+   {"op": "len", "expect": 0},
+   {"op": "inflight", "expect": false},
+   {"op": "runnable", "expect": false},
+   {"op": "pending", "expect": false}
+  ]},
+  {"name": "cancel-after-two-turns", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "push", "id": "b"},
+   {"op": "push", "id": "c"},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "plan", "cancelled": false, "source": true, "busy": false, "expect": "drive"},
+   {"op": "plan", "cancelled": true, "source": true, "busy": false, "expect": "close"},
+   {"op": "plan", "cancelled": true, "source": true, "busy": false, "expect": "close"},
+   {"op": "plan", "cancelled": true, "source": false, "busy": false, "expect": "idle"},
+   {"op": "len", "expect": 0},
+   {"op": "inflight", "expect": false},
+   {"op": "runnable", "expect": false}
+  ]},
+  {"name": "cancel-waits-for-the-unclaimed-receipt", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "delivered", "receipt": 7},
+   {"op": "plan", "cancelled": true, "source": false, "busy": false, "expect": "idle"},
+   {"op": "pending", "expect": true},
+   {"op": "outcome", "expect": 7},
+   {"op": "plan", "cancelled": true, "source": false, "busy": false, "expect": "idle"},
+   {"op": "pending", "expect": false}
+  ]},
+  {"name": "failure-closes-the-source-then-answers-the-task-with-its-fault", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "push", "id": "b"},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "plan", "cancelled": false, "source": true, "busy": false, "expect": "drive"},
+   {"op": "failed", "answer": 5},
+   {"op": "inflight", "expect": true},
+   {"op": "outcome", "expect": null},
+   {"op": "plan", "cancelled": false, "source": true, "busy": false, "expect": "close"},
+   {"op": "plan", "cancelled": false, "source": true, "busy": false, "expect": "close"},
+   {"op": "outcome", "expect": null},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "idle"},
+   {"op": "inflight", "expect": false},
+   {"op": "len", "expect": 1},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "idle"},
+   {"op": "outcome", "expect": 5},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "lend", "expect": "b"}
+  ]},
+  {"name": "failure-without-an-answer-leaves-no-receipt", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "failed", "answer": null},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "idle"},
+   {"op": "outcome", "expect": null},
+   {"op": "len", "expect": 0},
+   {"op": "pending", "expect": false}
+  ]},
+  {"name": "cancel-drops-the-fault-owed-for-a-failed-resume", "steps": [
+   {"op": "push", "id": "a"},
+   {"op": "plan", "cancelled": false, "source": false, "busy": false, "expect": "drive"},
+   {"op": "failed", "answer": 5},
+   {"op": "plan", "cancelled": true, "source": true, "busy": false, "expect": "close"},
+   {"op": "plan", "cancelled": true, "source": false, "busy": false, "expect": "idle"},
+   {"op": "outcome", "expect": null},
+   {"op": "pending", "expect": false}
+  ]}
+ ]
+}

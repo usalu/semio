@@ -4,7 +4,7 @@ use std::mem::{size_of,ManuallyDrop};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,FactoryAuthority,ErasedSnapshotRetirement,OriginalRetirementControl,RetainedCloneSource,RetainedOwnedProjection,retained_clone::{RetainedCloneClose,retained_clone_grant_admits}};
 use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use semio_framework_value_snapshot_read::{SnapshotRead,CapturedSnapshotSource};
-use semio_framework_os_store_replay::replay_preparation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode,ArtifactReplayPreparationFactory,ArtifactReplayPreparationRequest,ArtifactReplayPreparationTask,ArtifactReplayPreparationContext,ArtifactReplayPreparationMode};
+use semio_framework_os_store_replay_operation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode,ArtifactReplayPreparationFactory,ArtifactReplayPreparationRequest,ArtifactReplayPreparationTask,ArtifactReplayPreparationContext,ArtifactReplayPreparationMode};
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Factory<P:'static,M:Sync+'static>{#[factory_child] snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,#[factory_child] mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<M>>,#[factory_child] semantics:Arc<dyn ArtifactReplayPreparationFactory<P,M>>}
@@ -27,7 +27,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> Factory<P,M>{
   Ok(Preparation{base:ManuallyDrop::new(Some(base)),mutation:ManuallyDrop::new(Some(request.mutation)),authority:ManuallyDrop::new(None),source:ManuallyDrop::new(None),input:ManuallyDrop::new(None),native:ManuallyDrop::new(None),prepared:ManuallyDrop::new(None),captured:ManuallyDrop::new(None),retirement:Default::default(),active:ManuallyDrop::new(None),snapshots:ManuallyDrop::new(Some(Arc::clone(&self.snapshots))),mutations:ManuallyDrop::new(Some(Arc::clone(&self.mutations))),semantics:ManuallyDrop::new(Some(Arc::clone(&self.semantics))),factories:Default::default(),context:ArtifactReplayPreparationContext{mode:ArtifactReplayPreparationMode::Prefix,operation_index:0,generation:request.generation.0,base_revision:[0;32]},checkpoint:Default::default(),original:None,phase:0,closing:false})
  }
 }
-impl<P:Send+Sync+'static,M:protocol::Mutation<P>+Send+'static> store::ArtifactEphemeralOneItemPreparationFactory<P,M> for Factory<P,M>{
+impl<P:Send+Sync+'static,M: ::semio_framework_os_kernel::StoreMutationFor<P>> store::ArtifactEphemeralOneItemPreparationFactory<P,M> for Factory<P,M>{
  fn preflight(&self,_:&M)->Result<store::os_store::one_item::ArtifactStoreOneItemFootprint,String>{Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<M>()))}
  fn begin(&self,request:store::ArtifactEphemeralOneItemPreparationRequest<P,M>)->Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<P,M>>,store::ArtifactEphemeralOneItemPreparationRequest<P,M>>{self.construct(request).map(|owner|Box::new(owner)as Box<dyn store::ArtifactEphemeralOneItemPreparation<P,M>>)}
 }
@@ -123,7 +123,7 @@ impl<P:Send+Sync+'static,M:Send+Sync+'static> store::ArtifactEphemeralOneItemPre
 impl<P:Send+Sync+'static,M:Send+Sync+'static> Drop for Preparation<P,M>{fn drop(&mut self){assert!(std::thread::panicking()||self.empty(),"ephemeral native publication abandoned original custody");if self.empty(){unsafe{ManuallyDrop::drop(&mut self.base);ManuallyDrop::drop(&mut self.mutation);ManuallyDrop::drop(&mut self.authority);ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.input);ManuallyDrop::drop(&mut self.native);ManuallyDrop::drop(&mut self.prepared);ManuallyDrop::drop(&mut self.captured);ManuallyDrop::drop(&mut self.active);ManuallyDrop::drop(&mut self.snapshots);ManuallyDrop::drop(&mut self.mutations);ManuallyDrop::drop(&mut self.semantics);}}}}
 /// 🏭️ Uses the mutation family's existing original retained semantics and intrinsic snapshot issuer.
 pub fn bounded_transient_preparation_factory<P,M>()->Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<P,M>>
-where P:semio_framework_value_snapshot_projection::SnapshotProjection,M:protocol::RetainedMutation<P>+store::ArtifactCanonicalJsonTree{
+where P:semio_framework_value_snapshot_projection::SnapshotProjection<Output=P>+::semio_framework_os_kernel::StoreState,M:protocol::RetainedMutation<P>+store::ArtifactCanonicalJsonTree+::semio_framework_os_kernel::StoreMutationFor<P>{
  Arc::new(Factory{snapshots:Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<P>::default()),mutations:Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<M>::default()),semantics:Arc::new(store::PagedOneItemPreparationFactory::<P,M,store::MutationApplyEdit<P,M>>::default())})
 }
 

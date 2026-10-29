@@ -1,0 +1,13 @@
+{
+  "files": [
+    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🦀️.rs",
+    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🧪️tests/🔣️.json",
+    "🧰️framework/🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/🧪️tests/📐️.json"
+  ],
+  "removed": [],
+  "reportsInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-edit.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/typing-edit-oracle.ts"
+  ],
+  "status": "unmounted draft; cancellation rollback/ack contract pending; no manifest or defining ledger changes"
+}

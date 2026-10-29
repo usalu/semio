@@ -26,7 +26,7 @@ fn original_list_receiving_denies_each_axis_before_child_shape_or_value_progress
 }
 #[test]
 fn original_list_guidance_keeps_cardinality_and_each_word_editable_without_defaults(){
- use semio_framework_plugin::{action_staging::*,app::staged_form::*};
+ use semio_framework_plugin::action_staging::*;use semio_framework_plugin_decl_staged_form::*;
  type Guidance=super::super::super::type_guidance::IfcTypeInputSourceWork<DetailsTestProfile>;
  if DetailsTestProfile::catalog().schema!="IFC4X3_ADD2"{return;}
  let law=contract();for row in law["cases"].as_array().unwrap(){let snapshot=source(&law,row["entity"].as_str().unwrap());let editing::SnapshotEditEvent::SetValue{path,value}=event(row)else{unreachable!()};let mut donor=Some(StagedFormRequest{token:StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:"list-original".into(),generation:"1".into(),revision:"0".repeat(64)},locale:semio_framework_ui_locale::Locale::De,args:DslValue::Object(vec![("path".into(),DslValue::String(path)),("value".into(),value)]),page:None});let mut caller=OriginalWorkFixture::new();let mut guide=Some(Guidance::default());let mut output=None;

@@ -15,7 +15,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     pub command_retirements: semio_framework_value_retirement_queue::RetirementQueue,
     pub finalize_outcome:Option<TimeTravelCommit>,pub authoring_finalization:bool,
     pub command_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
-    pub(super) session_retirement: Option<ControlledRetirement<TimeTravelSession>>,
+    pub session_retirement: Option<ControlledRetirement<TimeTravelSession>>,
     pub(super) session_retired: bool,
     pub editor: Option<TimeTravelEditor>,
     pub document: TimeTravelStoreState<A::Snapshot, A::Mutation>,

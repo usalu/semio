@@ -1,6 +1,7 @@
 //! 📸️ snapshot of `semio-s-artifact-stdio-semio-presentation` — a path-preserving carve of the artifact root mounts.
 
 #![allow(async_fn_in_trait)]
+#![recursion_limit = "256"]
 #![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as protocol;

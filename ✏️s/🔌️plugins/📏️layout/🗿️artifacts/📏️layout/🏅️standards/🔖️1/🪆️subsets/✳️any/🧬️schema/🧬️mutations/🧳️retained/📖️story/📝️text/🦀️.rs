@@ -1,10 +1,10 @@
 //! 📝️ Original String projections and numeric UTF8 spans build one final owned String with bounded copies.
-use crate::LayoutMutation;
+use crate::{LayoutMutationSource,LayoutMutationView as LayoutMutation};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
 use std::mem::{ManuallyDrop,size_of};
 #[derive(Clone,Copy)]pub struct OriginalTextSpan<'a>{pub source:RetainedCloneRef<'a,String>,pub start:usize,pub end:usize}
-pub trait OriginalTextSource{fn mutation(&self)->RetainedCloneRef<'_,LayoutMutation>;fn baseline(&self)->RetainedCloneRef<'_,LayoutSnapshot>;fn identity(&self)->usize;fn piece_count(&self)->usize;fn piece(&self,index:usize)->OriginalTextSpan<'_>;}
+pub trait OriginalTextSource{type Mutation:LayoutMutationSource;fn mutation(&self)->RetainedCloneRef<'_,Self::Mutation>;fn baseline(&self)->RetainedCloneRef<'_,LayoutSnapshot>;fn identity(&self)->usize;fn piece_count(&self)->usize;fn piece(&self,index:usize)->OriginalTextSpan<'_>;}
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original text span custody is invalid")}
 fn fixed()->RetirementDemand{RetirementDemand{copy_bytes:2048,depth:1,..Default::default()}}
 fn nested(mut d:RetirementDemand)->RetirementDemand{d.copy_bytes+=2048;d.depth+=1;d}

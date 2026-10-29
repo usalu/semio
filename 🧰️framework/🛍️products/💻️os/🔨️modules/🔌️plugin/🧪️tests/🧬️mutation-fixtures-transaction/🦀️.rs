@@ -364,8 +364,8 @@ impl ArtifactApp for TxnApp {
         }
     }
 
-    fn reference_birth()->Option<fn()->TxnSnapshot>{Some(||{
-        TxnSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<TxnSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(TxnSnapshot::default())
     })}
 
     async fn handle(
@@ -445,7 +445,7 @@ async fn dispatching_a_mutation_with_foreign_steps_proposes_instead_of_applying(
 /// reads `snapshot()`/the history right after its dispatch, which is only true after this.
 async fn dispatch_settled(app: &mut VcsArtifactApp<TxnApp>, command: TxnCommand, actor: &str, cx:&mut semio_framework_job::StepContext<'_>) -> Result<semio_framework::InvocationResult, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let action_meta = meta(actor);
-    let admitted = app.dispatch_typed(command, &action_meta, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await?;
+    let admitted = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(app, &command, &action_meta, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await?;
     settle_registered_typed_operation(app, action_meta.instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await?;
     Ok(admitted)
 }

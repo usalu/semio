@@ -82,8 +82,8 @@ impl ArtifactEditor for BitmapEditor {
         Some(semio_framework_plugin::no_presence_store_disposer())
     }
 
-    fn reference_birth()->Option<fn()->BitmapSnapshot>{Some(||{
-        crate::examples::rooms_16::snapshot()
+    fn reference_birth()->Option<fn()->Result<BitmapSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::examples::rooms_16::snapshot())
     })}
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {

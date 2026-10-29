@@ -84,7 +84,7 @@ pub(crate) mod context {
     /// 🚚️ Dispatches one typed command, settles its retained operation and applies any `LoadDocument`
     /// effect exactly as the host would; a mounted app's `result.mutations` is always empty.
     pub async fn dispatch(app: &mut PlaybookApp, command: PlaybookCommand) -> InvocationResult {
-        let mut result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let receipt = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained playbook operation settles");
         result.requested_effects.extend(receipt.effects);
         for effect in &result.requested_effects {
@@ -275,7 +275,7 @@ async fn set_contributions_boots_because_presence_declares_its_retirement_owners
     );
 
     let mut app = playbook_app().await;
-    let outcome = app.0.dispatch_typed(PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    let outcome = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &PlaybookCommand::SetContributions(set_contributions::SetContributions { json: "{}".to_string() }), &artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert!(outcome.is_ok(), "setContributions must not be refused at boot: {:?}", outcome.err());
     artifact_app_laws::settle_registered_typed_operation(&mut app.0, artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("setContributions publishes");
 }
@@ -314,9 +314,9 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let receiver = meta("actor-a").instance_id;
-    instance_a.0.dispatch_typed(PlaybookCommand::AddStep(add_step::AddStep {}), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &PlaybookCommand::AddStep(add_step::AddStep {}), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a applies its edit");
     settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
-    instance_b.0.dispatch_typed(PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &PlaybookCommand::AddBlock(add_block::AddBlock { kind: "number".into(), step_id: None }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b applies its edit");
     settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
     instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");
     instance_b.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b folds a's events");

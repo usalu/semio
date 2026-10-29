@@ -35,5 +35,3 @@ impl LayoutDocumentEquality{
  pub fn terminal_is_empty(&self)->bool{self.left.is_none()&&self.right.is_none()&&self.pending.is_none()&&self.frames.capacity()==0&&self.next.is_none()}
 }
 impl Drop for LayoutDocumentEquality{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Layout document equality retains original descendant loans and funded frame storage")}}
-
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

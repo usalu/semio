@@ -24,6 +24,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-plugin-window-config = { path = "../../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-media = { path = "../../../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-framework-plugin-job = { path = "../../../../../👷️job/📦️packages/🦀️rust" }

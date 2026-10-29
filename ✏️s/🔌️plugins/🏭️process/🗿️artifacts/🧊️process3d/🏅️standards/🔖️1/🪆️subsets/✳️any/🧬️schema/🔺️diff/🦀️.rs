@@ -72,7 +72,15 @@ pub struct Process3dDiff {
 
 //#region 🔖️DeltaHelpers
 protocol::list_delta! {
-    pub Process3dMachinesDelta { removal: Process3dMachinesRemoval, insertion: Process3dMachinesInsertion, relocation: Process3dMachinesRelocation, modification: Process3dMachinesModification, row: WorkshopMachine, patch: Process3dMachinePatch, key: id, values_only }
+    pub Process3dMachinesDelta { removal: Process3dMachinesRemoval, insertion: Process3dMachinesInsertion, relocation: Process3dMachinesRelocation, modification: Process3dMachinesModification, row: WorkshopMachine, patch: Process3dMachinePatch, list: Vec<WorkshopMachine>, key: String = by Process3dMachineKeys, values_only }
+}
+
+/// 🔑️ Keys the foreign `WorkshopMachine` rows of their list delta by `id`.
+pub(crate) struct Process3dMachineKeys;
+
+impl protocol::list_delta::KeyOf<WorkshopMachine> for Process3dMachineKeys {
+    type Key = String;
+    fn key_of(row: &WorkshopMachine) -> String { row.id.clone() }
 }
 
 /// 🩹 Field patch of one machine; every present slot is the new value of exactly that field.
@@ -85,7 +93,15 @@ pub struct Process3dMachinePatch {
 }
 
 protocol::list_delta! {
-    pub Process3dStepsDelta { removal: Process3dStepsRemoval, insertion: Process3dStepsInsertion, relocation: Process3dStepsRelocation, modification: Process3dStepsModification, row: ProcessStep, patch: Process3dStepPatch, key: id, values_only }
+    pub Process3dStepsDelta { removal: Process3dStepsRemoval, insertion: Process3dStepsInsertion, relocation: Process3dStepsRelocation, modification: Process3dStepsModification, row: ProcessStep, patch: Process3dStepPatch, list: Vec<ProcessStep>, key: String = by Process3dStepKeys, values_only }
+}
+
+/// 🔑️ Keys the foreign `ProcessStep` rows of their list delta by `id`.
+pub(crate) struct Process3dStepKeys;
+
+impl protocol::list_delta::KeyOf<ProcessStep> for Process3dStepKeys {
+    type Key = String;
+    fn key_of(row: &ProcessStep) -> String { row.id.clone() }
 }
 
 /// 🧱️ Carries the optional step origin as a present slot, so clearing it stays distinct from leaving it untouched on every wire.

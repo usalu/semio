@@ -17,6 +17,10 @@ impl RegisteredActionBusSource {
     pub fn production() -> Self {
         Self { bus: ActionBus::production() }
     }
+    /// 🧾️ Reference construction names the explicit bus its factories are registered in.
+    pub fn reference(bus: ActionBus) -> Self {
+        Self { bus }
+    }
     pub fn identity(&self) -> usize {
         Arc::as_ptr(&self.bus.inner) as usize
     }

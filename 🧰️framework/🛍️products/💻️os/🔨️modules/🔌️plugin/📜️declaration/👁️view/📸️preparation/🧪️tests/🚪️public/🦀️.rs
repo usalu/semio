@@ -29,7 +29,7 @@ impl ArtifactApp for PreparationApp {
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{ NoConfig::default() })}
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{ Ok(NoConfig::default()) })}
     async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view: Option<&ViewModel>, _draft: &DraftView<'_, Self::Draft>, _engines: &semio_framework_2d_compute::EngineHandles) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
         Ok(Emit::default())
     }
@@ -51,7 +51,7 @@ async fn mounted_snapshot_preparation_boundary_uses_original_context_and_readine
     let mut policy = artifact_app_laws::fixture_mounted_policy();
     policy.preparation.maximum_items = 8;
     let mut identity = artifact_app_laws::fixture_identity();
-    let mut app = Box::pin(VcsArtifactApp::<PreparationApp>::new(PreparationApp, replication::ActorId("mounted-preparation".into()), policy, &mut identity)).await;
+    let mut app = Box::pin(VcsArtifactApp::<PreparationApp>::new(PreparationApp, replication::ActorId("mounted-preparation".into()), policy, &mut identity)).await.expect("the reference snapshot births");
     artifact_app_laws::settle_store_constructor(&mut app, policy);
     let original_parent_identity=app.fixture_original_document_identity().as_ptr()as usize;
     let original_source_version=app.fixture_original_document_source_version();

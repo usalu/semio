@@ -35,7 +35,7 @@ fn retained_surface_render_borrows_the_exact_mounted_view_without_materializatio
     let surface=&fixture["surfaces"][0];let id=surface["id"].as_str().unwrap();let window=surface["windowId"].as_str().unwrap();let body=surface["bodyKey"].as_str().unwrap();
     let mut contexts=SurfaceContexts::default();contexts.insert(id.into(),body.into(),view.for_window_instance(window).unwrap()).unwrap();
     let binding=contexts.slots.iter().flatten().find(|binding|binding.surface==id).unwrap();
-    for _ in 0..3{let actual=contexts.borrow(id).unwrap();assert!(std::ptr::eq(actual.view_state,&binding.view_state));assert!(std::ptr::eq(actual.body_key.as_ptr(),binding.body_key.as_ptr()));assert_eq!(actual.view_state.window_id.as_deref(),Some(window));}
+    for _ in 0..3{let actual=contexts.borrow(id).unwrap();assert!(std::ptr::eq(actual.view_state,binding.view_state.as_ref().unwrap()));assert!(std::ptr::eq(actual.body_key.as_ptr(),binding.body_key.as_ptr()));assert_eq!(actual.view_state.window_id.as_deref(),Some(window));}
     assert!(contexts.borrow("unmounted").is_none());
 }
 

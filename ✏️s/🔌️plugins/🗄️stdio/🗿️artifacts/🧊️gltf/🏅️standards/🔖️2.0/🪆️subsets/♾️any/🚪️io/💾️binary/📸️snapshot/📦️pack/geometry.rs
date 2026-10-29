@@ -1,4 +1,4 @@
-//! 🫴️ IFC static-geometry receiving admits the real native schema without advertising lossless foreign reconstruction.
+//! 🫴️ glTF static-geometry receiving admits the real native schema without advertising lossless foreign reconstruction.
 use super::*;
 use crate::standards::v2_0::subsets::any::schema::snapshot_root::GltfSnapshot;
 use semio_framework_dsl_record::{

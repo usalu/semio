@@ -1,6 +1,10 @@
 {
   "name": "repo-cache-reset",
   "projectType": "library",
+  "tags": [
+    "scope:repo",
+    "language:typescript"
+  ],
   "targets": {
     "cache-reset-graph": {
       "executor": "repo:script",

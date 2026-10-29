@@ -1,0 +1,6 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": { "noEmit": true, "types": ["bun"] },
+  "include": ["/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/**/*.ts", "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/**/*.tsx"],
+  "exclude": ["/Users/ueli/Documents/semio/**/node_modules/**", "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/dist/**", "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/test-results/**"]
+}

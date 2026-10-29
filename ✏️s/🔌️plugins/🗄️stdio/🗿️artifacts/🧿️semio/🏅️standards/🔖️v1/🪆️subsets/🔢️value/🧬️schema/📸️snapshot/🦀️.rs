@@ -16,7 +16,7 @@ pub const STDIO_SEMIOVALUE_DOCUMENT_SCHEMA: &str = "stdio.semio.value";
 /// (f6-final-summary.md §4.3, las/jpg-confirmed gap), and every other id-shaped type this program
 /// introduces (`SemioQuaternion` in the shared `🧮️geometry` engine) follows the same named-field
 /// convention rather than risk the same class of bug.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct ValueId {
@@ -36,11 +36,12 @@ impl ValueId {
 /// `Default` (never constructed as a "real" empty entry — required by the shared
 /// `engine::triples::NamedTripleDiff<K,D,T>`'s `Deserialize` derive, which needs `T: Default` due
 /// to a `#[value(default)]`-triggered bound-inference quirk on ITS generic fields).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioValueEntry {
     pub key: String,
+    #[dsl(statements, block)]
     pub value: SemioValue,
 }
 
@@ -57,7 +58,8 @@ pub struct SemioValueEntry {
 /// internally-tagged (`tag = "kind"`) representation can only merge the tag into map-shaped
 /// content; a tuple variant wrapping a non-map payload compiles but fails at RUNTIME serialization
 /// (identical citation in `json`'s own `JsonValue` doc comment).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslEnum)]
+#[value(receive_recursive)]
 #[value(tag = "kind", rename_all = "camelCase")]
 #[derive(Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -80,6 +82,7 @@ pub enum SemioValue {
         value: Vec<u8>,
     },
     List {
+        #[dsl(statements, block)]
         items: Vec<SemioValue>,
     },
     Map {
@@ -116,17 +119,19 @@ pub fn semio_value_scalar_label(value: &SemioValue) -> Option<(String, String)> 
 /// values resolve against. Real per-node diffability (see `🔺️diff`) makes this the format's
 /// "keyed repeating structure" per the recipe, not just a scalar container. Derives `Default` for
 /// the same `NamedTripleDiff<K,D,T>: Deserialize` bound-inference reason as `SemioValueEntry`.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioValueNode {
     pub id: ValueId,
+    #[dsl(statements, block)]
     pub value: SemioValue,
 }
 //#endregion 🔖️ValueGraph
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.value")]
@@ -135,6 +140,7 @@ pub struct SemioValueSnapshot {
     pub schema: String,
     /// 🌱 The graph's entry point — any `SemioValue`, including a `Ref` into `nodes`.
     #[state(artifact)]
+    #[dsl(statements, block)]
     pub root: SemioValue,
     /// 🕸️ The id-keyed backing store `Ref` values resolve against — ordered (insertion order
     /// preserved), id-addressable, a real strong-entity collection (never a `HashMap`, so decode

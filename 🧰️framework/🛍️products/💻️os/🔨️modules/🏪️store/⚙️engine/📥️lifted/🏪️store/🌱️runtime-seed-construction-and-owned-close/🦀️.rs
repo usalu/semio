@@ -2,25 +2,14 @@
 
 use super::*;
 use semio_framework_os_spr::ColdMutation;
+use semio_framework_os_store_replay::PrefixSnapshot;
 use semio_framework_os_store_engine_close::StoreCloseWitness as _;
 use semio_framework_value::RetirementDemand;
 
-//#region 🔖️EphemeralLanes
-//#region 🔖️Backbone
-//#region 🔖️Backbone
-//#region 🔖️Authority
-//#region 🔖️EphemeralLanes
-//#region 🔖️Text
-//#region 🔖️Pack
-//#region 🔖️CodecRegistry
-//#region 🔖️TextFormat
-//#region 🔖️History
-//#region 🔖️ArtifactStore
-//#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub fn preflight_runtime_seed(identities: &[MutationId]) -> Result<(), VcsError> {
         let mut unique = HashSet::new();
@@ -308,8 +297,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactRe
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     /// 🏗️ Atomically adopts a domain-validated initialization runtime. Every
     /// history/reference/snapshot owner was prepared under the caller's StepContext before this
@@ -440,15 +429,3 @@ where
     }
 
 }
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️History
-//#endregion 🔖️TextFormat
-//#endregion 🔖️CodecRegistry
-//#endregion 🔖️Pack
-//#endregion 🔖️Text
-//#endregion 🔖️EphemeralLanes
-//#endregion 🔖️Authority
-//#endregion 🔖️Backbone
-//#endregion 🔖️Backbone
-//#endregion 🔖️EphemeralLanes

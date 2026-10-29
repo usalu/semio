@@ -103,8 +103,8 @@ impl ArtifactEditor for ShootingPlayApp {
         Some(crate::editor::shooting::config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->ShootingSnapshot>{Some(||{
-        crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+    fn reference_birth()->Option<fn()->Result<ShootingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot())
     })}
 
     fn io() -> Option<AppIo> {

@@ -71,8 +71,8 @@ impl ArtifactViewer for StepAnyViewer {
     const DIALECT: Dialect = STEP_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STEP_ANY_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->StepSnapshot>{Some(||{
-        StepSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<StepSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(StepSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

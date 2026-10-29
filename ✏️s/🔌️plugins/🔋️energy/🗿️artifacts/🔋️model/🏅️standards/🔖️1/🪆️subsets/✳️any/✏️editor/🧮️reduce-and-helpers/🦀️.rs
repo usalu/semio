@@ -71,7 +71,7 @@ pub(super) fn interzone_partner(boundary: OutsideBoundary) -> Option<EntityId> {
 /// in `📐️cad`'s `reset_document_effect` and `🔱️trinity`'s. A freshly minted envelope has no edits,
 /// so its spr encode is infallible.
 fn load_document_effect(model: &crate::model::Model) -> semio_framework_plugin::kernel::Effect {
-    let snapshot = crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None);
+    let snapshot = EnergyModelSnapshot::from_model(model).expect("a registered engine model is an admissible native document");
     let pack = <EnergyModelSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&snapshot);
     let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::print_document_spr(&envelope)).expect("energy model document spr encode is infallible for a fresh, edit-free envelope");
@@ -206,7 +206,7 @@ pub(super) fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, 
                 return Err(target_missing("construction", *construction));
             }
             let target = model.surfaces.iter().find(|entry| entry.id.0 == *surface).ok_or_else(|| target_missing("surface", *surface))?;
-            step_if(target.construction_id != construction_id, || crate::surface_mutations::change_surface_construction(target.id, construction_id))
+            step_if(target.construction_id != construction_id, || crate::surface_properties_mutations::change_surface_construction(target.id, construction_id))
         }
         EnergyModelEditorCommand::SetMaterialProperty { material, property, value } => {
             let target = model.materials.iter().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("material", *material))?;

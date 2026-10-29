@@ -155,8 +155,8 @@ impl ArtifactEditor for Vdi3805PlayApp {
         registry.register::<results::ResultsWindowConfigOwner>()
     }
 
-    fn reference_birth()->Option<fn()->Vdi3805Snapshot>{Some(||{
-        Vdi3805Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<Vdi3805Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Vdi3805Snapshot::default())
     })}
 
     fn io() -> Option<AppIo> {

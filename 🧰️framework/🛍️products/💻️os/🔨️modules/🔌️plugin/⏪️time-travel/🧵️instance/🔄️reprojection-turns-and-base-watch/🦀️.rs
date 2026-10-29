@@ -33,7 +33,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 self.time_travel.reprojection_paused = false;
                 if self.stores.store.generation() != generation {
                     self.history.cache = None;
-                    self.as_dispatch().deliver_base_moved(identity, cx).await?;
+                    self.as_dispatch().queue_base_moved();
                 }
                 self.note_time_travel_changed(true, true);
             }

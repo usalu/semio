@@ -12,7 +12,7 @@ use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_plugin_ownership::bounded_ownership::ArtifactFixedQueue;
-use crate::history_view::HistoryView;
+use semio_framework_plugin_decl_views::history_view::HistoryView;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseLease;
 
@@ -120,20 +120,6 @@ impl ArtifactOutputChunks {
                 sealed: std::sync::atomic::AtomicBool::new(false),
             }),
         }
-    }
-
-    /// 📤️ Moves one paid original page into its pre-admitted slot while preserving refused custody.
-    pub fn push_original(&self,source:&mut Option<Vec<u8>>,credit:&ArtifactMediaExportCredit,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        use semio_framework_value::{ValueError,ValueRefusalKind};cx.original_source_parent()?;
-        let Some(page)=source.as_ref()else{return Ok(true)};let bytes=size_of::<Vec<u8>>()+6*size_of::<usize>();let grant=cx.retained_grant();
-        if cx.should_yield()||cx.is_cancelled()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
-        if page.is_empty()||page.len()>Self::CHUNK_BYTES{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"original media output page extent refused").into())}
-        let mut state=match self.inner.state.try_lock(){Ok(state)=>state,Err(_)=>return Ok(false)};let total=self.inner.bytes.load(std::sync::atomic::Ordering::Acquire).checked_add(page.len()).filter(|next|*next<=self.inner.maximum);
-        if self.is_sealed()||!state.chunks.can_push()||total.is_none(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original media output lacks its admitted slot or byte ceiling").into())}
-        credit.credit_original(page.len())?;
-        let original=source.take().unwrap();if let Err(original)=state.chunks.push(original){*source=Some(original);return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original output lost its pre-admitted slot").into())}
-        self.inner.remaining.store(state.chunks.len(),std::sync::atomic::Ordering::Release);self.inner.bytes.store(total.unwrap(),std::sync::atomic::Ordering::Release);self.inner.bytes_remaining.store(total.unwrap(),std::sync::atomic::Ordering::Release);
-        cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
 
     pub fn push(&self, chunk: Vec<u8>) -> Result<usize, Fault> {

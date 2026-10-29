@@ -54,8 +54,8 @@ impl ArtifactViewer for Pdf14AViewer {
     const DIALECT: Dialect = PDF14A_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->PdfSnapshot>{Some(||{
-        PdfSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<PdfSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(PdfSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change. Kept as a

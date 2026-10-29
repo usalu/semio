@@ -137,6 +137,16 @@ impl<A: ArtifactApp> InstanceStores<A> {
         generation as usize % ARTIFACT_LIVE_OUTPUT_SLOTS
     }
 
+    /// 🧭️ The `(slot, child_id)` the published parent declares for one exact child target, the inverse of [`Self::declared_child_reference`].
+    pub fn declared_child_address(&self, target: &ArtifactRef) -> Result<(String, String), Fault> {
+        let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(self.store.snapshot_ref()).map_err(|error| plugin_sdk_fault(format!("child member projection failed: {error}")))?;
+        (0..projection.len())
+            .filter_map(|index| projection.get(index))
+            .find(|(_, fields)| fields.artifact_id == target.artifact_id && fields.artifact_kind == target.dialect.artifact_kind && fields.standard == target.dialect.standard && fields.subset == target.dialect.subset)
+            .map(|(slot, fields)| (slot.to_owned(), fields.child_id.to_owned()))
+            .ok_or_else(|| plugin_sdk_fault("created child is not declared by the published parent"))
+    }
+
     pub fn declared_child_reference(&self, slot: &str, child_id: &str, dialect: &ArtifactDialect) -> Result<ArtifactRef, Fault> {
         let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(self.store.snapshot_ref()).map_err(|error| plugin_sdk_fault(format!("child member projection failed: {error}")))?;
         let fields = (0..projection.len()).filter_map(|index| projection.get(index)).find(|(declared, fields)| *declared == slot && fields.child_id == child_id).map(|(_, fields)| fields).ok_or_else(|| plugin_sdk_fault("child member identity is not declared by the current parent"))?;
@@ -147,17 +157,17 @@ impl<A: ArtifactApp> InstanceStores<A> {
     }
 
     /// 📐️ Quotes the next actual pin-source, publication or final frame retirement before mounted cancellation.
-    pub fn checkpoint_composition_pins_close_demands(&self,pins:&Option<Vec<vcs::CompositionPin>>,publication:&Option<Box<store::os_store::original_replay_publication::repin::OriginalRepinPublication<A::Mutation>>>,retirement:&semio_framework_value::retained_clone::RetainedCloneClose,closing:bool,body:usize)->Result<RetirementDemand,ValueError>{
-        if !closing{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()})}if !retirement.is_empty(){return retirement.demands(body)}if let Some(owner)=publication.as_ref(){return if owner.terminal_is_empty(){Ok(store::os_store::original_replay_publication::repin::OriginalRepinPublication::<A::Mutation>::boxed_release_demands())}else{owner.close_demands(&self.store,body)}}if pins.is_some(){return retirement.next_owner_demands::<Vec<vcs::CompositionPin>>(true,&None,body)}Ok(Default::default())
+    pub fn checkpoint_composition_pins_close_demands(&self,pins:&Option<Vec<vcs::CompositionPin>>,publication:&Option<Box<semio_framework_os_store_engine_replay::repin::OriginalRepinPublication<A::Mutation>>>,retirement:&semio_framework_value::retained_clone::RetainedCloneClose,closing:bool,body:usize)->Result<RetirementDemand,ValueError>{
+        if !closing{return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()})}if !retirement.is_empty(){return retirement.demands(body)}if let Some(owner)=publication.as_ref(){return if owner.terminal_is_empty(){Ok(semio_framework_os_store_engine_replay::repin::OriginalRepinPublication::<A::Mutation>::boxed_release_demands())}else{owner.close_demands(&self.store,body)}}if pins.is_some(){return retirement.next_owner_demands::<Vec<vcs::CompositionPin>>(true,&None,body)}Ok(Default::default())
     }
 
     /// 📌️ The original pin vector and current canonical checkpoint advance through the actual native Job until full closure.
-    pub fn checkpoint_composition_pins_unit(&mut self,pins:&mut Option<Vec<vcs::CompositionPin>>,publication:&mut Option<Box<store::os_store::original_replay_publication::repin::OriginalRepinPublication<A::Mutation>>>,retirement:&mut semio_framework_value::retained_clone::RetainedCloneClose,closing:&mut bool,publish:bool,body:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub fn checkpoint_composition_pins_unit(&mut self,pins:&mut Option<Vec<vcs::CompositionPin>>,publication:&mut Option<Box<semio_framework_os_store_engine_replay::repin::OriginalRepinPublication<A::Mutation>>>,retirement:&mut semio_framework_value::retained_clone::RetainedCloneClose,closing:&mut bool,publish:bool,body:usize,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::close_original_retained_step;
         use semio_framework_value::RetainedCloneStep;
         if pins.is_none()&&publication.is_none()&&retirement.is_empty(){return Ok(true)}
         if !*closing&&(!publish||cx.is_cancelled()||publication.as_ref().is_some_and(|owner|owner.published())){let d=RetirementDemand{copy_bytes:std::mem::size_of::<bool>(),depth:1,..Default::default()};cx.with_original_retirement(|cx|close_original_retained_step(cx,d,|_|{*closing=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}))?;return Ok(false)}
-        if !*closing{if let Some(owner)=publication.as_mut(){if owner.prepared(){owner.publish(&mut self.store,cx)?;}else{owner.advance(&mut self.store,cx)?;}}else{store::os_store::original_replay_publication::repin::OriginalRepinPublication::admit_current(&self.store,pins,cx,publication)?;}return Ok(false)}
+        if !*closing{if let Some(owner)=publication.as_mut(){if owner.prepared(){owner.publish(&mut self.store,cx)?;}else{owner.advance(&mut self.store,cx)?;}}else{semio_framework_os_store_engine_replay::repin::OriginalRepinPublication::admit_current(&self.store,pins,cx,publication)?;}return Ok(false)}
         cx.with_original_retirement(|cx|{let d=self.checkpoint_composition_pins_close_demands(pins,publication,retirement,*closing,body)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(cx.retained_grant(),d){return Ok(false)}if !retirement.is_empty(){let selection=retirement.select(body)?;close_original_retained_step(cx,d,|g|selection.step(g))?;}else if let Some(owner)=publication.as_mut(){if !owner.terminal_is_empty(){owner.close_step(&mut self.store,body,cx)?;}else{close_original_retained_step(cx,d,|_|{*publication=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;}}else if pins.is_some(){close_original_retained_step(cx,d,|g|Ok(retirement.begin_granted(pins,g)?.unwrap_or(RetainedCloneStep::Progress(Default::default()))))?;}Ok(pins.is_none()&&publication.is_none()&&retirement.is_empty())})
     }
 }

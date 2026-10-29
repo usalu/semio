@@ -1,5 +1,12 @@
 // 🔬️ Support module 1 of the split test module `🔬️plugin-runtime-plugin-builder-contract`: the fixtures that more than one piece uses, as real definitions the pieces import.
 use semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorPhase;
+use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolPublicContract, ToolOwnerWitness};
+use semio_framework_tool_run::ToolRunTraceCursor;
+use semio_framework_plugin_job::{EmitWire, TransactionProposalDraft, TypedOperationCompletion, TypedOperationResultPage, TypedOperationResultToken, TypedOperationUiProgress};
+use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitProgress;
+use semio_framework_plugin_composition_publication::ComposedGestureResult;
+use semio_framework_plugin_decl_media::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
+use semio_framework_plugin_document_media::lifted_app::MediaArtifact;
 use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
 use semio_framework_plugin_operation::original_catalog_constructor::ArtifactStoreConstructorKind;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
@@ -28,7 +35,7 @@ use semio_framework_plugin_app_builder::App;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ArtifactOutputChunks;
 use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionHoverState, InteractionView, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
 use semio_framework_plugin_decl_views::history_view::HistoryView;
 use semio_framework_plugin_window_kits::Menu;
@@ -74,7 +81,7 @@ use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBui
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactBoundedFirstStepProof, ArtifactOwnedToolJobContext, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactReservedJob, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolCompletionRejection, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactToolRawInput, ReservedJobOutcomes};
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer, Editor};
-use semio_framework_plugin_decl_views::tool_contract::{ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle};
+use semio_framework_plugin_decl_tool_contract::{ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle};
 use semio_framework_plugin_decl_app::{ArtifactOwnedContextHandle, NaturalFileDecodeCursor, app_emission, media_type, tool_contract};
 use store::ArtifactStoreInitializationAuthority;
 use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, HostEvent, ToolCommandCatalog, child_emit_preparation};

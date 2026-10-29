@@ -106,7 +106,7 @@
     "semantics": {
       "verb": "add",
       "entity": "AirLoop",
-      "kind": "AddAirLoopTerminalZone",
+      "kind": "add-air-loop-terminal-zone",
       "record": "AddAirLoopTerminalZone"
     },
     "diagnostics": {

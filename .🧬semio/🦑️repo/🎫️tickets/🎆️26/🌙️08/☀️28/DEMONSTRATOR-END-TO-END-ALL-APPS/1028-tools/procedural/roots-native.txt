@@ -1,0 +1,5 @@
+semio-s-artifact-energy-model-snapshot
+semio-s-artifact-energy-model-snapshot-sqlite-admission
+semio-s-artifact-energy-model-native-mutations
+semio-s-artifact-energy-model-native-mutations-lifecycle
+semio-s-artifact-energy-model-native-mutations-singletons

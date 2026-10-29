@@ -134,7 +134,7 @@
     }
   ],
   "openTargets": [],
-  "catalogPackage": null,
+  "catalogPackage": "semio-s-artifact-stdio-ifc-catalog",
   "symbolPackages": [
     "semio-s-artifact-stdio-ifc-2x3-base",
     "semio-s-artifact-stdio-ifc-2x3-base-model",

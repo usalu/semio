@@ -46,4 +46,3 @@ impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,cons
 }
 impl<I:NativeValueSource+?Sized,V:NativeReceive<dyn NativeValueSource>+Sync,const N:usize> Drop for PagedMapReceiver<I,V,N>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"native original map receiving requires funded closure")}}
 
-

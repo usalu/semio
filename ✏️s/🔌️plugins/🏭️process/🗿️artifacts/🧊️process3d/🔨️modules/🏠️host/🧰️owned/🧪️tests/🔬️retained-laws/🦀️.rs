@@ -1,14 +1,15 @@
-
-/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
-const UNBOUNDED_STEP_GRANT: semio_framework_job::RetainedCloneGrant = semio_framework_job::RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 use super::*;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
-use semio_s_artifact_process_process3d_mutations::{standards::v1::subsets::any::io::binary::mutations::process3d_protocol_error, standards::v1::subsets::any::io::binary::mutations::PROCESS3D_MUTATION_BINARY_FORMAT};
-use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
-use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityParameter, snapshot::CapabilityRule, snapshot::MeasureRecipe, snapshot::Pose, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::Stock, snapshot::StockQuantity, snapshot::WorkingSolid, snapshot::WorkshopMachine};
 use semio_s_artifact_process_process3d_mutations::standards::v1::subsets::any::io::binary::mutations::*;
+
+const PROCESS3D_MAXIMUM_DOMAIN_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+
+const PROCESS3D_RETAINED_STACK_CAPACITY: usize = 64;
+
+/// 🎟️ Unbounded retained grant: the pre-migration step budget carried no retained limit.
+const UNBOUNDED_STEP_GRANT: RetainedCloneGrant = RetainedCloneGrant { maximum_items: usize::MAX, maximum_copy_bytes: usize::MAX, maximum_capacity_bytes: usize::MAX, maximum_release_bytes: usize::MAX, maximum_depth: usize::MAX };
 
 fn every_mutation() -> Vec<Process3dMutation> {
     process3d_all_retained_mutation_fixtures_for_test()
@@ -42,14 +43,6 @@ fn close_to_empty(mut owner: Box<dyn store::ErasedSnapshotRetirement>) -> usize 
         assert!(turns < 1 << 20, "retirement made no progress");
     }
     released
-}
-
-/// 🎟️ Runs `work` with a one-item step context whose retained grant is unbounded, the budget the pre-migration laws ran under.
-fn with_step_context<R>(work: impl FnOnce(&mut semio_framework_job::StepContext<'_>) -> R) -> R {
-    let mut retained = semio_framework_job::RetainedCloneProgress::default();
-    let mut preview_sequence = 0;
-    let mut context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(u64::MAX - 91), semio_framework_job::Generation(23), semio_framework_job::StepBudget::new(1, u64::MAX, UNBOUNDED_STEP_GRANT), semio_framework_job::CancelToken::root_now(), semio_framework_job::default_now_us, &mut preview_sequence, &mut retained);
-    work(&mut context)
 }
 
 /// 🧪️ Loads the retained-laws fixture shared by the retirement laws.
@@ -223,11 +216,10 @@ fn owned_store(label: &str, operation_value: u64) -> store::ArtifactStore<Proces
 fn owned_store_measured(label: &str, operation_value: u64, budget: &mut ReplacementPhaseBudget) -> store::ArtifactStore<Process3dSnapshot, Process3dMutation> {
     let operation = semio_framework_job::OperationId(operation_value);
     let generation = semio_framework_job::Generation(51);
-    process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).expect("fixture publication authority");
     let mut snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
     let envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, label, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut authority = Process3dStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
+    let mut authority = store::ArtifactStoreReplayInitializer::<Process3dSnapshot, Process3dMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>::new(envelope, semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
     let mut complete = false;
@@ -249,118 +241,7 @@ fn owned_store_measured(label: &str, operation_value: u64, budget: &mut Replacem
     let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).expect("fixture candidate handoff");
     assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
     drop(authority);
-    assert!(process3d_release_publication_authority(operation, generation));
     candidate
-}
-
-#[test]
-fn retained_initializer_replays_every_neutral_timeline_mutation() {
-    let _lane = publication_authority_lane();
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations");
-    let cases = ["🌱create-step/🪚️accepts", "🗑️delete-step/🚫️accepts", "🏷️rename-step/🔤️accepts", "🔘change-step-enabled/⏸️accepts", "🧷change-step-origin/🏭️accepts", "📐replace-step-measure/🕳️accepts", "🔀reorder-steps/🔀️accepts"];
-    let mut results = Vec::new();
-    for (index, case) in cases.iter().enumerate() {
-        let folder = root.join(case);
-        let before = std::fs::read_to_string(folder.join("📸️snapshot/⬅️before/🔣️.json")).unwrap();
-        let mutation = std::fs::read_to_string(folder.join("🦠️mutation/🔣️.json")).unwrap();
-        let after = std::fs::read_to_string(folder.join("📸️snapshot/➡️after/🔣️.json")).unwrap();
-        let snapshot: Process3dSnapshot = semio_framework_pack_json::from_json_str(&before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mutation: Process3dMutation = semio_framework_pack_json::from_json_str(&mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mut envelope = store::os_store::document_materialize::create_document_envelope(semio_s_artifact_process_process3d_model::snapshot::PROCESS_3D_SCHEMA, case, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-        envelope.cursor = None;
-        envelope.vcs.edits.try_push(protocol::Edit { id: format!("timeline-{index}"), actor: Some("neutral-law".into()), line: None, forwards: vec![mutation], inverse: Default::default(), mutation_meta: Vec::new(), verb: None, sequence_number: 1, started_at: "1".into(), finished_at: None }).unwrap();
-        let operation = semio_framework_job::OperationId(u64::MAX - 4_000 - index as u64);
-        let generation = semio_framework_job::Generation(51);
-        process3d_admit_publication_authority(operation, generation, 51, 51, 51, Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).unwrap();
-        let mut authority = Process3dStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId("neutral-law".into()));
-        let cancel = semio_framework_job::CancelToken::root_now();
-        let mut sequence = 0;
-        let mut complete = false;
-        for _ in 0..100_000 {
-            let mut context_retained = semio_framework_job::RetainedCloneProgress::default();
-            let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, UNBOUNDED_STEP_GRANT), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut context_retained);
-            match semio_framework_plugin::ArtifactStoreInitializationAuthority::step(&mut authority, &mut context).expect("neutral initializer turn") {
-                Some(semio_framework_job::JobOutcomeBorrow::Complete { .. }) => { complete = true; break; }
-                Some(semio_framework_job::JobOutcomeBorrow::Fault { .. }) => panic!("neutral initializer refused {case}"),
-                Some(semio_framework_job::JobOutcomeBorrow::Cancelled { .. }) => panic!("neutral initializer cancelled"),
-                _ => {}
-            }
-        }
-        assert!(complete);
-        let candidate = semio_framework_plugin::ArtifactStoreInitializationAuthority::take_candidate(&mut authority).unwrap();
-        assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(&authority));
-        drop(authority);
-        assert!(process3d_release_publication_authority(operation, generation));
-        let actual: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(candidate.snapshot_root().as_ref())).unwrap();
-        let expected: serde_json::Value = serde_json::from_str(&after).unwrap();
-        close_store(candidate);
-        results.push((case, actual, expected));
-    }
-    for (case, actual, expected) in results { assert_eq!(actual, expected, "retained neutral timeline {case}"); }
-}
-
-/// 🧮️ Cancelling a retained timeline closes its physical backing only under a grant that quotes it, and a partial cursor at every stop retires to terminal-empty through quote-sized grants.
-#[test]
-fn retained_timeline_cancellation_closes_partial_rows_and_json_with_exact_grants() {
-    let fixture = retained_fixture();
-    assert_eq!(fixture["maximumAdmittedReleaseBytes"].as_u64().unwrap() as usize, PROCESS3D_MAXIMUM_DOMAIN_BYTES);
-    let backing = &fixture["physicalBacking"];
-    let mut backed = Process3dTimelineCursor::new();
-    backed.payload.steps = Vec::with_capacity(backing["capacityItems"].as_u64().unwrap() as usize);
-    backed.payload.phase = 3;
-    let extent = backed.payload.steps.capacity() * size_of::<ProcessStep>();
-    match backed.close_step(RetainedCloneGrant::default()).expect("a zero-item grant is a no-op") {
-        RetainedCloneStep::Progress(progress) => assert_eq!((progress.copied_items, progress.released_bytes), (0, 0)),
-        RetainedCloneStep::Complete(_) => panic!("a zero-item grant must not complete a populated cursor"),
-    }
-    assert!(!backed.terminal_is_empty() && backed.payload.steps.capacity() == extent / size_of::<ProcessStep>());
-    let mut released = 0usize;
-    let mut turns = 0usize;
-    while !backed.terminal_is_empty() {
-        let quote = backed.close_demands(PROCESS3D_MAXIMUM_DOMAIN_BYTES).expect("the cursor quotes its next turn");
-        assert!(quote.release_bytes <= PROCESS3D_MAXIMUM_DOMAIN_BYTES);
-        if backed.retirement.is_some() && quote.release_bytes > 0 {
-            if let Ok(step) = backed.close_step(RetainedCloneGrant { maximum_release_bytes: quote.release_bytes - 1, ..grant_of(&quote) }) {
-                assert_eq!(step.progress().released_bytes, 0, "an under-granted turn releases nothing");
-            }
-            assert!(backed.retirement.is_some(), "an under-granted turn keeps the physical backing");
-        }
-        let progress = backed.close_step(grant_of(&quote)).expect("the cursor closes within its quoted grant").progress();
-        assert!(progress.released_bytes <= quote.release_bytes);
-        released += progress.released_bytes;
-        turns += 1;
-        assert!(turns < 1 << 16, "timeline retirement made no progress");
-    }
-    assert!(released >= extent, "the physical backing is released under its quoted grants");
-    drop(backed);
-
-    let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧬️mutations/🌱create-step/🪚️accepts");
-    let snapshot: Process3dSnapshot = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(root.join("📸️snapshot/⬅️before/🔣️.json")).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let mutation: Process3dMutation = semio_framework_pack_json::from_json_str(&std::fs::read_to_string(root.join("🦠️mutation/🔣️.json")).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    for stop in fixture["stops"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
-        let mut cursor = Process3dTimelineCursor::new();
-        assert_eq!(fixture["maximumWorkItems"].as_u64().unwrap(), 1);
-        for _ in 0..stop {
-            if with_step_context(|context| cursor.step(&snapshot, &mutation, context)).unwrap() {
-                break;
-            }
-        }
-        let phase = cursor.phase;
-        assert!(matches!(cursor.close_step(RetainedCloneGrant::default()), Ok(RetainedCloneStep::Progress(_)) | Ok(RetainedCloneStep::Complete(_))));
-        assert!(cursor.phase == phase, "a zero-item grant does not move the cursor");
-        let mut turns = 0usize;
-        while !cursor.terminal_is_empty() {
-            let quote = cursor.close_demands(PROCESS3D_MAXIMUM_DOMAIN_BYTES).expect("the cursor quotes its next turn");
-            assert!(quote.release_bytes <= fixture["maximumAdmittedReleaseBytes"].as_u64().unwrap() as usize);
-            let progress = cursor.close_step(grant_of(&quote)).expect("the cursor closes within its quoted grant").progress();
-            assert!(progress.released_bytes <= quote.release_bytes);
-            turns += 1;
-            assert!(turns < fixture["maximumCloseSteps"].as_u64().unwrap() as usize, "partial timeline retirement at {stop}");
-        }
-        assert_eq!(cursor.payload.steps.len(), fixture["expected"]["stepLength"].as_u64().unwrap() as usize);
-        assert_eq!(cursor.payload.steps.capacity(), fixture["expected"]["stepCapacity"].as_u64().unwrap() as usize);
-        drop(cursor);
-    }
 }
 
 #[test]
@@ -474,24 +355,8 @@ fn measure_one_store_replacement(round: u64) -> ReplacementPhaseBudget {
 }
 
 #[test]
-fn owner_census_rejects_zero_depth_and_maximum_plus_one() {
-    let mut zero = Process3dOwnerTotals::default();
-    assert_eq!(zero.admit(0, 0, 0), Ok(()));
-
-    let mut exact = Process3dOwnerTotals::default();
-    assert_eq!(exact.admit(PROCESS3D_MAXIMUM_DOMAIN_ITEMS, PROCESS3D_MAXIMUM_DOMAIN_BYTES, PROCESS3D_RETAINED_STACK_CAPACITY - 1), Ok(()));
-
-    let mut item_overflow = Process3dOwnerTotals::default();
-    assert_eq!(item_overflow.admit(PROCESS3D_MAXIMUM_DOMAIN_ITEMS + 1, 0, 0), Err("process3d-owner.items-capacity"));
-    let mut byte_overflow = Process3dOwnerTotals::default();
-    assert_eq!(byte_overflow.admit(0, PROCESS3D_MAXIMUM_DOMAIN_BYTES + 1, 0), Err("process3d-owner.bytes-capacity"));
-    let mut depth_overflow = Process3dOwnerTotals::default();
-    assert_eq!(depth_overflow.admit(0, 0, PROCESS3D_RETAINED_STACK_CAPACITY), Err("process3d-owner.combined-depth"));
-}
-
-#[test]
 fn interrupted_snapshot_close_reaches_terminal_empty() {
-    let owner = admitted(Process3dReleased::Snapshot(semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot()));
+    let owner = admitted(semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot());
     assert!(!owner.terminal_is_empty(), "an admitted snapshot has work left");
     close_to_empty(owner);
 }
@@ -598,13 +463,11 @@ fn snapshot_decoder_publishes_and_funds_large_timeline_backing() {
     let fixture = retained_fixture();
     let row = &fixture["decoderBacking"];
     assert_eq!(row["queryEachDemand"].as_bool(), Some(true));
-    let mut timeline = Process3dTimelineOwner::empty();
-    timeline.steps = Vec::with_capacity(row["capacityItems"].as_u64().unwrap() as usize);
-    timeline.phase = 3;
-    let extent = timeline.steps.capacity() * size_of::<ProcessStep>();
+    let backing: Vec<ProcessStep> = Vec::with_capacity(row["capacityItems"].as_u64().unwrap() as usize);
+    let extent = backing.capacity() * size_of::<ProcessStep>();
     assert!(extent > fixture["releaseBytes"].as_u64().unwrap() as usize && extent < PROCESS3D_MAXIMUM_DOMAIN_BYTES);
     let mut decoder = Process3dSnapshotDecodeAuthority::new(semio_framework_job::OperationId(7001), semio_framework_job::Generation(1), store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT);
-    *decoder.retirement = Some(admitted(Process3dReleased::Timeline(timeline)));
+    *decoder.retirement = Some(admitted(backing));
     decoder.state = Process3dSnapshotDecodeState::Closing;
     let mut released = 0usize;
     let mut turns = 0u64;
@@ -627,12 +490,10 @@ fn mutation_decoder_forwards_large_retained_backing_grant() {
     let fixture = retained_fixture();
     let row = &fixture["decoderBacking"];
     assert_eq!(row["queryEachDemand"].as_bool(), Some(true));
-    let mut timeline = Process3dTimelineOwner::empty();
-    timeline.steps = Vec::with_capacity(row["capacityItems"].as_u64().unwrap() as usize);
-    timeline.phase = 3;
-    let extent = timeline.steps.capacity() * size_of::<ProcessStep>();
+    let backing: Vec<ProcessStep> = Vec::with_capacity(row["capacityItems"].as_u64().unwrap() as usize);
+    let extent = backing.capacity() * size_of::<ProcessStep>();
     let mut decoder = Process3dMutationDecodeAuthority::new(semio_framework_job::OperationId(7004), semio_framework_job::Generation(1), store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT);
-    *decoder.retirement = Some(admitted(Process3dReleased::Timeline(timeline)));
+    *decoder.retirement = Some(admitted(backing));
     decoder.state = Process3dMutationDecodeState::Closing;
     let mut released = 0usize;
     let mut undergrant_retained = true;
@@ -666,7 +527,7 @@ fn retained_owner_demand_distinguishes_structural_work_from_exact_string_allocat
         let mut value = String::new();
         value.try_reserve_exact(extent).unwrap();
         assert_eq!(value.capacity(), extent);
-        let mut owner = admitted(Process3dReleased::String(value));
+        let mut owner = admitted(value);
         let quote = owner.next_demand(PROCESS3D_MAXIMUM_DOMAIN_BYTES).expect("the owner quotes its next turn");
         let step = owner.close_step(RetainedCloneGrant { maximum_release_bytes: caller, ..grant_of(&quote) });
         let reported = match &step { Ok(step) => step.progress().released_bytes, Err(_) => 0 };

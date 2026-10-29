@@ -31,6 +31,8 @@ semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚�
 semio-framework-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
 semio-framework-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-tool-contract = { path = "../../../👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-media = { path = "../../../🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-emission = { path = "../../../📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-app = { path = "../../../🧩️app/📦️packages/🦀️rust" }
 semio-framework-plugin-app-builder = { path = "../../../../🏗️builder/🧩️app/📦️packages/🦀️rust" }

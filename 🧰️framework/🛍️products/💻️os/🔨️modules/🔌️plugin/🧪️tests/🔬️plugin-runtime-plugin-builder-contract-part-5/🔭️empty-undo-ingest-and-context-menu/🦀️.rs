@@ -12,7 +12,7 @@
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let result = reserved_action(&mut app, "undo", None, &mut identity).await;
+        let result = reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert!(result.mutations.is_empty());
         assert!(result.events.is_empty());
         close_reserved_app(&mut app, mounted_policy,cx);

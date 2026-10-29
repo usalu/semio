@@ -26,21 +26,13 @@ pub use mutation_decode::*;
 
 //#endregion 🔖️OwnedSprCatalog
 
-//#region 🔖️RetainedStoreInitialization
+//#region 🔖️RetainedSnapshotClone
 
 #[path = "📑️snapshot-clone/🦀️.rs"]
 pub mod snapshot_clone;
 pub use snapshot_clone::*;
 
-#[path = "🏗️initialization-authority/🦀️.rs"]
-pub mod initialization_authority;
-use initialization_authority::*;
-
-#[path = "📜️initialization-contract/🦀️.rs"]
-pub mod initialization_contract;
-pub use initialization_contract::*;
-
-//#endregion 🔖️RetainedStoreInitialization
+//#endregion 🔖️RetainedSnapshotClone
 
 //#region 🧪️Tests
 //#endregion 🧪️Tests

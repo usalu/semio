@@ -44,6 +44,7 @@ semio-framework-value-snapshot-projection = { path = "../../../../../../../../�
 
 semio-framework-hash = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-replay-operation = { path = "../../../../../🏪️store/🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", package = "semio-framework-job", features = ["testkit"] }

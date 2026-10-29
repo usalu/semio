@@ -139,6 +139,7 @@ async fn two_instances_converge_disjoint_widget_moves() {
             let layout = &context::snapshot(&app).host_snapshot.layout;
             (layout.get(&w0).map(|entry| entry.x), layout.get(&w1).map(|entry| entry.x))
         },
+        semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),
     )
     .await;
 }

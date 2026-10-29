@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Input Admission Evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "actionRegistry",
+    "commandOwnership",
+    "hostAdmission",
+    "hostSettlement",
+    "typedProducer",
+    "typedIdentity",
+    "qualifiedWire",
+    "intentSource",
+    "noReconstruction",
+    "directQualification"
+  ],
+  "properties": {
+    "actionRegistry": {
+      "const": true
+    },
+    "commandOwnership": {
+      "const": true
+    },
+    "hostAdmission": {
+      "const": true
+    },
+    "hostSettlement": {
+      "const": true
+    },
+    "typedProducer": {
+      "const": true
+    },
+    "typedIdentity": {
+      "const": true
+    },
+    "qualifiedWire": {
+      "const": true
+    },
+    "intentSource": {
+      "const": true
+    },
+    "noReconstruction": {
+      "const": true
+    },
+    "directQualification": {
+      "const": true
+    }
+  }
+}

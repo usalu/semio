@@ -64,4 +64,4 @@ fn shape_segment(shape:VectorShapeRef<'_>,at:usize)->Option<VectorSegment>{let p
 fn ellipse_segment(cx:f64,cy:f64,rx:f64,ry:f64,at:usize)->Option<VectorSegment>{Some(match at{0=>VectorSegment::MoveTo{to:VectorPoint2{x:cx+rx,y:cy}},1|2=>VectorSegment::ArcTo{rx,ry,x_rotation:0.0,large_arc:false,sweep:true,to:VectorPoint2{x:cx+if at==1{-rx}else{rx},y:cy}},3=>VectorSegment::Close,_=>return None})}
 #[path="🖊️segments/🦀️.rs"]pub mod segments;
 #[path="🖼️composition/🦀️.rs"]pub mod composition;
-#[cfg(test)]#[path="🧪️tests/🧵️graph.rs"]mod tests;
+

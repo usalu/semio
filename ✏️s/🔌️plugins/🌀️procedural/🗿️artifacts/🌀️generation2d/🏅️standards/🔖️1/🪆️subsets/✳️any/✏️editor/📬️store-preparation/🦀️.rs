@@ -69,6 +69,11 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Generation2dArtifactStorePreparation>(), depth: 1 })
     }
 
+    fn begin_copy_byte_demand(&self, mutation: &Generation2dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<usize, semio_framework_value::ValueError> {
+        self.begin_demand(mutation, lane)?;
+        size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation, Generation2dMutation>>().checked_add(size_of::<Generation2dArtifactStorePreparation>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original preparation header quote overflow"))
+    }
+
     fn begin(
         &self,
         request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation, Generation2dMutation>,
@@ -96,7 +101,7 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -216,6 +221,11 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Generation2dConfigPreparation>(), depth: 1 })
     }
 
+    fn begin_copy_byte_demand(&self, mutation: &Generation2dConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<usize, semio_framework_value::ValueError> {
+        self.begin_demand(mutation, lane)?;
+        size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation, Generation2dConfigMutation>>().checked_add(size_of::<Generation2dConfigPreparation>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original preparation header quote overflow"))
+    }
+
     fn begin(
         &self,
         request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation, Generation2dConfigMutation>,
@@ -251,7 +261,7 @@ pub(super) struct Generation2dConfigPreparation {
 }
 
 impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparation {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || grant.maximum_copy_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.owners.is_closing() {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }

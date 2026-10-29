@@ -5,7 +5,7 @@ use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBui
 use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
 use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
 use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use pack::snapshot::ArtifactPack;
 use store::ArtifactStoreInitializationAuthority;

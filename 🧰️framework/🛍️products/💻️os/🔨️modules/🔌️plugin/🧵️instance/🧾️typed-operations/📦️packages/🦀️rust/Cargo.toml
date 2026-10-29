@@ -25,11 +25,13 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-plugin-scrub-host = { path = "../../../../🛠️tool-machine/🫧️host/📦️packages/🦀️rust" }
 semio-framework-plugin-abi = { path = "../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-mutation = { path = "../../../../🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
@@ -64,3 +66,6 @@ semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/�
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 
 [dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }

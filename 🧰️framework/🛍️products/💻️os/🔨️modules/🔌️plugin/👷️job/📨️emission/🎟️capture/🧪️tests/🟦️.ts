@@ -9,3 +9,13 @@ test("original emitted metadata remains one owner while its caller loan follows 
 });
 
 test("the native admission receipt preserves canonical u64 identity without a mutation mirror",()=>{const db=new Database(":memory:");db.exec("CREATE TABLE receipt(operation_id TEXT,generation TEXT,invocation_id TEXT,mutations INTEGER,inverse_mutations INTEGER)");const r=law.receipt;db.query("INSERT INTO receipt VALUES (?,?,?,?,?)").run(r.operationId,r.generation,r.invocationId,r.mutations,r.inverseMutations);const row=db.query("SELECT operation_id,generation,invocation_id,mutations,inverse_mutations FROM receipt").get() as Record<string,string|number>;const maximum=((1n<<64n)-1n).toString();expect(row).toEqual({operation_id:maximum,generation:maximum,invocation_id:`operation:${maximum}:${maximum}`,mutations:0,inverse_mutations:0});db.close();});
+test("owned emitted lanes move as one source without changing their values",()=>{
+ const db=new Database(":memory:");db.exec("CREATE TABLE accepted(owner TEXT PRIMARY KEY, operations TEXT, metadata TEXT)");
+ const operations=JSON.stringify(law.ownedProducer.mutationValues),metadata="v".repeat(law.wideTextBytes);
+ db.query("INSERT INTO accepted VALUES ('producer',?,?)").run(operations,metadata);
+ const before=db.query("SELECT operations,metadata FROM accepted WHERE owner='producer'").get();
+ db.transaction(()=>{db.query("UPDATE accepted SET owner='source' WHERE owner='producer'").run()})();
+ expect(db.query("SELECT operations,metadata FROM accepted WHERE owner='source'").get()).toEqual(before);
+ expect(db.query("SELECT count(*) AS owners FROM accepted").get()).toEqual({owners:1});
+ db.exec("DELETE FROM accepted");expect(db.query("SELECT count(*) AS owners FROM accepted").get()).toEqual({owners:0});db.close();
+});

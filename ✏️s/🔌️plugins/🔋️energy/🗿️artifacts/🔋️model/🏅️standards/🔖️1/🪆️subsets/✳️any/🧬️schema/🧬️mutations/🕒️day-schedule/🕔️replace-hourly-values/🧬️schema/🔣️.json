@@ -75,7 +75,7 @@
     "semantics": {
       "verb": "replace",
       "entity": "daily-schedule",
-      "kind": "replace-hourly-values",
+      "kind": "replace-daily-schedule-hourly-values",
       "record": "ReplacedDailyScheduleHourlyValues"
     },
     "diagnostics": {

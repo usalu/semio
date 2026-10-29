@@ -2,7 +2,7 @@
 use crate::{snapshot::{original::EnergyModelSnapshot,state::fields::{EntityRow,RetainedEntityLookup,RetainedBranchProjection}},diff::original::EnergyModelDiff,row::{RowBranchPath,RowBranchPreparation,RowOutcome},reference::{ReferenceCollection,ReferenceLookup},leaf::RowFieldPreparation,scalar::{NativeScalar,CursorClose,cursor_demand,close_cursor,birth,invalid,scalar,nested,child,add,tag,receipt}};
 use semio_framework_value::{RetirementDemand,ValueError,RetainedOwnedProjection,shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneSource,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection;
-use protocol::mutation::retained::retained_mutation_demand_fits;
+use protocol::retained_mutation_demand_fits;
 use std::mem::{size_of,ManuallyDrop};
 #[path="🧺️storage/🦀️.rs"]mod storage;pub use storage::MembershipValues;
 type Builder<S>=<<S as MembershipPath>::Values as MembershipValues<<S as MembershipPath>::Item>>::Builder;

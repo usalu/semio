@@ -5,7 +5,7 @@
         let chunks = ArtifactOutputChunks::new(4);
         assert_eq!(chunks.push(vec![1, 2, 3, 4]), Ok(4));
         assert_eq!(chunks.seal(), Ok(4));
-        let result = semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportResult::structured(MediaType { class: MediaClass::Presentation, form: MediaForm::Sequence }, "stdio.mp4.isobmff", "video/mp4", chunks).expect("completed media");
+        let result = semio_framework_plugin_decl_media::ArtifactMediaExportResult::structured(MediaType { class: MediaClass::Presentation, form: MediaForm::Sequence }, "stdio.mp4.isobmff", "video/mp4", chunks).expect("completed media");
         assert_eq!(result.mime_type, "video/mp4");
         assert_eq!(result.schema, "stdio.mp4.isobmff");
         assert_ne!(result.mime_type, result.schema);
@@ -77,7 +77,7 @@
 
         let mut app = unproved_contract_app(mounted_policy, &mut identity).await;
         assert!(!app.tools.test_registered_tool_keys().iter().any(|key| key.1 == "watchdogOverrun"), "the unproved fixture registers no owned factory for this verb");
-        let error = app.dispatch_typed(TestCommand::WatchdogOverrun, &meta(), &mut identity).await.expect_err("an unproved operation must fail before an over-budget reducer starts");
+        let error = app.dispatch_typed(TestCommand::WatchdogOverrun, &meta(), &mut identity, cx).await.expect_err("an unproved operation must fail before an over-budget reducer starts");
         assert_eq!(error.code.0, "interactive-job.not-ui-safe", "a verb with no proof is a verb that was never migrated, and the backstop names the cause");
         assert_eq!(app.stores.test_snapshot().await.count, 0, "the over-budget reducer never started");
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
@@ -112,7 +112,7 @@
         let bundle = __semio_plugin_bundle().await.expect("synthetic plugin assembly");
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🏪️store/🧪️tests/🧫️fixtures/🧫️actor-genesis/🔣️.json")).expect("neutral actor/genesis fixture");
         let actor = protocol::ActorId(fixture["actors"]["opened"].as_str().expect("opened actor").into());
-        let mut app = bundle.create_app(TestApp::<false>::APP_ID, actor.clone(), mounted_policy, &mut identity).expect("registered app");
+        let mut app = bundle.create_app(TestApp::<false>::APP_ID, actor.clone(), mounted_policy, &mut identity).expect("registered app factory births").expect("registered app");
         assert_eq!(app.app_id().await, TestApp::<false>::APP_ID);
         let TestRuntimeApps::Test(owner) = &mut app;
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(owner, mounted_policy);
@@ -125,7 +125,7 @@
         let pack = owner.document_pack().await.expect("stored document");
         artifact_app_laws::load_document(owner, &pack, &mut identity).await.expect("production reload");
         assert_eq!(owner.store.local_actor_id(), &actor, "reload retains the opened actor");
-        assert!(bundle.create_app("unknown-app", actor, mounted_policy, &mut identity).is_none());
+        assert!(bundle.create_app("unknown-app", actor, mounted_policy, &mut identity).expect("unknown app is not a fault").is_none());
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
 
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result

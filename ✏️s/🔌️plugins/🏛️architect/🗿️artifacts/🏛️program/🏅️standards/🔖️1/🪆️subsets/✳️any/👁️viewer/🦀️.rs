@@ -74,8 +74,8 @@ impl ArtifactViewer for ArchitectViewer {
     const DIALECT: Dialect = ARCHITECT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ARCHITECT_PROGRAM_SCHEMA;
 
-    fn reference_birth()->Option<fn()->ProgramSnapshot>{Some(||{
-        sample_plugin()
+    fn reference_birth()->Option<fn()->Result<ProgramSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(sample_plugin())
     })}
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {

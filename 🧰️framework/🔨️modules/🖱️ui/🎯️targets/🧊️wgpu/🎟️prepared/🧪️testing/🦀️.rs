@@ -183,3 +183,36 @@ pub fn drive_preparation_until_terminal(job: &mut PreparedRenderJob) -> Option<J
     panic!("prepared render job did not reach a terminal outcome within fixed test credits");
 }
 
+/// 🧫️ Builds one armed packet under the independently authored fixed test authority, so white-box laws never touch private packet custody.
+pub fn packet(revision: u64, generation: u64) -> PreparedRenderPacket {
+    let mut directives = PreparedRenderDirectives::default();
+    assert!(directives.try_push(RenderDirective::PreservePreviousOnFailure).is_ok());
+    let packet = PreparedRenderPacket {
+        has_animated_primitives: false,
+        scene_revision: revision,
+        preview_generation: generation,
+        damage: PreparedRenderScissors::default(),
+        clips: PreparedRenderScissors::default(),
+        directives,
+        uploads: PreparedRenderUploads::default(),
+        evictions: PreparedRenderEvictions::default(),
+        draw: semio_framework_ui_draw_contract::DrawList::default(),
+        overlay: None,
+        commands: PreparedRenderCommandPages::default(),
+        time_seconds: 0.0,
+        usage: PreparedRenderUsage::default(),
+        limits: PreparedRenderLimits::default(),
+        permit: PreparedRenderProcessPermit::try_reserve(0, 0),
+        retirement_phase: 0,
+        abandonment_slot: u8::MAX,
+    };
+    match packet.try_arm_abandonment() {
+        Ok(packet) => packet,
+        Err(_) => panic!("test packet abandonment slot"),
+    }
+}
+
+/// 📮️ Observes that no render mailbox slot still owns a packet.
+pub fn render_mailbox_is_empty() -> bool {
+    PREPARED_RENDER_MAILBOX.iter().all(|slot| slot.packet.load(std::sync::atomic::Ordering::Acquire).is_null())
+}

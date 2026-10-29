@@ -261,8 +261,8 @@ impl ArtifactViewer for Grid2dViewer {
 
     /// 👁️ The viewer boots the subset's own committed default example, so editor and viewer share
     /// one scene instead of the viewer falling back to a hardcoded empty grid.
-    fn reference_birth()->Option<fn()->Grid2dSnapshot>{Some(||{
-        crate::examples::grid2d::pipes::document()
+    fn reference_birth()->Option<fn()->Result<Grid2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::examples::grid2d::pipes::document())
     })}
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, ViewerApp<Self>>) -> Result<(), Fault> {

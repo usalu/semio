@@ -28,7 +28,8 @@ pub use semio_framework_os_store_space_member::lifted_store::{ArtifactRefs, Blob
 pub use semio_framework_os_store_replay_operation::{ArtifactReplayPreparation as _, ArtifactReplayPreparationFactory as _, ArtifactReplayPrepared};
 pub use semio_framework_os_store_initialization_runtime::native_publication_producer::{ArtifactSnapshotPublication, ArtifactStorePublication as _};
 pub use semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations;
-pub use semio_framework_os_store_engine::lifted_store::{ArtifactStore, HistoryFinalization, merge_base, reconcile_alternative, retract_history_transitions_from_spr};
+pub use semio_framework_os_store_engine::lifted_store::{ArtifactStore, HistoryFinalization};
+pub use semio_framework_os_store_engine_checkpoint_graph::{merge_base, reconcile_alternative, retract_history_transitions_from_spr};
 pub use semio_framework_os_store_backbone::backbone_retirement::ArtifactStoreBackboneRetirement;
 pub use one_item_publication::{ArtifactStoreBatchAdmissionRejected, ArtifactStoreBatchPublication, ArtifactStoreOneItemAdvance, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared, ArtifactStoreOneItemPublicationPhase, ErasedMemberStoreOneItemPublication, MemberStoreOneItemWire, MemberStoreOneItemWirePreparationFactory, MemberStoreOneItemWireRequest};
 pub use semio_framework_os_store_one_item_publication::batch_digest::{admit_artifact_batch_digest, ArtifactStoreBatchDigest};
@@ -191,5 +192,5 @@ pub mod replay {
 
 #[cfg(test)]mod original_receiving_fixture_tests{
  use super::*;
- #[test]fn fixture_resumes_original_ledger_and_recipient_through_cancelled_cleanup(){let g=physical_test_close_grant();let mut source=FixtureStoreReceiving::new(g);let(ledger,recipient)=source.receive(|c|{c.admit_turn_capacity(g.maximum_capacity_bytes).unwrap();c.charge(32).unwrap();(c.ledger_identity(),c.retirement_recipient_identity())});source.receive(|c|{assert_eq!(c.ledger_identity(),ledger);assert_eq!(c.retirement_recipient_identity(),recipient);assert_eq!(c.owned_bytes(),32)});source.cancel();source.retire(RetainedCloneGrant{maximum_capacity_bytes:3,..g},|o|{assert_eq!(o.ledger_identity(),ledger);assert_eq!(o.retirement_recipient_identity(),recipient);o.charge(1)?;o.charge(2)?;assert!(o.charge(1).is_err());Ok(())}).unwrap();assert_eq!(source.receipt.as_ref().unwrap().owned_bytes(),35);}
+ #[test]fn fixture_resumes_original_ledger_and_recipient_through_cancelled_cleanup(){let g=semio_framework_value::testing::physical_test_close_grant();let mut source=FixtureStoreReceiving::new(g);let(ledger,recipient)=source.receive(|c|{c.admit_turn_capacity(g.maximum_capacity_bytes).unwrap();c.charge(32).unwrap();(c.ledger_identity(),c.retirement_recipient_identity())});source.receive(|c|{assert_eq!(c.ledger_identity(),ledger);assert_eq!(c.retirement_recipient_identity(),recipient);assert_eq!(c.owned_bytes(),32)});source.cancel();source.retire(RetainedCloneGrant{maximum_capacity_bytes:3,..g},|o|{assert_eq!(o.ledger_identity(),ledger);assert_eq!(o.retirement_recipient_identity(),recipient);o.charge(1)?;o.charge(2)?;assert!(o.charge(1).is_err());Ok(())}).unwrap();assert_eq!(source.receipt.as_ref().unwrap().owned_bytes(),35);}
 }

@@ -258,7 +258,7 @@ async fn window_commands_persist_per_window_and_never_touch_the_document() {
         for (window, command) in steps {
             let meta = ActionMeta { instance_id: 91, view_state: Some(addressed(&view, window)), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) };
             let label = format!("{window} {command:?}");
-            app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("dispatch {label}: {error:?}"))?;
+            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("dispatch {label}: {error:?}"))?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("settle {label}: {error:?}"))?;
             if !receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) {
                 return Err(format!("the viewer command published no window configuration: {:?}", receipt.lanes));

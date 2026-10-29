@@ -5,16 +5,13 @@ use semio_framework_dsl_record::{
     FieldValue, RecordValue,
     receiving::{DslReceivingField, NativeSnapshotDecodeOwner, work},
 };
-use semio_framework_value::{RetireOwned, ValueError, ValueRefusalKind};
+use semio_framework_value::{retirement::RetireOwned, ValueError, ValueRefusalKind};
 use semio_s_fem_material::volumetric::FemMaterialValue;
 use semio_s_fem_node::volumetric::FemNodeValue;
 use std::mem::size_of;
 fn invalid() -> ValueError {
     ValueError::literal(ValueRefusalKind::InvalidValue, "FEM exchange record differs from its declared analytical shape")
 }
-#[cfg(test)]
-#[path = "loads/receiver-tests.rs"]
-mod load_tests;
 fn field(record: &RecordValue, id: u16) -> Result<&FieldValue, ValueError> {
     record.get(id).ok_or_else(invalid)
 }
@@ -60,7 +57,7 @@ fn row<T: RetireOwned>(
         Ok(slot.take().unwrap())
     })
 }
-#[derive(RetireOwned)]
+#[derive(semio_framework_value::RetireOwned)]
 struct Rows<T: RetireOwned> {
     values: Vec<T>,
     child: Option<T>,
@@ -197,7 +194,7 @@ fn support(r: &RecordValue, o: &mut NativeSnapshotDecodeOwner<'_, '_>) -> Result
         },
     )
 }
-#[derive(RetireOwned)]
+#[derive(semio_framework_value::RetireOwned)]
 struct Member {
     id: String,
     start: String,
@@ -232,7 +229,7 @@ fn member(r: &RecordValue, o: &mut NativeSnapshotDecodeOwner<'_, '_>, frame: boo
         })
     })
 }
-#[derive(RetireOwned)]
+#[derive(semio_framework_value::RetireOwned)]
 struct LoadFields {
     id: String,
     target: String,

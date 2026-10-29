@@ -1,6 +1,6 @@
 //! 🚚️ Genuine Zone sparse preparation validates original identity and physics before central writes.
 use super::{StateZonePatch,StateZone,EntityId};
-use protocol::{ApplyCapability,MutationMessage,mutation::retained::{RetainedDiffFragment,RetainedDiffApply,RetainedDiffPreflightAdvance,retained_mutation_demand_fits,patch::RetainedRowPatchApply}};
+use protocol::{ApplyCapability,MutationMessage,RetainedDiffFragment,RetainedDiffApply,RetainedDiffPreflightAdvance,retained_mutation_demand_fits,RetainedRowPatchApply};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneRef, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::size_of;

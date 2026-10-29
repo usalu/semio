@@ -132,6 +132,7 @@ pub struct SemioKitDiff {
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub models: Option<IndexedTripleDiff<Replace<store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>>, store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>>>,
     #[state(artifact)]
+    #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub properties: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>>>,
     #[state(artifact)]

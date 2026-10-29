@@ -7,10 +7,11 @@ extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_mut_year_schedule as year_schedule_mutations;
+extern crate semio_s_artifact_energy_model_mut_year_schedule_holidays as year_schedule_holidays_mutations;
 
 #[path = "."]
 mod change_annual_schedule_holiday_daily_schedule {
-    pub use crate::year_schedule_mutations::change_annual_schedule_holiday_daily_schedule::*;
+    pub use crate::year_schedule_holidays_mutations::change_annual_schedule_holiday_daily_schedule::*;
     #[path = "../../📆️year-schedule/🎄️change-holiday-daily-schedule/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../📆️year-schedule/🎄️change-holiday-daily-schedule/🧪️tests/✅️applies/🦀️.rs"]
@@ -19,7 +20,7 @@ mod change_annual_schedule_holiday_daily_schedule {
 
 #[path = "."]
 mod add_annual_schedule_holiday {
-    pub use crate::year_schedule_mutations::add_annual_schedule_holiday::*;
+    pub use crate::year_schedule_holidays_mutations::add_annual_schedule_holiday::*;
     #[path = "../../📆️year-schedule/🎉️add-holiday/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../📆️year-schedule/🎉️add-holiday/🧪️tests/✅️applies/🦀️.rs"]
@@ -28,7 +29,7 @@ mod add_annual_schedule_holiday {
 
 #[path = "."]
 mod remove_annual_schedule_holiday {
-    pub use crate::year_schedule_mutations::remove_annual_schedule_holiday::*;
+    pub use crate::year_schedule_holidays_mutations::remove_annual_schedule_holiday::*;
     #[path = "../../📆️year-schedule/🎊️remove-holiday/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../📆️year-schedule/🎊️remove-holiday/🧪️tests/✅️applies/🦀️.rs"]

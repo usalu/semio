@@ -1,4 +1,6 @@
-use super::*;
+use semio_s_artifact_stdio_idml::io::admission::{IdmlVersionView,retained_version::RetainedIdmlVersion};
+use semio_framework_value::{RetirementDemand,retained_clone::RetainedCloneGrant};
+use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapshot::validation::XmlSpan;
 use semio_framework_value::{retirement::RetireOwned,retained_clone::RetainedCloneSource};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn underfunded(d:RetirementDemand)->Vec<RetainedCloneGrant>{let g=grant(d);let mut rows=vec![RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_depth:0,..g}];if d.copy_bytes!=0{rows.push(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..g});}if d.capacity_bytes!=0{rows.push(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..g});}if d.release_bytes!=0{rows.push(RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..g});}rows}
@@ -8,7 +10,7 @@ fn close(owner:&mut RetainedIdmlVersion){owner.begin_close();for _ in 0..100000{
 #[test]
 fn original_numeric_references_yield_one_funded_owned_string_field(){
     let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧪️fixtures/🔣️.json")).unwrap();
-    for row in corpus["cases"].as_array().unwrap(){let before=row["source"].as_str().unwrap().as_bytes().to_vec();let mut original=source(before.clone());let view=IdmlVersionView{part_index:0,value:super::super::XmlSpan{start:row["start"].as_u64().unwrap() as usize,end:row["end"].as_u64().unwrap() as usize},decoded_length:row["decodedLength"].as_u64().unwrap() as usize};
+    for row in corpus["cases"].as_array().unwrap(){let before=row["source"].as_str().unwrap().as_bytes().to_vec();let mut original=source(before.clone());let view=IdmlVersionView{part_index:0,value:XmlSpan{start:row["start"].as_u64().unwrap() as usize,end:row["end"].as_u64().unwrap() as usize},decoded_length:row["decodedLength"].as_u64().unwrap() as usize};
         for body in [1024,4096,65536]{let mut owner=RetainedIdmlVersion::new(view);for _ in 0..100000{if owner.ready(){break;}let d=owner.demand(original.borrow(),body).unwrap();for g in underfunded(d){assert_eq!(owner.advance(original.borrow(),body,g).unwrap().progress(),Default::default());}owner.advance(original.borrow(),body,grant(d)).unwrap();}assert!(owner.ready());let d=owner.take_demand().unwrap();for g in underfunded(d){let (value,p)=owner.take(g).unwrap();assert!(value.is_none());assert_eq!(p,Default::default());}let(value,_)=owner.take(grant(d)).unwrap();let value=value.unwrap();assert_eq!(value,row["expected"].as_str().unwrap());let mut output=source(value);close_source(&mut output);close(&mut owner);assert_eq!(original.borrow().get(),&before);}
         for cut in [0,1,2,10,30]{let mut owner=RetainedIdmlVersion::new(view);for _ in 0..cut{if owner.ready(){break;}let d=owner.demand(original.borrow(),1024).unwrap();owner.advance(original.borrow(),1024,grant(d)).unwrap();}close(&mut owner);assert_eq!(original.borrow().get(),&before);}close_source(&mut original);
     }

@@ -1,6 +1,6 @@
 //! 🌳️ Original immutable branch projection opens one owned candidate before separately funded header adoption and sealing.
 use super::{invalid,nested,child,add,receipt,tag};
-use protocol::mutation::retained::retained_mutation_demand_fits;
+use protocol::retained_mutation_demand_fits;
 use semio_framework_value::{RetirementDemand,ValueError,retirement::RetireOwned,shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection,ProjectionField};
 use std::mem::{size_of,ManuallyDrop};

@@ -1,7 +1,7 @@
 //! 🟰️ Exact optional dictionaries and intrinsic values compare borrowed original fields through funded paged pair frames.
 use super::QuestionDictionary;
-use semio_framework_value::{DslValue,Number,RetirementDemand,ValueError,ValueRefusalKind,RetainedEqualityStep,retirement::RetireOwned,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
-use semio_framework_value_persistent::list::PagedList;
+use semio_framework_value::{DslValue,Number,RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
+use semio_framework_value_persistent::{list::PagedList,RetainedEqualityStep};
 use std::mem::size_of;
 /// 🪞️ Only the first-party source representation selects the initial borrowed comparison role.
 pub enum QuestionEqualityRoot<'a>{Dictionary(Option<&'a QuestionDictionary>),Value(&'a DslValue)}
@@ -23,7 +23,7 @@ impl<S:QuestionEqualitySource> BorrowedQuestionEquality<S>{
  pub fn new()->Self{Self{left:None,right:None,frames:Default::default(),pending:None,started:false,result:None,closing:false,rebinding:false,marker:Default::default()}}
  pub fn result(&self)->Option<bool>{self.result}
  pub fn verify(&self,left:RetainedCloneRef<'_,S>,right:RetainedCloneRef<'_,S>)->Result<(),ValueError>{left.check_binding(&self.left)?;right.check_binding(&self.right)?;Ok(())}
- pub fn verify_original(&self,right:RetainedCloneRef<'_,S>)->Result<(),ValueError>{if self.right.is_none(){return Err(fault("Question equality has no original right source"))}right.check_binding(&self.right)}
+ pub fn verify_original(&self,right:RetainedCloneRef<'_,S>)->Result<(),ValueError>{if self.right.is_none(){return Err(fault("Question equality has no original right source"))}right.check_binding(&self.right)?;Ok(())}
  fn nested(d:RetirementDemand)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:d.copy_bytes.checked_add(Self::FIXED).ok_or_else(||fault("Question equality copy extent overflow"))?,depth:d.depth.checked_add(1).ok_or_else(||fault("Question equality depth overflow"))?,..d})}
  fn child(g:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes.saturating_sub(Self::FIXED),maximum_depth:g.maximum_depth.saturating_sub(1),..g}}
  fn receipt(mut p:RetainedCloneProgress)->RetainedCloneProgress{p.copied_items=p.copied_items.max(1);p.copied_bytes+=Self::FIXED;p}

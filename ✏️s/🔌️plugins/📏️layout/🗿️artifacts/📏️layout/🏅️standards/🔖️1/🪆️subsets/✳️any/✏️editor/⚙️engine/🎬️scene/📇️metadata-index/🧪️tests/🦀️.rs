@@ -1,5 +1,5 @@
 //! 🧪️ Exact borrowed-key collisions and all retained currencies share the neutral metadata corpus.
-use super::*;
+use crate::*;
 struct Source{keys:Vec<String>}
 impl MetadataSource for Source{fn identity(&self)->usize{self as*const Self as usize}fn text(&self,key:MetadataKey)->Result<&str,&'static str>{self.keys.get(key.a).map(String::as_str).ok_or("metadata fixture key")}}
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}

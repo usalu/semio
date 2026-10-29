@@ -2,9 +2,11 @@
 use super::*;
 use semio_framework_os_store_read::{ArtifactCheckpointSelection,ArtifactCheckpointReadSource};
 impl<P,Mutation> ArtifactStore<P,Mutation>
-where P:ToValue+Send+Sync+'static,Mutation:ToValue+FromValue+protocol::Mutation<P>+OpBinary+OpText+Send+'static{
+where P: semio_framework_os_spr::StoreState,Mutation: semio_framework_os_spr::StoreMutationFor<P>{
+ /// 📏️ Quotes the actual checkpoint source frame without allocating or selecting a different frontier.
+ pub fn derived_checkpoint_preview_admission_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:size_of::<ArtifactDerivedHistoryPreview<P,Mutation>>(),depth:1,..Default::default()}}
  pub fn begin_derived_checkpoint_preview(&self,id:&str,grant:RetainedCloneGrant)->Result<Option<(ArtifactDerivedHistoryPreview<P,Mutation>,RetainedCloneProgress)>,ValueError>{
-  if id.is_empty()||id.chars().count()>512{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"checkpoint selection exceeds its authored identity bound"))}let bytes=size_of::<ArtifactDerivedHistoryPreview<P,Mutation>>();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(None)}self.wire.ensure_durable_group_idle().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"checkpoint read awaits the current durable group"))?;
+  if id.is_empty()||id.chars().count()>512{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"checkpoint selection exceeds its authored identity bound"))}let bytes=Self::derived_checkpoint_preview_admission_demands().copy_bytes;if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(None)}self.wire.ensure_durable_group_idle().map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"checkpoint read awaits the current durable group"))?;
   Ok(Some((ArtifactDerivedHistoryPreview{checkpoint:Some(ArtifactCheckpointSelection::new(id)),derived_operation:None,history_source:None,history_input:None,history_issuer:None,history_issuer_close:None,displaced_operation:None,operation_close:None,operation_identity:None,operation_adopted:false,preparation_receipt:Default::default(),plan:None,plan_retirement:None,drafts:protocol::HistoryInputDrafts::new(),target:None,cursor:0,operation:0,state:None,progress:ReplayProgress::default(),registry:self.owners.snapshot_read_leases.clone(),generation:self.generation_now(),revision:self.content_revision_now(),marker:PhantomData,finished:false},RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})))
  }
  pub fn derived_history_preview_retirement_demands(&self,preview:&ArtifactDerivedHistoryPreview<P,Mutation>,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
@@ -23,7 +25,7 @@ where P:ToValue+Send+Sync+'static,Mutation:ToValue+FromValue+protocol::Mutation<
  }
 }
 
-struct CheckpointSource<'a,P,M>{envelope:&'a semio_framework_os_store_space_schema::ArtifactEnvelopeOwners<P,M>}
+pub struct CheckpointSource<'a,P,M>{pub envelope:&'a semio_framework_os_store_space_schema::ArtifactEnvelopeOwners<P,M>}
 impl<P,M> ArtifactCheckpointReadSource for CheckpointSource<'_,P,M>{
  fn checkpoint_id(&self,position:usize)->Option<&str>{self.envelope.vcs.checkpoints.get(position).map(|row|row.id.as_str())}
  fn checkpoint_change_id(&self,checkpoint:usize,change:usize)->Option<&str>{self.envelope.vcs.checkpoints.get(checkpoint)?.change_ids.get(change).map(String::as_str)}
@@ -32,6 +34,3 @@ impl<P,M> ArtifactCheckpointReadSource for CheckpointSource<'_,P,M>{
  fn edit_id(&self,position:usize)->Option<&str>{self.envelope.vcs.edits.get(position).map(|row|row.id.as_str())}
 }
 
-#[path="order.rs"]
-pub mod order;
-pub use order::OriginalCheckpointEditOrder;

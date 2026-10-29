@@ -76,8 +76,8 @@ impl ArtifactViewer for DagViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->DagSnapshot>{Some(||{
-        default_snapshot()
+    fn reference_birth()->Option<fn()->Result<DagSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `DagViewCommand::Noop` variant never carries a config

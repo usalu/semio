@@ -45,7 +45,7 @@ fn window_meta() -> ActionMeta {
 
 async fn seeded(text: &str) -> Replica {
     let mut app = replica().await;
-    app.0.dispatch_typed(WriterCommand::SetText(set_text::SetText { text: text.into() }), &window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the seed is admitted");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &WriterCommand::SetText(set_text::SetText { text: text.into() }), &window_meta(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the seed is admitted");
     settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the seed publishes");
     app
 }

@@ -41,6 +41,8 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-base-examples = { workspace = true }
 semio-s-artifact-stdio-semio-value = { workspace = true }
 semio-s-artifact-stdio-semio-value-model = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

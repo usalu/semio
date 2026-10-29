@@ -297,7 +297,7 @@ fn render_mounted(
     let layers = semio_s_artifact_fem_2d_editor_session::editor::fem2d::session::with_live_fields(operation, authority, |visual| {
         let mut layers = fem2d_structure_layers_with(doc, "#334155", "#334155", "#334155", interaction);
         if family != semio_s_fem_app_surface::ResultMode::Static {
-            layers.push(semio_framework_pack_json::json!({ "id": "analysis-progress", "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0], "text": { "content": labels.failed, "size": 11.0 } }));
+            layers.push(semio_framework_pack_json::json!({ "id": "analysis-progress", "transform": [1.0, 0.0, 0.0, 1.0, 10.0, 20.0], "text": { "content": labels.failed.as_str(), "size": 11.0 } }));
         }
         if let Some(view) = visual {
             let visual = view.progress;

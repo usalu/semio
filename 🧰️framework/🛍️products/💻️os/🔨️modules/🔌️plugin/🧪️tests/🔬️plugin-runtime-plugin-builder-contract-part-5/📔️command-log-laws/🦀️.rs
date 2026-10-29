@@ -110,11 +110,11 @@
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("increment");
         assert_eq!(app.render_ctx().test_history().await.commands.len(), 1);
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         let after_undo = app.render_ctx().test_history().await;
         assert_eq!(after_undo.commands.len(), 2, "undo appends, it does not remove the increment entry");
         assert!(after_undo.commands.iter().any(|entry| entry.action_id == "increment"));
-        reserved_action(&mut app, "redo", None, &mut identity).await;
+        reserved_action(&mut app, "redo", None, &mut identity, cx).await;
         let after_redo = app.render_ctx().test_history().await;
         assert_eq!(after_redo.commands.len(), 3, "redo appends a third entry");
         assert!(after_redo.commands.iter().any(|entry| entry.action_id == "undo"));
@@ -177,7 +177,7 @@
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let result = reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity).await;
+        let result = reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity, cx).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.render_ctx().test_history().await.command_filter, HistoryCommandFilter::OnlyMutations);
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
@@ -227,7 +227,7 @@
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" }))), &mut identity).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" }))), &mut identity, cx).await;
         let history = app.render_ctx().test_history().await;
         let label = &history.commands[0].label;
         for terminology in Terminology::ALL {
@@ -279,7 +279,7 @@
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let before_len = app.render_ctx().test_history().await.commands.len();
-        let result = reserved_action(&mut app, "undo", None, &mut identity).await;
+        let result = reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(result.ui_scope, UiDirtyScope::None, "nothing was logged, so the scope must not be upgraded either");
         assert_eq!(app.render_ctx().test_history().await.commands.len(), before_len);
         close_reserved_app(&mut app, mounted_policy,cx);
@@ -301,7 +301,7 @@
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let before_len = app.render_ctx().test_history().await.commands.len();
-        reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity).await;
+        reserved_action(&mut app, SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&dv(json!({ "value": "onlyMutations" }))), &mut identity, cx).await;
         assert_eq!(app.render_ctx().test_history().await.commands.len(), before_len, "the filter's own chrome must not fill the list it filters");
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy,cx).expect("original contract fixture paid terminal close");
 
@@ -322,7 +322,7 @@
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render before");
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" }))), &mut identity).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme" }))), &mut identity, cx).await;
         let rendered = app.render(FRAMEWORK_HISTORY_BODY_KEY, None, &ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)).await.expect("render after");
         assert_eq!(rendered.root.children.len(), 2, "Actions + Commands");
         assert_eq!(rendered.root.children[1].children.len(), 1, "a log-only cache key change (no store generation bump) must still refresh the rendered panel");

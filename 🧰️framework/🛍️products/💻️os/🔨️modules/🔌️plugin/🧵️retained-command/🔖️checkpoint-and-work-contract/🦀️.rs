@@ -163,7 +163,7 @@ pub trait ArtifactCommandWork<A: ArtifactApp>: Send {
     /// 📨️ Receives original owned command fields under the initiating caller before immutable work views begin.
     fn receive_original_command(&mut self,_command:&mut A::Command,_cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
     /// 📤️ Transfers the actual producer output root under this same original command turn before immutable work views begin.
-    fn receive_original_output_chunks(&mut self,_chunks:&mut Option<semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks>,_cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
+    fn receive_original_output_chunks(&mut self,_chunks:&mut Option<semio_framework_plugin_decl_media::ArtifactOutputChunks>,_cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{Ok(true)}
     /// 📐️ Opts into retained native decoding while the job keeps custody of the immutable original wire.
     fn original_wire_demands(&self,_wire:&[u8],_maximum_copy_bytes:usize)->Result<Option<RetirementDemand>,ValueError>{Ok(None)}
     /// 🛬️ Produces one actual command under the original caller without a cold codec fallback.

@@ -88,8 +88,8 @@ impl ArtifactViewer for LowpolyViewer {
     const DIALECT: Dialect = LOWPOLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->LowpolySnapshot>{Some(||{
-        default_snapshot()
+    fn reference_birth()->Option<fn()->Result<LowpolySnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `LowpolyViewCommand::Noop` variant never carries a config

@@ -67,7 +67,6 @@ pub mod examples {
 pub mod editor {
     #[path = "."]
     pub mod sourcing {
-        pub use semio_s_artifact_sourcing_curation_tests::editor::sourcing::*;
         #[path = "../../../../✏️editor/📚️examples/🎬️demo-session/🦀️.rs"]
         pub mod demo_session;
         #[cfg(test)]

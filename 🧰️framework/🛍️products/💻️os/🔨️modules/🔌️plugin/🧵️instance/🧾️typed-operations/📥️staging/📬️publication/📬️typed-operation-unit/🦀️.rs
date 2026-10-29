@@ -2,29 +2,30 @@
 
 use super::*;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if mounted.reject_cancelled_publication()? {
             self.stores.handoff_mounted_durable_publication(mounted)?;
             return Ok(());
         }
         let _permit = mounted.cancellation_lease.as_ref().and_then(ToolCancellationLease::try_claim_publication).ok_or_else(|| plugin_sdk_fault("typed-operation publication claim is cancelled or occupied"))?;
-        if mounted.publication.is_none() {
-            let Some(completion) = mounted.completion.as_ref() else { return Err(plugin_sdk_fault("typed-operation completion owner was retired before publication").into()) };
-            let Some(mut publication) = completion.take()? else { return Ok(()) };
-            mounted.ui_pending = matches!(publication, ArtifactToolCompletionValue::Emit(Ok(_), _));
-            self.as_render().settle_tool_operation(mounted, &mut publication)?;
-            if let ArtifactToolCompletionValue::Emit(Ok(emit), _) = &mut publication {
-                let verbs = take_inline_interaction_verbs(&mut emit.effects);
-                if !verbs.is_empty() {
-                    self.tools.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != mounted.operation.operation.0);
-                    self.tools.typed_inline_interaction_verbs.push((mounted.operation.operation.0, verbs));
-                }
-            }
-            mounted.publication = Some(publication);
-            if mounted_typed_interaction_writes_are_next::<A>(mounted) || self.tools.mounted_typed_inline_interaction_verbs_are_next(mounted) {
-                return Ok(());
-            }
+        if mounted.publication.is_none(){
+            let bytes=2*std::mem::size_of::<ArtifactToolCompletionValue<A>>()+std::mem::size_of::<bool>();let grant=cx.retained_grant();
+            if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(())}
+            let completion=mounted.completion.as_ref().ok_or_else(||plugin_sdk_fault("typed-operation completion owner was retired before publication"))?;
+            mounted.publication=completion.take()?;
+            if mounted.publication.is_none(){return Ok(())}
+            mounted.ui_pending=matches!(mounted.publication,Some(ArtifactToolCompletionValue::Emit(Ok(_),_)));
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);
+            return Ok(())
+        }
+        if mounted.tool_stage!=semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Complete{
+            let complete=self.as_render().settle_tool_operation(mounted.operation.operation.0,&mounted.canonical_revision,&mounted.meta.actor,mounted.publication.as_mut().expect("mounted publication retains its accepted emit"),&mut mounted.tool_stage,&mut mounted.tool_press_result,&mut mounted.command_logged,cx)?;
+            if !complete{return Ok(())}
+            let mut done=None;let bytes=std::mem::size_of::<semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage>()+std::mem::size_of::<bool>();
+            if !semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{if mounted.tool_stage==semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Scrub{if let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_ref(){if emit.transaction.is_none(){mounted.command_logged=true}}}mounted.tool_stage=semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Complete;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})?{return Ok(())}
+            if let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_mut(){let verbs=take_inline_interaction_verbs(&mut emit.effects);if !verbs.is_empty(){self.tools.typed_inline_interaction_verbs.retain(|(operation,_)|*operation!=mounted.operation.operation.0);self.tools.typed_inline_interaction_verbs.push((mounted.operation.operation.0,verbs));}}
+            return Ok(())
         }
         if let Some((generation,revision))=mounted.pending_stream_abort.as_ref().and_then(|owner|owner.published_frontier()){
             if generation!=self.stores.store.generation_now()||revision!=self.stores.store.content_revision_now(){return Err(plugin_sdk_fault("stream abort original published frontier changed before mounted acknowledgement").into())}
@@ -53,14 +54,14 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 return Ok(());
             }
             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
-            let result = cx.with_native_receiving(|receiving|Ok::<_,Fault>(match pending {
+            let result = cx.with_native_receiving(|receiving|Ok::<_,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>(match pending {
                 PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch(publication, retained.maximum_copy_bytes, grant,receiving).map_err(store_publication_fault)?,
                 PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch(publication, retained.maximum_copy_bytes, grant,receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                 PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch(publication, retained.maximum_copy_bytes, grant,receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                 PendingArtifactStorePublication::Presence(publication) => self.stores.presence_store.advance_publish_one(publication, grant,receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                 PendingArtifactStorePublication::Transient(publication) => self.stores.transient_store.advance_publish_one(publication, grant,receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
                 PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(),retained.maximum_copy_bytes, grant,receiving)?,
-                PendingArtifactStorePublication::WindowTransient(publication) => self.stores.window_transient_store.advance(publication.as_mut(), grant)?,
+                PendingArtifactStorePublication::WindowTransient(publication) => self.stores.window_transient_store.advance(publication.as_mut(), grant,receiving)?,
             }));
             let ownership=match &result{Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>*receipt,Err(error)=>error.retained_progress(),_=>Default::default()};
             cx.consume_receiving_retained(retained,ownership)?;
@@ -173,7 +174,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                     };
                     let grant=self.mounted_policy.maintenance;
                     let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>self.stores.window_transient_store.refresh(authority,grant),Err(error)=>Err(plugin_retirement_fault(error))};
-                    match refresh{Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault.into());}}
+                    match refresh{Ok(semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault.into());}}
                     match self.stores.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
                         Ok(publication) => {
                             mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
@@ -230,7 +231,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                         let mut running = self.stores.store.snapshot().map_err(|error| error.into_fault())?;
                         let foreign = Vec::new();
                         for op in emit.artifact_mutations.iter() {
-                            if op.foreign_step_source(&running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient").into()); }
+                            if store::ColdMutation::foreign_step_source(op, &running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient").into()); }
                             let outcome = op.diff(&running);
                             if !outcome.is_applicable(protocol::MergePolicy::default()) {
                                 return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())).into());
@@ -353,7 +354,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                     };
                     let grant=self.mounted_policy.maintenance;
                     let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>self.stores.window_transient_store.refresh(authority,grant),Err(error)=>Err(plugin_retirement_fault(error))};
-                    match refresh{Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault.into());}}
+                    match refresh{Ok(semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault.into());}}
                     match self.stores.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
                         Ok(publication) => {
                             mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));

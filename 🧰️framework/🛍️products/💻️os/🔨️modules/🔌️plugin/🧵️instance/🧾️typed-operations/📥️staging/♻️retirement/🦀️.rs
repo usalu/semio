@@ -85,7 +85,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let owner=self.tools.tool_operations.get_mut(operation_id).unwrap();assert!(owner.original_retirement_receipt.is_none(),"original mounted Close receipt cannot be overwritten before acknowledgement");owner.original_retirement_receipt=Some((grant,progress));return Ok(());
 
             }
-            let grant = semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
+            let grant = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
             let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
             if !plugin_grant_funds(demand, grant) {
                 return Ok(());

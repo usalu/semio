@@ -29,7 +29,7 @@ use semio_framework_value_derive::ToValue;
 /// 🪪️ Explicit reference node identity belongs to its cold delta schema.
 #[derive(Clone,Debug,PartialEq)]
 pub struct Fem3dNodeKey;
-impl protocol::list_delta::KeyOf<FemNodeValue>for Fem3dNodeKey{type Key=String;fn key(row:&FemNodeValue)->String{row.id.clone()}fn retire_row(row:FemNodeValue){<FemNodeValue as semio_framework_value::FromValue>::retire_decoded(row)}}
+impl protocol::list_delta::KeyOf<FemNodeValue>for Fem3dNodeKey{type Key=String;fn key_of(row:&FemNodeValue)->String{row.id.clone()}fn retire_cold(row:FemNodeValue){<FemNodeValue as semio_framework_value::FromValue>::retire_decoded(row)}}
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the fem3d artifact: per-collection id-keyed rows plus an owned-field analysis patch.
@@ -960,3 +960,17 @@ impl semio_s_fem_material::patch::NativeMaterialPatch<4> for Fem3dMaterialPatch{
 #[derive(Clone,Debug,PartialEq)]
 pub struct Fem3dMaterialKey;
 impl protocol::list_delta::KeyOf<FemMaterialValue> for Fem3dMaterialKey{type Key=String;fn key_of(row:&FemMaterialValue)->String{row.id.clone()}fn retire_cold(row:FemMaterialValue){<FemMaterialValue as semio_framework_value::FromValue>::retire_decoded(row)}}
+
+/// ❄️ Persistent snapshots apply a diff through the explicit reference projection and receive the result back into persistent ownership.
+impl protocol::ColdMutationDiff<Fem3dSnapshot> for Fem3dDiff {
+    fn absorb(&mut self, other: Self) {
+        <Self as protocol::ColdMutationDiff<Fem3dSnapshotValue>>::absorb(self, other)
+    }
+
+    fn apply(&self, unpublished: &mut Fem3dSnapshot, capability: ApplyCapability) -> MutationApplyResult<()> {
+        let mut reference = unpublished.to_reference();
+        <Self as protocol::ColdMutationDiff<Fem3dSnapshotValue>>::apply(self, &mut reference, capability)?;
+        *unpublished = Fem3dSnapshot::from_reference(reference).map_err(|error| protocol::MutationApplyError { code: "mutation.reference-receive".into(), message: error.to_string(), target: Vec::new() })?;
+        Ok(())
+    }
+}

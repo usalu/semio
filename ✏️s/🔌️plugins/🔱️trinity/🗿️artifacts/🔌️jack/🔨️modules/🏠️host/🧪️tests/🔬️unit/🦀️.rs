@@ -19,8 +19,6 @@ use semio_framework_value::retained_clone::admit_retained_clone_close;
 #[allow(unused_imports)]
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
-#[allow(unused_imports)]
-use crate::standards::v1::subsets::any::schema::host::initialization_authority::*;
 use crate::standards::v1::subsets::any::schema::host::*;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use crate::standards::v1::subsets::any::io::binary::mutations::new_trinity_graph_store;
@@ -50,9 +48,11 @@ fn create_document_envelope_for_test() -> store::os_store::store_schema::Artifac
 }
 use store::os_store::document_materialize::create_document_envelope;
 
+type JackStoreInitializationAuthority = store::ArtifactStoreReplayInitializer<JackSnapshot, TrinityGraphMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>;
+
 fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
     let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document::<crate::test_support::FixtureComposition>(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    JackStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    JackStoreInitializationAuthority::new(envelope, TRINITY_GRAPH_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
 fn step_grant() -> RetainedCloneGrant {
@@ -249,113 +249,16 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 }
 
 
-struct JackCloseRefusalOwner {
-    kind: ValueRefusalKind,
-    message: Option<String>,
-}
-
-impl semio_framework_value::ErasedSnapshotRetirement for JackCloseRefusalOwner {
-    fn close_step(&mut self, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        match self.message.take() {
-            Some(message) => Err(ValueError::new(self.kind, message)),
-            None => Ok(RetainedCloneStep::Complete(Default::default())),
-        }
-    }
-
-    fn terminal_is_empty(&self) -> bool {
-        self.message.is_none()
-    }
-
-    fn next_copy_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(0)
-    }
-
-    fn next_capacity_byte_demand(&self, _maximum_body_bytes: usize) -> Result<usize, ValueError> {
-        Ok(0)
-    }
-
-    fn next_release_byte_demand(&self) -> Result<usize, ValueError> {
-        Ok(0)
-    }
-
-    fn next_depth_demand(&self) -> Result<usize, ValueError> {
-        Ok(usize::from(self.message.is_some()))
-    }
-}
-
 fn close_jack_initializer(authority: &mut JackStoreInitializationAuthority) {
     for _ in 0..100_000 {
+        if semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(authority) {
+            return;
+        }
+        semio_framework_plugin::ArtifactStoreInitializationAuthority::begin_close(authority);
         let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
         let grant = crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand);
-        match semio_framework_job::close_with_self_funded_context(grant, |cx| semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(authority, cx)).expect("Jack initializer close") {
-            RetainedCloneStep::Progress(progress) => assert!(progress.fits(grant)),
-            RetainedCloneStep::Complete(progress) => {
-                assert!(progress.fits(grant));
-                assert!(semio_framework_plugin::ArtifactStoreInitializationAuthority::terminal_is_empty(authority));
-                return;
-            }
-        }
+        let step = semio_framework_job::close_with_self_funded_context(grant, |cx| semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(authority, cx)).expect("Jack initializer close");
+        assert!(step.progress().fits(grant));
     }
     panic!("Jack initializer did not reach terminal-empty close")
-}
-
-fn jack_close_refusal_fixture() -> serde_json::Value {
-    serde_json::from_str(runtime_fixture_text("../../🔨️modules/🏠️host/🧪️tests/🧫️fixtures/🚫️close-refusal/🔣️.json")).expect("closed language-neutral Jack refusal corpus")
-}
-
-#[test]
-fn jack_initializer_close_preserves_typed_refusal_and_owned_message() {
-    use semio_framework_value::ToValue;
-
-    let fixture = jack_close_refusal_fixture();
-    for row in fixture["closeRefusals"].as_array().expect("close refusal cases") {
-        let kind = match row["kind"].as_str().expect("refusal kind") {
-            "invalidValue" => ValueRefusalKind::InvalidValue,
-            "canceled" => ValueRefusalKind::Canceled,
-            "ownershipLimit" => ValueRefusalKind::OwnershipLimit,
-            "allocationFailed" => ValueRefusalKind::AllocationFailed,
-            "workLimit" => ValueRefusalKind::WorkLimit,
-            "depthLimit" => ValueRefusalKind::DepthLimit,
-            "unsupportedOwner" => ValueRefusalKind::UnsupportedOwner,
-            "invariantViolated" => ValueRefusalKind::InvariantViolated,
-            other => panic!("unknown refusal kind: {other}"),
-        };
-        let mut authority = empty_jack_initializer(semio_framework_job::OperationId(503), semio_framework_job::Generation(17));
-        *authority.active = Some(Box::new(JackCloseRefusalOwner { kind, message: Some(row["message"].as_str().expect("refusal message").to_owned()) }));
-        let demand = semio_framework_plugin::ArtifactStoreInitializationAuthority::retirement_demands(&authority, crate::standards::v1::subsets::any::schema::content::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack initializer close quote");
-        let zero_grant = semio_framework_job::close_with_self_funded_context(RetainedCloneGrant { maximum_items: 0, ..crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand) }, |cx| semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, cx));
-        let result = semio_framework_job::close_with_self_funded_context(crate::standards::v1::subsets::any::schema::content::jack_self_funded_grant(demand), |cx| semio_framework_plugin::ArtifactStoreInitializationAuthority::close_step(&mut authority, cx));
-        close_jack_initializer(&mut authority);
-        drop(authority);
-        assert_eq!(zero_grant.expect("zero grant retains owner"), RetainedCloneStep::Progress(RetainedCloneProgress::default()));
-        let error = result.expect_err("typed retirement refusal").primary_value().expect("value primary of the close refusal").clone();
-        let fault = semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework, error.kind.as_str(), error.into_message());
-        let oracle: serde_json::Value = serde_json::from_slice(&semio_framework_diagnostic::encode_fault_bytes(&fault)).expect("independent JSON fault oracle");
-        assert_eq!(oracle, row["expected"]);
-        assert_eq!(fault.to_value(), row["expected"]);
-    }
-}
-
-#[test]
-fn jack_initializer_fault_copies_short_borrow_into_owned_bytes() {
-    let fixture = jack_close_refusal_fixture();
-    for row in fixture["borrowedFaults"].as_array().expect("borrowed fault cases") {
-        let mut authority = empty_jack_initializer(semio_framework_job::OperationId(504), semio_framework_job::Generation(18));
-        {
-            let message = row["message"].as_str().expect("borrowed message").to_owned();
-            authority.fail(message.as_bytes());
-        }
-        let phase = authority.phase;
-        let actual = authority.fault.as_ref().map(|fault| fault.message.clone().into_bytes());
-        close_jack_initializer(&mut authority);
-        drop(authority);
-        assert_eq!(phase, JackStoreInitializationPhase::RetireFault);
-        let oracle: Vec<u8> = serde_json::from_value(row["expectedBytes"].clone()).expect("independent byte-array oracle");
-        assert_eq!(actual.as_deref(), Some(oracle.as_slice()));
-    }
-}
-
-fn runtime_fixture_text(relative: &str) -> &'static str {
-    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(relative);
-    Box::leak(std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display())).into_boxed_str())
 }

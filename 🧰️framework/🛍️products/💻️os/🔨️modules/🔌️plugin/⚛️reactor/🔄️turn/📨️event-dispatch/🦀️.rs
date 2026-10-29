@@ -219,13 +219,13 @@ async fn job_completed_event<PA: PluginApp>(runtime: &PluginRuntime<PA>, job: u6
 ///
 /// 🎯️ M1: surviving intents dispatch through the SAME `route_app_frame`/effects/events plumbing
 /// as `app_commands` above, immediately after it (so a mutation an app command made this turn is
-/// already visible to the intent's own dispatch) — via the NEW `plugin_dispatch_intents`, which
+/// already visible to the intent's own dispatch) — via `plugin_dispatch_intent` over the retained `OriginalIntentActionSource`, which
 /// routes through the app's EXISTING typed command path (`PluginApp::handle_intent_frame` →
 /// `ArtifactApp::command_from_intent` → `dispatch_typed_command_inner`), never a parallel path.
 /// Each handled batch's surfaces feed the retained render set so the reply patch — the next `UiPatch`
 /// revision bump — is produced in this SAME turn (design decision: no new reply channel).
 ///
-/// 🚫️async: E5 executor bridge — `plugin_dispatch_intents` stays genuinely `async fn`; safe to
+/// 🚫️async: E5 executor bridge — `plugin_dispatch_intent` stays genuinely `async fn`; safe to
 /// resolve synchronously here for the same reason as `plugin_exchange` above.
 pub(super) async fn advance_original_receiving<PA: PluginApp>(runtime: &PluginRuntime<PA>, dirty: &mut DirtyPollOwners, effects: &mut Vec<Effect>, identity: &mut EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
     if !original_receiving::retain_intents(&mut dirty.intents,cx)? {

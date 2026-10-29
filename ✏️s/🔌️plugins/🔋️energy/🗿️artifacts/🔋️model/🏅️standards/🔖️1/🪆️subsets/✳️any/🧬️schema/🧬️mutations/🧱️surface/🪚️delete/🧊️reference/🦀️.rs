@@ -3,7 +3,7 @@ use super::DeleteSurface;
 use crate::{diff::ReferenceEnergyModelDiff as EnergyModelDiff,snapshot::reference::EnergyModelSnapshot};
 impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteSurface
 where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteSurface> + From<crate::boundary_mutations::ConnectSurfaces> + From<crate::fenestration_mutations::CreateFenestration> + From<crate::CreateSurface> + From<crate::fenestration_mutations::ReplaceFenestrationVertices>,
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteSurface> + From<crate::boundary_mutations::ConnectSurfaces> + From<crate::fenestration_mutations::CreateFenestration> + From<crate::CreateSurface> + From<crate::fenestration_geometry_mutations::ReplaceFenestrationVertices>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "surface", kind: "delete-surface", record: "DeletedSurface" };
 
@@ -19,7 +19,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for DeleteSurface
 where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<DeleteSurface> + From<crate::boundary_mutations::ConnectSurfaces> + From<crate::fenestration_mutations::CreateFenestration> + From<crate::CreateSurface> + From<crate::fenestration_mutations::ReplaceFenestrationVertices>,
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<DeleteSurface> + From<crate::boundary_mutations::ConnectSurfaces> + From<crate::fenestration_mutations::CreateFenestration> + From<crate::CreateSurface> + From<crate::fenestration_geometry_mutations::ReplaceFenestrationVertices>,
 {
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)

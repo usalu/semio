@@ -1,9 +1,6 @@
 //! 👁️ The read views an app receives, its operation contexts and the empty state lanes.
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-#[path="staged-form/🦀️.rs"]
-pub mod staged_form;
-
 #[doc(hidden)]
 #[path = "../🪆️child/🦀️.rs"]
 pub mod child_view;
@@ -13,9 +10,6 @@ pub mod gesture_contract;
 #[doc(hidden)]
 #[path = "../🎮️command/🦀️.rs"]
 pub mod history_view;
-#[doc(hidden)]
-#[path = "../🎞️media/🦀️.rs"]
-pub mod media_contract;
 #[doc(hidden)]
 #[path = "../⏯️tool-run/🦀️.rs"]
 pub mod tool_run_contract;
@@ -31,9 +25,6 @@ pub mod no_draft_retirement;
 #[doc(hidden)]
 #[path = "../../🫧️transient/♻️retirement/🦀️.rs"]
 pub mod transient_retirement;
-#[doc(hidden)]
-#[path = "🛬️lifted/👷️job/🦀️.rs"]
-pub mod tool_contract;
 use semio_framework::ActionKind;
 use semio_framework::ActionDefinition;
 use semio_framework::FaultCode;
@@ -58,14 +49,14 @@ use pack::snapshot::ArtifactPack;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value::{ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use crate::child_view::ChildContentView;
+pub use crate::child_view::ChildContentView;
 use crate::history_view::HistoryView;
 use semio_framework_plugin_interaction::interaction_topology::empty_domain_hover;
 use semio_framework_plugin_interaction::interaction_topology::empty_domain_selection;
 use semio_framework_plugin_interaction::interaction_topology::leftover_selected_ids_of;
 
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 
 use crate::tool_run_contract::ToolRunView;
 pub use crate::tool_run_contract::ToolRunPollView;

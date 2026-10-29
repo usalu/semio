@@ -99,6 +99,8 @@ impl<T:Send+Sync+'static> SealedShared<T>{
  pub fn identity(&self)->usize{self.source.as_ref().map_or(0,|source|source.identity())}
  pub fn get(&self)->&T{self.source.as_ref().expect("sealed shared source has transferred").get()}
 }
+/// 🔗️ Cloning shares the persistent payload as one more alias, exactly like `OrderedMap`: no deep copy, and every live alias must be explicitly retired before drop.
+impl<T:Send+Sync+'static> Clone for SealedShared<T>{fn clone(&self)->Self{let source=self.source.as_ref().expect("sealed shared source has transferred");Self{source:ManuallyDrop::new(Some(source.duplicate().expect("sealed shared alias space is exhausted"))),issuer:self.issuer,issuance:self.issuance}}}
 impl<T:Send+Sync+'static> std::ops::Deref for SealedShared<T>{type Target=T;fn deref(&self)->&T{self.get()}}
 impl<T:Send+Sync+'static> Drop for SealedShared<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.source.is_none(),"sealed source requires original granted handback");if self.source.is_none(){unsafe{ManuallyDrop::drop(&mut self.source);}}}}
 

@@ -27,11 +27,13 @@ impl ArtifactOwnedValueRetirementFactory<DagMutation> for DagMutationRetirementF
 }
 
 impl MemberStoreProducer<DagSnapshot,DagMutation> for DagMemberStoreProducer {
-    /// 📦️ A DAG document opens as an owned member through its OWN `ArtifactPack` codec. It declared
-    /// `UnsupportedMemberSnapshotOpen` until 2026-09-21, whose `step` has exactly one answer —
-    /// `Rejected(MemberOpenDiagnostic::Decode)` at step 0 — so every composed replacement and every
-    /// document archive carrying a real DAG member was refused before it began.
-    type SnapshotOpen = crate::os_store::ProducedMemberSnapshotOpen<DagSnapshot,crate::os_store::ArtifactPackSnapshotDecoder<DagSnapshot>>;
+    /// 📦️ A DAG document opens as an owned member by receiving its original text record directly into native fields.
+    type SnapshotOpen = crate::os_store::OriginalRecordMemberSnapshotOpen<DagSnapshot>;
+
+    /// 🧮️ Catalog source construction copies no bytes: it donates fixed factories and reports only retained capacity.
+    fn member_store_owners_copy_byte_demand(&self) -> Result<usize, ValueError> {
+        Ok(0)
+    }
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<DagSnapshot, DagMutation>::source_birth_bytes::<DagSnapshotRetirementFactory, DagOwnedSnapshotRetirementFactory, DagMutationRetirementFactory, ArtifactStoreCursorDisposer<DagSnapshot, DagMutation>>()?, depth: 1 })

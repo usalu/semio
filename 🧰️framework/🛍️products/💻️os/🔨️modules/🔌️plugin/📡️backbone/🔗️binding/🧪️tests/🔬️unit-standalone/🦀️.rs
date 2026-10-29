@@ -9,7 +9,7 @@ fn hex(bytes: &[u8]) -> String {
 fn document_backbone_op_binary_is_exact_canonical_and_bounded() {
     let rows = [
         (BackboneMessage::Genesis { pack: vec![0xaa] }, "01000001000801aa", false),
-        (BackboneMessage::Mutations { envelopes: vec![0xdd] }, "01010001000801dd", true),
+        (BackboneMessage::Mutations { envelopes: semio_framework_value::PagedBytes::try_from_slice(&[0xdd]).expect("bounded fixture envelope") }, "01010001000801dd", true),
         (BackboneMessage::Ack { op_ids: Vec::new() }, "01020001000c00", true),
         (BackboneMessage::Ack { op_ids: vec!["a".into()] }, "010201016101000c010600", true),
     ];

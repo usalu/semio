@@ -49,5 +49,4 @@ pub mod diff;
 #[path = "🧬️mutations/🦀️.rs"]
 pub mod mutations;
 
-#[path = "📇️descriptor/🦀️.rs"]
-pub mod descriptor;
+pub use semio_s_artifact_stdio_idml_schema as descriptor;

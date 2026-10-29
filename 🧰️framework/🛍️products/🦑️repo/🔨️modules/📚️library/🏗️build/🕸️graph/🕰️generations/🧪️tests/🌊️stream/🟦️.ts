@@ -48,6 +48,14 @@ test("the collected assembly and the streamed assembly equal the model for every
  }
 });
 
+test("the external names a backend adds to every project keep their nodes in a slice, by package name or node key, and a name without a node is ignored",async()=>{
+ const{store,current}=await publish(fixture as unknown as Corpus),keys=async(external?:string[])=>Object.keys((await store.assemble(current,{names:["e"],external})).externalNodes).sort();
+ expect(await keys()).toEqual([]);
+ const kept=await keys(["plain","npm:named","absent"]);
+ expect(kept).toContain("npm:plain");expect(kept).toContain("npm:named");expect(kept).not.toContain("npm:unused");
+ expect(await keys(["plain"])).toEqual(["npm:plain"]);
+});
+
 test("a node stream is read once, is finished only after it was consumed, reports progress and stops at an abort",async()=>{
  const{store,current}=await publish(fixture as unknown as Corpus),events:{done:number;total:number}[]=[];
  const stream=store.assembleStream(current,{progress:event=>{events.push({done:event.done,total:event.total});}});

@@ -9,7 +9,8 @@ import type { DEMONSTRATOR_PANES } from "../../🪧️brand.ts";
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: { panes: typeof DEMONSTRATOR_PANES }): Promise<void> {
   const { describe, expect, it } = vitest;
   const directory = dirname(fileURLToPath(import.meta.url)), workspace = resolve(directory, "../../../..");
-  const fixture = JSON.parse(readFileSync(resolve(directory, "🧫️cases.json"), "utf8")) as { cases: { paneId: string; brand: string; exampleId: string; source: string }[] };
+  const fixture = JSON.parse(readFileSync(resolve(directory, "🧫️cases.json"), "utf8")) as { cases: { paneId: string; brand: string; exampleId: string; source: string }[]; catalogueRows: { paneId: string; editsKey: string; rowId: string; kind: "dsl-object-id" | "cad-typology"; needle: string; source: string }[] };
+  const edits = JSON.parse(readFileSync(resolve(directory, "../🎭️acceptance/🧬️edits/🧫️cases.json"), "utf8")) as Record<string, Record<string, unknown>>;
   const schema = JSON.parse(readFileSync(resolve(directory, "🧬️schema/🔣️.json"), "utf8"));
   const source = ts.createSourceFile("brand.ts", readFileSync(resolve(directory, "../../🪧️brand.ts"), "utf8"), ts.ScriptTarget.Latest, true);
   const property = (node: ts.ObjectLiteralExpression, name: string): ts.Expression | undefined => node.properties.find((member): member is ts.PropertyAssignment => ts.isPropertyAssignment(member) && member.name.getText(source) === name)?.initializer;
@@ -32,6 +33,11 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       expect(registered).toBe(row.exampleId);
       expect(declared.get(row.brand)).toBe(registered);
       expect(dependencies.panes.find(pane => pane.id === row.paneId)?.brand.defaults?.exampleId).toBe(registered);
+    });
+    for (const row of fixture.catalogueRows) it(`${row.paneId} catalogue row ${row.rowId} resolves in its authored source`, () => {
+      expect(edits[row.paneId]?.[row.editsKey]).toBe(row.rowId);
+      expect(readFileSync(resolve(workspace, row.source), "utf8")).toContain(row.needle);
+      if (row.kind === "cad-typology") expect(row.rowId).toBe(`cad-play-catalogue.${/typology: "([^"]+)"/.exec(row.needle)?.[1]}`);
     });
   });
 }

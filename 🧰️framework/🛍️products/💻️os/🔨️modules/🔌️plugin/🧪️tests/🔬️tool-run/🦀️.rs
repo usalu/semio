@@ -4,7 +4,7 @@ use semio_framework_os_kernel::ConfigStore;
 use serde_json::Value;
 use semio_framework_ui_contract::column;
 use semio_framework_os_kernel::store_schema::ArtifactCommand;
-use semio_framework_plugin_decl_views::tool_contract::EmptyArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::EmptyArtifactInstanceOperationOwner;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_owners;
 use semio_framework_plugin_decl_emission::ArtifactMutationOutcome;
@@ -21,7 +21,7 @@ use semio_framework_plugin_app_builder::App;
 use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
 use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
 use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use store::ArtifactStoreInitializationAuthority;
 use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -455,8 +455,8 @@ impl ArtifactApp for ToyRunApp {
         Ok(Some(Box::new(toy_run_job(request))))
     }
 
-    fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
-        TestSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(TestSnapshot::default())
     })}
 
     async fn handle(

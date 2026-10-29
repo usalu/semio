@@ -2,7 +2,7 @@
 use super::*;
 
 pub(super) fn prepare_original_message<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant)->Result<Option<ArtifactStoreOneItemAdvance>,VcsError>
-where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static{
+where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P>{
  let Some(wire)=store.log.operation_wire else{return Ok(None)};
  let Some(admit)=wire.original_message_admission else{return Ok(None)};
  let stage=publication.stage.as_mut().expect("original message owns its staged batch");
@@ -30,7 +30,7 @@ where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+OpBinary+OpTex
 
 
 pub(super) fn prepare_original_outgoing<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant)->Result<Option<ArtifactStoreOneItemAdvance>,VcsError>
-where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static{
+where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P>{
  if let Some(step)=prepare_original_message(store,publication,body,grant)?{return Ok(Some(step))}
  let stage=publication.stage.as_mut().expect("original outgoing owns its staged batch");if !stage.message_complete{return Ok(None)}
  let refuse=VcsError::InverseRefused;

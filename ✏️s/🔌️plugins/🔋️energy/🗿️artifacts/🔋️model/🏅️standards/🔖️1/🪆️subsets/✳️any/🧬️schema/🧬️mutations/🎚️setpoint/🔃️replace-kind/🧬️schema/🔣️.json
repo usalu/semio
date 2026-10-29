@@ -217,7 +217,7 @@
     "semantics": {
       "verb": "replace",
       "entity": "setpoint-manager",
-      "kind": "replace-kind",
+      "kind": "replace-setpoint-manager-kind",
       "record": "ReplacedSetpointManagerKind"
     },
     "diagnostics": {

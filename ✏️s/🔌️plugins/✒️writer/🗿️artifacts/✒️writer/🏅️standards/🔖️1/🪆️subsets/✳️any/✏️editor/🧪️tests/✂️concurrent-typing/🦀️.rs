@@ -55,7 +55,7 @@ async fn type_run(replica: &mut Replica, author: &mut Author, run: &str) {
         author.seq += 1;
         let caret_bytes = next.chars().take(author.caret + 1).map(char::len_utf8).sum();
         let command = WriterCommand::TextSplice(text_splice::TextSplice { start: splice.start, deleted: splice.deleted, insert: splice.insert, before: splice.before, after: splice.after, seq: author.seq, anchor: caret_bytes, caret: caret_bytes });
-        replica.0.dispatch_typed(command, &author_meta(author.actor), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), replica.1.cx()).await.expect("the keystroke applies");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut replica.0, &command, &author_meta(author.actor), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), replica.1.cx()).await.expect("the keystroke applies");
         settle_registered_typed_operation(&mut replica.0, meta(author.actor).instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), replica.1.cx()).await.expect("the keystroke publishes");
         author.view = next;
         author.caret += 1;
@@ -76,7 +76,7 @@ async fn exchange(a: &mut Replica, b: &mut Replica) -> String {
 async fn two_authors_typing_at_once_keep_both_runs_and_undo_only_their_own() {
     let (a, b) = paired_registered_apps_with_members::<EditorApp<WriterPlayApp>, semio_s_artifact_stdio_semio::SemioMembers, _, _>("mem://writer-concurrent-typing", || async { semio_framework_plugin::App { definition: crate::editor::writer::create_writer_app(), examples: Vec::new() } }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
     let (mut a, mut b) = (Replica(a, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit()), Replica(b, semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit()));
-    a.0.dispatch_typed(WriterCommand::SetText(set_text::SetText { text: "Doc: \nend".into() }), &author_meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a seeds the text");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut a.0, &WriterCommand::SetText(set_text::SetText { text: "Doc: \nend".into() }), &author_meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("a seeds the text");
     settle_registered_typed_operation(&mut a.0, meta("actor-a").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), a.1.cx()).await.expect("the seed publishes");
     assert_eq!(exchange(&mut a, &mut b).await, "Doc: \nend");
     let mut alice = Author { actor: "actor-a", view: "Doc: \nend".into(), caret: 5, seq: 0 };

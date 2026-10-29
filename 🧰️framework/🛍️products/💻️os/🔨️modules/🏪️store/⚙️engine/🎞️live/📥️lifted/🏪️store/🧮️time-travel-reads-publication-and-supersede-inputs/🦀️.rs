@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️TimeTravelReads
     /// 🗺️ The effective supersessions the live projection folds with.
@@ -233,7 +233,7 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
         output:&mut protocol::ForeignStepsPreparation, grant:RetainedCloneGrant,
     )->Result<RetainedCloneStep,ValueError> {
         let(original,prebase)=self.original_proposal_forward(store_owners, store_cursor, publication)?;
-        let source=if original.may_emit_foreign_steps(){original.foreign_step_source(prebase,output.source_index())?}else{None};
+        let source=if original.may_emit_foreign_steps(){semio_framework_os_spr::ColdMutation::foreign_step_source(original,prebase,output.source_index())?}else{None};
         let step=output.advance_source(source,grant)?;
         semio_framework_value::retained_clone::admit_retained_clone_progress(grant,step.progress(),"original prepared foreign row turn")?;
         Ok(step)
@@ -254,8 +254,8 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
 
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️ToolTransactions
     /// 🪂️ Takes the open tool transaction's edit off the applied tail before a remote merge: the ledger, the message ledger

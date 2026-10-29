@@ -162,8 +162,8 @@ impl ArtifactEditor for FormsPlayApp {
         Some(crate::editor::forms::config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->FormsSnapshot>{Some(||{
-        crate::schema::empty_forms_snapshot()
+    fn reference_birth()->Option<fn()->Result<FormsSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::schema::empty_forms_snapshot())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

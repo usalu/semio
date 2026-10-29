@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "retainedQueue",
+    "capturedRoots",
+    "producerRequest",
+    "sourceAuthority",
+    "producerHandoff",
+    "singleTurn"
+  ],
+  "properties": {
+    "retainedQueue": {
+      "const": true
+    },
+    "capturedRoots": {
+      "const": true
+    },
+    "producerRequest": {
+      "const": true
+    },
+    "sourceAuthority": {
+      "const": true
+    },
+    "producerHandoff": {
+      "const": true
+    },
+    "singleTurn": {
+      "const": true
+    }
+  }
+}

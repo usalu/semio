@@ -1,0 +1,2325 @@
+{
+ "schema": "semio.flow.dsl-native-snapshot-law/v1",
+ "note": "Canonical JSON projection of FlowHostSnapshot; the DSL text (flow.flow envelope) round-trip is checked through ArtifactDsl::print_dsl/parse_dsl and must equal the JSON projection.",
+ "cases": [
+  {
+   "id": "empty-document",
+   "description": "no widgets, synapses or layout",
+   "snapshot": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+     "x": 0.0,
+     "y": 0.0,
+     "zoom": 1.0
+    },
+    "widgets": [],
+    "synapses": [],
+    "layout": {}
+   }
+  },
+  {
+   "id": "default-three-widget-chain",
+   "description": "slider -> add -> preview",
+   "snapshot": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+     "x": 0.0,
+     "y": 0.0,
+     "zoom": 1.0
+    },
+    "widgets": [
+     {
+      "kind": "inputSlider",
+      "id": "s",
+      "label": "Number",
+      "value": 3.0,
+      "min": 0.0,
+      "max": 10.0,
+      "step": 0.5
+     },
+     {
+      "kind": "neuron",
+      "id": "add",
+      "neuronKind": "math.add",
+      "params": {},
+      "inputPorts": [],
+      "outputPorts": [],
+      "preview": true
+     },
+     {
+      "kind": "outputPreview",
+      "id": "preview",
+      "preview": {},
+      "expanded": []
+     }
+    ],
+    "synapses": [
+     {
+      "id": "s1",
+      "from": "s",
+      "to": "add",
+      "fromPort": "number",
+      "toPort": "a"
+     },
+     {
+      "id": "s2",
+      "from": "add",
+      "to": "preview",
+      "fromPort": "sum",
+      "toPort": ""
+     }
+    ],
+    "layout": {
+     "s": {
+      "x": 0.0,
+      "y": 0.0
+     }
+    }
+   }
+  },
+  {
+   "id": "every-widget-kind",
+   "description": "one widget of each of the nine kinds",
+   "snapshot": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+     "x": 12.5,
+     "y": -3.0,
+     "zoom": 2.0
+    },
+    "widgets": [
+     {
+      "kind": "neuron",
+      "id": "n",
+      "neuronKind": "math.add",
+      "params": {
+       "a": 1,
+       "b": 2.5,
+       "flag": true,
+       "nothing": null,
+       "label": "x",
+       "dict": {
+        "deep": {
+         "deeper": 3
+        }
+       }
+      },
+      "inputPorts": [
+       "a",
+       "b"
+      ],
+      "outputPorts": [
+       "sum"
+      ],
+      "preview": false
+     },
+     {
+      "kind": "inputSlider",
+      "id": "s",
+      "label": "Number",
+      "value": 3.0,
+      "min": 0.0,
+      "max": 10.0,
+      "step": 0.5
+     },
+     {
+      "kind": "inputNote",
+      "id": "note",
+      "text": "line one\nline \"two\" \\ tab\t"
+     },
+     {
+      "kind": "inputImage",
+      "id": "img",
+      "src": "data:image/png;base64,AAAA"
+     },
+     {
+      "kind": "variable",
+      "id": "v",
+      "name": "x",
+      "schema": "flow.number"
+     },
+     {
+      "kind": "outputPreview",
+      "id": "pv",
+      "preview": {
+       "text": "hi",
+       "n": 2
+      },
+      "expanded": [
+       "n",
+       "text"
+      ]
+     },
+     {
+      "kind": "outputAction",
+      "id": "act",
+      "action": "export"
+     },
+     {
+      "kind": "outputExport",
+      "id": "ex",
+      "format": "json"
+     },
+     {
+      "kind": "cluster",
+      "id": "cl",
+      "name": "Cluster",
+      "tree": {
+       "neurons": [
+        {
+         "id": "a",
+         "kind": "math.add",
+         "params": {
+          "x": 1
+         },
+         "tree": null
+        },
+        {
+         "id": "b",
+         "kind": "math.mul",
+         "params": {},
+         "tree": null
+        }
+       ],
+       "synapses": [
+        {
+         "id": "t1",
+         "from": "a",
+         "to": "b",
+         "fromPort": "sum",
+         "toPort": "a"
+        }
+       ]
+      },
+      "flow": {
+       "camera": {
+        "x": 10.0,
+        "y": -4.5,
+        "zoom": 0.5
+       },
+       "nodes": {
+        "outer": {
+         "layout": {
+          "x": 1.0,
+          "y": 2.0
+         },
+         "chrome": {
+          "kind": "plain",
+          "preview": true
+         }
+        }
+       },
+       "previews": [
+        {
+         "id": "p",
+         "source": {
+          "neuron": "outer",
+          "channel": "out"
+         },
+         "mode": "text",
+         "preview": {
+          "k": "v"
+         },
+         "expanded": [
+          "k"
+         ],
+         "layout": {
+          "x": 3.0,
+          "y": 4.0
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "synapses": [
+     {
+      "id": "e1",
+      "from": "s",
+      "to": "n",
+      "fromPort": "number",
+      "toPort": "a"
+     }
+    ],
+    "layout": {
+     "s": {
+      "x": -5.5,
+      "y": 2.0
+     },
+     "n": {
+      "x": 40.0,
+      "y": 2.0
+     }
+    }
+   }
+  },
+  {
+   "id": "nested-cluster-depth-3",
+   "description": "cluster tree whose neuron trees nest three levels",
+   "snapshot": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+     "x": 0.0,
+     "y": 0.0,
+     "zoom": 1.0
+    },
+    "widgets": [
+     {
+      "kind": "cluster",
+      "id": "deep",
+      "name": "Deep",
+      "tree": {
+       "neurons": [
+        {
+         "id": "outer",
+         "kind": "cluster",
+         "params": {},
+         "tree": {
+          "neurons": [
+           {
+            "id": "middle",
+            "kind": "cluster",
+            "params": {},
+            "tree": {
+             "neurons": [
+              {
+               "id": "inner",
+               "kind": "math.add",
+               "params": {
+                "a": 1,
+                "b": 2.5
+               },
+               "tree": null
+              }
+             ],
+             "synapses": []
+            }
+           }
+          ],
+          "synapses": []
+         }
+        }
+       ],
+       "synapses": []
+      },
+      "flow": {
+       "camera": {
+        "x": 10.0,
+        "y": -4.5,
+        "zoom": 0.5
+       },
+       "nodes": {
+        "outer": {
+         "layout": {
+          "x": 1.0,
+          "y": 2.0
+         },
+         "chrome": {
+          "kind": "plain",
+          "preview": true
+         }
+        }
+       },
+       "previews": [
+        {
+         "id": "p",
+         "source": {
+          "neuron": "outer",
+          "channel": "out"
+         },
+         "mode": "text",
+         "preview": {
+          "k": "v"
+         },
+         "expanded": [
+          "k"
+         ],
+         "layout": {
+          "x": 3.0,
+          "y": 4.0
+         }
+        }
+       ]
+      }
+     }
+    ],
+    "synapses": [],
+    "layout": {}
+   }
+  },
+  {
+   "id": "unicode-identifiers",
+   "description": "non-ASCII ids, labels and note text",
+   "snapshot": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+     "x": 0.0,
+     "y": 0.0,
+     "zoom": 1.0
+    },
+    "widgets": [
+     {
+      "kind": "inputNote",
+      "id": "notiz-ä",
+      "text": "Grüße 世界 🌍"
+     },
+     {
+      "kind": "inputSlider",
+      "id": "schieber-ö",
+      "label": "Größe",
+      "value": 1.0,
+      "min": 0.0,
+      "max": 2.0,
+      "step": 0.25
+     }
+    ],
+    "synapses": [
+     {
+      "id": "verbindung-ß",
+      "from": "notiz-ä",
+      "to": "schieber-ö",
+      "fromPort": "aus",
+      "toPort": "ein"
+     }
+    ],
+    "layout": {
+     "notiz-ä": {
+      "x": 1.0,
+      "y": 1.0
+     }
+    }
+   }
+  },
+  {
+   "id": "large-layout",
+   "description": "120 note widgets chained with 119 synapses and 120 layout entries",
+   "snapshot": {
+    "schema": "flow.host_snapshot",
+    "camera": {
+     "x": 0.0,
+     "y": 0.0,
+     "zoom": 1.0
+    },
+    "widgets": [
+     {
+      "kind": "inputNote",
+      "id": "note-000",
+      "text": "note 0"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-001",
+      "text": "note 1"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-002",
+      "text": "note 2"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-003",
+      "text": "note 3"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-004",
+      "text": "note 4"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-005",
+      "text": "note 5"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-006",
+      "text": "note 6"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-007",
+      "text": "note 7"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-008",
+      "text": "note 8"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-009",
+      "text": "note 9"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-010",
+      "text": "note 10"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-011",
+      "text": "note 11"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-012",
+      "text": "note 12"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-013",
+      "text": "note 13"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-014",
+      "text": "note 14"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-015",
+      "text": "note 15"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-016",
+      "text": "note 16"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-017",
+      "text": "note 17"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-018",
+      "text": "note 18"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-019",
+      "text": "note 19"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-020",
+      "text": "note 20"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-021",
+      "text": "note 21"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-022",
+      "text": "note 22"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-023",
+      "text": "note 23"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-024",
+      "text": "note 24"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-025",
+      "text": "note 25"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-026",
+      "text": "note 26"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-027",
+      "text": "note 27"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-028",
+      "text": "note 28"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-029",
+      "text": "note 29"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-030",
+      "text": "note 30"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-031",
+      "text": "note 31"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-032",
+      "text": "note 32"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-033",
+      "text": "note 33"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-034",
+      "text": "note 34"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-035",
+      "text": "note 35"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-036",
+      "text": "note 36"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-037",
+      "text": "note 37"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-038",
+      "text": "note 38"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-039",
+      "text": "note 39"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-040",
+      "text": "note 40"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-041",
+      "text": "note 41"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-042",
+      "text": "note 42"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-043",
+      "text": "note 43"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-044",
+      "text": "note 44"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-045",
+      "text": "note 45"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-046",
+      "text": "note 46"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-047",
+      "text": "note 47"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-048",
+      "text": "note 48"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-049",
+      "text": "note 49"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-050",
+      "text": "note 50"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-051",
+      "text": "note 51"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-052",
+      "text": "note 52"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-053",
+      "text": "note 53"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-054",
+      "text": "note 54"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-055",
+      "text": "note 55"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-056",
+      "text": "note 56"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-057",
+      "text": "note 57"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-058",
+      "text": "note 58"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-059",
+      "text": "note 59"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-060",
+      "text": "note 60"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-061",
+      "text": "note 61"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-062",
+      "text": "note 62"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-063",
+      "text": "note 63"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-064",
+      "text": "note 64"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-065",
+      "text": "note 65"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-066",
+      "text": "note 66"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-067",
+      "text": "note 67"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-068",
+      "text": "note 68"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-069",
+      "text": "note 69"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-070",
+      "text": "note 70"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-071",
+      "text": "note 71"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-072",
+      "text": "note 72"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-073",
+      "text": "note 73"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-074",
+      "text": "note 74"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-075",
+      "text": "note 75"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-076",
+      "text": "note 76"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-077",
+      "text": "note 77"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-078",
+      "text": "note 78"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-079",
+      "text": "note 79"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-080",
+      "text": "note 80"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-081",
+      "text": "note 81"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-082",
+      "text": "note 82"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-083",
+      "text": "note 83"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-084",
+      "text": "note 84"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-085",
+      "text": "note 85"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-086",
+      "text": "note 86"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-087",
+      "text": "note 87"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-088",
+      "text": "note 88"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-089",
+      "text": "note 89"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-090",
+      "text": "note 90"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-091",
+      "text": "note 91"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-092",
+      "text": "note 92"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-093",
+      "text": "note 93"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-094",
+      "text": "note 94"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-095",
+      "text": "note 95"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-096",
+      "text": "note 96"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-097",
+      "text": "note 97"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-098",
+      "text": "note 98"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-099",
+      "text": "note 99"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-100",
+      "text": "note 100"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-101",
+      "text": "note 101"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-102",
+      "text": "note 102"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-103",
+      "text": "note 103"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-104",
+      "text": "note 104"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-105",
+      "text": "note 105"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-106",
+      "text": "note 106"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-107",
+      "text": "note 107"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-108",
+      "text": "note 108"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-109",
+      "text": "note 109"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-110",
+      "text": "note 110"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-111",
+      "text": "note 111"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-112",
+      "text": "note 112"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-113",
+      "text": "note 113"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-114",
+      "text": "note 114"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-115",
+      "text": "note 115"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-116",
+      "text": "note 116"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-117",
+      "text": "note 117"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-118",
+      "text": "note 118"
+     },
+     {
+      "kind": "inputNote",
+      "id": "note-119",
+      "text": "note 119"
+     }
+    ],
+    "synapses": [
+     {
+      "id": "s000",
+      "from": "note-000",
+      "to": "note-001",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s001",
+      "from": "note-001",
+      "to": "note-002",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s002",
+      "from": "note-002",
+      "to": "note-003",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s003",
+      "from": "note-003",
+      "to": "note-004",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s004",
+      "from": "note-004",
+      "to": "note-005",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s005",
+      "from": "note-005",
+      "to": "note-006",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s006",
+      "from": "note-006",
+      "to": "note-007",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s007",
+      "from": "note-007",
+      "to": "note-008",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s008",
+      "from": "note-008",
+      "to": "note-009",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s009",
+      "from": "note-009",
+      "to": "note-010",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s010",
+      "from": "note-010",
+      "to": "note-011",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s011",
+      "from": "note-011",
+      "to": "note-012",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s012",
+      "from": "note-012",
+      "to": "note-013",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s013",
+      "from": "note-013",
+      "to": "note-014",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s014",
+      "from": "note-014",
+      "to": "note-015",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s015",
+      "from": "note-015",
+      "to": "note-016",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s016",
+      "from": "note-016",
+      "to": "note-017",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s017",
+      "from": "note-017",
+      "to": "note-018",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s018",
+      "from": "note-018",
+      "to": "note-019",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s019",
+      "from": "note-019",
+      "to": "note-020",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s020",
+      "from": "note-020",
+      "to": "note-021",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s021",
+      "from": "note-021",
+      "to": "note-022",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s022",
+      "from": "note-022",
+      "to": "note-023",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s023",
+      "from": "note-023",
+      "to": "note-024",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s024",
+      "from": "note-024",
+      "to": "note-025",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s025",
+      "from": "note-025",
+      "to": "note-026",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s026",
+      "from": "note-026",
+      "to": "note-027",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s027",
+      "from": "note-027",
+      "to": "note-028",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s028",
+      "from": "note-028",
+      "to": "note-029",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s029",
+      "from": "note-029",
+      "to": "note-030",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s030",
+      "from": "note-030",
+      "to": "note-031",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s031",
+      "from": "note-031",
+      "to": "note-032",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s032",
+      "from": "note-032",
+      "to": "note-033",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s033",
+      "from": "note-033",
+      "to": "note-034",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s034",
+      "from": "note-034",
+      "to": "note-035",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s035",
+      "from": "note-035",
+      "to": "note-036",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s036",
+      "from": "note-036",
+      "to": "note-037",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s037",
+      "from": "note-037",
+      "to": "note-038",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s038",
+      "from": "note-038",
+      "to": "note-039",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s039",
+      "from": "note-039",
+      "to": "note-040",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s040",
+      "from": "note-040",
+      "to": "note-041",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s041",
+      "from": "note-041",
+      "to": "note-042",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s042",
+      "from": "note-042",
+      "to": "note-043",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s043",
+      "from": "note-043",
+      "to": "note-044",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s044",
+      "from": "note-044",
+      "to": "note-045",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s045",
+      "from": "note-045",
+      "to": "note-046",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s046",
+      "from": "note-046",
+      "to": "note-047",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s047",
+      "from": "note-047",
+      "to": "note-048",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s048",
+      "from": "note-048",
+      "to": "note-049",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s049",
+      "from": "note-049",
+      "to": "note-050",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s050",
+      "from": "note-050",
+      "to": "note-051",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s051",
+      "from": "note-051",
+      "to": "note-052",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s052",
+      "from": "note-052",
+      "to": "note-053",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s053",
+      "from": "note-053",
+      "to": "note-054",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s054",
+      "from": "note-054",
+      "to": "note-055",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s055",
+      "from": "note-055",
+      "to": "note-056",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s056",
+      "from": "note-056",
+      "to": "note-057",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s057",
+      "from": "note-057",
+      "to": "note-058",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s058",
+      "from": "note-058",
+      "to": "note-059",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s059",
+      "from": "note-059",
+      "to": "note-060",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s060",
+      "from": "note-060",
+      "to": "note-061",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s061",
+      "from": "note-061",
+      "to": "note-062",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s062",
+      "from": "note-062",
+      "to": "note-063",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s063",
+      "from": "note-063",
+      "to": "note-064",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s064",
+      "from": "note-064",
+      "to": "note-065",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s065",
+      "from": "note-065",
+      "to": "note-066",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s066",
+      "from": "note-066",
+      "to": "note-067",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s067",
+      "from": "note-067",
+      "to": "note-068",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s068",
+      "from": "note-068",
+      "to": "note-069",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s069",
+      "from": "note-069",
+      "to": "note-070",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s070",
+      "from": "note-070",
+      "to": "note-071",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s071",
+      "from": "note-071",
+      "to": "note-072",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s072",
+      "from": "note-072",
+      "to": "note-073",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s073",
+      "from": "note-073",
+      "to": "note-074",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s074",
+      "from": "note-074",
+      "to": "note-075",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s075",
+      "from": "note-075",
+      "to": "note-076",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s076",
+      "from": "note-076",
+      "to": "note-077",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s077",
+      "from": "note-077",
+      "to": "note-078",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s078",
+      "from": "note-078",
+      "to": "note-079",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s079",
+      "from": "note-079",
+      "to": "note-080",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s080",
+      "from": "note-080",
+      "to": "note-081",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s081",
+      "from": "note-081",
+      "to": "note-082",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s082",
+      "from": "note-082",
+      "to": "note-083",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s083",
+      "from": "note-083",
+      "to": "note-084",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s084",
+      "from": "note-084",
+      "to": "note-085",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s085",
+      "from": "note-085",
+      "to": "note-086",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s086",
+      "from": "note-086",
+      "to": "note-087",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s087",
+      "from": "note-087",
+      "to": "note-088",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s088",
+      "from": "note-088",
+      "to": "note-089",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s089",
+      "from": "note-089",
+      "to": "note-090",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s090",
+      "from": "note-090",
+      "to": "note-091",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s091",
+      "from": "note-091",
+      "to": "note-092",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s092",
+      "from": "note-092",
+      "to": "note-093",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s093",
+      "from": "note-093",
+      "to": "note-094",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s094",
+      "from": "note-094",
+      "to": "note-095",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s095",
+      "from": "note-095",
+      "to": "note-096",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s096",
+      "from": "note-096",
+      "to": "note-097",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s097",
+      "from": "note-097",
+      "to": "note-098",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s098",
+      "from": "note-098",
+      "to": "note-099",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s099",
+      "from": "note-099",
+      "to": "note-100",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s100",
+      "from": "note-100",
+      "to": "note-101",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s101",
+      "from": "note-101",
+      "to": "note-102",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s102",
+      "from": "note-102",
+      "to": "note-103",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s103",
+      "from": "note-103",
+      "to": "note-104",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s104",
+      "from": "note-104",
+      "to": "note-105",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s105",
+      "from": "note-105",
+      "to": "note-106",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s106",
+      "from": "note-106",
+      "to": "note-107",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s107",
+      "from": "note-107",
+      "to": "note-108",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s108",
+      "from": "note-108",
+      "to": "note-109",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s109",
+      "from": "note-109",
+      "to": "note-110",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s110",
+      "from": "note-110",
+      "to": "note-111",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s111",
+      "from": "note-111",
+      "to": "note-112",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s112",
+      "from": "note-112",
+      "to": "note-113",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s113",
+      "from": "note-113",
+      "to": "note-114",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s114",
+      "from": "note-114",
+      "to": "note-115",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s115",
+      "from": "note-115",
+      "to": "note-116",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s116",
+      "from": "note-116",
+      "to": "note-117",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s117",
+      "from": "note-117",
+      "to": "note-118",
+      "fromPort": "out",
+      "toPort": "in"
+     },
+     {
+      "id": "s118",
+      "from": "note-118",
+      "to": "note-119",
+      "fromPort": "out",
+      "toPort": "in"
+     }
+    ],
+    "layout": {
+     "note-000": {
+      "x": 0.0,
+      "y": 0.0
+     },
+     "note-001": {
+      "x": 10.0,
+      "y": -1.0
+     },
+     "note-002": {
+      "x": 20.0,
+      "y": -2.0
+     },
+     "note-003": {
+      "x": 30.0,
+      "y": -3.0
+     },
+     "note-004": {
+      "x": 40.0,
+      "y": -4.0
+     },
+     "note-005": {
+      "x": 50.0,
+      "y": -5.0
+     },
+     "note-006": {
+      "x": 60.0,
+      "y": -6.0
+     },
+     "note-007": {
+      "x": 70.0,
+      "y": -7.0
+     },
+     "note-008": {
+      "x": 80.0,
+      "y": -8.0
+     },
+     "note-009": {
+      "x": 90.0,
+      "y": -9.0
+     },
+     "note-010": {
+      "x": 100.0,
+      "y": -10.0
+     },
+     "note-011": {
+      "x": 110.0,
+      "y": -11.0
+     },
+     "note-012": {
+      "x": 120.0,
+      "y": -12.0
+     },
+     "note-013": {
+      "x": 130.0,
+      "y": -13.0
+     },
+     "note-014": {
+      "x": 140.0,
+      "y": -14.0
+     },
+     "note-015": {
+      "x": 150.0,
+      "y": -15.0
+     },
+     "note-016": {
+      "x": 160.0,
+      "y": -16.0
+     },
+     "note-017": {
+      "x": 170.0,
+      "y": -17.0
+     },
+     "note-018": {
+      "x": 180.0,
+      "y": -18.0
+     },
+     "note-019": {
+      "x": 190.0,
+      "y": -19.0
+     },
+     "note-020": {
+      "x": 200.0,
+      "y": -20.0
+     },
+     "note-021": {
+      "x": 210.0,
+      "y": -21.0
+     },
+     "note-022": {
+      "x": 220.0,
+      "y": -22.0
+     },
+     "note-023": {
+      "x": 230.0,
+      "y": -23.0
+     },
+     "note-024": {
+      "x": 240.0,
+      "y": -24.0
+     },
+     "note-025": {
+      "x": 250.0,
+      "y": -25.0
+     },
+     "note-026": {
+      "x": 260.0,
+      "y": -26.0
+     },
+     "note-027": {
+      "x": 270.0,
+      "y": -27.0
+     },
+     "note-028": {
+      "x": 280.0,
+      "y": -28.0
+     },
+     "note-029": {
+      "x": 290.0,
+      "y": -29.0
+     },
+     "note-030": {
+      "x": 300.0,
+      "y": -30.0
+     },
+     "note-031": {
+      "x": 310.0,
+      "y": -31.0
+     },
+     "note-032": {
+      "x": 320.0,
+      "y": -32.0
+     },
+     "note-033": {
+      "x": 330.0,
+      "y": -33.0
+     },
+     "note-034": {
+      "x": 340.0,
+      "y": -34.0
+     },
+     "note-035": {
+      "x": 350.0,
+      "y": -35.0
+     },
+     "note-036": {
+      "x": 360.0,
+      "y": -36.0
+     },
+     "note-037": {
+      "x": 370.0,
+      "y": -37.0
+     },
+     "note-038": {
+      "x": 380.0,
+      "y": -38.0
+     },
+     "note-039": {
+      "x": 390.0,
+      "y": -39.0
+     },
+     "note-040": {
+      "x": 400.0,
+      "y": -40.0
+     },
+     "note-041": {
+      "x": 410.0,
+      "y": -41.0
+     },
+     "note-042": {
+      "x": 420.0,
+      "y": -42.0
+     },
+     "note-043": {
+      "x": 430.0,
+      "y": -43.0
+     },
+     "note-044": {
+      "x": 440.0,
+      "y": -44.0
+     },
+     "note-045": {
+      "x": 450.0,
+      "y": -45.0
+     },
+     "note-046": {
+      "x": 460.0,
+      "y": -46.0
+     },
+     "note-047": {
+      "x": 470.0,
+      "y": -47.0
+     },
+     "note-048": {
+      "x": 480.0,
+      "y": -48.0
+     },
+     "note-049": {
+      "x": 490.0,
+      "y": -49.0
+     },
+     "note-050": {
+      "x": 500.0,
+      "y": -50.0
+     },
+     "note-051": {
+      "x": 510.0,
+      "y": -51.0
+     },
+     "note-052": {
+      "x": 520.0,
+      "y": -52.0
+     },
+     "note-053": {
+      "x": 530.0,
+      "y": -53.0
+     },
+     "note-054": {
+      "x": 540.0,
+      "y": -54.0
+     },
+     "note-055": {
+      "x": 550.0,
+      "y": -55.0
+     },
+     "note-056": {
+      "x": 560.0,
+      "y": -56.0
+     },
+     "note-057": {
+      "x": 570.0,
+      "y": -57.0
+     },
+     "note-058": {
+      "x": 580.0,
+      "y": -58.0
+     },
+     "note-059": {
+      "x": 590.0,
+      "y": -59.0
+     },
+     "note-060": {
+      "x": 600.0,
+      "y": -60.0
+     },
+     "note-061": {
+      "x": 610.0,
+      "y": -61.0
+     },
+     "note-062": {
+      "x": 620.0,
+      "y": -62.0
+     },
+     "note-063": {
+      "x": 630.0,
+      "y": -63.0
+     },
+     "note-064": {
+      "x": 640.0,
+      "y": -64.0
+     },
+     "note-065": {
+      "x": 650.0,
+      "y": -65.0
+     },
+     "note-066": {
+      "x": 660.0,
+      "y": -66.0
+     },
+     "note-067": {
+      "x": 670.0,
+      "y": -67.0
+     },
+     "note-068": {
+      "x": 680.0,
+      "y": -68.0
+     },
+     "note-069": {
+      "x": 690.0,
+      "y": -69.0
+     },
+     "note-070": {
+      "x": 700.0,
+      "y": -70.0
+     },
+     "note-071": {
+      "x": 710.0,
+      "y": -71.0
+     },
+     "note-072": {
+      "x": 720.0,
+      "y": -72.0
+     },
+     "note-073": {
+      "x": 730.0,
+      "y": -73.0
+     },
+     "note-074": {
+      "x": 740.0,
+      "y": -74.0
+     },
+     "note-075": {
+      "x": 750.0,
+      "y": -75.0
+     },
+     "note-076": {
+      "x": 760.0,
+      "y": -76.0
+     },
+     "note-077": {
+      "x": 770.0,
+      "y": -77.0
+     },
+     "note-078": {
+      "x": 780.0,
+      "y": -78.0
+     },
+     "note-079": {
+      "x": 790.0,
+      "y": -79.0
+     },
+     "note-080": {
+      "x": 800.0,
+      "y": -80.0
+     },
+     "note-081": {
+      "x": 810.0,
+      "y": -81.0
+     },
+     "note-082": {
+      "x": 820.0,
+      "y": -82.0
+     },
+     "note-083": {
+      "x": 830.0,
+      "y": -83.0
+     },
+     "note-084": {
+      "x": 840.0,
+      "y": -84.0
+     },
+     "note-085": {
+      "x": 850.0,
+      "y": -85.0
+     },
+     "note-086": {
+      "x": 860.0,
+      "y": -86.0
+     },
+     "note-087": {
+      "x": 870.0,
+      "y": -87.0
+     },
+     "note-088": {
+      "x": 880.0,
+      "y": -88.0
+     },
+     "note-089": {
+      "x": 890.0,
+      "y": -89.0
+     },
+     "note-090": {
+      "x": 900.0,
+      "y": -90.0
+     },
+     "note-091": {
+      "x": 910.0,
+      "y": -91.0
+     },
+     "note-092": {
+      "x": 920.0,
+      "y": -92.0
+     },
+     "note-093": {
+      "x": 930.0,
+      "y": -93.0
+     },
+     "note-094": {
+      "x": 940.0,
+      "y": -94.0
+     },
+     "note-095": {
+      "x": 950.0,
+      "y": -95.0
+     },
+     "note-096": {
+      "x": 960.0,
+      "y": -96.0
+     },
+     "note-097": {
+      "x": 970.0,
+      "y": -97.0
+     },
+     "note-098": {
+      "x": 980.0,
+      "y": -98.0
+     },
+     "note-099": {
+      "x": 990.0,
+      "y": -99.0
+     },
+     "note-100": {
+      "x": 1000.0,
+      "y": -100.0
+     },
+     "note-101": {
+      "x": 1010.0,
+      "y": -101.0
+     },
+     "note-102": {
+      "x": 1020.0,
+      "y": -102.0
+     },
+     "note-103": {
+      "x": 1030.0,
+      "y": -103.0
+     },
+     "note-104": {
+      "x": 1040.0,
+      "y": -104.0
+     },
+     "note-105": {
+      "x": 1050.0,
+      "y": -105.0
+     },
+     "note-106": {
+      "x": 1060.0,
+      "y": -106.0
+     },
+     "note-107": {
+      "x": 1070.0,
+      "y": -107.0
+     },
+     "note-108": {
+      "x": 1080.0,
+      "y": -108.0
+     },
+     "note-109": {
+      "x": 1090.0,
+      "y": -109.0
+     },
+     "note-110": {
+      "x": 1100.0,
+      "y": -110.0
+     },
+     "note-111": {
+      "x": 1110.0,
+      "y": -111.0
+     },
+     "note-112": {
+      "x": 1120.0,
+      "y": -112.0
+     },
+     "note-113": {
+      "x": 1130.0,
+      "y": -113.0
+     },
+     "note-114": {
+      "x": 1140.0,
+      "y": -114.0
+     },
+     "note-115": {
+      "x": 1150.0,
+      "y": -115.0
+     },
+     "note-116": {
+      "x": 1160.0,
+      "y": -116.0
+     },
+     "note-117": {
+      "x": 1170.0,
+      "y": -117.0
+     },
+     "note-118": {
+      "x": 1180.0,
+      "y": -118.0
+     },
+     "note-119": {
+      "x": 1190.0,
+      "y": -119.0
+     }
+    }
+   }
+  }
+ ]
+}

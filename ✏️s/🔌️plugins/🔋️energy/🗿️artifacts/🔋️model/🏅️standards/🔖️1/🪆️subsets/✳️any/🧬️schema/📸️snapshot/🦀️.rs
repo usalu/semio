@@ -16,7 +16,7 @@ use crate::model::EntityId;
 
 #[path="🧊️reference/🦀️.rs"]pub mod reference;
 pub use original::EnergyModelSnapshot;
-impl store::os_store::serialization::ArtifactStoreSnapshot for EnergyModelSnapshot{fn native_pack_source(&self)->Option<store::os_store::serialization::OriginalSnapshotPackView<'_>>{let(source,spec)=original::pack::source(self);Some(store::os_store::serialization::OriginalSnapshotPackView{source,spec,envelope:<Self as pack::snapshot::ArtifactPackMetadata>::EXTENSION})}}
+impl store::os_store::serialization::ArtifactStoreSnapshot for EnergyModelSnapshot{fn native_pack_source(&self)->Option<store::os_store::serialization::OriginalSnapshotPackView<'_>>{let(source,spec)=original::pack::source(self);Some(store::os_store::serialization::OriginalSnapshotPackView{source,spec,envelope:<Self as pack::snapshot::ArtifactDsl>::envelope_id()})}}
 pub const ENERGY_MODEL_DOCUMENT_SCHEMA: &str = "energy.model";
 
 /// 🧬️ Artifact schema descriptor id.
@@ -56,7 +56,7 @@ pub fn energy_zones_table_from_model(model: &state::EnergyModelView<'_>) -> semi
             .map(|zone| SemioTableRow {
                 cells: vec![
                     SemioValue::Int { lexeme: zone.id.0.to_string() },
-                    SemioValue::Str { value: zone.name.clone() },
+                    SemioValue::Str { value: zone.name.get().clone() },
                     SemioValue::Float { lexeme: format!("{}", zone.volume_m3) },
                     SemioValue::Int { lexeme: zone.multiplier.to_string() },
                     SemioValue::Bool { value: zone.conditioned },
@@ -235,10 +235,6 @@ pub mod state;
 #[path="🧬️original/🦀️.rs"]
 pub mod original;
 
-#[cfg(test)]use crate::{original as native_snapshot,state as native_state};
-#[cfg(test)]#[path="../🔺️diff/🧬️original/🦀️.rs"]pub mod native_diff;
 
-#[cfg(test)]#[global_allocator]
-static ORIGINAL_ENERGY_SNAPSHOT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 
 #[path="🧬️original/📦️pack/🫴️receiving/🦀️.rs"]mod native_pack_receiving;

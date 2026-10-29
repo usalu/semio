@@ -12,9 +12,9 @@ role = "framework"
 id = "os-kernel"
 
 [package.metadata.semio.rust-source-boundary]
-maxSourceBytes = 1048576
-maxSourceFiles = 128
-maxActiveLines = 12000
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
 
 [lints]
 workspace = true
@@ -77,10 +77,14 @@ semio-framework-os-store-document = { path = "../../🔨️modules/🏪️store/
 semio-framework-os-store-durable-group = { path = "../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📦️packages/🦀️rust" }
 semio-framework-os-store-durable-group-wire = { path = "../../🔨️modules/🏪️store/🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
 semio-framework-os-store-engine = { path = "../../🔨️modules/🏪️store/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-branch = { path = "../../🔨️modules/🏪️store/⚙️engine/🌿️branch/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-checkpoint-graph = { path = "../../🔨️modules/🏪️store/⚙️engine/🌳️checkpoint-graph/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-command = { path = "../../🔨️modules/🏪️store/🕰️history/🎮️command/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-core = { path = "../../🔨️modules/🏪️store/⚙️engine/🧱️store-components/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-live = { path = "../../🔨️modules/🏪️store/⚙️engine/🎞️live/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-member-group = { path = "../../🔨️modules/🏪️store/🧩️composition/📬️publication/🤝️group/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-owners = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏠️owners/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-replay = { path = "../../🔨️modules/🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-stage = { path = "../../🔨️modules/🏪️store/⚙️engine/🗄️stage/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-replay = { path = "../../🔨️modules/🏪️store/🏗️initialization/🔁️replay/📦️packages/🦀️rust" }
 semio-framework-os-store-initialization-runtime = { path = "../../🔨️modules/🏪️store/🏗️initialization/🏃️runtime/📦️packages/🦀️rust" }

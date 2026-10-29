@@ -33,6 +33,8 @@ semio-framework-plugin-testing-fixtures = { path = "../../../../🧪️testing/�
 semio-framework-plugin-testing-fixtures-publication = { path = "../../../../🧪️testing/🧰️fixtures-publication/📦️packages/🦀️rust" }
 semio-framework-plugin-testing-laws = { path = "../../../../🧪️testing/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-registry = { path = "../../../../🪟️window/🎚️config/🗂️registry/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-mutation = { path = "../../../../🪟️window/🎚️config/📬️mutation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-transient = { path = "../../../../🪟️window/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", features = ["entrypoint"], package = "semio-framework-async" }

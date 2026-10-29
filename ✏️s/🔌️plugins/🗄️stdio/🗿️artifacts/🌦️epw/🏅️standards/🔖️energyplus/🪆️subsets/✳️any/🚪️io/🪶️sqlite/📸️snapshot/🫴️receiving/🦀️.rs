@@ -11,7 +11,7 @@ const TABLES:[(&str,usize);5]=[("epw_document",8),("epw_location",10),("epw_data
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"EPW complete semantic state differs")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"EPW semantic extent overflow"))}
 fn empty()->EpwSnapshot{EpwSnapshot{schema:String::new(),location:EpwLocation::default(),design_conditions:String::new(),typical_extreme_periods:String::new(),ground_temperatures:String::new(),holidays_dst:String::new(),comments_1:String::new(),comments_2:String::new(),data_periods:EpwDataPeriods::default(),records:Vec::new()}}
-#[derive()]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct Frame{projection:Projection,snapshot:EpwSnapshot,ids:[Vec<usize>;5],ordered:[Vec<usize>;2],status:Option<Result<()>>}
 impl Frame{fn new()->Self{Self{projection:Projection::new(),snapshot:empty(),ids:std::array::from_fn(|_|Vec::new()),ordered:std::array::from_fn(|_|Vec::new()),status:None}}}
 pub fn definition(index:usize)->&'static str{SQL.split(';').map(str::trim).filter(|text|!text.is_empty()).nth(index).unwrap()}

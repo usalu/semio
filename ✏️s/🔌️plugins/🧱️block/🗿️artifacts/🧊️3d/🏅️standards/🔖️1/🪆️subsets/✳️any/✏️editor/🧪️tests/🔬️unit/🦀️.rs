@@ -70,7 +70,7 @@ pub(crate) mod context {
             Block3dCommand::PlaceVortex(payload) => payload.window_id.clone(),
             Block3dCommand::LeaveSurface(_) => BLOCK3D_DEFAULT_WINDOW_ID.into(),
             _ => {
-                let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+                let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
                 settle(app).await;
                 return result;
             }
@@ -84,7 +84,7 @@ pub(crate) mod context {
     /// drives the publication itself, turn by turn, to count the lanes each hover/leave/place reaches.
     pub async fn dispatch_in_window(app: &mut Block3dAppFixture, command: Block3dCommand, window_id: &str) -> InvocationResult {
         let view_state = world_view_state(window_id);
-        app.0.dispatch_typed(command, &ActionMeta { view_state: Some(view_state), ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &ActionMeta { view_state: Some(view_state), ..meta("local") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
     }
     
     /// 🕰️ Admits one framework-RESERVED history verb (`undo`/`redo`/checkpoints) and settles it —

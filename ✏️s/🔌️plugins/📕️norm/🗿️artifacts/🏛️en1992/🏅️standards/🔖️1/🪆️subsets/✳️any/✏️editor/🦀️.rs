@@ -132,8 +132,8 @@ impl ArtifactEditor for En1992PlayApp {
         registry.register::<results::ResultsWindowConfigOwner>()
     }
 
-    fn reference_birth()->Option<fn()->En1992Snapshot>{Some(||{
-        En1992Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<En1992Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(En1992Snapshot::default())
     })}
 
     fn io() -> Option<AppIo> {

@@ -70,6 +70,10 @@
   },
   "expected": {
     "schemaStringBytes": 99,
-    "operatorStringBytes": 120
+    "operatorStringBytes": 120,
+    "schemaOrderedKeyBytes": 11,
+    "schemaBoxedValueTypes": 1,
+    "operatorOrderedKeyBytes": 5,
+    "operatorBoxedValueTypes": 0
   }
 }

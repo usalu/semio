@@ -1,0 +1,24 @@
+{
+  "patchIsolation": {
+    "before": [],
+    "operations": [
+      {
+        "op": "add",
+        "path": "/0",
+        "value": {
+          "id": "authored"
+        }
+      },
+      {
+        "op": "replace",
+        "path": "/0/id",
+        "value": "updated"
+      }
+    ],
+    "after": [
+      {
+        "id": "updated"
+      }
+    ]
+  }
+}

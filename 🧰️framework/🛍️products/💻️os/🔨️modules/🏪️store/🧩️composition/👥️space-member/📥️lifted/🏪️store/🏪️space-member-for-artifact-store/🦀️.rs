@@ -20,13 +20,13 @@ use semio_framework_os_store_engine_member_group::ApplyBatchGroup as _;
 //#region 🔖️BlobStore
 impl<P, Mutation> SpaceMember for ArtifactStore<P, Mutation>
 where
-    P: ToValue + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn member_native_vcs_capture_demands(&self)->semio_framework_value::RetirementDemand{native_vcs::capture_demands::<P, Mutation>()}
-    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{native_vcs::admit(self,request,cx,output)}
-    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{native_vcs::advance(self,owner,cx)}
-    fn take_member_native_vcs_result(&self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{native_vcs::take(self,owner,cx,output)}
+    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_framework_os_store_engine_command::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{native_vcs::admit(self,request,cx,output)}
+    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_engine_command::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{native_vcs::advance(self,owner,cx)}
+    fn take_member_native_vcs_result(&self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_framework_os_store_engine_command::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{native_vcs::take(self,owner,cx,output)}
     fn ack_member_native_vcs_command(&self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{native_vcs::acknowledge(self,owner,cx)}
     fn member_native_vcs_close_demands(&self,owner:&dyn MemberNativeVcsCommand,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{native_vcs::close_demands(self,owner,body)}
     fn close_member_native_vcs_command(&mut self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{native_vcs::close(self,owner,cx)}
@@ -120,10 +120,10 @@ where
     fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String> {
         let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member publication concrete owner type does not match".to_string())?;
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.owners.snapshot_read_leases)) {
-            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member publication belongs to a different exact store authority")));
+            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member publication belongs to a different exact store authority")).to_string());
         }
         if publication.group_history.is_some() || publication.group_displaced.is_some() {
-            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"group-reserved member candidate requires an atomic group visibility authority")));
+            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"group-reserved member candidate requires an atomic group visibility authority")).to_string());
         }
         self.advance_apply_batch(&mut publication.publication, body, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant },receiving).map_err(|error| error.to_string())
     }
@@ -131,12 +131,12 @@ where
     fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         let publication = publication.as_any_mut().downcast_mut::<MemberStoreOneItemPublication<P, Mutation>>().ok_or_else(|| "member group preparation concrete owner type does not match".to_string())?;
         if !publication.member.as_ref().is_some_and(|member| member.ptr_eq(&self.owners.snapshot_read_leases)) {
-            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation belongs to a different exact store authority")));
+            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation belongs to a different exact store authority")).to_string());
         }
         if self.cursor.generation != publication.publication.expected_generation || self.cursor.content_revision != publication.publication.expected_revision {
             publication.publication.fault = Some(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation became stale before visibility publication"));
             publication.publication.begin_close();
-            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation became stale before visibility publication")));
+            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation became stale before visibility publication")).to_string());
         }
         if !grant.permits_one() {
             return Ok(ArtifactStoreOneItemPreparationStep::Blocked);
@@ -148,20 +148,20 @@ where
             if publication.group_history.is_none(){
                 let capacity=self.log.envelope.vcs.edits.next_reservation_allocation_bytes();
                 if grant.maximum_capacity_bytes<capacity{return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
-                publication.group_history=Some(self.reserve_edit_history_slot()?);
+                publication.group_history=Some(self.reserve_edit_history_slot().map_err(|error| error.to_string())?);
                 return Ok(ArtifactStoreOneItemPreparationStep::Progress(publication.publication.progress(),RetainedCloneProgress{copied_items:1,retained_capacity_bytes:capacity,..Default::default()}));
             }
-            publication.group_displaced=Some(self.owners.displaced_retirements.reserve_owner_slots(12)?);
+            publication.group_displaced=Some(self.owners.displaced_retirements.reserve_owner_slots(12).map_err(|error| error.to_string())?);
             return Ok(ArtifactStoreOneItemPreparationStep::Prepared(publication.publication.progress(),RetainedCloneProgress{copied_items:1,..Default::default()}));
         }
         if matches!(publication.publication.phase(), ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete | ArtifactStoreOneItemPublicationPhase::Fault) {
-            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation is no longer in a prepublication phase")));
+            return Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation is no longer in a prepublication phase")).to_string());
         }
         match self.advance_apply_batch(&mut publication.publication, body, ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant },receiving).map_err(|error| error.to_string())? {
             ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint,ownership) => Ok(ArtifactStoreOneItemPreparationStep::Progress(checkpoint,ownership)),
-            ArtifactStoreOneItemAdvance::Progress(_) => Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member preparation returned an unmeasured publication turn"))),
+            ArtifactStoreOneItemAdvance::Progress(_) => Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member preparation returned an unmeasured publication turn")).to_string()),
             ArtifactStoreOneItemAdvance::Blocked => Ok(ArtifactStoreOneItemPreparationStep::Blocked),
-            _ => Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation crossed its reserved prepublication boundary"))),
+            _ => Err(semio_framework_os_vcs::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"member group preparation crossed its reserved prepublication boundary")).to_string()),
         }
     }
 

@@ -249,7 +249,7 @@ async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
         ("label".to_string(), DslValue::object([("de".to_string(), DslValue::String("Exportieren".into())), ("en".to_string(), DslValue::String("Export".into()))])),
     ]);
     let admitted = app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta(&fixture), &mut identity).await.expect("noteShellCommand admits");
-    semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted).await.expect("noteShellCommand settles");
+    semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.expect("noteShellCommand settles");
     let patch = app.render_ctx().history_patch(true).await.expect("history patch");
     let row = patch.upserts.iter().find(|entry| entry.action_id == "shell.export").expect("the noted row");
     assert_eq!(row.label.resolve(Terminology::Native, Locale::En), "Export - a.png");

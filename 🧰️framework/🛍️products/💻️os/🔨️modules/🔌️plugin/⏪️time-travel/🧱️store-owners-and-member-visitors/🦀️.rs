@@ -5,8 +5,8 @@ use super::*;
 //#region 🔖️StoreState
 impl<P, Mu> TimeTravelOwners for TimeTravelStoreState<P, Mu>
 where
-    P: semio_framework_value::ToValue  + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+    P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
+    Mu: ::semio_framework_os_kernel::StoreMutationFor<P>,
 {
     fn replaying(&self) -> bool {
         self.replay.is_some()
@@ -58,8 +58,8 @@ impl store::MemberStoreVisitorMut for TimeTravelMemberRun<'_,'_> {
 
     async fn visit_mut<P, Mu>(self, store: &mut ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: semio_framework_value::ToValue  + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+        P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
     {
         for documents in <Mu as ::protocol::Mutation<P>>::INPUT_SCHEMA_DOCUMENTS {
             semio_framework_schema_registry::register_referenced_schema_documents(documents);
@@ -73,7 +73,7 @@ impl store::MemberStoreVisitorMut for TimeTravelMemberRun<'_,'_> {
 /// 🪪️ Transfers the actual finalization request into the original composed member's retained Store state.
 #[doc(hidden)]
 pub struct TimeTravelMemberCommit<'a,'c>{pub owners:&'a mut Option<Box<dyn TimeTravelOwners>>,pub request:&'a mut Option<store::HistoryFinalization>,pub actor:Option<&'a str>,pub receiving:&'a mut semio_framework_job::StepContext<'c>}
-impl store::MemberStoreVisitorMut for TimeTravelMemberCommit<'_,'_>{type Output=Result<TimeTravelCommit,Fault>;async fn visit_mut<P,Mu>(self,store:&mut ArtifactStore<P,Mu>)->Self::Output where P:semio_framework_value::ToValue+store::os_store::serialization::ArtifactStoreSnapshot+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,Mu:semio_framework_value::ToValue+semio_framework_value::FromValue+protocol::Mutation<P>+protocol::SemanticMutation<P>+protocol::OpBinary+protocol::OpText+Send+'static{let state=self.owners.as_deref_mut().and_then(|owners|owners.as_any_mut().downcast_mut::<TimeTravelStoreState<P,Mu>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original member finalization Store state is absent").into_fault())?;state.commit_finished(store,self.request,self.actor,self.receiving)}}
+impl store::MemberStoreVisitorMut for TimeTravelMemberCommit<'_,'_>{type Output=Result<TimeTravelCommit,Fault>;async fn visit_mut<P,Mu>(self,store:&mut ArtifactStore<P,Mu>)->Self::Output where P: store::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>{let state=self.owners.as_deref_mut().and_then(|owners|owners.as_any_mut().downcast_mut::<TimeTravelStoreState<P,Mu>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original member finalization Store state is absent").into_fault())?;state.commit_finished(store,self.request,self.actor,self.receiving)}}
 
 /// 🧽️ Settles a composed member's owners for `stage` against its store (design §12).
 #[doc(hidden)]
@@ -87,8 +87,8 @@ impl store::MemberStoreVisitor for TimeTravelMemberSettle<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: semio_framework_value::ToValue  + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+        P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
     {
         self.owners.as_any_mut().downcast_mut::<TimeTravelStoreState<P, Mu>>().ok_or_else(|| Fault::new(FaultOrigin::Plugin, FaultCode::new("timeTravel.member-store-kind"), "a composed member's history-edit owners belong to another store kind"))?.settle(store, self.stage)
     }
@@ -106,8 +106,8 @@ impl store::MemberStoreVisitor for TimeTravelMemberQuery<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: semio_framework_value::ToValue  + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+        P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
     {
         TimeTravelStoreState::<P, Mu>::query(self.owners.and_then(|owners| owners.as_any().downcast_ref::<TimeTravelStoreState<P, Mu>>()), store, self.query)
     }

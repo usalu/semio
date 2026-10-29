@@ -56,7 +56,7 @@
     "semantics": {
       "verb": "delete",
       "entity": "fenestration",
-      "kind": "delete",
+      "kind": "delete-fenestration",
       "record": "DeletedFenestration"
     },
     "diagnostics": {

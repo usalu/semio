@@ -200,11 +200,11 @@ pub(crate) fn fem2d_region_centroid(region: &semio_s_artifact_fem_2d_model::stan
 pub fn fem2d_entity_kind(doc: &Fem2dSnapshot, target: &str) -> Option<&'static str> {
     let segments = protocol::wire::decode_scoped_identity(target).ok()?;
     match segments.as_slice() {
-        [FEM2D_GRANULARITY_NODE, id] if doc.nodes.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_NODE),
+        [FEM2D_GRANULARITY_NODE, id] if doc.nodes.iter().any(|row| row.id.as_str() == *id) => Some(FEM2D_GRANULARITY_NODE),
         [FEM2D_GRANULARITY_ELEMENT, id] if doc.elements.iter().any(|row| element_id(row) == *id) => Some(FEM2D_GRANULARITY_ELEMENT),
         [FEM2D_GRANULARITY_REGION, id] if doc.regions.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_REGION),
         [FEM2D_GRANULARITY_SUPPORT, id] if doc.supports.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_SUPPORT),
-        [FEM2D_GRANULARITY_MATERIAL, id] if doc.materials.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_MATERIAL),
+        [FEM2D_GRANULARITY_MATERIAL, id] if doc.materials.iter().any(|row| row.id.as_str() == *id) => Some(FEM2D_GRANULARITY_MATERIAL),
         [FEM2D_GRANULARITY_SECTION, id] if doc.sections.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_SECTION),
         [FEM2D_GRANULARITY_LOAD_CASE, id] if doc.load_cases.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_LOAD_CASE),
         [FEM2D_GRANULARITY_COMBINATION, id] if doc.combinations.iter().any(|row| row.id == *id) => Some(FEM2D_GRANULARITY_COMBINATION),
@@ -413,8 +413,8 @@ pub fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-pub fn find_node_2d<'a>(nodes: &'a [semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode], id: &str) -> Option<&'a semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode> {
-    nodes.iter().find(|n| n.id == id)
+pub fn find_node_2d<'a>(nodes: &'a semio_framework_value_persistent::list::persistent::PersistentList<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode>, id: &str) -> Option<&'a semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemNode> {
+    nodes.iter().find(|n| n.id.as_str() == id)
 }
 
 pub fn fem2d_element_endpoints(element: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement) -> (&str, &str) {

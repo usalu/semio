@@ -481,8 +481,8 @@ impl ArtifactEditor for HomeApp {
         } })
     }
 
-    fn reference_birth()->Option<fn()->SHomeSnapshot>{Some(||{
-        SHomeSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SHomeSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SHomeSnapshot::default())
     })}
 
     fn command_id(command: &HomeCommand) -> &'static str {

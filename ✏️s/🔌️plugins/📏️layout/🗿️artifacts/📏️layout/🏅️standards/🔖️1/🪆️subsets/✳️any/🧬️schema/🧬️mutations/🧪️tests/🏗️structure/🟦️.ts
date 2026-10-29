@@ -5,15 +5,15 @@ import Ajv from "ajv";
 import { applyPatch, type Operation } from "fast-json-patch";
 import vectors from "../../../../🧪️tests/🧫️fixtures/🧬️structure/🔣️.json";
 import artifactSchema from "../../../🔣️.json";
-import { parseLayoutSnapshot } from "../../../📸️snapshot/🟦️.ts";
+import { layoutArtifactFromNativeJson } from "../../../../🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
 
 test("structural mutations share exact independent JSON Patch witnesses", () => {
   for (const vector of vectors.cases) {
     const input = JSON.stringify(vector.before);
     expect(applyPatch(structuredClone(vector.before), vector.patch as Operation[], true, false).newDocument).toEqual(vector.after);
     expect(JSON.stringify(vector.before)).toBe(input);
-    expect(() => parseLayoutSnapshot(vector.before)).not.toThrow();
-    expect(() => parseLayoutSnapshot(vector.after)).not.toThrow();
+    expect(() => layoutArtifactFromNativeJson(vector.before)).not.toThrow();
+    expect(() => layoutArtifactFromNativeJson(vector.after)).not.toThrow();
   }
 });
 
@@ -25,7 +25,7 @@ test("structural payloads match their first-party JSON Schemas", () => {
     const schema = JSON.parse(readFileSync(new URL("../../" + folder + "/🧬️schema/🔣️.json", import.meta.url), "utf8"));
     const validate = ajv.compile(schema);
     for (const vector of vectors.cases.filter((row) => Object.hasOwn(row.mutation, schema.title))) {
-      const payload = (vector.mutation as Record<string, object>)[schema.title];
+      const payload = (vector.mutation as Record<string, object | undefined>)[schema.title]!;
       expect(validate(payload)).toBe(true);
       expect(validate({ ...payload, unexpected: true })).toBe(false);
     }

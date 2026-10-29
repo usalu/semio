@@ -29,7 +29,7 @@ fn drill_step(id: &str) -> ProcessStep {
 /// catalog `Process3dPlayApp::build_document_store_owners` hands the runtime, which in turn obliges
 /// every fixture to finish through [`close_store`].
 async fn new_store() -> Process3dStore {
-    let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
+    let mut store = Process3dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
     store
 }
@@ -108,7 +108,7 @@ async fn a_placed_step_edited_in_history_replays_its_downstream() {
     let mut deeper = drill_step("drill-1");
     deeper.measure = ProcessMeasure::Drill { radius: 0.02, depth: 0.6, pose: Pose::default() };
     let edited = Process3dMutation::CreateStep(CreateStep { index: 0, step: deeper });
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: PROCESS_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: PROCESS_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     let empty = empty_process3d_snapshot();
     assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &empty, "the preview base is the state right before the edited step");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited step");
@@ -173,7 +173,7 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
 #[semio_framework_async_macros::async_test]
 async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
     let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut store = Process3dStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
+    let mut store = Process3dStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
     store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
     store
         .dispatch(ArtifactCommand::Apply {

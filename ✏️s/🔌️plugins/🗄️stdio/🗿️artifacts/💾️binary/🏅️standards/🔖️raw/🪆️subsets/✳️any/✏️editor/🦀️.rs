@@ -339,8 +339,8 @@ impl ArtifactEditor for BinaryEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->BinarySnapshot>{Some(||{
-        BinarySnapshot::default()
+    fn reference_birth()->Option<fn()->Result<BinarySnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(BinarySnapshot::default())
     })}
 
     /// ✏️ Parses the hex text and, if well-formed, replaces exactly the bytes it changed via ONE

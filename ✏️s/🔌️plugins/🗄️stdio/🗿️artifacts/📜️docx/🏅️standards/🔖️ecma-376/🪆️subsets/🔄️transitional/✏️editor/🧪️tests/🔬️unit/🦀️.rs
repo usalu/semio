@@ -38,7 +38,7 @@ async fn create_docx_transitional_editor_builds_a_definition_for_the_editor_role
 
 #[test]
 fn initial_transitional_document_renders_one_empty_paragraph_target() {
-    let snapshot = <DocxTransitionalEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
+    let snapshot = <DocxTransitionalEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let targets = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
     assert_eq!(targets.len(), 1);
     assert_eq!(targets[0].kind, semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::DocxTextTargetKind::EmptyParagraph);

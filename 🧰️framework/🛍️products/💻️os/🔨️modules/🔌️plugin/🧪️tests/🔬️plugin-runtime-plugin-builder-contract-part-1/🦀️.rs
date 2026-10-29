@@ -41,7 +41,7 @@ use semio_framework_plugin_abi::ArtifactComposer;
 use semio_framework_plugin_abi::ArtifactComposition;
 use semio_framework_plugin_abi::ArtifactDecomposer;
 use semio_framework_plugin_decl_surface::ArtifactEditor;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use semio_framework_plugin_decl_surface::ArtifactViewer;
@@ -105,7 +105,7 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
-        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
         app.child_composition.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
@@ -155,7 +155,7 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
-        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         let dialect = test_child_dialect().await;
         let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
         app.register_child("slot", "child-1", dialect.clone(), member, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("pure fresh member is adopted");
@@ -164,7 +164,7 @@ include!("../🔬️plugin-runtime-plugin-builder-contract-part-1-x/🦀️.rs")
         let member = app.child_store("slot", "child-1").await.unwrap();
         assert_eq!(member.owner_ref(), Some(owner.clone()));
         let packed = member.envelope_pack_bytes().await.unwrap();
-        let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         restored.open_child("slot", "child-1", dialect, &packed, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("fresh factory restores exact parent owner");
         assert_eq!(restored.test_child_admission_state(1).generation, 1);
         assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(owner.clone()));

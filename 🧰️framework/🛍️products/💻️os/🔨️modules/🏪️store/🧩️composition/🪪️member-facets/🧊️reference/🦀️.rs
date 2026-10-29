@@ -122,8 +122,8 @@ pub trait ReferenceSpaceMember:SpaceMember {
 
 impl<P, Mutation> ReferenceSpaceMember for ArtifactStore<P, Mutation>
 where
- P:Clone+ToValue+FromValue+semio_framework_os_store_text_io::ArtifactStoreSnapshot+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,
- Mutation:Clone+ToValue+FromValue+self::Mutation<P>+ColdMutation<P>+OpBinary+OpText+Send+'static,
+ P: semio_framework_os_store_text_io::ArtifactStoreSnapshot + ArtifactPack + semio_framework_schema_composition::ArtifactCompositionFields + semio_framework_os_spr::StoreState,
+ Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
 
     fn begin_one_item_wire_publication(&self, request: MemberStoreOneItemWireRequest) -> Result<Box<dyn ErasedMemberStoreOneItemPublication>, ArtifactStoreBatchAdmissionRejected<MemberStoreOneItemWire>> {

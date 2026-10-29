@@ -27,7 +27,8 @@ pub struct WindowConfigReplaceCursor<S: Copy + RetireOwned + 'static, M: RetireO
 }
 
 impl<S, M> RetainedCloneEdit<S, M> for WindowConfigReplaceEdit<S, M>
-where S: RetainedClone + Copy + RetireOwned + Send + Sync + 'static, M: WindowConfigReplaceMutation<S> + RetireOwned {
+where S: RetainedClone + Copy + RetireOwned + ::semio_framework_os_kernel::StoreState, M: WindowConfigReplaceMutation<S> + RetireOwned
+{
     type Cursor = WindowConfigReplaceCursor<S, M>;
     fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, &'static str> {
         if lane != store::os_store::store_schema::HistoryLane::Document || !mutation.admissible() { return Err("window config replace mutation has invalid lane or record authority".into()); }
@@ -43,7 +44,7 @@ where S: RetainedClone + Copy + RetireOwned + Send + Sync + 'static, M: WindowCo
     }
 }
 
-impl<S: Copy + RetireOwned + 'static, M: RetireOwned + 'static> WindowConfigReplaceCursor<S, M> {
+impl<S: Copy + RetireOwned + ::semio_framework_os_kernel::StoreState, M: RetireOwned + 'static> WindowConfigReplaceCursor<S, M> {
     #[doc(hidden)]
     pub fn normal_demand(&self) -> RetirementDemand {
         let (copy_bytes, capacity_bytes) = match self.stage {
@@ -58,7 +59,8 @@ impl<S: Copy + RetireOwned + 'static, M: RetireOwned + 'static> WindowConfigRepl
 }
 
 impl<S, M> RetainedCloneEditCursor<S, M> for WindowConfigReplaceCursor<S, M>
-where S: RetainedClone + Copy + RetireOwned + Send + Sync + 'static, M: WindowConfigReplaceMutation<S> + RetireOwned {
+where S: RetainedClone + Copy + RetireOwned + ::semio_framework_os_kernel::StoreState, M: WindowConfigReplaceMutation<S> + RetireOwned
+{
     fn advance_demands(&self, _: RetainedCloneRef<'_, S>, _: &S, _: RetainedCloneRef<'_, M>, _: usize) -> Result<RetirementDemand, ValueError> { Ok(if self.cancelled || self.custody.is_closing() || self.stage == 4 { Default::default() } else { self.normal_demand() }) }
     fn advance(&mut self, base: RetainedCloneRef<'_, S>, post: &mut S, mutation: RetainedCloneRef<'_, M>, body:usize,grant: RetainedCloneGrant) -> Result<RetainedCloneEditStep, ValueError> {
         if self.cancelled || self.custody.is_closing() || grant.maximum_items == 0 || grant.maximum_depth == 0 { return Ok(RetainedCloneEditStep::Progress(Default::default())); }

@@ -71,8 +71,8 @@ impl ArtifactViewer for ObjAnyViewer {
     const DIALECT: Dialect = OBJ_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = OBJ_ANY_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->ObjSnapshot>{Some(||{
-        ObjSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<ObjSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(ObjSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

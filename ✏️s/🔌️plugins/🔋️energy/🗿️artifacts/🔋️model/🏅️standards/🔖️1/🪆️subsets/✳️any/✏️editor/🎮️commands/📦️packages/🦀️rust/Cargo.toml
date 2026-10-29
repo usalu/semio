@@ -21,6 +21,7 @@ semio-framework-plugin-window-kits = { path = "../../../../../../../../../../../
 semio-framework-plugin-ownership = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-native-mutations = { workspace = true }
+semio-s-artifact-energy-model-native-mutations-singletons = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-plugin-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📦️packages/🦀️rust" }

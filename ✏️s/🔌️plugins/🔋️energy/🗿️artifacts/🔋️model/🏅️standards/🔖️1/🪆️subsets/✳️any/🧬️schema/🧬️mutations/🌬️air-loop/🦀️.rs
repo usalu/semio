@@ -1,4 +1,4 @@
-//! 🌬️ Energy model mutation domain `air-loop`: `change-air-loop-supply-node`, `change-air-loop-return-node`, `change-air-loop-design-supply-air-flow`, `rename-air-loop`, `create-air-loop`, `delete-air-loop`, `remove-air-loop-terminal-zone`, `add-air-loop-terminal-zone`.
+//! 🌬️ Energy model mutation domain `air-loop`: `rename-air-loop`, `create-air-loop`, `delete-air-loop`, `remove-air-loop-terminal-zone`, `add-air-loop-terminal-zone`
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
@@ -12,45 +12,6 @@ extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
 use crate::snapshot::reference::EnergyModelSnapshot;
-
-#[path = "."]
-pub mod change_air_loop_supply_node {
-    #[path = "↗️change-supply-node/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "↗️change-supply-node/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "↗️change-supply-node/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "↗️change-supply-node/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_air_loop_return_node {
-    #[path = "↘️change-return-node/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "↘️change-return-node/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "↘️change-return-node/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "↘️change-return-node/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_air_loop_design_supply_air_flow {
-    #[path = "🍥️change-design-supply-air-flow/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🍥️change-design-supply-air-flow/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "🍥️change-design-supply-air-flow/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🍥️change-design-supply-air-flow/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
 
 #[path = "."]
 pub mod rename_air_loop {
@@ -117,9 +78,6 @@ pub mod add_air_loop_terminal_zone {
     pub mod inverse;
 }
 
-pub use change_air_loop_supply_node::{change_air_loop_supply_node, ChangeAirLoopSupplyNode};
-pub use change_air_loop_return_node::{change_air_loop_return_node, ChangeAirLoopReturnNode};
-pub use change_air_loop_design_supply_air_flow::{change_air_loop_design_supply_air_flow, ChangeAirLoopDesignSupplyAirFlow};
 pub use rename_air_loop::{rename_air_loop, RenameAirLoop};
 pub use create_air_loop::{create_air_loop, CreateAirLoop};
 pub use delete_air_loop::{delete_air_loop, DeleteAirLoop};

@@ -13,7 +13,7 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️PathSegment
 /// ✏️ A single SVG-style path command — the honest, complete production set for `Path.segments`
 /// (no `*OCTET`/size-eos catch-all: every field a real drawn quantity).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslEnum)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase", deny_unknown_fields)]
 pub enum PathSegment {
@@ -50,11 +50,13 @@ pub enum PathSegment {
 /// `SvgNodeDiff` recursive-diff template per the master plan. `style` fields are a referential
 /// `Option<String>` into `SemioDrawingSnapshot.styles` by name (checked by `SemioDrawingValidator`
 /// — dangling references are a real referential-invariant breach, not silently tolerated).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslEnum)]
+#[value(receive_recursive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_node")]
 pub enum DrawNode {
     Path {
+        #[dsl(statements, block)]
         segments: Vec<PathSegment>,
         #[value(default, skip_serializing_if = "Option::is_none")]
         style: Option<String>,
@@ -68,6 +70,7 @@ pub enum DrawNode {
     Group {
         transform: SemioTransform,
         #[value(default)]
+        #[dsl(statements, block)]
         children: Vec<DrawNode>,
     },
     /// 🖼️ Raster payload embedded verbatim (typed raw retention — real bytes, not a lie).
@@ -88,7 +91,7 @@ impl Default for DrawNode {
 /// `triples::NamedTripleDiff<String, DrawStyleDiff, DrawStyle>`'s generated `Deserialize` impl
 /// (serde-derive's bound inference for `#[value(default)]` fields on a generic container reaches
 /// every type parameter, not just the immediately-defaulted field's own type).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_style")]
 pub struct DrawStyle {
     pub name: String,
@@ -108,13 +111,14 @@ pub struct DrawStyle {
 /// the diff facet — mirrors gif-frame ordering precedent).
 /// 🩹 `Default` derived for the same reason as `DrawStyle` above (needed as the `T` of
 /// `triples::IndexedTripleDiff<DrawLayerDiff, DrawLayer>`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_layer")]
 pub struct DrawLayer {
     pub id: String,
     pub name: String,
     pub visible: bool,
     #[value(serialize_controlled_with="crate::schema::snapshot::native_binding::nodes::encode_node")]
+    #[dsl(statements, block)]
     pub root: DrawNode,
 }
 
@@ -142,7 +146,7 @@ impl semio_framework_pack_json::ArtifactCanonicalJsonTree for DrawLayer {
 
 //#region 🔖️Canvas
 /// 🖼️ Document-level viewport/backdrop.
-#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct DrawCanvas {
     pub width: f64,
@@ -163,7 +167,8 @@ pub const STDIO_SEMIODRAWING_DOCUMENT_SCHEMA: &str = "stdio.semio.drawing";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(layout = "lines")]
 #[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_snapshot")]
 #[artifact_schema(id = "s.stdio.semio.drawing")]
 pub struct SemioDrawingSnapshot {

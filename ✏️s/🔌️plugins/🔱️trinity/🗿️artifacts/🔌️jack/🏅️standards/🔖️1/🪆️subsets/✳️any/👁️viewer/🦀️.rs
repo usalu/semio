@@ -73,8 +73,8 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         C::genesis_child_pack(snapshot, slot, child_id)
     }
 
-    fn reference_birth()->Option<fn()->JackSnapshot>{Some(||{
-        C::initial_viewer_snapshot()
+    fn reference_birth()->Option<fn()->Result<JackSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(C::initial_viewer_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `TrinityJackViewCommand::Noop` variant never carries a

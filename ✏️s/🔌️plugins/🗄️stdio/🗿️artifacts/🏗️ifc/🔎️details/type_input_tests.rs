@@ -176,7 +176,7 @@ fn retire_guidance<T: semio_framework_value::retirement::RetireOwned + 'static>(
 }
 #[test]
 fn original_type_guidance_denies_each_published_axis_before_source_or_output_changes() {
-    use semio_framework_plugin::app::staged_form::StagedBodySource;
+    use semio_framework_plugin_decl_staged_form::StagedBodySource;
     let snapshot = source(&contract()["cases"][0]);
     let alternate = Arc::new(snapshot.as_ref().clone());
     let mut caller = OriginalWorkFixture::new();

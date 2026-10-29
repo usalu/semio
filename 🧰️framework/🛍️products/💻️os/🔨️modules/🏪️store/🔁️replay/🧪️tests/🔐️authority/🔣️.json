@@ -1,0 +1,43 @@
+{
+  "schema": "semio.replay-authority.v1",
+  "cases": [
+    {
+      "name": "original-missing-producer",
+      "authority": "original",
+      "producerInstalled": false,
+      "state": {
+        "counter": 7,
+        "calls": 0
+      },
+      "nextCounter": 11,
+      "expected": {
+        "accepted": false,
+        "unchanged": true,
+        "error": "UnsupportedOwner",
+        "state": {
+          "counter": 7,
+          "calls": 0
+        }
+      }
+    },
+    {
+      "name": "explicit-cold-executor",
+      "authority": "cold",
+      "producerInstalled": false,
+      "state": {
+        "counter": 7,
+        "calls": 0
+      },
+      "nextCounter": 11,
+      "expected": {
+        "accepted": true,
+        "unchanged": false,
+        "error": null,
+        "state": {
+          "counter": 11,
+          "calls": 1
+        }
+      }
+    }
+  ]
+}

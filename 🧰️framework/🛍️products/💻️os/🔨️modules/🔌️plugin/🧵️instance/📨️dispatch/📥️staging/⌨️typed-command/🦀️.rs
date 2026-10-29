@@ -9,7 +9,7 @@ use semio_framework::{AppRole, Fault, FaultCode, FaultFrom, FaultOrigin, Media};
 use std::sync::Arc;
 use semio_framework_plugin_decl_app::{ArtifactApp, ArtifactOwnedContextHandle};
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ArtifactOutputChunks;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobContext, ArtifactOwnedToolJobRequest, ArtifactOwnedToolJobSnapshots, ArtifactToolCompletion, ArtifactToolRawInput};
 use pack::snapshot::ArtifactPack;
@@ -38,8 +38,8 @@ use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of
 use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
 use semio_framework_plugin_instance_docs::docs_maintenance_ladder::removed;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
-    pub async fn dispatch_typed_command_inner(&mut self,source:&mut semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,metadata:&mut Option<ActionMeta>,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
+impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+    pub async fn dispatch_typed_command_inner(&mut self,source:&mut semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,tool_tag:&mut Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag>,metadata:&mut Option<ActionMeta>,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<InvocationResult>,semio_framework_job::OriginalTurnFailure>{
         if !source.admit(cx)?{return Ok(None)}
         if source.receipt.is_some(){return source.advance_receipt(cx)}
         if !source.capture_metadata(metadata,cx)?{return Ok(None)}
@@ -65,7 +65,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         let receipt=semio_framework_plugin_job::original_emission::OriginalEmissionReceipt::capture(operation,cx)?;
         let body=source.original_body()?;let decoder=source.original_decoder()?;let binding=source.original_binding()?;
         let mut pending=None;
-        if source.handoff(cx,&mut pending,|source|PendingLatestWinsCommand{
+        if source.handoff(cx,&mut pending,&mut *self.tool_machines,tool_tag,|source|PendingLatestWinsCommand{
             command:ManuallyDrop::new(source.command.take()),command_retirement:Default::default(),admission:source.admission.take(),meta:ManuallyDrop::new(source.metadata.take()),original_caller:ManuallyDrop::new(source.caller.take()),original_body:body,original_decoder:decoder,metadata_retirement:Default::default(),metadata_copy:ManuallyDrop::new(None),context_metadata:ManuallyDrop::new(None),context_view:ManuallyDrop::new(None),context_phase:0,operation,source_identity:binding,revision,lease:None,cancellation_retirement:None,key_copy:None,key:None,retired_key:None,lookup_started:false,accepted:ordinary,restarting:false,closing:false,receipt:None,fault:ManuallyDrop::new(None),fault_retirement:None,
         })?{self.tools.latest_wins_commands.insert_admitted(id,pending.unwrap());self.tools.latest_wins_order.push(id).expect("original typed FIFO reservation");source.receipt=Some(receipt);}
         Ok(None)
@@ -120,14 +120,6 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
     pub async fn test_capture_presence_roots(&mut self, command: &A::Command, meta: &ActionMeta) -> Result<(std::sync::Arc<PeerPresenceRoot>, std::sync::Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>), Fault> {
         let TypedCommandRoots { peer_presence, presence_peers, .. } = self.capture_typed_command_roots(command, meta).await?;
         Ok((peer_presence, presence_peers))
-    }
-
-    /// 🧪️ Mounts an exact typed admission so laws can observe the boundary before producer completion.
-    #[cfg(test)]
-    pub async fn test_mount_typed_command(&mut self, command: A::Command, verb: &str, meta: &ActionMeta, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<InvocationResult, Fault> {
-        let payload = ::protocol::OpBinary::encode_op(&command).map_err(|error| error.into_fault())?;
-        let admission = self.tools.admit_command_wire(&*self.stores, verb, &payload, 1).await?;
-        self.dispatch_typed_command_inner(Box::new(command), admission, meta, identity, cx).await
     }
 
     /// 🧵️ Captures immutable roots and mounts one admitted worker turn. Ephemeral producers
@@ -280,7 +272,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 terminal_seen: false,
                 worker_resume_pending: false,
                 publication: None,
-                pending_artifact_publication: None, pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+                tool_stage:semio_framework_plugin_retained_command::typed_operation::OriginalToolSettlementStage::Capture,tool_press_result:None,pending_artifact_publication:None, pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
                 pending_child_publication: None,
                 owned_child_group: None,
                 owned_child_committed: false,
@@ -313,21 +305,6 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         );
         self.tools.typed_operation_reservations[operation_id.0 as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = None;
         Ok(())
-    }
-
-    /// 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
-    /// 🧪️ Test-only typed-value helper. Production callers must enter with an exact
-    /// owner-qualified retained raw-page admission and cannot infer identity from a bare command.
-    pub fn dispatch_typed<'b, 'context>(mut self, command: A::Command, meta: &'ctx ActionMeta, identity: &'ctx mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,cx:&'ctx mut semio_framework_job::StepContext<'context>) -> impl Future<Output = Result<InvocationResult, Fault>> + 'ctx + use<'ctx, 'b, 'context, A, M, X> where X: 'ctx {
-        let command = Box::new(command);
-        async move {
-            let log_generation_before = self.history.log_generation;
-            let verb = A::command_id(command.as_ref()).await;
-            let payload = ::protocol::OpBinary::encode_op(command.as_ref()).map_err(|error| error.into_fault())?;
-            let admission = self.tools.admit_command_wire(&*self.stores, verb, &payload, 1).await?;
-            let result = self.dispatch_typed_command_inner(command, admission, meta, identity, cx).await?;
-            Ok(self.as_render().finish_recorded(log_generation_before, verb, result).await)
-        }
     }
 
     /// 🕰️ The actual body of `PluginApp::import_media` — see `dispatch_action`'s doc.

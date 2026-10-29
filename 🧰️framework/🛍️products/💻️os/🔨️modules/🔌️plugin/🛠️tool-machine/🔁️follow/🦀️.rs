@@ -7,7 +7,7 @@ use semio_framework_value::retained_clone::RetainedCloneClose;
 use semio_framework_value::retained_clone::original_slot::RetainedOriginalSlotKey;
 use semio_framework_tool_machine::{OriginalToolLedgerSource,ScrubState,GestureState,TypingState};
 use semio_framework_plugin_window_config::{OriginalWindowPreviewEpoch,WindowConfigOwnerRegistry};
-use crate::original_operations::{OriginalToolOverlayFold,OriginalToolLedgerWalk,paid,receive,close_paid};
+use semio_framework_plugin_tool_run_operations::{OriginalToolOverlayFold,OriginalToolLedgerWalk,paid,receive,close_paid};
 use std::mem::size_of;
 type Machines<A>=ToolMachineRuntime<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation,<A as ArtifactApp>::Config,<A as ArtifactApp>::ConfigMutation>;
 type Document<A>=store::ArtifactStore<<A as ArtifactApp>::Snapshot,<A as ArtifactApp>::Mutation>;

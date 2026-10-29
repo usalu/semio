@@ -97,8 +97,8 @@ impl ArtifactViewer for Puzzle3dViewer {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
-    fn reference_birth()->Option<fn()->Puzzle3dSnapshot>{Some(||{
-        Puzzle3dSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Puzzle3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Puzzle3dSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Puzzle3dViewCommand::Noop` variant never carries a config

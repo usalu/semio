@@ -623,7 +623,7 @@ impl Puzzle3dCollision {
         Some((page, query.examined()))
     }
 
-    #[cfg(test)]
+    #[cfg(any(test, feature = "testkit"))]
     fn brush_collision_free(&mut self, target_full_id: &str, candidates: &[BrushCompatibleCandidate], contact_tolerance: f64) -> BrushCollisionFreeResult {
         let Some(deadline) = puzzle3d_deadline(PUZZLE3D_PRECOMPUTE_STEP_BUDGET_US * 8) else {
             return BrushCollisionFreeResult { free: Vec::new(), unknown_pending: true, resume_candidate_index: 0 };

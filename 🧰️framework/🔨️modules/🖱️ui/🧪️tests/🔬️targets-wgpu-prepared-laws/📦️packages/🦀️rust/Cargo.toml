@@ -25,6 +25,7 @@ semio-framework-test-fixtures = { path = "../../../../../🧪️test/🧲️fixt
 semio-framework-trace = { path = "../../../../../⏱️trace/📦️packages/🦀️rust" }
 semio-framework-ui-draw-contract = { path = "../../../../🎯️targets/🧊️wgpu/🖍️draw/🏷️types/📦️packages/🦀️rust" }
 semio-framework-ui-prepared-staging = { path = "../../../../🎯️targets/🧊️wgpu/🎟️prepared/📤️staging/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-ui-scene = { path = "../../../../🎬️scene/📦️packages/🦀️rust" }
 semio-framework-ui-theme = { path = "../../../../🎨️styling/🎭️theme/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../🌱️value/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

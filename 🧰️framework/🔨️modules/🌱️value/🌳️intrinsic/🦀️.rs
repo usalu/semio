@@ -278,9 +278,8 @@ impl From<DslValue> for serde_json::Value {
     }
 }
 
-/// 🌉️ The reverse bridge: a plugin decoding `ArtifactEditor::command_from_action`/
-/// `host_configuration_mutation`'s trait-mandated `Option<&serde_json::Value>` args into a
-/// `ToValue`/`FromValue` domain type routes through here — preserves whichever of `serde_json`'s
+/// 🌉️ Converts borrowed JSON into the intrinsic value algebra for domain decoding.
+/// This bridge preserves whichever of `serde_json`'s
 /// own `u64`/`i64`/`f64` storage the number parsed into (same convention `pack::json`'s
 /// `to_dsl_value` bridge uses for its sibling `Value` type), never widening an integer to `f64`.
 impl From<&serde_json::Value> for DslValue {

@@ -1,0 +1,28 @@
+{
+  "createdUpdated": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧬️schema/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧬️schema/📇️descriptor/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧪️tests/📦️packages/🦀️rust/Cargo.toml",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧪️tests/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🧪️tests/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔢️version/🧳️retained/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔢️version/🧳️retained/🧪️tests/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🧪️tests/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🧳️part/🦀️.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🚪️io/🛂️admission/🔺️change/🧳️part/🧪️tests/🦀️.rs"
+  ],
+  "preservedInputs": [
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧪️tests/native.rs",
+    "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧬️schema/📇️descriptor/🦀️.rs"
+  ],
+  "reportsInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-boundary.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-boundary-inventory.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-boundary-oracle.ts",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/idml-xml-oracle.py"
+  ]
+}

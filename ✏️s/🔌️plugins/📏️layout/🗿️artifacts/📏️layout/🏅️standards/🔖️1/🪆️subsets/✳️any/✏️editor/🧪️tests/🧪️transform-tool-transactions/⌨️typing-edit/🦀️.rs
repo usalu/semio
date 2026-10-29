@@ -1,0 +1,13 @@
+//! ⌨️ The real mounted Layout typing edit retains its original source while prior transactions publish.
+use super::*;
+
+#[semio_framework_async_macros::async_test]
+async fn mounted_typing_edits_publish_previous_transaction_and_keep_latest_preview(){
+ let fixture:Value=serde_json::from_str(include_str!("../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🛠️tool-machine/⌨️typing/✍️edit/🧪️fixtures/🔣️.json")).unwrap();let action=fixture["action"].as_str().unwrap();let buffer=fixture["buffer"].as_str().unwrap();let first=fixture["deliveries"][0]["name"].as_str().unwrap();let second=fixture["deliveries"][1]["name"].as_str().unwrap();
+ let mut app=layout_app_with_registry().await;let baseline=app.0.snapshot().unwrap().name.clone();let source=app.1.cx().original_recipient_identity();let decoder=app.1.cx().native_receiving_identity();let operation=app.1.cx().operation();let generation=app.1.cx().generation();
+ let delivered=act(&mut app,action,Some(DslValue::from(&serde_json::json!({"field":"name","value":first,"typing":buffer})))).await;let first_result=settle(&mut app,delivered).await;assert!(edit_rows(&first_result).is_empty());assert_eq!(app.0.snapshot().unwrap().name,baseline);assert_eq!(app.0.rendered_snapshot().name,first);
+ let delivered=act(&mut app,action,Some(DslValue::from(&serde_json::json!({"field":"name","value":second,"typing":buffer})))).await;let second_result=settle(&mut app,delivered).await;assert_eq!(edit_rows(&second_result).len(),1);assert_eq!(app.0.snapshot().unwrap().name,first);assert_eq!(app.0.rendered_snapshot().name,second);
+ let delivered=act(&mut app,action,Some(DslValue::from(&serde_json::json!({"typing":buffer,"typingCommit":"enter"})))).await;let committed=settle(&mut app,delivered).await;assert_eq!(edit_rows(&committed).len(),1);assert_ne!(edit_rows(&second_result)[0].transaction,edit_rows(&committed)[0].transaction);assert_eq!(app.0.snapshot().unwrap().name,second);assert_eq!(app.0.rendered_snapshot().name,second);
+ assert_eq!(app.1.cx().original_recipient_identity(),source);assert_eq!(app.1.cx().native_receiving_identity(),decoder);assert_eq!(app.1.cx().operation(),operation);assert_eq!(app.1.cx().generation(),generation);assert!(app.0.maintenance_source_terminal_is_empty());
+ println!("mounted-typing-edit={}",serde_json::json!({"firstPreview":first,"priorCommitted":first,"lastPreview":second,"finalCommitted":second,"firstRows":edit_rows(&first_result).len(),"priorRows":edit_rows(&second_result).len(),"finalRows":edit_rows(&committed).len(),"sameSource":true,"closed":app.0.maintenance_source_terminal_is_empty()}));app.close_fixture();
+}

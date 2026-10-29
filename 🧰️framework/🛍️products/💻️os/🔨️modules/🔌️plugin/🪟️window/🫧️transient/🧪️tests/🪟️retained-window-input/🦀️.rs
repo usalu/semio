@@ -7,7 +7,7 @@ use semio_framework_plugin_window_transient::window_transient::{ErasedWindowTran
 use semio_framework::{Fault, ViewModel};
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError};
-use semio_framework_plugin_window_config::registry::{WindowRegistry, fits};
+use semio_framework_plugin_window_config_registry::{WindowRegistry, fits};
 use semio_framework_os_kernel as store;
 use semio_framework_plugin_ownership::transient_publication::transient_store_disposer;
 
@@ -285,7 +285,7 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
     let captured = registry.capture(Some(&view)).unwrap().unwrap();
     publish(&mut registry, &captured, expected["firstRevision"].as_u64().unwrap());
     let rejected=registry.begin(semio_framework_job::OperationId(2),&captured,mutation(expected["staleRevision"].as_u64().unwrap())).err().unwrap(); assert!(!expected["staleBeginAccepted"].as_bool().unwrap()); crate::window_mutation_tests::tests::close_original(rejected.mutation);
-    let captured_generation=captured.generation; let mut live=captured; for _ in 0..1024 {let demand=registry.refresh_demands(&live,4096).unwrap();if matches!(registry.refresh(&mut live,quoted(demand,1)).unwrap(),semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_)){break;}} assert_ne!(live.generation,captured_generation);
+    let captured_generation=captured.generation; let mut live=captured; for _ in 0..1024 {let demand=registry.refresh_demands(&live,4096).unwrap();if matches!(registry.refresh(&mut live,quoted(demand,1)).unwrap(),semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(_)){break;}} assert_ne!(live.generation,captured_generation);
     assert!(expected["refreshedBeginAccepted"].as_bool().unwrap());
     publish(&mut registry, &live, expected["liveRevision"].as_u64().unwrap());
     crate::window_mutation_tests::tests::close_with(live,||{let demand=registry.maintenance_demands(4096).unwrap();registry.maintenance_step(quoted(demand,1)).unwrap();});

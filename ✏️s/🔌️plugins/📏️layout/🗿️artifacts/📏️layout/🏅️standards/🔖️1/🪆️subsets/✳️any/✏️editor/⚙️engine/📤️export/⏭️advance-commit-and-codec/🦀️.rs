@@ -4,7 +4,20 @@ use super::*;
 
 //#region 🧩️Job
 impl LayoutExportJob {
+    fn media_projection_one(&mut self,work:&mut OutputWork)->Result<(),String>{
+        work.copy(size_of::<usize>()+size_of::<u8>()+size_of::<ExportStage>(),1)?;
+        let literal:Option<&[u8]>=match self.media_projection_phase{0=>Some(br#"{"schema":"2d.layout","source":{"documentId":""#),2=>Some(br#"","frontierRevision":""#),4=>Some(br#""},"svg":""#),6=>Some(br#""}"#),1|3|5=>None,_=>return Err("layout-media-projection-phase".into())};
+        if let Some(bytes)=literal{self.encoded.append(bytes,work)?;self.media_projection_phase+=1;self.base64_cursor=0;if self.media_projection_phase==7{self.stage=ExportStage::PackageCommit;}return Ok(())}
+        let mut input=[0u8;1024];
+        let take=if self.media_projection_phase==5{let count=(self.output.len-self.base64_cursor).min(input.len());if count>0{self.output.copy_range(self.base64_cursor,&mut input[..count],work)?;}count}else{let request=self.request.as_ref().unwrap();let bytes=if self.media_projection_phase==1{request.parent_document_id.as_bytes()}else{request.canonical_base_revision_hex.as_bytes()};let count=(bytes.len()-self.base64_cursor).min(input.len());work.copy(count+size_of::<usize>()*3,1)?;input[..count].copy_from_slice(&bytes[self.base64_cursor..self.base64_cursor+count]);count};
+        if take==0{self.media_projection_phase+=1;self.base64_cursor=0;return Ok(())}
+        let mut escaped=[0u8;6144];let mut length=0;const HEX:&[u8;16]=b"0123456789abcdef";
+        for byte in &input[..take]{match *byte{b'"'|b'\\'=>{escaped[length]=b'\\';escaped[length+1]=*byte;length+=2},0..=31=>{escaped[length..length+4].copy_from_slice(b"\\u00");escaped[length+4]=HEX[usize::from(*byte>>4)];escaped[length+5]=HEX[usize::from(*byte&15)];length+=6},_=>{escaped[length]=*byte;length+=1}}}
+        work.copy(length,1)?;self.encoded.append(&escaped[..length],work)?;self.base64_cursor+=take;Ok(())
+    }
+
     fn base64_one(&mut self,work:&mut OutputWork)->Result<(),String>{
+        if self.projected_media(){return self.media_projection_one(work)}
         const TABLE:&[u8;64]=b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
         let remaining=self.output.len.saturating_sub(self.base64_cursor);if remaining==0{self.stage=ExportStage::PackageCommit;return Ok(());}
         let take=remaining.min(BASE64_INPUT_BYTES_PER_UNIT);let mut input=[0u8;BASE64_INPUT_BYTES_PER_UNIT];self.output.copy_range(self.base64_cursor,&mut input[..take],work)?;
@@ -19,6 +32,7 @@ impl LayoutExportJob {
             ExportStage::Plan => "layout.export.plan",
             ExportStage::BeginEncode=>"layout.export.begin-encode",
             ExportStage::Encode => "layout.export.encode",
+            ExportStage::Base64 if self.projected_media() => "layout.export.vector-projection",
             ExportStage::Base64 => "layout.export.base64",
             ExportStage::PackageCommit => "layout.export.package-commit",
             ExportStage::Complete => "layout.export.complete",
@@ -31,7 +45,7 @@ impl LayoutExportJob {
     pub(super) fn commit_work_turn(&mut self,committed:bool,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let mut work_units=self.work_units.checked_add(1).ok_or_else(||Fault::from("layout-export-work-overflow"))?;let committed_units=self.committed_units.checked_add(u64::from(committed)).ok_or_else(||Fault::from("layout-export-work-overflow"))?;let matched=if let Some(target)=self.restore_target.as_ref(){checkpoint::replay_position(committed_units,target.committed_units,self.active_output().len as u64==target.output_bytes&&self.active_output().digest==target.output_digest,self.stage==ExportStage::Complete).map_err(Fault::from)?}else{false};if matched{work_units=work_units.max(self.restore_target.as_ref().unwrap().work_units);self.restore_target=None;}self.work_units=work_units;if committed{self.committed_units=committed_units;}context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1+usize::from(committed)+usize::from(matched),copied_bytes:size_of::<u64>()*(1+usize::from(committed))+if matched{size_of::<Option<LayoutExportCheckpoint>>()}else{0},..Default::default()})?;Ok(matched)}
 
     fn package_commit_one(&mut self,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let output=if self.request.as_ref().unwrap().kind.binary(){&mut self.encoded}else{&mut self.output};
+        let output=if self.request.as_ref().unwrap().kind.binary()||self.projected_media(){&mut self.encoded}else{&mut self.output};
         let queue=self.output_chunks.as_ref().unwrap();
         if output.publishing.is_some(){
             let demand=ArtifactOutputChunks::original_push_demands();let grant=context.retained_grant();let own=std::mem::size_of::<usize>();if grant.maximum_items<2||grant.maximum_copy_bytes<demand.copy_bytes.saturating_add(own)||grant.maximum_depth<demand.depth{return Ok(false);}

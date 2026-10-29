@@ -75,7 +75,7 @@ pub async fn flow_app_closing() -> FlowAppFixture {
     let definition = create_flow_app();
     let registry = AppActionRegistry::from_definition(&definition);
     let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     app.bind_instance_id(meta("local").instance_id).await;
     semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     FlowAppFixture(app, scope)
@@ -145,7 +145,7 @@ pub async fn flow_app_with_actor(actor: semio_framework_os_kernel::ActorId) -> F
     let definition = create_flow_app();
     let registry = AppActionRegistry::from_definition(&definition);
     let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, actor, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut app = VcsArtifactApp::<EditorApp<FlowPlayApp>, SemioMembers>::with_registry(EditorApp::default(), registry, actor, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     app.bind_instance_id(meta("local").instance_id).await;
     semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     FlowAppFixture(app, scope)
@@ -165,11 +165,11 @@ pub fn flow_main_window_meta() -> semio_framework_plugin::ActionMeta {
 }
 
 pub async fn dispatch(app: &mut FlowAppFixture, command: FlowCommand) -> InvocationResult {
-    app.0.dispatch_typed(command, &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &flow_main_window_meta(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
 }
 
 pub async fn dispatch_with_registry(app: &mut FlowAppFixture, command: FlowCommand) -> InvocationResult {
-    app.0.dispatch_typed(command, &flow_main_window_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &flow_main_window_meta(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
 }
 
 pub async fn settle(app: &mut FlowAppFixture) {

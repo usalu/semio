@@ -292,8 +292,8 @@ impl ArtifactEditor for BcfAnyEditor {
         bcf_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->BcfSnapshot>{Some(||{
-        BcfSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<BcfSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(BcfSnapshot::default())
     })}
 
     fn handle(

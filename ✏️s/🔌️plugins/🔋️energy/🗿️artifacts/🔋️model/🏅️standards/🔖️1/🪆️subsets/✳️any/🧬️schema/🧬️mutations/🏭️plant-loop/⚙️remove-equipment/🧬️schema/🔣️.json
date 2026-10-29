@@ -80,7 +80,7 @@
     "semantics": {
       "verb": "remove",
       "entity": "PlantLoop",
-      "kind": "RemovePlantLoopEquipment",
+      "kind": "remove-plant-loop-equipment",
       "record": "RemovePlantLoopEquipment"
     },
     "diagnostics": {

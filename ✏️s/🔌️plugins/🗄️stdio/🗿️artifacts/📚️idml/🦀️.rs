@@ -45,9 +45,6 @@ impl IdmlPackage{
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
 
 pub const DOCUMENT_SCHEMA: &str = "stdio.idml";
 pub use schema::{snapshot::IdmlSnapshot, diff::IdmlDiff, mutations::IdmlMutation};

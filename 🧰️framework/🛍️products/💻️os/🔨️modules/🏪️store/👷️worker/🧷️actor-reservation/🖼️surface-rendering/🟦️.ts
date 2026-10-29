@@ -106,16 +106,17 @@ export class ReservationSurfaceRendering {
     assertCurrent();
     const hostView = this.session.artifact.browserActorViewState;
     if (hostView === null) throw new Error("document browser actor: missing host view context");
-    const visible = this.visibleEvents(lifetime, hostView, this.session.renderedViewState === null ? "mount" : "repaint");
+    const owed = this.visibleEvents(lifetime, hostView, this.session.renderedViewState === null ? "mount" : "repaint");
     for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
       assertCurrent();
-      let result: BrowserActorChildValue | null = await this.hub.lanes.invokePoll(child, turn === 0 ? visible : [{ tag: "wake" }], null, assertCurrent);
+      const events: BrowserActorChildValue[] = owed.length !== 0 ? owed.splice(0, 1) : turn === 0 ? [] : [{ tag: "wake" }];
+      let result: BrowserActorChildValue | null = await this.hub.lanes.invokePoll(child, events, null, assertCurrent);
       try {
         assertCurrent();
         if (browserActorColdStatus(result).kind !== "idle") throw new Error("document browser actor: unexpected cold ingress during render");
         const owned = result;
         result = null;
-        if (!(await this.hub.patches.reconcileUiPatches(owned, child, assertCurrent)).moreWork) {
+        if (!(await this.hub.patches.reconcileUiPatches(owned, child, assertCurrent)).moreWork && owed.length === 0) {
           this.session.renderedViewState = hostView;
           this.publishMountedIfReady();
           return;
@@ -152,12 +153,13 @@ export class ReservationSurfaceRendering {
     const lifetime = this.session.lifetime,
       hostView = this.session.renderedViewState;
     if (lifetime === null || hostView === null) return;
-    const events = this.visibleEvents(lifetime, hostView, windows ? "repaint" : "refresh");
-    const result = await this.hub.lanes.invokePoll(child, events, null, assertCurrent);
-    if (browserActorColdStatus(result).kind !== "idle") {
-      wipeBrowserActorValue(result);
-      throw new Error("document browser actor: unexpected cold ingress during surface refresh");
+    for (const event of this.visibleEvents(lifetime, hostView, windows ? "repaint" : "refresh")) {
+      const result = await this.hub.lanes.invokePoll(child, [event], null, assertCurrent);
+      if (browserActorColdStatus(result).kind !== "idle") {
+        wipeBrowserActorValue(result);
+        throw new Error("document browser actor: unexpected cold ingress during surface refresh");
+      }
+      if ((await this.hub.patches.driveTurnResult(result, child, assertCurrent)) !== 0) throw new Error("document browser actor: surface refresh mutated the document");
     }
-    if ((await this.hub.patches.driveTurnResult(result, child, assertCurrent)) !== 0) throw new Error("document browser actor: surface refresh mutated the document");
   }
 }

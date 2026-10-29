@@ -71,8 +71,8 @@ impl ArtifactViewer for PlyAnyViewer {
     const DIALECT: Dialect = PLY_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLY_ANY_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->PlySnapshot>{Some(||{
-        PlySnapshot::default()
+    fn reference_birth()->Option<fn()->Result<PlySnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(PlySnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

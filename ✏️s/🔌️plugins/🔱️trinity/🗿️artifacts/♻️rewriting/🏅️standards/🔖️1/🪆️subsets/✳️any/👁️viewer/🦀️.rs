@@ -79,8 +79,8 @@ impl ArtifactViewer for TrinityRewritingViewer {
         crate::standards::v1::subsets::any::content::genesis_working_child_pack(snapshot, slot, child_id)
     }
 
-    fn reference_birth()->Option<fn()->RewritingSnapshot>{Some(||{
-        empty_rule_state()
+    fn reference_birth()->Option<fn()->Result<RewritingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(empty_rule_state())
     })}
 
     /// 👁️ Structurally read-only: the sole `TrinityRewritingViewCommand::Noop` variant never carries a

@@ -31,3 +31,6 @@ let key=ledger.resident_key("source").unwrap();turn_native(&mut caller,&mut deco
 #[test]fn original_scrub_transfer_preserves_resident_and_entries(){transfer_law!(scrub(),ScrubLedger<u64>);}
 #[test]fn original_gesture_transfer_preserves_resident_and_entries(){transfer_law!(gesture(),GestureLedger<u64>);}
 #[test]fn original_typing_transfer_preserves_resident_and_entries(){transfer_law!(typing(),TypingLedger<u64>);}
+
+#[path="🧵️scrub/🦀️.rs"]
+mod original_scrub_write_laws;

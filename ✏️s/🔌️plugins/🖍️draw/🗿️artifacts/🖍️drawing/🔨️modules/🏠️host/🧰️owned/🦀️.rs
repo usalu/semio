@@ -1,4 +1,4 @@
-//! 🧰️ Drawing owned envelope decoder, recursive retirement, and retained store initializer.
+//! 🧰️ Drawing owned envelope decoder, recursive retirement and retained mutation authorities.
 
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_s_artifact_draw_drawing_host_arena::DRAWING_DUPLICATE_ID_BYTES;
@@ -65,14 +65,6 @@ use mutation_candidate::*;
 
 #[path = "🪜️candidate-step/🦀️.rs"]
 mod candidate_step;
-
-#[path = "🚀️store-initialization/🦀️.rs"]
-pub mod store_initialization;
-pub use store_initialization::*;
-
-#[path = "🔄️initialization-turn/🦀️.rs"]
-pub mod initialization_turn;
-use initialization_turn::*;
 
 //#endregion 🔖️RetainedStoreInitialization
 

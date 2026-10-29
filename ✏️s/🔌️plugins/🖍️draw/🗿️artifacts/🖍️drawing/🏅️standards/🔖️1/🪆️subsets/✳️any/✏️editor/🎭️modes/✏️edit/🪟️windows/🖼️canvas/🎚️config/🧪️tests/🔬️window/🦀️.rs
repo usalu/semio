@@ -28,7 +28,7 @@ fn drawing_canvas_window_ownership_runtime_isolates_reloads_and_restores_exact_i
 
             async fn dispatch(app: &mut VcsArtifactApp<EditorApp<DrawingPlayApp>>, command: DrawingCommand, view: &ViewModel, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(usize, usize), String> {
                 let meta = ActionMeta { instance_id: 91, view_state: Some(view.clone()), ..artifact_app_laws::meta("drawing-window-ownership") };
-                app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
                 let receipt = artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
                 Ok((
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(),

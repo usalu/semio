@@ -1,6 +1,6 @@
 //! 📬️ Original completion source and receiving slots preserve exact fields across budget, busy and duplicate refusal.
 use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::media_contract::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportHandle, ArtifactMediaExportPoll, ArtifactMediaExportResult, ArtifactOutputChunks};
+use semio_framework_plugin_decl_media::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportHandle, ArtifactMediaExportPoll, ArtifactMediaExportResult, ArtifactOutputChunks};
 use semio_framework::{MediaError, MediaType};
 use semio_framework_job::{OriginalCallerSourceParent, OperationId, Generation, StepBudget, close_original_retained_step};
 use semio_framework_job_payload::{JobPayloadAuthority};

@@ -287,7 +287,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
 
                 async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand, view: Option<&ViewModel>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, String> {
                     let meta = ActionMeta { instance_id: 93, view_state: view.cloned(), ..artifact_app_laws::meta("architect-window-ownership") };
-                    app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
                     artifact_app_laws::settle_registered_typed_operation(app, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))
                 }
 

@@ -79,8 +79,8 @@ impl ArtifactViewer for Generation2dViewer {
     const DIALECT: Dialect = GENERATION2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Generation2dSnapshot>{Some(||{
-        semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot()
+    fn reference_birth()->Option<fn()->Result<Generation2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `Generation2dViewCommand::Noop` variant never carries a

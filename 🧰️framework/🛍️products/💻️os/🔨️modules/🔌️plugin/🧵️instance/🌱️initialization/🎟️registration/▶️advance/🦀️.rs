@@ -1,7 +1,7 @@
 //! ▶️ Each registration child and original registry birth advances under its initiating source scope.
 use super::*;
 impl<A,M,O> OriginalSingleWindowRegistration<A,M,O>
-where A:OriginalArtifactAppBirth<Presence=NoPresence,PresenceMutation=NoPresenceMutation,Transient=NoTransient,TransientMutation=NoTransientMutation>,M:SpaceMember+MemberFactory+'static,O:WindowConfigOwner{
+where A:OriginalArtifactAppBirth<Presence=NoPresence,PresenceMutation=NoPresenceMutation,Transient=NoTransient,TransientMutation=NoTransientMutation>,M:ReferenceSpaceMember+MemberFactory+'static,O:WindowConfigOwner{
  pub(super) fn advance_source(&mut self,definition:RegisteredDefinitionSource<'_>,cx:&mut StepContext<'_>)->Result<(),OriginalTurnFailure>{
   match self.phase{
    0=>{if self.tools.is_some(){self.phase(1,cx)?;}else if let Some(source)=self.tools_source.as_mut(){if source.ready(){source.take(cx,&mut self.tools)?;}else{source.advance(definition,self.catalog.as_ref().unwrap().source().ok_or_else(||invalid("original catalog alias lost its source"))?,cx)?;}}else{OriginalDeclaredEmptyOperationSource::admit(cx,&mut self.tools_source)?;}},

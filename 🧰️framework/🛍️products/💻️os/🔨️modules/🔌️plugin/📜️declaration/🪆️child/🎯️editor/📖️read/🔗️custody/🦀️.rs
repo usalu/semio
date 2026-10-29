@@ -1,6 +1,6 @@
 //! 🔗️ Actual qualified member-read custody issues its immutable typed source under the original caller grant.
 use super::{ChildEditorRead,ChildEditorCapability};
-use crate::child_view::editor::source::ChildEditorStamp;
+use crate::child_view::child_editor::source::ChildEditorStamp;
 use semio_framework_io_ports::ChildAdmissionQualificationV1;
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneSource,RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits},retirement::{RetireOwned,controlled::ControlledRetirement}};
 use store::os_store::snapshot_read::{SnapshotRead,ErasedSnapshotRead};

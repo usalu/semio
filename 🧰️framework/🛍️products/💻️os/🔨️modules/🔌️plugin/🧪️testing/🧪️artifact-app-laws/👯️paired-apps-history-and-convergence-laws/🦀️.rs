@@ -58,16 +58,16 @@ where
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
     let admitted = dispatch_fixture_action(app,action,None,&meta("local"),identity,cx,mounted_policy.close).await.unwrap_or_else(|fault| panic!("history verb {action} admission: {fault:?}"));
-    semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
+    semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.unwrap_or_else(|fault| panic!("history verb {action} reserved-job commit: {fault:?}"));
     settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await.unwrap_or_else(|fault| panic!("history verb {action} publication: {fault:?}"));
 }
 
 /// 🧪️ Runs `command` once via the typed channel, asserts `probe(app)` matches `after`, undoes (still
 /// the framework-reserved `"undo"` action) and asserts `before`, redoes and asserts `after` again — the
-/// repeated undo/redo round-trip test body. B1: takes a typed `A::Command` value (`dispatch_typed`) —
+/// repeated undo/redo round-trip test body. B1: takes a typed `A::Command` value (`dispatch_original_fixture_command`) —
 /// `ArtifactApp::handle_action`'s stringly-typed dispatch no longer exists.
 ///
-/// 🔁️ Every step SETTLES: a retained tool's `dispatch_typed` only returns an admission
+/// 🔁️ Every step SETTLES: a retained tool's `dispatch_original_fixture_command` only returns an admission
 /// receipt, so probing straight after it observes the pre-command document and the
 /// round trip passes or fails against the wrong state entirely. A non-retained app has
 /// nothing pending and settles in zero turns (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
@@ -200,9 +200,9 @@ where
     let (mut instance_a, mut instance_b) = paired_registered_apps_with_members::<A, M, Manifest, Build>(channel, manifest, mounted_policy, identity).await;
     let genesis = probe(&instance_a);
     let receiver = meta("actor-a").instance_id;
-    instance_a.dispatch_typed(command_a, &meta("actor-a"), identity,cx).await.expect("a applies its edit");
+    dispatch_original_fixture_command(&mut instance_a, &command_a, &meta("actor-a"), mounted_policy, identity, cx).await.expect("a applies its edit");
     settle_registered_typed_operation(&mut instance_a, receiver, mounted_policy, identity,cx).await.expect("a's edit publishes");
-    instance_b.dispatch_typed(command_b, &meta("actor-b"), identity,cx).await.expect("b applies its edit");
+    dispatch_original_fixture_command(&mut instance_b, &command_b, &meta("actor-b"), mounted_policy, identity, cx).await.expect("b applies its edit");
     settle_registered_typed_operation(&mut instance_b, receiver, mounted_policy, identity,cx).await.expect("b's edit publishes");
     exchange_and_assert_convergence(&mut instance_a, &mut instance_b, "actor-a", &probe, mounted_policy, identity,cx).await;
     assert_ne!(probe(&instance_a), genesis, "the replicated edits must actually land, not converge on the untouched genesis");
@@ -230,7 +230,7 @@ where
     assert_eq!(probe(instance_a), probe(instance_b), "both instances must converge on the same snapshot");
     let receiver = meta(actor_a).instance_id;
     let admitted = dispatch_fixture_action(instance_a,"commitCheckpoint",None,&meta(actor_a),identity,cx,mounted_policy.close).await.expect("a commits a checkpoint");
-    semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(instance_a, admitted).await.expect("a's checkpoint commit settles");
+    semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(instance_a, admitted, cx).await.expect("a's checkpoint commit settles");
     settle_registered_typed_operation(instance_a, receiver, mounted_policy, identity,cx).await.expect("a's checkpoint publication settles");
     instance_b.tick_backbone(identity,cx).await.expect("b folds a's checkpoint");
     assert_eq!(probe(instance_a), probe(instance_b), "a replicated checkpoint keeps both instances converged");

@@ -78,8 +78,8 @@ impl ArtifactViewer for SequenceViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->SequenceSnapshot>{Some(||{
-        crate::snapshot::schema::default_persisted_snapshot()
+    fn reference_birth()->Option<fn()->Result<SequenceSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::snapshot::schema::default_persisted_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `SequenceViewCommand::Noop` variant never carries a config

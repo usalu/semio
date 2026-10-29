@@ -71,8 +71,8 @@ impl ArtifactViewer for DxfAnyViewer {
     const DIALECT: Dialect = DXF_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DXF_ANY_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->DxfSnapshot>{Some(||{
-        DxfSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<DxfSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(DxfSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

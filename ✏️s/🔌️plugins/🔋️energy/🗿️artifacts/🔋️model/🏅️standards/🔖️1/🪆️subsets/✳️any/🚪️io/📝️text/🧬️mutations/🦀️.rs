@@ -32,9 +32,9 @@ pub const MUTATION_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️mutati
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
-/// 🔮️ Reports the forward and inverse behavior of one committed language-neutral vector.
+/// 🔮️ Reports the forward and inverse behavior of one committed language-neutral vector on the explicit reference snapshot.
 pub fn energy_model_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
     use semio_framework_value::ToValue;
     let decode_snapshot = |text: &str| -> Result<EnergyModelSnapshot, String> { semio_framework_pack_json::from_json_str::<EnergyModelSnapshot>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string()) };

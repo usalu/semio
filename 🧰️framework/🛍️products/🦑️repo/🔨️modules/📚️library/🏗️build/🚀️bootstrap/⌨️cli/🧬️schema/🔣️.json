@@ -31,8 +31,8 @@
           "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
           "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧹️pruning/🏪️budget",
           "targets": {
-            "cache-retire-inactive-preview": "preview",
-            "cache-retire-inactive": "retire"
+            "inactive-preview": "preview",
+            "inactive": "retire"
           }
         },
         "reset": {
@@ -40,10 +40,10 @@
           "owner": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
           "scriptRoot": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/💾️storage/🔒️enforcement/📦️budget/📥️opening/♻️reset",
           "targets": {
-            "cache-reset-graph": "graph",
-            "cache-reset-nx": "nx",
-            "cache-reset-rust": "rust",
-            "cache-reset-products": "products"
+            "graph": "graph",
+            "nx": "nx",
+            "rust": "rust",
+            "products": "products"
           }
         }
       }
@@ -191,11 +191,11 @@
         "targets": {
           "type": "object",
           "required": [
-            "cache-retire-inactive-preview",
-            "cache-retire-inactive"
+            "inactive-preview",
+            "inactive"
           ],
           "properties": {
-            "cache-retire-inactive-preview": {
+            "inactive-preview": {
               "type": "object",
               "required": [
                 "executor",
@@ -262,7 +262,7 @@
                 }
               }
             },
-            "cache-retire-inactive": {
+            "inactive": {
               "type": "object",
               "required": [
                 "executor",

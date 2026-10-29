@@ -1,3 +1,6 @@
+import {toolJobPluginInstanceSource} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📤️publication/🟦️.ts";
+import {toolJobProductionSource} from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/📋️inventory/🟦️.ts";
+
 /** 🧪️ The puzzle outbox as the guards read it: the commit builder prepares the raw wire, completion lends the sealed pages. */
 const PUZZLE_JOBS_FIXTURE = `
 pub enum JobTurn { Yield, Cancelled, Complete, Prepare(Vec<u8>) }
@@ -12,8 +15,8 @@ impl JobOutbox {
 fn a_prepared_commit_output_rides_on_the_completion_and_closes_exactly() {}
 `;
 
-/** 🧪️ The framework host's reserved-route driver as the guards read it. */
-const PUZZLE_RESERVED_HOST_FIXTURE = `async fn run_framework_reserved_job() { proof.admits::<A>(&admission); *applied_progress < checkpoint_progress; retained_payload_eq_slice(output, raw); protocol_fault = Some("interactive-job.output-envelope"); session.resume(); session.begin_close(); Ok(semio_framework_job::WorkerJobCloseStep::Complete { .. }) if session.terminal_is_empty() => break; self.validate_framework_reserved_commit(action, permit).await?; semio_framework_job::validate_commit(&permit.operation, live_revision, live_generation); permit.lease.is_cancelled().await; permit.is_cancelled().await; async fn ensure_reserved_emit_bounded(action: &str) {} permit.finish(); }`;
+/** 🧪️ The positive host witness is the actual current compiler-owned production source family. */
+const PUZZLE_RESERVED_HOST_FIXTURE=toolJobProductionSource(toolJobPluginInstanceSource(process.cwd()));
 
 const ROUTE_JOBS = ["Puzzle5dClipboardJob", "Puzzle5dPasteJob", "Puzzle5dImportJob"] as const;
 
@@ -66,10 +69,10 @@ ${routeJob("Puzzle5dImportJob", "raw")}
     ["completion without sealed commit output", () => exact(source, host, jobs.replace("admit_complete(cx, None, self.commit.published())", "admit_complete(cx, None, None)"))],
     ["commit pages never closed", () => exact(source, host, jobs.replace("self.commit.close_step_granted(grant)?;", ""))],
     ["prepared output law omitted", () => exact(source, host, jobs.replace("a_prepared_commit_output_rides_on_the_completion_and_closes_exactly", "commit_smoke"))],
-    ["host commit freshness omitted", () => exact(source, host.replace("semio_framework_job::validate_commit(&permit.operation, live_revision, live_generation);", ""))],
-    ["host exact output ACK omitted", () => exact(source, host.replace("retained_payload_eq_slice(output, raw)", "false"))],
-    ["host output envelope fault omitted", () => exact(source, host.replace("interactive-job.output-envelope", "interactive-job.other"))],
-    ["host terminal close witness omitted", () => exact(source, host.replace("Ok(semio_framework_job::WorkerJobCloseStep::Complete { .. }) if session.terminal_is_empty() => break", "Ok(semio_framework_job::WorkerJobCloseStep::Complete { .. }) => break"))],
+    ["host commit freshness omitted", () => exact(source, host.replaceAll("canonical_revision == live_revision", "true"))],
+    ["host original output ACK omitted", () => exact(source, host.replaceAll("session.acknowledge_checked_out_outcome(grant)", "Default::default()"))],
+    ["host exact output bound omitted", () => exact(source, host.replaceAll("self.raw.len() > self.contract.max_output_bytes", "false"))],
+    ["host terminal close witness omitted", () => exact(source, host.replaceAll(/progress\.fits\(grant\)\s*&&\s*session\.terminal_is_empty\(\)/g, "progress.fits(grant)"))],
   ];
   for (const [name, mutation] of mutations) if (mutation()) throw new Error(`[verify interactivity tool-jobs] self-test Puzzle5d ${name} was falsely accepted.`);
   return mutations.length + 1 + toolJobPuzzle2dReservedRoutesSelfTests(toolJobPuzzle2dReservedRoutesExact, host, jobs);
@@ -106,7 +109,7 @@ impl ArtifactEditor for Puzzle2dPlayApp { fn clipboard_media_type() {} fn copy_f
     ["terminal close witness omitted", () => exact(source.replace("fn terminal_is_empty(&self) -> bool { self.closing }", ""))],
     ["reserved job trait omitted", () => exact(source.replace("impl ArtifactReservedJob for Puzzle2dClipboardJob {}", ""))],
     ["sealed commit output not lent on completion", () => exact(source, host, jobs.replace("admit_complete(cx, None, self.commit.published())", "admit_complete(cx, None, None)"))],
-    ["host bounded-emit guard omitted", () => exact(source, host.replace("async fn ensure_reserved_emit_bounded(action: &str) {}", ""))],
+    ["host original parent loan omitted", () => exact(source, host.replaceAll("cx.original_source_parent()?.admit_loan(cx)", "cx.recreated_source()"))],
   ];
   for (const [name, mutation] of mutations) if (mutation()) throw new Error(`[verify interactivity tool-jobs] self-test Puzzle2d ${name} was falsely accepted.`);
   return mutations.length + 1;

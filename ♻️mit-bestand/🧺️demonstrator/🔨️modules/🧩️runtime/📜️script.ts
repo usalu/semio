@@ -13,6 +13,7 @@ import { readDemonstratorActivation } from "./♻️activation/🟦️.ts";
 import { builtPluginModulesRootIn, playgroundSessionsRootV1, playgroundSessionStagedOutputPath } from "@semio-tech/framework-os-dev/activation";
 import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
 import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
+import { MODULE_SHARD_DIRECTORY, MODULE_VENDOR_DIRECTORY } from "@semio-tech/plugin-registry/deployment";
 
 /** 🎪️ Verifies the runtime union completed by the outer build preparation graph. */
 class PreparationScript extends BundleScript {
@@ -21,7 +22,8 @@ class PreparationScript extends BundleScript {
     const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), profile = mode;
     const moduleRoot = builtPluginModulesRootIn(this.repoRoot, profile), sessionsRoot = playgroundSessionsRootV1(this.repoRoot, profile);
     const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout(DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
-    for (const name of [...pluginModuleDirNames.slice(2), ...extensionModuleDirNames]) {
+    const support = new Set([MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY]);
+    for (const name of [...pluginModuleDirNames.filter(name => !support.has(name)), ...extensionModuleDirNames]) {
       const directory = join(moduleRoot, name), marker = JSON.parse(readFileSync(join(directory, ".semio-artifact.json"), "utf8"));
       if (!Array.isArray(marker.files) || !marker.files.includes("🌉️bridge.js") || !marker.files.includes("🔣️.json") || marker.files.some((file: string) => !existsSync(join(directory, file)))) throw new Error(`Incomplete Demonstrator runtime component: ${name}`);
     }

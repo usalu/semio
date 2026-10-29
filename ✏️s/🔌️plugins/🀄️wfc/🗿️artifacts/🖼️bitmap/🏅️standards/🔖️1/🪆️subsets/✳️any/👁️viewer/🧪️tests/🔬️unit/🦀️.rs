@@ -14,7 +14,7 @@ fn the_manifest_binds_both_windows() {
 #[test]
 fn the_viewer_shares_the_editors_dialect_and_boot_example() {
     assert_eq!(<BitmapViewer as ArtifactViewer>::DIALECT, WFC_BITMAP_DIALECT);
-    assert_eq!(<BitmapViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")(), crate::examples::rooms_16::snapshot());
+    assert_eq!(<BitmapViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"), crate::examples::rooms_16::snapshot());
 }
 
 #[test]

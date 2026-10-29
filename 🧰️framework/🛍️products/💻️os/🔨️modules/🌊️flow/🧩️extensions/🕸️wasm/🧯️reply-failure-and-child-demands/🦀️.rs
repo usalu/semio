@@ -3,10 +3,13 @@
 use super::*;
 
 // #region 🔖️Evaluate
+/// 🧵️ The encoded evaluation envelope stays in the paged pages the Pack writer produced until the invocation boundary copies it out.
+pub type EvaluationWire=semio_framework_value::paged::PagedBytes<{isize::MAX as usize}>;
+
 /// 🧾️ Publishes the original physical envelope with facts from its same execution owner.
 #[derive(semio_framework_value::RetireOwned)]
 #[value(send_only)]
-pub struct EvaluationReply {pub external_pending:bool,pub(super) pending_source:Option<neural_engine::PendingExtensionEval>,pub wire:Option<Vec<u8>>,pub complete:bool,pub faulted:bool,pub retirement_progress:RetainedCloneProgress,pub(super) retirement_posted:bool,pub returned_request:Option<EvaluateRequest>,pub refusal:Option<EvaluationFailure>}
+pub struct EvaluationReply {pub external_pending:bool,pub(super) pending_source:Option<neural_engine::PendingExtensionEval>,pub wire:Option<EvaluationWire>,pub complete:bool,pub faulted:bool,pub retirement_progress:RetainedCloneProgress,pub(super) retirement_posted:bool,pub returned_request:Option<EvaluateRequest>,pub refusal:Option<EvaluationFailure>}
 
 impl EvaluationReply{
     pub(super) fn pending_request(request:EvaluateRequest,retirement_progress:RetainedCloneProgress)->Self{Self{retirement_posted:false,external_pending:false,pending_source:None,wire:None,complete:false,faulted:false,retirement_progress,returned_request:Some(request),refusal:None}}

@@ -42,6 +42,7 @@ semio-s-artifact-stdio-ifc-4-descriptor = { workspace = true }
 semio-s-artifact-stdio-ifc-4-model = { workspace = true }
 semio-s-artifact-stdio-ifc-4 = { workspace = true }
 semio-s-artifact-stdio-ifc-4-mutations = { workspace = true }
+semio-framework-plugin-decl-staged-form = { path = "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/staged-form/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

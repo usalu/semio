@@ -3,7 +3,9 @@ import{nativeBuildDiagnosticLinesV1}from"../../../../../../../🔨️modules/�
 import{cargoProfileCompilerConsumptionV1}from"../../../🏗️build/🎚️mode/🦀️profile/🟦️.ts";
 import{cargoTimingPolicyV1,cargoTimingEventV1,cargoResourceWaitEventV1,cargoTimingLedgerRowV1,appendCargoTimingLedgerV1}from"../⏱️timing/🟦️.ts";
 import{withCompilerWorkspaceSharedWriteV1}from"../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/📏️capacity/🟦️.ts";
-import {acquirePooledLaneV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts";
+import {acquirePooledLaneV1,planPoolAcquireV1,poolBoundsV1,readPoolV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🏊️pool/🟦️.ts";
+import {crateKeyV1,measureLaneBytesV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧵️lane/🟦️.ts";
+import {admitImageHeadroomV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🟦️.ts";
 import {compilerLaneQuotaBytesV1} from "../../../⚡️caching/💾️storage/🔒️enforcement/🏗️compiler/🛤️lane/🟦️.ts";
 import {agentSessionAddressV1,currentAgentSessionV1} from "../../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🪪️agent-sessions/🟦️.ts";
 import {gcOutOfSpaceV1} from "../../../⚡️caching/🦀️cargo/🗃️unit-cache/🧹️gc/🟦️.ts";
@@ -87,17 +89,23 @@ export async function withRepositoryCargoIsolatedStoreV1<T>(options:Readonly<{st
 
 /** 🛤️ One private lane of the pool inside the issued compiler store: a target and build directory held by one process at a time, so no two Cargo processes ever share a build directory and Cargo's unit locks can never form a cycle between processes. The lane of the same crate set is preferred (its incremental state is still warm), a new lane starts empty and fills from the shared content-addressed unit cache, and the idle lanes are trimmed to the pool bounds. */
 export type RepositoryCargoAgentLaneV1=Readonly<{target:string;build:string;lane:Readonly<{id:string;root:string}>}>;
-type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;workspace:string;capacityBytes:number;crates:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
+type AgentLaneOptionsV1=Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;workspace:string;capacityBytes:number;crates:readonly string[];classes?:readonly string[];environment:Readonly<Record<string,string|undefined>>;control:ResourceLeaseControl}>;
 
 async function withAgentLaneV1<T>(options:AgentLaneOptionsV1,body:(lane:RepositoryCargoAgentLaneV1)=>Promise<T>):Promise<T>{
  requireNativeStorageReservationV1(options.storage,options.control);await options.storage.recheck();
  const root=options.storage.backing.root;requireNativeStoragePathV1(root,options.cacheRoot);mkdirSync(options.cacheRoot,{recursive:true});
- const session=currentAgentSessionV1({environment:options.environment}),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,quotaBytes=await compilerLaneQuotaBytesV1(options.workspace,options.environment,options.capacityBytes);
- const lane=await acquirePooledLaneV1(options.cacheRoot,{crates:options.crates,quotaBytes,owner:{session:agentSessionAddressV1(session),agent:session.agent.id}},{signal:options.control.signal,report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
+ const session=currentAgentSessionV1({environment:options.environment}),language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,quotaBytes=await compilerLaneQuotaBytesV1(options.workspace,options.environment,options.capacityBytes),classes=options.classes??["lane"];
+ const warm=planPoolAcquireV1(readPoolV1(options.cacheRoot,Date.now()),{crateKey:crateKeyV1(options.crates)},poolBoundsV1(quotaBytes)).kind==="warm";
+ const headroom=await admitImageHeadroomV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,classes,temperature:warm?"warm":"cold",label:classes[classes.length-1]!,language,report:line=>{process.stderr.write(line+"\n");},signal:options.control.signal});
  try{
-  for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(root,path);
-  return await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));
- }finally{lane.release();}
+  const lane=await acquirePooledLaneV1(options.cacheRoot,{crates:options.crates,quotaBytes,owner:{session:agentSessionAddressV1(session),agent:session.agent.id}},{signal:options.control.signal,report:(kind,parameters)=>{process.stderr.write(laneMessageV1(kind,parameters,language)+"\n");}});
+  let grown:(()=>number)|undefined;
+  try{
+   for(const path of[lane.paths.target,lane.paths.build])requireNativeStoragePathV1(root,path);
+   const before=measureLaneBytesV1(options.cacheRoot,lane.paths.id);grown=()=>measureLaneBytesV1(options.cacheRoot,lane.paths.id)-before;
+   return await body(Object.freeze({target:lane.paths.target,build:lane.paths.build,lane:Object.freeze({id:lane.paths.id,root:lane.paths.base})}));
+  }finally{await headroom.release(grown);lane.release();}
+ }finally{await headroom.release();}
 }
 
 /** 🗂️ The planning port of a repository compile: foreign (registry) crate sources are inventoried through the digest book kept under the store's unit cache, so an unchanged crate directory is stamped, not re-hashed. Shared by `bun repo cargo` and repository tests. */
@@ -106,7 +114,7 @@ export function repositoryCargoPlanningPortV1(store:Readonly<{root:string}>){ret
 export function repositoryCargoSourceMemoV1(store:Readonly<{root:string;toolchain:Readonly<{digest:string}>}>){return unitAdmissionMemoV1(unitCacheRootV1(store.root),store.toolchain.digest);}
 
 /** 🧵️ One Cargo command's lane (see {@link RepositoryCargoAgentLaneV1}). Cleanup of idle lanes and cold cache objects is a niced, single-flight background collector that starts when the image passes its high-water mark (or every ten minutes of use), and a command that finds less free space than one compile needs collects before it starts. */
-export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;workspace:string;crates:readonly string[];capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
+export async function withRepositoryCargoLaneV1<T>(options:Readonly<{storage:NativeStorageReservationV1;cacheRoot:string;workspace:string;crates:readonly string[];classes?:readonly string[];capacityBytes:number;emergencyBytes:number;environment:Readonly<Record<string,string|undefined>>;temporary:string;control:ResourceLeaseControl}>,body:(store:Readonly<{target:string;build:string;temporary:string;lane:Readonly<{id:string;root:string}>}>)=>Promise<T>):Promise<T>{
  const language=resolveLanguageV1(CATALOG_LANGUAGES_V1,[],options.environment).language,report=(line:string)=>{process.stderr.write(line+"\n");},relieve=()=>relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:options.emergencyBytes,environment:options.environment,language,report});
  try{return await withAgentLaneV1(options,async lane=>{await relieve();return withUnitPressureRecheckV1(relieve,()=>body(Object.freeze({...lane,temporary:options.temporary})));});}
  finally{await relieveUnitCachePressureV1({root:options.cacheRoot,capacityBytes:options.capacityBytes,emergencyBytes:0,environment:options.environment,language,report});}
@@ -122,6 +130,12 @@ export function withRepositoryComponentLaneV1<T>(options:Readonly<{storage:Nativ
 function cargoManifestV1(args:readonly string[],cwd:string):string{
  const delimiter=args.indexOf("--"),head=delimiter<0?args:args.slice(0,delimiter),index=head.indexOf("--manifest-path"),inline=head.find(argument=>argument.startsWith("--manifest-path=")),manifest=index>=0?head[index+1]:inline?.slice("--manifest-path=".length)??"Cargo.toml";
  if(!manifest)throw Error("Original compiler manifest selection required");return resolve(cwd,manifest);
+}
+
+/** 🏷️ The classes the image bytes of a Cargo command are learned under, general to specific: its subcommand, then the compilation target, then the crate set it selects (see `admitImageHeadroomV1`). */
+export function cargoHeadroomClassesV1(args:readonly string[]):readonly string[]{
+ const subcommand=`cargo/${args[0]??""}`,target=`${subcommand}/${cargoTargetV1(args)}`;
+ return Object.freeze([subcommand,target,`${target}/${crateKeyV1(focusFromCargoArgumentsV1(args))}`]);
 }
 
 /** 🎯️ The compilation target a broker pass is keyed by: the first `--target`, else the host. */
@@ -207,7 +221,7 @@ export async function launchRepositoryCargoV1<T>(invocation:ScriptInvocation,pha
     try{return await admitted(compilerArgs,compilerEnvironment,selected,control,generated&&!generatedPolicy?()=>copyFileSync(generated,env.SEMIO_TYPEGEN_OUT!):undefined,generated);}finally{if(generated)rmSync(generated,{force:true});}
    });
   };
-  return request.store==="shared"?withRepositoryCargoLaneV1({storage:store.storage,cacheRoot:unitCacheRootV1(store.root),workspace,crates:focusFromCargoArgumentsV1(request.cargo),capacityBytes:spaceBudget,emergencyBytes:space.maximumWorkspaceBytes,environment,temporary:store.environment.TMPDIR!,control},run):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);
+  return request.store==="shared"?withRepositoryCargoLaneV1({storage:store.storage,cacheRoot:unitCacheRootV1(store.root),workspace,crates:focusFromCargoArgumentsV1(request.cargo),classes:cargoHeadroomClassesV1(request.cargo),capacityBytes:spaceBudget,emergencyBytes:space.maximumWorkspaceBytes,environment,temporary:store.environment.TMPDIR!,control},run):withRepositoryCargoIsolatedStoreV1({storage:store.storage,base:dirname(store.buildDirectory),control},run);
  });
  }));
 }

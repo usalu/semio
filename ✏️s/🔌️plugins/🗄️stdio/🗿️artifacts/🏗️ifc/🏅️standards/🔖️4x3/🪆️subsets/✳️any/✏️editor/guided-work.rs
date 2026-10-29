@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_plugin::action_staging::StagedFormRequest;
 use semio_framework_job::{admit_original_construction,OriginalConstructionDemand,OriginalSourceBinding};
 use crate::templates::application::work::staging_native::{IfcTemplateSourceWork,IfcPreparedTemplateSource};
-use semio_framework_plugin::app::staged_form::{StagedBodyCursor,StagedBodyOutput,StagedBodySource};
+use semio_framework_plugin_decl_staged_form::{StagedBodyCursor,StagedBodyOutput,StagedBodySource};
 use semio_framework_value::{RetainedCloneStep,RetirementDemand};
 use crate::details::{IfcTypeInputSourceWork,IfcPreparedTypeInputSource,Ifc4x3DetailsProfile};
 

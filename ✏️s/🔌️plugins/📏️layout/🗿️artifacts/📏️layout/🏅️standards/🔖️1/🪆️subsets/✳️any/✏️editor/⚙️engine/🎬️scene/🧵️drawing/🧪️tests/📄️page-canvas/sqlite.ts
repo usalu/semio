@@ -1,21 +1,59 @@
-import {validateDocument} from "../../../../../../🧬️schema/✅️validation/🟦️.ts";
-/** 🧪️ Real SQLite preserves explicit page child ownership and refuses cross-component graph aliases. */
-import {deepStrictEqual,strictEqual,rejects} from 'node:assert';
-import fixtures from './🔣️.json' with {type:'json'};
-import graph from "../../../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json" with {type:'json'};
-import {layoutArtifactFromNativeJson,layoutArtifactNativeJson} from "../../../../../../🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
-import {layoutSnapshotToSqliteDatabase,layoutSnapshotFromSqliteDatabase} from "../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
-import {bindLayoutDrawingCodec} from "../../../../../../../../../../🔨️modules/🧩️drawing-composition/🟦️.ts";
-import {semioDrawingSnapshotFromNativeJson} from "../../../../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
-import type {LayoutDrawingChild} from "../../../../../../🧬️schema/🟦️.ts";
-import type {SqliteDatabase,SqliteValue} from '@semio-tech/framework/io/sqlite-snapshot';
-type MutableDatabase={tables:{name:string;sql:string;rows:{rowid:bigint;values:SqliteValue[]}[]}[]};
-export interface PageSqliteOracle{roundTrip(database:SqliteDatabase):SqliteDatabase}
-export async function testPageDrawingSqlite(oracle:PageSqliteOracle):Promise<{sqliteCases:number;sqliteComponents:number;sqliteRefusals:number}>{bindLayoutDrawingCodec();let count=0,refusals=0;
- const child=(width:number,height:number,id:string):LayoutDrawingChild=>({handle:{childId:id,target:{artifactId:id,dialect:{artifactKind:'s.stdio.semio',standard:'v1',subset:'drawing'}}},content:semioDrawingSnapshotFromNativeJson({schema:'stdio.semio.drawing',canvas:{width,height},styles:[{name:'ink',stroke:{r:0.2,g:0.3,b:0.4,a:1},strokeWidth:2}],layers:[{id:'paint',name:'Paint',visible:true,root:{kind:'path',style:'ink',segments:[{kind:'moveTo',to:{x:20,y:10}},{kind:'lineTo',to:{x:80,y:40}}]}}]})});
- let original:SqliteDatabase|undefined;
- for(const fixture of fixtures.sqliteCases){const doc=layoutArtifactFromNativeJson(graph.cases[0]!.before),page=structuredClone(doc.pages[0]!);page.id='page-two';page.frames=[];page.overrides=[];page.parentPageId=null;for(const layer of page.layers)layer.objectIds=[];doc.pages.push(page);doc.spreads.find(s=>s.id===page.spreadId)!.pageIds.push(page.id);for(const c of fixture.components){const value=child(c.canvas[0]!,c.canvas[1]!,c.owner+'-'+c.page);if(c.owner==='document')doc.backgroundDrawing=value;else doc.pages[c.page!]!.backgroundDrawing=value;}const saved=structuredClone(doc),database=await layoutSnapshotToSqliteDatabase(doc),components=database.tables.find(t=>t.name==='layout_drawing_component')!.rows;deepStrictEqual(components.map(r=>r.rowid),fixture.components.map(c=>BigInt(c.root)));strictEqual(database.tables.find(t=>t.name==='semio_drawing_document')!.rows.length,fixture.components.length);const independent=oracle.roundTrip(database),restored=await layoutSnapshotFromSqliteDatabase(independent);strictEqual(validateDocument(restored),null);deepStrictEqual(layoutArtifactNativeJson(restored),layoutArtifactNativeJson(doc),fixture.name);deepStrictEqual(doc,saved);count+=fixture.components.length;if(!original)original=database;}
- if(!original)throw Error('SQLite fixture missing');const table=(db:MutableDatabase,name:string)=>db.tables.find(t=>t.name===name)!;
- const mutations=[(db:MutableDatabase)=>{table(db,'layout_drawing_component').rows.pop();},(db:MutableDatabase)=>{const nodes=table(db,'semio_drawing_node'),paths=table(db,'semio_drawing_path'),id=10000n;nodes.rows.push({rowid:id,values:[id,'path']});paths.rows.push({rowid:id,values:[id,null]});},(db:MutableDatabase)=>{const c=table(db,'layout_drawing_component').rows;c[2]!.values[2]=c[1]!.values[2]!;},(db:MutableDatabase)=>{const styles=table(db,'semio_drawing_style').rows,paths=table(db,'semio_drawing_path').rows;paths[0]!.values[1]=styles[1]!.rowid;},(db:MutableDatabase)=>{const layers=table(db,'semio_drawing_layer').rows;layers[1]!.values[6]=layers[0]!.values[6]!;},(db:MutableDatabase)=>{table(db,'layout_drawing_component').rows[0]!.values[2]=1n;}];
- for(let i=0;i<mutations.length;i++){const bad=structuredClone(original)as MutableDatabase;mutations[i]!(bad);await rejects(()=>layoutSnapshotFromSqliteDatabase(bad),()=>true,fixtures.sqliteRefusals[i]);let refused=false;try{oracle.roundTrip(bad);}catch{refused=true;}strictEqual(refused,true,'independent SQLite ownership oracle '+fixtures.sqliteRefusals[i]);refusals++;}
- return{sqliteCases:fixtures.sqliteCases.length,sqliteComponents:count,sqliteRefusals:refusals};}
+/** 🧪️ Reference-only page members roundtrip through real SQLite and reject ambiguous ownership. */
+import { deepStrictEqual, strictEqual, rejects } from "node:assert";
+import fixtures from "./🔣️.json";
+import graph from "../../../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json";
+import { layoutArtifactFromNativeJson, layoutArtifactNativeJson } from "../../../../../../🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
+import { layoutSnapshotToSqliteDatabase, layoutSnapshotFromSqliteDatabase } from "../../../../../../🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts";
+import { validateDocument } from "../../../../../../🧬️schema/✅️validation/🟦️.ts";
+import type { LayoutDrawingMember } from "../../../../../../🧬️schema/🟦️.ts";
+import type { SqliteDatabase, SqliteValue } from "@semio-tech/framework/io/sqlite-snapshot";
+type MutableDatabase = { tables: { name: string; sql: string; rows: { rowid: bigint; values: SqliteValue[] }[] }[] };
+export interface PageSqliteOracle { roundTrip(database: SqliteDatabase): SqliteDatabase }
+export async function testPageDrawingSqlite(oracle: PageSqliteOracle): Promise<{ sqliteCases: number; sqliteMembers: number; sqliteRefusals: number }> {
+  let count = 0;
+  let original: SqliteDatabase | undefined;
+  for (const fixture of fixtures.sqliteCases) {
+    const doc = layoutArtifactFromNativeJson(graph.cases[0]!.before), page = structuredClone(doc.pages[0]!);
+    page.id = "page-two"; page.frames = []; page.overrides = []; page.parentPageId = null;
+    for (const layer of page.layers) layer.objectIds = [];
+    doc.pages.push(page);
+    doc.spreads.find(spread => spread.id === page.spreadId)!.pageIds.push(page.id);
+    for (const entry of fixture.members) {
+      const value: LayoutDrawingMember = { handle: { childId: entry.childId, target: { artifactId: entry.artifactId, dialect: { artifactKind: "s.draw.drawing", standard: "1", subset: "*" } } } };
+      if (entry.owner === "document") doc.backgroundDrawing = value;
+      else doc.pages[entry.page!]!.backgroundDrawing = value;
+    }
+    const saved = structuredClone(doc), database = await layoutSnapshotToSqliteDatabase(doc);
+    const members = database.tables.find(table => table.name === "layout_drawing_member")!.rows;
+    deepStrictEqual(members.map(row => row.rowid), fixture.members.map(entry => BigInt(entry.id)));
+    strictEqual(database.tables.some(table => table.name.startsWith("semio_drawing_")), false);
+    const restored = await layoutSnapshotFromSqliteDatabase(oracle.roundTrip(database));
+    strictEqual(validateDocument(restored), null);
+    deepStrictEqual(layoutArtifactNativeJson(restored), layoutArtifactNativeJson(doc), fixture.name);
+    deepStrictEqual(doc, saved);
+    count += fixture.members.length;
+    original ??= database;
+  }
+  if (!original) throw Error("SQLite member fixture missing");
+  const members = (db: MutableDatabase) => db.tables.find(table => table.name === "layout_drawing_member")!.rows;
+  const mutations: ((db: MutableDatabase) => void)[] = [
+    db => { const rows = members(db), row = structuredClone(rows[1]!); row.rowid = 4n; row.values[0] = 4n; rows.push(row); },
+    db => { members(db)[1]!.values[2] = 999n; },
+    db => { const rows = members(db); rows[2]!.values[3] = rows[1]!.values[3]!; },
+    db => { const rows = members(db); rows[2]!.values[7] = rows[1]!.values[7]!; },
+    db => { members(db)[0]!.values[4] = "s.stdio.semio"; },
+    db => { members(db)[0]!.values[2] = 1n; },
+    db => { members(db)[0]!.values[3] = ""; },
+    db => { members(db)[0]!.values[7] = ""; },
+  ];
+  strictEqual(mutations.length, fixtures.sqliteRefusals.length);
+  for (const [index, mutate] of mutations.entries()) {
+    const bad = structuredClone(original) as MutableDatabase;
+    mutate(bad);
+    await rejects(() => layoutSnapshotFromSqliteDatabase(bad), () => true, fixtures.sqliteRefusals[index]);
+    let refused = false;
+    try { oracle.roundTrip(bad); } catch { refused = true; }
+    strictEqual(refused, true, "independent SQLite member oracle: " + fixtures.sqliteRefusals[index]);
+  }
+  return { sqliteCases: fixtures.sqliteCases.length, sqliteMembers: count, sqliteRefusals: mutations.length };
+}

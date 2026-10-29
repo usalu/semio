@@ -1,4 +1,5 @@
 use super::*;
+use crate::model::Model;
 
 fn quad(id: u32, class: SurfaceClass) -> Surface {
     Surface {

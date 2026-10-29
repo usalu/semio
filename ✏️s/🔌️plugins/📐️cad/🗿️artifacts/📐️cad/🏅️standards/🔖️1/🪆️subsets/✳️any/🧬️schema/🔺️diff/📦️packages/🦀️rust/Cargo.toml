@@ -20,6 +20,7 @@ name = "cad_model_diff"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
 
 [dependencies]
+semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }

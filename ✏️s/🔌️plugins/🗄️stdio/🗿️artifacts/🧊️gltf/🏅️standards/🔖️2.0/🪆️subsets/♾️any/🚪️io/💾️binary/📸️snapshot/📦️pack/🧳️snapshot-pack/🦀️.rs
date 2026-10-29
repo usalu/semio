@@ -7,6 +7,9 @@ use semio_framework_dsl_record::{DslField, FieldValue, RecordValue};
 use semio_framework_value::NativeEncodeControl;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
+#[path = "../geometry.rs"]
+pub mod geometry;
+
 pub fn record(value:&GltfSnapshot)->semio_framework_dsl_record::RecordValue{let buffers=value.buffers.iter().map(|bytes|ResolvedBuffer{bytes:bytes.clone()}).collect::<Vec<_>>();semio_framework_dsl_record::RecordValue{fields:[(0,value.schema.to_value()),(1,value.document.to_value()),(2,buffers.to_value()),(3,value.source_form.to_value())].into_iter().collect()}}
 impl From<Snapshot> for GltfSnapshot{fn from(value:Snapshot)->Self{Self{schema:value.schema,document:value.document,buffers:value.buffers.into_iter().map(|buffer|buffer.bytes).collect(),source_form:value.source_form}}}
 

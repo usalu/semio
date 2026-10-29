@@ -46,3 +46,19 @@ impl semio_framework_dsl_record::DslField for DagExpandedPaths{
  fn from_value_controlled(value:&semio_framework_dsl_record::FieldValue,control:&mut NativeDecodeControl<'_>)->Result<Self,ValueError>{let semio_framework_dsl_record::FieldValue::List(values)=value else{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expanded paths require text list"))};control.scoped_stage(|control|{control.begin_stage(0)?;let mut output=Self::from_admitted(control.allocate_vec(values.len())?);for value in values{let value=<String as semio_framework_dsl_record::DslField>::from_value_controlled(value,control)?;output.insert_admitted(value,control)?;}control.checkpoint()?;Ok(output)})}
  fn retire_decoded(self){drop(self)}
 }
+impl semio_framework_value_native_owned::native_decoding::owned::NativeReceiveMap<Vec<String>> for DagExpandedPaths{
+ fn from_native(mut values:Vec<String>)->Self{values.sort_unstable();values.dedup();Self::from_admitted(values)}
+}
+impl<I:semio_framework_value_native_owned::native_decoding::owned::tree::NativeValueSource+?Sized> semio_framework_value_native_owned::native_decoding::NativeReceive<I> for DagExpandedPaths{
+ type Receiver=semio_framework_value_native_owned::native_decoding::owned::NativeMappedReceiver<I,Vec<String>,Self>;
+ fn receive_birth_demand()->semio_framework_value::RetirementDemand{Self::Receiver::birth().expect("expanded paths have one fixed original sequence ancestor")}
+ fn begin_receive(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::Receiver,semio_framework_value::RetainedCloneProgress),ValueError>{Self::Receiver::begin(grant)}
+}
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for DagExpandedPaths{
+ fn native_default_demand()->semio_framework_value::RetirementDemand{semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2*std::mem::size_of::<Self>())}
+ fn native_default(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self,semio_framework_value::RetainedCloneProgress),ValueError>{
+  let demand=Self::native_default_demand();
+  if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"expanded paths default exceeds its grant"))}
+  Ok((Self::new(),semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
+ }
+}

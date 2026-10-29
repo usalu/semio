@@ -16,9 +16,10 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = ["semio-s-artifact-layout-layout-diff/testkit", "semio-s-artifact-layout-layout-model/testkit", "semio-s-artifact-layout-layout-mutations-content/testkit", "semio-s-artifact-layout-layout-mutations-frames/testkit"]
+testkit = ["semio-s-artifact-layout-layout-mutations-decisions/testkit", "semio-s-artifact-layout-layout-diff/testkit", "semio-s-artifact-layout-layout-model/testkit", "semio-s-artifact-layout-layout-mutations-content/testkit", "semio-s-artifact-layout-layout-mutations-frames/testkit"]
 
 [dependencies]
+semio-s-artifact-layout-layout-mutations-decisions = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }

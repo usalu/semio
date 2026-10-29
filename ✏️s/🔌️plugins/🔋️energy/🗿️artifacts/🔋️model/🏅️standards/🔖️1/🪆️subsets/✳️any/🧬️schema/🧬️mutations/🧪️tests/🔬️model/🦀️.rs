@@ -4,6 +4,7 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mut_model as model_mutations;
+extern crate semio_s_artifact_energy_model_mut_model_simulation as model_simulation_mutations;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
@@ -45,7 +46,7 @@ mod rename_model {
 
 #[path = "."]
 mod remove_output_variable {
-    pub use crate::model_mutations::remove_output_variable::*;
+    pub use crate::model_simulation_mutations::remove_output_variable::*;
     #[path = "../../🔋️model/📉️remove-output-variable/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🔋️model/📉️remove-output-variable/🧪️tests/✅️drops/🦀️.rs"]
@@ -54,7 +55,7 @@ mod remove_output_variable {
 
 #[path = "."]
 mod add_output_variable {
-    pub use crate::model_mutations::add_output_variable::*;
+    pub use crate::model_simulation_mutations::add_output_variable::*;
     #[path = "../../🔋️model/📊️add-output-variable/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🔋️model/📊️add-output-variable/🧪️tests/✅️adds/🦀️.rs"]
@@ -81,7 +82,7 @@ mod connect_referenced_model {
 
 #[path = "."]
 mod replace_airflow_network {
-    pub use crate::model_mutations::replace_airflow_network::*;
+    pub use crate::model_simulation_mutations::replace_airflow_network::*;
     #[path = "../../🔋️model/🫧️replace-airflow-network/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🔋️model/🫧️replace-airflow-network/🧪️tests/✅️attaches/🦀️.rs"]

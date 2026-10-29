@@ -308,7 +308,7 @@ impl<J: InteractiveJob + 'static> BatchJobSession<J> {
     }
 
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
+        let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}
         if let Some(owner)=self.checked_out.take(){let progress=RetainedCloneProgress{copied_items:1,..Default::default()};if let Err(error)=cx.consume_retained(progress){self.checked_out=Some(owner);return Err(error.into())}cx.consume_fuel(1);owner.begin_close();return Ok(WorkerJobCloseStep::Pending{progress})}
         self.session.close_step(cx)
     }

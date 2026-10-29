@@ -11,14 +11,6 @@ use semio_framework_value::RetirementDemand;
 mod retirement_and_clone;
 pub use retirement_and_clone::*;
 
-#[path = "🏁️initialization-authority/🦀️.rs"]
-mod initialization_authority;
-use initialization_authority::*;
-
-#[path = "🔚️initialization-close/🦀️.rs"]
-mod initialization_close;
-pub use initialization_close::*;
-
 #[path = "🔡️owned-field-decode/🦀️.rs"]
 mod owned_field_decode;
 pub use owned_field_decode::*;

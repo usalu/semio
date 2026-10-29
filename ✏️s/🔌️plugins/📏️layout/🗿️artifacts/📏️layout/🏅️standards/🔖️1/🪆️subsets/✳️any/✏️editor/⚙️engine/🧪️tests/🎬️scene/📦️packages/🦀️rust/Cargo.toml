@@ -1,0 +1,34 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-layout-layout-engine-scene-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+[package.metadata.semio]
+role = "library"
+[lints]
+workspace = true
+[lib]
+path = "../../🦀️.rs"
+[dev-dependencies]
+semio-framework-canvas = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
+semio-framework-pack-json = { workspace = true }
+semio-s-artifact-layout-layout-model = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }
+ui_render = { workspace = true }
+semio-framework-io-ports = { workspace = true, features = ["testkit"] }
+semio-framework-pixels = { workspace = true }
+semio-framework-2d-engine = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-framework-async-macros = { workspace = true }
+semio-s-artifact-layout-layout-mutations = { workspace = true }
+semio-s-artifact-layout-layout-mutations-frames = { workspace = true }
+semio-s-artifact-layout-layout-editor-commands = { workspace = true }
+semio-s-artifact-layout-layout-engine-export = { workspace = true, features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+ttf-parser = "0.25.1"
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-engine = { workspace = true, features = ["testkit"] }
+semio-framework-value = { workspace = true }

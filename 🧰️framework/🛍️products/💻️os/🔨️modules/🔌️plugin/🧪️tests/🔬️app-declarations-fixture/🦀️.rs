@@ -291,7 +291,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1AnyCommand;
-        fn reference_birth()->Option<fn()->Std1AnySnapshot>{Some(||{ Std1AnySnapshot::default() })}
+        fn reference_birth()->Option<fn()->Result<Std1AnySnapshot,semio_framework_plugin::Fault>>{Some(||{ Ok(Std1AnySnapshot::default()) })}
         fn handle(_command: &Std1AnyCommand, doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1AnyMutation> {
             Ok(Emit { artifact_mutations: vec![Std1AnyMutation::SetValue(crate::declaration_fixture_mutations::std1_any::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
@@ -314,7 +314,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1AnyCommand;
-        fn reference_birth()->Option<fn()->Std1AnySnapshot>{Some(||{ Std1AnySnapshot::default() })}
+        fn reference_birth()->Option<fn()->Result<Std1AnySnapshot,semio_framework_plugin::Fault>>{Some(||{ Ok(Std1AnySnapshot::default()) })}
         fn handle(_command: &Std1AnyCommand, _doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
             Ok(ViewEmit::default())
         }
@@ -339,7 +339,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1StrictCommand;
-        fn reference_birth()->Option<fn()->Std1StrictSnapshot>{Some(||{ Std1StrictSnapshot::default() })}
+        fn reference_birth()->Option<fn()->Result<Std1StrictSnapshot,semio_framework_plugin::Fault>>{Some(||{ Ok(Std1StrictSnapshot::default()) })}
         fn handle(_command: &Std1StrictCommand, doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1StrictMutation> {
             Ok(Emit { artifact_mutations: vec![Std1StrictMutation::SetValue(crate::declaration_fixture_mutations::std1_strict::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
@@ -362,7 +362,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1StrictCommand;
-        fn reference_birth()->Option<fn()->Std1StrictSnapshot>{Some(||{ Std1StrictSnapshot::default() })}
+        fn reference_birth()->Option<fn()->Result<Std1StrictSnapshot,semio_framework_plugin::Fault>>{Some(||{ Ok(Std1StrictSnapshot::default()) })}
         fn handle(_command: &Std1StrictCommand, _doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
             Ok(ViewEmit::default())
         }
@@ -387,7 +387,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std2AnyCommand;
-        fn reference_birth()->Option<fn()->Std2AnySnapshot>{Some(||{ Std2AnySnapshot::default() })}
+        fn reference_birth()->Option<fn()->Result<Std2AnySnapshot,semio_framework_plugin::Fault>>{Some(||{ Ok(Std2AnySnapshot::default()) })}
         fn handle(_command: &Std2AnyCommand, doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std2AnyMutation> {
             Ok(Emit { artifact_mutations: vec![Std2AnyMutation::SetValue(crate::declaration_fixture_mutations::std2_any::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
@@ -410,7 +410,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std2AnyCommand;
-        fn reference_birth()->Option<fn()->Std2AnySnapshot>{Some(||{ Std2AnySnapshot::default() })}
+        fn reference_birth()->Option<fn()->Result<Std2AnySnapshot,semio_framework_plugin::Fault>>{Some(||{ Ok(Std2AnySnapshot::default()) })}
         fn handle(_command: &Std2AnyCommand, _doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
             Ok(ViewEmit::default())
         }
@@ -520,7 +520,7 @@ use semio_framework_plugin_decl_app::MediaConsumption;
 use std::collections::HashMap;
 use super::*;
         use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, Confidence, DerivedArtifactSpec, sqlite_wire};
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use store::ArtifactStoreInitializationAuthority;
 use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, ToolCommandCatalog, surface_contract};
@@ -960,7 +960,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let identifier = char::from(fixture["identifierByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let parent = char::from(fixture["parentByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let slot = char::from(fixture["slotByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
-        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
         assert_eq!(app.close_retirement_demands(4096).unwrap(), app.stores.constructor_close_demands(&app.constructor, 4096).unwrap());
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor_close(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());

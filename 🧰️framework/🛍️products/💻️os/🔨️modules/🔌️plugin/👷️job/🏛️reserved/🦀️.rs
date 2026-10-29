@@ -782,7 +782,7 @@ pub enum FrameworkReservedCommitStage<P,M:store::Mutation<P>+Sync> {
     Route { pins: Vec<vcs::CompositionPin> },
     CheckoutChildren { pins: Vec<vcs::CompositionPin>, next: usize, result: InvocationResult },
     Revert { edit_id: String, command:Option<store::os_store::ArtifactNativeVcsCommand<P,M>>, result:Option<store::os_store::ArtifactNativeVcsResult>, closing:bool },
-    Repin { pins:Option<Vec<vcs::CompositionPin>>, publication:Option<Box<store::os_store::original_replay_publication::repin::OriginalRepinPublication<M>>>, retirement:semio_framework_value::retained_clone::RetainedCloneClose, changed:bool, closing:bool },
+    Repin { pins:Option<Vec<vcs::CompositionPin>>, publication:Option<Box<semio_framework_os_store_engine_replay::repin::OriginalRepinPublication<M>>>, retirement:semio_framework_value::retained_clone::RetainedCloneClose, changed:bool, closing:bool },
 }
 
 /// 📊️ Progress of the framework-reserved commit at the head of an app's commit queue: `applied` of

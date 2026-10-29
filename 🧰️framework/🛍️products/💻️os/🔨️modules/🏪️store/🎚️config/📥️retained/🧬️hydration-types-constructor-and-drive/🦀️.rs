@@ -20,8 +20,8 @@ pub struct ConfigStoreHydrationProgress {
 
 pub enum ConfigStoreHydrationStep<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     Pending(ConfigStoreHydrationProgress),
     Ready(Box<ArtifactStore<P, M>>),
@@ -52,8 +52,8 @@ pub(super) enum Phase {
 
 pub struct RetainedConfigStoreHydration<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub initial: ManuallyDrop<Option<semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>>>,
     pub(super) validation: ManuallyDrop<Option<P>>,
@@ -101,8 +101,8 @@ where
 
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub fn from_snapshots(
         initial: semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis<P>,

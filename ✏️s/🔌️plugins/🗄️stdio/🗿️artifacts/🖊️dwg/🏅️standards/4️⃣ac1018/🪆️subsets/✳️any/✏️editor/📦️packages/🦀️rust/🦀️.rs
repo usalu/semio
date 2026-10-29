@@ -4,6 +4,7 @@
 #![allow(long_running_const_eval)]
 
 extern crate semio_framework_os_kernel as store;
+extern crate semio_framework_value_derive as value_derive;
 
 #[path = "."]
 pub mod editor {

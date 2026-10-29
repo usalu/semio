@@ -80,8 +80,8 @@ pub struct InitialMemberStoreOpen<F, P, M, C>
 where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields,
-    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P>,
+    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub producer:C,
     pub source_loan: ManuallyDrop<Option<OriginalCallerSourceLoan>>,
@@ -118,8 +118,8 @@ impl<F, P, M, C> InitialMemberStoreOpen<F, P, M, C>
 where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields,
-    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P>,
+    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn history_page_due(&self) -> bool { self.history_page.is_some() }
     pub fn payload_terminal_is_empty(&self)->bool{self.ownership_is_empty()&&!self.history_page_due()}
@@ -151,8 +151,8 @@ impl<F, P, M, C> InitialMemberStoreOpen<F, P, M, C>
 where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn close_owned_field(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
@@ -618,8 +618,8 @@ impl<F, P, M, C> MemberOpenOperation for InitialMemberStoreOpen<F, P, M, C>
 where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     type Member = Box<ArtifactStore<P, M>>;
 
@@ -657,8 +657,8 @@ impl<F, P, M, C> Drop for InitialMemberStoreOpen<F, P, M, C>
 where
     F: MemberFactory + 'static,
     C: MemberStoreProducer<P,M>,
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields,
-    M: Clone + ToValue + FromValue + Mutation<P> + ColdMutation<P>,
+    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     /// 💣️ A panic already unwinding through a live open must not become a double panic that aborts the
     /// whole process; the drop bomb still fires for every non-unwinding drop.

@@ -3,7 +3,8 @@
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{EditorApp, ExecutionMode, NeedsLabel, Plugin, PluginApp, PluginAssemblyError, PluginBuilder, OriginalVcsApp, ViewerApp};
+use semio_framework_plugin::{EditorApp, ExecutionMode, NeedsLabel, Plugin, PluginApp, PluginAssemblyError, PluginBuilder, ViewerApp};
+use semio_framework_plugin_instance_construction::OriginalVcsApp;
 
 //#region 🗃️Apps
 // 🗃️ Closed runtime app fleet for the energy plugin's model surfaces. Both surfaces run over stdio's

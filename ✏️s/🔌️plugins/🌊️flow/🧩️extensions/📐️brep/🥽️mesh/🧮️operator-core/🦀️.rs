@@ -638,7 +638,7 @@ impl neural_engine::OperatorJob for MeshOperatorJob {
 
 pub enum MeshEvaluation { Mesh(HalfedgeMesh), Value(Dictionary) }
 
-pub struct MeshOperation(&'static str, SessionCapture);
+pub struct MeshOperation(pub(crate) &'static str, pub(crate) SessionCapture);
 impl MeshOperation {
     pub fn plan_job(&self, input: &Dictionary) -> Result<Option<MeshOperatorJob>, EvalError> {
         if self.0=="transform" {HalfedgeMesh::validate_affine_matrix(affine_matrix(input)?).map_err(mesh_error)?;}

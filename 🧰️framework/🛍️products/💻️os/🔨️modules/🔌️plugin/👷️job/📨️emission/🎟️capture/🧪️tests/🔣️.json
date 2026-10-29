@@ -41,5 +41,26 @@
     "verbText": "α🙂",
     "sameMetadataBacking": true,
     "maximumCopiedTextBytes": 64
+  },
+  "ownedProducer": {
+    "verb": "original-owned-emit",
+    "cancelAfter": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "mutationValues": [
+      2.75,
+      3.5
+    ],
+    "sameEmissionBacking": true,
+    "sameMetadataBacking": true,
+    "deniedTransferKeepsProducer": true,
+    "foreignDecoderRefused": true,
+    "hostBase": {
+      "deferredUntilTypingSettled": true,
+      "changedFrontierRefused": true
+    }
   }
 }

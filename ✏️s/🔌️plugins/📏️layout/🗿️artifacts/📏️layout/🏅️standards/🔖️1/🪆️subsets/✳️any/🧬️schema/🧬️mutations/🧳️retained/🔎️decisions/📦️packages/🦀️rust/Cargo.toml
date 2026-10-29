@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-layout-layout-mutations-decisions"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Borrowed Layout mutation decisions, original-source plans and bounded diagnostic preparation"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-s-artifact-layout-layout-diff/testkit", "semio-s-artifact-layout-layout-model/testkit", "semio-s-artifact-layout-layout-mutations-content/testkit", "semio-s-artifact-layout-layout-mutations-frames/testkit"]
+
+[dependencies]
+semio-framework-diagnostic = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-dictionary = { workspace = true }
+semio-s-artifact-layout-layout-diff = { workspace = true }
+semio-s-artifact-layout-layout-model = { workspace = true }
+semio-s-artifact-layout-layout-mutations-content = { workspace = true }
+semio-s-artifact-layout-layout-mutations-frames = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -1,11 +1,21 @@
 //! 🏁️ Completed native replay keeps its actual result and every private publication root in one original caller custody.
-use crate::{lifted_store::{ArtifactStore,HistoryFinalization},original_replay_metadata::OriginalReplayMetadataPreparation,original_history_transitions::{OriginalHistoryTransitionBatch,OriginalHistoryTransitionBatchOutput}};
+use semio_framework_os_store_engine::lifted_store::{ArtifactStore,HistoryFinalization};
+use semio_framework_os_store_engine_branch::transitions::{OriginalHistoryTransitionBatch,OriginalHistoryTransitionBatchOutput};
+use original_replay_metadata::OriginalReplayMetadataPreparation;
 use semio_framework_os_spr::{Mutation,OpBinary,OpText};
 use semio_framework_os_store_replay::EditReplayResult;
 use semio_framework_os_store_ledger::{OriginalReplayDiagnostics,PendingCommandReport,original_replay_pending_report::OriginalReplayPendingReport,original_replay_supersessions::OriginalReplaySupersessions};
 use semio_framework_value::{ToValue,FromValue,ValueError,ValueRefusalKind,RetirementDemand,RetainedCloneProgress,RetainedCloneStep,retained_clone::RetainedCloneClose};
 use semio_framework_job::{StepContext,OriginalSourceBinding,OriginalTurnFailure,OriginalConstructionDemand,admit_original_construction,close_original_retained_step};
 use std::mem::{ManuallyDrop,size_of};
+#[path="📚️metadata/🦀️.rs"]
+pub mod original_replay_metadata;
+#[path="⚠️failure/🦀️.rs"]
+pub mod failure;
+pub use failure::ArtifactOriginalVcsFailure;
+#[path="checkpoint-order.rs"]
+pub mod checkpoint_order;
+pub use checkpoint_order::OriginalCheckpointEditOrder;
 #[path="📬️publication/🦀️.rs"]mod publication;
 use publication::OriginalReplayStage;
 
@@ -32,13 +42,13 @@ impl<P,M:Mutation<P>+Sync> OriginalReplayPublication<P,M>{
  /// 🏁️ Preparation has no effect on visible Store roots.
  pub fn prepared(&self)->bool{self.phase==10&&!self.closing&&self.receipt.is_none()}
 }
-impl<P,M> OriginalReplayPublication<P,M>where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+Sync+'static{
+impl<P,M> OriginalReplayPublication<P,M>where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P>{
  fn validate(&self,store:&ArtifactStore<P,M>,cx:&StepContext<'_>,frontier:bool)->Result<(),ValueError>{let parts=store.parts_ref();if !self.matches_caller(cx)||self.frontier.0!=parts.owners.snapshot_read_leases.identity()||self.frontier.1!=parts.log.envelope.vcs.edits.retained_issuance(){return Err(invalid("completed replay changed its original caller, Store or history issuer"))}if frontier&&(self.frontier.2!=parts.cursor.generation||self.frontier.3!=parts.cursor.content_revision){return Err(invalid("completed replay publication frontier changed"))}Ok(())}
  /// 🪪️ Every original publication step uses the same caller source and consuming decoder recipient that produced the Report.
  pub fn matches_caller(&self,cx:&StepContext<'_>)->bool{self.caller.matches(cx)&&cx.native_receiving_identity()==Some(self.decoder)}
  /// 🎟️ Refusal preserves both caller slots; admitted capture moves the same original result without copying its payloads.
  pub fn admit(store:&ArtifactStore<P,M>,result:&mut Option<EditReplayResult<P,M>>,request:&mut Option<HistoryFinalization>,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{if result.as_ref().is_some_and(|result|result.original_selection.is_some()){return Err(invalid("selected history replay requires its original edit-step intent").into())}Self::capture(store,result,request,&mut None,cx,output)}
- pub(crate) fn admit_edit_step(store:&ArtifactStore<P,M>,result:&mut Option<EditReplayResult<P,M>>,edit_ids:&mut Option<Vec<semio_framework_os_spr::MutationId>>,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{if result.as_ref().is_none_or(|result|result.original_selection.is_none())||edit_ids.as_ref().is_none_or(Vec::is_empty){return Err(invalid("native edit-step publication requires its original selected result and IDs").into())}Self::capture(store,result,&mut None,edit_ids,cx,output)}
+ pub fn admit_edit_step(store:&ArtifactStore<P,M>,result:&mut Option<EditReplayResult<P,M>>,edit_ids:&mut Option<Vec<semio_framework_os_spr::MutationId>>,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{if result.as_ref().is_none_or(|result|result.original_selection.is_none())||edit_ids.as_ref().is_none_or(Vec::is_empty){return Err(invalid("native edit-step publication requires its original selected result and IDs").into())}Self::capture(store,result,&mut None,edit_ids,cx,output)}
  fn capture(store:&ArtifactStore<P,M>,result:&mut Option<EditReplayResult<P,M>>,request:&mut Option<HistoryFinalization>,edit_ids:&mut Option<Vec<semio_framework_os_spr::MutationId>>,cx:&mut StepContext<'_>,output:&mut Option<Box<Self>>)->Result<bool,OriginalTurnFailure>{
   if output.is_some(){return Err(invalid("completed replay publication destination is occupied").into())}let parts=store.parts_ref();let original=result.as_ref().ok_or_else(||invalid("completed replay source is absent"))?;let frontier=(parts.owners.snapshot_read_leases.identity(),parts.log.envelope.vcs.edits.retained_issuance(),parts.cursor.generation,parts.cursor.content_revision);
   if original.original_history!=Some((frontier.0,frontier.1))||original.revision!=frontier.3{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"completed replay belongs to another original history frontier").into())}if original.original_selection.is_none()&&original.drafts.is_empty()||original.state.is_none()||original.report.blocks_finalize(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"completed replay cannot publish empty, missing or blocking semantic output").into())}if request.is_none()&&edit_ids.is_none(){return Err(invalid("completed replay finalization request is absent").into())}store.ensure_durable_group_idle().map_err(|_|ValueError::literal(ValueRefusalKind::WorkLimit,"completed replay waits for its original durable group"))?;if parts.log.envelope.open_transaction.is_some()||store.local_step_pending(){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"completed replay waits for the original Store writer").into())}

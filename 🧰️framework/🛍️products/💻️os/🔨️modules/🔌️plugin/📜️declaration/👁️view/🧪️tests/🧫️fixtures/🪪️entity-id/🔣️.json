@@ -66,5 +66,16 @@
       "localKey": "field",
       "expected": "m-679b34a7fb00c025"
     }
+  ],
+  "readOnly": [
+    {
+      "name": "admitted-media-read",
+      "documentId": "actual-layout",
+      "appInstanceId": 7,
+      "operationId": 42,
+      "generation": 3,
+      "canonicalRevisionByte": 5,
+      "authoringAccepted": false
+    }
   ]
 }

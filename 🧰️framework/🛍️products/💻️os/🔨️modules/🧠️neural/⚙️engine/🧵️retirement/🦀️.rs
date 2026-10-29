@@ -133,7 +133,7 @@ impl RetireOwned for SnapshotTreeLease{fn retirement(self)->Box<dyn RetirementCu
 impl RetireOwned for SnapshotSeedLease{fn retirement(self)->Box<dyn RetirementCursor>{Box::new(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(self.0))}fn retirement_birth_bytes(&self)->Option<usize>{Some(semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<HistoryFoldIndex<String,Dictionary>>())}fn controlled_retirement_supported()->bool{true}}
 #[derive(semio_framework_value::RetireOwned)]
 struct SnapshotSources{tree:SnapshotTreeLease,seeds:SnapshotSeedLease}
-impl RetireOwned for TreeSnapshot{fn retirement(self)->Box<dyn RetirementCursor>{SnapshotSources{tree:SnapshotTreeLease(self.tree),seeds:SnapshotSeedLease(self.seeds)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<super::Tree>(),semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<HistoryFoldIndex<String,Dictionary>>()])}fn controlled_retirement_supported()->bool{true}}
+impl RetireOwned for TreeSnapshot{fn retirement(self)->Box<dyn RetirementCursor>{SnapshotSources{tree:SnapshotTreeLease(self.tree),seeds:SnapshotSeedLease(self.seeds)}.retirement()}fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes::<SnapshotTreeLease>(),semio_framework_value::retirement::deferred_birth_bytes::<SnapshotSeedLease>()])}fn controlled_retirement_supported()->bool{true}}
 semio_framework_value::artifact_retire_struct!(EvalChannels {outputs,inputs});
 impl RetireOwned for super::VariadicSpec {
     fn retirement(self)->Box<dyn RetirementCursor> {RetireOwned::retirement(self.slot_key)}
@@ -255,7 +255,8 @@ impl RetainedDictionaryInput {
             return Ok(if self.shared_key.is_none() {SharedOwner::<String>::allocation_bytes()}else if self.shared_value.is_none() {SharedOwner::<Value>::allocation_bytes()}else {0});
         }
         if matches!(self.pending,Some(protocol::value::DslValue::Object(_))) {
-            return self.frames.next_capacity_allocation_bytes(self.frames.len()+1).map(|bytes|bytes.unwrap_or(0)).map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason));
+            if self.frames.len()>=128 {return Ok(0);}
+            return self.frames.next_allocation_bytes().map_err(|error|ValueError::literal(ValueRefusalKind::OwnershipLimit,error.reason));
         }
         Ok(0)
     }

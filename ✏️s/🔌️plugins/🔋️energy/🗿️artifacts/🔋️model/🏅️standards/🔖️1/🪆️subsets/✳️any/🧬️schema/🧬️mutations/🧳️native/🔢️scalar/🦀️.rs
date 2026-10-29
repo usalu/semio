@@ -2,7 +2,7 @@
 use crate::{snapshot::{original::EnergyModelSnapshot,state::fields::{EntityRow,RetainedEntityLookup,RetainedBranchProjection}},diff::original::EnergyModelDiff};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,RetainedOwnedProjection,retirement::RetireOwned,shared_issuance::SealedShared,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneSource,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_persistent::list::persistent::{PersistentList,PersistentSet};
-use protocol::mutation::retained::retained_mutation_demand_fits;
+use protocol::retained_mutation_demand_fits;
 use std::mem::{size_of,ManuallyDrop};
 use super::{reference::{ReferenceCollection,ReferenceLookup},row::{RowBranchPreparation,ScalarBranch}};
 use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection;
@@ -134,16 +134,16 @@ impl CursorClose for ReferenceLookup{fn close_demand(&self,b:usize)->Result<Reti
 impl<R:EntityRow> CursorClose for RetainedEntityLookup<R>{fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{Self::close_demand(self,b)}fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::close_step(self,g)}fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}}
 impl<B:SnapshotProjection<Output:crate::snapshot::state::fields::BranchProjectionOutput<B>>+Send> CursorClose for RetainedBranchProjection<B>{fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{Self::close_demand(self,b)}fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::close_step(self,g)}fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}}
 impl<R:RetireOwned+Send+Sync> CursorClose for PersistentSet<R>{fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{Self::close_demand(self,b)}fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{Self::close_step(self,g)}fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}}
-pub(crate) fn cursor_demand<C:CursorClose>(cursor:&Option<Box<C>>,body:usize)->Result<RetirementDemand,ValueError>{let c=cursor.as_ref().ok_or_else(invalid)?;if c.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:2*size_of::<Option<Box<C>>>(),release_bytes:size_of::<C>(),depth:1,..Default::default()})}else{c.close_demand(body)}}
-pub(crate) fn close_cursor<C:CursorClose>(cursor:&mut Option<Box<C>>,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let d=cursor_demand(cursor,g.maximum_copy_bytes)?;if !retained_mutation_demand_fits(d,g){return Ok(Default::default());}let c=cursor.as_mut().ok_or_else(invalid)?;if c.terminal_is_empty(){drop(cursor.take());Ok(receipt(d))}else{Ok(c.close_step(g)?.progress())}}
-pub(crate) fn birth<C>()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<C>()+2*size_of::<Option<Box<C>>>(),capacity_bytes:size_of::<C>(),depth:1,..Default::default()}}
-pub(crate) fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Zone scalar preparation lost its original source or candidate path")}
-pub(crate) fn scalar(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
-pub(crate) fn nested(mut d:RetirementDemand,extra:usize)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(extra).ok_or_else(invalid)?;d.depth=d.depth.checked_add(1).ok_or_else(invalid)?;Ok(d)}
-pub(crate) fn child(g:RetainedCloneGrant,extra:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-extra,maximum_depth:g.maximum_depth-1,..g}}
-pub(crate) fn add(mut p:RetainedCloneProgress,extra:usize)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(extra).ok_or_else(invalid)?;Ok(p)}
-pub(crate) fn tag(e:ValueError,extra:usize)->ValueError{let p=e.retained_progress();match add(p,extra){Ok(p)=>e.with_retained_progress(p),Err(f)=>f.with_retained_progress(p)}}
-pub(crate) fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
+pub fn cursor_demand<C:CursorClose>(cursor:&Option<Box<C>>,body:usize)->Result<RetirementDemand,ValueError>{let c=cursor.as_ref().ok_or_else(invalid)?;if c.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:2*size_of::<Option<Box<C>>>(),release_bytes:size_of::<C>(),depth:1,..Default::default()})}else{c.close_demand(body)}}
+pub fn close_cursor<C:CursorClose>(cursor:&mut Option<Box<C>>,g:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let d=cursor_demand(cursor,g.maximum_copy_bytes)?;if !retained_mutation_demand_fits(d,g){return Ok(Default::default());}let c=cursor.as_mut().ok_or_else(invalid)?;if c.terminal_is_empty(){drop(cursor.take());Ok(receipt(d))}else{Ok(c.close_step(g)?.progress())}}
+pub fn birth<C>()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<C>()+2*size_of::<Option<Box<C>>>(),capacity_bytes:size_of::<C>(),depth:1,..Default::default()}}
+pub fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Zone scalar preparation lost its original source or candidate path")}
+pub fn scalar(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
+pub fn nested(mut d:RetirementDemand,extra:usize)->Result<RetirementDemand,ValueError>{d.copy_bytes=d.copy_bytes.checked_add(extra).ok_or_else(invalid)?;d.depth=d.depth.checked_add(1).ok_or_else(invalid)?;Ok(d)}
+pub fn child(g:RetainedCloneGrant,extra:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-extra,maximum_depth:g.maximum_depth-1,..g}}
+pub fn add(mut p:RetainedCloneProgress,extra:usize)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(extra).ok_or_else(invalid)?;Ok(p)}
+pub fn tag(e:ValueError,extra:usize)->ValueError{let p=e.retained_progress();match add(p,extra){Ok(p)=>e.with_retained_progress(p),Err(f)=>f.with_retained_progress(p)}}
+pub fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
 impl<S:ScalarRowPath> Drop for ScalarRowPreparation<S>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"native Zone scalar preparation retains original custody");if empty{unsafe{ManuallyDrop::drop(&mut self.row_value);ManuallyDrop::drop(&mut self.row_source);ManuallyDrop::drop(&mut self.decision);}}}}
 
 

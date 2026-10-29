@@ -31,35 +31,6 @@
         assert_eq!(hovering[0].color, Some(4));
     }
 
-    impl store::os_store::document_store_owners::MemberStoreProducer<TestSnapshot,TestMutation> for semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer {
-        /// 🚪️ The fixture child is a real openable member, not an un-openable one. While this was
-        /// `UnsupportedMemberSnapshotOpen` every composed replacement that carried a `TestMembers`
-        /// candidate was refused at its first member-open step with `MemberOpenDiagnostic::Decode`
-        /// (`UnsupportedMemberSnapshotOpen::step` has no other answer), so the three
-        /// `retained_composed_replacement_*` laws could never reach `ValidatingClosure` or
-        /// `CandidateReady`. `ProducedMemberSnapshotOpen` is the framework's own pack decoder and
-        /// `TestSnapshot` is an `ArtifactPack`, which is exactly what a real member declares.
-        type SnapshotOpen = store::ProducedMemberSnapshotOpen<TestSnapshot,store::ArtifactPackSnapshotDecoder<TestSnapshot>>;
-
-        fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-            let base = store::os_store::document_store_owners::DocumentStoreOwners::<TestSnapshot, TestMutation>::source_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<TestSnapshot>, semio_framework_value::factory::OwnedValueRetirementFactory<TestSnapshot>, semio_framework_value::factory::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<TestSnapshot, TestMutation>>()?;
-            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<TestSnapshot, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<TestSnapshot, TestMutation, store::MutationApplyEdit<TestSnapshot, TestMutation>>(), depth: 1 })?;
-            let capacity_bytes = base.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member original source tree capacity overflow"))?;
-            Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: preparation.depth.max(1) })
-        }
-
-        fn member_store_owners(&self,grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<TestSnapshot, TestMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<TestSnapshot, TestMutation>> {
-            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<TestSnapshot, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<TestSnapshot, TestMutation, store::MutationApplyEdit<TestSnapshot, TestMutation>>(), depth: 1 }).map_err(|error| store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
-            store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (
-                semio_framework_value::factory::SharedValueRetirementFactory::<TestSnapshot>::default(),
-                semio_framework_value::factory::OwnedValueRetirementFactory::<TestSnapshot>::default(),
-                semio_framework_value::factory::OwnedValueRetirementFactory::<TestMutation>::default(),
-                store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new(),
-                test_document_preparation_factory(),
-            ))
-        }
-    }
-
     /// ⏪️ A row follows its parent document lane, else its children (design §20.13, L4: a config-lane edit is never part
     /// of a row). 💠️lowpoly `addPrimitive` and 🎥️shooting `addShot` once read applied for ever after an undo because a
     /// config lane answered for them (ticket 26/09/18 S11 §3.4b, S12 §4); no lane but the document and its children can.

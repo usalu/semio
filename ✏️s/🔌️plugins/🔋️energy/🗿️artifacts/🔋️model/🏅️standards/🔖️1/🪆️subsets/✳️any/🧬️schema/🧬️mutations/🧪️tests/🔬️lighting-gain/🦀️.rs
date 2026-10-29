@@ -3,6 +3,7 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_artifact_energy_model_mut_lighting_gain as lighting_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_lighting_gain_emission as lighting_gain_emission_mutations;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
@@ -19,7 +20,7 @@ mod change_lighting_gain_schedule {
 
 #[path = "."]
 mod change_lighting_gain_radiant_fraction {
-    pub use crate::lighting_gain_mutations::change_lighting_gain_radiant_fraction::*;
+    pub use crate::lighting_gain_emission_mutations::change_lighting_gain_radiant_fraction::*;
     #[path = "../../💡️lighting-gain/🌟️change-radiant-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../💡️lighting-gain/🌟️change-radiant-fraction/🧪️tests/✅️applies/🦀️.rs"]
@@ -28,7 +29,7 @@ mod change_lighting_gain_radiant_fraction {
 
 #[path = "."]
 mod change_lighting_gain_return_air_fraction {
-    pub use crate::lighting_gain_mutations::change_lighting_gain_return_air_fraction::*;
+    pub use crate::lighting_gain_emission_mutations::change_lighting_gain_return_air_fraction::*;
     #[path = "../../💡️lighting-gain/🎐️change-return-air-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../💡️lighting-gain/🎐️change-return-air-fraction/🧪️tests/✅️applies/🦀️.rs"]
@@ -46,7 +47,7 @@ mod create_lighting_gain {
 
 #[path = "."]
 mod change_lighting_gain_visible_fraction {
-    pub use crate::lighting_gain_mutations::change_lighting_gain_visible_fraction::*;
+    pub use crate::lighting_gain_emission_mutations::change_lighting_gain_visible_fraction::*;
     #[path = "../../💡️lighting-gain/🔅️change-visible-fraction/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../💡️lighting-gain/🔅️change-visible-fraction/🧪️tests/✅️applies/🦀️.rs"]
@@ -55,7 +56,7 @@ mod change_lighting_gain_visible_fraction {
 
 #[path = "."]
 mod change_lighting_gain_watts_per_area {
-    pub use crate::lighting_gain_mutations::change_lighting_gain_watts_per_area::*;
+    pub use crate::lighting_gain_emission_mutations::change_lighting_gain_watts_per_area::*;
     #[path = "../../💡️lighting-gain/🔌️change-watts-per-area/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../💡️lighting-gain/🔌️change-watts-per-area/🧪️tests/✅️applies/🦀️.rs"]

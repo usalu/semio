@@ -68,8 +68,8 @@ impl ArtifactViewer for CsvViewer {
     const DIALECT: Dialect = CSV_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_CSV_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->CsvSnapshot>{Some(||{
-        CsvSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<CsvSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(CsvSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

@@ -18,13 +18,14 @@ pub(super) async fn acceptance_verb<A, M>(app: &mut VcsArtifactApp<A, M>, action
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut args = Some(DslValue::Object(args.into_iter().map(|(key, value)| (key.to_string(), value)).collect()));
-    let meta=acceptance_meta();
+    let mut meta=Some(acceptance_meta());
     let outcome=semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| async{
         for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
             if cx.should_yield(){break}
-            let result=app.handle_action(action,&mut args,&meta,&mut identity,cx).await.map_err(|fault|AcceptanceError::from(fault).context(format!("{action} faulted")))?;
+            let result=app.handle_action(action,&mut args,&mut meta,&mut identity,cx).await.map_err(|fault|AcceptanceError::from(fault).context(format!("{action} faulted")))?;
             if let Some(result)=result{return match result.output.get("rejected").and_then(DslValue::as_str){Some(code)=>Err(format!("{action} was refused: {code}").into()),None=>Ok(())}}
         }
         Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance action remains pending at caller opportunity limit")).into())
@@ -43,6 +44,7 @@ pub(super) async fn acceptance_pump<A, M>(app: &mut VcsArtifactApp<A, M>, done: 
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     for _ in 0..artifact_app_laws::OriginalFixtureCaller::maximum_turns(){
         if cx.should_yield(){return Err(semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure::from(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original acceptance driver exhausted caller opportunity")).into())}
@@ -65,6 +67,7 @@ pub(super) async fn acceptance_close<A, M>(app: &mut VcsArtifactApp<A, M>,cx:&mu
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let failed=acceptance_pump(app, |app| !app.time_travel.has_pending_work(),cx).await.err();
     artifact_app_laws::close_registered_fixture_app(app,acceptance_policy(),cx).expect("original acceptance app terminal close");
@@ -79,6 +82,7 @@ pub(super) async fn acceptance_seeded<A, M>(manifest: fn() -> App, base: &str, o
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
@@ -118,6 +122,7 @@ pub(super) fn acceptance_head<A, M>(app: &VcsArtifactApp<A, M>) -> Result<(DslVa
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let head = app.stores.store.snapshot().map_err(|error| format!("the head does not fold: {error:?}"))?;
     let value = (semio_framework_value::ToValue::to_value(&head), pack::snapshot::ArtifactDsl::print_dsl(&head));
@@ -144,6 +149,7 @@ pub(super) async fn acceptance_drive<A, M>(
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut begin = vec![(HISTORY_EDIT_ARG_MUTATION_ID, DslValue::String(target.to_string()))];
     begin.extend(store.map(|store| (HISTORY_EDIT_ARG_STORE, DslValue::String(store.to_string()))));

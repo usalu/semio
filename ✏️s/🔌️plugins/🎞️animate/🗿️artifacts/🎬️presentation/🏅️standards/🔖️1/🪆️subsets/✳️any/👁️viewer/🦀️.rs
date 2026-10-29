@@ -79,8 +79,8 @@ impl ArtifactViewer for AnimatePresentationViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->PresentationSnapshot>{Some(||{
-        default_presentation_snapshot()
+    fn reference_birth()->Option<fn()->Result<PresentationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_presentation_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `AnimateViewCommand::Noop` variant never carries a config

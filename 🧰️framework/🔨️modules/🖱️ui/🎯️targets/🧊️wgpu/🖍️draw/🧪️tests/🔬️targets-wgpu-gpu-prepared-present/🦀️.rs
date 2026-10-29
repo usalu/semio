@@ -159,7 +159,7 @@ fn prepared_gpu_color_commands_advance_one_bounded_clip_piece_at_a_time() {
         let logical = pieces.iter().map(|piece| serde_json::json!([piece.x, piece.y, piece.w, piece.h])).collect::<Vec<_>>();
         assert_eq!(serde_json::Value::Array(logical), expected["logicalPieces"].clone(), "{}", row["id"]);
         let dpr = row["dpr"].as_f64().expect("DPR") as f32;
-        let physical = pieces.iter().map(|piece| semio_framework_ui_draw_contract::physical_scissor_rect(*piece, dpr)).map(|piece| serde_json::json!([piece.x, piece.y, piece.w, piece.h])).collect::<Vec<_>>();
+        let physical = pieces.iter().map(|piece| crate::physical_scissor_rect(*piece, dpr)).map(|piece| serde_json::json!([piece.x, piece.y, piece.w, piece.h])).collect::<Vec<_>>();
         assert_eq!(serde_json::Value::Array(physical), expected["physicalPieces"].clone(), "{}", row["id"]);
         let kind = row["kind"].as_str().expect("command kind");
         let color_encodes = if matches!(kind, "ui" | "world") { pieces.len() } else { 0 };

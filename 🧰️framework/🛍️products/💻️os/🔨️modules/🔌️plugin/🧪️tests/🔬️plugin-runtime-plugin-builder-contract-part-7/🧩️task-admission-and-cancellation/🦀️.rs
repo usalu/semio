@@ -21,14 +21,6 @@
         assert_eq!(crate::reactor_driver::task_count_for_instance(instance).await, 0);
     }
 
-    impl<F, Fut> AsyncTaskSource<TestMutation, TestConfigMutation, NoDraftMutation> for TestTaskSource<F>
-    where
-        F: FnOnce(TaskCtx) -> Fut + Send + 'static,
-        Fut: std::future::Future<Output = Result<TaskResolution<TestMutation, TestConfigMutation, NoDraftMutation>, Fault>> + 'static,
-    {
-        type Future = Fut;
-        fn run(self, context: TaskCtx) -> Fut { (self.0)(context) }
-    }
 
     /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
     /// silent drop — while earlier tasks and OTHER instances are unaffected.

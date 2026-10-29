@@ -61,6 +61,8 @@ impl<T, const N: usize> DslSequenceView<T> for semio_framework_value_persistent:
 /// for technology-declared nested types, so composition (a record field whose type is another
 /// derived record or enum) works transparently through the same trait.
 pub trait DslField: Sized {
+    /// 🪪️ Identifies the retained original payload when the field owner moves its inline header but keeps shared original custody.
+    fn projection_identity(&self)->usize{self as *const Self as *const () as usize}
     /// 🔎️ Reads a declared field without materializing a mirror or an unbounded projection.
     fn projection_view(&self,_path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"field owner has no retained source projection"))}
     /// ⌨️ Borrows a dynamic key from the original ranked or indexed field owner.
@@ -90,6 +92,7 @@ pub trait DslField: Sized {
 
 /// 📦️ Boxed ownership preserves the inner field's schema, value, and decoding errors.
 impl<T: DslField> DslField for Box<T> {
+    fn projection_identity(&self)->usize{DslField::projection_identity(self.as_ref())}
     fn projection_view(&self,path:&[usize])->Result<native_encoding::FieldProjectionView<'_>,ValueError>{DslField::projection_view(self.as_ref(),path)}
     fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{DslField::projection_key(self.as_ref(),path,index)}
     fn to_value_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{T::to_value_controlled(self.as_ref(),control)}
@@ -644,5 +647,9 @@ mod value_type_binding;
 
 #[path = "🪆️optional/🦀️.rs"]
 mod optional_field;
+#[path = "🗂️ordered/🦀️.rs"]
+mod ordered_fields;
+#[path = "👯️pair/🦀️.rs"]
+mod pair_fields;
 
 

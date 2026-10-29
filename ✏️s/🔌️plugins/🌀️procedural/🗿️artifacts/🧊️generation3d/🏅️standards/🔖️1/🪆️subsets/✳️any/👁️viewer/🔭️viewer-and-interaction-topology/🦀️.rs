@@ -262,8 +262,8 @@ impl semio_framework_plugin::ArtifactViewer for Generation3dViewer {
         command.command_id()
     }
 
-    fn reference_birth()->Option<fn()->Generation3dSnapshot>{Some(||{
-        semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot()
+    fn reference_birth()->Option<fn()->Result<Generation3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot())
     })}
 
     /// 👁️ Structurally read-only: `dispatch` returns `ViewEmit`, so this signature cannot widen into

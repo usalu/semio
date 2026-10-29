@@ -1,0 +1,27 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["schema", "stages", "admitted", "decisionRefused", "preflightRefused", "closeOwners", "constraints"],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {"const": "retained.generic.issuer.v1"},
+    "stages": {"$ref": "#/definitions/names"},
+    "admitted": {"$ref": "#/definitions/names"},
+    "decisionRefused": {"$ref": "#/definitions/names"},
+    "preflightRefused": {"$ref": "#/definitions/names"},
+    "closeOwners": {"$ref": "#/definitions/names"},
+    "constraints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["decisionBeforePreflight", "inverseAfterPreflight", "commitAfterInverse", "issuerStable", "coldApply"],
+      "properties": {
+        "decisionBeforePreflight": {"type": "boolean"},
+        "inverseAfterPreflight": {"type": "boolean"},
+        "commitAfterInverse": {"type": "boolean"},
+        "issuerStable": {"type": "boolean"},
+        "coldApply": {"type": "boolean"}
+      }
+    }
+  },
+  "definitions": {"names": {"type": "array", "minItems": 1, "items": {"type": "string"}}}
+}

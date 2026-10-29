@@ -237,7 +237,8 @@ impl EnergySimulationRunJob {
     }
 
     fn refuse(&mut self, reason: EnergySimulationRunReason, args: &[ToolRunStepArg]) -> EnergyRunGrant {
-        let _ = self.writer.as_mut().expect("original running tick writer").step(ToolRunStepKind::Danger, self.stage().index(), reason.code(), None, args);
+        let stage = self.stage().index();
+        let _ = self.writer.as_mut().expect("original running tick writer").step(ToolRunStepKind::Danger, stage, reason.code(), None, args);
         self.phase = EnergyRunPhase::Settled;
         EnergyRunGrant::Settled(EnergyRunSettled::Fault)
     }

@@ -22,7 +22,7 @@
                 "inverseCommandId": "setActiveExample",
                 "inverseArgs": { "exampleId": "forest" }
             }))),
-         &mut identity)
+         &mut identity, cx)
         .await;
         reserved_action(
             &mut app,
@@ -33,7 +33,7 @@
                 "inverseCommandId": "os.resizeWindow",
                 "inverseArgs": { "width": 800, "height": 600 }
             }))),
-         &mut identity)
+         &mut identity, cx)
         .await;
         let before = app.render_ctx().test_history().await;
         assert_eq!(before.commands.iter().map(|entry| label_in(&entry.label, Locale::En)).collect::<Vec<_>>(), ["Resize Window", "Set Active Example"]);
@@ -48,7 +48,7 @@
         assert!(admitted.history_patch.is_none(), "first turn answers with an empty patch");
         assert!(admitted.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })), "first turn must not apply the inverse");
 
-        let settled = settle_reserved(&mut app, admitted).await;
+        let settled = settle_reserved(&mut app, admitted, cx).await;
         assert_eq!(
             settled.requested_effects,
             vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
@@ -64,7 +64,7 @@
         let example = after_resize.commands.iter().find(|entry| entry.action_id == "setActiveExample").expect("example");
         assert!(example.revertible);
 
-        let second = reserved_action(&mut app, "undo", None, &mut identity).await;
+        let second = reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(
             second.requested_effects,
             vec![Effect::ReplayShellCommand { action_id: "setActiveExample".into(), args: Some(dv(json!({ "exampleId": "forest" }))) }]
@@ -73,14 +73,14 @@
         assert!(!patch2.can_undo);
         assert!(patch2.can_redo);
 
-        let redo_example = reserved_action(&mut app, "redo", None, &mut identity).await;
+        let redo_example = reserved_action(&mut app, "redo", None, &mut identity, cx).await;
         assert_eq!(redo_example.requested_effects, vec![Effect::ReplayShellCommand { action_id: "setActiveExample".into(), args: None }]);
         let redo_patch = redo_example.history_patch.expect("redo publishes history_patch");
         assert!(redo_patch.can_undo);
         assert!(redo_patch.can_redo);
         assert!(app.render_ctx().test_history().await.commands.iter().find(|entry| entry.action_id == "setActiveExample").is_some_and(|entry| entry.revertible));
 
-        let redo_resize = reserved_action(&mut app, "redo", None, &mut identity).await;
+        let redo_resize = reserved_action(&mut app, "redo", None, &mut identity, cx).await;
         assert_eq!(redo_resize.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: None }]);
         let redo_resize_patch = redo_resize.history_patch.expect("second redo publishes history_patch");
         assert!(redo_resize_patch.can_undo);
@@ -111,7 +111,7 @@
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/reserved-undo-browser-note.json")).expect("browser-note fixture");
         let mut app = contract_app(mounted_policy, &mut identity).await;
         for entry in fixture["stack"].as_array().expect("stack") {
-            reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(entry.clone())), &mut identity).await;
+            reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(entry.clone())), &mut identity, cx).await;
         }
         let before = app.render_ctx().test_history().await;
         assert_eq!(before.commands.iter().map(|entry| label_in(&entry.label, Locale::En)).collect::<Vec<_>>(), ["Activate Window", "Resize Window", "Set Active Example"]);
@@ -126,7 +126,7 @@
             "first turn must admit Isolated framework.reserved.tool"
         );
         assert!(admitted.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })), "first turn must not apply the inverse");
-        let settled = settle_reserved(&mut app, admitted).await;
+        let settled = settle_reserved(&mut app, admitted, cx).await;
         let replay_id = fixture["undo"]["replayActionId"].as_str().expect("replayActionId");
         let replay_args = dv(fixture["undo"]["replayArgs"].clone());
         assert_eq!(
@@ -140,7 +140,7 @@
         assert!(!patch.upserts.is_empty());
         let after = app.render_ctx().test_history().await;
         assert!(after.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| !entry.revertible), "popped chrome-top shell is no longer revertible");
-        let redo = reserved_action(&mut app, "redo", None, &mut identity).await;
+        let redo = reserved_action(&mut app, "redo", None, &mut identity, cx).await;
         assert_eq!(redo.requested_effects, vec![Effect::ReplayShellCommand { action_id: fixture["redo"]["replayActionId"].as_str().expect("redo replayActionId").into(), args: None }]);
         assert!(redo.history_patch.is_some_and(|patch| patch.can_undo && !patch.can_redo));
         assert!(app.render_ctx().test_history().await.commands.iter().find(|entry| entry.action_id == replay_id).is_some_and(|entry| entry.revertible));
@@ -196,7 +196,7 @@
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity,cx).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity, cx).await;
 
         app.roster.own_color = Some(9);
         let mut peer_presence = PeerPresenceRoot::empty();
@@ -317,20 +317,20 @@
             ComponentTree::new(root)
         };
 
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity, cx).await;
         let state = app.interaction_state().await;
         app.tools.stamp_and_cache_interaction_ui(&mut app.roster, &mut app.interaction, &tree(), &state, "window").await.expect("bounded fixture");
         let first: Vec<(String, bool)> = app.roster.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert_eq!(first, vec![("item-1".to_string(), true)]);
 
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2")), &mut identity, cx).await;
         let state = app.interaction_state().await;
         app.tools.stamp_and_cache_interaction_ui(&mut app.roster, &mut app.interaction, &tree(), &state, "window").await.expect("bounded fixture");
         let second: Vec<(String, bool)> = app.roster.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();
         assert!(second.contains(&("item-2".to_string(), true)), "the newly selected row must be marked: {second:?}");
         assert!(second.contains(&("item-1".to_string(), false)), "the row that LOST the selection must be retired, not left marked: {second:?}");
 
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-2")), &mut identity, cx).await;
         let state = app.interaction_state().await;
         app.tools.stamp_and_cache_interaction_ui(&mut app.roster, &mut app.interaction, &tree(), &state, "window").await.expect("bounded fixture");
         let third: Vec<(String, bool)> = app.roster.pending_presence.drain(..).map(|update| (update.node_key, update.own.selected)).collect();

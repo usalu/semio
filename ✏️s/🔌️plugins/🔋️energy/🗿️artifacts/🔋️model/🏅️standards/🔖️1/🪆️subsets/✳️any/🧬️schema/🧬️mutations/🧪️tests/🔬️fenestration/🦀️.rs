@@ -2,6 +2,7 @@
 
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mut_fenestration as fenestration_mutations;
+extern crate semio_s_artifact_energy_model_mut_fenestration_geometry as fenestration_geometry_mutations;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
@@ -9,7 +10,7 @@ extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 #[path = "."]
 mod change_fenestration_height {
-    pub use crate::fenestration_mutations::change_fenestration_height::*;
+    pub use crate::fenestration_geometry_mutations::change_fenestration_height::*;
     #[path = "../../🪟️fenestration/⬆️change-height/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🪟️fenestration/⬆️change-height/🧪️tests/✅️raises/🦀️.rs"]
@@ -18,7 +19,7 @@ mod change_fenestration_height {
 
 #[path = "."]
 mod change_fenestration_sill_height {
-    pub use crate::fenestration_mutations::change_fenestration_sill_height::*;
+    pub use crate::fenestration_geometry_mutations::change_fenestration_sill_height::*;
     #[path = "../../🪟️fenestration/⬇️change-sill-height/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🪟️fenestration/⬇️change-sill-height/🧪️tests/✅️raises/🦀️.rs"]
@@ -36,7 +37,7 @@ mod rename_fenestration {
 
 #[path = "."]
 mod replace_fenestration_vertices {
-    pub use crate::fenestration_mutations::replace_fenestration_vertices::*;
+    pub use crate::fenestration_geometry_mutations::replace_fenestration_vertices::*;
     #[path = "../../🪟️fenestration/🔶️replace-vertices/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🪟️fenestration/🔶️replace-vertices/🧪️tests/✅️shapes/🦀️.rs"]
@@ -54,7 +55,7 @@ mod delete_fenestration {
 
 #[path = "."]
 mod change_fenestration_area {
-    pub use crate::fenestration_mutations::change_fenestration_area::*;
+    pub use crate::fenestration_geometry_mutations::change_fenestration_area::*;
     #[path = "../../🪟️fenestration/🟥️change-area/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🪟️fenestration/🟥️change-area/🧪️tests/✅️doubles/🦀️.rs"]

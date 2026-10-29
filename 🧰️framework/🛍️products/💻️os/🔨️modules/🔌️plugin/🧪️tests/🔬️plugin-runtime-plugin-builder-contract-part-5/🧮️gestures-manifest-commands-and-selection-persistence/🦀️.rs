@@ -19,14 +19,14 @@
             app.dispatch_typed(TestCommand::StreamLabel { value: value.into(), commit }, &meta(), &mut identity,cx).await.expect("streamLabel");
         }
         assert_eq!(app.stores.test_snapshot().await.label, "abc");
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "");
 
         for value in ["x", "xy"] {
             app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta(), &mut identity,cx).await.expect("setLabel");
         }
         assert_eq!(app.stores.test_snapshot().await.label, "xy");
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "x");
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -157,7 +157,7 @@
         app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity,cx).await.expect("inc");
         app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity,cx).await.expect("inc");
         assert_eq!(app.stores.test_snapshot().await.count, 2);
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.count, 1);
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -180,7 +180,7 @@
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity,cx).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity, cx).await;
         let selection = app.interaction_state().await.selection.get("items").cloned().expect("items domain selected");
         assert_eq!(selection.ids, vec!["item-1".to_string()]);
         assert_eq!(selection.granularity, "item");
@@ -206,10 +206,10 @@
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "seed".into() }, &meta(), &mut identity,cx).await.expect("seed label");
-        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
+        reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity, cx).await;
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]));
 
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "", "undo must revert the document edit (seeding the label)");
         assert_eq!(app.interaction_state().await.selection.get("items").map(|selection| selection.ids.clone()), Some(vec!["item-1".to_string()]), "the pick itself must survive an unrelated document undo — lane discipline");
 

@@ -2,7 +2,7 @@
 use super::{invalid,nested,child,add,receipt,tag};
 use semio_framework_value::{RetirementDemand,ValueError,retirement::RetireOwned,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedOwnedProjection,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_persistent::list::persistent::{PersistentList,PersistentListRead,PersistentListReadStep};
-use protocol::mutation::retained::retained_mutation_demand_fits;
+use protocol::retained_mutation_demand_fits;
 use std::mem::size_of;
 
 /// 🪪️ The collection's declared row type supplies its fixed native identifier.
@@ -33,4 +33,3 @@ impl<T:EntityRow> RetainedEntityLookup<T>{
 }
 impl<T:EntityRow> Default for RetainedEntityLookup<T>{fn default()->Self{Self::new()}}
 impl<T:EntityRow> Drop for RetainedEntityLookup<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original entity lookup retains its genuine source and selected row");}}
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

@@ -49,7 +49,7 @@
     "semantics": {
       "verb": "delete",
       "entity": "setpoint-manager",
-      "kind": "delete",
+      "kind": "delete-setpoint-manager",
       "record": "DeletedSetpointManager"
     },
     "diagnostics": {

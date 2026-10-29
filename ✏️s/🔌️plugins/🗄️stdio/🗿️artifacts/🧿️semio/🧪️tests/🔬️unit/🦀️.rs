@@ -2,7 +2,6 @@ use super::*;
 use ::semio_framework_os_kernel::os_store::document_store_owners::MemberStoreProducer as _;
 use semio_framework_test_fixtures::fixture_text;
 use {semio_framework_artifact_reference::ArtifactDialect,crate::dsl::ArtifactPack,crate::dsl::SpaceMember,crate::dsl::ReferenceSpaceMember};
-use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_s_artifact_stdio_semio_base::SemioSnapshotRetirementFactory;
 use semio_s_artifact_stdio_semio_base::SEMIO_ARTIFACT_SCHEMA_ID;
@@ -106,21 +105,43 @@ async fn every_composable_subset_dispatches_to_a_real_child_store() {
 /// 🧸️ `create_semio_member` must MINT a real child store and `open_semio_member` must REOPEN it
 /// from its own persisted envelope — the whole point of "children have their own version
 /// history". The reopen half only works because the persisted `.spr` now carries the dialect the
-/// subset is recovered from.
+/// subset is recovered from. Every subset reopens through `OriginalRecordMemberSnapshotOpen`, which
+/// receives the committed example document's sealed record pack natively into its persisted owner.
 #[semio_framework_async_macros::async_test]
-async fn a_semio_member_mints_and_reopens_a_real_child_envelope() {
-    let dialect = subset_dialect("mesh");
+async fn every_record_subset_mints_and_reopens_a_real_child_envelope() {
+    let examples: [(&str, &[u8]); 18] = [
+        ("flow", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🖼️assets/🌊️pipeline/🎒️.pack.semio").as_slice()),
+        ("animation", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🚶️walk/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("audio", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎵️tone/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("brep", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🧊️solid/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("cad", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📐️drawing/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("document", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🗒️memo/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("drawing", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖍️sketch/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("graph", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/🕸️graph/🖼️assets/🕸️wires/🎒️.pack.semio").as_slice()),
+        ("image", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🖼️swatch/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("kit", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/🧰️kit/🖼️assets/🪑️furniture/🎒️.pack.semio").as_slice()),
+        ("mesh", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📚️examples/🧊️cube/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("model", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🏢️building/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("object", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/📦️object/🖼️assets/📦️crate/🎒️.pack.semio").as_slice()),
+        ("presentation", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📽️deck/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("table", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/📊️table/🖼️assets/📃️sheet/🎒️.pack.semio").as_slice()),
+        ("text", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/📃️note/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("value", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🕸️graph/🖼️assets/🎒️.pack.semio").as_slice()),
+        ("video", include_bytes!("../../🏅️standards/🔖️v1/🪆️subsets/✉️base/📚️examples/🎥️clip/🖼️assets/🎒️.pack.semio").as_slice()),
+    ];
+    for (subset, pack) in examples {
+        let dialect = subset_dialect(subset);
+        let id = format!("{subset}-child-1");
+        let child = create_semio_member(&id, &dialect, pack, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("create {subset} child: {error}"));
+        assert_eq!(child.document_id().await, id);
 
-    let seed = SemioMeshSnapshot::default();
-    let child = create_semio_member("mesh-child-1", &dialect, &seed.encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("create child");
-    assert_eq!(child.document_id().await, "mesh-child-1");
-
-    let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: "mesh-child-1".into(), dialect };
-    let mut reopened = open_semio_member(&expected, None, &child.envelope_pack_bytes().await.expect("envelope pack"), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("reopen child");
-    assert_eq!(reopened.document_pack_bytes().await.expect("head pack"), child.document_pack_bytes().await.expect("head pack"), "the reopened child diverged from the persisted one");
-    let mut child = child;
-    close_member(&mut reopened);
-    close_member(&mut child);
+        let expected = semio_framework_artifact_reference::ArtifactRef { artifact_id: id, dialect };
+        let mut reopened = open_semio_member(&expected, None, &child.envelope_pack_bytes().await.expect("envelope pack"), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("reopen {subset} child: {error}"));
+        assert_eq!(reopened.document_pack_bytes().await.expect("head pack"), child.document_pack_bytes().await.expect("head pack"), "the reopened {subset} child diverged from the persisted one");
+        let mut child = child;
+        close_member(&mut reopened);
+        close_member(&mut child);
+    }
 }
 
 /// 🪤 A snapshot read lease ALIASES the very snapshot the next commit displaces, so the displaced

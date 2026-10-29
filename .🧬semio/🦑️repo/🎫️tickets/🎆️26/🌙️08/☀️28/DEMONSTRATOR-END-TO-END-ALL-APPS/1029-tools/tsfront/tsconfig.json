@@ -1,0 +1,45 @@
+{
+  "extends": "/Users/ueli/Documents/semio/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [
+      "bun",
+      "node",
+      "react",
+      "react-dom",
+      "vite/client"
+    ],
+    "allowJs": true
+  },
+  "include": [
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/**/*.tsx",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/**/*.tsx",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/**/*.tsx",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/**/*.tsx",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🖥️host/**/*.tsx",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🗂️plugin-registry/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/🗂️plugin-registry/**/*.tsx",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🗂️plugin-registry/**/*.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript/🗂️plugin-registry/**/*.tsx",
+    "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/**/*.ts",
+    "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/**/*.tsx",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🌿️ambient/**/*.d.ts",
+    "/Users/ueli/Documents/semio/🧰️framework/📦️packages/🟦️typescript/🌿️ambient/**/*.d.ts"
+  ],
+  "exclude": [
+    "/Users/ueli/Documents/semio/**/node_modules/**",
+    "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/dist/**",
+    "/Users/ueli/Documents/semio/♻️mit-bestand/🧺️demonstrator/test-results/**",
+    "/Users/ueli/Documents/semio/**/🗑️generated/**",
+    "/Users/ueli/Documents/semio/**/dist/**",
+    "/Users/ueli/Documents/semio/**/target/**",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🧩️extension-modules/**",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️plugin-modules/**",
+    "/Users/ueli/Documents/semio/🧰️framework/🛍️products/💻️os/🧪️testing/🧩️jcoprobe/🌐️browser-bundles/**"
+  ]
+}

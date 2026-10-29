@@ -27,7 +27,7 @@ pub use native::Fem3dReceiving;
 pub use identity_index::{FemIdentityIndex,FemIdentityKind,FemIdentitySource};
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem3d document snapshot (persistent fields of the artifact).
-#[derive(Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem3d")]

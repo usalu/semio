@@ -155,7 +155,7 @@ pub fn action_meta() -> semio_framework_plugin::ActionMeta {
 /// the snapshot a test reads next is the committed one.
 pub async fn dispatch(app: &mut LowpolyApp, command: LowpolyCommand) -> InvocationResult {
     let verb = command.command_id().to_string();
-    let result = app.0.dispatch_typed(command, &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{verb} refused: {fault:?}"));
     settle(app, &verb).await;
     result
 }
@@ -176,7 +176,7 @@ pub async fn act(app: &mut LowpolyApp, action: &str, args: serde_json::Value) {
 /// itself faults, or the retained reducer publishes a fault page while the operation settles.
 pub async fn dispatch_refused(app: &mut LowpolyApp, command: LowpolyCommand) -> String {
     let verb = command.command_id().to_string();
-    if let Err(fault) = app.0.dispatch_typed(command, &action_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
+    if let Err(fault) = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
         return fault.message;
     }
     settle_faults(app, &verb).await.into_iter().next().unwrap_or_else(|| panic!("{verb} was admitted and settled without a refusal"))

@@ -9,7 +9,7 @@ use semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
-use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep};
+use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
 use semio_framework_value::retained_clone::{RetainedCloneRef, RetainedCloneStep};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
@@ -56,7 +56,7 @@ const OWNER_ITEMS: usize = OWNER_BYTES / 16;
 const OWNER_DEPTH: usize = 32;
 const TURN_BYTES: usize = 4_096;
 
-pub(crate) fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<DocxSnapshot, DocxMutation>> {
+pub fn route(_prefix: &'static str) -> Option<NativeEditPreparationRoute<DocxSnapshot, DocxMutation>> {
     None
 }
 
@@ -238,12 +238,17 @@ impl PagedOneItemEdit<DocxSnapshot, DocxMutation> for DocxXmlEdit {
         measure_mutation(mutation)
     }
 
-    fn advance_demands(&self, _before: RetainedCloneRef<'_, DocxSnapshot>, _mutation: RetainedCloneRef<'_, DocxMutation>, _post: &DocxSnapshot, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn post_mode(&self) -> PagedOneItemPostMode {
+        PagedOneItemPostMode::Mutable
+    }
+
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, DocxSnapshot>, _mutation: RetainedCloneRef<'_, DocxMutation>, _post: PagedOneItemPostRead<'_, DocxSnapshot>, _body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, DocxSnapshot>, mutation: RetainedCloneRef<'_, DocxMutation>, post: &mut DocxSnapshot, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<DocxMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, DocxSnapshot>, mutation: RetainedCloneRef<'_, DocxMutation>, post: PagedOneItemPost<'_, DocxSnapshot>, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<DocxMutation>, ValueError> {
         let mutation = mutation.get();
+        let post = post.mutable()?;
         let Some(reserve) = self.reserve else {
             measure_snapshot(post).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?;
             let reserve = measure_mutation(mutation).map_err(|message| ValueError::new(ValueRefusalKind::InvalidValue, message))?.saturating_add(TURN_BYTES);

@@ -636,8 +636,8 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->WiresSnapshot>{Some(||{
-        crate::empty_wires_snapshot()
+    fn reference_birth()->Option<fn()->Result<WiresSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::empty_wires_snapshot())
     })}
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.

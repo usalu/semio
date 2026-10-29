@@ -84,7 +84,7 @@
     "semantics": {
       "verb": "change",
       "entity": "schedule-reference",
-      "kind": "change-holiday-daily-schedule-id",
+      "kind": "change-annual-schedule-holiday-daily-schedule",
       "record": "ChangedOptionalSchedule"
     },
     "diagnostics": {

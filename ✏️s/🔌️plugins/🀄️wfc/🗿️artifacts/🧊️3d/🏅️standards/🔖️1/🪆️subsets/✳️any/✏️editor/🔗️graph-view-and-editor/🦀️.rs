@@ -125,8 +125,8 @@ impl ArtifactEditor for Wfc3dEditor {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
-    fn reference_birth()->Option<fn()->Wfc3dSnapshot>{Some(||{
-        crate::examples::two_room_corridor::snapshot()
+    fn reference_birth()->Option<fn()->Result<Wfc3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::examples::two_room_corridor::snapshot())
     })}
 
     fn command_id(command: &Self::Command) -> &'static str {

@@ -16,7 +16,7 @@ Feature: Native Repository Bootstrap Before JavaScript Preparation
     And changed owners, forwarded arguments and copied controls are refused before effects
 
   Scenario: Inactive Nx reset is one exact early owner under the current Original
-    Given the schema-owned cache-reset-nx target with no dependencies or outputs
+    Given the schema-owned nx reset target with no dependencies or outputs
     When the exact command enters before graph or Nx cache admission
     Then only the fixed reset owner receives the same Original and phase
     And arguments alternate owners changed recipes and fabricated controls refuse

@@ -27,12 +27,12 @@ pub(crate) struct DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, Drawin
 /// cross the request boundary together and can leave it only through one terminal handoff.
 pub(super) struct DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
     pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
@@ -45,12 +45,12 @@ where
 /// to a request owner and cannot be replaced before its exact terminal handoff.
 pub struct DurableOwnedMapCommitHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub operation: std::mem::ManuallyDrop<Option<DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
 }
@@ -58,12 +58,12 @@ where
 /// 🧳 Exact live owners returned after one retained Map publication reaches terminal emptiness.
 pub struct DurableOwnedMapCommitOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub parent: ArtifactStore<ParentP, ParentMutation>,
     pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
@@ -75,12 +75,12 @@ where
 #[must_use = "the exact three Store owners must transfer into recovery or remain retained"]
 pub struct DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
     pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
@@ -90,12 +90,12 @@ where
 /// ♻️ Exact three Store owners returned by committed recovery after terminal publication or an idempotent post-frontier match.
 pub struct DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub parent: ArtifactStore<ParentP, ParentMutation>,
     pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
@@ -105,12 +105,12 @@ where
 /// 🚧 Committed recovery rejection preserves every Store owner for corrected retry or close.
 pub struct DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub error: DurableOwnedGroupDecisionError,
     pub parent: ArtifactStore<ParentP, ParentMutation>,
@@ -120,12 +120,12 @@ where
 
 pub(super) struct DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
     pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,
@@ -136,12 +136,12 @@ where
 /// 🧭 Retained committed-recovery host; no journal sink exists because its opaque DB witness already proves the transaction committed.
 pub struct DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub operation: std::mem::ManuallyDrop<Option<DurableOwnedMapRecoveryOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>>,
 }
@@ -150,12 +150,12 @@ where
 #[expect(clippy::large_enum_variant, reason = "Recovery transfers the exact admitted operation or original store owners without allocating during handoff.")]
 pub enum DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     Apply(DurableOwnedMapRecoveryHostV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
     AlreadyApplied(DurableOwnedMapRecoveryOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>),
@@ -163,12 +163,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + Send + 'static,
-    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + Send + 'static,
-    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + Send + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + Send + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + Send + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + Send + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + 'static,
 {
     pub fn new(parent: ArtifactStore<ParentP, ParentMutation>, drawing: ArtifactStore<DrawingP, DrawingMutation>, value: ArtifactStore<ValueP, ValueMutation>) -> Self {
         Self { parent: std::mem::ManuallyDrop::new(Some(parent)), drawing: std::mem::ManuallyDrop::new(Some(drawing)), value: std::mem::ManuallyDrop::new(Some(value)) }
@@ -198,12 +198,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapRecoveryAdmissionV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.parent.is_none() && self.drawing.is_none() && self.value.is_none()), "committed recovery admission reached Drop before exact DB witness transfer");
@@ -213,12 +213,12 @@ where
 /// 🧳 Exact owners returned after a pre-journal rejection or cancellation reaches terminal emptiness.
 pub struct DurableOwnedThreeStoreMapAssemblyOwnersV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub parent: ArtifactStore<ParentP, ParentMutation>,
     pub drawing: ArtifactStore<DrawingP, DrawingMutation>,
@@ -233,12 +233,12 @@ where
 /// 🏗️ Store-owned fixed-three admission and preparation owner. It never publishes an individual member.
 pub struct DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue,
-    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
-    DrawingP: ValueToValue,
-    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
-    ValueP: ValueToValue,
-    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     pub parent: std::mem::ManuallyDrop<Option<ArtifactStore<ParentP, ParentMutation>>>,
     pub drawing: std::mem::ManuallyDrop<Option<ArtifactStore<DrawingP, DrawingMutation>>>,

@@ -332,8 +332,8 @@ impl ArtifactViewer for BimModelViewer {
         semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| refusal("bim.model.viewer.child-projection", &error.to_string()))
     }
 
-    fn reference_birth()->Option<fn()->ModelSnapshot>{Some(||{
-        semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
+    fn reference_birth()->Option<fn()->Result<ModelSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot())
     })}
 
     fn build_config_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {

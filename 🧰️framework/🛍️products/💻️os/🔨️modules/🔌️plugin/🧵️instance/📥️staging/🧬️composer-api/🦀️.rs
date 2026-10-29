@@ -21,12 +21,12 @@ use crate::VcsArtifactApp;
 use semio_framework_plugin_window_transient::window_transient::WindowTransientSnapshot;
 use semio_framework_ui_contract::*;
 
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 📸️ Materializes and returns the current snapshot — the typed counterpart to
     /// `render`'s `UiNode` output, for callers (host code, downstream plugin crates' own tests) that
     /// need direct structural access to document state instead of a rendered node.
     pub fn snapshot(&self) -> Result<A::Snapshot, Fault> {
-        self.stores.snapshot()
+        Ok(self.stores.snapshot_ref().clone())
     }
 
     /// 📸️ Borrows the current persisted read root without copying its state.

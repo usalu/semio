@@ -1,7 +1,8 @@
 //! 🌱️ Native surface declarations commit real shared definition and registration producers before mounted admission.
 use super::*;
 use semio_framework_plugin_decl_surface::{ArtifactEditor,ArtifactViewer,OriginalArtifactEditorBirth,OriginalArtifactViewerBirth,EditorApp,ViewerApp};
-use semio_framework_plugin_instance_app::{OriginalVcsApp,original_instance_admission::{OriginalInstanceRegistration,original_instance_factory}};
+use semio_framework_plugin_instance_construction::{OriginalVcsApp,factory::original_instance_factory};
+use semio_framework_plugin_instance_initialization::services::OriginalInstanceRegistration;
 
 impl<PA:PluginApp> PluginBuilder<Ready,PA>{
  /// ✏️ Declares only an original retained editor factory and its authentic immutable registration source.
@@ -24,14 +25,15 @@ impl<PA:PluginApp> PluginBuilder<Ready,PA>{
   Ok(self.capability(CapabilityRequirement{artifact:ArtifactKind::Document,rights:Rights::Read,scope:Scope::App}))
  }
  fn install_native_surface<A,M,R>(&mut self,mut definition:semio_framework::AppDefinition,examples:Vec<semio_framework_plugin_app_builder::ExampleSource>)->Result<(),PluginAssemblyError>
- where A:semio_framework_plugin_decl_app::OriginalArtifactAppBirth,M:semio_framework_os_kernel::SpaceMember+semio_framework_os_kernel::MemberFactory+'static,R:OriginalInstanceRegistration<A,M>,PA:From<OriginalVcsApp<A,M>>{
+ where A:semio_framework_plugin_decl_app::OriginalArtifactAppBirth,M:semio_framework_os_kernel::ReferenceSpaceMember+semio_framework_os_kernel::MemberFactory+Send+'static,R:OriginalInstanceRegistration<A,M>,PA:From<OriginalVcsApp<A,M>>{
   semio_framework_plugin_job::reserved_jobs::join_framework_shared_action_dispositions(&mut definition);
   let app=App{definition:definition.clone(),examples};
   let definition=semio_framework_plugin_window_kits::RegisteredAppDefinition::declared(definition,true);
   let original_factory=original_instance_factory::<A,M,PA,R>();
   let registration=(original_factory.registration)(definition.original_source().expect("native declaration retains its original shared producer")).map_err(PluginAssemblyError::from_fault)?;
   self.app_defs.push((app,semio_framework_plugin_decl_registry::plugin_program::AppFactory{definition,registration:Some(registration),original_factory:Some(original_factory),create:None,document_schema:A::DOCUMENT_SCHEMA,codec:semio_framework_plugin_decl_surface::artifact_codec_table::<A>()}));
-  self.app_schema_descriptors.push(A::app_schema);
+  fn app_schema<A:semio_framework_plugin_decl_app::ArtifactApp>()->Option<::semio_framework_schema_registry::AppSchemaDescriptor>{::semio_framework_async::poll::resolve_ready(A::app_schema())}
+  self.app_schema_descriptors.push(app_schema::<A>);
   Ok(())
  }
 }

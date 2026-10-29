@@ -30,11 +30,14 @@ impl OriginalExportDrawingRead{
   }cx.consume_fuel(1);Ok(self.ready())
  }
  pub fn provider_demand()->Result<RetirementDemand,ValueError>{sum(ChildVectorAdmissionProvider::<DrawingSnapshot>::demand(),drawing_read_demand())}
- pub fn advance_core(&self,parent:&ParentSource,address:DrawingSourceAddress,inner:&mut LayoutExportJob,cx:&mut StepContext<'_>)->Result<semio_s_artifact_layout_layout_engine_export::LayoutExportWorkTurn,OriginalTurnFailure>{
-  if !self.ready(){return Err(invalid("export Drawing source custody is not ready").into())}let demand=Self::provider_demand()?;if cx.should_yield()||cx.is_cancelled()||cx.retained_grant().maximum_items<4||!cx.retained_work_can_enter(demand){return Ok(semio_s_artifact_layout_layout_engine_export::LayoutExportWorkTurn::Pending)}
+ fn with_core_read<T>(&self,parent:&ParentSource,address:DrawingSourceAddress,cx:&mut StepContext<'_>,drive:impl FnOnce(&semio_framework_io_ports::ChildAdmissionRead<'_>,&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->Result<Option<T>,OriginalTurnFailure>{
+  if !self.ready(){return Err(invalid("export Drawing source custody is not ready").into())}let demand=Self::provider_demand()?;if cx.should_yield()||cx.is_cancelled()||cx.retained_grant().maximum_items<4||!cx.retained_work_can_enter(demand){return Ok(None)}
   let issued=DRAWING_CHILD_VECTOR_READ.admission_provider(&self.owners.custody,ordinal(address)?,cx.retained_grant());let(provider,p)=paid(cx,issued,|step|step.1)?;
   let _=p;let routed=drawing_read_at(parent.try_borrow()?.get(),address,&provider,provider.address(),cx.retained_grant());let routed=paid(cx,routed,|step|step.progress)?;let read=routed.read.ok_or_else(||invalid("export qualified original Drawing route returned no read"))?;
-  inner.advance_original_work(cx,Some(&read))
+  drive(&read,cx).map(Some)
  }
+ pub fn advance_core(&self,parent:&ParentSource,address:DrawingSourceAddress,inner:&mut LayoutExportJob,cx:&mut StepContext<'_>)->Result<semio_s_artifact_layout_layout_engine_export::LayoutExportWorkTurn,OriginalTurnFailure>{Ok(self.with_core_read(parent,address,cx,|read,cx|inner.advance_original_work(cx,Some(read)))?.unwrap_or(semio_s_artifact_layout_layout_engine_export::LayoutExportWorkTurn::Pending))}
+ pub fn step_core<'a>(&self,parent:&ParentSource,address:DrawingSourceAddress,inner:&'a mut LayoutExportJob,cx:&mut StepContext<'_>)->LayoutExportTurn<'a>{Ok(self.with_core_read(parent,address,cx,|read,cx|inner.step_with_drawing_read(cx,Some(read)))?.flatten())}
+
 }
 pub(super) fn ordinal(address:DrawingSourceAddress)->Result<usize,ValueError>{match address{DrawingSourceAddress::Document=>Ok(0),DrawingSourceAddress::Page(index)=>index.checked_add(1).filter(|ordinal|*ordinal<MAX_DRAWING_SOURCES).ok_or_else(||invalid("export original Drawing page address exceeds its bound"))}}

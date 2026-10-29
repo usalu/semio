@@ -12,6 +12,7 @@ pub(super) async fn acceptance_reloaded<A, M>(app: &VcsArtifactApp<A, M>, manife
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let archive = PluginApp::document_archive(app).await.map_err(|fault| AcceptanceError::from(fault).context("the document does not archive".into()))?;
     let mut reloaded = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
@@ -49,6 +50,7 @@ pub(super) async fn acceptance_reloaded_head<A, M>(app: &VcsArtifactApp<A, M>, m
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut reloaded = acceptance_reloaded(app, manifest,cx).await?;
     let head = acceptance_head(&reloaded);
@@ -69,6 +71,7 @@ async fn acceptance_document_view<A, M>(app: &mut VcsArtifactApp<A, M>, manifest
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let head = acceptance_head(app)?;
     let mut children: Vec<(String, String, String, Vec<u8>)> =
@@ -111,6 +114,7 @@ pub async fn assert_documents_reload_identically<A, M>(plugin: &str, manifest: f
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut documents = vec![("initial".to_string(), None)];
@@ -157,6 +161,7 @@ async fn acceptance_child_row<A, M>(app: &mut VcsArtifactApp<A, M>) -> Result<Op
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let patch = app.render_ctx().history_patch(true).await.map_err(|fault| AcceptanceError::from(fault).context("the history does not project".into()))?;
     let Some(row) = patch.upserts.iter().filter(|entry| entry.applied).flat_map(|entry| entry.mutations.iter()).find(|row| row.store.is_some() && row.editable && !row.superseded && !row.withdrawn && !row.pending) else {
@@ -175,6 +180,7 @@ async fn acceptance_child_seeded<A, M>(manifest: fn() -> App, seed: &[(&str, &st
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut app = semio_framework_plugin_testing_laws::with_authoring_identity!(|identity| artifact_app_laws::new_app_with_registry_and_members::<A, M>(manifest, protocol::ActorId(ACCEPTANCE_ACTOR.into()), acceptance_policy(), &mut identity).await);
     app.bind_instance_id(artifact_app_laws::meta(ACCEPTANCE_ACTOR).instance_id).await;
@@ -205,6 +211,7 @@ async fn acceptance_child_heads<A, M>(app: &VcsArtifactApp<A, M>) -> Result<Vec<
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     Ok(PluginApp::child_head_packs(app).await.map_err(|fault| AcceptanceError::from(fault).context("the owned children do not pack their heads".into()))?.into_iter().map(|entry| (entry.slot, entry.child_id, entry.head_pack)).collect())
 }
@@ -216,6 +223,7 @@ async fn acceptance_child_reload_difference<A, M>(app: &mut VcsArtifactApp<A, M>
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let saved = acceptance_document_view(app, manifest,cx).await?;
     let heads = acceptance_child_heads(app).await?;
@@ -234,6 +242,7 @@ async fn acceptance_child_scenario<A, M>(manifest: fn() -> App, seed: &[(&str, &
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut overwrite = acceptance_child_seeded::<A, M>(manifest, seed,cx).await.map_err(|reason|reason.context("the seed does not land".into()))?;
     let outcome = async {
@@ -294,6 +303,7 @@ pub async fn assert_child_history_edits_end_to_end<A, M>(plugin: &str, manifest:
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     match acceptance_child_scenario::<A, M>(manifest, seed,cx).await {

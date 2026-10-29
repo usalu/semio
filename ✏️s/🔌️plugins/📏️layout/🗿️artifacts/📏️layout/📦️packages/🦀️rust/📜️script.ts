@@ -16,7 +16,4 @@ class MediaAdoptionSourceScript extends BundleScript {
   }
 }
 const router = new ScriptRouter(import.meta.dir).register("verify", OwnedVerifyScript).register("test-media-adoption-source", MediaAdoptionSourceScript);
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { testPackages: ["semio-s-artifact-layout-layout", "semio-s-artifact-layout-layout-editor-commands-tests", "semio-s-artifact-layout-layout-mutations-content-tests-1", "semio-s-artifact-layout-layout-mutations-content-tests-2", "semio-s-artifact-layout-layout-mutations-frames-tests-1", "semio-s-artifact-layout-layout-mutations-frames-tests-2"], commands: router });
-
-
-
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-layout-layout", { testPackages: ["semio-s-artifact-layout-layout-editor-transform-tests", "semio-s-artifact-layout-layout-engine", "semio-s-artifact-layout-layout", "semio-s-artifact-layout-layout-editor-tests","semio-s-artifact-layout-layout-engine-scene-tests","semio-s-artifact-layout-layout-engine-flow-tests", "semio-s-artifact-layout-layout-editor-commands-tests", "semio-s-artifact-layout-layout-mutations-content-tests-1", "semio-s-artifact-layout-layout-mutations-content-tests-2", "semio-s-artifact-layout-layout-mutations-frames-tests-1", "semio-s-artifact-layout-layout-mutations-frames-tests-2", "semio-s-artifact-layout-layout-diff-plan", "semio-s-artifact-layout-layout-sqlite-member-tests", "semio-s-artifact-layout-layout-engine-export-unit-tests", "semio-s-artifact-layout-layout-editor"], commands: router });

@@ -520,8 +520,6 @@ impl SnapshotReadReturn {
 }
 
 impl<T: ?Sized> SnapshotRead<T> {
-    /// ⏺️ The inline bytes one Store read occupies while an owner captures it by move.
-    pub const fn capture_copy_byte_demand() -> usize { size_of::<Self>() }
     pub fn release_original_alias(&mut self) -> bool { self.owner.take().is_some() }
     pub fn return_original_lease(&mut self) -> Option<SnapshotReadRegistryAliasRetirement> { let mut lease = self.lease.take()?; lease.return_now(); Some(SnapshotReadRegistryAliasRetirement::new(lease.registry)) }
 

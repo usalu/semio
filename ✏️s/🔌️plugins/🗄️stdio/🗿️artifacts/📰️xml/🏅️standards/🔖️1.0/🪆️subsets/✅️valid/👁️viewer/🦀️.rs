@@ -67,8 +67,8 @@ impl ArtifactViewer for XmlValidViewer {
     const DIALECT: Dialect = XML_VALID_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XML_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->XmlSnapshot>{Some(||{
-        crate::standards::v1_0::subsets::valid::schema::blank_valid_xml_snapshot()
+    fn reference_birth()->Option<fn()->Result<XmlSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1_0::subsets::valid::schema::blank_valid_xml_snapshot())
     })}
 
     fn handle(

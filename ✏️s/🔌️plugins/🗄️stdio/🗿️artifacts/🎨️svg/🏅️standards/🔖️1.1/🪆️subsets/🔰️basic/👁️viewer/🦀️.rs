@@ -60,8 +60,8 @@ impl ArtifactViewer for SvgBasicViewer {
     const DIALECT: Dialect = SVG_BASIC_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        SvgSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SvgSnapshot::default())
     })}
 
     fn handle(

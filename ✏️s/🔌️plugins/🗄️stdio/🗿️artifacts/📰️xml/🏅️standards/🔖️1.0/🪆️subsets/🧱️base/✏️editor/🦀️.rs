@@ -447,8 +447,8 @@ impl ArtifactEditor for XmlAnyEditor {
         xml_any_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->XmlSnapshot>{Some(||{
-        XmlSnapshot::with_empty_root()
+    fn reference_birth()->Option<fn()->Result<XmlSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(XmlSnapshot::with_empty_root())
     })}
 
     /// ✏️ Only a `Text` node found at `node_id` accepts `set-node` — anything else (unparseable

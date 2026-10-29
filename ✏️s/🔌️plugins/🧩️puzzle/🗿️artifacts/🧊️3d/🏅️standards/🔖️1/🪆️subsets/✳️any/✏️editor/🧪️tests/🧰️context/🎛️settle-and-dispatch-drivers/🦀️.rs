@@ -231,10 +231,18 @@ pub async fn dispatch_reporting_with_items(
         };
         return settle_into_reporting_with_items(app, reserved, maximum_items).await;
     }
-    let command = Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}"));
     let (raw, cx) = app.parts();
-    let typed = raw.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await;
+    let typed = semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, action_args(args, window_id), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of);
     settle_into_reporting_with_items(app, typed, maximum_items).await
+}
+
+/// 🧾 The addressed window rides in the action arguments, exactly as the shell sends it.
+fn action_args(args: Option<&Value>, window_id: &str) -> Option<semio_framework_value::DslValue> {
+    let mut value = args.cloned().unwrap_or_else(|| Value::Object(Default::default()));
+    if let Value::Object(object) = &mut value {
+        object.insert("windowId".into(), Value::String(window_id.into()));
+    }
+    Some(semio_framework_pack_json::to_dsl_value(&value))
 }
 
 /// 📤 `dispatch` up to the point the host has minted the typed operation and NOT one continuation
@@ -246,9 +254,8 @@ pub async fn dispatch_unsettled(app: &mut Puzzle3dApp, action: &str, args: Optio
     let window_id = window_id.unwrap_or(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
     app.ensure_window(window_id);
     let action_meta = ActionMeta { view_state: Some(app.window_view(window_id)), ..app.meta("local") };
-    let command = Puzzle3dCommand::from_action(action, args.cloned(), Some(window_id.to_string())).unwrap_or_else(|| panic!("unknown puzzle3d action id in test: {action}"));
     let (raw, cx) = app.parts();
-    raw.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await
+    semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, action, action_args(args, window_id), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.map_err(fault_of)
 }
 
 /// 🕹️ ticket 26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM: dispatches `interactionSelect`
@@ -292,5 +299,6 @@ pub async fn select_id_unsettled(app: &mut Puzzle3dApp, granularity: &str, id: &
 }
 
 pub async fn settle_reserved(app: &mut Puzzle3dApp, admitted: InvocationResult) -> Result<InvocationResult, Fault> {
-    semio_framework_plugin::app::settle_framework_reserved_admission(app, admitted).await.map_err(fault_of)
+    let (raw, cx) = app.parts();
+    semio_framework_plugin::app::settle_framework_reserved_admission(raw, admitted, cx).await.map_err(fault_of)
 }

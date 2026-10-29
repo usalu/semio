@@ -147,6 +147,8 @@ semio-framework-plugin-operation = { path = "../../♻️cancellation/📦️pac
 semio-framework-plugin-window-transient = { path = "../../🪟️window/📦️packages/🦀️rust" }
 semio-framework-plugin-window-kits = { path = "../../🪟️window-kits/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-tool-contract = { path = "../../📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-media = { path = "../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-window-kits-rich = { path = "../../🪟️window-kits/🧱️rich/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-emission = { path = "../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-child = { path = "../../🪆️child/📦️packages/🦀️rust" }
@@ -195,6 +197,8 @@ semio-framework-plugin-instance-ladders = { path = "../../🪜️maintenance-lad
 semio-framework-plugin-time-travel-turns = { path = "../../⏪️time-travel/🧵️instance/📦️packages/🦀️rust" }
 semio-framework-plugin-tool-run-turns = { path = "../../⏯️tool-run/🧵️instance/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-app = { path = "../../🧵️instance/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-construction = { path = "../../🧵️instance/🧱️construction/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-initialization = { path = "../../🧵️instance/🌱️initialization/📦️packages/🦀️rust" }
 semio-framework-plugin-builder = { path = "../../🏗️builder/📦️packages/🦀️rust" }
 semio-framework-plugin-registration = { path = "../../🏗️builder/📜️registration/📦️packages/🦀️rust" }
 semio-framework-plugin-testing-laws = { path = "../../🧪️testing/📦️packages/🦀️rust", optional = true }

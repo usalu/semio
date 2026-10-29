@@ -2,23 +2,13 @@
 
 use super::*;
 use semio_framework_os_spr::ColdMutation;
+use semio_framework_os_store_replay::PrefixSnapshot;
+use semio_framework_os_store_ledger::ArtifactStorePendingReportRetirement;
 
-//#region 🔖️EphemeralLanes
-//#region 🔖️Backbone
-//#region 🔖️Backbone
-//#region 🔖️Authority
-//#region 🔖️EphemeralLanes
-//#region 🔖️Text
-//#region 🔖️Pack
-//#region 🔖️CodecRegistry
-//#region 🔖️TextFormat
-//#region 🔖️History
-//#region 🔖️ArtifactStore
-//#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub fn close_cursor_admit(&mut self, phase: ArtifactStoreCursorDisposerPhase, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         let structural = RetainedCloneProgress { copied_items: 1, ..Default::default() };
@@ -180,8 +170,8 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub async fn fold_history<I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, supersessions: &EffectiveSupersessions) -> Result<P, VcsError>
     where
@@ -239,16 +229,14 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
-    //#region 📬️OneItemPublication
     /// 🪞️ Delegates to [`semio_framework_os_store_engine_bundle::advance_apply_batch`]: advances at most one preparation, fold, cursor, preflight or atomic move-publication unit of the batched publication.
     #[inline]
 
 
 
-    //#endregion 📬️OneItemPublication
     pub async fn apply_one(&mut self, expected_generation: u64, mutation: Mutation, lane: HistoryLane, identity: &mut EntityIdentityAuthority<'_>) -> Result<(CommandReceipt, LaneItemReceipt), VcsError>
     where
         P: Sync,
@@ -270,7 +258,6 @@ where
         Ok((receipt, LaneItemReceipt { generation_before, generation_after: self.cursor.generation }))
     }
 
-    //#region 🔖️EventSourcedHistory
     /// 🖋️ Authors one local history transition: stamps it on this replica's clock, records it
     /// in the event log, and materializes the projection through the same fold remote transitions
     /// take. The caller's dispatch announces it outbound with every other new event.
@@ -380,7 +367,6 @@ where
         Ok(())
     }
 
-    //#endregion 🔖️EventSourcedHistory
     /// 🛤️ Same edit-recording path as `Apply`, tagging the fresh edit into `lane` instead of
     /// the implicit `Document` default — see `HistoryLane`'s doc.
     pub(super) async fn dispatch_inner(&mut self, command: ArtifactCommand<Mutation>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>
@@ -474,15 +460,3 @@ where
     }
 
 }
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️History
-//#endregion 🔖️TextFormat
-//#endregion 🔖️CodecRegistry
-//#endregion 🔖️Pack
-//#endregion 🔖️Text
-//#endregion 🔖️EphemeralLanes
-//#endregion 🔖️Authority
-//#endregion 🔖️Backbone
-//#endregion 🔖️Backbone
-//#endregion 🔖️EphemeralLanes

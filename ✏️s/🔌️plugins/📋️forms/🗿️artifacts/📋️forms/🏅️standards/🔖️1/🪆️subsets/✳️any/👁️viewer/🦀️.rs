@@ -77,8 +77,8 @@ impl ArtifactViewer for FormsViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->FormsSnapshot>{Some(||{
-        empty_forms_snapshot()
+    fn reference_birth()->Option<fn()->Result<FormsSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(empty_forms_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `FormsViewCommand::Noop` variant never carries a config

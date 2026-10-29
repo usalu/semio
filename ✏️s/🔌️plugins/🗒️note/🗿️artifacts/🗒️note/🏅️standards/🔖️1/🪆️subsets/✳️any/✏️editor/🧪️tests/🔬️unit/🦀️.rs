@@ -229,7 +229,7 @@ use semio_framework_plugin::UtilityCategory;
     }
 
     pub async fn dispatch_with_view_for_instance(app: &mut OwnedNoteApp, command: NoteCommand, instance_id: u32, view_state: ViewModel) -> InvocationResult {
-        let result = app.0.dispatch_typed(command, &action_meta("local", instance_id, view_state), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta("local", instance_id, view_state), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         settle(app, instance_id, result).await.expect("dispatch")
     }
 
@@ -682,8 +682,7 @@ async fn note_empty_config_owner_exact_composite_window_transient_isolates_reset
         assert_eq!(app.window_transient_generation(&view_a).expect("reset window a generation"), Some(0));
         drop(reset_a);
 
-        let pending = app.0
-            .dispatch_typed(NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Cancelled".into() }), &semio_framework_plugin::ActionMeta { instance_id: 71_103, view_state: Some(view_a.clone()), ..artifact_app_laws::meta("cancel") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+        let pending = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &NoteCommand::EngagementInput(engagement_input::EngagementInput { value: "Cancelled".into() }), &semio_framework_plugin::ActionMeta { instance_id: 71_103, view_state: Some(view_a.clone()), ..artifact_app_laws::meta("cancel") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
             .await
             .expect("start retained transient command");
         assert!(pending.mutations.is_empty());

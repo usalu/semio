@@ -57,7 +57,8 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = Fem3dAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
+                    if let Some(value) = analysis.parts.snapshot {
+                        let snapshot = Fem3dSnapshot::from_reference(value).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?;
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
                 }
@@ -70,6 +71,7 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🚫️GeometryImport
+
 
 //#region 🔖️IoDeclaration
 /// 🚪️ This subset's complete io declaration — the native `LanguagePair`s and `ArtifactCodec` plus
@@ -117,7 +119,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::bare_artifact_codec::<Fem3dSnapshot, Fem3dMutation>(FEM_3D_SCHEMA.to_string()),
+            codec: store::native_artifact_codec::<Fem3dSnapshot>(FEM_3D_SCHEMA.to_string()),
         },
         entries: entries(),
     }
@@ -131,14 +133,16 @@ mod tests;
 //#endregion 🧪️Tests
 
 pub mod derived_construction {
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
     use semio_s_artifact_fem_3d_mutations::standards::v1::subsets::any::schema::mutations::Fem3dMutation;
-    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
+    /// 🏗️ The builder accumulates the explicit authoring rows and receives them into persistent ownership once, when the snapshot is built.
     #[derive(Clone, Debug, Default)]
     pub struct Fem3dBuilderConstruction {
-        snapshot: Fem3dSnapshot,
+        rows: Fem3dSnapshotValue,
         diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
@@ -147,36 +151,34 @@ pub mod derived_construction {
         type Mutation = Fem3dMutation;
         type Diff = Fem3dDiff;
         fn empty() -> Self {
-            Self { snapshot: Fem3dSnapshot::default(), diagnostics: Vec::new() }
+            Self::default()
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
+            Self { rows: snapshot.to_reference(), diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <Fem3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
+            Ok(Self::from_snapshot(<Fem3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <Fem3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
+            Ok(Self::from_snapshot(<Fem3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::ColdMutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
+            let outcome = <Self::Mutation as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(&mutation, &self.rows);
+            match protocol::apply_diff_cold(outcome.diff(), &self.rows) {
+                Ok(rows) => self.rows = rows,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
+            self.rows = protocol::apply_diff_cold(&diff, &self.rows)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
+            if !self.diagnostics.is_empty() {
+                return Err(self.diagnostics);
             }
+            Fem3dSnapshot::from_reference(self.rows).map_err(|error| vec![semio_framework_diagnostic::Diagnostic::error("build.receive", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())])
         }
     }
 }
@@ -184,11 +186,12 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+    use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Fem3dParts {
-        pub snapshot: Option<Fem3dSnapshot>,
+        pub snapshot: Option<Fem3dSnapshotValue>,
     }
 
     pub struct Fem3dAnalyzerAnalysis;
@@ -208,14 +211,14 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Fem3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Ok(snapshot) => parts.snapshot = Some(snapshot.to_reference()),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Fem3dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Ok(snapshot) => parts.snapshot = Some(snapshot.to_reference()),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
@@ -361,14 +364,12 @@ pub fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
 //#region 🚀️BootDocument
 /// 🚀️ The document every `fem3d` surface boots with — the bundled `concrete-forest` (Betonwald) example
 /// so Entwerfen-mit-Bestand surfaces and the demonstrator Statik pane paint the reuse story on first
-/// frame. Shared by `Fem3dPlayApp::initial_snapshot` and `Fem3dViewer::initial_snapshot` (the viewer
-/// must never import through the sibling editor module, so the shared boot document lives here). Falls
-/// back to the legacy `demo` fixture, then the empty document, if parsing ever fails — a boot must
-/// never fault on a fixture.
-pub fn fem3d_boot_snapshot() -> semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
+/// frame. Shared by `Fem3dPlayApp::reference_birth` and `Fem3dViewer::reference_birth` (the viewer
+/// must never import through the sibling editor module, so the shared boot document lives here). The
+/// document is received into persistent ownership through the reference wallet; a fixture that does
+/// not load is a typed error, never a substitute document.
+pub fn fem3d_boot_snapshot() -> Result<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot, semio_framework_diagnostic::TextError> {
     semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT)
-        .or_else(|_| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::FEM3D_EXAMPLE_TEXT))
-        .unwrap_or_else(|_| semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::empty_fem3d_snapshot())
 }
 //#endregion 🚀️BootDocument
 

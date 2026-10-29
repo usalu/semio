@@ -336,7 +336,7 @@ async fn renders_lhs_rhs_graphs() {
 async fn set_parameter_emits_one_op_and_is_undoable() {
     let mut app = new_app().await;
     let history_before = app.history_snapshot().await.expect("history").upserts.len();
-    app.0.dispatch_typed(TrinityRewritingCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set parameter");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetParameter { name: "label".into(), value: "changed".into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set parameter");
     let receipt = settle(&mut app).await;
     assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a parameter edit publishes on the artifact lane: {:?}", receipt.lanes);
     assert_eq!(app.history_snapshot().await.expect("history").upserts.len(), history_before + 1, "a single-key parameter edit is one ChangeParameterBinding operation (one history entry)");
@@ -348,12 +348,11 @@ async fn set_parameter_emits_one_op_and_is_undoable() {
 #[semio_framework_async_macros::async_test]
 async fn add_and_delete_rhs_set_clause() {
     let mut app = new_app().await;
-    app.0.dispatch_typed(TrinityRewritingCommand::AddRuleClause { kind: "set".into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add clause");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::AddRuleClause { kind: "set".into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add clause");
     settle(&mut app).await;
     let rhs: Rhs = app.snapshot().unwrap().rhs;
     assert_eq!(rhs.set.len(), 2);
-    let result = app.0
-        .dispatch_typed(TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: semio_framework_pack_json::json!([{ "operation": "delete", "nodeIds": ["rhs-set-1"], "synapseIds": [] }]).to_string() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::NodeGraphEdit { surface_id: TRINITY_REWRITING_PLAY_SURFACE_RHS.into(), operations_json: semio_framework_pack_json::json!([{ "operation": "delete", "nodeIds": ["rhs-set-1"], "synapseIds": [] }]).to_string() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
         .await
         .expect("delete the clause node");
     let receipt = settle(&mut app).await;
@@ -410,7 +409,7 @@ async fn app_definition_declares_set_active_example_unscoped_for_every_window_ki
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_loads_the_registered_demo_document() {
     let mut app = new_app().await;
-    app.0.dispatch_typed(TrinityRewritingCommand::SetActiveExample { example_id: crate::examples::demo::ID.into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetActiveExample { example_id: crate::examples::demo::ID.into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
     let receipt = settle(&mut app).await;
     let loads = receipt.effects.iter().filter(|effect| matches!(effect, semio_framework_plugin::Effect::LoadDocument { .. })).count();
     assert_eq!(loads, 1, "the registered example id produces exactly one LoadDocument effect");
@@ -422,7 +421,7 @@ async fn set_active_example_loads_the_registered_demo_document() {
 #[semio_framework_async_macros::async_test]
 async fn set_active_example_ignores_an_unregistered_id() {
     let mut app = new_app().await;
-    app.0.dispatch_typed(TrinityRewritingCommand::SetActiveExample { example_id: "not-an-example".into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetActiveExample { example_id: "not-an-example".into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set active example");
     let receipt = settle(&mut app).await;
     assert!(receipt.effects.is_empty(), "an unknown example id loads nothing");
 }
@@ -468,7 +467,7 @@ async fn set_lhs_json_undo_redo_round_trip() {
     let mut app = new_app().await;
     let original = app.snapshot().unwrap().lhs;
     let next_lhs = r#"{"pattern":{"leftVar":"x","leftKind":"Piece","edgeVar":"r","edgeKind":"Connection","rightVar":"y","rightKind":"Piece"}}"#;
-    app.0.dispatch_typed(TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set lhs");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::SetLhsJson { value: next_lhs.into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set lhs");
     settle(&mut app).await;
     assert_eq!(app.snapshot().unwrap().lhs, semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::rule::Lhs>(next_lhs, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("typed match input"));
     history(&mut app, "undo").await;

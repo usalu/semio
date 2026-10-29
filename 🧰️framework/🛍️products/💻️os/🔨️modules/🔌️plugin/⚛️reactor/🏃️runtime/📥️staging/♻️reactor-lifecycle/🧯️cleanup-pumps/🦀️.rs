@@ -47,7 +47,7 @@ impl<PA: PluginApp> RuntimeLiveCleanupPump<PA> {
     pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         use semio_framework_job::{InteractiveJobCloseStep as Step};
 use semio_framework_job_worker_authority::{WorkerJobCloseStep as Worker};
-        let grant=cx.retained_grant();if cx.should_yield(){return Ok(Step::Pending{progress:Default::default()})}
+        let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(Step::Pending{progress:Default::default()})}
         let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Step::Pending{progress:Default::default()});}
         self.closing=true;
@@ -85,6 +85,35 @@ impl<PA: PluginApp> RuntimeCloseCleanupPump<PA> {
     pub fn new() -> Self {
         Self { session: None, rejected: None, outcome_pending: false, terminal: false, complete: false, blocked: false, pending_status: RuntimeCloseStatus::Ready, faulted: false, resume_pending: false }
     }
+    pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,semio_framework_value::ValueError>{
+        let metadata=|bytes|RetirementDemand{copy_bytes:bytes,depth:1,..Default::default()};
+        let quote=if let Some(rejected)=self.rejected.as_ref(){if rejected.terminal_is_empty(){return Ok(metadata(size_of_val(rejected)));}rejected.retirement_demands(body)?}
+        else if let Some(session)=self.session.as_ref(){if session.terminal_is_empty(){return Ok(metadata(size_of_val(session)));}session.retirement_demands(body).map_err(|error|match error{semio_framework_job_worker::WorkerJobDemandError::Refused(error)=>error,semio_framework_job_worker::WorkerJobDemandError::Contention(_)=>semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"runtime cleanup original session remains checked out")})?}
+        else{return Ok(Default::default());};
+        Ok(RetirementDemand{depth:quote.depth.checked_add(1).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"runtime cleanup session depth overflow"))?,..quote})
+    }
+    pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+        use semio_framework_job::{InteractiveJobCloseStep as Step};
+use semio_framework_job_worker_authority::{WorkerJobCloseStep as Worker};
+        let grant=cx.retained_grant();if cx.retirement_should_yield(){return Ok(Step::Pending{progress:Default::default()})}
+        let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|semio_framework_job::OriginalTurnFailure::debit_original(error,cx))?;
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Step::Pending{progress:Default::default()});}
+        let metadata=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+        if let Some(rejected)=self.rejected.as_mut(){
+            if rejected.terminal_is_empty(){cx.consume_retained(metadata)?;drop(self.rejected.take());cx.consume_fuel(1);return Ok(Step::Pending{progress:metadata});}
+            let step=rejected.close_step(cx)?.admit(grant,rejected.terminal_is_empty()).map_err(semio_framework_job::OriginalTurnFailure::from)?;
+            return Ok(match step{Step::Complete{progress}=>Step::Pending{progress},step=>step});
+        }
+        if let Some(session)=self.session.as_mut(){
+            if session.terminal_is_empty(){cx.consume_retained(metadata)?;drop(self.session.take());self.outcome_pending=false;self.resume_pending=false;cx.consume_fuel(1);return Ok(Step::Pending{progress:metadata});}
+            session.begin_close();
+            let step=match session.close_step(cx)?{Worker::Pending{progress}|Worker::Complete{progress}=>Step::Pending{progress},Worker::Blocked=>Step::Blocked};
+            return step.admit(grant,false).map_err(semio_framework_job::OriginalTurnFailure::from);
+        }
+        self.outcome_pending=false;self.resume_pending=false;
+        Ok(Step::Complete{progress:Default::default()})
+    }
+
 }
 #[doc(hidden)]
 pub struct RuntimeLiveCleanupJob<PA: PluginApp> {
@@ -116,9 +145,7 @@ impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
         cx.set_stage("plugin-runtime-live-cleanup");
         *outcome_progress = None;
         *contended = false;
-        if cx.is_cancelled() {
-            return CleanupTurn::Cancelled;
-        }
+        if cx.is_cancelled(){return CleanupTurn::Cancelled;}
         if cx.deadline_exceeded() || cx.fuel_exhausted() { return CleanupTurn::Yield; }
         let mut instance = match cell.background_instance() {
             Ok(instance) => instance,
@@ -171,6 +198,15 @@ impl<PA: PluginApp> RuntimeLiveCleanupJob<PA> {
 }
 impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJob<PA> {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if cx.is_cancelled(){
+            if let Some(original)=self.cell.as_ref(){
+                let drained=cx.with_original_native_weak_source(original,|cell,cx|{
+                    let step=runtime_drain_maintenance_source(cell,cx)?;
+                    Ok(matches!(step,PluginLifecycleStep::Complete(progress) if progress==RetainedCloneProgress::default()))
+                })?;
+                if !drained{return Ok(None)}
+            }
+        }
         semio_framework_plugin_job::reserved_job_outcomes::drive_turn(self, cx)
     }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -204,6 +240,21 @@ impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeLiveCleanupJo
         self.closing && self.cell.is_none() && self.publication.terminal_is_empty()
     }
 }
+/// 🧭️ Drains retained app sources under the persistent actor issuer before retiring its live worker.
+pub fn runtime_drain_maintenance_source<PA:PluginApp>(cell:&RuntimeAppCell<PA>,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
+    cx.with_original_retirement(|cx|{
+        let mut instance=match cell.background_instance(){Ok(instance)=>instance,Err(RuntimeInstanceRefusal::Contended)=>return Ok(PluginLifecycleStep::Blocked{reason:"original maintenance source is borrowed"}),Err(RuntimeInstanceRefusal::Poisoned)=>return Err(plugin_internal_fault("original maintenance source is poisoned").into())};
+        if instance.app.maintenance_source_terminal_is_empty(){return Ok(PluginLifecycleStep::Complete(Default::default()))}
+        cx.with_retained_loan(cell.mounted_policy.close,|cx|{
+            let grant=cx.retained_grant();let demand=instance.app.maintenance_source_close_demands(grant.maximum_copy_bytes)?;
+            if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::AwaitingInput{reason:"original maintenance drain retains its quoted authority"})}
+            let before=cx.retained_progress();let step=instance.app.maintenance_source_close_step(cx,grant)?;let after=cx.retained_progress();
+            let actual=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
+            if step.progress().unwrap_or_default()!=actual||matches!(step,PluginLifecycleStep::Complete(_))&&!instance.app.maintenance_source_terminal_is_empty(){return Err(plugin_internal_fault("original maintenance drain receipt or terminal witness disagrees").into())}
+            Ok(step)
+        })
+    })
+}
 #[doc(hidden)]
 pub struct RuntimeCloseCleanupJob<PA: PluginApp> {
     pub state: Option<std::sync::Weak<RuntimeCloseWorkerState<PA>>>,
@@ -235,10 +286,7 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
         runtime_close_phase(&state, 9);
         *outcome_progress = None;
         *contended = false;
-        if cx.is_cancelled() {
-            return CleanupTurn::Cancelled;
-        }
-        if cx.deadline_exceeded() || cx.fuel_exhausted() { return CleanupTurn::Yield; }
+        if cx.retirement_should_yield() { return CleanupTurn::Yield; }
         let cell_owner = match state.cell.try_lock() {
                 Ok(cell) => cell,
                 Err(std::sync::TryLockError::WouldBlock) => {
@@ -253,8 +301,12 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
                 *outcome_progress = Some(PluginLifecycleStep::Complete(Default::default()));
                 return CleanupTurn::Complete;
             };
+        match runtime_drain_maintenance_source(cell,cx) {
+            Ok(PluginLifecycleStep::Complete(progress)) if progress==RetainedCloneProgress::default() => {},
+            Ok(step) => { *outcome_progress=Some(step); return CleanupTurn::Yield },
+            Err(failure) => return CleanupTurn::OriginalFailure(failure),
+        }
         {
-
             let mut maintenance = match cell.maintenance_pump.try_lock() {
                 Ok(maintenance) => maintenance,
                 Err(std::sync::TryLockError::WouldBlock) => {
@@ -336,6 +388,17 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
 }
 impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJob<PA> {
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure> {
+        if cx.is_cancelled(){
+            if let Some(original)=self.state.as_ref(){
+                let drained=cx.with_original_native_weak_source(original,|state,cx|{
+                    let cell=match state.cell.try_lock(){Ok(cell)=>cell,Err(std::sync::TryLockError::WouldBlock)=>return Ok(false),Err(std::sync::TryLockError::Poisoned(_))=>return Err(plugin_internal_fault("cancelled close source is poisoned").into())};
+                    let Some(cell)=cell.as_ref()else{return Ok(true)};
+                    let step=runtime_drain_maintenance_source(cell,cx)?;
+                    Ok(matches!(step,PluginLifecycleStep::Complete(progress) if progress==RetainedCloneProgress::default()))
+                })?;
+                if !drained{return Ok(None)}
+            }
+        }
         semio_framework_plugin_job::reserved_job_outcomes::drive_turn(self, cx)
     }
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
@@ -346,6 +409,10 @@ impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJ
     }
     fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.closing = true;
+        if let Some(original)=self.state.as_ref(){
+            let step=cx.with_original_native_weak_source(original,|state,cx|runtime_close_owned_app_source(state,cx))?;
+            if !matches!(step,semio_framework_job::InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){return Ok(match step{semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>semio_framework_job::InteractiveJobCloseStep::Pending{progress},step=>step})}
+        }
         if !self.publication.terminal_is_empty() {
             return self.publication.close_step(cx);
         }
@@ -368,6 +435,21 @@ impl<PA: PluginApp> semio_framework_job::InteractiveJob for RuntimeCloseCleanupJ
     fn terminal_is_empty(&self) -> bool {
         self.closing && self.state.is_none() && self.publication.terminal_is_empty()
     }
+}
+/// 🧯️ The actual close state owns every app rung through cancellation, expiry and physical worker return.
+pub fn runtime_close_owned_app_source<PA:PluginApp>(state:&RuntimeCloseWorkerState<PA>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
+    cx.with_original_retirement(|cx|{
+        let before=cx.retained_progress();let mut lifecycle=None;let mut contended=false;
+        let turn=RuntimeCloseCleanupJob::advance_source(state,&mut lifecycle,&mut contended,cx);let after=cx.retained_progress();
+        let progress=RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes};
+        match turn{
+            CleanupTurn::OriginalFailure(failure)=>Err(failure),
+            CleanupTurn::Fault(detail)=>Err(plugin_internal_fault(String::from_utf8_lossy(detail).into_owned()).into()),
+            CleanupTurn::FaultText(detail)=>Err(plugin_internal_fault(detail).into()),
+            CleanupTurn::Complete=>Ok(semio_framework_job::InteractiveJobCloseStep::Complete{progress}),
+            _=>Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}),
+        }
+    })
 }
 /// ⏳️ A close authority that is not yet releasable is a WAIT, never a fault: the ladder keeps
 /// stepping until its external owner lets go (mirrors the live cleanup job, which has always

@@ -179,10 +179,8 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// first paint was a blank scene until a client dispatched `setActiveExample`. Mirrors the sibling
     /// `Fem3dViewer::initial_snapshot` (and block3d's `block3d_boot_snapshot`) so editor and viewer boot
     /// the same geometry. See `semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::fem3d_boot_snapshot`.
-    fn reference_birth()->Option<fn()->Fem3dSnapshot>{Some(||{
-        let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
-        eprintln!("[TRACE] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len(), snapshot.materials.len(), snapshot.load_cases.len());
-        snapshot
+    fn reference_birth()->Option<fn()->Result<Fem3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot().map_err(|error|semio_framework_plugin::reference_birth_fault("fem3d bundled boot document",error))
     })}
 
     fn io() -> Option<AppIo> {
@@ -490,7 +488,7 @@ impl ArtifactEditor for Fem3dPlayApp {
     ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
         let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let clock = transient.window::<window_results::transient::Fem3dResultsWindowTransientOwner>().and_then(|window| window.clock);
-        let preview = transient.snapshot.preview::<Fem3dSnapshot, Fem3dMutation>(doc.snapshot);
+        let preview = transient.snapshot.preview::<Fem3dSnapshot, semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue, Fem3dMutation>(doc.snapshot, Fem3dSnapshot::to_reference, |value| Fem3dSnapshot::from_reference(value).ok());
         Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem3dInteractionSnapshot::from_interaction(interaction), clock)
 
         })();

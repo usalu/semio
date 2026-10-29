@@ -40,12 +40,7 @@ async fn node_graph_viewport_writes_config_not_mutations() {
         window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "equation-graph-test".into(), window_kind_id: crate::editor::equation::modes::edit::windows::graph::MATH_PLAY_WINDOW_GRAPH.into() }],
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
-    let result = app
-        .0
-        .dispatch_typed(
-            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
-            &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()
-        )
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }), &semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
         .await
         .expect("viewport");
     assert!(result.mutations.is_empty(), "nodeGraphViewport must not emit a VCS operation");
@@ -81,8 +76,8 @@ async fn node_graph_edit_delete_removes_nodes_and_incident_edges() {
 #[semio_framework_async_macros::async_test]
 async fn node_graph_edit_refuses_an_unknown_operation_and_an_empty_array_emits_nothing() {
     let mut app = math_app().await;
-    assert!(app.0.dispatch_typed(node_graph_edit(semio_framework_pack_json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.is_err(), "a row outside the shared vocabulary refuses the batch");
-    let result = app.0.dispatch_typed(EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("empty array");
+    assert!(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &node_graph_edit(semio_framework_pack_json::object([("operation".to_string(), Value::from("unknownTag"))])), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.is_err(), "a row outside the shared vocabulary refuses the batch");
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &EquationCommand::NodeGraphEdit(node_graph_edit::NodeGraphEdit { operations_json: "[]".into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("empty array");
     assert!(result.mutations.is_empty());
 }
 

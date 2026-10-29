@@ -3,7 +3,7 @@
 use super::*;
 
 // #region 🔖️Write
-struct ProductIds {
+pub(super) struct ProductIds {
     pub(super) definition: u64,
 }
 

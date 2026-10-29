@@ -10,9 +10,9 @@ description = "FEM 2d play app editor: app, manifest, view commands, options and
 role = "library"
 
 [package.metadata.semio.rust-source-boundary]
-maxSourceBytes = 2097152
-maxSourceFiles = 128
-maxActiveLines = 24000
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
 
 [lints]
 workspace = true

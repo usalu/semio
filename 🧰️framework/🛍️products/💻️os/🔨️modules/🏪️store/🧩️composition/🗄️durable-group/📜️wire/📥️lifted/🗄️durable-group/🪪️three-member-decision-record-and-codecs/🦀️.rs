@@ -234,3 +234,11 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
 impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DurableOwnedThreeMemberDecisionV1 {
 
 }
+
+impl planning::DurableDecisionSource for DurableOwnedThreeMemberDecisionV1 {
+    fn fields(&self) -> DurableBorrowedDecisionFields<'_> {
+        DurableBorrowedDecisionFields { schema: &self.schema, anchor: &self.anchor, anchor_sha256: &self.anchor_sha256, decision_sha256: &self.decision_sha256, parent: &self.parent, drawing: &self.drawing, value: &self.value }
+    }
+    fn set_anchor_hash(&mut self, hash: String) { self.anchor_sha256 = hash; }
+    fn set_decision_hash(&mut self, hash: String) { self.decision_sha256 = hash; }
+}

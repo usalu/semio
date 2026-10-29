@@ -1,0 +1,599 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "semio:flow/dsl-native-snapshot",
+ "title": "FlowHostSnapshot canonical JSON projection",
+ "type": "object",
+ "additionalProperties": false,
+ "required": [
+  "schema",
+  "camera",
+  "widgets",
+  "synapses",
+  "layout"
+ ],
+ "properties": {
+  "schema": {
+   "const": "flow.host_snapshot"
+  },
+  "camera": {
+   "$ref": "#/$defs/camera"
+  },
+  "widgets": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/widget"
+   }
+  },
+  "synapses": {
+   "type": "array",
+   "items": {
+    "$ref": "#/$defs/synapseSpec"
+   }
+  },
+  "layout": {
+   "type": "object",
+   "additionalProperties": {
+    "$ref": "#/$defs/point"
+   }
+  }
+ },
+ "$defs": {
+  "num": {
+   "type": "number"
+  },
+  "point": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "x",
+    "y"
+   ],
+   "properties": {
+    "x": {
+     "type": "number"
+    },
+    "y": {
+     "type": "number"
+    }
+   }
+  },
+  "camera": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "x",
+    "y",
+    "zoom"
+   ],
+   "properties": {
+    "x": {
+     "type": "number"
+    },
+    "y": {
+     "type": "number"
+    },
+    "zoom": {
+     "type": "number"
+    }
+   }
+  },
+  "value": {
+   "anyOf": [
+    {
+     "type": [
+      "null",
+      "boolean",
+      "integer",
+      "number",
+      "string"
+     ]
+    },
+    {
+     "$ref": "#/$defs/dictionary"
+    }
+   ]
+  },
+  "dictionary": {
+   "type": "object",
+   "additionalProperties": {
+    "$ref": "#/$defs/value"
+   }
+  },
+  "strings": {
+   "type": "array",
+   "items": {
+    "type": "string"
+   },
+   "uniqueItems": true
+  },
+  "synapseSpec": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "from",
+    "to",
+    "fromPort",
+    "toPort"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "from": {
+     "type": "string"
+    },
+    "to": {
+     "type": "string"
+    },
+    "fromPort": {
+     "type": "string"
+    },
+    "toPort": {
+     "type": "string"
+    }
+   }
+  },
+  "tree": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "neurons",
+    "synapses"
+   ],
+   "properties": {
+    "neurons": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/neuron"
+     }
+    },
+    "synapses": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/synapseSpec"
+     }
+    }
+   }
+  },
+  "neuron": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "id",
+    "kind"
+   ],
+   "properties": {
+    "id": {
+     "type": "string"
+    },
+    "kind": {
+     "type": "string"
+    },
+    "params": {
+     "$ref": "#/$defs/dictionary"
+    },
+    "tree": {
+     "oneOf": [
+      {
+       "$ref": "#/$defs/tree"
+      },
+      {
+       "type": "null"
+      }
+     ]
+    }
+   }
+  },
+  "chrome": {
+   "oneOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind"
+     ],
+     "properties": {
+      "kind": {
+       "const": "plain"
+      },
+      "preview": {
+       "type": "boolean"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "label",
+      "min",
+      "max",
+      "step"
+     ],
+     "properties": {
+      "kind": {
+       "const": "slider"
+      },
+      "label": {
+       "type": "string"
+      },
+      "min": {
+       "type": "number"
+      },
+      "max": {
+       "type": "number"
+      },
+      "step": {
+       "type": "number"
+      },
+      "value": {
+       "type": "number"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind"
+     ],
+     "properties": {
+      "kind": {
+       "const": "note"
+      },
+      "text": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind"
+     ],
+     "properties": {
+      "kind": {
+       "const": "image"
+      },
+      "src": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "name",
+      "schema"
+     ],
+     "properties": {
+      "kind": {
+       "const": "variable"
+      },
+      "name": {
+       "type": "string"
+      },
+      "schema": {
+       "type": "string"
+      }
+     }
+    }
+   ]
+  },
+  "flowUi": {
+   "type": "object",
+   "additionalProperties": false,
+   "required": [
+    "camera",
+    "nodes"
+   ],
+   "properties": {
+    "camera": {
+     "$ref": "#/$defs/camera"
+    },
+    "nodes": {
+     "type": "object",
+     "additionalProperties": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "layout",
+       "chrome"
+      ],
+      "properties": {
+       "layout": {
+        "$ref": "#/$defs/point"
+       },
+       "chrome": {
+        "$ref": "#/$defs/chrome"
+       }
+      }
+     }
+    },
+    "previews": {
+     "type": "array",
+     "items": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+       "id",
+       "mode"
+      ],
+      "properties": {
+       "id": {
+        "type": "string"
+       },
+       "source": {
+        "oneOf": [
+         {
+          "type": "null"
+         },
+         {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+           "neuron",
+           "channel"
+          ],
+          "properties": {
+           "neuron": {
+            "type": "string"
+           },
+           "channel": {
+            "type": "string"
+           }
+          }
+         }
+        ]
+       },
+       "mode": {
+        "type": "string"
+       },
+       "preview": {
+        "$ref": "#/$defs/dictionary"
+       },
+       "expanded": {
+        "$ref": "#/$defs/strings"
+       },
+       "layout": {
+        "oneOf": [
+         {
+          "type": "null"
+         },
+         {
+          "$ref": "#/$defs/point"
+         }
+        ]
+       }
+      }
+     }
+    }
+   }
+  },
+  "widget": {
+   "oneOf": [
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id",
+      "neuronKind"
+     ],
+     "properties": {
+      "kind": {
+       "const": "neuron"
+      },
+      "id": {
+       "type": "string"
+      },
+      "neuronKind": {
+       "type": "string"
+      },
+      "params": {
+       "$ref": "#/$defs/dictionary"
+      },
+      "inputPorts": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "outputPorts": {
+       "type": "array",
+       "items": {
+        "type": "string"
+       }
+      },
+      "preview": {
+       "type": "boolean"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id",
+      "label"
+     ],
+     "properties": {
+      "kind": {
+       "const": "inputSlider"
+      },
+      "id": {
+       "type": "string"
+      },
+      "label": {
+       "type": "string"
+      },
+      "value": {
+       "type": "number"
+      },
+      "min": {
+       "type": "number"
+      },
+      "max": {
+       "type": "number"
+      },
+      "step": {
+       "type": "number"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id"
+     ],
+     "properties": {
+      "kind": {
+       "const": "inputNote"
+      },
+      "id": {
+       "type": "string"
+      },
+      "text": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id"
+     ],
+     "properties": {
+      "kind": {
+       "const": "inputImage"
+      },
+      "id": {
+       "type": "string"
+      },
+      "src": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id"
+     ],
+     "properties": {
+      "kind": {
+       "const": "variable"
+      },
+      "id": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string"
+      },
+      "schema": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id"
+     ],
+     "properties": {
+      "kind": {
+       "const": "outputPreview"
+      },
+      "id": {
+       "type": "string"
+      },
+      "preview": {
+       "$ref": "#/$defs/dictionary"
+      },
+      "expanded": {
+       "$ref": "#/$defs/strings"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id"
+     ],
+     "properties": {
+      "kind": {
+       "const": "outputAction"
+      },
+      "id": {
+       "type": "string"
+      },
+      "action": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id"
+     ],
+     "properties": {
+      "kind": {
+       "const": "outputExport"
+      },
+      "id": {
+       "type": "string"
+      },
+      "format": {
+       "type": "string"
+      }
+     }
+    },
+    {
+     "type": "object",
+     "additionalProperties": false,
+     "required": [
+      "kind",
+      "id",
+      "tree"
+     ],
+     "properties": {
+      "kind": {
+       "const": "cluster"
+      },
+      "id": {
+       "type": "string"
+      },
+      "name": {
+       "type": "string"
+      },
+      "tree": {
+       "$ref": "#/$defs/tree"
+      },
+      "flow": {
+       "$ref": "#/$defs/flowUi"
+      }
+     }
+    }
+   ]
+  }
+ }
+}

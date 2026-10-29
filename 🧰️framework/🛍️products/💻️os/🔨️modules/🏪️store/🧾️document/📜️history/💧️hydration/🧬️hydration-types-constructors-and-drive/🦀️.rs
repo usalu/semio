@@ -55,8 +55,8 @@ pub enum PersistedDocumentHydrationTarget {
 
 pub enum PersistedDocumentHydrationOutput<P, M>
 where
-    P: ToValue + Clone + FromValue,
-    M: ToValue + FromValue + Mutation<P> + Clone + semio_framework_os_spr::ColdMutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     Store(Box<ArtifactStore<P, M>>),
     Envelope(ArtifactEnvelope<P, M>),
@@ -70,8 +70,8 @@ pub struct PersistedDocumentHydrationProgress {
 
 pub enum PersistedDocumentHydrationStep<P, M>
 where
-    P: ToValue + Clone + FromValue,
-    M: ToValue + FromValue + Mutation<P> + Clone + semio_framework_os_spr::ColdMutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(PersistedDocumentHydrationOutput<P, M>),
@@ -81,8 +81,8 @@ where
 /// 🏪️ A Store-only hydration handoff preserves its declared output authority.
 pub enum PersistedDocumentStoreHydrationStep<P, M>
 where
-    P: ToValue + Clone + FromValue,
-    M: ToValue + FromValue + Mutation<P> + Clone + semio_framework_os_spr::ColdMutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     Pending(PersistedDocumentHydrationProgress),
     Ready(Box<ArtifactStore<P, M>>),
@@ -140,8 +140,8 @@ impl<M> semio_framework_os_store_replay::ReplayEdits<M> for HydratedReplayEdits<
 
 pub struct RetainedPersistedDocumentHydration<P, M>
 where
-    P: ToValue + Clone + FromValue,
-    M: ToValue + FromValue + Mutation<P> + Clone + semio_framework_os_spr::ColdMutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub actor: ManuallyDrop<semio_framework_os_spr::ActorId>,
     pub pack: ManuallyDrop<Option<Vec<u8>>>,
@@ -195,8 +195,8 @@ where
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static + semio_framework_os_spr::ColdMutation<P>,
+    P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub fn from_decoded_pack(
         initial: P,
@@ -378,8 +378,8 @@ where
 }
 
 impl<P,M> RetainedPersistedDocumentHydration<P,M>
-where P: ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static {
+where P: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+M: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static {
     pub(super) fn loaded_replay_retirement(&self, owners: &DocumentStoreOwners<P, M>) -> semio_framework_os_store_read::ArtifactHistoryReadRetirement<P, M> {
         semio_framework_os_store_read::ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None), preview: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), plan_retirement: ManuallyDrop::new(None), draft_retirement: ManuallyDrop::new(None), registry_retirement: ManuallyDrop::new(None), snapshots: ManuallyDrop::new(Some(owners.initial_snapshot_retirement.clone())), mutations: ManuallyDrop::new(Some(owners.mutation_retirement.clone())), factory_retirement:std::array::from_fn(|_|None) }
     }

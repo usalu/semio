@@ -1,6 +1,5 @@
-use super::*;
+use semio_s_artifact_stdio_idml::io::admission::{IdmlAdmissionCursor,IdmlAdmissionSource,IdmlAdmissionGrant,IdmlAdmissionParts,change::*};
 use crate::{IdmlSnapshot,IdmlDiff,schema::{IdmlPart,diff::{IdmlPatch,IdmlPartPatch}}};
-use super::super::{IdmlAdmissionGrant,IdmlAdmissionParts};
 fn admitted(snapshot:&IdmlSnapshot)->IdmlAdmissionCursor{let mut cursor=IdmlAdmissionCursor::new();loop{let step=cursor.advance(IdmlAdmissionSource::snapshot(snapshot),IdmlAdmissionGrant{maximum_work:7,maximum_copy_bytes:2048,maximum_capacity_bytes:1024,maximum_release_bytes:0});assert!(step.error.is_none());if step.done{return cursor;}}}
 fn close(index:&mut IdmlAdmissionCursor){index.begin_close();while index.next_release_bytes()!=0{index.close_one(index.next_release_bytes());}assert!(index.terminal_is_empty());}
 fn event_value(event:IdmlChangeEvent)->serde_json::Value{match event{IdmlChangeEvent::Version=>serde_json::json!({"kind":"version"}),IdmlChangeEvent::Order=>serde_json::json!({"kind":"order"}),IdmlChangeEvent::Remove{before}=>serde_json::json!({"kind":"remove","before":before}),IdmlChangeEvent::Part{next,before:Some(before)}=>serde_json::json!({"kind":"part","next":next,"before":before}),IdmlChangeEvent::Part{next,before:None}=>serde_json::json!({"kind":"part","next":next})}}

@@ -125,7 +125,7 @@ async fn a_video_import_streams_its_frames_and_commits_one_edit() {
 async fn an_open_import_refuses_every_other_document_verb() {
     let mut app = app().await;
     video_tick(&mut app, 0).await;
-    let admitted = app.0.dispatch_typed(RemodelingCommand::AddStream(add_stream::AddStream { name: "Side".into(), kind: "video".into(), camera_id: String::new() }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    let admitted = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RemodelingCommand::AddStream(add_stream::AddStream { name: "Side".into(), kind: "video".into(), camera_id: String::new() }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     let refusal = match admitted {
         Err(fault) => fault,
         Ok(_) => settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("a foreign edit while the import is open is refused"),
@@ -228,7 +228,7 @@ async fn a_pick_whose_first_file_does_not_decode_mints_its_own_stream() {
 async fn a_windowless_multi_file_pick_is_refused() {
     let mut app = app().await;
     let first = RemodelingCommand::ImportFramePayload(import_frame_payload::ImportFramePayload { payload: semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::kit::checker_data_url(24, 24, 3).await, name: "frame-0.png".into(), index: 0, total: 2 });
-    let refusal = match app.0.dispatch_typed(first, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
+    let refusal = match semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &first, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await {
         Err(fault) => fault,
         Ok(_) => settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("a windowless multi-file pick is refused"),
     };

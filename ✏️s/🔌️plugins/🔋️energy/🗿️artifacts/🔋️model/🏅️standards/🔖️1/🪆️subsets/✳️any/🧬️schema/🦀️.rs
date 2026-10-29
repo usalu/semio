@@ -8,7 +8,7 @@ extern crate semio_s_artifact_energy_model_diff as diff;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::snapshot::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
+use crate::snapshot::reference::{EnergyModelSnapshot, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::{DslValue, FromValue, ToValue, ValueError};
 
@@ -24,13 +24,13 @@ pub fn empty_energy_model_snapshot() -> EnergyModelSnapshot {
 /// the working-scene cache (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM). Replaces the old
 /// `serde_json::from_str(&snapshot.model_json)` decode-on-demand now that `model_json` is gone.
 pub fn model_from_snapshot(snapshot: &EnergyModelSnapshot) -> Result<crate::model::Model, String> {
-    Ok(crate::snapshot::energy_model(snapshot))
+    Ok(crate::snapshot::reference::energy_model(snapshot))
 }
 
 /// 📕️ Encode a typed `Model` into snapshot form — mints+caches its composed `structure`/`zones`
-/// children in one call via [`crate::energy_snapshot_with_state`].
+/// children in one call via [`crate::snapshot::reference::energy_snapshot_with_state`].
 pub fn snapshot_from_model(model: &crate::model::Model) -> Result<EnergyModelSnapshot, String> {
-    Ok(crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None))
+    Ok(crate::snapshot::reference::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, model, None))
 }
 //#endregion 🔖️DocumentHelpers
 

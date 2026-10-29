@@ -60,8 +60,8 @@ impl ArtifactViewer for PngViewer {
     const DIALECT: Dialect = PNG_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PNG_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        crate::standards::v1_2::subsets::any::schema::blank_png_snapshot()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1_2::subsets::any::schema::blank_png_snapshot())
     })}
 
     fn handle(

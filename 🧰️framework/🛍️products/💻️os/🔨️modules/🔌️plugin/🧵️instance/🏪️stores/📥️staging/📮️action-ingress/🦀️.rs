@@ -8,7 +8,7 @@ use semio_framework_plugin_decl_app::ArtifactApp;
 
 /// 🫴️ Original parser input is transferred only by the receiving caller, never by a structural copy.
 #[derive(RetireOwned)]
-pub struct ActionIngressSource{pub action:Option<String>,pub args:Option<DslValue>,pub prepared:Option<DslValue>,pub assembled:Option<DslValue>,pub fault:Option<Fault>}
+pub struct ActionIngressSource{pub original_typing_ready:bool,pub original_typing_control_ready:bool,pub original_press_result:Option<bool>,pub original_tool_dispatch:Option<bool>,pub original_press_tag:Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ScrubTag>,pub original_tool_tag:Option<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag>,pub original_tool_tag_ready:bool,pub action:Option<String>,pub args:Option<DslValue>,pub prepared:Option<DslValue>,pub assembled:Option<DslValue>,pub fault:Option<Fault>}
 
 /// ♻️ One exact receiving record holds the original source until its acknowledged paid close.
 pub struct ActionIngressRecord{pub source:std::mem::ManuallyDrop<Option<ActionIngressSource>>,pub retirement:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ActionIngressSource>>>,pub caller:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub ready:bool}
@@ -64,7 +64,7 @@ impl ActionIngress {
    let grant=cx.retained_grant();let bytes=size_of::<ActionIngressSource>()+action.len();if cx.should_yield()||grant.maximum_items<2||grant.maximum_copy_bytes<bytes||grant.maximum_capacity_bytes<action.len()||grant.maximum_depth<2{return Ok(None)}
    let Some(caller)=cx.original_source_parent()?.admit_loan(cx)?else{return Ok(None)};*self.pending_action_ingress_caller=Some(caller);
    cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ActionIngressSource>(),..Default::default()})?;
-   *self.pending_action_ingress=Some(ActionIngressSource{action:Some(String::new()),args:args.take(),prepared:None,assembled:None,fault:fault.take()});self.pending_action_ingress_identity=Some((cx.operation(),cx.generation()));
+   *self.pending_action_ingress=Some(ActionIngressSource{original_typing_ready:false,original_typing_control_ready:false,original_press_result:None,original_tool_dispatch:None,original_press_tag:None,original_tool_tag:None,original_tool_tag_ready:false,action:Some(String::new()),args:args.take(),prepared:None,assembled:None,fault:fault.take()});self.pending_action_ingress_identity=Some((cx.operation(),cx.generation()));
    let original=self.pending_action_ingress.as_mut().unwrap();let name=original.action.as_mut().unwrap();name.try_reserve_exact(action.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original action name capture allocation refused"))?;name.push_str(action);cx.consume_retained(RetainedCloneProgress{copied_items:0,copied_bytes:action.len(),retained_capacity_bytes:name.capacity(),..Default::default()})?;
   }
   self.pending_action_ingress_caller.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original pending action caller loan is absent"))?.validate_context(cx)?;

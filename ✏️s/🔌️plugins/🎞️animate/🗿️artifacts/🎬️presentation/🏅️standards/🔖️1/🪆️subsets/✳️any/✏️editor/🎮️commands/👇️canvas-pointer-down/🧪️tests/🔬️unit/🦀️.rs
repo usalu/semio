@@ -22,7 +22,7 @@ use semio_framework_plugin::{artifact_app_laws, Effect, PluginApp};
 /// would have been handed and the selection snapshot is the witness.
 async fn settled(app: &mut PresentationApp, command: PresentationCommand) -> artifact_app_laws::TypedOperationFixtureReceipt {
     let instance_id = artifact_app_laws::meta("local").instance_id;
-    app.0.dispatch_typed(command, &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
     artifact_app_laws::settle_registered_typed_operation(&mut app.0, instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication settles")
 }
 

@@ -71,12 +71,14 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "mounted turn has stale instance, operation or generation"));
         }
         if context.is_cancelled() && phase != MountedOwnerPhaseV1::Close { return Err(ValueError::literal(ValueRefusalKind::Canceled, "mounted turn was cancelled")); }
-        if context.deadline_exceeded() || context.fuel_exhausted() { return Ok(None); }
+        if if phase==MountedOwnerPhaseV1::Close {context.retirement_should_yield()}else{context.should_yield()} { return Ok(None); }
         let policy_grant=policy.grant(phase);let original=context.retained_grant();
         let grant=RetainedCloneGrant {maximum_items:policy_grant.maximum_items.min(original.maximum_items),maximum_copy_bytes:policy_grant.maximum_copy_bytes.min(original.maximum_copy_bytes),maximum_capacity_bytes:policy_grant.maximum_capacity_bytes.min(original.maximum_capacity_bytes),maximum_release_bytes:policy_grant.maximum_release_bytes.min(original.maximum_release_bytes),maximum_depth:policy_grant.maximum_depth.min(original.maximum_depth)};
         if grant.maximum_items == 0 { return Ok(None); }
         Ok(Some(Self { identity: expected, phase, grant, progress: RetainedCloneProgress::default(), context }))
     }
+
+    fn scheduling_should_yield(&self)->bool{if self.phase==MountedOwnerPhaseV1::Close{self.context.retirement_should_yield()}else{self.context.should_yield()}}
 
     /// 🪪️ Returns the owner-pinned identity without consulting mutable document state.
     pub fn identity(&self) -> MountedOwnerIdentityV1 { self.identity }
@@ -99,7 +101,7 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
     /// 🚦️ Descriptive demand may refuse a turn but can never increase its authority.
     pub fn admits(&self, demand: RetirementDemand) -> Result<bool, ValueError> {
         if self.context.is_cancelled()&&self.phase!=MountedOwnerPhaseV1::Close { return Err(ValueError::literal(ValueRefusalKind::Canceled, "mounted owner was cancelled")); }
-        if self.context.should_yield() { return Ok(false); }
+        if self.scheduling_should_yield() { return Ok(false); }
         let grant = self.grant();
         Ok(grant.maximum_items > 0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth)
     }
@@ -119,7 +121,7 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
     /// ⛽️ Validates a nested job's actual scheduling debit without spending the same fuel twice.
     pub fn advance_job(&mut self, job: impl FnOnce(&mut StepContext<'context>, RetainedCloneGrant) -> Result<MountedOwnerJobReceiptV1, ValueError>) -> Result<RetainedCloneProgress, ValueError> {
         if self.context.is_cancelled()&&self.phase!=MountedOwnerPhaseV1::Close { return Err(ValueError::literal(ValueRefusalKind::Canceled, "mounted job was cancelled before execution")); }
-        if self.context.should_yield() { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "mounted job has no original scheduling authority")); }
+        if self.scheduling_should_yield() { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "mounted job has no original scheduling authority")); }
         let grant = self.grant();
         if grant.maximum_items == 0 { return Err(ValueError::literal(ValueRefusalKind::WorkLimit, "mounted job has no original physical turn authority")); }
         let before_fuel = self.context.fuel_remaining();
@@ -140,7 +142,7 @@ impl<'turn, 'context> MountedOwnerTurnV1<'turn, 'context> {
 
     /// 🏇️ Adopts an original lifecycle producer's posted receipt without debiting its caller twice.
     pub fn advance_lifecycle<S:semio_framework_value::RetirementReceipt,E:From<ValueError>>(&mut self, producer: impl FnOnce(&mut StepContext<'context>, RetainedCloneGrant) -> Result<S,E>) -> Result<S,E> {
-        if self.context.should_yield() || self.grant().maximum_items == 0 {
+        if self.scheduling_should_yield() || self.grant().maximum_items == 0 {
             return Ok(S::retirement_yield());
         }
         let grant = self.grant();

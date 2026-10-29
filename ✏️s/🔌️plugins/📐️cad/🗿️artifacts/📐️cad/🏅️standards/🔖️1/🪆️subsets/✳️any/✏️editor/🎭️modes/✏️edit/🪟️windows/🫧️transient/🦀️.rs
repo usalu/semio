@@ -4,6 +4,9 @@
 //! possible-select publish nothing durable and list no history row; only a commit lands, as one transform-tool transaction.
 
 
+extern crate semio_framework_os_kernel;
+extern crate semio_framework_pack as pack;
+
 /// 🫧️ One CAD world window's engagement state — see the module doc and `🧬️schema/🔣️.json`.
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]

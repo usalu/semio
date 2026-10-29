@@ -72,7 +72,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
 
     #[doc(hidden)]
     pub fn command_ctx(&mut self) -> CommandCtx<'_, A, M, InstanceExtensions> {
-        CommandCtx { original_typed_command:&mut self.original_typed_command, original_emission:&mut self.original_emission, app: &mut self.app, mounted_policy: self.mounted_policy, stores: &mut self.stores, roster: &mut self.roster, ingress: &mut self.ingress, interaction: &mut self.interaction, history: &mut self.history, host_events: &mut self.host_events, txn: &mut self.txn, child_composition: &mut self.child_composition, pending: &mut self.pending, tools: &mut self.tools, media: &mut self.media, ingest: &mut self.ingest, tool_runs: &mut self.tool_runs, time_travel: &mut self.time_travel, tool_machines: &mut self.tool_machines, extension: PhantomData }
+        CommandCtx { original_typing:&mut self.original_typing, original_typed_tag:&mut self.original_typed_tag, original_typed_command:&mut self.original_typed_command, original_emission:&mut self.original_emission, app: &mut self.app, mounted_policy: self.mounted_policy, stores: &mut self.stores, roster: &mut self.roster, ingress: &mut self.ingress, interaction: &mut self.interaction, history: &mut self.history, host_events: &mut self.host_events, txn: &mut self.txn, child_composition: &mut self.child_composition, pending: &mut self.pending, tools: &mut self.tools, media: &mut self.media, ingest: &mut self.ingest, tool_runs: &mut self.tool_runs, time_travel: &mut self.time_travel, tool_machines: &mut self.tool_machines, extension: PhantomData }
     }
 
     #[doc(hidden)]
@@ -95,11 +95,9 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
 }
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
-    /// 🎯️ B1: the shared body behind both `dispatch_typed_command` (wire bytes, decoded above)
-    /// 🧪️ Test-only typed-value helper. Production callers must enter with an exact
-    /// owner-qualified retained raw-page admission and cannot infer identity from a bare command.
-    pub fn dispatch_typed<'a, 'b, 'context>(&'a mut self, command: A::Command, meta: &'a ActionMeta, identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>,cx:&'a mut semio_framework_job::StepContext<'context>) -> impl Future<Output = Result<InvocationResult, Fault>> + 'a + use<'a, 'b, 'context, A, M> {
-        self.dispatch_ctx().dispatch_typed(command, meta, identity, cx)
+    /// 🏃️ One funded turn of a typed command the caller owns, produced and admitted through the original source like a host event; laws loop it over fixture turns until the receipt answers.
+    pub async fn drive_typed(&mut self, source: &mut semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>, command: &mut Option<Box<A::Command>>, meta: &mut Option<ActionMeta>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+        self.dispatch_ctx().drive_runtime_typed_command(source, || command.take(), &mut None, meta, identity, cx).await
     }
 
     /// 🧪️ Pins the continuous tools' clock (`None`: the wall clock again), so a law types, pauses and lapses deterministically

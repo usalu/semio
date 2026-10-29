@@ -217,8 +217,8 @@ fn document_archive_member_identity_mut(entry: &mut protocol::OwnedDocumentMembe
 #[doc(hidden)]
 pub struct ActiveDocumentArchiveLoad<P, Mutation>
 where
-    P: semio_framework_value::ToValue,
-    Mutation: semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
+    P: ::semio_framework_os_kernel::StoreState,
+    Mutation: ::semio_framework_os_kernel::StoreMutationFor<P>,
 {
     pub operation: u64,
     pub archive: Option<Box<protocol::DocumentArchivePack>>,
@@ -248,8 +248,8 @@ where
 
 impl<P, Mutation> ActiveDocumentArchiveLoad<P, Mutation>
 where
-    P: semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
+    Mutation: ::semio_framework_os_kernel::StoreMutationFor<P>,
 {
     pub fn new(operation: u64, archive: protocol::DocumentArchivePack, history: protocol::RetainedHistoryDecode) -> Self {
         let total = archive.members.len() as u64 + 1;
@@ -398,8 +398,8 @@ where
 
 impl<P, Mutation> Drop for ActiveDocumentArchiveLoad<P, Mutation>
 where
-    P: semio_framework_value::ToValue,
-    Mutation: semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
+    P: ::semio_framework_os_kernel::StoreState,
+    Mutation: ::semio_framework_os_kernel::StoreMutationFor<P>,
 {
     fn drop(&mut self) {
         assert!(

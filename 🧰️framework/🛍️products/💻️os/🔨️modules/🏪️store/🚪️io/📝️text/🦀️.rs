@@ -40,7 +40,7 @@ mod text_files_parsed_document_and_ops_log;
 pub use text_files_parsed_document_and_ops_log::{
     adopt_loaded_replay, common_address, fill_supersession_targets, loaded_history_replay,
     mutation_ids, operation_ids, ops_line_from_transition, parse_clock, print_clock,
-    print_document_text, print_edit_lines, print_ops_log, project_envelope_history,
+    print_document_text, print_document_text_with, print_edit_lines, print_ops_log, project_envelope_history,
     replay_loaded_history, supersession_address, take_loaded_replay, transition_from_ops_line,
     ArtifactTextFiles, ParsedDocumentText,
 };

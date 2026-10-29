@@ -223,8 +223,8 @@ impl ArtifactEditor for StepAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); step_any_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->StepSnapshot>{Some(||{
-        StepSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<StepSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(StepSnapshot::default())
     })}
 
     fn handle(

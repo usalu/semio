@@ -1,0 +1,58 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-hub-stdio-catalog-definition"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Definition-only stdio artifact catalog: the selected roster with ifc and semio contributed by their schema-owned definitions, committing to the same catalog as the full roster"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-hub-stdio-catalog-projection = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-ifc = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-avi = { workspace = true }
+semio-s-artifact-stdio-bcf = { workspace = true }
+semio-s-artifact-stdio-binary = { workspace = true }
+semio-s-artifact-stdio-bmp = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-deflate = { workspace = true }
+semio-s-artifact-stdio-docx = { workspace = true }
+semio-s-artifact-stdio-dwg = { workspace = true }
+semio-s-artifact-stdio-dxf = { workspace = true }
+semio-s-artifact-stdio-epw = { workspace = true }
+semio-s-artifact-stdio-gif = { workspace = true }
+semio-s-artifact-stdio-gltf = { workspace = true }
+semio-s-artifact-stdio-html = { workspace = true }
+semio-s-artifact-stdio-jpg = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-las = { workspace = true }
+semio-s-artifact-stdio-md = { workspace = true }
+semio-s-artifact-stdio-mp3 = { workspace = true }
+semio-s-artifact-stdio-mp4 = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true }
+semio-s-artifact-stdio-ply = { workspace = true }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-s-artifact-stdio-pptx = { workspace = true }
+semio-s-artifact-stdio-step = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-tiff = { workspace = true }
+semio-s-artifact-stdio-tsv = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
+semio-s-artifact-stdio-wav = { workspace = true }
+semio-s-artifact-stdio-xlsx = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }

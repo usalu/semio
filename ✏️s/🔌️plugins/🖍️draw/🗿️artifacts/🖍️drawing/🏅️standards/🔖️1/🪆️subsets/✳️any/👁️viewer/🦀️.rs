@@ -202,15 +202,6 @@ impl ArtifactViewer for DrawingViewer {
         Some(semio_s_artifact_draw_drawing_host_arena::drawing_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_s_artifact_draw_drawing_host::owned::drawing_document_store_initialization_job(envelope, operation, generation, actor))
-    }
-
     /// 🧬️ The loaded-parent child projection, read off the snapshot's own derived composition fields;
     /// without it every live envelope load faults `viewer did not declare a loaded-parent child
     /// projection` before the decoded document can replace the store.
@@ -229,8 +220,8 @@ impl ArtifactViewer for DrawingViewer {
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> { Some(semio_framework_plugin::no_presence_local_root_retirement_factory()) }
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> { Some(semio_framework_plugin::no_transient_local_root_retirement_factory()) }
 
-    fn reference_birth()->Option<fn()->DrawingSnapshot>{Some(||{
-        default_drawing_document("empty", None)
+    fn reference_birth()->Option<fn()->Result<DrawingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_drawing_document("empty", None))
     })}
 
     /// 🔒️ Camera publication requires the retained window-config route.

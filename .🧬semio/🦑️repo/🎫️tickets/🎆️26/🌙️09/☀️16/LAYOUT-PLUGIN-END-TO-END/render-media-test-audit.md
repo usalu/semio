@@ -1,0 +1,35 @@
+# Render Media Behavioral Test Harness Audit
+
+2026-10-28. Read-only inventory and recommendations sent directly to Rust and mutations workers. No code, builds or tests executed. Existing component activation remains independently owned.
+
+## Checkpoint Versus Live: Genuine Store Harness
+
+Best existing executable owner: Store/tests/bin-02/unit derived_child_reads_require_the_exact_store_frontier_and_genuine_operation_or_history_fold, under @semio-tech/os-store-tests-02-rs. Its existing neutral input is Store/tests/fixtures/derived-read/JSON. It constructs a real DemoSnapshot Store and genuine owner catalog, derives n9while live remains n0, issues a read and checks exact pointer equality to the derived snapshot, rejects a foreign Store with matching concrete type/event numbers, performs actual event publication to n6and rejects the old source. It then exercises real history replay, unchanged owner/registry on refusal, state transfer and bounded retirement. Portable derived/published values are compared both to fixture values and independently serialized serde_json values.
+
+Existing borrowed replay harness is Store/tests/supersede-replay/retraction-and-bounded-history-read-laws bounded_history_read_cursors_obey_the_neutral_law. It uses real Demo mutations and neutral edits/target, FixtureStoreReceiving, physical grants, real preview completion, unchanged live head and actual residue/alias close. It proves planning/prefix folds yield rather than merely finding source tokens. Some older calls are explicit reference/cold methods; use its actual fixture setup and receiving/retirement pattern, not a cold shortcut into the new original issuer API.
+
+Viable new checkpoint law in that owned native harness: create a real checkpoint with a distinguishable nvalue, mutate live to another value, drive begin_derived_checkpoint_preview and step_derived_checkpoint_preview under FixtureStoreReceiving until finished, invoke the new funded checkpoint read handoff before preview state transfer, then assert returned read points exactly to selected stateArc and differs from live head. Check selected contents, captured registry/frontier, foreign Store refusal, later publication refusal, every grant underflow before read issue/state take, and full preview/read/returned-registry closure. These assertions would fail a live snapshot_read_original substitution even when the two roots share document metadata. Do not manufacture ArtifactDerivedSnapshot or registry authority for the positive path.
+
+## Actual Media Read Custody Witness
+
+Existing focused native law: declaration/app/lifted/media-export/read/tests.rs actual_original_media_read_binds_pointer_and_current_issuer, mounted by plugin-decl-app. It uses an actual registry and typed read, compares the real media_original_read_matches result against three neutral dimensions, rejects a distinct Arc holding the same value, rejects a later registry publication, and closes its RetainedCloneSource plus returned registry. Its local JSON fixture is executable semantic input, not just schema validation. This is the natural narrow helper test for pointer/frontier checks, but it does not yet drive completed checkpoint replay or the full producer request.
+
+Extend the actual producer/consumer witness to inspect the built ArtifactMediaExportJobRequest: snapshot_read.get pointer equals request.snapshot, child catalog root identity equals the supplied original ChildContentView root, operation_context preserves actual admitted app/document/operation/generation/revision/grant, and its empty authoring seed makes entity_id refuse. Observe the same request consumed once, then all read/child/context owners close under their actual grant. A source-substring assertion or portable metadata JSON alone cannot prove this move/handoff.
+
+## Child Original Read and Context Harness
+
+Exact native source: declaration/child/editor/read/lookup/tests.rs. actual_registry_member_lookup_matches_neutral_original_source_laws executes17neutralcases over actual immutable child entries and issuer leases. It checks returned child payload pointer, retained parent identity, parent revision and child ID, with source/root/key/operation/revision/facet substitutions. Every funded turn is checked against semio_framework_trace heap accounting; item/copy/depth undergrants must do no work/allocation, and cancellation cuts close the partially progressed lookup and all child/read/registry/parent owners.
+
+Its companion actual_render_view_lends_its_original_context_to_member_lookup builds ArtifactView::with_render_context and verifies OriginalChildMemberOperation::from_view borrows the identical AppRenderOperationContext pointer and parent ID storage; it then resolves the actual child pointer through the funded lookup. This is a stronger existing positive than filling a structurally similar operation object. The nearby command/tests.rs is an executable exact child read/command metadata handoff harness and can supply the request-consumption close pattern.
+
+Portable assets are lookup/tests JSON and schema, TypeScript lookup implementation and tests.ts. The TypeScript checker accepts an independent collection findIndex oracle, constructs real collision/substitution cases, verifies exact selected entry identity and refuses parent payload access. It also checks undergrants leave catalog observation counts unchanged and cancellation cuts close. Reuse the existing owner test invocation/oracle injection rather than adding a runtime library. The native and TS implementations share the neutral cases; their actual pointer/reference/observation assertions provide semantic evidence beyond schema parsing.
+
+## Useful Existing Integration And Independent Media Readers
+
+SDK tests/media-owner-context media_export_request_context_preserves_exact_supplied_owner is a genuine registered Editor/Viewer/live-VCS export fixture. It verifies the supplied instance-operation owner label, document contents, default pack output, unknown port refusal and funded owner close. Its neutral fixture/schema and serde_json payload reader are reusable. It does not select a checkpoint, inspect request.snapshot_read or prove child read/context transfer, so it is supporting integration evidence only.
+
+Existing ticket media-oracles.mjs uses jsdom+sharp for SVG, sharp for PNG and pdfjs for PDF. An exported checkpoint content marker differing from live could be independently decoded with those readers after activation. Native export/unit PDF structure helpers additionally use lopdf to inspect actual PDF text/operators/images. None of these visual readers replace registry/pointer/closure assertions at the original custody seam.
+
+## Evidence Boundary
+
+Existing tests provide real Store, source, registry, child and context harnesses. They are appropriate places to add behavioral regression coverage; this inventory does not claim the new producer/checkpoint fixes have passed. Worker instructions preserve current genuine original receiving contexts, exact grant receipts and owned test routes. No new compiler lane or fabricated source authority was proposed.

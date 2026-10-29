@@ -125,6 +125,8 @@ impl Buffer{
 pub struct BufferView{raw:wgpu::BufferView}
 impl std::ops::Deref for BufferView{type Target=[u8];fn deref(&self)->&Self::Target{&self.raw}}
 impl BufferSlice<'_>{
+    /// 🔪️ Narrows this slice to a sub-range relative to its own start, never beyond its own end.
+    pub fn slice(&self,bounds:impl std::ops::RangeBounds<u64>)->BufferSlice<'_>{use std::ops::Bound;let length=self.end-self.start;let start=match bounds.start_bound(){Bound::Included(value)=>*value,Bound::Excluded(value)=>value.checked_add(1).expect("buffer slice start overflow"),Bound::Unbounded=>0};let end=match bounds.end_bound(){Bound::Included(value)=>value.checked_add(1).expect("buffer slice end overflow"),Bound::Excluded(value)=>*value,Bound::Unbounded=>length};assert!(start<=end&&end<=length,"bounded buffer slice");BufferSlice{buffer:self.buffer,start:self.start+start,end:self.start+end}}
     fn raw(&self)->wgpu::BufferSlice<'_>{self.buffer.raw.slice(self.start..self.end)}
     pub fn map_async(&self,_mode:MapMode,completion:impl FnOnce(Result<(),ResourceFault>)+Send+'static){self.raw().map_async(wgpu::MapMode::Read,move|result|completion(result.map_err(|_|ResourceFault::Backend("buffer mapping"))));}
     pub fn get_mapped_range(&self)->BufferView{BufferView{raw:self.raw().get_mapped_range()}}

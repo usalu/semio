@@ -5,11 +5,12 @@ extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_mut_site as site_mutations;
+extern crate semio_s_artifact_energy_model_mut_site_ground as site_ground_mutations;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 #[path = "."]
 mod change_ground_deep {
-    pub use crate::site_mutations::change_ground_deep::*;
+    pub use crate::site_ground_mutations::change_ground_deep::*;
     #[path = "../../📍️site/⛏️change-ground-deep/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../📍️site/⛏️change-ground-deep/🧪️tests/✅️sets/🦀️.rs"]
@@ -45,7 +46,7 @@ mod change_site_longitude {
 
 #[path = "."]
 mod change_ground_building {
-    pub use crate::site_mutations::change_ground_building::*;
+    pub use crate::site_ground_mutations::change_ground_building::*;
     #[path = "../../📍️site/🌡️change-ground-building/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../📍️site/🌡️change-ground-building/🧪️tests/✅️sets/🦀️.rs"]
@@ -54,7 +55,7 @@ mod change_ground_building {
 
 #[path = "."]
 mod change_ground_shallow {
-    pub use crate::site_mutations::change_ground_shallow::*;
+    pub use crate::site_ground_mutations::change_ground_shallow::*;
     #[path = "../../📍️site/🌱️change-ground-shallow/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../📍️site/🌱️change-ground-shallow/🧪️tests/✅️sets/🦀️.rs"]

@@ -113,8 +113,8 @@ impl ArtifactViewer for NoteViewer {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn reference_birth()->Option<fn()->NoteSnapshot>{Some(||{
-        empty_note_snapshot()
+    fn reference_birth()->Option<fn()->Result<NoteSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(empty_note_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `NoteViewCommand::Noop` variant never carries a config

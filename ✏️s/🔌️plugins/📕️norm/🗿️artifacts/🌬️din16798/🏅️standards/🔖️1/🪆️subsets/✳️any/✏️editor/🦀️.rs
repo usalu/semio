@@ -132,8 +132,8 @@ impl ArtifactEditor for Din16798PlayApp {
         registry.register::<results::ResultsWindowConfigOwner>()
     }
 
-    fn reference_birth()->Option<fn()->Din16798Snapshot>{Some(||{
-        Din16798Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<Din16798Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Din16798Snapshot::default())
     })}
 
     fn io() -> Option<AppIo> {

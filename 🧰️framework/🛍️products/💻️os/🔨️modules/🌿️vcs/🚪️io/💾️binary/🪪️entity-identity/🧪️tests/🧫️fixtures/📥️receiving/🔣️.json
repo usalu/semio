@@ -78,7 +78,7 @@
     "plugin_poll_document_archive_load",
     "plugin_receive_document_backbone",
     "plugin_dispatch_response_action",
-    "plugin_dispatch_intents",
+    "plugin_dispatch_intent",
     "plugin_exchange",
     "plugin_resume_task",
     "plugin_artifact_apply_ops"

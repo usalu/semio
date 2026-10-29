@@ -12,7 +12,7 @@ use semio_s_artifact_draw_drawing_model::snapshot::DrawingSnapshot;
 /// 🔁️ Drives one dispatched command to its published `LoadDocument` effect the way the host does.
 async fn published_load(app: &mut super::unit_tests::context::DrawingAppFixture, command: DrawingCommand, instance: u32) -> (Vec<u8>, Vec<u8>) {
     let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_laws::meta("fixture") };
-    app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
         app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();

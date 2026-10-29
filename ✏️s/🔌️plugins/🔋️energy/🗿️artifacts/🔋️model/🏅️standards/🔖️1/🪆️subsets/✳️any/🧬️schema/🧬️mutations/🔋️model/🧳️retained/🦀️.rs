@@ -1,6 +1,6 @@
 //! 🪪️ Original model identity mutations prepare immutable typed deltas without numerical model materialization.
 use crate::{snapshot::{original::EnergyModelSnapshot,state::{ModelIdentityState,fields::{RetainedSealedField,RetainedBranchProjection}}},diff::original::EnergyModelDiff};
-use protocol::mutation::retained::{RetainedFieldPreparation,retained_mutation_demand_fits};
+use protocol::{RetainedFieldPreparation,retained_mutation_demand_fits};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,shared_issuance::SealedShared,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_persistent::RetainedEqualityOwner;
 use std::mem::{size_of,ManuallyDrop};

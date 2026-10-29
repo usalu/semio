@@ -10,28 +10,7 @@ use crate::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 use crate::io::text::snapshot::dec_semio_value_snapshot;
 use crate::io::text::snapshot::enc_semio_value_snapshot;
-impl pack::snapshot::ArtifactPack for SemioValueSnapshot {
-
-    /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    
-
-    fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        let _ = options;
-        let raw = enc_semio_value_snapshot(self).into_bytes();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        Ok(store::semio_format::wrap_binary(&envelope, &raw))
-    }
-
-    fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
-        }
-        let _ = options;
-        let text = std::str::from_utf8(&inner).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
-        dec_semio_value_snapshot(text).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
-    }
-}
+semio_s_artifact_stdio_semio_base::semio_snapshot_record_pack!(SemioValueSnapshot);
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SemioValueSnapshot {
     fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 

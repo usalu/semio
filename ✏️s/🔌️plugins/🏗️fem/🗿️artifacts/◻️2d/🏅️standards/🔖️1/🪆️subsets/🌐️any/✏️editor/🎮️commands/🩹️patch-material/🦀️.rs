@@ -25,7 +25,8 @@ pub struct PatchMaterial {
 
 /// 🩹️ Parses one property; the semantic mutation validates its range against the replay base.
 pub fn handle(payload: &PatchMaterial, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let material = doc.snapshot.materials.iter().find(|material| material.id == payload.id).ok_or_else(|| Fault::from("fem2d.patch.material-missing"))?;
+    let material = doc.snapshot.materials.iter().find(|material| material.id.as_str() == payload.id.as_str()).ok_or_else(|| Fault::from("fem2d.patch.material-missing"))?;
+    let material = semio_s_fem_material::planar::FemMaterialValue { id: material.id.to_string(), name: material.name.to_string(), e: material.e, nu: material.nu, rho: material.rho };
     let mut patch = Fem2dMaterialPatch::default();
     let number = || -> Result<f64, Fault> { payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.material-value")) };
     match payload.field.as_str() {
@@ -35,7 +36,7 @@ pub fn handle(payload: &PatchMaterial, doc: &ArtifactView<'_, Fem2dSnapshot>, _c
         "rho" => patch.rho = Some(number()?),
         _ => return Err(Fault::from("fem2d.patch.material-field")),
     }
-    if patch.candidate(material) == *material {
+    if patch.candidate(&material) == material {
         return Ok(Emit::default());
     }
     Ok(Emit::mutations(vec![Fem2dMutation::ChangeMaterial(ChangeMaterial { id: payload.id.clone(), patch })]))

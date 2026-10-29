@@ -58,7 +58,7 @@ async function proveNativeOpenableCatalogProviderFixture(repoRoot: string): Prom
   
   if (!readFileSync(join(builderRoot, "🦀️.rs"), "utf8").includes("pub fn contributes_topic(")) throw new Error("plugin builder does not retain domain-neutral topic contributions before assembly");
   hubSchemaExport(repoRoot, "schema://hub.compositions.stdio.catalog/NativeCatalogSurfaceCommitment");
-  const catalogSource = readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/🦀️.rs"), "utf8");
+  const catalogSource = ["🦀️.rs", "🏗️projection/🦀️.rs"].map((file) => readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog", file), "utf8")).join("\n");
   if (!catalogSource.includes("pub fn native_artifact_catalog_dependency(") || !catalogSource.includes("pub fn validate_native_artifact_catalog_dependency(")) throw new Error("native catalog compiled dependency contract is absent");
   const registryRoot = join(surfaceRoot, "../..");
   const artifactsRoot = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts");

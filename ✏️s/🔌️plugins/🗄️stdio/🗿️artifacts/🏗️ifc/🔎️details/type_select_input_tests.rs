@@ -35,7 +35,7 @@ fn original_select_receiving_denies_axes_and_cancels_without_publishing_partial_
 }
 #[test]
 fn original_select_guidance_keeps_discriminator_and_scalar_editable_without_default_children(){
- use semio_framework_plugin::{action_staging::*,app::staged_form::*};
+ use semio_framework_plugin::action_staging::*;use semio_framework_plugin_decl_staged_form::*;
  type Guidance=super::super::super::type_guidance::IfcTypeInputSourceWork<DetailsTestProfile>;
  if DetailsTestProfile::catalog().schema!="IFC4X3_ADD2"{return;}
  let law=contract();for row in law["cases"].as_array().unwrap(){for mode in 0..3{let snapshot=source(&law,row["entity"].as_str().unwrap());let editing::SnapshotEditEvent::SetValue{path,value}=event(row)else{unreachable!()};let mut value=value;if mode==0{let DslValue::Object(fields)=&mut value else{unreachable!()};fields.iter_mut().find(|(key,_)|key=="$ifcInputs").unwrap().1=DslValue::Array(Vec::new());}else if mode==1{let DslValue::Object(fields)=&mut value else{unreachable!()};let DslValue::Array(rows)=&mut fields.iter_mut().find(|(key,_)|key=="$ifcInputs").unwrap().1 else{unreachable!()};let DslValue::Object(fields)=&mut rows[0]else{unreachable!()};let DslValue::Object(fields)=&mut fields.iter_mut().find(|(key,_)|key=="value").unwrap().1 else{unreachable!()};let DslValue::Object(fields)=&mut fields.iter_mut().find(|(key,_)|key=="value").unwrap().1 else{unreachable!()};fields.iter_mut().find(|(key,_)|key=="items").unwrap().1=DslValue::Array(Vec::new());}

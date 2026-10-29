@@ -142,8 +142,8 @@ impl ArtifactEditor for Pdf14AEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->PdfSnapshot>{Some(||{
-        PdfSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<PdfSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(PdfSnapshot::default())
     })}
 
     /// ✏️ Applies own page mutations after addressed text revision admission.

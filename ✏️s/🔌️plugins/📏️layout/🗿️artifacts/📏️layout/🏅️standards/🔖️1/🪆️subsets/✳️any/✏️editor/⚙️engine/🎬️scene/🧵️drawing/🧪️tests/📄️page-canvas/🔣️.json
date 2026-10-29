@@ -158,9 +158,9 @@
     "same child no-op"
   ],
   "sqlite": [
-    "document plus two page components",
-    "duplicate child content owned independently",
-    "orphan component refused"
+    "document and two page members",
+    "distinct page member identities",
+    "invalid member ownership refused"
   ],
   "canvasEdits": [
     {
@@ -186,68 +186,60 @@
   ],
   "sqliteCases": [
     {
-      "name": "document and distinct page roots",
-      "components": [
+      "name": "document and distinct page members",
+      "members": [
         {
           "owner": "document",
           "page": null,
-          "root": 1,
-          "canvas": [
-            200,
-            100
-          ]
+          "id": 1,
+          "childId": "document-child",
+          "artifactId": "document-artifact"
         },
         {
           "owner": "page",
           "page": 0,
-          "root": 2,
-          "canvas": [
-            200,
-            100
-          ]
+          "id": 2,
+          "childId": "page-one-child",
+          "artifactId": "page-one-artifact"
         },
         {
           "owner": "page",
           "page": 1,
-          "root": 3,
-          "canvas": [
-            80,
-            40
-          ]
+          "id": 3,
+          "childId": "page-two-child",
+          "artifactId": "page-two-artifact"
         }
       ]
     },
     {
-      "name": "equal child payloads remain independent",
-      "components": [
+      "name": "independent page member identities",
+      "members": [
         {
           "owner": "page",
           "page": 0,
-          "root": 1,
-          "canvas": [
-            200,
-            100
-          ]
+          "id": 1,
+          "childId": "first-child",
+          "artifactId": "first-artifact"
         },
         {
           "owner": "page",
           "page": 1,
-          "root": 2,
-          "canvas": [
-            200,
-            100
-          ]
+          "id": 2,
+          "childId": "second-child",
+          "artifactId": "second-artifact"
         }
       ]
     }
   ],
   "sqliteRefusals": [
-    "unowned Drawing document",
-    "unowned Drawing geometry",
-    "one Drawing root owned by two pages",
-    "cross-component style reference",
-    "cross-component shared geometry",
-    "ambiguous document/page owner"
+    "multiply owned page member",
+    "missing page owner",
+    "duplicate child identity",
+    "duplicate artifact target",
+    "unsupported Drawing dialect",
+    "ambiguous document/page owner",
+    "empty child identity",
+    "empty artifact target"
   ],
   "identityCases": [
     {

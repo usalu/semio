@@ -4,7 +4,7 @@ use semio_framework_plugin_document_media::media_export::ActiveMediaExport;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
 use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput;
+use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
 use semio_framework_plugin_ownership::bounded_ownership::{ArtifactFixedRegistry, DOCUMENT_ARCHIVE_LOAD_SLOTS};
 use semio_framework_plugin_ownership::store_lifecycle::{ArtifactOwnedDisposer, ArtifactSnapshotCloseRetention};
 use pack::snapshot::ArtifactPack;
@@ -15,7 +15,7 @@ use semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitPermit;
 use std::future::Future;
 use std::mem::ManuallyDrop;
 use crate::docs_instance_root::MediaExportPreparation;
-use store::{MemberFactory, Mutation, ReferenceSpaceMember};
+use store::{MemberFactory, Mutation, SpaceMember};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_child::SnapshotReadReturnPump;
@@ -59,7 +59,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         }
     }
 
-    pub async fn take_media_export_chunk(&mut self,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    pub async fn take_media_export_chunk(&mut self,handle:semio_framework_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         cx.original_source_parent()?;if receiver.is_some(){return Ok(true)}let operation_id=handle.operation_id.0;
         if *terminal&&self.segmented_downloads.get(operation_id).is_none(){return Ok(true)}
         self.snapshot_retirements.get(operation_id).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving lost its original source"))?.validate(cx)?;
@@ -67,7 +67,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
         if !output.owns_media_export_loan(handle){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download chunk receiving requires its exact handle").into())}
         if !*terminal{if !output.chunks.take_chunk_original(receiver,terminal,cx)?{return Ok(false)}return Ok(receiver.is_some())}
         if !output.terminal_is_empty(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"download EOF retains unread original chunks").into())}
-        let grant=cx.retained_grant();let bytes=size_of::<semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput>()+size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
+        let grant=cx.retained_grant();let bytes=size_of::<semio_framework_plugin_decl_media::ArtifactDownloadOutput>()+size_of::<semio_framework_plugin_document_media::media_export::MediaDownloadRetirement>();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<bytes{return Ok(false)}
         if !self.segmented_closures.can_insert(operation_id){return Ok(false)}let output=self.segmented_downloads.remove(operation_id).expect("checked exact original download");self.segmented_closures.insert_admitted(operation_id,semio_framework_plugin_document_media::media_export::MediaDownloadRetirement::pending(output));cx.consume_retained(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;cx.consume_fuel(1);Ok(true)
     }
 
@@ -88,7 +88,7 @@ impl<A: ArtifactApp> MediaTransfers<A> {
 }
 
 /// 🦠️ Envelope jobs: envelope ingress and decode, store replacement and document archive loads.
-pub struct EnvelopeJobs<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory> {
+pub struct EnvelopeJobs<A: ArtifactApp, M: SpaceMember + MemberFactory> {
     pub envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>,
     pub envelope_decode_jobs: ArtifactFixedRegistry<ActiveArtifactEnvelopeDecode<A::Snapshot, A::Mutation>>,
     pub store_replacement_jobs: ArtifactFixedRegistry<ActiveArtifactStoreReplacement<A::Snapshot, A::Mutation, M>>,

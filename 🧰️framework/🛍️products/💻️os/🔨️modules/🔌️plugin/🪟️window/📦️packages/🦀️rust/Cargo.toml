@@ -29,6 +29,8 @@ semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒�
 semio-framework-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-ownership = { path = "../../../🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../🎚️config/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-registry = { path = "../../🎚️config/🗂️registry/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config-mutation = { path = "../../🎚️config/📬️mutation/📦️packages/🦀️rust" }
 semio-framework-ui-declaration = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
 semio-framework-ui-layout = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }

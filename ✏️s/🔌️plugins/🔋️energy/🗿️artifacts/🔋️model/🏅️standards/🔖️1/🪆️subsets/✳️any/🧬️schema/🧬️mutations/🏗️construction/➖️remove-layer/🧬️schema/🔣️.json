@@ -81,7 +81,7 @@
     "semantics": {
       "verb": "remove",
       "entity": "Construction",
-      "kind": "RemoveConstructionLayer",
+      "kind": "remove-construction-layer",
       "record": "RemoveConstructionLayer"
     },
     "diagnostics": {

@@ -200,7 +200,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         V::fault_notices()
     }
-    fn reference_birth()->Option<fn()->Self::Snapshot>{V::reference_birth()}
+    fn reference_birth()->Option<semio_framework_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>>{V::reference_birth()}
     async fn initial_config() -> Self::Config {
         V::initial_config()
     }
@@ -219,7 +219,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     async fn command_id(command: &Self::Command) -> &'static str {
         V::command_id(command)
     }
-    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{V::original_action_command_producer()}
+    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{V::original_action_command_producer().or_else(semio_framework_plugin_decl_app::tool_contract::declared_action_command_bridge::<Self>)}
     async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         V::command_from_action(action, args, original_fault)
     }

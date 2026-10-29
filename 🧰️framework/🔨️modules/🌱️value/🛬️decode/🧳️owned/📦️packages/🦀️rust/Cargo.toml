@@ -41,3 +41,7 @@ semio-framework-value-derive = { path = "../../../../✨️derive/📦️package
 semio-framework-value-testing-allocator = { path = "../../../../🧪️testing/💾️allocator/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 serde = { workspace = true }
+
+[[test]]
+name = "set_receiving"
+path = "../../🧺️set/🧪️tests/🦀️.rs"

@@ -4,7 +4,7 @@ use semio_framework_os_kernel::os_store::{SpaceMember,ArtifactNativeVcsRequest,A
 use semio_framework_job::{OriginalSourceBinding,OriginalTurnFailure,StepContext,admit_original_construction,close_original_retained_step};
 use semio_framework_value::{RetirementDemand,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::RetainedCloneClose};
 use std::mem::{ManuallyDrop,size_of};
-use crate::original_pack_receiving::OriginalPackReceiving;
+use semio_framework_plugin_job_receiving::original_pack_receiving::OriginalPackReceiving;
 use semio_framework_value::DslValue;
 use semio_framework_os_kernel::os_vcs::{Author,CompositionPin,io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds};
 /// 🖋️ The authored action fields receive directly from their original intrinsic tree.

@@ -148,7 +148,7 @@ impl SurfaceContexts {
         if self.leases_exhausted||lease.source!=self as*const _ as usize||lease.context_version!=self.version{return None;}
         let binding=self.slots.get(lease.slot)?.as_ref()?;
         if binding.version!=lease.version{return None;}
-        Some(BorrowedSurfaceContext{body_key:&binding.body_key,view_state:&binding.view_state})
+        Some(BorrowedSurfaceContext{body_key:&binding.body_key,view_state:binding.view_state.as_ref()?})
     }
 
     /// 🪟️ The last host view this instance was refreshed or mounted with — the attached-window

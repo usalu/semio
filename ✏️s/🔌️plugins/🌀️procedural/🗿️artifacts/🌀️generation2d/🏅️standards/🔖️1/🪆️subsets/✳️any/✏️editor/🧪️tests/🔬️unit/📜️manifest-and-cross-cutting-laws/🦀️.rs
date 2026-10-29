@@ -51,7 +51,7 @@ fn canvas_pointer_wire_reads_only_a_samples_batch_and_defaults_cancelled() {
     assert_eq!(moved.last_sample(), Some([3.0, 4.0]));
     assert_eq!(bridge("canvasPointerUp", bare_point), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "an absent `cancelled` is a real release");
     assert_eq!(bridge("canvasPointerUp", semio_framework_value::DslValue::object([("cancelled".into(), semio_framework_value::DslValue::Bool(true))])), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: true }));
-    let document = Generation2dPlayApp::reference_birth().expect("explicit reference snapshot producer")();
+    let document = Generation2dPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = Generation2dConfig::default();
@@ -88,7 +88,7 @@ async fn add_widget_materializes_declared_kind_default_into_an_operation() {
     let mut app = app_with_registry().await;
     let result: Result<(usize, usize), String> = async {
         let before = snapshot_read(&app).host_snapshot.widgets.len();
-        app.0.dispatch_typed(Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Generation2dCommand::AddWidget(add_widget::AddWidget { kind: "inputSlider".into(), neuron_kind: None, format: None, action: None, x: None, y: None }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())
             .await
             .map_err(|error| format!("{error:?}"))?;
         let (artifact, _, _) = drive_preview_operation(&mut app).await?;

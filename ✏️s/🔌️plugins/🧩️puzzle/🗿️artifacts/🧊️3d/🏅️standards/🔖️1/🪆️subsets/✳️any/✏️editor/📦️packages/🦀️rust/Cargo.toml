@@ -93,8 +93,24 @@ semio-s-plugin-puzzle-retained = { workspace = true, features = ["testing"] }
 serde_json = { workspace = true }
 
 [[test]]
+name = "editor-action-producer"
+path = "../../🧪️tests/🔬️action-producer/🦀️.rs"
+
+[[test]]
+name = "editor-task-resume"
+path = "../../🧪️tests/🔬️task-resume/🦀️.rs"
+
+[[test]]
 name = "editor-surface"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
+
+[[test]]
+name = "editor-defects"
+path = "../../🧪️tests/🔬️defects/🦀️.rs"
+
+[[test]]
+name = "editor-manifest"
+path = "../../🧪️tests/🔬️manifest/🦀️.rs"
 
 [[test]]
 name = "editor-panels"

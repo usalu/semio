@@ -40,11 +40,7 @@ pub use semio_framework_os_store_replay_operation as replay_preparation;
 pub use replay_preparation::{ArtifactMutationSource, ArtifactReplayPreparationRequest, ArtifactReplayPreparation, ArtifactReplayPreparationContext, ArtifactReplayPreparationFactory, ArtifactReplayPreparationMode, ArtifactReplayPreparationProgress, ArtifactReplayPreparationRetirement, ArtifactReplayPreparationStep, ArtifactReplayPreparationTask, ArtifactReplayPrepared, admit_replay_preparation_step};
 use crate::os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 pub use replay_preparation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode};
-#[path="🕰️history/🎮️command/🦀️.rs"]
-mod native_vcs_command;
-pub use native_vcs_command::{ArtifactNativeVcsRequest,ArtifactNativeVcsKind,ArtifactNativeVcsSelection,ArtifactNativeVcsResult,ArtifactNativeVcsPhase,ArtifactNativeVcsAdvance,ArtifactNativeVcsCommand,ArtifactStoreNativeVcs};
-pub use semio_framework_os_store_engine::lifted_store::{OriginalCheckpointEditOrder,ArtifactNativeVcsRequest,ArtifactNativeVcsKind,ArtifactNativeVcsSelection,ArtifactNativeVcsResult,ArtifactNativeVcsPhase,ArtifactNativeVcsAdvance,ArtifactNativeVcsCommand,ArtifactOriginalVcsFailure};
-pub use semio_framework_os_store_engine::{original_history_branch,original_history_transitions,original_replay_metadata,original_replay_publication};
+pub use semio_framework_os_store_engine_command::{ArtifactNativeVcsRequest,ArtifactNativeVcsKind,ArtifactNativeVcsSelection,ArtifactNativeVcsResult,ArtifactNativeVcsPhase,ArtifactNativeVcsAdvance,ArtifactNativeVcsCommand,ArtifactStoreNativeVcsTurn};
 use semio_framework_value_snapshot_read as snapshot_read_registry_handle;
 use semio_framework_value_snapshot_read as snapshot_read_registry_retirement;
 pub use semio_framework_os_spr::command::MessageCopyCursor;
@@ -108,6 +104,7 @@ pub use semio_framework_os_store_one_item_batch::paged_one_item;
 pub use paged_one_item::{cold_mutation_apply_preparation_factory, mutation_apply_preparation_factory, paged_one_item_factory_birth_bytes, ColdMutationApplyFactory, MutationApplyEdit, PagedOneItemPreparationFactory};
 pub use semio_framework_os_store_one_item::semantic::PagedOneItemEdit;
 pub use semio_framework_os_store_one_item::semantic::PagedOneItemEditStep;
+pub use semio_framework_os_store_one_item::semantic::{PagedOneItemPost,PagedOneItemPostMode,PagedOneItemPostRead};
 
 // The `crate::os_dsl::DslArtifact`/`crate::os_dsl::DslOps` derive macros emit `::pack::snapshot::ArtifactDsl`/`::crate::os_store::OpText`
 // paths (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `store` as an
@@ -520,10 +517,12 @@ pub use semio_framework_os_store_space_member::lifted_store::{ArtifactRefs, Blob
 pub use semio_framework_os_store_space::lifted_store::{SpaceHost, create_member_store, install_funded_member_store_owners, install_unscheduled_catalog, open_member_store, space_history_store_owners};
 pub(crate) use semio_framework_os_store_space::lifted_store::{validate_member_history_identity};
 pub use semio_framework_os_store_engine_core::lifted_store::{ArtifactEnvelopeView, CommandReceipt, HistoryColumn, StoreCursor, StoreLog, StoreMintToken, StoreOwners, StoreWire, build_history_columns};
-pub use semio_framework_os_store_engine::lifted_store::{ArtifactStore, ConfigStore, DraftStore, HistoryFinalization, config_store_from_initialized_runtime_with_owners, merge_base, reconcile_alternative, retract_history_transitions_from_spr};
+pub use semio_framework_os_store_engine::lifted_store::{ArtifactStore, ConfigStore, DraftStore, HistoryFinalization, config_store_from_initialized_runtime_with_owners};
+pub use semio_framework_os_store_engine_checkpoint_graph::{merge_base, reconcile_alternative, retract_history_transitions_from_spr};
 pub use semio_framework_os_store_codec_factory::lifted_store::{ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS, artifact_codec, bare_artifact_codec, bare_artifact_codec_with_owners, ArtifactCodecOwnerSource, BoundedArtifactCodecOwners, codec_document_owners, replay_envelopes_onto_pair, native_artifact_codec};
 pub(crate) use semio_framework_os_store_codec_factory::lifted_store::{close_codec_reduction_store};
-pub(crate) use semio_framework_os_store_engine::lifted_store::{SupersedeScope, checkpoint_ancestors, checkpoint_identity, merge_by_id, preflight_merge_by_id};
+pub(crate) use semio_framework_os_store_engine::lifted_store::SupersedeScope;
+pub(crate) use semio_framework_os_store_engine_checkpoint_graph::{checkpoint_ancestors, checkpoint_identity, merge_by_id, preflight_merge_by_id};
 pub use semio_framework_os_store_config::lifted_store::{ConfigEnvelope, ConfigRecord, create_config_envelope};
 pub(crate) use semio_framework_os_store_engine_core::lifted_store::{MIRROR_ORACLE_EVERY_HISTORY, MIRROR_ORACLE_HISTORY, MIRROR_ORACLE_STRIDE, ScratchOwner, assign_history_checkpoint_lanes, branched_alternatives, checkpoint_alternatives, fold_history, has_main_only_descendant, is_checkpoint_main_only};
 pub use semio_framework_os_store_initialization_runtime::lifted_store::{ArtifactStoreInitializationDigest, ArtifactStoreInitializationEditAdmission, ArtifactStoreInitializationEditIndex, ArtifactStoreInitializationForward, ArtifactStoreInitializationOwnerCatalog, ArtifactStoreInitializationRuntime, artifact_initial_digest, artifact_initial_digest_of_pack, bound_edit_messages};
@@ -552,6 +551,6 @@ pub use semio_framework_os_store_test_support as test_support;
 
 
 pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
-pub use semio_framework_os_store_space_member::lifted_store::{ReferenceSpaceMember,MemberNativeDecodeControl};
+pub use semio_framework_os_store_space_member::lifted_store::MemberNativeDecodeControl;
 
 pub use semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand;

@@ -131,15 +131,6 @@ pub fn render_select_menu<E: Clone, T: SelectItemView>(id: &str, value: &str, it
     }
 }
 
-/// 🔼️ Arms one chevron press: the direction is stashed for [`render_select_menu`] to price and
-/// clamp on the next paint, which is the only place the item count and the resolved popup height are
-/// both in hand. Answers `false` for a control id that is not a scroll chevron.
-pub fn arm_select_scroll(scroll_offsets: &mut std::collections::HashMap<String, f32>, control_id: &str) -> bool {
-    let Some((id, direction)) = select_scroll_control_parts(control_id) else { return false };
-    scroll_offsets.insert(select_scroll_pending_key(id), direction);
-    true
-}
-
 pub fn arm_retained_select_scroll_at(tree: &mut semio_framework_ui_retained_tree::tree::UiTree, id: semio_framework_ui_arena::NodeId, x: f32, y: f32) -> bool {
     let direction = tree.node(id).and_then(|node| node.state.select_popup).and_then(|popup| select_scroll_direction_at(popup, x, y));
     let Some(direction) = direction else { return false };
@@ -158,13 +149,6 @@ pub fn scroll_retained_select_at(tree: &mut semio_framework_ui_retained_tree::tr
         tree.mark_dirty(id, semio_framework_ui_retained_tree::tree::NodeFlags::DIRTY_PAINT);
     }
     true
-}
-
-/// 🧹️ Drops both of one popup's scroll slots — called when the popup closes so a reopened `Select`
-/// starts at its first page, like a freshly mounted `SelectContent`, and neither slot outlives it.
-pub fn clear_select_scroll(scroll_offsets: &mut std::collections::HashMap<String, f32>, id: &str) {
-    scroll_offsets.remove(&select_scroll_key(id));
-    scroll_offsets.remove(&select_scroll_pending_key(id));
 }
 
 

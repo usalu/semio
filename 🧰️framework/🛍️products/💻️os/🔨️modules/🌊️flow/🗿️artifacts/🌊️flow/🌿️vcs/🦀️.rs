@@ -153,12 +153,13 @@ impl ArtifactOwnedValueRetirementFactory<FlowMutation> for FlowMutationRetiremen
 }
 
 impl MemberStoreProducer<FlowHostSnapshot,FlowMutation> for crate::io::binary::snapshot::FlowSnapshotPackProducer {
-    /// 📦️ A flow document opens as an owned member through its OWN `ArtifactPack` codec (the
-    /// hand-written twin above). It declared `UnsupportedMemberSnapshotOpen` until 2026-09-21, whose
-    /// `step` has exactly one answer — `Rejected(MemberOpenDiagnostic::Decode)` — so every composed
-    /// replacement or document archive carrying a real flow member was refused at member-open step 0,
-    /// always.
-    type SnapshotOpen = crate::os_store::ProducedMemberSnapshotOpen<FlowHostSnapshot,crate::io::binary::snapshot::FlowSnapshotPackProducer>;
+    /// 📦️ A flow document opens as an owned member by receiving its sealed Pack record natively into the persisted owner.
+    type SnapshotOpen = crate::os_store::OriginalRecordMemberSnapshotOpen<FlowHostSnapshot>;
+
+    /// 🧮️ Catalog source construction copies no bytes: it donates fixed factories and reports only retained capacity.
+    fn member_store_owners_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+        Ok(0)
+    }
 
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<FlowHostSnapshot, FlowMutation>::source_birth_bytes::<FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer<FlowHostSnapshot, FlowMutation>>()? + FlowAuthoringFactory::birth_demand().capacity_bytes, depth: 1 })

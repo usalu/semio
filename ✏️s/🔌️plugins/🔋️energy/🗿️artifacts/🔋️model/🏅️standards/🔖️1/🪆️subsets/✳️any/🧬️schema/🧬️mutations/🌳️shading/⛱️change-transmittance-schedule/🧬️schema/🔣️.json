@@ -88,7 +88,7 @@
     "semantics": {
       "verb": "change",
       "entity": "schedule-reference",
-      "kind": "change-transmittance-schedule-id",
+      "kind": "change-shading-surface-transmittance-schedule",
       "record": "ChangedOptionalSchedule"
     },
     "diagnostics": {

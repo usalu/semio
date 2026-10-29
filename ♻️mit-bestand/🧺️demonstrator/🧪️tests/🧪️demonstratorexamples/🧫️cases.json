@@ -17,6 +17,36 @@
       "brand": "ENTWERFEN_MIT_BESTAND_BEARBEITEN_BRAND",
       "exampleId": "concrete-forest",
       "source": "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🦀️.rs"
+    },
+    {
+      "paneId": "energie",
+      "brand": "ENTWERFEN_MIT_BESTAND_ENERGIE_BRAND",
+      "exampleId": "bestest-600",
+      "source": "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🏛️bestest-600/🦀️.rs"
+    },
+    {
+      "paneId": "statik",
+      "brand": "ENTWERFEN_MIT_BESTAND_STATIK_BRAND",
+      "exampleId": "concrete-forest",
+      "source": "✏️s/🔌️plugins/🏗️fem/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/🌐️any/📚️examples/🌲️concrete-forest/🦀️.rs"
+    }
+  ],
+  "catalogueRows": [
+    {
+      "paneId": "aggregator",
+      "editsKey": "kindId",
+      "rowId": "Hexagonal Cut Concrete Forest Left",
+      "kind": "dsl-object-id",
+      "needle": "\n    \"Hexagonal Cut Concrete Forest Left\" ",
+      "source": "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🌲️concrete-forest/🖼️assets/🌲️forest/🗣️.dsl.semio"
+    },
+    {
+      "paneId": "koordinator",
+      "editsKey": "catalogueId",
+      "rowId": "cad-play-catalogue.spatial.shape.primitive.box",
+      "kind": "cad-typology",
+      "needle": "typology: \"spatial.shape.primitive.box\",",
+      "source": "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧰️kit/🦀️.rs"
     }
   ]
 }

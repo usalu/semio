@@ -71,8 +71,8 @@ impl ArtifactViewer for SemioAnimationViewer {
     const DIALECT: Dialect = SEMIO_ANIMATION_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_ANIMATION_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->SemioAnimationSnapshot>{Some(||{
-        SemioAnimationSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SemioAnimationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SemioAnimationSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

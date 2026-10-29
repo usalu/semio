@@ -3,6 +3,18 @@
 use super::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+    pub(crate) fn original_typed_tag_pending(&self)->bool{self.original_typed_tag.is_some()||!self.original_typed_tag_close.is_empty()}
+
+    pub(crate) fn original_typed_tag_close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if !self.original_typed_tag_close.is_empty(){self.original_typed_tag_close.demands(body)}else{self.original_typed_tag_close.next_owner_demands::<semio_framework_plugin_tool_run::tool_jobs_tool_machine::ToolTag>(true,&None,body)}
+    }
+
+    pub(crate) fn close_original_typed_tag(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_value::RetainedCloneStep,semio_framework_job::OriginalTurnFailure>{
+        if !self.original_typed_command.original_binding()?.matches(cx)||Some(self.original_typed_command.original_decoder()?)!=cx.native_receiving_identity(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"direct tool tag requires its original command receiving source").into())}
+        let body=self.original_typed_command.original_body()?;let d=self.original_typed_tag_close_demands(body)?;let mut output=semio_framework_value::RetainedCloneStep::Progress(Default::default());
+        semio_framework_job::close_original_retained_step(cx,d,|grant|{output=if !self.original_typed_tag_close.is_empty(){self.original_typed_tag_close.select(body)?.step(grant)?}else{self.original_typed_tag_close.begin_granted(&mut self.original_typed_tag,grant)?.unwrap_or(semio_framework_value::RetainedCloneStep::Progress(Default::default()))};Ok(output)})?;Ok(output)
+    }
+
     pub(super) fn close_terminal_is_empty(&self) -> bool {
         self.constructor.constructor_terminal_is_empty()
             && self.close.close_started
@@ -26,8 +38,11 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.tools.pending_tool_lease_admission.is_none()
             && self.media.pending_media_import_permit.is_none()
             && self.tools.tool_operations.is_empty()
+            && self.original_typing.terminal_is_empty()
             && !self.original_emission.pending()
             && !self.original_typed_command.pending()
+            && self.original_typed_tag.is_none()
+            && self.original_typed_tag_close.is_empty()
             && self.tools.original_emission_admission.is_none()
             && self.tools.original_emission_receipt.is_none()
             && self.child_composition.private_child_groups_terminal_is_empty()

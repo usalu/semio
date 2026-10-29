@@ -406,8 +406,8 @@ impl ArtifactEditor for TxtEditor {
         txt_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->TxtSnapshot>{Some(||{
-        TxtSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<TxtSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(TxtSnapshot::default())
     })}
 
     fn handle(

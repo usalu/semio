@@ -24,9 +24,15 @@ enum Terminal {
     Fault,
 }
 
+type RasterStoreInitializationAuthority = store::ArtifactStoreReplayInitializer<RasterSnapshot, RasterMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>;
+
+fn raster_initializer(envelope: store::os_store::store_schema::ArtifactEnvelope<RasterSnapshot, RasterMutation>, operation: OperationId, generation: semio_framework_job::Generation) -> RasterStoreInitializationAuthority {
+    RasterStoreInitializationAuthority::new(envelope, RASTER_DOCUMENT_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+}
+
 fn empty_raster_initializer(operation: OperationId, generation: semio_framework_job::Generation) -> RasterStoreInitializationAuthority {
     let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    raster_initializer(envelope, operation, generation)
 }
 
 fn step_initializer(authority: &mut RasterStoreInitializationAuthority, operation: OperationId, generation: semio_framework_job::Generation, fuel: u64, cancel: &semio_framework_job::CancelToken, preview_sequence: &mut u64) -> Option<Terminal> {
@@ -55,12 +61,16 @@ fn drive_raster_initializer(authority: &mut RasterStoreInitializationAuthority, 
 
 fn close_authority(authority: &mut RasterStoreInitializationAuthority) {
     ArtifactStoreInitializationAuthority::begin_close(authority);
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut preview_sequence = 0;
     for _ in 0..200_000 {
         if ArtifactStoreInitializationAuthority::terminal_is_empty(authority) {
             return;
         }
         let demand = ArtifactStoreInitializationAuthority::retirement_demands(authority, RASTER_OWNED_FIELD_BYTES).expect("Raster initializer quotes its next close turn");
-        ArtifactStoreInitializationAuthority::close_step(authority, exact_grant(demand)).expect("Raster initializer closes within its quoted grant");
+        let mut progress = RetainedCloneProgress::default();
+        let mut context = semio_framework_job::StepContext::new(OperationId(0), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, exact_grant(demand)), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut progress);
+        ArtifactStoreInitializationAuthority::close_step(authority, &mut context).expect("Raster initializer closes within its quoted grant");
     }
     panic!("Raster initializer did not reach terminal-empty");
 }
@@ -133,7 +143,7 @@ fn raster_store_initializer_zero_budget_advances_no_owner_or_phase() {
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     assert_eq!(step_initializer(&mut authority, operation, generation, 0, &cancel, &mut preview_sequence), None);
-    assert_eq!(authority.phase, RasterStoreInitializationPhase::ValidateEnvelope);
+    assert_eq!(format!("{:?}", authority.phase), "ValidateEnvelope");
     assert!(authority.envelope.is_some());
     ArtifactStoreInitializationAuthority::request_cancel(&mut authority);
     assert_eq!(drive_raster_initializer(&mut authority, operation, generation, 4_096), Terminal::Cancelled);
@@ -214,7 +224,7 @@ fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_pa
     }
     retire_raster_value_cold(empty);
     let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
+    let mut authority = raster_initializer(envelope, operation, generation);
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
     let mut terminal = None;
@@ -295,7 +305,7 @@ fn raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal(
     let operation = OperationId(707);
     let generation = semio_framework_job::Generation(39);
     let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
+    let mut authority = raster_initializer(envelope, operation, generation);
     assert_eq!(drive_raster_initializer(&mut authority, operation, generation, 4_096), Terminal::Complete);
     assert!(authority.candidate.is_some());
     ArtifactStoreInitializationAuthority::request_cancel(&mut authority);

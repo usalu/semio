@@ -214,7 +214,7 @@ impl ArtifactCommandWork<EditorApp<Process3dPlayApp>> for Process3dResumableComm
 
     fn step(&mut self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<Process3dPlayApp>>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<Process3dPlayApp>>, semio_framework_job::OriginalTurnFailure> {
         let original: Result<_, Fault> = (|| {
-        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+        let semio_framework_plugin::retained_command::ArtifactCommandInputs { snapshot_owner: _, command, snapshot: _snapshot, config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation, snapshot_read: _ } = *input;
         if self.complete {
             return Err(Fault::from("process3d-retained-work-repeated"));
         }

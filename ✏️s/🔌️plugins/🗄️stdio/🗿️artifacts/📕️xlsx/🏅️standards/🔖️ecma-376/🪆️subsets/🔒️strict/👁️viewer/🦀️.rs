@@ -72,8 +72,8 @@ impl ArtifactViewer for XlsxStrictViewer {
     const DIALECT: Dialect = XLSX_STRICT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->XlsxSnapshot>{Some(||{
-        <crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction::new(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook::default())).expect("valid authored strict XLSX initial owner")
+    fn reference_birth()->Option<fn()->Result<XlsxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        <crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction::new(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook::default())).map_err(|error|semio_framework_plugin::reference_birth_fault("valid authored strict XLSX initial owner",format_args!("{error:?}")))
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

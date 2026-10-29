@@ -1864,6 +1864,41 @@
           }
         }
       }
+    },
+    "test-native-child-cleanup": {
+      "executor": "repo:script",
+      "cache": false,
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "^default",
+        "testEnv",
+        "reads",
+        "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/**/*",
+        "{projectRoot}/🧭️routing/📥️invocation/**/*"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🏃️process",
+        "command": "repo ./📜️script.ts test native-child-cleanup"
+      },
+      "metadata": {
+        "semio": {
+          "execution": {
+            "version": 1,
+            "kind": "source"
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "exercises-host-resources"
+          },
+          "sourceInputObservation": "freshness",
+          "runtimeSourceEntries": [
+            "{projectRoot}/📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🟦️.ts"
+          ]
+        }
+      }
     }
   },
   "tags": [

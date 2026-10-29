@@ -77,11 +77,12 @@ pub(super) fn admit_lifecycle_focus<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
 /// single step's one owner per 26-stage rotation and saturated its 1 024-slot queue after
 /// ~340 frames (ticket 26/09/16/FEM-3D-INTERACTIVE-FEATURE-COMPLETE).
 pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+    cx.with_original_retirement(|cx|{
     retire_while_progress_fallible(cx, REACTOR_CLOSE_UNITS_PER_TURN, step_reactor_close)?;
     retire_while_progress_bounded(cx, REACTOR_CLOSE_UNITS_PER_TURN, || COLD_PAIR_INGRESS.with(|ingress| ingress.borrow_mut().advance_close_one()));
     PATCHES.with(|patches| -> Result<(),semio_framework_job::OriginalTurnFailure> {
         for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
-            if cx.should_yield() {
+            if cx.retirement_should_yield() {
                 break;
             }
             if patches.close_step(cx)? {
@@ -91,12 +92,12 @@ pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
         Ok(())
     })?;
     for _ in 0..PATCH_CLOSE_UNITS_PER_TURN {
-        if cx.should_yield(){break}
+        if cx.retirement_should_yield(){break}
         cx.consume_fuel(1);
         if semio_framework_ui_runtime::close_surface_reconcile_handback_one().map_err(reactor_close_fault)? {
             break;
         }
-        if cx.should_yield() {
+        if cx.retirement_should_yield() {
             break;
         }
     }
@@ -112,14 +113,15 @@ pub(super) fn drive_turn_retirement<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     step_pending_patch_close(cx)?;
     let close_cleanup_work=semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_close_cleanup(runtime,cx)?;
     for _ in 0..semio_framework_plugin_runtime_instances::inst_cleanup_turns::LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN {
-        if cx.should_yield(){break}
+        if cx.retirement_should_yield(){break}
         cx.consume_fuel(1);
         let _ = semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_step_live_cleanup(runtime,cx)?;
-        if !semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_live_cleanup_under_pressure(runtime) || cx.should_yield() {
+        if !semio_framework_plugin_runtime_instances::inst_cleanup_turns::plugin_live_cleanup_under_pressure(runtime) || cx.retirement_should_yield() {
             break;
         }
     }
     Ok(close_cleanup_work)
+    })
 }
 
 /// 🩹️ Spends the turn's patch close units on the pending patch owner until one unit completes or the turn must yield.

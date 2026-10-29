@@ -1,5 +1,5 @@
 use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
-use super::*;
+use crate::*;
 use semio_framework_io_ports::testkit::{bind, scene_content};
 
 fn bind_drawing() {
@@ -184,8 +184,8 @@ async fn layout_story_in_frame_resolves_alignment_variants_and_detects_overset()
 #[semio_framework_async_macros::async_test]
 async fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
     let mut engine = LayoutEngine::new();
-    let style = TextStyle { family: FontFamilyChoice::Custom(engine.font), size_px: 12.0 };
-    let font = engine.text.shape("A", &style).glyphs[0].font;
+    let style = TextStyle { family: FontFamilyChoice::Custom(engine.test_font_dependency()), size_px: 12.0 };
+    let font = engine.test_text_system().shape("A", &style).glyphs[0].font;
     let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
     let viewport = Viewport { width: 200, height: 200, dpr: 1.0 };
     let list = DisplayList {
@@ -629,22 +629,22 @@ fn an_engine_built_from_a_host_font_set_has_the_built_in_families() {
     let fonts = host_font_set();
     let mut engine = LayoutEngine::with_text_fonts(&fonts).expect("the built-in set registers");
     let mut reference = TextSystem::new(&fonts).expect("the built-in set registers");
-    let engine_ids = glyph_ids(&mut engine.text, "Hello");
+    let engine_ids = glyph_ids(engine.test_text_system(), "Hello");
     assert_eq!(engine_ids.len(), 5);
     assert!(engine_ids.iter().all(|id| *id != 0), "every Latin glyph must come from the built-in sans family, got {engine_ids:?}");
     assert_eq!(engine_ids, glyph_ids(&mut reference, "Hello"));
     for sample in ["😀", "a😀b", "🏳️‍🌈"] {
-        assert_eq!(glyph_ids(&mut engine.text, sample), glyph_ids(&mut reference, sample), "fallback for {sample:?} must equal the plain text system over the same fonts");
+        assert_eq!(glyph_ids(engine.test_text_system(), sample), glyph_ids(&mut reference, sample), "fallback for {sample:?} must equal the plain text system over the same fonts");
     }
-    let mut bare = LayoutEngine::from_text_system(TextSystem::without_builtin_fonts());
-    assert_ne!(glyph_ids(&mut bare.text, "Hello"), engine_ids, "an engine without the built-in set must be observably different");
+    let mut bare = LayoutEngine::test_without_builtin_fonts();
+    assert_ne!(glyph_ids(bare.test_text_system(), "Hello"), engine_ids, "an engine without the built-in set must be observably different");
 }
 
 #[test]
 fn the_layout_font_still_shapes_through_the_engine_with_the_built_in_set_installed() {
     let mut engine = LayoutEngine::with_text_fonts(&host_font_set()).expect("the built-in set registers");
-    let style = TextRunStyle { base: TextStyle { family: FontFamilyChoice::Custom(engine.font), size_px: 12.0 }, weight: 400.0, line_height_relative: 1.2, letter_spacing_px: 0.0, alignment: TextAlignment::Left };
-    let shaped = engine.text.shape_paragraph("Layout", &style, 200.0);
+    let style = TextRunStyle { base: TextStyle { family: FontFamilyChoice::Custom(engine.test_font_dependency()), size_px: 12.0 }, weight: 400.0, line_height_relative: 1.2, letter_spacing_px: 0.0, alignment: TextAlignment::Left };
+    let shaped = engine.test_text_system().shape_paragraph("Layout", &style, 200.0);
     assert!(!shaped.glyphs.is_empty() && shaped.width > 0.0);
 }
 
@@ -653,7 +653,7 @@ fn new_uses_the_fonts_the_host_installed() {
     let installed = install_text_fonts(host_font_set());
     assert!(matches!(installed, Ok(()) | Err(TextFontsInstallError::AlreadyInstalled)), "the install must be accepted or already satisfied by an earlier engine in this process");
     let mut engine = LayoutEngine::new();
-    let ids = glyph_ids(&mut engine.text, "Hello");
+    let ids = glyph_ids(engine.test_text_system(), "Hello");
     assert_eq!(ids.len(), 5);
     assert!(ids.iter().all(|id| *id != 0), "LayoutEngine::new must carry the built-in sans family once fonts are installed, got {ids:?}");
 }
@@ -708,7 +708,7 @@ fn an_engine_shapes_with_real_glyphs_from_the_fonts_the_host_delivered_on_open()
     let delivered = delivered_package_assets();
     let set = package_text_font_set(|name| delivered.get(name).copied()).expect("every declared font was delivered");
     let mut engine = LayoutEngine::with_text_fonts(&set).expect("the delivered fonts register");
-    let ids = glyph_ids(&mut engine.text, "Hello");
+    let ids = glyph_ids(engine.test_text_system(), "Hello");
     assert_eq!(ids.len(), 5);
     assert!(ids.iter().all(|id| *id != 0), "delivered sans family must shape real glyphs, got {ids:?}");
     let mut reference = TextSystem::new(&host_font_set()).expect("the built-in set registers");

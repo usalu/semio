@@ -113,8 +113,8 @@ impl ArtifactEditor for VcsPlayApp {
         Some(crate::editor::vcs::config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->VcsSnapshot>{Some(||{
-        crate::standards::v1::subsets::any::schema::empty_vcs_snapshot()
+    fn reference_birth()->Option<fn()->Result<VcsSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1::subsets::any::schema::empty_vcs_snapshot())
     })}
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by

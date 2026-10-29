@@ -18,7 +18,7 @@ use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 
 /// 🏕️ Child composition: the live owned children, their private groups, content roots and retirement registries.
-pub struct ChildComposition<M: ReferenceSpaceMember + MemberFactory> {
+pub struct ChildComposition<M: SpaceMember + MemberFactory> {
     /// 🧩️ UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM (C1): every owned child's LIVE store, keyed by
     /// `(slot, child_id)` — mirrors how `store`/`config_store`/`draft_store` above each hold one
     /// lane's live `ArtifactStore`, generalized to N children instead of one fixed lane. Each
@@ -75,7 +75,7 @@ impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
     /// 🔢️ Sorted by `(slot, child_id)`: the map's iteration order is not stable, and a
     /// persisted child list that reshuffles between reads would make every save look like a
     /// change to anything diffing it.
-    pub async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, semio_framework::Fault> {
+    pub async fn child_packs(&self) -> Result<Vec<protocol::ChildPackEntry>, semio_framework::Fault> where M: ReferenceSpaceMember {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let mut entries: Vec<protocol::ChildPackEntry> = Vec::with_capacity(self.children.len());
@@ -88,7 +88,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Ok(entries)
     }
 
-    pub async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, semio_framework::Fault> {
+    pub async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, semio_framework::Fault> where M: ReferenceSpaceMember {
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 
         let mut entries: Vec<protocol::ChildHeadPackEntry> = Vec::with_capacity(self.children.len());

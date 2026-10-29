@@ -24,12 +24,15 @@ pub struct SemioObjectDiff {
     pub transform: Option<SemioTransform>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
+    #[child(kind = "s.stdio.semio")]
     pub brep: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
+    #[child(kind = "s.stdio.semio")]
     pub mesh: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
+    #[child(kind = "s.stdio.semio")]
     pub properties: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>>>,
 }
 

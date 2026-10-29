@@ -5,7 +5,7 @@ use store::ArtifactEphemeralOneItemPreparation;
 struct Unavailable;
 impl ArtifactReplayPreparationFactory<bool,bool> for Unavailable{
  fn preparation_birth_demand(&self)->RetirementDemand{Default::default()}
- fn begin(&self,request:ArtifactReplayPreparationRequest<bool,bool>,_:RetainedCloneGrant)->Result<(Box<dyn semio_framework_os_store_replay::replay_preparation::ArtifactReplayPreparation<bool,bool>>,RetainedCloneProgress),(ValueError,ArtifactReplayPreparationRequest<bool,bool>)>{Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"fixture has no semantic producer"),request))}
+ fn begin(&self,request:ArtifactReplayPreparationRequest<bool,bool>,_:RetainedCloneGrant)->Result<(Box<dyn semio_framework_os_store_replay_operation::ArtifactReplayPreparation<bool,bool>>,RetainedCloneProgress),(ValueError,ArtifactReplayPreparationRequest<bool,bool>)>{Err((ValueError::literal(ValueRefusalKind::UnsupportedOwner,"fixture has no semantic producer"),request))}
 }
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 #[test]

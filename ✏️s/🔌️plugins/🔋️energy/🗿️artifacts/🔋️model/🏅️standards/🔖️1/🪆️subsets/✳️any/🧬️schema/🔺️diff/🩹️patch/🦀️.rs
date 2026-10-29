@@ -435,9 +435,9 @@ impl<P: RowPatch> FieldPatch for Rows<P> {
             let row = target.iter_mut().find(|row| P::row_key(row) == key).ok_or_else(|| refused("diff.target-missing", "a row patch names a row the collection does not hold"))?;
             patch.commit_onto(row)?;
         }
-        let next = self.edit.commit_onto(std::mem::take(target), |row, key| row.key() == *key).map_err(splice_refused)?;
+        let next = self.edit.commit_onto(std::mem::take(target), |row, key| P::row_key(row) == *key).map_err(splice_refused)?;
         let mut keys = std::collections::BTreeSet::new();
-        if next.iter().any(|row| !keys.insert(row.key())) {
+        if next.iter().any(|row| !keys.insert(P::row_key(row))) {
             return Err(refused("diff.duplicate-key", "a collection cannot hold multiple rows with the same entity key"));
         }
         *target = next;

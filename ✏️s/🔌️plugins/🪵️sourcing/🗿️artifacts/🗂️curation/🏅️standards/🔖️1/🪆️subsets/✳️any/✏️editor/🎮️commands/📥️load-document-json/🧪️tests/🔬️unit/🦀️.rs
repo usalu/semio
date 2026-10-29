@@ -57,7 +57,7 @@ fn load_document_pack(emit: &Emit<SourcingMutation, SourcingCurationConfigMutati
 #[semio_framework_async_macros::async_test]
 async fn curation_and_example_actions_survive_registry_enforcement() {
     let mut app = new_app().await;
-    app.0.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set example");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("set example");
     let effects = crate::editor_unit_tests::context::settle(&mut app).await;
     let Some(Effect::LoadDocument { pack, .. }) = effects.first() else { panic!("setActiveExample must publish a LoadDocument effect") };
     let loaded = <CurationSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");

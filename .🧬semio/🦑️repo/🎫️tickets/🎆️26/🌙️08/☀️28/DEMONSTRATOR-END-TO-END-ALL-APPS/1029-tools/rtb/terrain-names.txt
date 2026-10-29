@@ -1,0 +1,7 @@
+semio-s-artifact-gis-gisterrain-editor
+semio-s-artifact-gis-gisterrain-operations
+semio-s-artifact-gis-gisterrain-inferences
+semio-s-artifact-gis-gisterrain-schema
+semio-s-artifact-gis-gisterrain-relocated-engine-tests
+semio-s-artifact-gis-gisterrain-terrain-descriptor
+semio-s-artifact-gis-gisterrain

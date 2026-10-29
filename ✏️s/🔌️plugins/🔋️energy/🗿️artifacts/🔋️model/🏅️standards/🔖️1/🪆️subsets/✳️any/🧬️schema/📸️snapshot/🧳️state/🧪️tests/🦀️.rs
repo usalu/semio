@@ -8,7 +8,7 @@ use semio_framework_value::ToValue as _;
 use semio_framework_value::{DslValue, RetirementDemand, retained_clone::{RetainedCloneRef,RetainedCloneSource, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, retirement::{RetireOwned, controlled::ControlledRetirement}};
 use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor};
 use semio_framework_value_native_owned::{native_decoding::NativeDecodeControl, native_decoding::NativeReceive, native_decoding::NativeReceiver};
-use protocol::mutation::retained::{RetainedRowPatchFields,RetainedPatchSource};
+use protocol::{RetainedRowPatchFields,RetainedPatchSource};
 
 
 
@@ -56,5 +56,4 @@ fn energy_native_sparse_zone_path_rebuilds_only_its_pages_and_branch_and_restore
   let mut inverse=diff::energy_model_fields::Fields::new(RetainedPatchSource::Inverse);for _ in 0..100000{let g=grant(inverse.demand(authored.borrow(),base,4096).unwrap());let(s,h)=observe(||inverse.advance(authored.borrow(),base,4096,g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));if matches!(s,RetainedCloneStep::Complete(_)){break;}}let g=grant(RetirementDemand{copy_bytes:2*std::mem::size_of::<diff::EnergyModelStatePatch>(),depth:1,..Default::default()});let(undo,p)=inverse.take(g).unwrap();assert!(p.fits(g));let undo=undo.unwrap();assert_eq!(undo.geometry.as_ref().unwrap().identity(),base.get().geometry.identity());inverse.begin_close();for _ in 0..100000{if inverse.terminal_is_empty(){break;}let g=grant(inverse.close_demand(4096).unwrap());let(s,h)=observe(||inverse.close_step(g).unwrap());assert_eq!(h,(s.progress().retained_capacity_bytes,s.progress().released_bytes));}assert!(inverse.terminal_is_empty());let changed=source(post.into_inner());let mut restored=PostFixture::projected(project_record(changed.borrow()));let undo=source(undo);assert!(central_fragment(&undo,changed.borrow(),&mut restored));assert_eq!(restored.geometry.identity(),base.get().geometry.identity());assert_portable_value(restored.to_value(),&model);drain(restored.into_inner());drain(undo);drain(changed);drain(authored);drain(previous);drain(row);drain(patch);drain(original);
  }
 }
-
 fn seal_owned<T:RetireOwned+Sync>(value:T)->SealedShared<T>{let d=RetirementDemand{copy_bytes:2*std::mem::size_of::<T>()+2*std::mem::size_of::<SealedShared<T>>(),capacity_bytes:SealedShared::<T>::birth_bytes(),depth:1,..Default::default()};let g=grant(d);let(result,h)=observe(||SealedShared::admit(value,semio_framework_value::shared_issuance::SharedIssuer::owned(),g).unwrap_or_else(|_|panic!("funded handed-back original branch sealing")));assert_eq!(h,(result.1.retained_capacity_bytes,0));result.0}

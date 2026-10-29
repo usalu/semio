@@ -105,8 +105,10 @@ pub use tool_contract::original_reserved_producer_laws;
 //#region 🧵️InstanceFacet
 //#endregion 🧵️InstanceFacet
 
+pub use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
 pub mod app {
     //! 🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.
+    pub use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection,OriginalContributionProjection};
     pub use crate::{MountedOwnerPhaseV1, MountedOwnerTurnV1};
     pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
     pub use semio_framework_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
@@ -219,8 +221,10 @@ pub mod plugin_app_close_prelude {
     pub use semio_framework_os_kernel as protocol;
     pub use semio_framework_os_kernel as store;
     pub use semio_framework_plugin_decl_app;
+    pub use semio_framework_plugin_decl_media;
     pub use semio_framework_plugin_decl_views;
     pub use semio_framework_plugin_ownership;
+    pub use semio_framework_plugin_window_config;
     pub use semio_framework_tool_run::ToolRunTraceCursor;
     pub use semio_framework_ui_contract::tree_item as tree_item_builder;
     pub use semio_framework_ui_contract::*;
@@ -244,6 +248,7 @@ pub use semio_framework_ui_locale::LocalizedLabel;
 pub use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
 pub use app::{FRAMEWORK_TOOL_RUN_BODY_KEY, OriginalToolRunJobPortRetirement, ToolRunJob, ToolRunJobPort, ToolRunJobPurpose, ToolRunJobRequest, ToolRunRetargetableJob, ToolRunTraceKeys, ToolRunView, ToolRunPollView, is_time_travel_action_id};
 pub use app::{AsyncTaskSource,AsyncTaskRun};
+pub use app::{reference_birth_fault,ReferenceArtifactAppBirth};
 pub use app::{activation_target, resolve_labels, row_action, row_target, selection_ids, tree_group, tree_item, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable, LabelAxes};
 pub use app::{
     artifact_app_apply_ops,
@@ -478,7 +483,6 @@ pub use app::{
     TwoDSvgExportResult,
     UiAssemblyResult,
     VcsArtifactApp,
-    OriginalVcsApp,
     ViewEmit,
     Viewer,
     ViewerApp,

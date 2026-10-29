@@ -1,6 +1,6 @@
 //! 🤝️ Qualified editor and read-only facets borrow the same actual member custody and registered producer pair.
 use super::custody::{ChildReadSourceCustody,ChildEditorSourceCustody};
-use crate::child_view::editor::{registration::ChildEditorRegistration,source::ChildEditorStamp};
+use crate::child_view::child_editor::{registration::ChildEditorRegistration,source::ChildEditorStamp};
 use semio_framework_io_ports::{ChildAdmissionAddress,ChildAdmissionProviderV1,ChildAdmissionRead,ChildAdmissionQualificationV1,EmbeddedChildAdmitterV1,EmbeddedChildVectorSourceV1};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::RetireOwned,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,retained_clone_grant_admits}};
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}

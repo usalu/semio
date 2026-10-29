@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "text",
+    "operation",
+    "generation",
+    "work",
+    "totalGrant",
+    "callPolicy",
+    "initialClock",
+    "expiredClock",
+    "zeroFuelBlocked",
+    "cases",
+    "unscopedBlocked"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "operation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "work": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fuel",
+        "absoluteDeadlineUs",
+        "clockBinding"
+      ],
+      "properties": {
+        "fuel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "absoluteDeadlineUs": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "clockBinding": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "totalGrant": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "callPolicy": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "initialClock": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expiredClock": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "zeroFuelBlocked": {
+      "const": true
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "cancelled"
+          ],
+          "properties": {
+            "name": {
+              "const": "expired"
+            },
+            "cancelled": {
+              "const": false
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "name",
+            "cancelled"
+          ],
+          "properties": {
+            "name": {
+              "const": "expired-cancelled"
+            },
+            "cancelled": {
+              "const": true
+            }
+          }
+        }
+      ]
+    },
+    "unscopedBlocked": {
+      "const": true
+    }
+  }
+}

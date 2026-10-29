@@ -1,7 +1,7 @@
 //! 🧱️ Learning program and geometry ownership of the procedural module: the authored program, the flow widget helpers and the geometry handle owner. See [`super`].
 
 use super::*;
-use semio_s_artifact_playbook_playbook_snapshot::standards::v1::subsets::any::io::sqlite::snapshot::text;
+use semio_framework_ui_contract::text;
 
 //#region 🔖️Constants
 /// 🧱️ The authored hexagonal-column learning program consumed by this playbook module.

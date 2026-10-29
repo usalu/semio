@@ -24,4 +24,4 @@ impl DrawingSegmentCursor{
  pub fn cancel(&mut self){self.cancelled=true;self.command=None;self.arc=None;self.pen=None;self.start=None;}
  pub fn terminal_is_empty(&self)->bool{!self.pending()}
 }
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+

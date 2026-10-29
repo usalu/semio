@@ -139,7 +139,7 @@ fn retained_document_root_permit_reader_pressure_refuses_then_retries_exact_slot
     assert_eq!(UiResidentPermit::try_reserve(UiResidentLimits { items: 1, bytes: 1 }, &mut denied, 32768), Err(UiResidentFault::Capacity));
     assert!(denied.is_none());
     assert_eq!(UiResidentPermit::snapshot().unwrap().bytes, UI_RESIDENT_AGGREGATE_BYTES);
-    let old_key = reader.as_ref().unwrap().handle.unwrap();
+    let old_key = reader.as_ref().unwrap().slot_epoch().unwrap();
     for _ in 0..100000 {
         reader.as_mut().unwrap().close_read_step_with_grant(1, 64).unwrap();
         if UiResidentPermit::snapshot().unwrap().bytes < UI_RESIDENT_AGGREGATE_BYTES {
@@ -148,8 +148,8 @@ fn retained_document_root_permit_reader_pressure_refuses_then_retries_exact_slot
     }
     assert!(!reader.as_ref().unwrap().terminal_is_empty());
     let mut permit = reserve(65536);
-    assert_eq!(permit.as_ref().unwrap().root_key().unwrap().slot, old_key.slot);
-    assert!(permit.as_ref().unwrap().root_key().unwrap().epoch > old_key.epoch);
+    assert_eq!(permit.as_ref().unwrap().root_slot_epoch().unwrap().0, old_key.0);
+    assert!(permit.as_ref().unwrap().root_slot_epoch().unwrap().1 > old_key.1);
     let mut candidate = UiDocumentAssembly::default();
     let mut surface = Some(SurfaceId::try_from("retry").unwrap());
     let error = candidate.open_with_permit(&mut permit, &mut surface, crate::UiDocumentAssemblyIdentity { generation: 300, revision: UiRevision(1), root: Some(UiNodeId(41)), layout_epoch: 0 }, 1, 32768).unwrap_err();

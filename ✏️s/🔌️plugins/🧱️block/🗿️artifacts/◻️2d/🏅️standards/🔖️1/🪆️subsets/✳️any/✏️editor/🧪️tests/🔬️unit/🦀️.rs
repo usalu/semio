@@ -61,7 +61,7 @@ pub(crate) mod context {
     /// 🔁️ Admits one typed command and settles it through the same bounded continuation, maintenance
     /// and ACK protocol the plugin host drives — a fault in any of those turns fails the dispatch.
     pub async fn dispatch(app: &mut Block2dAppFixture, command: Block2dCommand) -> InvocationResult {
-        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle typed operation");
         result
     }

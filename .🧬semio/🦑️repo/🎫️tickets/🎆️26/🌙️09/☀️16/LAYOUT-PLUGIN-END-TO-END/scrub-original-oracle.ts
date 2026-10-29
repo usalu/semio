@@ -1,0 +1,17 @@
+import {readFile} from "node:fs/promises";
+import jsonpatch from "fast-json-patch";
+import fixture from "../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️scrub-law/🔣️.json";
+import capability from "../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧪️tests/🧫️fixtures/🧫️scrub-law/🧵️original.json";
+const log=await readFile(process.argv[2],"utf8");
+const records=(prefix:string)=>log.split("\n").filter(line=>line.startsWith(prefix+" ")).map(line=>JSON.parse(line.slice(prefix.length+1)));
+const rows=records("[ORIGINAL-SCRUB-XSTATE]");
+const expected=fixture.scenarios.flatMap(scenario=>scenario.steps.map((step,index)=>({scenario:scenario.name,index,actual:step.expect})));
+jsonpatch.applyPatch({rows},[{op:"test",path:"/rows",value:expected}],true,false);
+const owned=records("[ORIGINAL-SCRUB]");
+if(owned.length!==1)throw Error("one actual ownership record required");
+jsonpatch.applyPatch({actual:owned[0]},[{op:"test",path:"/actual",value:capability.expected}],true,false);
+const cancelled=records("[ORIGINAL-SCRUB-CANCEL]");
+jsonpatch.applyPatch({actual:cancelled},[{op:"test",path:"/actual",value:[0,1,2,3,8].map(cut=>({cut,unchanged:true,retiredPayloads:2}))}],true,false);
+const relocation=records("[ORIGINAL-SCRUB-RELOCATION]");
+jsonpatch.applyPatch({actual:relocation},[{op:"test",path:"/actual",value:capability.relocationCuts.map(cut=>({cut,issuerPreserved:true,entriesPreserved:true,retiredPayloads:2}))}],true,false);
+console.log(JSON.stringify({scenarios:fixture.scenarios.length,steps:rows.length,cancellations:cancelled.length,relocationCuts:relocation.length,nativeCompared:true}));

@@ -83,8 +83,9 @@ fn preview_view_state() -> String {
 /// 🍄️ Loads the bundled example and renders its preview once, arming the retained evaluation
 /// session, the window-transient partitions and the tessellation request table.
 async fn arm_example(runtime: &ProceduralRuntime, dsl: &str) {
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let booted = plugin_document_text(runtime, IDLE_INSTANCE).await.expect("booted document text");
-    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, IDLE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("the bundled example loads into the booted instance");
+    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(runtime, IDLE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("the bundled example loads into the booted instance");
     let view_state = preview_view_state();
     for _ in 0..4 {
         let _ = plugin_render(runtime, IDLE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;

@@ -219,8 +219,8 @@ impl ArtifactEditor for SemioPresentationEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_presentation_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->SemioPresentationSnapshot>{Some(||{
-        SemioPresentationSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SemioPresentationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SemioPresentationSnapshot::default())
     })}
 
     fn handle(

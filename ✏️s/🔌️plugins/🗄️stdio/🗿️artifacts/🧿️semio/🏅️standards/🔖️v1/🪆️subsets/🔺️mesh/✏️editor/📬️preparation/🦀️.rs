@@ -5,7 +5,7 @@ use {semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3, crate::sc
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
-use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep};
+use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
 use semio_framework_value::retained_clone::{RetainedCloneRef, RetainedCloneStep};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
@@ -101,13 +101,18 @@ impl PagedOneItemEdit<SemioMeshSnapshot, SemioMeshMutation> for MeshVertexEdit {
         value.mesh_id.len().checked_add(value.primitive_id.len()).and_then(|bytes| bytes.checked_add(size_of::<usize>() + size_of::<SemioPoint3>())).ok_or_else(|| format!("{PREFIX}-payload-overflow"))
     }
 
-    fn advance_demands(&self, _before: RetainedCloneRef<'_, SemioMeshSnapshot>, _mutation: RetainedCloneRef<'_, SemioMeshMutation>, _post: &SemioMeshSnapshot, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn post_mode(&self) -> PagedOneItemPostMode {
+        PagedOneItemPostMode::Mutable
+    }
+
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, SemioMeshSnapshot>, _mutation: RetainedCloneRef<'_, SemioMeshMutation>, _post: PagedOneItemPostRead<'_, SemioMeshSnapshot>, _body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, SemioMeshSnapshot>, mutation: RetainedCloneRef<'_, SemioMeshMutation>, post: &mut SemioMeshSnapshot, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<SemioMeshMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, SemioMeshSnapshot>, mutation: RetainedCloneRef<'_, SemioMeshMutation>, post: PagedOneItemPost<'_, SemioMeshSnapshot>, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<SemioMeshMutation>, ValueError> {
         let mutation = mutation.get();
         let target = Self::target(mutation)?;
+        let post = post.mutable()?;
         if self.scanned { self.apply(post, target, grant) } else { self.scan(post, target, grant) }
     }
 

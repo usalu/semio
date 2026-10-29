@@ -44,7 +44,7 @@
         assert!(admitted.mutations.is_empty());
         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
         assert_eq!(app.stores.test_snapshot().await.count, 1, "first turn must not commit history");
-        let result = settle_reserved(&mut app, admitted).await;
+        let result = settle_reserved(&mut app, admitted, cx).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.stores.test_snapshot().await.count, 0, "history order must regress through actor ingress");
         assert!(app.stores.test_store().await.applied_edit_ids().len() < before);
@@ -81,14 +81,14 @@
                 "inverseCommandId": "os.resizeWindow",
                 "inverseArgs": { "width": 800, "height": 600 }
             }))),
-         &mut identity)
+         &mut identity, cx)
         .await;
         assert_eq!(app.stores.test_snapshot().await.count, 1);
         let before = app.render_ctx().test_history().await;
         assert!(before.commands.iter().any(|entry| label_in(&entry.label, Locale::En).contains("Set Active Example")));
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Resize Window"));
 
-        let first = reserved_action(&mut app, "undo", None, &mut identity).await;
+        let first = reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(
             first.requested_effects,
             vec![Effect::ReplayShellCommand { action_id: "os.resizeWindow".into(), args: Some(dv(json!({ "width": 800, "height": 600 }))) }]
@@ -96,12 +96,12 @@
         assert_eq!(app.stores.test_snapshot().await.count, 1, "first undo must pop the chrome-top shell, not the document example");
         assert!(first.history_patch.as_ref().is_some_and(|patch| patch.can_undo && !patch.upserts.is_empty()));
 
-        let second = reserved_action(&mut app, "undo", None, &mut identity).await;
+        let second = reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert!(second.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })));
         assert_eq!(app.stores.test_snapshot().await.count, 0, "second undo must apply the document inverse");
         assert!(second.history_patch.as_ref().is_some_and(|patch| patch.can_redo && !patch.upserts.is_empty()));
 
-        reserved_action(&mut app, "redo", None, &mut identity).await;
+        reserved_action(&mut app, "redo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.count, 1, "redo must restore the document example before the shell");
         close_reserved_app(&mut app, mounted_policy,cx);
 
@@ -134,13 +134,13 @@
             &mut app,
             NOTE_SHELL_COMMAND_ACTION_ID,
             Some(&dv(json!({ "commandId": "shell.windowActivate", "label": "Activate Window", "detail": { "windowId": "trinity-jack-graph" } }))),
-         &mut identity)
+         &mut identity, cx)
         .await;
         let before = app.render_ctx().test_history().await;
         assert_eq!(before.commands.first().map(|entry| label_in(&entry.label, Locale::En)), Some("Activate Window"), "the window activation is the newest row");
         assert!(before.commands.iter().find(|entry| entry.action_id == "shell.windowActivate").is_some_and(|entry| !entry.revertible), "a note that declared no inverse is not an undo target");
         assert_eq!(app.stores.test_snapshot().await.count, 1);
-        let undone = reserved_action(&mut app, "undo", None, &mut identity).await;
+        let undone = reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert!(
             undone.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })),
             "undo must not replay a window activation into the guest"
@@ -175,7 +175,7 @@
         let first_increment_seq = app.render_ctx().test_history().await.commands.iter().filter(|entry| entry.action_id == "increment").map(|entry| entry.seq).min().expect("first increment entry");
         let before_len = app.render_ctx().test_history().await.commands.len();
 
-        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq }))), &mut identity).await;
+        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first_increment_seq }))), &mut identity, cx).await;
         assert!(result.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.stores.test_snapshot().await.count, 1, "revert leaves the target edit applied, undoing only what came after it");
         let history = app.render_ctx().test_history().await;
@@ -225,7 +225,7 @@
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         let args = dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "detail": "dark" }));
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &mut identity).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &mut identity, cx).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty(), "interception must happen before the app ever sees noteShellCommand");
         let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), 1);
@@ -234,7 +234,7 @@
         assert_eq!(entry.kind, ActionKind::Shell);
         assert!(label_in(&entry.label, Locale::En).contains("dark"));
 
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &mut identity).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &mut identity, cx).await;
         assert!(app.test_app().await.received_actions.borrow().is_empty());
         let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.len(), 2);

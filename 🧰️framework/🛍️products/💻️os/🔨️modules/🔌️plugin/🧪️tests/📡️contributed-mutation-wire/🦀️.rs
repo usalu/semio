@@ -12,6 +12,16 @@ pub struct WireTestSnapshot {
     pub value: i32,
 }
 
+impl pack::snapshot::ArtifactDsl for WireTestSnapshot {
+    const EXTENSION: &'static str = "wire-test";
+    fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
+        serde_json::from_str(text).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
+    }
+    fn print_dsl(&self) -> String {
+        serde_json::to_string(self).unwrap_or_default()
+    }
+}
+
 impl pack::snapshot::ArtifactPack for WireTestSnapshot {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))

@@ -158,7 +158,7 @@ where
     Ok(value)
 }
 
-pub fn validate_json_budget(bytes:&[u8])->Result<(),DurableOwnedGroupDecisionError>{if bytes.len()>DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES{return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);}let mut budget=planning_budget::DurableJsonBudgetV1::default();for byte in bytes{budget.advance_byte(*byte)?;}budget.finish()}
+pub fn validate_json_budget(bytes:&[u8])->Result<(),DurableOwnedGroupDecisionError>{if bytes.len()>DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES{return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);}let mut budget=super::planning::DurableJsonBudgetV1::default();for byte in bytes{budget.advance_byte(*byte)?;}budget.finish()}
 pub fn valid_edit_identities<Mutation>(edit: &Edit<Mutation>) -> bool {
     valid_edit_identity_header(edit)&&edit.mutation_meta.iter().all(|meta|valid_edit_identity_metadata(meta)&&meta.dependencies.iter().all(|id|valid_identity(&id.0)))
 }

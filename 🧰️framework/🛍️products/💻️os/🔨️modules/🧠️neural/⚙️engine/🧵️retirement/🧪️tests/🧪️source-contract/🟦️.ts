@@ -51,6 +51,12 @@ type TypeWire={kind:"schema",of:string}|{kind:"list",of:TypeWire}|{kind:"boolean
 function typeText(value:TypeWire):number {return value.kind==="schema"?Buffer.byteLength(value.of):value.kind==="list"?typeText(value.of):0;}
 assert.equal(texts([finite.schema.id,finite.schema.module,finite.schema.name,finite.schema.icon,finite.schema.summary])+finite.schema.fields.reduce((sum:number,field:any)=>sum+texts([field.key,field.label??""])+typeText(field.value)+bytesOf(field.default),0),finite.expected.schemaStringBytes);
 assert.equal(texts([finite.operator.id,finite.operator.extension,finite.operator.name,finite.operator.abbreviation,finite.operator.icon,finite.operator.summary,...finite.operator.group,finite.operator.variadicInput.slotKey])+finite.operator.inputs.reduce((sum:number,channel:any)=>sum+texts([channel.code,channel.abbreviation,channel.name,channel.fullName,channel.label??"",...channel.operators,...channel.valueTypes,...channel.itemTypes])+bytesOf(channel.default),0),finite.expected.operatorStringBytes);
+function keyBytesOf(value:unknown):number {return value!==null&&typeof value==="object"?Object.entries(value).reduce((sum,[key,child])=>sum+Buffer.byteLength(key)+keyBytesOf(child),0):0;}
+function boxedTypes(value:TypeWire):number {return value.kind==="list"?1+boxedTypes(value.of as TypeWire):0;}
+assert.equal(finite.schema.fields.reduce((sum:number,field:any)=>sum+keyBytesOf(field.default),0),finite.expected.schemaOrderedKeyBytes);
+assert.equal(finite.schema.fields.reduce((sum:number,field:any)=>sum+boxedTypes(field.value),0),finite.expected.schemaBoxedValueTypes);
+assert.equal(finite.operator.inputs.reduce((sum:number,channel:any)=>sum+keyBytesOf(channel.default),0),finite.expected.operatorOrderedKeyBytes);
+assert.equal(finite.expected.operatorBoxedValueTypes,0);
 
 const ownedDemand = await Bun.file(new URL("../🧫️fixtures/📏️owned-demand/🔣️.json", import.meta.url)).json();
 assert.equal(JSON.parse(stableStringify({ text: ownedDemand.text })).text, ownedDemand.text);

@@ -6,7 +6,7 @@ fn close_original_staging(close: impl FnOnce(RetainedCloneGrant) -> Result<Close
     let n = |key: &str| law["grant"][key].as_u64().unwrap() as usize;
     let grant = RetainedCloneGrant { maximum_items: n("maximumItems"), maximum_copy_bytes: n("maximumCopyBytes"), maximum_capacity_bytes: n("maximumCapacityBytes"), maximum_release_bytes: n("maximumReleaseBytes"), maximum_depth: n("maximumDepth") };
     let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| close(grant));
-    let (complete, progress) = match result.unwrap() { CloseStep::Complete { progress } => (true, progress), CloseStep::Pending { progress } => (false, progress), CloseStep::Blocked => (false, Default::default()), CloseStep::Refused { kind, progress } => panic!("original fixed staging close refused: {kind:?} {progress:?}") };
+    let (complete, progress) = match result.unwrap() { CloseStep::Complete { progress } => (true, progress), CloseStep::Pending { progress } => (false, progress), CloseStep::Blocked => (false, Default::default()) };
     assert!(!heap.overflowed);
     assert!(progress.fits(grant));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -37,7 +37,7 @@ pub(super) fn atlas_fixture_page(owner: &mut PreparedAtlasPages, source: &[u8], 
 fn close_abandoned_atlas_step() -> bool {
     use semio_framework_job::InteractiveJobCloseStep as Close;
     let grant = atlas_fixture_authority().retirement;
-    match PreparedAtlasPages::close_abandoned_step(grant) {
+    match PreparedAtlasPages::close_abandoned_step(grant).unwrap() {
         Close::Complete { progress } => { assert!(progress.fits(grant)); true },
         Close::Pending { progress } => { assert!(progress.fits(grant)); false },
         Close::Blocked => false,
@@ -152,7 +152,7 @@ fn atlas_page_cap_plus_one_faults_before_process_credit_transfer() {
         Err(fault) => panic!("fixed atlas admission faulted: {fault}"),
     };
     let mut turns = 0;
-    while !matches!(admitted.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {
+    while !matches!(admitted.close_original_step(atlas_fixture_authority().retirement).unwrap(), CloseStep::Complete { .. }) {
         turns += 1;
     }
     assert!(turns >= 6, "fixed backing and four permit scalars close independently");
@@ -170,11 +170,11 @@ fn atlas_close_releases_one_fixed_page_then_its_exact_credit() {
     };
     assert!(matches!(atlas_fixture_page(&mut pages, &source, 0), Ok(true)));
     assert_eq!(pages.page(0), Some((&source[..], 0, 2)));
-    assert!(!matches!(pages.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }));
+    assert!(!matches!(pages.close_original_step(atlas_fixture_authority().retirement).unwrap(), CloseStep::Complete { .. }));
     assert_eq!(pages.len(), 0);
     assert!(!pages.terminal_is_empty());
     let mut turns = 0;
-    while !matches!(pages.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {
+    while !matches!(pages.close_original_step(atlas_fixture_authority().retirement).unwrap(), CloseStep::Complete { .. }) {
         turns += 1;
     }
     assert!(turns >= 6, "slot backing and permit fields each consume a distinct grant");
@@ -194,7 +194,7 @@ fn atlas_process_item_max_plus_one_is_nonblocking_and_recovers_every_permit() {
     }
     assert!(matches!(atlas_fixture_owner(1, 1, 1, 1), Err(ref error) if error.message.as_ref() == "atlas process permit credits exhausted"));
     for owner in owners.iter_mut().filter_map(Option::as_mut) {
-        while !matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {}
+        while !matches!(owner.close_original_step(atlas_fixture_authority().retirement).unwrap(), CloseStep::Complete { .. }) {}
         assert!(owner.terminal_is_empty());
     }
     assert_eq!(PREPARED_ATLAS_PROCESS_PERMITS.load(Ordering::Acquire), 0);
@@ -230,7 +230,7 @@ fn interrupted_atlas_close_rejoins_the_same_abandonment_authority() {
     };
     assert!(matches!(atlas_fixture_page(&mut owner, &source, 0), Ok(false)));
     assert!(matches!({ let row = owner.next_row(); atlas_fixture_page(&mut owner, &source, row) }, Ok(true)));
-    assert!(!matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }));
+    assert!(!matches!(owner.close_original_step(atlas_fixture_authority().retirement).unwrap(), CloseStep::Complete { .. }));
     assert_eq!(owner.len(), 1);
     drop(owner);
     let mut turns = 0;
@@ -258,7 +258,7 @@ fn atlas_contended_permit_attempts_are_nonblocking_and_poison_free() {
     let handles = std::array::from_fn::<_, 8, _>(|_| {
         std::thread::spawn(|| match atlas_fixture_owner(1, 1, 1, 1) {
             Ok(mut owner) => {
-                while !matches!(owner.close_original_step(atlas_fixture_authority().retirement), CloseStep::Complete { .. }) {}
+                while !matches!(owner.close_original_step(atlas_fixture_authority().retirement).unwrap(), CloseStep::Complete { .. }) {}
                 owner.terminal_is_empty()
             }
             Err(ref error) if error.message.as_ref() == "atlas process permit credits exhausted" => true,

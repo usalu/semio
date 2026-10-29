@@ -30,8 +30,8 @@ use semio_framework_plugin_decl_registry::declarations::stamp_fault_notices;
 /// 🚫️async: E4 fn-pointer slot — `E::app_schema()` is a genuine (pure, non-suspending)
 /// AFIT trait method; resolved synchronously via `resolve_ready` to fit the bare slot.
 pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
-    fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
-        PA::from(::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor, mounted_policy, identity)))
+    fn factory<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<EditorApp<E>, E::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<PA, semio_framework::Fault> {
+        ::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<EditorApp<E>, E::Members>::with_registry_on_bus(EditorApp::<E>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor, mounted_policy, identity)).map(PA::from)
     }
     fn app_schema<E: ArtifactEditor>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         E::app_schema()
@@ -54,8 +54,8 @@ pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<Edi
 ///
 /// 🚫️async: E4 fn-pointer slot — see `editor_surface`'s `app_schema` doc.
 pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(mut def: AppDefinition) -> SurfaceDeclaration<PA> {
-    fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> PA {
-        PA::from(::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor, mounted_policy, identity)))
+    fn factory<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<ViewerApp<V>, V::Members>>>(def: &AppDefinition, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<PA, semio_framework::Fault> {
+        ::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<ViewerApp<V>, V::Members>::with_registry_on_bus(ViewerApp::<V>::default(), AppActionRegistry::from_definition(def), semio_framework::ActionBus::production(), actor, mounted_policy, identity)).map(PA::from)
     }
     fn app_schema<V: ArtifactViewer>() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor> {
         V::app_schema()

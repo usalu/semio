@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-energy-model-native-mutations-lifecycle"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+[package.metadata.semio]
+role = "library"
+[lints]
+workspace = true
+[lib]
+path = "../../🦀️.rs"
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-s-artifact-energy-model-diff = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-artifact-energy-model-native-mutations = { workspace = true }
+
+[dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+serde_json = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-schedule = { workspace = true }

@@ -27,7 +27,8 @@ pub struct PatchNode {
 /// text, so the parsed value authors only that ordinate through `ChangeNode`. An unchanged value
 /// emits no history revision.
 pub fn handle(payload: &PatchNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
-    let row = doc.snapshot.nodes.iter().find(|row| row.id == payload.id).ok_or_else(|| Fault::from("fem2d.patch.node-missing"))?;
+    let row = doc.snapshot.nodes.iter().find(|row| row.id.as_str() == payload.id.as_str()).ok_or_else(|| Fault::from("fem2d.patch.node-missing"))?;
+    let row = semio_s_fem_node::planar::FemNodeValue { id: row.id.to_string(), x: row.x, y: row.y };
     let mut patch = Fem2dNodePatch::default();
     let number = || -> Result<f64, Fault> { payload.value.trim().parse().map_err(|_| Fault::from("fem2d.patch.node-value")) };
     match payload.field.as_str() {
@@ -35,7 +36,7 @@ pub fn handle(payload: &PatchNode, doc: &ArtifactView<'_, Fem2dSnapshot>, _cfg: 
         "y" => patch.y = Some(number()?),
         _ => return Err(Fault::from("fem2d.patch.node-field")),
     }
-    if patch.candidate(row) == *row { return Ok(Emit::default()); }
+    if patch.candidate(&row) == row { return Ok(Emit::default()); }
     Ok(Emit::mutations(vec![Fem2dMutation::ChangeNode(ChangeNode { id: payload.id.clone(), patch })]))
 }
 

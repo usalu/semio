@@ -37,4 +37,4 @@ impl MetadataIndex{
 impl Default for MetadataIndex{fn default()->Self{Self::new()}}
 semio_framework_value::artifact_retire_leaf!(MetadataKey,Entry,Task);
 semio_framework_value::artifact_retire_struct!(MetadataIndex{buckets,entries,task,source,cancelled,last});
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+

@@ -149,8 +149,8 @@ impl ArtifactEditor for Pdf17AEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->PdfSnapshot>{Some(||{
-        crate::standards::v1_7::subsets::base::io::export::blank_pdf_snapshot()
+    fn reference_birth()->Option<fn()->Result<PdfSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1_7::subsets::base::io::export::blank_pdf_snapshot())
     })}
 
     /// ✏️ Replaces the addressed page's Unicode text projection while retaining encoded text,

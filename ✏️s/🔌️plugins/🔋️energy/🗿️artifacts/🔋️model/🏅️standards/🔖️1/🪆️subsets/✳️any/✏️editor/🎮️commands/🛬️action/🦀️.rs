@@ -5,7 +5,7 @@ use semio_framework_diagnostic::Fault;
 use semio_framework_action_bus::RetainedToolWireInput;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOriginalCommandProducer,ArtifactOriginalCommandProducerFactory};
 use semio_framework_plugin_command::command_admission::original_typed_command::{ArtifactOriginalCommandWire as Wire,original_wire::ArtifactPreparedOperationSource};
-use semio_s_artifact_energy_model_native_mutations::action::{NativeActionFactory,NativeActionReceiving};
+use semio_s_artifact_energy_model_native_mutations_singletons::action::{NativeActionFactory,NativeActionReceiving};
 use std::{mem::{size_of,ManuallyDrop},marker::PhantomData};
 /// 🧬️ Authored static descriptors and borrowed command wire select the exact public Energy vocabulary.
 pub trait EnergyOriginalCommand<M>:RetireOwned+Send+Sync+'static{

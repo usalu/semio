@@ -483,7 +483,7 @@ impl Fem3dPageVisualJob {
                 let (start, end) = Self::element_endpoints(element);
                 if self.item_phase == 1 {
                     let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.visual-element-start".to_vec()) };
-                    if node.id == start {
+                    if node.id.as_str() == start {
                         self.endpoint_a = [node.x, node.y, node.z];
                         self.lookup_cursor = 0;
                         self.item_phase = 2;
@@ -494,7 +494,7 @@ impl Fem3dPageVisualJob {
                 }
                 if self.item_phase == 2 {
                     let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.visual-element-end".to_vec()) };
-                    if node.id == end {
+                    if node.id.as_str() == end {
                         self.endpoint_b = [node.x, node.y, node.z];
                         self.lookup_cursor = 0;
                         self.item_phase = 3;

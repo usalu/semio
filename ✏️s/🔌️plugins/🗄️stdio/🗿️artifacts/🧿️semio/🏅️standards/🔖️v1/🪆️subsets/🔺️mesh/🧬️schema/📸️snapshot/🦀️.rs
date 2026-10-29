@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_semio_base::schema::geometry::SemioUv;
 
 //#region 🔖️Topology
 /// 🔺️ Primitive draw mode — the gltf 2.0 `mode` enumeration, named (never a bare integer tag).
-#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]
+#[derive(semio_framework_value::RetireOwned, Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslScalar)]
 #[value(rename_all = "camelCase")]
 #[derive(Default, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -34,7 +34,7 @@ pub enum SemioTopology {
 /// `mesh.primitives` array lacks; every W2 subset id-keys its repeating structures per the
 /// schema-design.md recipe). `positions`/`normals`/`uvs`/`colors`/`indices` are weak, parallel
 /// buffer-shaped data — whole-value replaced in diffs, never sub-diffed per vertex.
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioPrimitive {
@@ -58,7 +58,7 @@ pub struct SemioPrimitive {
 
 //#region 🔖️Mesh
 /// 🕸️ A mesh is an id-keyed collection of `SemioPrimitive`s (gltf's `mesh.primitives`).
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioMesh {
@@ -71,7 +71,7 @@ pub struct SemioMesh {
 //#region 🔖️Material
 /// 🎨️ PBR metallic-roughness material (gltf's `material.pbrMetallicRoughness`, the spec-mandated
 /// field set per the master plan's row: "materials (PBR base_color/metallic/roughness)").
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioMaterial {
@@ -98,7 +98,7 @@ pub struct SemioMaterial {
 //#region 🔖️Texture
 /// 🖼️ Raw texture payload (gltf's `image` + embedded `bufferView`/data-uri collapsed into one
 /// typed-raw-retention entity — mime + bytes, per the master plan's row: "textures{mime, bytes}").
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioTexture {
@@ -117,7 +117,8 @@ pub const STDIO_SEMIOMESH_DOCUMENT_SCHEMA: &str = "stdio.semio.mesh";
 //#endregion 🔖️Ids
 
 //#region 🔖️Snapshot
-#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(layout = "lines")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.mesh")]

@@ -29,6 +29,9 @@ use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioPrimitive;
 use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioTopology;
 use std::collections::HashMap;
 
+/// ⚖️ Gravitational acceleration (m/s²) the Z-up document bridge feeds to `semio_s_fem_analyses::solve_multi_case` and `buckling` as `[0.0, 0.0, -GRAVITY_G]`.
+pub const GRAVITY_G: f64 = 9.81;
+
 // #region 🔖️NodeMerge
 /// 📏️ Two mesh points closer than this (in every coordinate, metres) are ONE node — the seam every
 /// interface between touching solids, and every document node a solid corner lands on, closes over.
@@ -171,12 +174,12 @@ pub type ResolvedGeometry = (Vec<Node>, Vec<Elements>, Vec<SolidMesh>, Vec<Suppo
 /// every `FemSolid` meshed into `Tet4` elements through [`mesh_solids`] — the geometry shared by
 /// `build_model`, `fem3d_solve_all`, modal, and buckling.
 pub fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, Fem3dError> {
-    let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
+    let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id.as_str() == id);
     let mut elements: Vec<Elements> = Vec::with_capacity(doc.elements.len());
     for element in &doc.elements {
         match element {
             FemElement::Bar { id, start, end, material_id, section_id } => {
-                let material = doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
+                let material = doc.materials.iter().find(|m| m.id.as_str() == material_id.as_str()).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
                 let section = doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem3dError::SectionNotFound(section_id.clone()))?;
                 if !node_exists(start) {
                     return Err(Fem3dError::NodeNotFound(start.clone()));
@@ -187,7 +190,7 @@ pub fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, Fem3dEr
                 elements.push(Bar3 { id: id.clone(), node_a: start.clone(), node_b: end.clone(), e: material.e, a: section.area, density: material.rho }.into());
             }
             FemElement::Frame { id, start, end, material_id, section_id, roll } => {
-                let material = doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
+                let material = doc.materials.iter().find(|m| m.id.as_str() == material_id.as_str()).ok_or_else(|| Fem3dError::MaterialNotFound(material_id.clone()))?;
                 let section = doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem3dError::SectionNotFound(section_id.clone()))?;
                 if !node_exists(start) {
                     return Err(Fem3dError::NodeNotFound(start.clone()));
@@ -201,13 +204,13 @@ pub fn resolve_geometry(doc: &Fem3dSnapshot) -> Result<ResolvedGeometry, Fem3dEr
     }
 
     for solid in &doc.solids {
-        if !doc.materials.iter().any(|m| m.id == solid.material_id) {
+        if !doc.materials.iter().any(|m| m.id.as_str() == solid.material_id.as_str()) {
             return Err(Fem3dError::MaterialNotFound(solid.material_id.clone()));
         }
     }
     let (nodes, meshes) = mesh_solids(doc)?;
     for (solid, mesh) in doc.solids.iter().zip(&meshes) {
-        let material = doc.materials.iter().find(|m| m.id == solid.material_id).ok_or_else(|| Fem3dError::MaterialNotFound(solid.material_id.clone()))?;
+        let material = doc.materials.iter().find(|m| m.id.as_str() == solid.material_id.as_str()).ok_or_else(|| Fem3dError::MaterialNotFound(solid.material_id.clone()))?;
         for (cell_index, tet) in mesh.tets.iter().enumerate() {
             let tet_nodes = [mesh.node_ids[tet[0] as usize].clone(), mesh.node_ids[tet[1] as usize].clone(), mesh.node_ids[tet[2] as usize].clone(), mesh.node_ids[tet[3] as usize].clone()];
             elements.push(semio_s_fem_elements3d::Tet4 { id: format!("{}_c{cell_index}", solid.id), nodes: tet_nodes, e: material.e, nu: material.nu, density: material.rho }.into());

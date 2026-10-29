@@ -48,6 +48,8 @@ semio-framework-action-bus = { path = "../../../../../../../../../../../../🧰�
 semio-framework-2d-compute = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack = { workspace = true }
@@ -56,6 +58,7 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema-registry = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
 semio-s-artifact-process-process3d-commands = { workspace = true }
 semio-s-artifact-process-process3d-config = { workspace = true }
 semio-s-artifact-process-process3d-examples = { workspace = true }
@@ -70,6 +73,7 @@ semio-s-artifact-process-process3d-presence = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
 
 [dev-dependencies]
+semio-framework-plugin-host-configuration = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🏛️host/📦️packages/🦀️rust", features = ["testkit"] }
 semio-s-artifact-process-process3d-inferences = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
@@ -80,3 +84,7 @@ semio-s-artifact-stdio-step = { workspace = true }
 serde_json = { workspace = true }
 semio-s-artifact-process-process3d-host = { workspace = true, features = ["testkit"] }
 semio-s-artifact-process-process3d-mutations = { workspace = true, features = ["testkit"] }
+
+[[test]]
+name = "original_host_configuration"
+path = "../../🧪️tests/🏛️host-configuration/🦀️.rs"

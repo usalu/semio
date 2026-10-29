@@ -143,7 +143,7 @@ macro_rules! assert_norm_pair {
     ($($artifact:path => ($editor:path, $viewer:path)),+ $(,)?) => {
         $(
             semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<$editor, $viewer>().await;
-            semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<$viewer>().await;
+            semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<$viewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         )+
     };
 }

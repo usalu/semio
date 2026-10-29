@@ -92,8 +92,8 @@ impl ArtifactViewer for XlsxViewer {
     const DIALECT: Dialect = XLSX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->XlsxSnapshot>{Some(||{
-        XlsxSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<XlsxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(XlsxSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

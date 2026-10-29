@@ -117,15 +117,6 @@ impl ArtifactEditor for Gis2dPlayApp {
         Some(crate::host::owned::gis_map_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::host::owned::gis_map_document_store_initialization_job(envelope, operation, generation, actor))
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
@@ -138,8 +129,8 @@ impl ArtifactEditor for Gis2dPlayApp {
         map_config::register(registry)
     }
 
-    fn reference_birth()->Option<fn()->GisMapSnapshot>{Some(||{
-        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
+    fn reference_birth()->Option<fn()->Result<GisMapSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {

@@ -32,7 +32,6 @@ use std::collections::{HashMap, HashSet};
 use semio_framework::ArtifactKindSpec;
 use semio_framework_plugin_reactor_app::NoPluginApp;
 use semio_framework_plugin_app_builder::App;
-use semio_framework_plugin_decl_registry::plugin_program::AppFactory;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_decl_registry::FlowExtensionDescriptor;
@@ -72,7 +71,7 @@ pub type PluginCommandHandler = Box<dyn Fn(&semio_framework::manifest::CommandIn
 pub trait PluginProgram: Send {
     type App: PluginApp;
     fn manifest(&self) -> PluginManifest;
-    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<Self::App>;
+    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<Self::App>, Fault>;
     fn handle_plugin_command(&self, invocation: &semio_framework::manifest::CommandInvocationView<'_>, meta: &ActionMeta) -> Result<InvocationResult, Fault>;
 }
 
@@ -276,8 +275,8 @@ impl<PA: PluginApp> Plugin<PA> {
         self
     }
 
-    pub fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<PA> {
-        self.apps.get(app_id).and_then(|factory|factory.create.map(|create|create(&factory.definition,actor,mounted_policy,identity)))
+    pub fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<PA>, Fault> {
+        self.apps.get(app_id).and_then(|factory|factory.create.map(|create|create(&factory.definition,actor,mounted_policy,identity))).transpose()
     }
 
     /// 🌱️ Admits the exact registered native construction owner under the actual retained opening caller.
@@ -320,7 +319,7 @@ impl<PA: PluginApp> PluginProgram for Plugin<PA> {
         self.manifest.clone()
     }
 
-    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<PA> {
+    fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<PA>, Fault> {
         Plugin::create_app(self, app_id, actor, mounted_policy, identity)
     }
 

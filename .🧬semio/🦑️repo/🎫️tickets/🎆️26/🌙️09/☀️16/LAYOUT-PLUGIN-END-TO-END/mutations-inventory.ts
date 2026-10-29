@@ -1,0 +1,8 @@
+import { readFile, readdir } from "node:fs/promises";
+import { resolve, dirname, relative } from "node:path";
+import { readRustSourceClosureV1 } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+const root=process.cwd(), base=resolve(root,"✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout"), results=[];
+async function walk(directory:string):Promise<void>{for(const entry of await readdir(directory,{withFileTypes:true})){if(entry.isDirectory()){if(!["node_modules","target","dist","🤖️generated"].includes(entry.name))await walk(resolve(directory,entry.name));}else if(entry.name==="Cargo.toml"){const manifest=resolve(directory,entry.name),text=await readFile(manifest,"utf8"),name=text.match(/^name\s*=\s*"([^"]+)"/m)?.[1],section=text.split("[lib]")[1]?.split(/^\[/m)[0],path=section?.match(/^path\s*=\s*"([^"]+)"/m)?.[1];if(!path)continue;const source=resolve(directory,path),inputs=await readRustSourceClosureV1([relative(root,source)],root,["target_arch=aarch64","target_os=macos","target_family=unix","unix"],async path=>await readFile(path).catch(error=>error.code==="ENOENT"?null:Promise.reject(error)));const row={name,manifest:relative(root,manifest),files:inputs.length,bytes:inputs.reduce((a,b)=>a+b.bytes,0),lines:inputs.reduce((a,b)=>a+b.activeLines,0)};results.push(row);if(row.files>32||row.bytes>262144||row.lines>4000)console.log(JSON.stringify(row));}}}
+
+await walk(resolve(base,"🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations"));
+console.log(JSON.stringify(results.filter(row=>row.name==="semio-s-artifact-layout-layout-mutations"||row.name==="semio-s-artifact-layout-layout-mutations-decisions"),null,2));

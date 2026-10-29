@@ -1,5 +1,5 @@
 //! 🧪️ Shared SVG endpoint fixtures exercise original funded command and cancellation frontiers.
-use super::*;
+use crate::*;
 fn p(value:&serde_json::Value)->VectorPoint2{VectorPoint2{x:value["x"].as_f64().unwrap(),y:value["y"].as_f64().unwrap()}}
 fn command(value:&serde_json::Value)->VectorSegment{match value["kind"].as_str().unwrap(){"moveTo"=>VectorSegment::MoveTo{to:p(&value["to"])},"lineTo"=>VectorSegment::LineTo{to:p(&value["to"])},"quadTo"=>VectorSegment::QuadTo{c:p(&value["c"]),to:p(&value["to"])},"cubicTo"=>VectorSegment::CubicTo{c1:p(&value["c1"]),c2:p(&value["c2"]),to:p(&value["to"])},"arcTo"=>VectorSegment::ArcTo{rx:value["rx"].as_f64().unwrap(),ry:value["ry"].as_f64().unwrap(),x_rotation:value["xRotation"].as_f64().unwrap(),large_arc:value["largeArc"].as_bool().unwrap(),sweep:value["sweep"].as_bool().unwrap(),to:p(&value["to"])},"close"=>VectorSegment::Close,_=>panic!("fixture command")}}
 fn affine(value:&serde_json::Value)->DrawingAffine{DrawingAffine{xx:value["xx"].as_f64().unwrap(),xy:value["xy"].as_f64().unwrap(),yx:value["yx"].as_f64().unwrap(),yy:value["yy"].as_f64().unwrap(),dx:value["dx"].as_f64().unwrap(),dy:value["dy"].as_f64().unwrap()}}

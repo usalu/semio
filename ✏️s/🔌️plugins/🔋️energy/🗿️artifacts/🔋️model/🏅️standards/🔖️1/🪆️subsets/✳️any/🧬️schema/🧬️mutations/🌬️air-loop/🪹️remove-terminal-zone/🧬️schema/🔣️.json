@@ -82,7 +82,7 @@
     "semantics": {
       "verb": "remove",
       "entity": "AirLoop",
-      "kind": "RemoveAirLoopTerminalZone",
+      "kind": "remove-air-loop-terminal-zone",
       "record": "RemoveAirLoopTerminalZone"
     },
     "diagnostics": {

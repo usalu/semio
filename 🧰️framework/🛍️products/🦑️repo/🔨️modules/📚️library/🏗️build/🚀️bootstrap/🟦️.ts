@@ -12,7 +12,7 @@ import {fileURLToPath} from "node:url";
 import buildPolicy from "../🔣️policy.json" with {type:"json"};
 import type {JavascriptDependencyStoreSelectionV1} from "../../⚡️caching/🚀️bootstrap/📦️dependencies/💾️storage/🟦️.ts";
 import {buildParserReceiptMatchesV1,readBuildParserInspectionV1,readInstalledBuildParserEntryPathV1,type BuildParserReceiptV1} from "./📦️parsers/🟦️.ts";
-import parserSchema from "./📦️parsers/🧬️schema/🔣️.json";
+import parserSchema from "./📦️parsers/🧬️schema/🔣️.json" with {type:"json"};
 import {checkScriptInvocation,type ScriptInvocation} from "../../../../../../🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import {profileMarkV1,profilePhaseV1} from "../⏱️profile/🟨️.mjs";
 

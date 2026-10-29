@@ -4,7 +4,8 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "cases"
+    "cases",
+    "catalogueRows"
   ],
   "properties": {
     "cases": {
@@ -29,6 +30,50 @@
             "minLength": 1
           },
           "exampleId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "catalogueRows": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "paneId",
+          "editsKey",
+          "rowId",
+          "kind",
+          "needle",
+          "source"
+        ],
+        "properties": {
+          "paneId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "editsKey": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rowId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "dsl-object-id",
+              "cad-typology"
+            ]
+          },
+          "needle": {
             "type": "string",
             "minLength": 1
           },

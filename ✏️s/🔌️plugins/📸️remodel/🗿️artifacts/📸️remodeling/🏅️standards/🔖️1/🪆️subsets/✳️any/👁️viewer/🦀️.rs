@@ -6,7 +6,6 @@
 
 use crate::viewer::remodeling::modes::view;
 use crate::viewer::remodeling::modes::view::windows::model;
-use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::default_remodeling_scene;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::RemodelingSnapshot;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DIALECT;
 use semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::schema::snapshot::REMODELING_DOCUMENT_SCHEMA;
@@ -69,10 +68,9 @@ impl ArtifactViewer for RemodelingViewer {
 
     /// 🚀️ Boots on the subset's committed `demo` example — the same document the editor boots on — so
     /// the two surfaces of one dialect open the same scene. A viewer has no `setActiveExample` action (its
-    /// sole command is `Noop`), so the artifact's own `default_remodeling_scene()` is only the fallback for
-    /// example text that no longer parses, never the ordinary boot.
-    fn reference_birth()->Option<fn()->RemodelingSnapshot>{Some(||{
-        semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| default_remodeling_scene())
+    /// sole command is `Noop`), so example text that no longer parses refuses the birth with a typed fault.
+    fn reference_birth()->Option<fn()->Result<RemodelingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::demo::PRIMARY_TEXT).map_err(|error|semio_framework_plugin::reference_birth_fault("remodeling demo document",error))
     })}
 
     /// 👁️ Structurally read-only: the sole `RemodelingViewCommand::Noop` variant never carries a config

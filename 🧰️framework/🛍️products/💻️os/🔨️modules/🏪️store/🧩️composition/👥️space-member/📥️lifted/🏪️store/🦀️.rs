@@ -88,9 +88,6 @@ pub use member_factory_visitors_and_no_members::{
 //#endregion 🔖️Backbone
 //#endregion 🔖️EphemeralLanes
 
-#[path = "../../../🪪️member-facets/🧊️reference/🦀️.rs"]
-mod reference;
-pub use reference::ReferenceSpaceMember;
 
 pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as MemberNativeDecodeControl;
 

@@ -92,7 +92,7 @@ impl ScalarRankCursor{
  pub fn close_step(&mut self,g:Grant)->Result<Step,ValueError>{
   if !self.closing{return Err(invalid());}let d=self.close_demand()?;if !fits(d,g){return Ok(Step::Progress(Default::default()));}if self.terminal_is_empty(){return Ok(Step::Complete(Default::default()));}
   let mut p=Progress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};
-  if !self.values.is_empty(){self.values.pop();}else if !self.values.terminal_is_empty(){p.released_bytes=self.values.release_empty_page(g.maximum_release_bytes).map_err(|_|invalid())?.released_bytes;}else if !self.bands.is_empty(){self.bands.pop();}else{p.released_bytes=self.bands.release_empty_page(g.maximum_release_bytes).map_err(|_|invalid())?.released_bytes;}
+  if !self.values.is_empty(){self.values.pop();}else if !self.values.terminal_is_empty(){p.released_bytes=self.values.release_empty_page(g.maximum_release_bytes).map_err(|_|invalid())?.released_allocation_bytes;}else if !self.bands.is_empty(){self.bands.pop();}else{p.released_bytes=self.bands.release_empty_page(g.maximum_release_bytes).map_err(|_|invalid())?.released_allocation_bytes;}
   Ok(if self.terminal_is_empty(){Step::Complete(p)}else{Step::Progress(p)})
  }
 }

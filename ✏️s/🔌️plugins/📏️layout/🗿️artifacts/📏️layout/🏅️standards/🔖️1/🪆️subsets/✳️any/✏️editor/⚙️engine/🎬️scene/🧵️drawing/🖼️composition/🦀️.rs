@@ -80,6 +80,15 @@ impl DrawingCompositionState{
   let cursor=&mut self.owners.active.as_mut().unwrap().0;let result=cursor.advance(read,budget.left());add(&mut budget.used,cursor.last_receipt());match result.map_err(|e|e.to_string())?{DrawingPlanTurn::Progress=>{},DrawingPlanTurn::Semantic(event)=>{if let super::DrawingSemanticEvent::Node{node,opacity,visible,..}=event{if visible{if node.blend_mode.text_chunk_count()!=1||node.blend_mode.text_chunk(0)!=Some("normal")||opacity!=1.0{return Err("layout-drawing-group-compositing-required".into())}if !matches!(node.paint.fill(),None|Some(semio_framework_io_ports::VectorFillHead::Solid{..}))||node.paint.stop_count()!=0||node.paint.dash_count()!=0{return Err("layout-drawing-full-paint-resolution-required".into())}}}},DrawingPlanTurn::MeasureText(plan)=>self.capture_label(plan),DrawingPlanTurn::Fitted{..}=>self.label_at=self.label_base,DrawingPlanTurn::Done=>self.phase=9,DrawingPlanTurn::Primitive(primitive)=>match primitive{DrawingPrimitive::Resolve{..}=>return Err("layout-drawing-boolean-trace-raster-resolution-required".into()),DrawingPrimitive::BeginPath{paint,affine,..}=>{self.emit_paint=paint;self.emit_affine=six(affine);let bound=affine.xx.hypot(affine.yx)+affine.xy.hypot(affine.yy);if !bound.is_finite(){return Err(failure())}self.normalizer=Some(DrawingSegmentCursor::new(1e-7/bound.max(1.0)).map_err(|e|e.to_string())?);self.phase=10;},DrawingPrimitive::Segment{segment,..}=>self.normalizer.as_mut().ok_or("layout-drawing-path-active")?.accept(segment,DrawingAffine::identity()).map_err(|e|e.to_string())?,DrawingPrimitive::EndPath{..}=>{let index=self.path.take().ok_or("layout-drawing-path-active")?;self.normalizer=None;return Ok(DrawingCompositionTurn::Path{index})},DrawingPrimitive::Text(plan)=>{self.original=plan.index;self.emit_paint=plan.paint;self.emit_affine=six(plan.affine);self.emit_affine[4]+=plan.affine.xx*plan.at.x+plan.affine.xy*plan.at.y;self.emit_affine[5]+=plan.affine.yx*plan.at.x+plan.affine.yy*plan.at.y;self.emit_glyph=0;self.phase=6;}}}Ok(DrawingCompositionTurn::Progress)
  }
 }
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+
 
 #[path="📤️canvas/🦀️.rs"]pub mod canvas;
+
+#[cfg(feature="testkit")]
+impl DrawingCompositionState {
+    pub fn test_text_copy_position(&self) -> (usize,usize,u8) { (self.source_at,self.source_chunk,self.phase) }
+    pub fn test_text_copy_phase(&self) -> u8 { self.phase }
+    pub fn test_text_copy_items(&self) -> usize { self.owners.active.as_ref().unwrap().0.next_source_item_demand()+4.min(self.source_length-self.source_at).max(1) }
+    pub fn test_text_copy_buffer(&self) -> &str { &self.owners.buffer }
+    pub fn test_active_receipt(&self) -> VectorSceneReceipt { self.owners.active.as_ref().unwrap().0.last_receipt() }
+}

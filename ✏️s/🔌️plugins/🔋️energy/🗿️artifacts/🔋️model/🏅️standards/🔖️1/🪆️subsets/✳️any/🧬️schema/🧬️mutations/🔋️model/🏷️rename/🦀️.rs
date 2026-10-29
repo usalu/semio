@@ -23,12 +23,12 @@ pub fn rename_model<Op: From<RenameModel>>(new_name: String) -> Op {
 
 impl<M> crate::retained::IdentityPayload<M> for RenameModel where M:From<RenameModel> {
  const FIELD:crate::retained::IdentityField=crate::retained::IdentityField::Name;
- const INVALID:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"An energy model name must not be blank."};
- const UNCHANGED:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The energy model already has this name."};
+ const INVALID:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"An energy model name must not be blank."};
+ const UNCHANGED:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The energy model already has this name."};
  fn source(payload:semio_framework_value::RetainedCloneRef<'_,Self>)->semio_framework_value::RetainedCloneRef<'_,String>{payload.project(0,|p|&p.new_name)}
  fn inverse(value:String)->M{Self{new_name:value}.into()}
 }
-impl<M> protocol::mutation::retained::RetainedMutationLeaf<crate::snapshot::original::EnergyModelSnapshot,M> for RenameModel
+impl<M> protocol::RetainedMutationLeaf<crate::snapshot::original::EnergyModelSnapshot,M> for RenameModel
 where M:protocol::Mutation<crate::snapshot::original::EnergyModelSnapshot,Diff=crate::diff::original::EnergyModelDiff>+From<RenameModel>+Send+'static {
  type Preparation=crate::retained::IdentityLeafPreparation<Self,M>;
 }

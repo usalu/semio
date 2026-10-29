@@ -1,14 +1,12 @@
 //! 🧪️ Exact serde operation wire and same-thread allocator witnesses across admitted copy and cancellation turns.
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use super::*;
 use semio_framework_pack_json::ArtifactCanonicalJsonNode;
 use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
 
 fn original_codec(source:ArtifactPreparedOperationSource<'_>)->ArtifactPreparedOperationCursor{
     let(mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactPreparedOperationCursor::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
-    let copied_bytes=cursor.codec_birth_copy_bytes();assert!(copied_bytes<=4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copied_bytes,maximum_depth:1,..Default::default()};
-    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.admit_codec(source,grant).unwrap().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.copied_bytes,copied_bytes);assert_eq!(step.processed_items,1);cursor
+    let copied_bytes=cursor.next_minimum_copy_bytes();assert_eq!(copied_bytes,cursor.codec_birth_copy_bytes());assert!(copied_bytes<=4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copied_bytes,maximum_depth:1,..Default::default()};
+    let mut output=[0;64];let denied=RetainedCloneGrant{maximum_copy_bytes:copied_bytes-1,..grant};assert_eq!(cursor.advance(source,&mut output,denied).unwrap(),ArtifactPreparedOperationProgress::default());let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source,&mut output,grant).unwrap());assert_eq!(step.written_bytes,0);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.copied_bytes,copied_bytes);assert_eq!(step.processed_items,1);cursor
 }
 
 struct OracleSource(serde_json::Value);

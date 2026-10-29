@@ -116,7 +116,7 @@ pub fn fem3d_entity_kind(doc: &Fem3dSnapshot, identity: &str) -> Option<&'static
     let segments = protocol::wire::decode_scoped_identity(identity).ok()?;
     if matches!(segments.as_slice(), [FEM3D_GRANULARITY_LOAD, _, _]) { return fem3d_load_owner(doc, identity).map(|_| FEM3D_GRANULARITY_LOAD); }
     let [kind, id] = segments.as_slice() else { return None };
-    if *kind == FEM3D_GRANULARITY_NODE && doc.nodes.iter().any(|node| node.id == *id) {
+    if *kind == FEM3D_GRANULARITY_NODE && doc.nodes.iter().any(|node| node.id.as_str() == *id) {
         return Some(FEM3D_GRANULARITY_NODE);
     }
     if *kind == FEM3D_GRANULARITY_ELEMENT && doc.elements.iter().any(|element| element_id(element) == *id) {
@@ -128,7 +128,7 @@ pub fn fem3d_entity_kind(doc: &Fem3dSnapshot, identity: &str) -> Option<&'static
     if *kind == FEM3D_GRANULARITY_SUPPORT && doc.supports.iter().any(|support| support.id == *id) {
         return Some(FEM3D_GRANULARITY_SUPPORT);
     }
-    if *kind == FEM3D_GRANULARITY_MATERIAL && doc.materials.iter().any(|material| material.id == *id) {
+    if *kind == FEM3D_GRANULARITY_MATERIAL && doc.materials.iter().any(|material| material.id.as_str() == *id) {
         return Some(FEM3D_GRANULARITY_MATERIAL);
     }
     if *kind == FEM3D_GRANULARITY_SECTION && doc.sections.iter().any(|section| section.id == *id) {

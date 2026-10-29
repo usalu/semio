@@ -264,8 +264,8 @@ impl ArtifactEditor for JpgBaselineEditor {
         jpg_baseline_editor_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot())
     })}
 
     fn handle(

@@ -14,9 +14,10 @@ pub fn refusals(diagnostics: &[EpJsonDiagnostic]) -> Vec<&EpJsonDiagnostic> {
     diagnostics.iter().filter(|diagnostic| diagnostic.code.ends_with("-unsupported") || diagnostic.code.ends_with("dangling-zone")).collect()
 }
 
-/// 📤️ The io-leaf entry point: this artifact's snapshot as an epJSON document tree.
+/// 📤️ The io-leaf entry point: this artifact's snapshot as an epJSON document tree, read through the same wire value its canonical JSON carries.
 pub fn serialize(snapshot: &EnergyModelSnapshot) -> Result<Value, semio_framework_diagnostic::TextError> {
-    let (document, diagnostics) = encode_model_with_diagnostics(&snapshot.model);
+    let model = <Model as semio_framework_value::FromValue>::from_value(semio_framework_value::ToValue::to_value(&snapshot.model)).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("model -> epJSON: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
+    let (document, diagnostics) = encode_model_with_diagnostics(&model);
     let refused = refusals(&diagnostics);
     if !refused.is_empty() {
         let detail = refused.iter().map(|diagnostic| format!("{} ({})", diagnostic.message, diagnostic.subject)).collect::<Vec<_>>().join("; ");

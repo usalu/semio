@@ -25,6 +25,8 @@ impl<T:RetireOwned+std::fmt::Debug+Send+Sync+'static> std::fmt::Debug for Persis
 impl<T:RetireOwned+PartialEq+Send+Sync+'static> PartialEq for PersistentList<T>{fn eq(&self,other:&Self)->bool{self.len==other.len&&self.iter().eq(other.iter())}}
 impl<T:RetireOwned+Eq+Send+Sync+'static> Eq for PersistentList<T>{}
 
+/// 🔗️ Cloning shares the immutable page root as one more alias; every live alias must be explicitly retired, exactly like `OrderedMap`.
+impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Clone for PersistentList<T>{fn clone(&self)->Self{Self{root:self.root.clone(),len:self.len,height:self.height}}}
 impl<T:crate::retirement::RetireOwned+Send+Sync+'static> Default for PersistentList<T>{fn default()->Self{Self{root:None,len:0,height:0}}}
 fn fits(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
 impl<T:crate::retirement::RetireOwned+Send+Sync+'static> PersistentList<T>{

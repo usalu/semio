@@ -1,4 +1,5 @@
 import { expect, test } from "vitest";
+import Ajv from "ajv";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { operationEntityId } from "../../🧬️schema/🪪️entity-id/🟦️.ts";
 import fixture from "../🧫️fixtures/🪪️entity-id/🔣️.json";
@@ -19,4 +20,13 @@ test("operation entity authority distinguishes writers and replays the same admi
     ids.add(id);
   }
   expect(() => operationEntityId({ parentDocumentId: "doc", authoringSeed: "" }, "n", "nodes")).toThrow("admitted authoring seed");
+});
+
+test("read-only media identity carries no entity authoring capability",()=>{
+  const admits=new Ajv({strict:true}).compile({type:"string",minLength:1});
+  for(const row of fixture.readOnly){
+    const authority={parentDocumentId:row.documentId,authoringSeed:""};
+    expect(admits(authority.authoringSeed)).toBe(row.authoringAccepted);
+    expect(()=>operationEntityId(authority,"frame","created")).toThrow("admitted authoring seed");
+  }
 });

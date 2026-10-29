@@ -303,7 +303,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
             id,
             actor: Some(authority.actor_utf8().clone()),
             forwards: vec![forward],
-            inverse: inverse_list,
+            inverse: inverse_list.into(),
             mutation_meta: vec![MutationMeta {
                 mutation_id: Some(mutation_id),
                 dependencies: Vec::new(),

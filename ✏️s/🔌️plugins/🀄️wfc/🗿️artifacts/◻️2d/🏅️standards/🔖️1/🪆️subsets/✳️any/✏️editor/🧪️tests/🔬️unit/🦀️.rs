@@ -24,7 +24,7 @@ fn dispatch(command: &Wfc2dEditorCommand, document: &crate::Wfc2dSnapshot, confi
 #[test]
 fn editor_binds_the_artifact_dialect() {
     assert_eq!(Wfc2dEditor::DIALECT.artifact_kind, crate::WFC_2D_DOCUMENT_SCHEMA);
-    assert_eq!(Wfc2dEditor::reference_birth().expect("explicit reference snapshot producer")(), crate::examples::two_room_corridor::document());
+    assert_eq!(Wfc2dEditor::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"), crate::examples::two_room_corridor::document());
 }
 
 #[test]

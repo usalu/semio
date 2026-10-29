@@ -14,7 +14,7 @@ fn original_measure_candidates_use_minimal_central_coordinate_atoms_and_exact_in
 
 #[test]
 fn original_donated_measure_controls_keep_all_members_exact_numeric_arms_and_array_bindings_under_denied_axes(){
- use semio_framework_plugin::{action_staging::*,app::staged_form::*};
+ use semio_framework_plugin::action_staging::*;use semio_framework_plugin_decl_staged_form::*;
  type Guidance=super::super::super::type_guidance::IfcTypeInputSourceWork<DetailsTestProfile>;
  if DetailsTestProfile::catalog().schema!="IFC4X3_ADD2"{return;}
  let law=contract();for row in law["cases"].as_array().unwrap(){

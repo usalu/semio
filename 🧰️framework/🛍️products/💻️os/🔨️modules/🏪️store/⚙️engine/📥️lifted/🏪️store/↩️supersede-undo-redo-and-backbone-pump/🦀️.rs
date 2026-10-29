@@ -3,24 +3,11 @@
 use super::*;
 use semio_framework_os_spr::ColdMutation;
 
-//#region 🔖️EphemeralLanes
-//#region 🔖️Backbone
-//#region 🔖️Backbone
-//#region 🔖️Authority
-//#region 🔖️EphemeralLanes
-//#region 🔖️Text
-//#region 🔖️Pack
-//#region 🔖️CodecRegistry
-//#region 🔖️TextFormat
-//#region 🔖️History
-//#region 🔖️ArtifactStore
-//#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
-    //#region 🔖️Supersede
     /// ✏️ `Supersede`: supersedes typed inputs in every alternative or within one existing alternative
     /// ([`Self::author_supersession`]).
     pub(super) async fn supersede_command(&mut self, scope: Option<String>, inputs: Vec<SupersedeInput<Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
@@ -197,8 +184,6 @@ where
         Ok(())
     }
 
-    //#endregion 🔖️Supersede
-    //#region 🔖️HistoryLane
     /// ⏪️ Shared body of `Undo`/`UndoWithPolicy`: picks the edit the policy names and reverts it.
     pub(super) async fn undo_with_policy(&mut self, policy: UndoPolicy, semantic_command: Option<Box<ArtifactCommand<Mutation>>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError>
     where
@@ -246,7 +231,6 @@ where
         self.commit_transition(transition, dependencies).await
     }
 
-    //#endregion 🔖️HistoryLane
     /// 🕹️ Parses `command_text` via [`parse_command`] and dispatches it — the op-line
     /// textual entry point (op-efficient one-line-per-structural-field commands, indented op
     /// lines for `Apply`/`AppendTransaction`).
@@ -399,15 +383,3 @@ where
         Ok((true, reports))
     }
 }
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️History
-//#endregion 🔖️TextFormat
-//#endregion 🔖️CodecRegistry
-//#endregion 🔖️Pack
-//#endregion 🔖️Text
-//#endregion 🔖️EphemeralLanes
-//#endregion 🔖️Authority
-//#endregion 🔖️Backbone
-//#endregion 🔖️Backbone
-//#endregion 🔖️EphemeralLanes

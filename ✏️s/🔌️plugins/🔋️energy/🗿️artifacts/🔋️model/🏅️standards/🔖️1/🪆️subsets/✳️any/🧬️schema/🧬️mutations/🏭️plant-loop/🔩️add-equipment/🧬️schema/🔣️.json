@@ -104,7 +104,7 @@
     "semantics": {
       "verb": "add",
       "entity": "PlantLoop",
-      "kind": "AddPlantLoopEquipment",
+      "kind": "add-plant-loop-equipment",
       "record": "AddPlantLoopEquipment"
     },
     "diagnostics": {

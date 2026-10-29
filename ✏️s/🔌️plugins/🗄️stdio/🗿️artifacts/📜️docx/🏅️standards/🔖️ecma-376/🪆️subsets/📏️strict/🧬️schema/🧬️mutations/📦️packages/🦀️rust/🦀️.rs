@@ -16,6 +16,19 @@ pub mod standards {
             pub mod strict {
                 #[path = "../../../🦀️.rs"]
                 pub mod schema;
+                #[path = "."]
+                pub mod io {
+                    #[path = "."]
+                    pub mod binary {
+                        #[path = "../../../../🚪️io/💾️binary/🧬️mutations/🦀️.rs"]
+                        pub mod mutations;
+                    }
+                    #[path = "."]
+                    pub mod text {
+                        #[path = "../../../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
+                        pub mod mutations;
+                    }
+                }
             }
         }
     }

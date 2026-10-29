@@ -387,8 +387,8 @@ impl ArtifactApp for DummyApp {
         }
     }
 
-    fn reference_birth()->Option<fn()->DummySnapshot>{Some(||{
-        DummySnapshot::default()
+    fn reference_birth()->Option<fn()->Result<DummySnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(DummySnapshot::default())
     })}
 
     async fn handle(
@@ -454,9 +454,9 @@ async fn new_app_constructs_a_registry_less_wrapper() {
     let mut observer = |_| true;
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let mut app = new_app::<DummyApp>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-    let error = app.dispatch_typed(DummyCommand::Increment, &meta("local"), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect_err("registry-less wrapper must fail closed");
-    assert_eq!(error.code.0, "interactive-job.unknown-key");
-    assert!(error.message.contains("no exact manifest declaration"), "the registry-less wrapper fails on the missing declaration, not on a missing factory: {}", error.message);
+    let error = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &DummyCommand::Increment, &meta("local"), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await.expect_err("registry-less wrapper must fail closed");
+    assert_eq!(error.primary_fault().expect("a diagnostic fault").code.0, "interactive-job.unknown-key");
+    assert!(error.primary_fault().expect("a diagnostic fault").message.contains("no exact manifest declaration"), "the registry-less wrapper fails on the missing declaration, not on a missing factory: {}", error.primary_fault().expect("a diagnostic fault").message);
     assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
     close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original fixture terminal close");
 

@@ -85,7 +85,7 @@ async fn generation_preview_is_one_evaluation_shared_by_two_generation_windows()
     let mut app = app_with_registry().await;
     let result: Result<(), String> = async {
         let before_document = crate::SnapshotRead::new(app.snapshot().map_err(|error| format!("{error:?}"))?);
-        app.0.dispatch_typed(Generation3dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::artifact_app_laws::meta("preview-owner"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Generation3dCommand::AddGeneration(add_generation::AddGeneration {}), &semio_framework_plugin::artifact_app_laws::meta("preview-owner"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
         let published = drive_preview_operation(&mut app).await?;
         if published != (1, 1, 0) {
             return Err(format!("a generation command publishes its document edit and selection config exactly once and no app transient: artifact={} config={} transient={}", published.0, published.1, published.2));

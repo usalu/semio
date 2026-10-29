@@ -102,7 +102,7 @@ pub mod context {
         };
         let mut action = meta("local");
         action.view_state = Some(view(kind));
-        let mut result = app.0.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, FEM2D_TEST_INSTANCE, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
@@ -120,7 +120,7 @@ pub mod context {
     pub async fn dispatch_rows(app: &mut Fem2dApp, command: Fem2dCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
         let mut action = meta("local");
         action.view_state = Some(view(model_window::WINDOW_KIND_ID));
-        app.0.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut rows = Vec::new();
         while app.has_pending_typed_operations() {

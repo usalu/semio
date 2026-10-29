@@ -87,9 +87,12 @@ impl FemGumballTransient {
 
     /// 👁️ `document` with every open gesture's provisional entries applied — the preview every window of this
     /// instance paints, never history. An entry that does not decode or apply is skipped.
-    pub fn preview<S: Clone, M: semio_framework_value::FromValue + protocol::Mutation<S>>(&self, document: &S) -> Option<S> {
+    pub fn preview<S, R: Clone, M: semio_framework_value::FromValue + protocol::ColdMutation<R>>(&self, document: &S, to_reference: impl FnOnce(&S) -> R, from_reference: impl FnOnce(R) -> Option<S>) -> Option<S> {
         let entries: Vec<M> = self.gestures.values().flat_map(|gesture| &gesture.entries).filter_map(|entry| semio_framework_value::FromValue::from_value(entry.mutation.clone()).ok()).collect();
-        (!entries.is_empty()).then(|| entries.iter().fold(document.clone(), |state, mutation| protocol::apply_diff_cold(protocol::ColdMutation::diff(mutation, &state).diff(), &state).unwrap_or(state)))
+        if entries.is_empty() {
+            return None;
+        }
+        from_reference(entries.iter().fold(to_reference(document), |state, mutation| protocol::apply_diff_cold(protocol::ColdMutation::diff(mutation, &state).diff(), &state).unwrap_or(state)))
     }
 }
 //#endregion 🔖️State

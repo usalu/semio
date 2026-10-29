@@ -23,24 +23,11 @@ impl ArtifactEditor for EnergyModelEditor {
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
     type Command = EnergyModelEditorCommand;
-    /// 🧩️ `structure`/`zones` are `s.stdio.semio@v1/{value,table}` members, so the roster that
-    /// resolves their genesis dialects is stdio's closed `SemioMembers` (same as gis/sourcing).
+    /// 🧩️ The native document declares no composed child slot; the hub's version-control app pairs it with stdio's closed `SemioMembers` roster.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
 
     const DIALECT: Dialect = MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = ENERGY_MODEL_DOCUMENT_SCHEMA;
-
-    fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
-        crate::snapshot::energy_child_restore_projection(snapshot)
-    }
-
-    /// 🌱️ Both composed children derive from the model — see `crate::energy_genesis_child_pack`.
-    fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
- Ok((||{
-        crate::snapshot::energy_genesis_child_pack(snapshot, slot, child_id)
-    
-})())
-}
 
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::tool_contract::ArtifactBoundedFirstStepProof> {
         ENERGY_MODEL_RETAINED_TOOL_IDS.iter().map(|tool| semio_framework_plugin::tool_contract::ArtifactBoundedFirstStepProof::new::<EditorApp<EnergyModelEditor>>(

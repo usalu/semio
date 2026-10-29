@@ -89,7 +89,7 @@
     "semantics": {
       "verb": "replace",
       "entity": "fenestration",
-      "kind": "replace-vertices",
+      "kind": "replace-fenestration-vertices",
       "record": "ReplacedFenestrationVertices"
     },
     "diagnostics": {

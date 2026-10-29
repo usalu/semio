@@ -93,7 +93,7 @@ impl ArtifactActor {
             return;
         }
         let (Some(pack), Some(spr)) = (self.current_pack.clone(), self.current_spr.clone()) else { return };
-        let Ok((spr, retracted)) = semio_framework_os_store_engine::lifted_store::retract_history_transitions_from_spr(&spr, refused).await else { return };
+        let Ok((spr, retracted)) = semio_framework_os_store_engine_checkpoint_graph::retract_history_transitions_from_spr(&spr, refused).await else { return };
         for id in &retracted {
             self.known_op_ids.remove(id);
         }

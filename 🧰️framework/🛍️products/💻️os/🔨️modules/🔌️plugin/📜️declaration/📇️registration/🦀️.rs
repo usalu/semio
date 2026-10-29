@@ -392,13 +392,13 @@ impl ArtifactContribution {
     /// suspension calls (io-async-signatures), so the whole body is bridged via `resolve_ready`.
     pub async fn mutation<Snapshot, Op, K>(mut self, target_artifact_schema: impl Into<String>, schema_version: u32, algorithm_version: u32) -> Self
     where
-        Snapshot: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
+        Snapshot: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
         Op: ::protocol::Mutation<Snapshot> + ::protocol::ColdMutation<Snapshot> + ::protocol::OpBinary + 'static,
         K: ::protocol::CompositeMutationKind<Snapshot, Op> + ::protocol::ColdCompositeMutationKind<Snapshot, Op> + 'static,
     {
         fn plan_cold<Snapshot, Op, K>(snapshot_pack: &[u8], payload: &[u8]) -> Result<ContributedMutationPlanOutput, ContributedMutationExecutionError>
         where
-            Snapshot: Clone + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot,
+            Snapshot: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
             Op: ::protocol::Mutation<Snapshot> + ::protocol::ColdMutation<Snapshot> + ::protocol::OpBinary,
             K: ::protocol::CompositeMutationKind<Snapshot, Op> + ::protocol::ColdCompositeMutationKind<Snapshot, Op>,
         {

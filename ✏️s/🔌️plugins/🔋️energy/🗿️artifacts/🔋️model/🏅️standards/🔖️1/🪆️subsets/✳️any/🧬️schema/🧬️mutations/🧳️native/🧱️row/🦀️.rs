@@ -3,10 +3,10 @@ use crate::{snapshot::{original::EnergyModelSnapshot,state::fields::RetainedBran
 use semio_framework_value::{RetirementDemand,ValueError,shared_issuance::SealedShared,retirement::RetireOwned,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_persistent::list::persistent::{PersistentList,PersistentSet,PersistentSplice,PersistentSpliceKind};
 use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection;
-use protocol::mutation::retained::retained_mutation_demand_fits;
+use protocol::retained_mutation_demand_fits;
 use std::mem::{size_of,ManuallyDrop};
 #[path="📤️output/🦀️.rs"]mod output;pub use output::{BranchOutput,DirectBranchOutput,NestedBranchPath,NestedBranchOutput,ScheduleBranchOutput,SiteBranchOutput,GroundBranchOutput,RunPeriodBranchOutput};
-#[path="📋️change/🦀️.rs"]mod change;pub use change::RowChange;pub(crate) use change::RowListPreparation;
+#[path="📋️change/🦀️.rs"]mod change;pub use change::RowChange;pub use change::RowListPreparation;
 /// 🧭️ The authored row path supplies the exact persistent collection and owning sealed branch.
 pub trait RowBranchPath:Send+Sync+'static{
  type Row:RetireOwned+Send+Sync;

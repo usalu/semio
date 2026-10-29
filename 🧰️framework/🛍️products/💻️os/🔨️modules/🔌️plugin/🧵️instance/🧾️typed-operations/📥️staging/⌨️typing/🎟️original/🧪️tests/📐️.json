@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contract",
+    "rows",
+    "cases",
+    "denials",
+    "cancelAfter",
+    "sameTransaction",
+    "sameMutationBacking",
+    "foreignDecoderRefused"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.original-typing-commit.v1"
+    },
+    "rows": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "window",
+          "tool",
+          "buffer",
+          "leaves",
+          "deadline",
+          "states"
+        ],
+        "properties": {
+          "states": {
+            "const": [
+              "root",
+              "typing"
+            ]
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "now",
+          "typing",
+          "commit",
+          "window",
+          "roster",
+          "view",
+          "expected",
+          "suppress",
+          "pass"
+        ],
+        "properties": {
+          "pass": {
+            "enum": [
+              "preverb",
+              "control"
+            ]
+          }
+        }
+      }
+    },
+    "denials": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "depth"
+        ]
+      }
+    },
+    "cancelAfter": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "sameTransaction": {
+      "const": true
+    },
+    "sameMutationBacking": {
+      "const": true
+    },
+    "foreignDecoderRefused": {
+      "const": true
+    }
+  }
+}

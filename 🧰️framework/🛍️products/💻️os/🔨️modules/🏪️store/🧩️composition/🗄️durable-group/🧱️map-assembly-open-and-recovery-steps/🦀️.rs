@@ -4,11 +4,11 @@ use super::*;
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ParentP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
     ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<ParentP> + 'static,
-    DrawingP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    DrawingP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
     DrawingMutation: ArtifactCanonicalJsonTree + StoreMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<DrawingP> + 'static,
-    ValueP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
+    ValueP: ArtifactPack + ArtifactDsl + BorrowedDslRecord + FieldProjectionSource + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
     ValueMutation: ArtifactCanonicalJsonTree + StoreMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<ValueP> + 'static,
 {
     #[allow(clippy::too_many_arguments)]
@@ -336,12 +336,12 @@ drop(self.prepared.take());
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedThreeStoreMapAssemblyV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue + Clone + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ParentP>,
-    DrawingP: ValueToValue + Clone + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<DrawingP>,
-    ValueP: ValueToValue + Clone + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ValueP>,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ParentP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<DrawingP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ValueP> + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + 'static,
 {
     fn drop(&mut self) {
         assert!(

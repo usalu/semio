@@ -1,0 +1,1383 @@
+{
+ "version": 1,
+ "estimates": [
+  {
+   "name": "no history uses the prior",
+   "input": {
+    "volumeBytes": 51539607552,
+    "classes": [
+     "a#cold"
+    ],
+    "prior": {
+     "bytes": 3221225472,
+     "rampMilliseconds": 600000
+    },
+    "history": {
+     "version": 1,
+     "classes": {}
+    }
+   },
+   "expected": {
+    "reservedBytes": 3221225472,
+    "rampMilliseconds": 600000,
+    "samples": 0,
+    "class": null
+   }
+  },
+  {
+   "name": "one sample is too few",
+   "input": {
+    "volumeBytes": 51539607552,
+    "classes": [
+     "a#cold"
+    ],
+    "prior": {
+     "bytes": 3221225472,
+     "rampMilliseconds": 600000
+    },
+    "history": {
+     "version": 1,
+     "classes": {
+      "a#cold": [
+       {
+        "bytes": 1073741824,
+        "wallMs": 60000,
+        "atMs": 1
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "reservedBytes": 3221225472,
+    "rampMilliseconds": 600000,
+    "samples": 0,
+    "class": null
+   }
+  },
+  {
+   "name": "two samples give the 90th percentile plus the margin",
+   "input": {
+    "volumeBytes": 51539607552,
+    "classes": [
+     "a#cold",
+     "b#cold",
+     "c#cold"
+    ],
+    "prior": {
+     "bytes": 3221225472,
+     "rampMilliseconds": 600000
+    },
+    "history": {
+     "version": 1,
+     "classes": {
+      "c#cold": [
+       {
+        "bytes": 1073741824,
+        "wallMs": 60000,
+        "atMs": 1
+       },
+       {
+        "bytes": 2147483648,
+        "wallMs": 120000,
+        "atMs": 1
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "reservedBytes": 2469606195,
+    "rampMilliseconds": 120000,
+    "samples": 2,
+    "class": "c#cold"
+   }
+  },
+  {
+   "name": "the most specific class with enough samples wins",
+   "input": {
+    "volumeBytes": 51539607552,
+    "classes": [
+     "a#cold",
+     "b#cold",
+     "c#cold"
+    ],
+    "prior": {
+     "bytes": 3221225472,
+     "rampMilliseconds": 600000
+    },
+    "history": {
+     "version": 1,
+     "classes": {
+      "c#cold": [
+       {
+        "bytes": 1073741824,
+        "wallMs": 60000,
+        "atMs": 1
+       }
+      ],
+      "b#cold": [
+       {
+        "bytes": 104857600,
+        "wallMs": 1000,
+        "atMs": 1
+       },
+       {
+        "bytes": 209715200,
+        "wallMs": 2000,
+        "atMs": 1
+       },
+       {
+        "bytes": 314572800,
+        "wallMs": 3000,
+        "atMs": 1
+       }
+      ],
+      "a#cold": [
+       {
+        "bytes": 9663676416,
+        "wallMs": 900000,
+        "atMs": 1
+       },
+       {
+        "bytes": 9663676416,
+        "wallMs": 900000,
+        "atMs": 1
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "reservedBytes": 361758720,
+    "rampMilliseconds": 30000,
+    "samples": 3,
+    "class": "b#cold"
+   }
+  },
+  {
+   "name": "the bytes never exceed the maximum share and the ramp its maximum",
+   "input": {
+    "volumeBytes": 51539607552,
+    "classes": [
+     "a#cold"
+    ],
+    "prior": {
+     "bytes": 3221225472,
+     "rampMilliseconds": 600000
+    },
+    "history": {
+     "version": 1,
+     "classes": {
+      "a#cold": [
+       {
+        "bytes": 21474836480,
+        "wallMs": 86400000,
+        "atMs": 1
+       },
+       {
+        "bytes": 21474836480,
+        "wallMs": 86400000,
+        "atMs": 1
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "reservedBytes": 7730941132,
+    "rampMilliseconds": 1800000,
+    "samples": 2,
+    "class": "a#cold"
+   }
+  },
+  {
+   "name": "zero bytes still reserve the minimum and the shortest ramp",
+   "input": {
+    "volumeBytes": 51539607552,
+    "classes": [
+     "a#cold"
+    ],
+    "prior": {
+     "bytes": 3221225472,
+     "rampMilliseconds": 600000
+    },
+    "history": {
+     "version": 1,
+     "classes": {
+      "a#cold": [
+       {
+        "bytes": 0,
+        "wallMs": 0,
+        "atMs": 1
+       },
+       {
+        "bytes": 0,
+        "wallMs": 0,
+        "atMs": 1
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "reservedBytes": 134217728,
+    "rampMilliseconds": 30000,
+    "samples": 2,
+    "class": "a#cold"
+   }
+  },
+  {
+   "name": "only the newest thirty-two samples count",
+   "input": {
+    "volumeBytes": 51539607552,
+    "classes": [
+     "a#cold"
+    ],
+    "prior": {
+     "bytes": 3221225472,
+     "rampMilliseconds": 600000
+    },
+    "history": {
+     "version": 1,
+     "classes": {
+      "a#cold": [
+       {
+        "bytes": 10737418240,
+        "wallMs": 100000,
+        "atMs": 0
+       },
+       {
+        "bytes": 10737418240,
+        "wallMs": 100000,
+        "atMs": 1
+       },
+       {
+        "bytes": 10737418240,
+        "wallMs": 100000,
+        "atMs": 2
+       },
+       {
+        "bytes": 10737418240,
+        "wallMs": 100000,
+        "atMs": 3
+       },
+       {
+        "bytes": 10737418240,
+        "wallMs": 100000,
+        "atMs": 4
+       },
+       {
+        "bytes": 10737418240,
+        "wallMs": 100000,
+        "atMs": 5
+       },
+       {
+        "bytes": 10737418240,
+        "wallMs": 100000,
+        "atMs": 6
+       },
+       {
+        "bytes": 10737418240,
+        "wallMs": 100000,
+        "atMs": 7
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 100
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 101
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 102
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 103
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 104
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 105
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 106
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 107
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 108
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 109
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 110
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 111
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 112
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 113
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 114
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 115
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 116
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 117
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 118
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 119
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 120
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 121
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 122
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 123
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 124
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 125
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 126
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 127
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 128
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 129
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 130
+       },
+       {
+        "bytes": 1073741824,
+        "wallMs": 100000,
+        "atMs": 131
+       }
+      ]
+     }
+    }
+   },
+   "expected": {
+    "reservedBytes": 1234803097,
+    "rampMilliseconds": 100000,
+    "samples": 32,
+    "class": "a#cold"
+   }
+  },
+  {
+   "name": "on a tiny image the maximum share wins over the minimum",
+   "input": {
+    "volumeBytes": 1000,
+    "classes": [
+     "a#cold"
+    ],
+    "prior": {
+     "bytes": 3221225472,
+     "rampMilliseconds": 600000
+    },
+    "history": {
+     "version": 1,
+     "classes": {}
+    }
+   },
+   "expected": {
+    "reservedBytes": 150,
+    "rampMilliseconds": 600000,
+    "samples": 0,
+    "class": null
+   }
+  },
+  {
+   "name": "the prior is bounded like a learned value",
+   "input": {
+    "volumeBytes": 51539607552,
+    "classes": [
+     "a#warm"
+    ],
+    "prior": {
+     "bytes": 42949672960,
+     "rampMilliseconds": 1
+    },
+    "history": {
+     "version": 1,
+     "classes": {}
+    }
+   },
+   "expected": {
+    "reservedBytes": 7730941132,
+    "rampMilliseconds": 30000,
+    "samples": 0,
+    "class": null
+   }
+  }
+ ],
+ "outstanding": [
+  {
+   "name": "a waiting command holds nothing",
+   "input": {
+    "row": {
+     "id": "a1",
+     "state": "waiting",
+     "reservedBytes": 1073741824,
+     "rampMilliseconds": 600000,
+     "arrivedMs": 1000,
+     "admittedMs": null
+    },
+    "nowMs": 1000000
+   },
+   "expected": 0
+  },
+  {
+   "name": "a fresh running command holds everything",
+   "input": {
+    "row": {
+     "id": "a1",
+     "state": "running",
+     "reservedBytes": 1073741824,
+     "rampMilliseconds": 600000,
+     "arrivedMs": 1000,
+     "admittedMs": 1000000
+    },
+    "nowMs": 1000000
+   },
+   "expected": 1073741824
+  },
+  {
+   "name": "halfway holds half",
+   "input": {
+    "row": {
+     "id": "a1",
+     "state": "running",
+     "reservedBytes": 1073741824,
+     "rampMilliseconds": 600000,
+     "arrivedMs": 1000,
+     "admittedMs": 1000000
+    },
+    "nowMs": 1300000
+   },
+   "expected": 536870912
+  },
+  {
+   "name": "at the end of the ramp nothing is left",
+   "input": {
+    "row": {
+     "id": "a1",
+     "state": "running",
+     "reservedBytes": 1073741824,
+     "rampMilliseconds": 600000,
+     "arrivedMs": 1000,
+     "admittedMs": 1000000
+    },
+    "nowMs": 1600000
+   },
+   "expected": 0
+  },
+  {
+   "name": "past the ramp nothing is left",
+   "input": {
+    "row": {
+     "id": "a1",
+     "state": "running",
+     "reservedBytes": 1073741824,
+     "rampMilliseconds": 600000,
+     "arrivedMs": 1000,
+     "admittedMs": 1000000
+    },
+    "nowMs": 1900000
+   },
+   "expected": 0
+  },
+  {
+   "name": "a clock behind the admission counts everything",
+   "input": {
+    "row": {
+     "id": "a1",
+     "state": "running",
+     "reservedBytes": 1073741824,
+     "rampMilliseconds": 600000,
+     "arrivedMs": 1000,
+     "admittedMs": 1000000
+    },
+    "nowMs": 500000
+   },
+   "expected": 1073741824
+  },
+  {
+   "name": "one millisecond in rounds down to the basis point",
+   "input": {
+    "row": {
+     "id": "a1",
+     "state": "running",
+     "reservedBytes": 1073741824,
+     "rampMilliseconds": 600000,
+     "arrivedMs": 1000,
+     "admittedMs": 1000000
+    },
+    "nowMs": 1000001
+   },
+   "expected": 1073634449
+  },
+  {
+   "name": "a quarter through the ramp holds three quarters",
+   "input": {
+    "row": {
+     "id": "a1",
+     "state": "running",
+     "reservedBytes": 1073741824,
+     "rampMilliseconds": 600000,
+     "arrivedMs": 1000,
+     "admittedMs": 1000000
+    },
+    "nowMs": 1150000
+   },
+   "expected": 805306368
+  }
+ ],
+ "decisions": [
+  {
+   "name": "an empty image with room admits at once",
+   "input": {
+    "freeBytes": 21474836480,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 2147483648,
+     "arrivedMs": 5000
+    },
+    "rows": [],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 0
+   }
+  },
+  {
+   "name": "a fresh running command holds its whole reservation",
+   "input": {
+    "freeBytes": 8589934592,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "running",
+      "reservedBytes": 6442450944,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 1000000
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 1546188226,
+    "heldBytes": 6442450944,
+    "aheadBytes": 0,
+    "shortfallBytes": 3693671874,
+    "running": 1
+   }
+  },
+  {
+   "name": "a running command half through its ramp holds half",
+   "input": {
+    "freeBytes": 8589934592,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "running",
+      "reservedBytes": 6442450944,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 700000
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 1546188226,
+    "heldBytes": 3221225472,
+    "aheadBytes": 0,
+    "shortfallBytes": 472446402,
+    "running": 1
+   }
+  },
+  {
+   "name": "a running command past its ramp holds nothing",
+   "input": {
+    "freeBytes": 8589934592,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "running",
+      "reservedBytes": 6442450944,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 400000
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 1
+   }
+  },
+  {
+   "name": "exactly the reservation above the floor fits",
+   "input": {
+    "freeBytes": 5841155522,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 0
+   }
+  },
+  {
+   "name": "one byte short does not fit",
+   "input": {
+    "freeBytes": 5841155521,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 1,
+    "running": 0
+   }
+  },
+  {
+   "name": "a waiting command that arrived earlier is served first",
+   "input": {
+    "freeBytes": 9062380994,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "waiting",
+      "reservedBytes": 5368709120,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 4000,
+      "admittedMs": null
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "queue",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 5368709120,
+    "shortfallBytes": 2147483648,
+    "running": 0
+   }
+  },
+  {
+   "name": "a waiting command that arrived later does not count",
+   "input": {
+    "freeBytes": 9062380994,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "waiting",
+      "reservedBytes": 5368709120,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 6000,
+      "admittedMs": null
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 0
+   }
+  },
+  {
+   "name": "an earlier waiting command still leaves room for a small one behind it",
+   "input": {
+    "freeBytes": 23021024706,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "waiting",
+      "reservedBytes": 5368709120,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 4000,
+      "admittedMs": null
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 5368709120,
+    "shortfallBytes": 0,
+    "running": 0
+   }
+  },
+  {
+   "name": "equal arrival is ordered by id, the smaller id first",
+   "input": {
+    "freeBytes": 9062380994,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "b1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "waiting",
+      "reservedBytes": 5368709120,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 5000,
+      "admittedMs": null
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "queue",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 5368709120,
+    "shortfallBytes": 2147483648,
+    "running": 0
+   }
+  },
+  {
+   "name": "equal arrival, the larger id waits behind",
+   "input": {
+    "freeBytes": 9062380994,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "a1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "b1",
+      "state": "waiting",
+      "reservedBytes": 5368709120,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 5000,
+      "admittedMs": null
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 0
+   }
+  },
+  {
+   "name": "the only command left goes on after a cleanup found nothing more",
+   "input": {
+    "freeBytes": 1073741824,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [],
+    "reclaimed": true
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "alone",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 4767413698,
+    "running": 0
+   }
+  },
+  {
+   "name": "the same without a cleanup still waits",
+   "input": {
+    "freeBytes": 1073741824,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 4767413698,
+    "running": 0
+   }
+  },
+  {
+   "name": "a running command forbids going on alone",
+   "input": {
+    "freeBytes": 1073741824,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "running",
+      "reservedBytes": 1073741824,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 1000000
+     }
+    ],
+    "reclaimed": true
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 1546188226,
+    "heldBytes": 1073741824,
+    "aheadBytes": 0,
+    "shortfallBytes": 5841155522,
+    "running": 1
+   }
+  },
+  {
+   "name": "a waiting command ahead forbids going on alone",
+   "input": {
+    "freeBytes": 1073741824,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "waiting",
+      "reservedBytes": 1073741824,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 4000,
+      "admittedMs": null
+     }
+    ],
+    "reclaimed": true
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 1073741824,
+    "shortfallBytes": 5841155522,
+    "running": 0
+   }
+  },
+  {
+   "name": "the command's own row is not counted against it",
+   "input": {
+    "freeBytes": 8589934592,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "r1",
+      "state": "running",
+      "reservedBytes": 4294967296,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 1000000
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 0
+   }
+  },
+  {
+   "name": "a clock behind the admission time counts the whole reservation",
+   "input": {
+    "freeBytes": 8589934592,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 1073741824,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "running",
+      "reservedBytes": 2147483648,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 2000000
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 2147483648,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 1
+   }
+  },
+  {
+   "name": "two running commands add up and admit",
+   "input": {
+    "freeBytes": 12884901888,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 3221225472,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "running",
+      "reservedBytes": 2147483648,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 1000000
+     },
+     {
+      "id": "a2",
+      "state": "running",
+      "reservedBytes": 3221225472,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 700000
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1546188226,
+    "heldBytes": 3758096384,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 2
+   }
+  },
+  {
+   "name": "two running commands add up and refuse",
+   "input": {
+    "freeBytes": 7516192768,
+    "volumeBytes": 51539607552,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 3221225472,
+     "arrivedMs": 5000
+    },
+    "rows": [
+     {
+      "id": "a1",
+      "state": "running",
+      "reservedBytes": 2147483648,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 1000000
+     },
+     {
+      "id": "a2",
+      "state": "running",
+      "reservedBytes": 3221225472,
+      "rampMilliseconds": 600000,
+      "arrivedMs": 1000,
+      "admittedMs": 700000
+     }
+    ],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 1546188226,
+    "heldBytes": 3758096384,
+    "aheadBytes": 0,
+    "shortfallBytes": 1009317314,
+    "running": 2
+   }
+  },
+  {
+   "name": "a small image keeps the minimum floor of one gibibyte",
+   "input": {
+    "freeBytes": 5368709120,
+    "volumeBytes": 17179869184,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 2147483648,
+     "arrivedMs": 5000
+    },
+    "rows": [],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "admit",
+    "reason": "fits",
+    "floorBytes": 1073741824,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 0,
+    "running": 0
+   }
+  },
+  {
+   "name": "a large image keeps its floor share",
+   "input": {
+    "freeBytes": 8589934592,
+    "volumeBytes": 171798691840,
+    "nowMs": 1000000,
+    "request": {
+     "id": "r1",
+     "reservedBytes": 4294967296,
+     "arrivedMs": 5000
+    },
+    "rows": [],
+    "reclaimed": false
+   },
+   "expected": {
+    "verdict": "wait",
+    "reason": "space",
+    "floorBytes": 5153960755,
+    "heldBytes": 0,
+    "aheadBytes": 0,
+    "shortfallBytes": 858993459,
+    "running": 0
+   }
+  }
+ ],
+ "floors": [
+  {
+   "name": "the 48 GiB image keeps three percent",
+   "volumeBytes": 51539607552,
+   "expected": 1546188226
+  },
+  {
+   "name": "the 16 GiB image keeps the 1 GiB minimum",
+   "volumeBytes": 17179869184,
+   "expected": 1073741824
+  },
+  {
+   "name": "a byte-sized image keeps the minimum",
+   "volumeBytes": 1000,
+   "expected": 1073741824
+  },
+  {
+   "name": "the 160 GiB image keeps three percent",
+   "volumeBytes": 171798691840,
+   "expected": 5153960755
+  },
+  {
+   "name": "the 64 GiB image keeps three percent",
+   "volumeBytes": 68719476736,
+   "expected": 2061584302
+  }
+ ],
+ "quantiles": [
+  {
+   "name": "ten values at the 90th percentile",
+   "values": [
+    10,
+    9,
+    8,
+    7,
+    6,
+    5,
+    4,
+    3,
+    2,
+    1
+   ],
+   "basisPoints": 9000,
+   "expected": 9
+  },
+  {
+   "name": "a single value",
+   "values": [
+    5
+   ],
+   "basisPoints": 9000,
+   "expected": 5
+  },
+  {
+   "name": "the median of three rounds the rank up",
+   "values": [
+    3,
+    1,
+    2
+   ],
+   "basisPoints": 5000,
+   "expected": 2
+  },
+  {
+   "name": "the full percentile is the maximum",
+   "values": [
+    10,
+    20,
+    30,
+    40
+   ],
+   "basisPoints": 10000,
+   "expected": 40
+  },
+  {
+   "name": "the smallest percentile is the minimum",
+   "values": [
+    30,
+    10,
+    20
+   ],
+   "basisPoints": 1,
+   "expected": 10
+  },
+  {
+   "name": "seven values at the 90th percentile are the maximum",
+   "values": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+   ],
+   "basisPoints": 9000,
+   "expected": 7
+  },
+  {
+   "name": "duplicates keep their rank",
+   "values": [
+    5,
+    5,
+    5,
+    9
+   ],
+   "basisPoints": 7500,
+   "expected": 5
+  }
+ ]
+}

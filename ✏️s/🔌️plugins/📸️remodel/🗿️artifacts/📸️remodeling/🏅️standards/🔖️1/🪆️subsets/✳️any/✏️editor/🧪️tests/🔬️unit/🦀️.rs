@@ -122,7 +122,7 @@ pub(crate) mod context {
         };
         let view_state = window_kind.map(test_window);
         let command_id = command.command_id();
-        let mut result = app.0.dispatch_typed(command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{command_id}: {fault:?}"));
+        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &semio_framework_plugin::ActionMeta { view_state, ..meta("local") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{command_id}: {fault:?}"));
         let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap_or_else(|fault| panic!("{command_id}: settle: {fault:?}"));
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
@@ -684,7 +684,7 @@ async fn view_rows_dispatch_cleanly_against_the_real_registry() {
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let result = semio_framework_plugin::ActionMeta { view_state: Some(view), ..artifact_app_laws::meta("local") };
-    app.0.dispatch_typed(RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("view dispatch");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &RemodelingCommand::SetReportTable(set_report_table::SetReportTable { table: "tracks".into() }), &result, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("view dispatch");
     let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("view publication settles");
     assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::WindowConfig) && !receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a view row publishes its window-config lane and never the document lane: {:?}", receipt.lanes);
 }

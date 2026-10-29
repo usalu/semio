@@ -249,9 +249,6 @@ pub use semio_s_artifact_layout_layout_engine::scene::text_fonts::text_font_asse
 #[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 pub mod unit_tests;
-#[cfg(test)]
-#[path = "🧪️tests/🧪️transform-tool-transactions/🦀️.rs"]
-mod transform_tool_transaction_tests;
 //#endregion 🧪️UnitTests
 
 //#region 🪢️TaxonomyMounts

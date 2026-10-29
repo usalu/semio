@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-typing-edit"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original typing emission capture, native fold and atomic ledger publication"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-typing-edit"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework = { path = "../../../../../../../../../📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-tool-machine = { path = "../../../../../../../../../🔨️modules/🛠️tool-machine/📦️packages/🦀️rust" }
+semio-framework-tool-typing-edit = { path = "../../../../../../../../../🔨️modules/🛠️tool-machine/⌨️typing/✍️edit/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-plugin-tool-run = { path = "../../../../../⏯️tool-run/📦️packages/🦀️rust" }

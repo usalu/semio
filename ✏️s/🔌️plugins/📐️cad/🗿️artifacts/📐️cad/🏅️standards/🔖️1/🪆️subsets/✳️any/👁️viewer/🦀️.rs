@@ -105,8 +105,8 @@ impl ArtifactViewer for CadViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->CadSnapshot>{Some(||{
-        forest_play_scene()
+    fn reference_birth()->Option<fn()->Result<CadSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(forest_play_scene())
     })}
 
     /// 👁️ Structurally read-only: the sole `CadViewCommand::Noop` variant never carries a config

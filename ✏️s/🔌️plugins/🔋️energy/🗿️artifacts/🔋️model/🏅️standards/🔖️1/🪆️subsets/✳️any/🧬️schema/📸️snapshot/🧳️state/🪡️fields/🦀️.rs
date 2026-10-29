@@ -1,5 +1,5 @@
 //! 🪡️ Native authored fields become sealed immutable values through original retained preparation.
-use protocol::mutation::retained::{RetainedFieldPreparation,retained_mutation_demand_fits};
+use protocol::{RetainedFieldPreparation,retained_mutation_demand_fits};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedClone,RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{size_of,ManuallyDrop};
 
@@ -56,7 +56,6 @@ fn child(g:RetainedCloneGrant,extra:usize)->RetainedCloneGrant{RetainedCloneGran
 fn add(mut p:RetainedCloneProgress,extra:usize)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(extra).ok_or_else(invalid)?;Ok(p)}
 fn tag(error:ValueError,extra:usize)->ValueError{let p=error.retained_progress();match add(p,extra){Ok(p)=>error.with_retained_progress(p),Err(failure)=>failure.with_retained_progress(p)}}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
 
 #[path="🌳️branch/🦀️.rs"]mod branch;
 pub use branch::{RetainedBranchProjection,BranchProjectionOutput};

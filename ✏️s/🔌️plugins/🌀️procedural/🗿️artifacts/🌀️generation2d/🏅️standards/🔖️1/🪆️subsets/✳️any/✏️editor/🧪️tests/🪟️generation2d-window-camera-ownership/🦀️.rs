@@ -147,7 +147,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
 
                 async fn dispatch(app: &mut TestApp, view: Option<&ViewModel>, command: Generation2dCommand) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
                     let meta = ActionMeta { instance_id: 71, view_state: view.cloned(), ..artifact_app_laws::meta("generation2d-window-camera-ownership") };
-                    Box::pin(app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.map_err(|error| format!("{error:?}"))?;
+                    Box::pin(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.map_err(|error| format!("{error:?}"))?;
                     Box::pin(artifact_app_laws::settle_registered_typed_operation(&mut app.0, 71, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await.map_err(|error| format!("{error:?}"))
                 }
 
@@ -179,7 +179,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                     app.bind_instance_id(71).await;
                     let meta = ActionMeta { instance_id: 71, view_state: view, ..artifact_app_laws::meta("generation2d-window-rejection") };
                     let command = Generation2dCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: 1.0, y: 2.0, zoom: 3.0 } });
-                    let observed = match Box::pin(app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await {
+                    let observed = match Box::pin(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await {
                         Err(error) => format!("{error:?}"),
                         Ok(_) => match Box::pin(artifact_app_laws::settle_registered_typed_operation(&mut app.0, 71, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).await {
                             Err(error) => format!("{error:?}"),

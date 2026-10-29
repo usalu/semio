@@ -234,12 +234,6 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
         if let Some(factory) = self.factory_close.iter().find_map(Option::as_ref) { return nested(factory.demands(body)?); }
         Ok(Default::default())
     }
-    /// 🧷️ The same original decoder cleanup loan reaches wire preparation before every outer owner retires.
-    pub fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>where P:Send+Sync+'static,Mutation:Send+'static{
-     self.begin_close();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if self.group_preparation.is_some()||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
-     if self.transaction_close.is_none()&&self.transaction.is_none()&&self.lane_close.is_none()&&self.lane_insert.is_none(){if let Some(owner)=self.preparation.as_mut(){if !owner.terminal_is_empty(){let child=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth-1};let s=owner.close_original_step(original,child)?;let s=semio_framework_value::retained_clone::admit_retained_clone_close(child.retained_grant(),s,owner.terminal_is_empty(),"original publication preparation")?;return Ok(RetainedCloneStep::Progress(s.progress()))}}}
-     original.charge(d.capacity_bytes)?;self.close_step(grant)
-    }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
     where P: Send + Sync + 'static, Mutation: Send + 'static,
     {
@@ -333,8 +327,6 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
     pub transaction_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<protocol::TransactionRef>>,
     pub lane_insert: Option<protocol::HistoryFoldIndexInsert<String, HistoryLane>>,
     pub lane_close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>,
-    pub original_registry: std::mem::ManuallyDrop<Option<semio_framework_value_snapshot_read::snapshot_read_registry_handle::SnapshotReadRegistryHandle>>,
-    pub registry_retirement: Option<Box<dyn ErasedSnapshotRetirement>>,
     pub lane_ready: bool,
     pub outbound: bool,
     pub announce_from: usize,
@@ -343,6 +335,12 @@ pub struct ArtifactStoreBatchPublication<P, Mutation> {
 }
 
 impl<P, Mutation> ArtifactStoreBatchPublication<P, Mutation> {
+    /// 🧷️ The same original decoder cleanup loan reaches wire preparation before every outer owner retires.
+    pub fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>where P:Send+Sync+'static,Mutation:Send+'static{
+     self.begin_close();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if self.group_preparation.is_some()||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+     if self.transaction_close.is_none()&&self.transaction.is_none()&&self.lane_close.is_none()&&self.lane_insert.is_none(){if let Some(owner)=self.preparation.as_mut(){if !owner.terminal_is_empty(){let child=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth-1};let s=owner.close_original_step(original,child)?;let s=semio_framework_value::retained_clone::admit_retained_clone_close(child.retained_grant(),s,owner.terminal_is_empty(),"original publication preparation")?;return Ok(RetainedCloneStep::Progress(s.progress()))}}}
+     original.charge(d.capacity_bytes)?;self.close_step(grant)
+    }
     /// 🧬️ Captures one original provenance row per mutation before any semantic candidate is admitted.
     pub fn admit_original_origins(&mut self,origins:&mut Option<std::collections::VecDeque<protocol::MutationOrigin>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let invalid=||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication provenance must precede semantic preparation and match every admitted mutation");

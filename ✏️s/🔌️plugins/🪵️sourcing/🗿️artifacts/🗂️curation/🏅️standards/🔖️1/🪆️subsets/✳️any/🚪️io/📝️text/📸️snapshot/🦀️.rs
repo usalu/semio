@@ -61,7 +61,7 @@ pub fn print_curation_dsl(snapshot: &CurationSnapshot) -> String { print_dsl(sna
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::any::schema::domain::{ContributedSourcingModule, SOURCING_CURATION_APP_ID, SOURCING_JSON_MAX_BYTES, SOURCING_JSON_MAX_DEPTH, SOURCING_JSON_MAX_ITEMS, SOURCING_JSON_MAX_STRING_BYTES, SOURCING_MAXIMUM_MODULES, SOURCING_MODULE_TOPIC, TypologyNode, authored_modules, demo_stock};
+use crate::standards::v1::subsets::any::schema::domain::{ContributedSourcingModule, SOURCING_CURATION_APP_ID, SOURCING_JSON_MAX_BYTES, SOURCING_JSON_MAX_DEPTH, SOURCING_JSON_MAX_ITEMS, SOURCING_JSON_MAX_STRING_BYTES, SOURCING_MAXIMUM_MODULES, SOURCING_MODULE_TOPIC, SourcingModule, SourcingModules, TypologyNode, authored_modules, demo_stock};
 use crate::CurationSnapshot;
 use framework_schema::ArtifactSchema;
 use semio_framework::parse_contributions;
@@ -87,7 +87,7 @@ pub(crate) struct SourcingModuleTopicPayload {
     kinds_json: String,
 }
 
-pub(crate) fn sourcing_json_envelope_is_bounded(input: &str) -> bool {
+pub fn sourcing_json_envelope_is_bounded(input: &str) -> bool {
     if input.len() > SOURCING_JSON_MAX_BYTES {
         return false;
     }

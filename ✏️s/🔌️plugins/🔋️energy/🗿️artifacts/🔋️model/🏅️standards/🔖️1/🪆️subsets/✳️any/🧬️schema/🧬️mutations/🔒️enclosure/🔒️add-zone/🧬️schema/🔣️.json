@@ -103,7 +103,7 @@
     "semantics": {
       "verb": "add",
       "entity": "ThermalEnclosure",
-      "kind": "AddThermalEnclosureZone",
+      "kind": "add-thermal-enclosure-zone",
       "record": "AddThermalEnclosureZone"
     },
     "diagnostics": {

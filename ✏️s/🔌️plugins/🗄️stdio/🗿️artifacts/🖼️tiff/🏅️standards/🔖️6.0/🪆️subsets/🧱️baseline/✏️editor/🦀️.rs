@@ -174,8 +174,8 @@ impl ArtifactEditor for TiffBaselineEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); tiff_baseline_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot())
     })}
 
     fn handle(

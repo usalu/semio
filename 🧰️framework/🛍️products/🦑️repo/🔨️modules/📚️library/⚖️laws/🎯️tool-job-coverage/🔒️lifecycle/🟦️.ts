@@ -3,6 +3,7 @@
  */
 import { policyReadFileSafe } from "../../../🔍️discovery/📖️source-access/🟦️.ts";
 import { TOOL_JOB_IMPORTER_INVENTORY, type ToolJobCoverageReport, type ToolJobProof, toolJobRustBlock } from "../📋️inventory/🟦️.ts";
+import {toolJobOriginalInputAdmissionExact} from "./🧬️original-input/🟦️.ts";
 import { toolJobSegmentedQueueHardBounded } from "../🛣️routes/🟦️.ts";
 
 export function toolJobMediaExportBounded(source: string): boolean {
@@ -330,54 +331,9 @@ export function toolJobLiveInstanceIsolated(source: string): boolean {
   );
 }
 
+/** 🎟️ Current original owners qualify action, producer and wire before receiving payloads. */
 export function toolJobQualifiedProofBeforeDecode(source: string): boolean {
-  const ordered = (functionName: string, proof: string, decode: string) => {
-    const start = source.lastIndexOf(functionName);
-    const open = start < 0 ? -1 : source.indexOf("{", start);
-    const block = open < 0 ? undefined : toolJobRustBlock(source, open);
-    return !!block && block.body.indexOf(proof) >= 0 && block.body.indexOf(proof) < block.body.indexOf(decode);
-  };
-  const intentStart = source.lastIndexOf("async fn handle_intent_frame");
-  const intentOpen = intentStart < 0 ? -1 : source.indexOf("{", intentStart);
-  const intent = intentOpen < 0 ? undefined : toolJobRustBlock(source, intentOpen);
-  const admissionStart = source.lastIndexOf("async fn admit_command_json");
-  const admissionOpen = admissionStart < 0 ? -1 : source.indexOf("{", admissionStart);
-  const admission = admissionOpen < 0 ? undefined : toolJobRustBlock(source, admissionOpen);
-  const hostAdmissionStart = source.lastIndexOf("async fn admit_host_configuration_json");
-  const hostAdmissionOpen = hostAdmissionStart < 0 ? -1 : source.indexOf("{", hostAdmissionStart);
-  const hostAdmission = hostAdmissionOpen < 0 ? undefined : toolJobRustBlock(source, hostAdmissionOpen);
-  const helperStart = source.lastIndexOf("async fn admit_command_json_with_proof");
-  const helperOpen = helperStart < 0 ? -1 : source.indexOf("{", helperStart);
-  const helper = helperOpen < 0 ? undefined : toolJobRustBlock(source, helperOpen);
-  const delegatedAfterQualifiedAdmission =
-    !!admission &&
-    admission.body.indexOf("let proof = self.qualified_tool_proof(verb)?") >= 0 &&
-    admission.body.indexOf("let proof = self.qualified_tool_proof(verb)?") < admission.body.indexOf("admit_command_json_with_proof(proof, verb, args)") &&
-    !!hostAdmission &&
-    hostAdmission.body.indexOf("let proof = self.qualified_host_configuration_tool_proof(verb)?") >= 0 &&
-    hostAdmission.body.indexOf("let proof = self.qualified_host_configuration_tool_proof(verb)?") < hostAdmission.body.indexOf("admit_command_json_with_proof(proof, verb, args)") &&
-    !!helper &&
-    helper.body.indexOf("let key = proof.key()") >= 0 &&
-    helper.body.indexOf("let key = proof.key()") < helper.body.indexOf("begin_exact_wire") &&
-    helper.body.indexOf("begin_exact_wire") < helper.body.indexOf("serde_json::to_writer") &&
-    helper.body.indexOf("serde_json::to_writer") < helper.body.indexOf("proof.admits::<A>(&admission)") &&
-    !helper.body.includes("bounded_json_items") &&
-    !helper.body.includes("serde_json::to_vec");
-  const streamsOnlyAfterQualifiedAdmission =
-    delegatedAfterQualifiedAdmission ||
-    (!!admission &&
-      admission.body.indexOf("qualified_tool_proof(verb)") >= 0 &&
-      admission.body.indexOf("qualified_tool_proof(verb)") < admission.body.indexOf("begin_exact_wire") &&
-      admission.body.indexOf("begin_exact_wire") < admission.body.indexOf("serde_json::to_writer") &&
-      !admission.body.includes("bounded_json_items") &&
-      !admission.body.includes("serde_json::to_vec"));
-  const rejectsUndecodedIntent =
-    !!intent &&
-    intent.body.includes("qualified_tool_proof(verb)") &&
-    intent.body.includes('FaultCode::new("interactive-job.intent-raw-owner-required")') &&
-    !intent.body.includes("serde_json::to_value") &&
-    !intent.body.includes("A::command_from_intent");
-  return (ordered("async fn admit_command_json", "qualified_tool_proof", "bounded_json_items") || streamsOnlyAfterQualifiedAdmission) && (ordered("async fn handle_intent_frame", "qualified_tool_proof", "serde_json::to_value") || rejectsUndecodedIntent);
+  return toolJobOriginalInputAdmissionExact(source);
 }
 
 export function toolJobLimitsMatch(proofs: readonly ToolJobProof[], publicLimits: ReadonlyMap<string, number>): boolean {

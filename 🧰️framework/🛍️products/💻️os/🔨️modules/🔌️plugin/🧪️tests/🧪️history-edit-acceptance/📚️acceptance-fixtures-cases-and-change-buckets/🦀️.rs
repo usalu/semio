@@ -87,7 +87,9 @@ fn acceptance_composed(value: &DslValue) -> bool {
 
 /// 🗣️ The DSL text of a self-contained document given as a JSON value (none for a value that names a composed child — see
 /// [`acceptance_composed`]); the snapshot is never dropped, so a fail-closed root never trips.
-fn acceptance_dsl_of<A: ArtifactApp>(document: DslValue) -> Option<String> {
+fn acceptance_dsl_of<A: ArtifactApp>(document: DslValue) -> Option<String>
+    where <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl
+{
     if acceptance_composed(&document) {
         return None;
     }
@@ -101,7 +103,9 @@ fn acceptance_dsl_of<A: ArtifactApp>(document: DslValue) -> Option<String> {
 /// whose document is given (`📸️snapshot/⬅️before/🗣️.dsl.semio` verbatim — the only form a composed parent's owned children
 /// survive in — else its JSON twin decoded as `A::Snapshot`) and whose operation the generic editor edits — in path order. A
 /// `{mutation, before, after}` case record carries its own document.
-pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<AcceptanceCase<A::Mutation>> {
+pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<AcceptanceCase<A::Mutation>>
+    where <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl
+{
     let mut cases = Vec::new();
     for directory in acceptance_fixture_directories(root) {
         let Some(wire) = acceptance_json(&directory.join("🦠️mutation").join("🔣️.json")) else { continue };
@@ -126,8 +130,10 @@ pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<Acceptanc
 /// (whatever its own outcome — a refusal on its fixture document may apply elsewhere) on every document the app itself ships —
 /// its initial document and each of `examples` (a DSL body verbatim, a JSON body decoded as `A::Snapshot`). Cases on one
 /// document share its key, so they can follow each other downstream.
-pub async fn acceptance_example_cases<A: ArtifactApp>(root: &std::path::Path, examples: &[ExampleSource]) -> Vec<AcceptanceCase<A::Mutation>> {
-    let initial = A::reference_birth().expect("explicit reference snapshot producer")();
+pub async fn acceptance_example_cases<A: ArtifactApp>(root: &std::path::Path, examples: &[ExampleSource]) -> Vec<AcceptanceCase<A::Mutation>>
+    where <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl
+{
+    let initial = A::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let mut documents = vec![("initial".to_string(), pack::snapshot::ArtifactDsl::print_dsl(&initial))];
     std::mem::forget(initial);
     for example in examples {

@@ -132,7 +132,8 @@ pub const fn validate_mutation_leaf_descriptor_roster(mutation_root: &'static st
     validate_mutation_leaf_descriptor_roster_uniqueness(mutation_root, descriptors, owner_layout)
 }
 
-/// 🧮️ Checks cross-leaf uniqueness and roster completeness after individual leaf source validation.
+/// 🧮️ Checks cross-leaf uniqueness and roster completeness after individual leaf source validation. The pairwise scan is quadratic in the roster, so a roster of several hundred leaves legitimately exceeds the const evaluator's loop-progress heuristic.
+#[allow(long_running_const_eval)]
 pub const fn validate_mutation_leaf_descriptor_roster_uniqueness(mutation_root: &'static str, descriptors: &'static [MutationLeafDescriptor], owner_layout: MutationOwnerLayout) -> Result<(), MutationLeafDescriptorRosterValidationError> {
     if let MutationOwnerLayout::DomainOperations(owners) = owner_layout {
         if owners.is_empty() || owners.len() != descriptors.len() {

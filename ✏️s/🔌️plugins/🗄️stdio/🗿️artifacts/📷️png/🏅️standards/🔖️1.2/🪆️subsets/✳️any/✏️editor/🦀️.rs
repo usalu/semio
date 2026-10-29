@@ -297,8 +297,8 @@ impl ArtifactEditor for PngEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); png_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        crate::standards::v1_2::subsets::any::schema::blank_png_snapshot()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1_2::subsets::any::schema::blank_png_snapshot())
     })}
 
     fn handle(

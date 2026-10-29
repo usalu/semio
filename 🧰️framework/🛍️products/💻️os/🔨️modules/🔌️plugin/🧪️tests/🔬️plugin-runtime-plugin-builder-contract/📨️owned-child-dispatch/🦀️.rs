@@ -16,7 +16,7 @@ use semio_framework_plugin_abi::ArtifactComposition;
 use semio_framework_plugin_abi::ArtifactDecomposer;
 use semio_framework_plugin_abi::ArtifactDeserializer;
 use semio_framework_plugin_decl_surface::ArtifactEditor;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use semio_framework_plugin_abi::ArtifactSerializer;

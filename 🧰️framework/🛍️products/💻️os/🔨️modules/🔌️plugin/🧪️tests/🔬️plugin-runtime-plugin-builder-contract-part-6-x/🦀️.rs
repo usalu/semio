@@ -240,7 +240,7 @@ async fn stamped_single_document_archive(app: &SingleDocumentAppUnderTest, snaps
 #[semio_framework_async_macros::async_test]
 async fn a_childless_whole_document_archive_replaces_the_live_document() {
     let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     assert_eq!(app.snapshot().expect("initial projection").label, "initial");
     let archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() })).await;
     PluginApp::begin_document_archive_load(&mut app, 91, archive).expect("whole-document archive admission");
@@ -262,7 +262,7 @@ async fn a_childless_whole_document_archive_replaces_the_live_document() {
 #[semio_framework_async_macros::async_test]
 async fn the_refresh_poll_lane_stamps_the_load_document_it_emits() {
     let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     let effects = Box::pin(semio_framework_plugin_testing_laws::artifact_app_laws::fixture_pending_effects(&mut app, None)).await.unwrap();
     let Some(Effect::LoadDocument { pack, spr }) = effects.first().cloned() else { panic!("the refresh poll lane dropped the LoadDocument effect: {effects:?}") };
     let archive = protocol::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
@@ -283,7 +283,7 @@ async fn the_refresh_poll_lane_stamps_the_load_document_it_emits() {
 #[semio_framework_async_macros::async_test]
 async fn an_unstamped_whole_document_archive_is_refused_by_parent_hydration() {
     let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     let live_id = app.stores.store.envelope().id.clone();
     let archive = Box::pin(raw_single_document_archive(&live_id, &TestSnapshot { count: 9, label: "unstamped".into(), slot: Vec::new() })).await;
     PluginApp::begin_document_archive_load(&mut app, 93, archive).expect("unstamped archive admission");
@@ -304,7 +304,7 @@ async fn an_unstamped_whole_document_archive_is_refused_by_parent_hydration() {
 #[semio_framework_async_macros::async_test]
 async fn a_refused_whole_document_archive_names_the_leg_that_refused_it() {
     let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
-    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await;
+    let mut app = Box::pin(VcsArtifactApp::<SingleDocumentApp, TestMembers>::new(SingleDocumentApp, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     let envelope_id = app.stores.store.envelope().id.clone();
     let dialect: ArtifactDialect = SingleDocumentApp::DIALECT.into();
     let mut archive = Box::pin(stamped_single_document_archive(&app, &TestSnapshot { count: 7, label: "foreign".into(), slot: Vec::new() })).await;
@@ -329,7 +329,7 @@ async fn a_refused_whole_document_archive_names_the_leg_that_refused_it() {
 async fn original_lifecycle_archive_pending_status_observation_preserves_retained_source(){
     let mut caller=semio_framework_plugin_testing_laws::OriginalFixtureCaller::admit().expect("original composition caller input");let mut cx=caller.context();
     let law:serde_json::Value=serde_json::from_str(include_str!("../🧾️document-archive-load-legs/🧫️fixtures/🔣️.json")).unwrap();
-    let mut app=Box::pin(VcsArtifactApp::<SingleDocumentApp,TestMembers>::new(SingleDocumentApp,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),&mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await;
+    let mut app=Box::pin(VcsArtifactApp::<SingleDocumentApp,TestMembers>::new(SingleDocumentApp,protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),&mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     let operation=law["operation"].as_u64().unwrap();let archive=Box::pin(stamped_single_document_archive(&app,&TestSnapshot{count:42,label:"example".into(),slot:Vec::new()})).await;
     PluginApp::begin_document_archive_load(&mut app,operation,archive).unwrap();
     let mut identity=semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity();
@@ -434,9 +434,9 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
     let node_key = fixture["pickedNodeKey"].as_str().expect("picked node");
     let domain = fixture["domainId"].as_str().expect("domain");
     let mut identity = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity();
-    let mut app = VcsArtifactApp::with_registry(TestApp::<false>::default(), surface_routing_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity).await;
+    let mut app = VcsArtifactApp::with_registry(TestApp::<false>::default(), surface_routing_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity).await.expect("the reference snapshot births");
     semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy());
-    reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": domain, "merge": "replace", "method": "pick" }), node_key)), &mut identity).await;
+    reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": domain, "merge": "replace", "method": "pick" }), node_key)), &mut identity, cx).await;
     assert_eq!(app.interaction_state().await.selection.get(domain).map(|selection| selection.ids.clone()), Some(vec![node_key.to_string()]), "the browser-shaped pick must be persisted before any surface renders");
     drop(PluginApp::take_pending_presence(&mut app).await);
     for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {

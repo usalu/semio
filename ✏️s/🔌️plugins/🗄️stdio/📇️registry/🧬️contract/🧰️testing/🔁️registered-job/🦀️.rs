@@ -38,7 +38,7 @@ impl Session {
 
 /// 📄️ Sealed wire pages of `bytes` as one retained tool input.
 pub fn wire(bytes: &[u8]) -> RetainedToolWireInput {
-    let mut input = RetainedToolWireInput::try_new(bytes.len(), bytes.len()).expect("wire extent");
+    let (mut input, _) = RetainedToolWireInput::admit_original(bytes.len(), bytes.len(), original_grant()).expect("wire extent").expect("wire extent admitted");
     for chunk in bytes.chunks(TOOL_WIRE_PAGE_BYTES) {
         input.admit_page(ToolWirePage::try_copy_from(chunk).expect("wire page")).ok().expect("wire page admitted");
     }

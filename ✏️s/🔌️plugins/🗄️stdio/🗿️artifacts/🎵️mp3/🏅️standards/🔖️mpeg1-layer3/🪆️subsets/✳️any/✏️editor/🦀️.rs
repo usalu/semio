@@ -259,8 +259,8 @@ impl ArtifactEditor for Mp3Editor {
         mp3_editor_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        Mp3Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Mp3Snapshot::default())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

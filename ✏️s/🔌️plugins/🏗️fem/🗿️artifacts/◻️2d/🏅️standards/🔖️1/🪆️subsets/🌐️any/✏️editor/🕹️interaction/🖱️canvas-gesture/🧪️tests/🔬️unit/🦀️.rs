@@ -162,8 +162,8 @@ fn rectangle_release_coordinates_complete_a_drag_without_a_move() {
     let doc = demo();
     let camera = Viewport2d::default();
     let model = addressed(FEM2D_UTILITY_SELECT_MARQUEE);
-    pointer_down(&doc, &camera, &model, 12.0, 12.0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
-    let emit = pointer_up(&doc, &camera, &model, CANVAS_WIDTH - 12.0, CANVAS_HEIGHT - 12.0, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", false).expect("up");
+    pointer_down(&doc, &camera, &model, BODY_KEY, 12.0, 12.0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, "replace").expect("down");
+    let emit = pointer_up(&doc, &camera, &model, BODY_KEY, CANVAS_WIDTH - 12.0, CANVAS_HEIGHT - 12.0, CANVAS_WIDTH, CANVAS_HEIGHT, "replace", false).expect("up");
     let Some(semio_framework::kernel::Effect::ReplayShellCommand { args: Some(args), .. }) = emit.effects.first() else { panic!("selection effect") };
     assert_eq!(args.get("method").and_then(semio_framework_value::DslValue::as_str), Some("rectangle"));
     assert!(args.get("targets").and_then(semio_framework_value::DslValue::as_str).is_some_and(|raw| raw.contains("n1") && raw.contains("n2")));
@@ -177,7 +177,7 @@ fn empty_modified_picks_preserve_the_requested_merge() {
     let camera = Viewport2d::default();
     let model = addressed(FEM2D_UTILITY_SELECT_DIRECT);
     for merge in ["replace", "additive", "subtractive", "invertive"] {
-        let emit = pointer_down(&doc, &camera, &model, -1000.0, -1000.0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, merge).expect("down");
+        let emit = pointer_down(&doc, &camera, &model, BODY_KEY, -1000.0, -1000.0, CANVAS_WIDTH, CANVAS_HEIGHT, 0, merge).expect("down");
         let Some(semio_framework::kernel::Effect::ReplayShellCommand { args: Some(args), .. }) = emit.effects.first() else { panic!("selection effect") };
         assert_eq!(args.get("merge").and_then(semio_framework_value::DslValue::as_str), Some(merge));
     }

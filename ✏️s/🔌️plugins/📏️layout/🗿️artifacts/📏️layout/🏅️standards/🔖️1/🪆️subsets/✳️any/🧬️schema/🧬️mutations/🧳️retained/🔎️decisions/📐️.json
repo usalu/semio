@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout Original Mutation Source Decisions",
+  "description": "Borrowed views of schema-defined mutation payloads drive funded source decisions. Event ownership and original-reference bindings remain with the mutation owner.",
+  "type": "object",
+  "properties": {
+    "schema": {
+      "const": "s.layout.layout"
+    },
+    "source": {
+      "const": "borrowed-mutation-view"
+    },
+    "operations": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "view",
+          "parent-creation-mut"
+        ]
+      },
+      "uniqueItems": true
+    }
+  },
+  "required": [
+    "schema",
+    "source",
+    "operations"
+  ],
+  "additionalProperties": false
+}

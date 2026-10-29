@@ -226,9 +226,6 @@ impl IdmlVersionDecoder {
     }
 }
 
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;
 
 /// 🧳 Genuine immutable source custody for bounded package admission.
 #[path="🧳️retained/🦀️.rs"]

@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-energy-model-snapshot-sqlite-admission"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Energy model SQLite snapshot: native relational cell admission before either typed owner"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-dsl-record = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }

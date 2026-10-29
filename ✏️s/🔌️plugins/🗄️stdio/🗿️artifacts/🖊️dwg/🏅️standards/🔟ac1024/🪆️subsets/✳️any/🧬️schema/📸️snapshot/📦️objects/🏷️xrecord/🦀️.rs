@@ -67,7 +67,7 @@ impl semio_framework_dsl_record::DslField for DwgXRecordValue {
             Self::Integer32{group_code,value}=>(5,*group_code,5,semio_framework_dsl_record::FieldValue::Int(i64::from(*value))),
             Self::Integer64{group_code,value}=>(6,*group_code,5,semio_framework_dsl_record::FieldValue::Int(*value)),
             Self::Point3d{group_code,value}=>(7,*group_code,6,control.scoped_stage(|control|{control.begin_stage(0)?;<[f64;3] as semio_framework_dsl_record::DslField>::to_value_controlled(value,control)})?),
-            Self::Binary{group_code,octets}=>(8,*group_code,7,semio_framework_dsl_record::FieldValue::Bytes64(control.copy_bytes(octets)?)),
+            Self::Binary{group_code,octets}=>(8,*group_code,7,semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::copy_encoded(octets,control)?)),
             Self::Handle{group_code,value}=>(9,*group_code,8,semio_framework_dsl_record::FieldValue::UInt(*value)),
             Self::ObjectId{group_code,absolute_value}=>(10,*group_code,8,semio_framework_dsl_record::FieldValue::UInt(*absolute_value)),
         };record.insert(payload_id,payload)?;control.step()?;record.insert(0,semio_framework_dsl_record::FieldValue::Enum(kind))?;control.step()?;record.insert(1,semio_framework_dsl_record::FieldValue::Int(i64::from(group_code)))?;control.step()?;
@@ -114,7 +114,7 @@ impl semio_framework_dsl_record::DslField for DwgXRecordValue {
             Self::Integer32 { group_code, value } => (5, *group_code, 5, semio_framework_dsl_record::FieldValue::Int(i64::from(*value))),
             Self::Integer64 { group_code, value } => (6, *group_code, 5, semio_framework_dsl_record::FieldValue::Int(*value)),
             Self::Point3d { group_code, value } => (7, *group_code, 6, semio_framework_dsl_record::FieldValue::Tuple(value.iter().copied().map(semio_framework_dsl_record::FieldValue::Float).collect())),
-            Self::Binary { group_code, octets } => (8, *group_code, 7, semio_framework_dsl_record::FieldValue::Bytes64(octets.clone())),
+            Self::Binary { group_code, octets } => (8, *group_code, 7, semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(octets).expect("cold xrecord octets fit their declared capacity"))),
             Self::Handle { group_code, value } => (9, *group_code, 8, semio_framework_dsl_record::FieldValue::UInt(*value)),
             Self::ObjectId { group_code, absolute_value, .. } => (10, *group_code, 8, semio_framework_dsl_record::FieldValue::UInt(*absolute_value)),
         };
@@ -207,7 +207,7 @@ impl semio_framework_dsl_record::DslField for DwgXRecordValue {
             8 => Self::Binary {
                 group_code,
                 octets: match record.get(7) {
-                    Some(semio_framework_dsl_record::FieldValue::Bytes64(value)) => value.clone(),
+                    Some(semio_framework_dsl_record::FieldValue::Bytes64(value)) => value.to_vec_owner(),
                     other => return Err(format!("expected XRECORD binary value, found {other:?}")),
                 },
             },

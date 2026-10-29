@@ -260,7 +260,7 @@ impl Puzzle2dRetainedCommandProofs {
 /// 📜️ The two framework-injected host-configuration verbs. Deliberately GENERIC proofs (no
 /// `factory_type`): they are not app-owned retained tools — [`Puzzle2dRetainedCommandJobFactory`]
 /// never claims them — they only need the wire admission and output budget `dispatch_action`'s
-/// host-configuration branch asks for before it applies `host_configuration_mutation`.
+/// shared-action admission branch requires.
 pub struct Puzzle2dHostConfigurationProofs;
 
 impl Puzzle2dHostConfigurationProofs {

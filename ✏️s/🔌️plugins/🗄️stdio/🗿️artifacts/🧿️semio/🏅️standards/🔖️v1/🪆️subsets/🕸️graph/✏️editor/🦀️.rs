@@ -220,8 +220,8 @@ impl ArtifactEditor for SemioGraphEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_graph_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->SemioGraphSnapshot>{Some(||{
-        SemioGraphSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SemioGraphSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SemioGraphSnapshot::default())
     })}
 
     fn handle(

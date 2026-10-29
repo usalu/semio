@@ -66,8 +66,8 @@ impl ArtifactViewer for JsonAnyViewer {
     const DIALECT: Dialect = JSON_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_JSON_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->JsonSnapshot>{Some(||{
-        JsonSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<JsonSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(JsonSnapshot::default())
     })}
 
     fn handle(

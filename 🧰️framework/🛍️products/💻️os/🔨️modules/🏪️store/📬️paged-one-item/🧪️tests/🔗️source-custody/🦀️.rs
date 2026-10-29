@@ -1,7 +1,7 @@
 //! 🧷️ Actual paged owners retain genuine source bindings and the exact original issuer pair.
 use super::*;
 use semio_framework_os_store_one_item_batch::paged_one_item::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
-use semio_framework_os_store_one_item::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
+use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,SnapshotRetirementFactory,RetirementDemand,ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 

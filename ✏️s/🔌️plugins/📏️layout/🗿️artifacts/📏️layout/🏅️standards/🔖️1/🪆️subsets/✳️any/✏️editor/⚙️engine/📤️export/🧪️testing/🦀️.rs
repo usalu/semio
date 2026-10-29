@@ -215,3 +215,15 @@ pub(super) fn close_original_fixture<T:semio_framework_value::retirement::Retire
 pub fn encode_export_checkpoint_fixture(operation:&Operation,request:&LayoutExportRequest,checkpoint:&LayoutExportCheckpoint)->Result<[u8;MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES],String>{encode_checkpoint(operation,request,checkpoint)}
 /// 📖️ Exercises the exact checkpoint authority reader without exposing a production resume issuer.
 pub fn decode_export_checkpoint_fixture(operation:&Operation,request:&LayoutExportRequest,state:&[u8])->Result<LayoutExportCheckpoint,String>{decode_checkpoint(operation,request,state)}
+
+/// 🧪️ Starts the codec fixture after its authored SVG bytes entered the real original writer.
+pub fn begin_media_projection_fixture(job:&mut LayoutExportJob,caller:&mut OriginalJobFixtureCaller){
+    assert!(job.projected_media());
+    caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{
+        let progress=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<ExportStage>(),..Default::default()};
+        cx.consume_retained(progress)?;job.stage=ExportStage::Base64;Ok(())
+    }).expect("original codec fixture phase");
+}
+
+/// 🔎️ Observes only the actual codec phase and byte frontier for source-bound grant/cancellation laws.
+pub fn media_projection_position_fixture(job:&LayoutExportJob)->(u8,usize){(job.media_projection_phase,job.base64_cursor)}

@@ -13,7 +13,7 @@ pub enum ArtifactStoreConstructorPhase { Preparation, Close }
 
 #[doc(hidden)]
 pub struct OriginalCatalogConstructor<P,Mu>
-where P:semio_framework_value::ToValue,
+where P: protocol::StoreState,
 Mu:semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
  original:ManuallyDrop<Option<Result<store::os_store::document_store_owners::DocumentStoreOwners<P,Mu>,store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P,Mu>>>>,
  refusal:ManuallyDrop<Option<ValueError>>,
@@ -21,8 +21,8 @@ Mu:semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
  done:bool,
 }
 impl<P,Mu> OriginalCatalogConstructor<P,Mu>
-where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,
-Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>+protocol::ColdMutation<P>+OpBinary+OpText+Send+'static{
+where P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + protocol::StoreState,
+Mu: 'static + protocol::StoreMutationFor<P> {
  #[doc(hidden)]
  pub fn new()->Self{Self{original:ManuallyDrop::new(None),refusal:ManuallyDrop::new(None),refusal_close:ManuallyDrop::new(None),done:false}}
  /// 📥️ Observes a catalog already installed by the original native initializer without creating replacement factories.
@@ -91,7 +91,7 @@ Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutatio
 }
 
 impl<P,Mu> Drop for OriginalCatalogConstructor<P,Mu>
-where P:semio_framework_value::ToValue,
+where P: protocol::StoreState,
 Mu:semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
  fn drop(&mut self){let empty=self.done&&self.original.is_none()&&self.refusal.is_none()&&self.refusal_close.is_none();assert!(std::thread::panicking()||empty,"original catalog cursor requires controlled source/error/ticket closure before shallow Drop");if empty{unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.refusal);ManuallyDrop::drop(&mut self.refusal_close)}}}
 }

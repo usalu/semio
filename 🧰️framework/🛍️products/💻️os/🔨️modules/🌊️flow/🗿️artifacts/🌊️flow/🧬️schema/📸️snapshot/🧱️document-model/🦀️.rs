@@ -44,7 +44,7 @@ pub(super) fn export_widget_display_meta(format: &str) -> (String, String, Strin
 }
 
 /// 📍️ Persisted node position on the canvas.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct WidgetLayout {
     pub x: f64,
@@ -73,7 +73,7 @@ pub struct FlowArtifact {
 }
 
 /// 🖼️ GUI-only flow data that can be removed without destroying logic.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowUi {
@@ -87,7 +87,7 @@ pub struct FlowUi {
 pub type FlowGui = FlowUi;
 
 /// 🧩️ GUI-only node presentation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -97,7 +97,7 @@ pub struct FlowNodeGui {
 }
 
 /// 🪟️ GUI-only node chrome.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase")]
@@ -133,7 +133,7 @@ pub enum NodeChrome {
 }
 
 /// 👁️ GUI-only preview binding.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct FlowPreviewGui {
@@ -149,7 +149,7 @@ pub struct FlowPreviewGui {
 }
 
 /// 📡️ Serializable channel reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -158,13 +158,23 @@ pub struct FlowChannelRef {
     pub channel: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 pub struct CameraJson {
     pub x: f64,
     pub y: f64,
     pub zoom: f64,
+}
+
+/// 📷️ A record that omits its camera receives the identity camera: origin at the centre and unit zoom.
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for CameraJson {
+    fn native_default_demand() -> semio_framework_value::RetirementDemand { semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2 * std::mem::size_of::<Self>()) }
+    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let demand = Self::native_default_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Err(semio_framework_value_native_owned::native_decoding::owned::tree::invalid()); }
+        Ok((Self { x: 0.0, y: 0.0, zoom: 1.0 }, semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
+    }
 }
 
 fn default_from_port() -> String {
@@ -175,7 +185,7 @@ fn default_to_port() -> String {
     String::new()
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
@@ -192,10 +202,11 @@ pub struct SynapseSpec {
 }
 
 /// 🎛️ Flow widget discriminant encoded through the first-party value contract.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslEnum)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum Widget {
+    #[dsl(key = "neuron")]
     Neuron {
         id: String,
         #[value(rename = "neuronKind")]
@@ -209,6 +220,7 @@ pub enum Widget {
         #[value(default = "default_neuron_preview")]
         preview: bool,
     },
+    #[dsl(key = "inputSlider")]
     InputSlider {
         id: String,
         label: String,
@@ -221,16 +233,19 @@ pub enum Widget {
         #[value(default = "default_slider_step")]
         step: f64,
     },
+    #[dsl(key = "inputNote")]
     InputNote {
         id: String,
         #[value(default)]
         text: String,
     },
+    #[dsl(key = "inputImage")]
     InputImage {
         id: String,
         #[value(default)]
         src: String,
     },
+    #[dsl(key = "variable")]
     Variable {
         id: String,
         #[value(default = "default_variable_name")]
@@ -238,6 +253,7 @@ pub enum Widget {
         #[value(default = "default_variable_schema")]
         schema: String,
     },
+    #[dsl(key = "outputPreview")]
     OutputPreview {
         id: String,
         #[value(default)]
@@ -245,20 +261,24 @@ pub enum Widget {
         #[value(default)]
         expanded: OrderedSet,
     },
+    #[dsl(key = "outputAction")]
     OutputAction {
         id: String,
         #[value(default)]
         action: String,
     },
+    #[dsl(key = "outputExport")]
     OutputExport {
         id: String,
         #[value(default = "default_export_format")]
         format: String,
     },
+    #[dsl(key = "cluster")]
     Cluster {
         id: String,
         #[value(default)]
         name: String,
+        #[dsl(block)]
         tree: Tree,
         #[value(default)]
         flow: FlowGui,
@@ -273,5 +293,56 @@ pub struct FlowHostComponents {
     pub widgets: Vec<Widget>,
     pub synapses: Vec<SynapseSpec>,
     pub layout: OrderedMap<WidgetLayout>,
+}
+
+/// 🎛️ A single widget payload (add/change mutations) is exactly one tagged statement of the widget variants.
+impl semio_framework_dsl_record::BorrowedDslField for Widget {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Statements(<Widget as semio_framework_dsl_record::BorrowedDslVariants>::VARIANTS);
+}
+
+impl semio_framework_dsl_record::DslField for Widget {
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> { Ok(semio_framework_dsl_record::Shape::Statements(<Self as semio_framework_dsl_record::DslVariants>::variants_controlled(control)?)) }
+    fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Statements(<Widget as semio_framework_dsl_record::DslVariants>::variants()) }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Statements(vec![<Widget as semio_framework_dsl_record::DslVariants>::to_named_record(self)]) }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        match value {
+            semio_framework_dsl_record::FieldValue::Statements(items) if items.len() == 1 => <Widget as semio_framework_dsl_record::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|error| error.message),
+            other => Err(format!("expected exactly 1 tagged widget value, found {other:?}")),
+        }
+    }
+}
+
+/// 🖼️ GUI view state is an untyped nested literal in documents: it never feeds neural evaluation, and its wire form is the canonical value form.
+impl semio_framework_dsl_record::BorrowedDslField for FlowUi {
+    const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::Value;
+}
+
+impl semio_framework_dsl_record::DslField for FlowUi {
+    fn shape() -> semio_framework_dsl_record::Shape { semio_framework_dsl_record::Shape::Value }
+    fn shape_controlled<C: semio_framework_dsl_record::NativeSchemaControl>(control: &mut C) -> Result<semio_framework_dsl_record::Shape, semio_framework_value::ValueError> { control.checkpoint()?; Ok(semio_framework_dsl_record::Shape::Value) }
+    fn to_value(&self) -> semio_framework_dsl_record::FieldValue { semio_framework_dsl_record::FieldValue::Value(semio_framework_value::ToValue::to_value(self)) }
+    fn to_value_controlled(&self, control: &mut semio_framework_value::NativeEncodeControl<'_>) -> Result<semio_framework_dsl_record::FieldValue, semio_framework_value::ValueError> { semio_framework_value::ToValue::to_value_controlled(self, control).map(semio_framework_dsl_record::FieldValue::Value) }
+    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
+        match value {
+            semio_framework_dsl_record::FieldValue::Value(value) => semio_framework_value::FromValue::from_value(value.clone()).map_err(|error| format!("expected flow gui: {error:?}")),
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+    fn from_value_controlled(value: &semio_framework_dsl_record::FieldValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, semio_framework_value::ValueError> {
+        match value {
+            semio_framework_dsl_record::FieldValue::Value(value) => semio_framework_value::FromValue::from_value_controlled(value, control),
+            _ => Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "expected a flow gui literal")),
+        }
+    }
+    fn retire_decoded(self) { semio_framework_value::FromValue::retire_decoded(self) }
+}
+
+impl semio_framework_value_native_owned::native_decoding::owned::NativeDefault for FlowUi {
+    fn native_default_demand() -> semio_framework_value::RetirementDemand { semio_framework_value_native_owned::native_decoding::owned::tree::fixed(2 * std::mem::size_of::<Self>()) }
+    fn native_default(grant: semio_framework_value::RetainedCloneGrant) -> Result<(Self, semio_framework_value::RetainedCloneProgress), semio_framework_value::ValueError> {
+        let demand = Self::native_default_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Err(semio_framework_value_native_owned::native_decoding::owned::tree::invalid()); }
+        Ok((Self::default(), semio_framework_value_native_owned::native_decoding::owned::tree::receipt(demand)))
+    }
 }
 // #endregion 🔖️Document

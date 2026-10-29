@@ -41,7 +41,7 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
+        semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("the migrated composite gesture settles before it is persisted");
         assert_eq!(app.stores.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
 
@@ -175,7 +175,7 @@ async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>,
         assert_eq!(history.commands.len(), 2, "two document rows and no config row");
         let first = history.commands.iter().min_by_key(|entry| entry.seq).expect("the first increment row");
         assert!(first.revertible, "a document row is revertible");
-        reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first.seq }))), &mut identity).await;
+        reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": first.seq }))), &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.count, 1, "reverting to the first increment undoes the second");
         assert_eq!(app.stores.test_config().await.selected, Some("b".to_string()), "the config lane is never walked");
         let after = app.render_ctx().test_history().await;

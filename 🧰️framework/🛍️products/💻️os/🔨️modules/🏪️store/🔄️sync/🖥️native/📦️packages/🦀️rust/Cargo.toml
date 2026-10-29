@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 testing = ["dep:semio-framework-async-macros", "dep:semio-framework-plugin-component-receipt"]
 
 [dependencies]
+semio-framework-os-store-engine-checkpoint-graph = { path = "../../../../⚙️engine/🌳️checkpoint-graph/📦️packages/🦀️rust" }
 semio-framework-async-macros = { path = "../../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust", optional = true }
 semio-framework-plugin-component-receipt = { path = "../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/📦️packages/🦀️rust", optional = true }
 semio-framework-os-semio = { path = "../../../../../🧬️semio/📦️packages/🦀️rust" }

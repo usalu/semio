@@ -1,6 +1,6 @@
 //! 📦️ FEM 2D artifact — binary document surface + laws (constitutional: pack).
 
-use crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::{Fem2dSnapshot, Fem2dSnapshotValue};
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -60,12 +60,7 @@ impl pack::snapshot::ArtifactPack for Fem2dSnapshot {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as pack::snapshot::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        let snapshot = Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?;
-        if let Err(error) = snapshot.validate_interaction_identities() {
-            <Self as semio_framework_value::FromValue>::retire_decoded(snapshot);
-            return Err(store::PackError::from(error));
-        }
-        Ok(snapshot)
+        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -83,4 +78,25 @@ fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSql
 impl store::ArtifactNativeSnapshot for Fem2dSnapshot {
  fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record,native|{Self::validate_interaction_record(record,native)?;Self::__dsl_from_record_controlled(record,native)},control)}
  fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control)}
+}
+
+impl store::ArtifactPackReceiving for Fem2dSnapshot{
+ /// 🫴️ The original pack parser, field graph, authoring rows and persistent output share the caller's receiving and retirement frames.
+ fn receive_pack(bytes:&[u8],owner:&mut store::NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,semio_framework_value::ValueError>{
+  use semio_framework_value::{ValueError,ValueRefusalKind};
+  use semio_framework_dsl_record::{BorrowedDslRecord,RecordValue};
+  use pack::record::RetainedRecordReceiving;
+  owner.receive_nested::<RecordValue,Self>(|slot,original|{
+   let body=store::semio_format::unwrap_binary_controlled(bytes,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1,original.native())?;
+   *slot=Some(original.receive_nested::<RetainedRecordReceiving,RecordValue>(|cursor,original|{
+    let grant=original.remaining_grant();
+    let Some((receiving,progress))=RetainedRecordReceiving::admit_document(body,(0,body.len()),<Fem2dSnapshotValue as BorrowedDslRecord>::RECORD,protocol::PackLimits::default(),grant)? else{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original FEM pack grant cannot admit its receiving parser"));};
+    *cursor=Some(receiving);original.record_progress(progress)?;
+    original.drive_cursor(cursor,|cursor,native,grant|{
+     if cursor.is_ready(){let mut out=None;match cursor.take_into(&mut out,grant){Ok(p)=>(Ok(out),p),Err(e)=>{let p=e.retained_progress();(Err(e),p)}}}else{match cursor.step(body,native,grant){Ok(p)=>(Ok(None),p),Err(e)=>{let p=e.retained_progress();(Err(e),p)}}}
+    })
+   })?);
+   Self::receive_exchange_record(slot.as_ref().unwrap(),original)
+  })
+ }
 }

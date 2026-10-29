@@ -1,0 +1,52 @@
+{
+  "version": 1,
+  "text": "retained original maintenance source",
+  "operation": 921,
+  "generation": 31,
+  "work": {
+    "fuel": 4096,
+    "absoluteDeadlineUs": 1000000,
+    "clockBinding": 519
+  },
+  "totalGrant": [
+    4096,
+    1048576,
+    1048576,
+    1048576,
+    128
+  ],
+  "callPolicy": [
+    16,
+    65536,
+    65536,
+    65536,
+    64
+  ],
+  "phases": [
+    {
+      "name": "live-maintenance",
+      "cancelled": false
+    },
+    {
+      "name": "close-drain",
+      "cancelled": false
+    },
+    {
+      "name": "cancelled-drain",
+      "cancelled": true
+    }
+  ],
+  "expectedPhases": [
+    "live-maintenance",
+    "close-drain",
+    "cancelled-drain"
+  ],
+  "refusedAxes": [
+    "operation",
+    "generation",
+    "clock",
+    "deadline",
+    "fuel",
+    "stock"
+  ]
+}

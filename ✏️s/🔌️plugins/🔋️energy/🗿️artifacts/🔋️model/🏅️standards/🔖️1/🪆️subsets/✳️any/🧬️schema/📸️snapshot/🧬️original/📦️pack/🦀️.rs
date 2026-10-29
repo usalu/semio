@@ -20,4 +20,3 @@ impl semio_framework_dsl_record::receiving::owned::DslOwnedReceivingRecord for E
 /// 🔏️ Digest of the authored one-field intrinsic Record graph, checked against the defining borrowed schema hasher.
 pub const SCHEMA_HASH:[u8;32]=[100,45,221,210,163,204,167,21,88,134,193,246,137,148,215,207,164,191,106,235,139,57,218,237,240,87,152,188,92,39,226,14];
 
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

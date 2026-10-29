@@ -177,10 +177,9 @@ const MAINTENANCE_BUDGET_TURNS: usize = 1_048_576;
 async fn every_maintenance_unit_stays_inside_the_interactive_step_budget() {
     for example in [PUZZLE3D_EXAMPLE_CONCRETE_FOREST, PUZZLE3D_EXAMPLE_NAKAGIN] {
         let mut app = app().await;
-        let command = Puzzle3dCommand::from_action("setActiveExample", Some(json!({ "exampleId": example })), None).expect("setActiveExample is a declared puzzle3d command");
         let action_meta = app.meta("local");
         let (raw, cx) = app.parts();
-        raw.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("setActiveExample mints its retained whole-document operation");
+        semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(raw, "setActiveExample", Some(semio_framework_pack_json::to_dsl_value(&json!({ "exampleId": example }))), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.close).await.expect("setActiveExample mints its retained whole-document operation");
         for _ in 0..MAINTENANCE_BUDGET_TURNS {
             if !app.has_pending_typed_operations() {
                 break;
@@ -203,7 +202,7 @@ async fn measured_host_turn(app: &mut Puzzle3dApp) {
     let (raw, cx) = app.parts();
     raw.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     let instance_id = app.instance_id;
-    if let Some(page) = app.take_typed_operation_result_page(instance_id) {
+    if let Some(page) = app.take_typed_operation_result_page(instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
         assert!(app.acknowledge_typed_operation_result(page.token).expect("acknowledge one presented result page"), "the app's own presented result page must accept its exact token");
     }
     drop(app.take_typed_operation_effect());

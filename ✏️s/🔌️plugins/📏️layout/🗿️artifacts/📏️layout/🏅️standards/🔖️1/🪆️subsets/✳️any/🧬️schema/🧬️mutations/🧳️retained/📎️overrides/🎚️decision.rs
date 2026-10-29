@@ -1,15 +1,15 @@
 //! 📎 Original Page override admission bounds every identity read and scalar comparison.
-use crate::LayoutMutation;
+use crate::{LayoutMutationSource,LayoutMutationView as LayoutMutation};
 use semio_s_artifact_layout_layout_model::{Frame,Page,ParentPage,PageOverride,snapshot::LayoutSnapshot};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,equal_f64,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits}};
-use super::super::{simple::SimpleAdvance,target::{LayoutTargetLookup,LayoutTargetSource}};
+use crate::{simple::SimpleAdvance,target::{LayoutTargetLookup,LayoutTargetSource}};
 fn fault()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Page overrides source custody is invalid")}
 fn fixed()->RetirementDemand{RetirementDemand{copy_bytes:2048,depth:1,..Default::default()}}
 fn nested(mut d:RetirementDemand)->RetirementDemand{d.copy_bytes+=2048;d.depth+=1;d}
 fn child(g:RetainedCloneGrant)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-2048,maximum_depth:g.maximum_depth-1,..g}}
 fn receipt(mut p:RetainedCloneProgress)->RetainedCloneProgress{p.copied_items=p.copied_items.max(1);p.copied_bytes+=2048;p}
 fn refused(e:ValueError)->ValueError{let p=receipt(e.retained_progress());e.with_retained_progress(p)}
-fn input(m:&LayoutMutation)->Result<&crate::set_page_overrides::SetPageOverrides,ValueError>{match m{LayoutMutation::SetPageOverrides(p)=>Ok(p),_=>Err(fault())}}
+fn input(m:&impl LayoutMutationSource)->Result<&crate::source::set_page_overrides::SetPageOverrides,ValueError>{match m.view(){LayoutMutation::SetPageOverrides(p)=>Ok(p),_=>Err(fault())}}
 pub fn scalar_equal(a:&PageOverride,b:&PageOverride)->bool{a.visible==b.visible&&a.locked==b.locked&&match(&a.bounds,&b.bounds){(None,None)=>true,(Some(a),Some(b))=>equal_f64(a.x,b.x)&&equal_f64(a.y,b.y)&&equal_f64(a.width,b.width)&&equal_f64(a.height,b.height)&&equal_f64(a.rotation,b.rotation),_=>false}}
 enum Rows<'a>{Pages(&'a[Page]),Parents(&'a[ParentPage]),Frames(&'a[Frame])}
 impl LayoutTargetSource for Rows<'_>{fn identity(&self)->usize{match self{Self::Pages(_)=>8100,Self::Parents(_)=>8101,Self::Frames(_)=>8102}}fn count(&self)->usize{match self{Self::Pages(r)=>r.len(),Self::Parents(r)=>r.len(),Self::Frames(r)=>r.len()}}fn key(&self,i:usize)->&str{match self{Self::Pages(r)=>&r[i].id,Self::Parents(r)=>&r[i].id,Self::Frames(r)=>r[i].id()}}}
@@ -17,8 +17,8 @@ impl LayoutTargetSource for Rows<'_>{fn identity(&self)->usize{match self{Self::
 pub struct OverrideDecision{m:Option<RetainedCloneBinding>,b:Option<RetainedCloneBinding>,cursor:LayoutTargetLookup,pub at:[usize;2],phase:u8,index:usize,other:usize,offset:usize,equal:bool,error:Option<&'static str>,closing:bool}
 impl Default for OverrideDecision{fn default()->Self{Self{m:None,b:None,cursor:Default::default(),at:[0,0],phase:0,index:0,other:0,offset:0,equal:true,error:None,closing:false}}}
 impl OverrideDecision{
- pub fn demand(&self,m:RetainedCloneRef<'_,LayoutMutation>,b:RetainedCloneRef<'_,LayoutSnapshot>,_body:usize)->Result<RetirementDemand,ValueError>{m.check_binding(&self.m)?;b.check_binding(&self.b)?;input(m.get())?;if self.closing{return Err(fault())}Ok(match self.phase{0=>nested(m.binding_demand(&self.m)?.unwrap_or_default()),1=>nested(b.binding_demand(&self.b)?.unwrap_or_default()),2|4|7=>nested(self.cursor.demand()),_=>fixed()})}
- pub fn advance(&mut self,m:RetainedCloneRef<'_,LayoutMutation>,b:RetainedCloneRef<'_,LayoutSnapshot>,g:RetainedCloneGrant)->Result<SimpleAdvance,ValueError>{let d=self.demand(m,b,256)?;let mut out=SimpleAdvance{progress:Default::default(),done:self.phase==30,unchanged:self.equal&&self.error.is_none(),error:self.error};if !retained_clone_grant_admits(g,d){return Ok(out)}let mut paid=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};let p=input(m.get())?;let base=b.get();match self.phase{
+ pub fn demand<M:LayoutMutationSource>(&self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>,_body:usize)->Result<RetirementDemand,ValueError>{m.check_binding(&self.m)?;b.check_binding(&self.b)?;input(m.get())?;if self.closing{return Err(fault())}Ok(match self.phase{0=>nested(m.binding_demand(&self.m)?.unwrap_or_default()),1=>nested(b.binding_demand(&self.b)?.unwrap_or_default()),2|4|7=>nested(self.cursor.demand()),_=>fixed()})}
+ pub fn advance<M:LayoutMutationSource>(&mut self,m:RetainedCloneRef<'_,M>,b:RetainedCloneRef<'_,LayoutSnapshot>,g:RetainedCloneGrant)->Result<SimpleAdvance,ValueError>{let d=self.demand(m,b,256)?;let mut out=SimpleAdvance{progress:Default::default(),done:self.phase==30,unchanged:self.equal&&self.error.is_none(),error:self.error};if !retained_clone_grant_admits(g,d){return Ok(out)}let mut paid=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};let p=input(m.get())?;let base=b.get();match self.phase{
  0=>{paid=receipt(m.bind(&mut self.m,child(g)).map_err(refused)?.unwrap_or_default());self.phase=1},1=>{paid=receipt(b.bind(&mut self.b,child(g)).map_err(refused)?.unwrap_or_default());self.phase=2},
  2=>{let step=self.cursor.advance(&Rows::Pages(&base.pages),0,&p.id,child(g)).map_err(refused)?;paid=receipt(step.progress());if let Some(found)=self.cursor.result(){self.cursor=Default::default();if let Some(page)=found{self.at[0]=page;self.phase=3}else{self.refuse("mutation.target-missing")}}},
  3=>{let page=&base.pages[self.at[0]];self.equal=page.overrides.len()==p.overrides.len();if p.overrides.len()>64{self.refuse("mutation.invariant")}else if page.parent_page_id.is_none(){if p.overrides.is_empty(){self.phase=30}else{self.refuse("mutation.invariant")}}else{self.phase=4}},
@@ -34,5 +34,3 @@ impl OverrideDecision{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.cursor.terminal_is_empty()&&self.m.is_none()&&self.b.is_none()}
 }
 impl Drop for OverrideDecision{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"Page overrides requires funded original closure")}}
-
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

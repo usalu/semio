@@ -58,15 +58,16 @@ pub struct ArtifactReferenceSnapshotCodec<P> {
     pub encode:fn(&P)->Result<Vec<u8>,PackError>,
     pub decode:fn(&[u8])->Result<P,PackError>,
     pub print_dsl:Option<fn(&P)->String>,
+    pub parse_dsl:Option<fn(&str)->Result<P,TextError>>,
 }
 /// 🏭️ Only an owner with genuine reference Pack and DSL implementations can declare this port.
 pub fn reference_snapshot_codec<P:pack::snapshot::ArtifactPack+pack::snapshot::ArtifactDsl>()->ArtifactReferenceSnapshotCodec<P>{
-    ArtifactReferenceSnapshotCodec{encode:|snapshot|snapshot.encode_pack_with(&PackEncodeOptions::default()),decode:|bytes|P::decode_pack_with(bytes,&PackDecodeOptions::default()),print_dsl:Some(|snapshot|snapshot.print_dsl())}
+    ArtifactReferenceSnapshotCodec{encode:|snapshot|snapshot.encode_pack_with(&PackEncodeOptions::default()),decode:|bytes|P::decode_pack_with(bytes,&PackDecodeOptions::default()),print_dsl:Some(|snapshot|snapshot.print_dsl()),parse_dsl:Some(P::parse_dsl)}
 }
 
 /// 🧮️ Binary-only reference owners declare Pack without manufacturing a DSL printer.
 pub fn binary_reference_snapshot_codec<P:pack::snapshot::ArtifactPack>()->ArtifactReferenceSnapshotCodec<P>{
- ArtifactReferenceSnapshotCodec{encode:|snapshot|snapshot.encode_pack_with(&PackEncodeOptions::default()),decode:|bytes|P::decode_pack_with(bytes,&PackDecodeOptions::default()),print_dsl:None}
+ ArtifactReferenceSnapshotCodec{encode:|snapshot|snapshot.encode_pack_with(&PackEncodeOptions::default()),decode:|bytes|P::decode_pack_with(bytes,&PackDecodeOptions::default()),print_dsl:None,parse_dsl:None}
 }
 
 impl<P> semio_framework_os_vcs::io::binary::genesis::ArtifactGenesisProducer<P> for ArtifactReferenceSnapshotCodec<P>{

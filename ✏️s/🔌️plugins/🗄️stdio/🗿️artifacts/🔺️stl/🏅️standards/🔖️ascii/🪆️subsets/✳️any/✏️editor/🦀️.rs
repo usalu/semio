@@ -220,8 +220,8 @@ impl ArtifactEditor for StlAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); stl_any_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->StlSnapshot>{Some(||{
-        StlSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<StlSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(StlSnapshot::default())
     })}
 
     fn handle(

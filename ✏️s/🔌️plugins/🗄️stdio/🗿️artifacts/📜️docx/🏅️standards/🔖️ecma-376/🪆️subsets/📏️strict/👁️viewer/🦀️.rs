@@ -69,8 +69,8 @@ impl ArtifactViewer for DocxStrictViewer {
     const DIALECT: Dialect = DOCX_STRICT_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DOCX_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->DocxSnapshot>{Some(||{
-        DocxSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<DocxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(DocxSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `DocxStrictViewCommand::Noop` variant never carries a

@@ -1,8 +1,8 @@
 //! 🏁️ Original finalization request custody and completed Report publication remain in the typed Store owner across turns.
 use super::*;
 use semio_framework_job::{StepContext,close_original_retained_step};
-use store::os_store::original_replay_publication::OriginalReplayPublication;
-impl<P,Mu> TimeTravelStoreState<P,Mu>where P:semio_framework_value::ToValue+store::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,Mu:semio_framework_value::ToValue+semio_framework_value::FromValue+protocol::Mutation<P>+protocol::OpBinary+protocol::OpText+Send+'static{
+use semio_framework_os_store_engine_replay::OriginalReplayPublication;
+impl<P,Mu> TimeTravelStoreState<P,Mu>where P: store::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,Mu: ::semio_framework_os_kernel::StoreMutationFor<P>{
  /// 📏️ A request handoff moves only existing canonical metadata into this original preallocated Store-state slot.
  pub fn commit_request_demands()->RetirementDemand{RetirementDemand{copy_bytes:2*std::mem::size_of::<store::HistoryFinalization>()+std::mem::size_of::<bool>(),depth:1,..Default::default()}}
  /// 👁️ The actual Store must remain available while any original publisher or request continuation is retained.

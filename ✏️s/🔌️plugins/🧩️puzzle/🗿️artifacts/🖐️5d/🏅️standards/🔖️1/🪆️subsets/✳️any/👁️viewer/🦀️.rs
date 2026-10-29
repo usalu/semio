@@ -103,8 +103,8 @@ impl ArtifactViewer for Puzzle5dViewer {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
-    fn reference_birth()->Option<fn()->Puzzle5dSnapshot>{Some(||{
-        Puzzle5dSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Puzzle5dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Puzzle5dSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Puzzle5dViewCommand::Noop` variant never carries a config

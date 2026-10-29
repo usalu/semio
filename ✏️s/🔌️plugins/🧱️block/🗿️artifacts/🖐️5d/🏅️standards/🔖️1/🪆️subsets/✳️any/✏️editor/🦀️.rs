@@ -431,8 +431,8 @@ impl ArtifactEditor for Block5dPlayApp {
     /// `setActiveExample` parses), so the board window shows a part kind and the World3d window a
     /// `mesh_url` instead of the all-`Default` empty part kind — see
     /// `crate::standards::v1::subsets::any::io::text::snapshot::default_block5d_snapshot`.
-    fn reference_birth()->Option<fn()->Block5dSnapshot>{Some(||{
-        semio_s_artifact_block_5d_io::text::snapshot::default_block5d_snapshot()
+    fn reference_birth()->Option<fn()->Result<Block5dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_block_5d_io::text::snapshot::default_block5d_snapshot())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

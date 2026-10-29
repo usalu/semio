@@ -34,7 +34,7 @@ impl StepContext<'_>{
         let Some(source)=original.as_ref()else{return Ok(Some(Default::default()))};
         let parent=self.native_weak_parent.ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original native Weak has no scoped strong parent witness"))?;
         if !parent.active(self)||parent.source_type!=TypeId::of::<T>()||parent.allocation!=source.as_ptr()as usize{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original native Weak requires its exact typed allocation parent").into())}
-        let grant=self.retained_grant();if self.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+        let grant=self.retained_grant();if self.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
         let progress=RetainedCloneProgress{copied_items:1,..Default::default()};self.consume_retained(progress)?;self.consume_fuel(1);drop(original.take());Ok(Some(progress))
     }
 }

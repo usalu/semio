@@ -136,6 +136,22 @@ pub fn select_scroll_control_id(id: &str, up: bool) -> String {
     }
 }
 
+/// 🔼️ Arms one chevron press: the direction is stashed for [`render_select_menu`] to price and
+/// clamp on the next paint, which is the only place the item count and the resolved popup height are
+/// both in hand. Answers `false` for a control id that is not a scroll chevron.
+pub fn arm_select_scroll(scroll_offsets: &mut std::collections::HashMap<String, f32>, control_id: &str) -> bool {
+    let Some((id, direction)) = select_scroll_control_parts(control_id) else { return false };
+    scroll_offsets.insert(select_scroll_pending_key(id), direction);
+    true
+}
+
+/// 🧹️ Drops both of one popup's scroll slots — called when the popup closes so a reopened `Select`
+/// starts at its first page, like a freshly mounted `SelectContent`, and neither slot outlives it.
+pub fn clear_select_scroll(scroll_offsets: &mut std::collections::HashMap<String, f32>, id: &str) {
+    scroll_offsets.remove(&select_scroll_key(id));
+    scroll_offsets.remove(&select_scroll_pending_key(id));
+}
+
 /// ✂️ Splits a `{select}.scroll.{up|down}` control id back into `(select id, direction)`.
 pub fn select_scroll_control_parts(control_id: &str) -> Option<(&str, f32)> {
     if let Some(id) = control_id.strip_suffix(".scroll.up") {

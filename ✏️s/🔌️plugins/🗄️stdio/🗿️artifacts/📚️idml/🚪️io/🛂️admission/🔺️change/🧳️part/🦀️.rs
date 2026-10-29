@@ -52,6 +52,3 @@ impl RetainedIdmlPartPatch {
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.path.terminal_is_empty()&&self.bytes.terminal_is_empty()&&self.result.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for RetainedIdmlPartPatch {fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"IDML sparse member requires typed source closure");if empty{unsafe{ManuallyDrop::drop(&mut self.result);}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

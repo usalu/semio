@@ -89,29 +89,30 @@ pub fn encode_mesh_pack(mesh: &semio_framework::MeshData) -> Result<Vec<u8>, Str
     
     if mesh.paint_texture_base64.is_none() {let mut job=MeshPackEncodingJob::new(mesh.clone(),usize::MAX)?;loop {if let Some(bytes)=job.step(4096)? {return Ok(bytes);}}}
     let mut record = semio_framework_dsl_record::RecordValue::default();
-    let mut put = |id: u16, bytes: Vec<u8>| {
+    let mut put = |id: u16, bytes: Vec<u8>| -> Result<(), String> {
         if !bytes.is_empty() {
-            record.fields.insert(id, semio_framework_dsl_record::FieldValue::Bytes64(bytes));
+            record.fields.insert(id, semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&bytes).map_err(|error| error.to_string())?));
         }
+        Ok(())
     };
-    put(MESH_PACK_FIELD_POSITIONS, f32_blob(&mesh.positions));
-    put(MESH_PACK_FIELD_NORMALS, f32_blob(&mesh.normals));
-    put(MESH_PACK_FIELD_INDICES, u32_blob(&mesh.indices));
-    put(MESH_PACK_FIELD_COLORS, f32_blob(&mesh.colors));
-    put(MESH_PACK_FIELD_UVS, f32_blob(&mesh.uvs));
-    put(MESH_PACK_FIELD_FACE_IDS, u32_blob(&mesh.face_ids));
-    put(MESH_PACK_FIELD_VERTEX_IDS, u32_blob(&mesh.vertex_ids));
-    put(MESH_PACK_FIELD_EDGE_POSITIONS, f32_blob(&mesh.edge_positions));
-    put(MESH_PACK_FIELD_EDGE_IDS, u32_blob(&mesh.edge_ids));
-    put(MESH_PACK_FIELD_EDGE_UVS, f32_blob(&mesh.edge_uvs));
-    put(MESH_PACK_FIELD_EDGE_IS_SEAM, mesh.edge_is_seam.clone());
+    put(MESH_PACK_FIELD_POSITIONS, f32_blob(&mesh.positions))?;
+    put(MESH_PACK_FIELD_NORMALS, f32_blob(&mesh.normals))?;
+    put(MESH_PACK_FIELD_INDICES, u32_blob(&mesh.indices))?;
+    put(MESH_PACK_FIELD_COLORS, f32_blob(&mesh.colors))?;
+    put(MESH_PACK_FIELD_UVS, f32_blob(&mesh.uvs))?;
+    put(MESH_PACK_FIELD_FACE_IDS, u32_blob(&mesh.face_ids))?;
+    put(MESH_PACK_FIELD_VERTEX_IDS, u32_blob(&mesh.vertex_ids))?;
+    put(MESH_PACK_FIELD_EDGE_POSITIONS, f32_blob(&mesh.edge_positions))?;
+    put(MESH_PACK_FIELD_EDGE_IDS, u32_blob(&mesh.edge_ids))?;
+    put(MESH_PACK_FIELD_EDGE_UVS, f32_blob(&mesh.edge_uvs))?;
+    put(MESH_PACK_FIELD_EDGE_IS_SEAM, mesh.edge_is_seam.clone())?;
     if let Some(texture) = mesh.paint_texture_base64.as_ref() {
         record.fields.insert(MESH_PACK_FIELD_PAINT_TEXTURE, semio_framework_dsl_record::FieldValue::Text(texture.clone()));
     }
     if !mesh.attributes.is_empty() || !mesh.materials.is_empty() || !mesh.textures.is_empty() || !mesh.component_references.is_empty() {
         let mut cursor=semio_framework::mesh_io::text::MeshMetadataCursor::default();let mut text=String::from("{");
         while !cursor.step(&mesh.attributes,&mesh.materials,&mesh.textures,Some(&mesh.component_references),None,None,&mut text)? {}text.push('}');
-        record.fields.insert(MESH_PACK_FIELD_METADATA,semio_framework_dsl_record::FieldValue::Bytes64(text.into_bytes()));
+        record.fields.insert(MESH_PACK_FIELD_METADATA,semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(text.as_bytes()).map_err(|error| error.to_string())?));
     }
     crate::os_pack::record::encode_record_body(&mesh_pack_spec(), &record, &crate::os_pack::record::EncodeOptions::default()).map_err(|error| error.to_string())
 }
@@ -201,14 +202,14 @@ pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, Strin
     
     let record = crate::os_pack::record::decode_record_body_exact(bytes, &mesh_pack_spec(), &crate::os_pack::record::DecodeOptions::default()).map_err(|error| error.to_string())?;
     let blob = |id: u16| match record.get(id) {
-        Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => bytes.as_slice(),
-        _ => &[][..],
+        Some(semio_framework_dsl_record::FieldValue::Bytes64(bytes)) => bytes.to_vec_owner(),
+        _ => Vec::new(),
     };
     let metadata=blob(MESH_PACK_FIELD_METADATA);
     let (attributes,materials,textures,component_references)=if metadata.is_empty() {(Default::default(),Default::default(),Default::default(),Default::default())}else {
         use semio_framework_value::FromValue;
         if metadata.len()>16_000_000 {return Err("mesh metadata exceeds 16 MB".into());}
-        let value=semio_framework_pack_json::parse(core::str::from_utf8(metadata).map_err(|error|error.to_string())?,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
+        let value=semio_framework_pack_json::parse(core::str::from_utf8(&metadata).map_err(|error|error.to_string())?,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|error.to_string())?;
         if value.as_object().is_none_or(|object|object.iter().any(|(name,_)|!["attributes","materials","textures","componentReferences"].contains(&name))) {return Err("unknown mesh metadata field".into());}
         let decode=|name|semio_framework_pack_json::to_dsl_value(&value[name]);
         (if value["attributes"].is_null() {Default::default()}else {FromValue::from_value(decode("attributes")).map_err(|error|error.into_message())?},
@@ -218,17 +219,17 @@ pub fn decode_mesh_pack(bytes: &[u8]) -> Result<semio_framework::MeshData, Strin
     };
     let mesh=semio_framework::MeshData {
         attributes,materials,textures,component_references,
-        positions: f32_from_blob(blob(MESH_PACK_FIELD_POSITIONS))?,
-        normals: f32_from_blob(blob(MESH_PACK_FIELD_NORMALS))?,
-        colors: f32_from_blob(blob(MESH_PACK_FIELD_COLORS))?,
-        indices: u32_from_blob(blob(MESH_PACK_FIELD_INDICES))?,
-        uvs: f32_from_blob(blob(MESH_PACK_FIELD_UVS))?,
-        face_ids: u32_from_blob(blob(MESH_PACK_FIELD_FACE_IDS))?,
-        vertex_ids: u32_from_blob(blob(MESH_PACK_FIELD_VERTEX_IDS))?,
-        edge_positions: f32_from_blob(blob(MESH_PACK_FIELD_EDGE_POSITIONS))?,
-        edge_ids: u32_from_blob(blob(MESH_PACK_FIELD_EDGE_IDS))?,
-        edge_uvs: f32_from_blob(blob(MESH_PACK_FIELD_EDGE_UVS))?,
-        edge_is_seam: blob(MESH_PACK_FIELD_EDGE_IS_SEAM).to_vec(),
+        positions: f32_from_blob(&blob(MESH_PACK_FIELD_POSITIONS))?,
+        normals: f32_from_blob(&blob(MESH_PACK_FIELD_NORMALS))?,
+        colors: f32_from_blob(&blob(MESH_PACK_FIELD_COLORS))?,
+        indices: u32_from_blob(&blob(MESH_PACK_FIELD_INDICES))?,
+        uvs: f32_from_blob(&blob(MESH_PACK_FIELD_UVS))?,
+        face_ids: u32_from_blob(&blob(MESH_PACK_FIELD_FACE_IDS))?,
+        vertex_ids: u32_from_blob(&blob(MESH_PACK_FIELD_VERTEX_IDS))?,
+        edge_positions: f32_from_blob(&blob(MESH_PACK_FIELD_EDGE_POSITIONS))?,
+        edge_ids: u32_from_blob(&blob(MESH_PACK_FIELD_EDGE_IDS))?,
+        edge_uvs: f32_from_blob(&blob(MESH_PACK_FIELD_EDGE_UVS))?,
+        edge_is_seam: blob(MESH_PACK_FIELD_EDGE_IS_SEAM),
         paint_texture_base64: match record.get(MESH_PACK_FIELD_PAINT_TEXTURE) {
             Some(semio_framework_dsl_record::FieldValue::Text(text)) => Some(text.clone()),
             _ => None,

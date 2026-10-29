@@ -1,4 +1,4 @@
-//! 💡️ Energy model mutation domain `lighting-gain`: `change-lighting-gain-schedule`, `change-lighting-gain-radiant-fraction`, `change-lighting-gain-return-air-fraction`, `create-lighting-gain`, `change-lighting-gain-visible-fraction`, `change-lighting-gain-watts-per-area`, `change-lighting-gain-zone`, `delete-lighting-gain`.
+//! 💡️ Energy model mutation domain `lighting-gain`: `change-lighting-gain-schedule`, `create-lighting-gain`, `change-lighting-gain-zone`, `delete-lighting-gain`
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
@@ -28,32 +28,6 @@ pub mod change_lighting_gain_schedule {
 }
 
 #[path = "."]
-pub mod change_lighting_gain_radiant_fraction {
-    #[path = "🌟️change-radiant-fraction/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🌟️change-radiant-fraction/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "🌟️change-radiant-fraction/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🌟️change-radiant-fraction/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_lighting_gain_return_air_fraction {
-    #[path = "🎐️change-return-air-fraction/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🎐️change-return-air-fraction/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "🎐️change-return-air-fraction/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🎐️change-return-air-fraction/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
 pub mod create_lighting_gain {
     #[path = "💡️create/🦀️.rs"]
     mod component;
@@ -63,32 +37,6 @@ pub mod create_lighting_gain {
     #[path = "💡️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "💡️create/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_lighting_gain_visible_fraction {
-    #[path = "🔅️change-visible-fraction/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🔅️change-visible-fraction/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "🔅️change-visible-fraction/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🔅️change-visible-fraction/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_lighting_gain_watts_per_area {
-    #[path = "🔌️change-watts-per-area/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🔌️change-watts-per-area/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "🔌️change-watts-per-area/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🔌️change-watts-per-area/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 
@@ -119,10 +67,6 @@ pub mod delete_lighting_gain {
 }
 
 pub use change_lighting_gain_schedule::{change_lighting_gain_schedule, ChangeLightingGainSchedule};
-pub use change_lighting_gain_radiant_fraction::{change_lighting_gain_radiant_fraction, ChangeLightingGainRadiantFraction};
-pub use change_lighting_gain_return_air_fraction::{change_lighting_gain_return_air_fraction, ChangeLightingGainReturnAirFraction};
 pub use create_lighting_gain::{create_lighting_gain, CreateLightingGain};
-pub use change_lighting_gain_visible_fraction::{change_lighting_gain_visible_fraction, ChangeLightingGainVisibleFraction};
-pub use change_lighting_gain_watts_per_area::{change_lighting_gain_watts_per_area, ChangeLightingGainWattsPerArea};
 pub use change_lighting_gain_zone::{change_lighting_gain_zone, ChangeLightingGainZone};
 pub use delete_lighting_gain::{delete_lighting_gain, DeleteLightingGain};

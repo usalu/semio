@@ -36,8 +36,8 @@ pub fn examples() -> Vec<ExampleSource> {
     example_rows()
         .into_iter()
         .map(|(id, label, model)| {
-            let snapshot = crate::snapshot::energy_snapshot_with_state(ENERGY_MODEL_DOCUMENT_SCHEMA, &model, None);
-            ExampleSource::new(id, LocalizedLabel::native(label, label), semio_framework_pack_json::to_json_string(&snapshot), "file")
+            let document = EnergyModelSnapshot::document_value(&model);
+            ExampleSource::new(id, LocalizedLabel::native(label, label), semio_framework_pack_json::to_json_string(&document), "file")
         })
         .collect()
 }

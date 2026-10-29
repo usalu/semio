@@ -31,6 +31,8 @@ semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩�
 semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-surface = { path = "../../../../📜️declaration/🪟️surface/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust", features = ["media-turn-testing"] }
+semio-framework-plugin-decl-tool-contract = { path = "../../../../📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-media = { path = "../../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-extension = { path = "../../../../🧩️extension/📦️packages/🦀️rust", features = ["original-actor-context-testing"] }
 semio-framework-plugin-instance-app = { path = "../../../../🧵️instance/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
 semio-framework-plugin-instance-docs = { path = "../../../../🧵️instance/📄️docs/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
@@ -79,12 +81,11 @@ semio-framework-replication = { workspace = true }
 semio-framework-action-bus = { path = "../../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
 semio-framework-value = { workspace = true }
 semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
-
-[dev-dependencies]
-semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
-semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
-semio-framework-action-bus = { path = "../../../../../../../../🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-tool-run = { workspace = true }
+semio-framework-plugin-job = { path = "../../../../👷️job/📦️packages/🦀️rust", features = ["artifact-app-testing"] }
+semio-framework-plugin-document-media = { path = "../../../../🗃️document/📦️packages/🦀️rust" }
+semio-framework-plugin-composition-publication = { path = "../../../../🧩️composition/📬️publication/📦️packages/🦀️rust" }
 
 [features]
 artifact-app-testing = []

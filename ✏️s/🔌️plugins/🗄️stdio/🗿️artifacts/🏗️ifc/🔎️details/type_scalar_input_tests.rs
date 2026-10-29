@@ -35,7 +35,7 @@ fn scalar_request(row: &serde_json::Value, complete: bool) -> semio_framework_pl
 }
 #[test]
 fn original_scalar_type_guidance_admits_complete_exact_strings_and_signed_integers_without_defaults() {
-    use semio_framework_plugin::app::staged_form::StagedBodySource;
+    use semio_framework_plugin_decl_staged_form::StagedBodySource;
     let law = scalar_contract();
     for row in law["cases"].as_array().unwrap() {
         for complete in [false, true] {

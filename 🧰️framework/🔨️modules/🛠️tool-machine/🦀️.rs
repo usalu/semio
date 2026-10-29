@@ -133,7 +133,7 @@ impl std::error::Error for ToolRefusal {}
 
 /// 🛑️ Who ended a transaction without an edit: the tool itself (`Abort` yield) or the host (focus lost, pointer
 /// capture lost, the gesture's base moved, a time-travel freeze, the tool retired).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
 pub enum ToolAbortReason {
     Tool,
     Blur,
@@ -252,7 +252,7 @@ impl<T: Machine<Effect = ToolYield<M>>, M> ToolMachine for T {
 pub const TOOL_MACHINE_ACTOR: machine::ActorId = machine::ActorId(0);
 
 /// 🔁️ What one event did to the runner's transaction slot.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
 pub enum ToolStep<M> {
     /// 💤️ No transaction is open and none closed.
     Idle,

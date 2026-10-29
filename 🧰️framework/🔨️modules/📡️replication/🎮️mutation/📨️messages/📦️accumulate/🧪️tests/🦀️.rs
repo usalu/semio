@@ -15,7 +15,8 @@ fn observed(step: impl FnOnce() -> Result<RetainedCloneProgress, ValueError>, gr
 fn drain(cursor: &mut OperationMessageDrain, ledger: &mut ReplayMessageAccumulator, limit: usize) -> usize {
     for turn in 0..limit {
         if cursor.is_finished() { return turn; }
-        let ((copy, capacity, release), heap) = observe_heap_allocations_on_this_thread(|| (cursor.next_copy_byte_demand(ledger), cursor.next_capacity_byte_demand(ledger).unwrap(), cursor.next_release_byte_demand()));
+        let (demand, heap) = observe_heap_allocations_on_this_thread(|| cursor.next_demand(ledger).unwrap());
+        let (copy, capacity, release) = (demand.copy_bytes, demand.capacity_bytes, demand.release_bytes);
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(copy + capacity <= 4096);
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: capacity, maximum_release_bytes: release, maximum_depth: 64 };

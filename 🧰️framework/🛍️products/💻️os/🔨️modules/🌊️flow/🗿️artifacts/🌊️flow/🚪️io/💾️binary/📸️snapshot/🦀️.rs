@@ -1,9 +1,8 @@
 //! 🚪️ Native artifact representation codecs.
 use super::super::super::*;
-use crate::io::text::snapshot::*;
 
 /// 📦️ Handcrafted ArtifactPack (P6).
-impl pack::snapshot::ArtifactPack for FlowHostSnapshotDsl {
+impl pack::snapshot::ArtifactPack for FlowHostSnapshot {
     fn encode_pack_with(&self, options: &crate::os_store::PackEncodeOptions) -> Result<Vec<u8>, crate::os_store::PackError> {
         let inner = crate::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
         let envelope =
@@ -22,28 +21,6 @@ impl pack::snapshot::ArtifactPack for FlowHostSnapshotDsl {
         Some(Self::__dsl_spec())
     }
 }
-impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for FlowHostSnapshotDsl {
-    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
-
-
-}
-
-/// 🗜️ `FlowHostSnapshot` has no `#[derive(crate::os_dsl::DslArtifact)]` of its own (see `FlowHostSnapshotDsl`'s doc
-/// comment above), so it doesn't automatically gain `pack::snapshot::ArtifactPack` the way every derived type
-/// does — this hand-written twin of the `pack::snapshot::ArtifactDsl` impl just above delegates through the
-/// same `flow_host_snapshot_to_dsl`/`flow_host_snapshot_dsl_to_host_snapshot` mirror instead of `__dsl_to_record`/
-/// `__dsl_from_record`.
-impl pack::snapshot::ArtifactPack for FlowHostSnapshot {
-    /// 🌊️ Publishes the actual persisted Flow owner when its Store opens or hydrates.
-    
-    
-    fn encode_pack_with(&self,options:&crate::os_store::PackEncodeOptions)->Result<Vec<u8>,crate::os_store::PackError>{FlowSnapshotPackProducer::encode_snapshot(self,options)}
-    fn decode_pack_with(bytes:&[u8],options:&crate::os_store::PackDecodeOptions)->Result<Self,crate::os_store::PackError>{FlowSnapshotPackProducer::decode_snapshot(bytes,options)}
-
-    fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <FlowHostSnapshotDsl as pack::snapshot::ArtifactPack>::record_spec()
-    }
-}
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for FlowHostSnapshot {
     fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
 
@@ -57,10 +34,9 @@ fn sqlite_snapshot_codec() -> Option<crate::os_store::serialization::ArtifactSql
 #[derive(Clone,Copy)]
 pub struct FlowSnapshotPackProducer;
 impl FlowSnapshotPackProducer {
- fn encode_snapshot(snapshot:&FlowHostSnapshot,options:&crate::os_store::PackEncodeOptions)->Result<Vec<u8>,crate::os_store::PackError>{<FlowHostSnapshotDsl as pack::snapshot::ArtifactPack>::encode_pack_with(&flow_host_snapshot_to_dsl(snapshot),options)}
+ fn encode_snapshot(snapshot:&FlowHostSnapshot,options:&crate::os_store::PackEncodeOptions)->Result<Vec<u8>,crate::os_store::PackError>{<FlowHostSnapshot as pack::snapshot::ArtifactPack>::encode_pack_with(snapshot,options)}
  fn decode_snapshot(bytes:&[u8],options:&crate::os_store::PackDecodeOptions)->Result<FlowHostSnapshot,crate::os_store::PackError>{
-  let dsl=<FlowHostSnapshotDsl as pack::snapshot::ArtifactPack>::decode_pack_with(bytes,options)?;
-  flow_host_snapshot_dsl_to_host_snapshot(dsl).map_err(|message|crate::os_store::serialization::text_error_to_pack_error(crate::os_store::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message,crate::os_store::TextSpan::at(1,1))))
+  <FlowHostSnapshot as pack::snapshot::ArtifactPack>::decode_pack_with(bytes,options)
  }
 }
 impl crate::os_store::MemberSnapshotDecoder<FlowHostSnapshot> for FlowSnapshotPackProducer {

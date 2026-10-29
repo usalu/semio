@@ -167,8 +167,8 @@ impl ArtifactEditor for EpwEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->EpwSnapshot>{Some(||{
-        crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot()
+    fn reference_birth()->Option<fn()->Result<EpwSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot())
     })}
 
     /// ✏️ Resolves the addressed column to its canonical wire index and emits one

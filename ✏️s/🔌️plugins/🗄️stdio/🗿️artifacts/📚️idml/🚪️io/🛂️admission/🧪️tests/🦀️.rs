@@ -1,4 +1,4 @@
-use super::*;
+use semio_s_artifact_stdio_idml::{IdmlSnapshot,io::admission::*};
 use crate::schema::IdmlPart;
 
 fn grant(work:usize)->IdmlAdmissionGrant {IdmlAdmissionGrant{maximum_work:work,maximum_copy_bytes:2048,maximum_capacity_bytes:1024,maximum_release_bytes:0}}

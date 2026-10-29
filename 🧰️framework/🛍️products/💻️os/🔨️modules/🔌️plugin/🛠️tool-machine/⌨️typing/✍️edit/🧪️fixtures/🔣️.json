@@ -1,0 +1,20 @@
+{
+  "schema": "plugin.typing.edit.settlement.v1",
+  "action": "patchDocument",
+  "buffer": "layout-title",
+  "deliveries": [
+    {
+      "name": "Typing First"
+    },
+    {
+      "name": "Typing Second"
+    }
+  ],
+  "lifecycle": {
+    "turnItems": 1,
+    "underfundedUnchanged": true,
+    "sameSource": true,
+    "cancelKeepsPrevious": true,
+    "physicalClose": true
+  }
+}

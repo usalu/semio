@@ -185,17 +185,15 @@ export async function createActorApi(actorId, activationGeneration, originalAdmi
     },
     poll: async (events, commandPage, coldPairPage, budget) => {
       await admitContext();
-      if (commandPage || coldPairPage || events.length) {
-        const original = { phase: "canonical-input", commandPage, coldPairPage, events };
-        originalSource.holdProducerRefusal(original);
-        originalReturn.hold(original);
-        throw Object.assign(new Error("original-turn.canonical-input-held"), { originalProducer: original });
-      }
+      if (events.length > 1) throw new Error("actor-poll.event-count: a reactor turn admits at most one event");
+      const wireEvents = events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration));
       const turn = originalSource.issue();
       hostShim.__checkoutOriginal(turn);
       let result;
       try {
-        result = await reactor.poll(events.map(({ kind, payload }) => lifecycleEvent(kind, payload, activationGeneration)), { retained: originalTurnWit(turn.input), fuel: BigInt(turn.fuel), deadlineUs: turn.deadlineUs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: budget.maxFrames });
+        if (commandPage) await reactor.stageCommandPage(commandPage.cursor, commandPage.bytes);
+        if (coldPairPage) await reactor.stageColdPairPage(coldPairPage);
+        result = await reactor.poll(wireEvents, { retained: originalTurnWit(turn.input), fuel: BigInt(turn.fuel), deadlineUs: turn.deadlineUs, maxEffects: budget.maxEffects, maxPatchBytes: budget.maxPatchBytes, maxFrames: budget.maxFrames });
       } catch (failure) {
         try {
           if (failure && failure.input && failure.spent && typeof failure.workUnitsSpent === "bigint") receiveOriginal(failure, failure.workUnitsSpent);

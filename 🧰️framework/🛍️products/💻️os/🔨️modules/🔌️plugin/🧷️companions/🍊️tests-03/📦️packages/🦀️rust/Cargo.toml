@@ -27,6 +27,7 @@ semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packag
 semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust", features = ["artifact-app-testing", "reserved-producer-testing"] }
 semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust", features = ["media-turn-testing"] }
+semio-framework-plugin-decl-media = { path = "../../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-document-media = { path = "../../../../🗃️document/📦️packages/🦀️rust", features = ["artifact-app-testing", "media-turn-testing"] }
 semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust", features = ["media-turn-testing"] }
 semio-framework-plugin-reactor-app = { path = "../../../../⚛️reactor/🔌️app/📦️packages/🦀️rust", features = ["artifact-app-testing"] }

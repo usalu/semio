@@ -1,0 +1,11 @@
+# Original Input and Worker Admission Guards
+
+The retired cold JSON/proof-helper recognizer and synthetic positive fixture are replaced by the actual current action, host, typed producer, wire qualification, decoder identity, direct intent and worker owners. The source reader includes the command owner. Ten required input facts and six worker facts have language-neutral schemas with strict independent Ajv 2020 and JSON Patch evidence changes.
+
+Current input coverage includes both direct-intent entry/resume sites, actual retained catalog qualification before control, canonical action/app owner checks in every pending phase, original source/decoder identity, and refusal of reconstructed contexts. The execution packet includes actual Layout unknown-action, known-control, cancellation and same-pointer/same-length action rewrite native laws, still pending execution.
+
+Worker coverage binds reserved queue admission, captured roots, original request/wire/metadata/caller/decoder custody, registered producer handoff and one funded mounted turn. Independent review exposed lexical-loop and recursion counterexamples; scoped for, for_each, map/last, custom-repeat, UFCS and method-reference witnesses were RED before their defining fixes. The structural fence requires the direct match/loan/pump expression under exactly the real lifecycle callback and its immediately invoked step closure, with the exact invocation/return tail. These are bounded source regressions, not a formal whole-program proof.
+
+Fresh combined execution passed65 tests and442 assertions across three files (session67339 EXIT0), including16 neutral original-host cases and37 Puzzle source checks. The full SDK admission-order/bounded-preparation self-check passed (3172 EXIT0). Independent review status is in input-native-review.md and typing-policy-review.md. Native typing and live browser verification remain pending.
+
+The declared repository route contains all three real test entries and six observed plugin families. Attempt87083 was gracefully deferred during graph preparation (EXIT130), before tests, to release root-owned memory/workers for mandatory native integration. Direct checks above remain actual passes. Rerun the declared target once shared source work settles; no peer job was stopped.

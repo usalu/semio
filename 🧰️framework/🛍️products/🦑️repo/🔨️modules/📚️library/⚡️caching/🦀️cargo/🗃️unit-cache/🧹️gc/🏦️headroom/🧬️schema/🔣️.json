@@ -1,0 +1,196 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/framework/repo/cargo-image-headroom/v1",
+  "title": "Image headroom admission of Cargo commands: each running command reserves the bytes it is expected to still write to the compiler image, a new command waits (and frees what it can) until the free space covers its own reservation",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "historyFile": "history.json",
+        "claim": "headroom",
+        "claimPollMilliseconds": 20,
+        "claimAttempts": 100,
+        "heartbeatMilliseconds": 2000,
+        "staleMilliseconds": 20000,
+        "abandonedMilliseconds": 600000,
+        "pollMilliseconds": 250,
+        "pollMaximumMilliseconds": 2000,
+        "pollBackoffBasisPoints": 15000,
+        "progressMilliseconds": 10000,
+        "reclaimIntervalMilliseconds": 2000,
+        "monitorMilliseconds": 2000,
+        "floorBasisPoints": 300,
+        "floorMinimumBytes": 1073741824,
+        "maximumShareBasisPoints": 1500,
+        "minimumBytes": 134217728,
+        "maximumClassLength": 160,
+        "prior": {
+          "cold": { "bytes": 2147483648, "rampMilliseconds": 600000 },
+          "warm": { "bytes": 805306368, "rampMilliseconds": 300000 }
+        },
+        "estimate": {
+          "quantileBasisPoints": 9000,
+          "marginBasisPoints": 1500,
+          "minimumSamples": 2,
+          "maximumSamples": 32,
+          "maximumClasses": 256,
+          "minimumRampMilliseconds": 30000,
+          "maximumRampMilliseconds": 1800000
+        }
+      }
+    },
+    "Messages": {
+      "const": {
+        "waiting": {
+          "en": "[repo cargo] waiting {seconds}s for compiler image headroom: this command is expected to write {need} GiB ({free} GiB free, {held} GiB still expected from {running} running command(s), {ahead} GiB reserved for commands ahead, {floor} GiB kept free)",
+          "de": "[repo cargo] warte seit {seconds}s auf Platz im Compiler-Image: dieser Befehl schreibt voraussichtlich {need} GiB ({free} GiB frei, {held} GiB noch erwartet von {running} laufenden Befehl(en), {ahead} GiB für vorausgehende Befehle reserviert, {floor} GiB bleiben frei)"
+        },
+        "reclaiming": {
+          "en": "[repo cargo] freeing {shortfall} GiB of idle lanes, incremental sessions and cold units for the commands waiting on the compiler image",
+          "de": "[repo cargo] gebe {shortfall} GiB ruhender Lanes, Inkrementsitzungen und kalter Einheiten für die auf das Compiler-Image wartenden Befehle frei"
+        },
+        "admitted": {
+          "en": "[repo cargo] admitted after {seconds}s: {need} GiB of compiler image headroom reserved ({free} GiB free)",
+          "de": "[repo cargo] nach {seconds}s zugelassen: {need} GiB Platz im Compiler-Image reserviert ({free} GiB frei)"
+        },
+        "alone": {
+          "en": "[repo cargo] the compiler image has {free} GiB free for the {need} GiB this command is expected to write, but no other command runs and a cleanup freed nothing more; running it anyway",
+          "de": "[repo cargo] Das Compiler-Image hat {free} GiB frei für die {need} GiB, die dieser Befehl voraussichtlich schreibt, aber kein anderer Befehl läuft und eine Bereinigung gab nichts mehr frei; der Befehl läuft trotzdem"
+        }
+      }
+    },
+    "Row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "state", "reservedBytes", "rampMilliseconds", "arrivedMs", "admittedMs"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9]{1,24}$" },
+        "state": { "enum": ["waiting", "running"] },
+        "reservedBytes": { "type": "integer", "minimum": 0, "maximum": 549755813888 },
+        "rampMilliseconds": { "type": "integer", "minimum": 1, "maximum": 86400000 },
+        "arrivedMs": { "type": "integer", "minimum": 0 },
+        "admittedMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
+      }
+    },
+    "Record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "pid", "label", "id", "state", "reservedBytes", "rampMilliseconds", "arrivedMs", "admittedMs"],
+      "properties": {
+        "version": { "const": 1 },
+        "pid": { "type": "integer", "minimum": 1 },
+        "label": { "type": "string", "maxLength": 200 },
+        "id": { "type": "string", "pattern": "^[a-z0-9]{1,24}$" },
+        "state": { "enum": ["waiting", "running"] },
+        "reservedBytes": { "type": "integer", "minimum": 0, "maximum": 549755813888 },
+        "rampMilliseconds": { "type": "integer", "minimum": 1, "maximum": 86400000 },
+        "arrivedMs": { "type": "integer", "minimum": 0 },
+        "admittedMs": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] }
+      }
+    },
+    "Sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "wallMs", "atMs"],
+      "properties": {
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 549755813888 },
+        "wallMs": { "type": "integer", "minimum": 0, "maximum": 86400000 },
+        "atMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "History": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "classes"],
+      "properties": {
+        "version": { "const": 1 },
+        "classes": { "type": "object", "additionalProperties": { "type": "array", "items": { "$ref": "#/definitions/Sample" } } }
+      }
+    },
+    "Prior": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["bytes", "rampMilliseconds"],
+      "properties": {
+        "bytes": { "type": "integer", "minimum": 0, "maximum": 549755813888 },
+        "rampMilliseconds": { "type": "integer", "minimum": 1, "maximum": 86400000 }
+      }
+    },
+    "Estimate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reservedBytes", "rampMilliseconds", "samples", "class"],
+      "properties": {
+        "reservedBytes": { "type": "integer", "minimum": 0 },
+        "rampMilliseconds": { "type": "integer", "minimum": 1 },
+        "samples": { "type": "integer", "minimum": 0 },
+        "class": { "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }] }
+      }
+    },
+    "Decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verdict", "reason", "floorBytes", "heldBytes", "aheadBytes", "shortfallBytes", "running"],
+      "properties": {
+        "verdict": { "enum": ["admit", "wait"] },
+        "reason": { "enum": ["fits", "alone", "space", "queue"] },
+        "floorBytes": { "type": "integer", "minimum": 0 },
+        "heldBytes": { "type": "integer", "minimum": 0 },
+        "aheadBytes": { "type": "integer", "minimum": 0 },
+        "shortfallBytes": { "type": "integer", "minimum": 0 },
+        "running": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "DecisionInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["freeBytes", "volumeBytes", "nowMs", "request", "rows", "reclaimed"],
+      "properties": {
+        "freeBytes": { "type": "integer", "minimum": 0 },
+        "volumeBytes": { "type": "integer", "minimum": 1 },
+        "nowMs": { "type": "integer", "minimum": 0 },
+        "request": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["id", "reservedBytes", "arrivedMs"],
+          "properties": {
+            "id": { "type": "string", "pattern": "^[a-z0-9]{1,24}$" },
+            "reservedBytes": { "type": "integer", "minimum": 0 },
+            "arrivedMs": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "rows": { "type": "array", "items": { "$ref": "#/definitions/Row" } },
+        "reclaimed": { "type": "boolean" }
+      }
+    },
+    "EstimateInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["volumeBytes", "classes", "prior", "history"],
+      "properties": {
+        "volumeBytes": { "type": "integer", "minimum": 1 },
+        "classes": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+        "prior": { "$ref": "#/definitions/Prior" },
+        "history": { "$ref": "#/definitions/History" }
+      }
+    },
+    "OutstandingInput": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["row", "nowMs"],
+      "properties": { "row": { "$ref": "#/definitions/Row" }, "nowMs": { "type": "integer", "minimum": 0 } }
+    },
+    "Vectors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "estimates", "outstanding", "decisions", "floors", "quantiles"],
+      "properties": {
+        "version": { "const": 1 },
+        "estimates": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "input", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "input": { "$ref": "#/definitions/EstimateInput" }, "expected": { "$ref": "#/definitions/Estimate" } } } },
+        "outstanding": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "input", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "input": { "$ref": "#/definitions/OutstandingInput" }, "expected": { "type": "integer", "minimum": 0 } } } },
+        "decisions": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "input", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "input": { "$ref": "#/definitions/DecisionInput" }, "expected": { "$ref": "#/definitions/Decision" } } } },
+        "floors": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "volumeBytes", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "volumeBytes": { "type": "integer", "minimum": 1 }, "expected": { "type": "integer", "minimum": 0 } } } },
+        "quantiles": { "type": "array", "items": { "type": "object", "additionalProperties": false, "required": ["name", "values", "basisPoints", "expected"], "properties": { "name": { "type": "string", "minLength": 1 }, "values": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 0 } }, "basisPoints": { "type": "integer", "minimum": 1, "maximum": 10000 }, "expected": { "type": "integer", "minimum": 0 } } } }
+      }
+    }
+  }
+}

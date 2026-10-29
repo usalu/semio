@@ -13,26 +13,26 @@ pub(super) struct Fem3dMeshedSolid {
 
 pub struct Fem3dNumericalChild {
     pub stage: Fem3dNumericalStage,
-    model: Option<MountedAnalysisModel>,
-    analysis_node_ids: FixedSlots<String, MAXIMUM_FIELDS>,
+    pub(super) model: Option<MountedAnalysisModel>,
+    pub(super) analysis_node_ids: FixedSlots<String, MAXIMUM_FIELDS>,
     pub(super) meshed_solids: FixedSlots<Fem3dMeshedSolid, MAXIMUM_REGIONS>,
-    node_cursor: usize,
-    element_cursor: usize,
-    support_cursor: usize,
+    pub(super) node_cursor: usize,
+    pub(super) element_cursor: usize,
+    pub(super) support_cursor: usize,
     pub(super) dof_cursor: usize,
     pub(super) lookup_cursor: usize,
-    material_cursor: usize,
-    section_cursor: usize,
-    resolved_material: usize,
-    resolved_section: usize,
+    pub(super) material_cursor: usize,
+    pub(super) section_cursor: usize,
+    pub(super) resolved_material: usize,
+    pub(super) resolved_section: usize,
     pub(super) element_materials: [usize; MAXIMUM_ELEMENTS],
     pub(super) element_sections: [usize; MAXIMUM_ELEMENTS],
-    pending_element_nodes: [usize; 2],
+    pub(super) pending_element_nodes: [usize; 2],
     pub(super) pending_support: Option<MountedAnalysisSupport>,
     pub(super) pending_element: Option<Elements>,
-    mass_update_cursor: usize,
-    pending_translational_mass: f64,
-    pending_rotational_mass: f64,
+    pub(super) mass_update_cursor: usize,
+    pub(super) pending_translational_mass: f64,
+    pub(super) pending_rotational_mass: f64,
     pub(super) assembly_build: Option<AssemblyJobConstruction>,
     pub(super) assembly: Option<AssemblyJob<'static>>,
     pub(super) csr_build: Option<AssemblyCsrBuild>,
@@ -42,10 +42,10 @@ pub struct Fem3dNumericalChild {
     pub pcg: Option<PcgJob>,
     pub(super) modal_build: Option<SymmetricPencilConstruction>,
     pub(super) ldlt: Option<LdltJob>,
-    subspace: Option<SubspaceIterationJob>,
+    pub(super) subspace: Option<SubspaceIterationJob>,
     pub(super) modal_mass: Option<Csr>,
-    scalar_axis: usize,
-    scalar: Fem3dSolverScalar,
+    pub(super) scalar_axis: usize,
+    pub(super) scalar: Fem3dSolverScalar,
     pub(super) equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
     pub(super) full_equations: [[Option<usize>; 6]; MAXIMUM_FIELDS],
     pub(super) full_rhs: [f64; MAXIMUM_FIELDS * 6],
@@ -65,10 +65,10 @@ pub struct Fem3dNumericalChild {
     pub(super) load_element_cursor: usize,
     pub(super) load_node_indices: [usize; 2],
     pub(super) load_positions: [[f64; 3]; 2],
-    reaction_entry: usize,
+    pub(super) reaction_entry: usize,
     pub(super) reaction_accumulator: f64,
     pub(super) solid_cursor: usize,
-    hole_cursor: usize,
+    pub(super) hole_cursor: usize,
     pub(super) point_cursor: usize,
     pub(super) solid_domain: Option<MountedPlanarDomain>,
     pub(super) mesh: Option<MeshJob>,
@@ -76,21 +76,21 @@ pub struct Fem3dNumericalChild {
     pub(super) solid_tris: FixedSlots<[u32; 3], MAXIMUM_ELEMENTS>,
     pub(super) solid_node_ids: FixedSlots<String, MAXIMUM_FIELDS>,
     pub(super) solid_node_analysis_indices: FixedSlots<usize, MAXIMUM_FIELDS>,
-    volume_node_cursor: usize,
+    pub(super) volume_node_cursor: usize,
     pub(super) pending_node_id: Option<String>,
-    pending_node_index: usize,
-    pending_node_needs_analysis: bool,
-    tet_cursor: usize,
+    pub(super) pending_node_index: usize,
+    pub(super) pending_node_needs_analysis: bool,
+    pub(super) tet_cursor: usize,
     pub(super) tet_phase: usize,
     pub(super) pending_tet: Option<Elements>,
-    pending_tet_indices: [usize; 4],
-    pending_tet_mass: f64,
-    solid_material_cursor: usize,
-    resolved_solid_material: usize,
+    pub(super) pending_tet_indices: [usize; 4],
+    pub(super) pending_tet_mass: f64,
+    pub(super) solid_material_cursor: usize,
+    pub(super) resolved_solid_material: usize,
     pub(super) solid_materials: [usize; MAXIMUM_REGIONS],
-    close_lane: u8,
-    close_started_jobs: u8,
-    operation: Option<semio_framework_job::Operation>,
+    pub(super) close_lane: u8,
+    pub(super) close_started_jobs: u8,
+    pub(super) operation: Option<semio_framework_job::Operation>,
     pub(super) solver_page_cursor: usize,
     pub(super) solver_page_lane: bool,
     pub(super) modal_lumped_mass: [f64; MAXIMUM_FIELDS * 6],
@@ -252,7 +252,7 @@ impl Fem3dNumericalChild {
         Ok(())
     }
 
-    fn observe_child_end(&mut self, end: ChildEnd) -> Result<bool, Vec<u8>> {
+    pub(super) fn observe_child_end(&mut self, end: ChildEnd) -> Result<bool, Vec<u8>> {
         match end {
             ChildEnd::Cancelled => Err(b"fem3d.numerical-cancelled".to_vec()),
             ChildEnd::Fault => Err(b"fem3d.numerical-child-fault".to_vec()),
@@ -302,7 +302,7 @@ impl Fem3dNumericalChild {
                 self.node_cursor += 1;
                 self.stage = Fem3dNumericalStage::Nodes;
             }
-            Fem3dNumericalStage::ElementMaterial => self.model_element_material(doc),
+            Fem3dNumericalStage::ElementMaterial => return self.model_element_material(doc),
             Fem3dNumericalStage::ElementSection => {
                 let Some(element) = doc.elements.get(self.element_cursor) else { return Err(b"fem3d.numerical-element".to_vec()) };
                 let section_id = match element {
@@ -317,8 +317,8 @@ impl Fem3dNumericalChild {
                     self.section_cursor += 1;
                 }
             }
-            Fem3dNumericalStage::ElementStart | Fem3dNumericalStage::ElementEnd => self.model_element_start_or_element_end(doc),
-            Fem3dNumericalStage::ElementCommit => self.model_element_commit(doc),
+            Fem3dNumericalStage::ElementStart | Fem3dNumericalStage::ElementEnd => return self.model_element_start_or_element_end(doc),
+            Fem3dNumericalStage::ElementCommit => return self.model_element_commit(doc),
             Fem3dNumericalStage::ElementMass => {
                 let limit = if self.pending_rotational_mass > 0.0 { 12 } else { 6 };
                 if self.mass_update_cursor < limit {
@@ -340,7 +340,7 @@ impl Fem3dNumericalChild {
                 self.element_cursor += 1;
                 self.stage = Fem3dNumericalStage::ElementMaterial;
             }
-            Fem3dNumericalStage::SolidDomainOuterReserve => self.model_solid_domain_outer_reserve(doc),
+            Fem3dNumericalStage::SolidDomainOuterReserve => return self.model_solid_domain_outer_reserve(doc),
             Fem3dNumericalStage::SolidDomainOuterPoint => {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
                 if let Some(point) = solid.outline.get(self.point_cursor) {
@@ -357,7 +357,7 @@ impl Fem3dNumericalChild {
                     self.stage = Fem3dNumericalStage::SolidDomainHoleReserve;
                 }
             }
-            Fem3dNumericalStage::SolidDomainHoleReserve => self.model_solid_domain_hole_reserve(doc),
+            Fem3dNumericalStage::SolidDomainHoleReserve => return self.model_solid_domain_hole_reserve(doc),
             Fem3dNumericalStage::SolidDomainHolePoint => {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
                 let hole = solid.holes.get(self.hole_cursor).ok_or_else(|| b"fem3d.numerical-solid-hole".to_vec())?;
@@ -373,7 +373,7 @@ impl Fem3dNumericalChild {
             Fem3dNumericalStage::SolidMaterial => {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
                 let Some(material) = doc.materials.get(self.solid_material_cursor) else { return Err(b"fem3d.numerical-solid-material".to_vec()) };
-                if material.id == solid.material_id {
+                if material.id.as_str() == solid.material_id.as_str() {
                     self.resolved_solid_material = self.solid_material_cursor;
                     self.solid_material_cursor = 0;
                     self.point_cursor = 0;
@@ -382,8 +382,8 @@ impl Fem3dNumericalChild {
                     self.solid_material_cursor += 1;
                 }
             }
-            Fem3dNumericalStage::SolidOwnersReserve => self.model_solid_owners_reserve(doc),
-            Fem3dNumericalStage::SolidNodeLookup => self.model_solid_node_lookup(doc),
+            Fem3dNumericalStage::SolidOwnersReserve => return self.model_solid_owners_reserve(doc),
+            Fem3dNumericalStage::SolidNodeLookup => return self.model_solid_node_lookup(doc),
             Fem3dNumericalStage::SolidNodeCreate => {
                 let solid = doc.solids.get(self.solid_cursor).ok_or_else(|| b"fem3d.numerical-solid".to_vec())?;
                 let point = self.solid_point(doc, self.volume_node_cursor)?;
@@ -398,8 +398,8 @@ impl Fem3dNumericalChild {
                 self.pending_node_needs_analysis = true;
                 self.stage = Fem3dNumericalStage::SolidNodeId;
             }
-            Fem3dNumericalStage::SolidNodeId => self.model_solid_node_id(),
-            Fem3dNumericalStage::SolidTet => self.model_solid_tet(doc),
+            Fem3dNumericalStage::SolidNodeId => return self.model_solid_node_id(),
+            Fem3dNumericalStage::SolidTet => return self.model_solid_tet(doc),
             Fem3dNumericalStage::SolidTetMass => {
                 if self.mass_update_cursor < 12 {
                     let index = self.pending_tet_indices[self.mass_update_cursor / 3];
@@ -432,7 +432,7 @@ impl Fem3dNumericalChild {
                 }
                 self.stage = Fem3dNumericalStage::SolidCommit;
             }
-            Fem3dNumericalStage::SolidCommit => self.model_solid_commit(doc),
+            Fem3dNumericalStage::SolidCommit => return self.model_solid_commit(doc),
             Fem3dNumericalStage::SupportDofReserve => {
                 let Some(support) = doc.supports.get(self.support_cursor) else {
                     self.stage = Fem3dNumericalStage::PublishFieldCount;
@@ -478,13 +478,14 @@ impl Fem3dNumericalChild {
             FemElement::Bar { material_id, .. } | FemElement::Frame { material_id, .. } => material_id,
         };
         let Some(material) = doc.materials.get(self.material_cursor) else { return Err(b"fem3d.numerical-material".to_vec()) };
-        if &material.id == material_id {
+        if material.id.as_str() == material_id.as_str() {
             self.resolved_material = self.material_cursor;
             self.material_cursor = 0;
             self.stage = Fem3dNumericalStage::ElementSection;
         } else {
             self.material_cursor += 1;
         }
+        Ok(false)
     }
 
     /// 🔩️ Runs the `element start` or `element end` stage of `step_model`.
@@ -495,13 +496,14 @@ impl Fem3dNumericalChild {
         };
         let target = if self.stage == Fem3dNumericalStage::ElementStart { start } else { end };
         let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem3d.numerical-element-node".to_vec()) };
-        if &node.id == target {
+        if node.id.as_str() == target.as_str() {
             self.pending_element_nodes[usize::from(self.stage == Fem3dNumericalStage::ElementEnd)] = self.lookup_cursor;
             self.lookup_cursor = 0;
             self.stage = if self.stage == Fem3dNumericalStage::ElementStart { Fem3dNumericalStage::ElementEnd } else { Fem3dNumericalStage::ElementCommit };
         } else {
             self.lookup_cursor += 1;
         }
+        Ok(false)
     }
 
     /// ⚙️ Runs the `element commit` stage of `step_model`.
@@ -528,6 +530,7 @@ impl Fem3dNumericalChild {
         self.pending_element = Some(built);
         self.mass_update_cursor = 0;
         self.stage = Fem3dNumericalStage::ElementMass;
+        Ok(false)
     }
 
     /// 🧲️ Runs the `solid domain outer reserve` stage of `step_model`.
@@ -546,6 +549,7 @@ impl Fem3dNumericalChild {
             self.point_cursor = 0;
             self.stage = Fem3dNumericalStage::SolidDomainOuterPoint;
         }
+        Ok(false)
     }
 
     /// 🪛️ Runs the `solid domain hole reserve` stage of `step_model`.
@@ -565,6 +569,7 @@ impl Fem3dNumericalChild {
             self.point_cursor = 0;
             self.stage = Fem3dNumericalStage::SolidDomainHolePoint;
         }
+        Ok(false)
     }
 
     /// 🔧️ Runs the `solid owners reserve` stage of `step_model`.
@@ -593,6 +598,7 @@ impl Fem3dNumericalChild {
                 return Ok(false);
             }
         }
+        Ok(false)
     }
 
     /// 🔨️ Runs the `solid node lookup` stage of `step_model`.
@@ -619,6 +625,7 @@ impl Fem3dNumericalChild {
             self.lookup_cursor = 0;
             self.stage = Fem3dNumericalStage::SolidNodeCreate;
         }
+        Ok(false)
     }
 
     /// 🪚️ Runs the `solid node id` stage of `step_model`.
@@ -644,6 +651,7 @@ impl Fem3dNumericalChild {
                 self.stage = Fem3dNumericalStage::SolidNodeLookup;
             }
         }
+        Ok(false)
     }
 
     /// 🧰️ Runs the `solid tet` stage of `step_model`.
@@ -675,6 +683,7 @@ impl Fem3dNumericalChild {
             self.mass_update_cursor = 0;
             self.stage = Fem3dNumericalStage::SolidTetMass;
         }
+        Ok(false)
     }
 
     /// 🧪️ Runs the `solid commit` stage of `step_model`.
@@ -696,6 +705,7 @@ impl Fem3dNumericalChild {
         self.solid_materials[self.solid_cursor] = self.resolved_solid_material;
         self.solid_cursor += 1;
         self.stage = Fem3dNumericalStage::SolidDomainOuterReserve;
+        Ok(false)
     }
 
 }

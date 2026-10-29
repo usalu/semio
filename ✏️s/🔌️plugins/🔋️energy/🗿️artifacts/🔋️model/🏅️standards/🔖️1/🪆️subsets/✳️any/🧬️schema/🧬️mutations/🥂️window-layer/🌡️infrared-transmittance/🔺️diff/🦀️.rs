@@ -1,5 +1,5 @@
 //! 🔺️ Only the authored optical field reaches the existing atomic central applier.
-use crate::{diff::{EnergyModelDiff,GlazingMaterialPatch,ModelPatch},EnergyModelSnapshot};
+use crate::{diff::{ReferenceEnergyModelDiff as EnergyModelDiff,GlazingMaterialPatch,ModelPatch},EnergyModelSnapshot};
 use crate::diff_patch::Rows;
 /// 🧭️ Validates the source row and optical domain before producing a sparse field patch.
 pub fn diff(payload:&super::ChangeGlazingMaterialInfraredTransmittance,base:&EnergyModelSnapshot)->protocol::MutationOutcome<EnergyModelDiff>{

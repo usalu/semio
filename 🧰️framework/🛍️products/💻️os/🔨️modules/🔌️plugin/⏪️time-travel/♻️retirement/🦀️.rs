@@ -79,7 +79,7 @@ pub use crate::original_retirement::tests::assert_pending_command_original;
 pub use crate::original_retirement::tests::assert_discard_publication_original;
 #[cfg(test)]
 pub use crate::original_retirement::tests::native_original_actor_grant;
-impl<P,Mu> TimeTravelStoreState<P,Mu> where P: semio_framework_value::ToValue + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static,Mu: semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+OpBinary+OpText+Send+'static {
+impl<P,Mu> TimeTravelStoreState<P,Mu> where P: ::protocol::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,Mu: ::semio_framework_os_kernel::StoreMutationFor<P> {
  pub(crate) fn original_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(demand)=self.discard_effects_retirement_demands(body)?{return Ok(demand)}
   if let Some(owner)=self.preview_derived.as_ref().filter(|owner|owner.is_closing()){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::os_store::ArtifactDerivedOperation<P,Mu>>>(),depth:1,..Default::default()})}else{owner.next_demand(body)};}

@@ -39,7 +39,7 @@ use semio_framework_plugin_abi::ArtifactComposer;
 use semio_framework_plugin_abi::ArtifactComposition;
 use semio_framework_plugin_abi::ArtifactDecomposer;
 use semio_framework_plugin_decl_surface::ArtifactEditor;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use store::ArtifactStoreInitializationAuthority;
@@ -150,14 +150,14 @@ use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_supp
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         let id = 41;
-        let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
         apply_test_mutations(app.stores.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })]).await.expect("the actual parent declares the exact member before registration");
         let child = new_test_child("child-1").await.expect("construct child");
         app.register_child("slot", "child-1", test_child_dialect().await, child, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("register child");
-        app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("admit retained child gesture");
+        semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("admit retained child gesture");
 
         let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(semio_framework_plugin_reactor_lifecycle::life_app_cell::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
@@ -257,7 +257,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
             let admitted = active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("undo retained group");
-            let undone = semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("undo reserved-job commit");
+            let undone = semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted, cx).await.expect("undo reserved-job commit");
             artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("undo publication");
             let skipped: Vec<String> = undone.diagnostics.iter().map(|diagnostic| diagnostic.message.clone()).collect();
             assert!(skipped.is_empty(), "the group undo skips no member of its own gesture: {skipped:?}");
@@ -266,7 +266,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
             let admitted = active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("redo retained group");
-            semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("redo reserved-job commit");
+            semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut active.app, admitted, cx).await.expect("redo reserved-job commit");
             artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("redo publication");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child").member;
@@ -321,12 +321,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let id = 47u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         let outcome: Result<(), String> = async {
-            let admitted = app.dispatch_typed(TestCommand::PickItem { id: "item-1".into() }, &meta, &mut identity).await.map_err(|error| format!("admit the pick: {error:?}"))?;
+            let admitted = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::PickItem { id: "item-1".into() }, &meta, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.map_err(|error| format!("admit the pick: {error:?}"))?;
             if !admitted.requested_effects.is_empty() || !admitted.mutations.is_empty() {
                 return Err(format!("the admitting result of a typed command carries no effect and no mutation: {:?}", admitted.requested_effects));
             }

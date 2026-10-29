@@ -1,0 +1,17 @@
+# Native Follow Integration Handoff
+
+Gate16 ended with11 actual compiler errors in `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🖼️render/📥️staging/🛠️tool-machine/🦀️.rs`. The removed window_preview field is referenced by abandon_window_preview, follow_tool_machines, tool_overlay_retirement_step/pending/demand. settle_press uses cold ScrubLedger::send requiring Clone; PressLeaf and WindowConfigMutation deliberately lack that capability. No broad Clone/Cold bound is justified.
+
+follow_tool_machines is live from typing, history, actions and gesture settlement. settle_press is live from settle_tool_operation and command-routes/actions. The renderer actually consumes document/config overlay_or and window registry preview_or. Deleting these behaviors would lose real preview. abandon_window_preview alone has no bounded Plugin Rust caller.
+
+The genuine retained replacement exists at plugin/🛠️tool-machine/🔁️follow/🦀️.rs as OriginalToolMachineFollow<A>. It captures OriginalSourceBinding plus actual decoder ledger and retirement recipient in admit, then unchanged document/config generation/content and all three ledger original revisions. It owns OriginalToolOverlayFold, OriginalToolLedgerWalk of presses/gestures/typing, and OriginalWindowPreviewEpoch, with explicit original alias and rejected typing retirement. Whole Plugin Rust scan found only its definition/reexport, no actual caller yet.
+
+Its public API is admit(machines,document,config,cx,&mut Option<Box<Self>>), advance(document,config,&mut windows,&mut machines,cx), demands(document,config,windows,machines), close_demands(...), close_step(...cx), terminal_is_empty(), shell_close_demands(). Full signatures are at that owner; it validates the actual original caller and decoder across turns. Therefore do not synthesize a receiving context or start it under a different retirement caller.
+
+A coherent A-generic existing recipient is ToolOperations<A> in plugin/🧵️instance/👷️jobs/📥️staging/🧱️components/🦀️.rs. RenderCtx and RenderRef already borrow tools: ToolOperations<A>. ToolMachineRuntime itself is generic over four values, not ArtifactApp, so adding A-dependent follow owner there requires unnecessary structural redesign. ToolOperations birth quotes include size_of<Self>; constructor/terminal close must retain and drain an added original owner if this recipient is selected.
+
+Existing real maintenance route is plugin/🪜️maintenance-ladder/🦀️.rs MaintenanceUnit::ToolOverlay. It currently calls tool_overlay_retirement_step(grant), discarding the available cx; admission/demand/pending dispatch must include pending native follow and use the actual cx. Matching close ladder selects this unit through render_ref.tool_overlay_retirement_pending. Native follower physically closes under actual original context and returns shell release demand, so integrate terminal ownership there rather than plain dropping the box.
+
+ToolMachineRuntime has refold_owed bool and refold_request u64. Old follow_tool_machines should request/invalidate exact retained work rather than clone/apply cold or clear pending before native completion. The genuine follower compares this request plus source revisions. Current code only changes refold_request in the follower rejection branch; caller request path is missing.
+
+No source edit made by this handoff. Medium owns the distinct SDK integration packet after engine projection wrapper. Rust retains Layout media consumer/schema/laws and the single native compiler lane; gate16 is complete, no compiler queued now.

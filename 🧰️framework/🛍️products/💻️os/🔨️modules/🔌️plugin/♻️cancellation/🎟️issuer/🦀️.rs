@@ -146,7 +146,7 @@ impl ToolCancellationIssuer{
  #[doc(hidden)]
  pub fn cleanup_slot(&mut self,index:usize,cx:&mut StepContext<'_>,finished_only:bool)->Result<bool,OriginalTurnFailure>{
   if self.pending.is_some()||self.renew_swapped{return Ok(false)}if self.cleanup_index.is_some_and(|selected|selected!=index){return Ok(false)}
-  if !self.ready(){return Ok(true)}if cx.should_yield(){return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+  if !self.ready(){return Ok(true)}if if finished_only{cx.should_yield()}else{cx.retirement_should_yield()}{return Ok(false)}let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
   if let Some(parts)=self.pending_close.as_mut(){
    if !parts.terminal_is_empty(){let progress=parts.close_step(self.issued.as_ref().unwrap(),self.admission.source.as_ref().unwrap().cancellation()?,grant)?.progress();cx.consume_retained(progress)?;if progress.copied_items>0{cx.consume_fuel(1)}return Ok(false)}
    if grant.maximum_copy_bytes<size_of::<usize>(){return Ok(false)}self.pending_close.take();self.cleanup_index=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<usize>(),..Default::default()})?;cx.consume_fuel(1);return Ok(true)

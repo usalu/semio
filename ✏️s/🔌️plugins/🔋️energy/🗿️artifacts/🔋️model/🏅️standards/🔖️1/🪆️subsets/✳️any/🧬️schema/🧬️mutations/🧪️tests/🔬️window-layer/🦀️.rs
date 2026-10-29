@@ -7,6 +7,7 @@ extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_mut_window_layer as window_layer_mutations;
 extern crate semio_s_artifact_energy_model_mut_window_layer_optics as window_layer_optics_mutations;
+extern crate semio_s_artifact_energy_model_mut_window_layer_optics_visible as window_layer_optics_visible_mutations;
 
 #[path = "."]
 mod rename_gas_material {

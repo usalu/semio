@@ -23,7 +23,7 @@
     "oneShortRelease": "inert",
     "transfer": "samePointer",
     "physical": "originalPlusAdmittedScaffolds",
-    "logical": "utf8KeysAndOwnedStrings"
+    "logical": "utf8OrderedKeys"
   },
   "frontier": {
     "sourceBirthBytes": 0,

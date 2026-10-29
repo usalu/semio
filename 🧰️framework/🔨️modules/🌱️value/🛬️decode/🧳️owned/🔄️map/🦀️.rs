@@ -26,6 +26,14 @@ impl<I:'static+?Sized,T:NativeReceive<I>,U:NativeReceiveMap<T>> NativeReceiver<I
  fn terminal_is_empty(&self)->bool{self.inner.terminal_is_empty()}
 }
 
+/// 📦️ A boxed child adopts its completed typed owner into one heap cell without rebuilding the payload.
+impl<T:RetireOwned> NativeReceiveMap<T> for Box<T>{fn from_native(value:T)->Self{Box::new(value)}}
+impl<I:?Sized+'static,T:NativeReceive<I>> NativeReceive<I> for Box<T>{
+ type Receiver=NativeMappedReceiver<I,T,Self>;
+ fn receive_birth_demand()->RetirementDemand{Self::Receiver::birth().expect("boxed receiving has one fixed original child ancestor")}
+ fn begin_receive(grant:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError>{Self::Receiver::begin(grant)}
+}
+
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

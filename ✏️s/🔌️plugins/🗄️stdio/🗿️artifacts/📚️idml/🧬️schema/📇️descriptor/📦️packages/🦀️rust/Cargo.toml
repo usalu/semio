@@ -1,0 +1,16 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-artifact-stdio-idml-schema"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Canonical IDML schema facets and their public descriptor"
+
+[package.metadata.semio]
+role = "library"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-schema-registry = { path = "../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }

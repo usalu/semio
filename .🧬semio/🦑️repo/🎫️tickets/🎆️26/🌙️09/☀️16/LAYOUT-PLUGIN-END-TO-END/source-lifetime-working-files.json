@@ -1,0 +1,29 @@
+{
+  "files": [
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📥️staging/♻️reactor-lifecycle/🧯️cleanup-pumps/🦀️.rs",
+    "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🛬️decoder/🦀️.rs",
+    "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/🧭️source-drain.json",
+    "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/🧭️source-drain.schema.json",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🏃️runtime/📦️instances/🔁️cleanup-turns/🦀️.rs",
+    "🧰️framework/🔨️modules/🧵️job/🦀️.rs",
+    "🧰️framework/🔨️modules/🧵️job/⏱️context/📦️return/🪶️weak/🦀️.rs",
+    "🧰️framework/🔨️modules/🧵️job/👷️worker/🧰️mounted-and-batch-sessions/🦀️.rs",
+    "🧰️framework/🔨️modules/🧵️job/👷️worker/🧵️worker-job-session/🦀️.rs",
+    "🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/🦀️.rs",
+    "🧰️framework/🔨️modules/🧵️job/👷️worker/🛂️session-inner-and-admission/🦀️.rs",
+    "🧰️framework/🔨️modules/🧵️job/👷️worker/🚪️admission/🏗️preparation/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/🚪️session/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/🦀️.rs",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/⚛️reactor/🔄️turn/🪜️entry-lifecycle-and-retirement/🦀️.rs",
+    "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/⌛️source-expiry.json",
+    "🧰️framework/🔨️modules/🎭️actor/🎟️retained-turn/🎟️context/🧪️tests/🧫️fixtures/⌛️source-expiry.schema.json"
+  ],
+  "removed": [],
+  "reportsInputs": [
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/source-lifetime.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/source-lifetime-oracle.py",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/source-lifetime-working-files.json",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/native-follow-review.md",
+    ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️16/LAYOUT-PLUGIN-END-TO-END/source-lifetime-oracle.ts"
+  ]
+}

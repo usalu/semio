@@ -7,7 +7,7 @@ pub use original_response::OriginalResponseActionSource;
 pub use original_intent::OriginalIntentActionSource;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle;
+use semio_framework_plugin_decl_media::ArtifactMediaExportHandle;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin_job::{EmitWire, TypedOperationLeftover, TypedOperationResultToken};
@@ -19,7 +19,7 @@ use semio_framework_plugin_plugin_program::{PluginProgram, encode_wire_serialize
 use semio_framework_plugin_peer::PresenceRosterAdmission;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use crate::ops_wire_limits::{find_instance, runtime_instance_cell};
-use semio_framework_plugin_runtime_instances::inst_wire_frames::{instance_actor, push_app_fault, with_instances_mut, with_instances_original_mut, with_instances_turn_mut};
+use semio_framework_plugin_runtime_instances::inst_wire_frames::{push_app_fault, with_instances_mut, with_instances_original_mut, with_instances_turn_mut};
 use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 use semio_framework_ui_contract as ui_contract;
 impl PluginExchangeOutput{
@@ -68,7 +68,7 @@ pub fn advance_typed_operation_output_with_leftover<PA: PluginApp>(app: &mut PA,
     trace_typed_operation_slot_occupancy(app, instance);
     output.collect_original_receipts(app);let after=cx.retained_progress();let subtract=|after:usize,before:usize|after.checked_sub(before).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original publication recipient moved backwards"));let posted=RetainedCloneProgress{copied_items:subtract(after.copied_items,before.copied_items)?,copied_bytes:subtract(after.copied_bytes,before.copied_bytes)?,retained_capacity_bytes:subtract(after.retained_capacity_bytes,before.retained_capacity_bytes)?,released_bytes:subtract(after.released_bytes,before.released_bytes)?};if posted!=RetainedCloneProgress::default(){output.original_receiving=Some(OriginalPublicationReceiving{family:output.original_receipt_family(),before,posted,grant:original,recipient});}
     if output.ownership_receipt_pending(){return Ok((output,None));}
-    match app.take_reserved_commit_outcome() {
+    match app.take_reserved_commit_outcome().or_else(|| app.take_task_resume_outcome()) {
         Some(Ok(result)) => {
             output.frames.push(::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(&protocol::AppFrame::Invocation {
                 in_reply_to: 0,
@@ -300,12 +300,14 @@ pub enum TaskResumeInput {
     Emit { artifact_ops: Vec<u8>, config_ops: Vec<u8>, draft_ops: Vec<u8> },
 }
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): resumes ONE `AsyncTask`
-/// follow-up against `instance_id`'s live `dyn PluginApp` — `Command` re-enters through
-/// `PluginApp::resume_task_command` (the SAME APPLYING typed-command path a fresh command uses,
-/// against CURRENT state — Elm's Msg-from-Cmd), `Emit` through `PluginApp::resume_task_emit`
-/// (decode + `dispatch_emit` directly, no re-entry into `handle`). Frames the result EXACTLY
-/// like `AppCommand::PureCommand` does (`AppFrame::Emit`, carrying the SAME
-/// `take_last_emit_wire()` triple `dispatch_emit` always captures) rather than
+/// follow-up against `instance_id`'s live `dyn PluginApp` — `Command` is QUEUED through
+/// `PluginApp::queue_task_resume_command`: the instance delivers it through the SAME APPLYING
+/// typed-command path a fresh command uses, against CURRENT state (Elm's Msg-from-Cmd), one funded
+/// unit per publication turn, so this call answers no frames of its own and its receipt follows
+/// through `PluginApp::take_task_resume_outcome` on the continuation path. `Emit` goes through
+/// `PluginApp::resume_task_emit` (decode + `dispatch_emit` directly, no re-entry into `handle`)
+/// and frames the result EXACTLY like `AppCommand::PureCommand` does (`AppFrame::Emit`, carrying the
+/// SAME `take_last_emit_wire()` triple `dispatch_emit` always captures) rather than
 /// `AppFrame::Invocation` — a task follow-up is a guest-applied store-authority mutation, not a
 /// live client's reply; `in_reply_to: 0` marks it unsolicited (no seq is awaiting it). An
 /// app-level `Err` becomes an `Error` frame, exactly like every other dispatch path in this
@@ -323,20 +325,21 @@ pub async fn plugin_resume_task<PA: PluginApp>(runtime: &PluginRuntime<PA>, inst
         TaskResumeInput::Command(bytes) => {
             with_instances_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
-                ::semio_framework_async::poll::resolve_ready(instance.app.resume_task_command(bytes, meta, identity, cx))
+                instance.app.queue_task_resume_command(bytes, meta).map(|()| None)
             })
             .await
         }
         TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops } => {
             with_instances_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
-                ::semio_framework_async::poll::resolve_ready(instance.app.resume_task_emit(artifact_ops, config_ops, draft_ops, meta, identity, cx))
+                ::semio_framework_async::poll::resolve_ready(instance.app.resume_task_emit(artifact_ops, config_ops, draft_ops, meta, identity, cx)).map(Some)
             })
             .await
         }
     };
     match dispatched {
-        Ok(result) => {
+        Ok(None) => {}
+        Ok(Some(result)) => {
             let emit_wire = with_instances_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
                 Ok(::semio_framework_async::poll::resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())
@@ -461,76 +464,9 @@ pub async fn plugin_complete_reserved_spawned_job<PA: PluginApp>(runtime: &Plugi
         Err(fault) => Err(fault.into()),
     }
 }
-/// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches every `intents` entry for
-/// `instance_id` against the app's live `dyn PluginApp` via `PluginApp::handle_intent_frame` —
-/// the ONLY dispatch path this takes, which resolves a typed `Command` through
-/// `ArtifactApp::command_from_intent` and routes it through the SAME internal
-/// `dispatch_typed_command_inner` every other command path uses (kind discipline, command log,
-/// undo grouping, `AsyncTask` spawning all apply automatically). `intents` is ALREADY
-/// revision-guarded by the caller (`⚛️reactor::poll`'s `PatchTracker::revision` +
-/// `ui_runtime::is_stale_intent`, at the reactor because it owns the reconciler that owns the
-/// revision) — this function never re-checks staleness, matching `plugin_exchange`'s own division
-/// of labor (host-level routing vs. app-level dispatch).
-///
-/// Frames the result EXACTLY like `plugin_resume_task` (`AppFrame::Emit`/`Error`, `in_reply_to:
-/// 0`): an intent is guest-applied, not a live client's `Command`-frame reply awaiting a specific
-/// `seq` — the reply IS the next `UiPatch` revision bump the caller's own `dirty_render` pass
-/// produces this same turn, already acknowledged by the existing `PatchAck` event; `intent.seq`
-/// is the dedupe/log key a caller may record, not an `in_reply_to`. A per-intent `Fault` (e.g. an
-/// `ActionId.version` mismatch, or a `View`/`🐚️Shell`-kind action returning operations) rides
-/// `AppFrame::Error` — never silently dropped, never a hard stop for the remaining intents in the
-/// same batch.
-pub async fn plugin_dispatch_intents<PA: PluginApp, const N: usize>(runtime: &PluginRuntime<PA>, instance_id: u32, intents: &ui_contract::UiFixedList<ui_contract::UiIntent, N>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<PluginExchangeOutput>,semio_framework_job::OriginalTurnFailure> {
-    let mut frames: Vec<protocol::AppFrame> = Vec::new();
-    let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
-    let mut event_bytes: Vec<Vec<u8>> = Vec::new();
-    let actor: semio_framework_value::SharedUtf8 = instance_actor(runtime, instance_id).await?.into();
-    for intent in intents {
-        let dispatched = with_instances_turn_mut(runtime, |list| {
-            let mut instance = find_instance(list, instance_id)?;
-            let context = instance.surface_contexts.get(intent.surface.as_ref()).ok_or_else(|| plugin_internal_fault("intent surface has no host context"))?;
-            let meta = ActionMeta { actor: actor.clone(), instance_id, view_state: Some(context.view_state) };
-            ::semio_framework_async::poll::resolve_ready(instance.app.handle_intent_frame(intent, &meta, identity, cx))
-        })
-        .await;
-        match dispatched {
-            Ok(None)=>return Ok(None),
-            Ok(Some(result)) => {
-                let emit_wire = with_instances_mut(runtime, |list| {
-                    let mut instance = find_instance(list, instance_id)?;
-                    Ok(::semio_framework_async::poll::resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())
-                })
-                .await
-                .unwrap_or_default();
-                let EmitWire { document: document_ops, config: config_ops, draft: draft_ops, children: child_ops } = emit_wire;
-                frames.push(protocol::AppFrame::Emit { in_reply_to: 0, document_ops, config_ops, draft_ops, output: encode_wire_serialized(&result.output), diagnostics: encode_wire_serialized(&result.diagnostics), child_ops });
-                push_invocation_side_frames(&mut effect_bytes, &mut event_bytes, &result).await;
-            }
-            Err(failure) => return Err(failure),
-        }
-    }
-    let mut frame_bytes = Vec::with_capacity(frames.len());
-    for frame in frames.iter() {
-        frame_bytes.push(protocol::encode_app_frame(frame).await);
-    }
-    Ok(Some(PluginExchangeOutput {
-        original_receiving: None,
-        constructor_receipt: None,
-        preparation_receipt: None,
-        retirement_receipt: None,
-        history_command_receipt: None,
-        tool_run_receipt: None,
-        frames: frame_bytes,
-        effects: effect_bytes,
-        events: event_bytes,
-        retry_command: None,
-        command_terminal_fault: None,
-        presence_pending: None,
-        presence_terminal: None,
-        presence_terminal_fault: None,
-        typed_operation_pages: 0,
-    }))
-
+/// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): dispatches ONE actual `UiIntent` of `instance_id` against the app's live `dyn PluginApp` via `PluginApp::handle_intent_frame` -- the only intent dispatch path, which resolves a typed `Command` through `ArtifactApp::command_from_intent` and routes it through the SAME internal `dispatch_typed_command_inner` every other command path uses (kind discipline, command log, undo grouping, `AsyncTask` spawning all apply automatically).
+/// The retained `OriginalIntentActionSource` owns the intent arguments, fault and selected-surface metadata, so a turn that yields resumes the same dispatch on the next poll; the caller revision-guards the intent (`⚛️reactor::poll`'s `PatchTracker::revision` + `ui_runtime::is_stale_intent`) and this function never re-checks staleness.
+/// Frames the result like `plugin_resume_task` (`AppFrame::Emit`, `in_reply_to: 0`): an intent is guest-applied, so the reply is the next `UiPatch` revision bump the caller's own `dirty_render` pass produces this same turn.
 pub async fn plugin_dispatch_intent<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,intent:&mut ui_contract::UiIntent,source:&mut OriginalIntentActionSource,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<PluginExchangeOutput>,semio_framework_job::OriginalTurnFailure>{
     if !source.advance(runtime,intent,cx).await?{return Ok(None)}
     let dispatched=with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;let(args,fault,meta)=source.command_inputs()?;::semio_framework_async::poll::resolve_ready(instance.app.handle_intent_frame(intent,args,fault,meta,identity,cx))}).await?;

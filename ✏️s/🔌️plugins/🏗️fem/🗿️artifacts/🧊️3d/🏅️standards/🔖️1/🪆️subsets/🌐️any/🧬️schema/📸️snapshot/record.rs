@@ -67,7 +67,7 @@ impl Fem3dSnapshot {
                 }
                 r.insert(0, FieldValue::List(nodes.take()))?;
                 let elements = semio_framework_dsl_record::native_encoding::project_statements(&self.elements, control)?;
-                control.charge(std::mem::size_of::<FieldValue>())?;
+                control.charge(size_of::<FieldValue>())?;
                 r.insert(1, FieldValue::Block(Box::new(elements)))?;
                 let mut materials = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(control.allocate_vec(self.materials.len())?, |v: Vec<FieldValue>| {
                     for f in v {
@@ -85,15 +85,16 @@ impl Fem3dSnapshot {
                 r.insert(6, DslField::to_value_controlled(&self.load_cases, control)?)?;
                 r.insert(7, DslField::to_value_controlled(&self.combinations, control)?)?;
                 let analysis = DslField::to_value_controlled(&self.analysis, control)?;
-                control.charge(std::mem::size_of::<FieldValue>())?;
+                control.charge(size_of::<FieldValue>())?;
                 r.insert(8, FieldValue::Block(Box::new(analysis)))?;
                 Ok(r.take())
             })
         })
     }
-    /// 🚫️ A stateless record binder cannot issue persistent sealed ownership.
-    pub fn __dsl_from_record(_: &RecordValue) -> Result<Self, semio_framework_diagnostic::TextError> {
-        Err(semio_framework_diagnostic::TextError::from_value_error(unavailable(), semio_framework_diagnostic::TextSpan::default()))
+    /// ❄️ A stateless record binder binds the explicit authoring value, then receives it into persistent ownership through the unbounded reference wallet.
+    pub fn __dsl_from_record(record: &RecordValue) -> Result<Self, semio_framework_diagnostic::TextError> {
+        let value = Fem3dSnapshotValue::__dsl_from_record(record)?;
+        Self::from_reference(value).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::default()))
     }
     /// 🚫️ Cumulative allocation alone cannot replace the required original five-axis receiving wallet.
     pub fn __dsl_from_record_controlled(_: &RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<Self, ValueError> {

@@ -27,7 +27,7 @@ async fn drawing_viewer_camera_ownership_and_restore() {
             let decoded = <DrawingViewCommand as protocol::OpBinary>::decode_op(&bytes).map_err(|error| format!("{error:?}"))?;
             if decoded != command { return Err("viewer camera command binary roundtrip changed payload".into()); }
             let meta = ActionMeta { instance_id: 91,view_state: Some(context),..artifact_app_laws::meta("drawing-viewer-camera") };
-            app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             let receipt = artifact_app_laws::settle_registered_typed_operation(&mut *app, 91, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
             if receipt.lanes != vec![semio_framework_plugin::app::TypedOperationResultLane::WindowConfig,semio_framework_plugin::app::TypedOperationResultLane::Ui,semio_framework_plugin::app::TypedOperationResultLane::Terminal] { return Err(format!("viewer camera published unexpected lanes: {:?}",receipt.lanes)); }
         }

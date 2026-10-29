@@ -63,8 +63,8 @@ impl ArtifactViewer for Vdi3805Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
-    fn reference_birth()->Option<fn()->Vdi3805Snapshot>{Some(||{
-        Vdi3805Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<Vdi3805Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Vdi3805Snapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Vdi3805ViewCommand::Noop` variant never carries a config

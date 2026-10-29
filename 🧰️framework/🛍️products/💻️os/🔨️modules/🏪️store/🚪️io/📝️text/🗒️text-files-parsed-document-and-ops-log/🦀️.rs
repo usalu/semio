@@ -363,7 +363,15 @@ where
     P: ArtifactDsl,
     Mutation: OpText,
 {
-    let dsl = envelope.vcs.genesis.facts().snapshot().print_dsl();
+    print_document_text_with(envelope, P::print_dsl).await
+}
+
+/// 📤️ [`print_document_text`] for an owner whose DSL printer is its declared reference codec rather than a trait bound.
+pub async fn print_document_text_with<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mutation>, print_dsl: fn(&P) -> String) -> Result<ArtifactTextFiles, VcsError>
+where
+    Mutation: OpText,
+{
+    let dsl = print_dsl(envelope.vcs.genesis.facts().snapshot());
     let ops = print_ops_log(envelope).await?;
     Ok(ArtifactTextFiles { dsl, ops })
 }

@@ -177,7 +177,7 @@ use semio_framework_plugin::HierarchyProvider;
 
     /// 🎛️ Dispatches one typed command and settles its publication.
     pub async fn dispatch(app: &mut OwnedWiresApp, command: WiresCommand) -> InvocationResult {
-        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -188,7 +188,7 @@ use semio_framework_plugin::HierarchyProvider;
     /// settle finds `has_pending_typed_operations() == false` and answers an EMPTY receipt — no lanes,
     /// no effects — which reads exactly like a command that emitted nothing.
     pub async fn dispatch_receipt(app: &mut OwnedWiresApp, command: WiresCommand) -> (InvocationResult, semio_framework_plugin::artifact_app_laws::TypedOperationFixtureReceipt) {
-        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let receipt = settle(app).await;
         (result, receipt)
     }
@@ -392,7 +392,7 @@ async fn a_redelivered_member_lane_is_idempotent() {
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://wires-idempotent", "mem://wires-idempotent").await;
     sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
-    sender.0.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("apply command");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut sender.0, &WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("apply command");
     settle_registered_typed_operation(&mut sender.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), sender.1.cx()).await.expect("the edit publishes");
     let received = far.receive().await.expect("receive");
     assert!(!received.iter().any(|message| matches!(message, BackboneMessage::Mutations { .. })), "a board edit never travels as a parent batch");
@@ -441,9 +441,9 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
     let receiver = meta("local").instance_id;
-    instance_a.0.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a adds node");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_a.0, &WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("actor-a"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a adds node");
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_a.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a's edit publishes");
-    instance_b.0.dispatch_typed(WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-2".into() }), &meta("actor-b"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b relates node-1 to node-2");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance_b.0, &WiresCommand::AddRelationship(add_relationship::AddRelationship { kind: "owns".into(), source_id: "node-1".into(), target_id: "node-2".into() }), &meta("actor-b"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b relates node-1 to node-2");
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut instance_b.0, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_b.1.cx()).await.expect("b's edit publishes");
 
     instance_a.0.tick_backbone(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance_a.1.cx()).await.expect("a folds b's events");

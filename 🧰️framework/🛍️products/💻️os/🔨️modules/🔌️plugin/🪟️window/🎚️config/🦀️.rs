@@ -27,10 +27,8 @@ pub use apply_edit::{WindowConfigApplyCursor,WindowConfigApplyEdit,WindowConfigA
 #[path = "📥️retained/🦀️.rs"]
 pub mod retained;
 pub use retained::WindowConfigCommandLoad;
-#[path = "🗂️registry/🦀️.rs"]
-pub mod registry;
-#[path = "📬️mutation/🦀️.rs"]
-pub mod window_mutation;
+use semio_framework_plugin_window_config_registry as registry;
+use semio_framework_plugin_window_config_mutation as window_mutation;
 use registry::WindowRegistry;
 pub use retained::{WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep};
 

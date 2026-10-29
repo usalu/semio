@@ -29,7 +29,7 @@ impl<P> ArtifactDerivedSnapshot<P> {
 
 /// ⏪️ Store-owned history replay whose input edits and projection origin cannot be supplied by the caller.
 pub struct ArtifactDerivedReplay<P, Mu: Mutation<P>> {
-        pub history_source:Option<semio_framework_os_store_replay::replay_preparation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
+        pub history_source:Option<semio_framework_os_store_replay_operation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
     pub replacement_wire:semio_framework_os_store_operation_wire::OriginalOperationWireComparison<Mu>,
     pub replacement_foreign:bool,
     pub original_history_issuance:u64,
@@ -55,7 +55,7 @@ pub replay: Option<EditReplay<P, Mu>>,
     pub revision: [u8; 32],
 }
 
-impl<P: Clone, Mu: Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
+impl<P, Mu: Mutation<P> + OpBinary> ArtifactDerivedReplay<P, Mu> {
         /// 🧾️ Exposes the original caller-granted replay work to the mounted history controller.
     pub fn take_preparation_receipt(&mut self)->RetainedCloneProgress{std::mem::take(&mut self.preparation_receipt)}
 /// 📈️ Reports genuine cumulative work inside the currently sealed operation producer.
@@ -105,8 +105,8 @@ impl ArtifactCheckpointSelection{
 
 /// 🕰️ A generation-fenced cursor resolving a preview's inputs and folding its prefix under the caller's deadline.
 pub struct ArtifactDerivedHistoryPreview<P, Mu: Mutation<P>> {
-        pub derived_operation:Option<semio_framework_os_store_replay::replay_preparation::ArtifactDerivedOperation<P,Mu>>,
-    pub history_source:Option<semio_framework_os_store_replay::replay_preparation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
+        pub derived_operation:Option<semio_framework_os_store_replay_operation::ArtifactDerivedOperation<P,Mu>>,
+    pub history_source:Option<semio_framework_os_store_replay_operation::native::history::OriginalHistorySource<semio_framework_os_spr::Edit<Mu>>>,
     pub checkpoint:Option<ArtifactCheckpointSelection>,
     pub history_input:Option<semio_framework_value::retained_clone::RetainedOwnedProjection<Mu>>,
     pub history_issuer:Option<Arc<dyn ArtifactOwnedValueRetirementFactory<semio_framework_os_spr::Edit<Mu>>>>,

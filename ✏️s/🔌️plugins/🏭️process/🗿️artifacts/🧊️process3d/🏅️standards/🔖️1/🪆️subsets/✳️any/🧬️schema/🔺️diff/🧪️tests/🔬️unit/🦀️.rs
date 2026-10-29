@@ -1,6 +1,6 @@
 use super::*;
 use semio_s_artifact_process_process3d_model::snapshot::WorkshopMachine;
-use protocol::MutationDiff as _;
+use protocol::{ColdMutationDiff as _, MutationDiff as _};
 
 #[semio_framework_async_macros::async_test]
 async fn absorbing_coalesces_same_key_entries_and_later_scalars_win() {
@@ -36,6 +36,6 @@ async fn positional_machine_delta_moves_and_inverts_row_by_row() {
     let relocate = diff(Process3dMachinesDelta::relocation(&base.workshop.machines, 3, 1));
     let moved = protocol::apply_diff_cold(&relocate, &base).expect("valid relocation");
     assert_eq!(moved.workshop.machines.iter().map(|row| row.id.as_str()).collect::<Vec<_>>(), ["a", "d", "b", "c"]);
-    let inverse = protocol::DiffAlgebra::inverse(&relocate, &base);
+    let inverse = protocol::ColdDiffAlgebra::inverse(&relocate, &base);
     assert_eq!(protocol::apply_diff_cold(&inverse, &moved).expect("valid inverse"), base);
 }

@@ -60,8 +60,8 @@ impl ArtifactViewer for MdViewer {
     const DIALECT: Dialect = MD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_MD_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        MdSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(MdSnapshot::default())
     })}
 
     fn handle(

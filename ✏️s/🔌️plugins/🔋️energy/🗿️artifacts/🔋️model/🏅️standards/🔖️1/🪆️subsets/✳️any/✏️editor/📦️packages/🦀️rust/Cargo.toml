@@ -45,15 +45,20 @@ semio-s-artifact-energy-model-examples = { workspace = true }
 semio-s-artifact-energy-model-mut-boundary = { workspace = true }
 semio-s-artifact-energy-model-mut-construction = { workspace = true }
 semio-s-artifact-energy-model-mut-fenestration = { workspace = true }
+semio-s-artifact-energy-model-mut-fenestration-geometry = { workspace = true }
 semio-s-artifact-energy-model-mut-finish = { workspace = true }
 semio-s-artifact-energy-model-mut-glazing = { workspace = true }
 semio-s-artifact-energy-model-mut-material = { workspace = true }
 semio-s-artifact-energy-model-mut-model = { workspace = true }
+semio-s-artifact-energy-model-mut-model-simulation = { workspace = true }
 semio-s-artifact-energy-model-mut-run = { workspace = true }
 semio-s-artifact-energy-model-mut-ideal-loads = { workspace = true }
+semio-s-artifact-energy-model-mut-ideal-loads-limits = { workspace = true }
 semio-s-artifact-energy-model-mut-space = { workspace = true }
 semio-s-artifact-energy-model-mut-people-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-people-gain-fractions = { workspace = true }
 semio-s-artifact-energy-model-mut-lighting-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-lighting-gain-emission = { workspace = true }
 semio-s-artifact-energy-model-mut-equipment-gain = { workspace = true }
 semio-s-artifact-energy-model-mut-infiltration = { workspace = true }
 semio-s-artifact-energy-model-mut-leakage = { workspace = true }
@@ -61,10 +66,13 @@ semio-s-plugin-energy-engine-air-exchange = { workspace = true }
 semio-s-artifact-energy-model-mut-shading = { workspace = true }
 semio-s-artifact-energy-model-mut-shading-device = { workspace = true }
 semio-s-artifact-energy-model-mut-site = { workspace = true }
+semio-s-artifact-energy-model-mut-site-ground = { workspace = true }
 semio-s-artifact-energy-model-mut-surface = { workspace = true }
+semio-s-artifact-energy-model-mut-surface-properties = { workspace = true }
 semio-s-artifact-energy-model-mut-thermostat = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer = { workspace = true }
 semio-s-artifact-energy-model-mut-window-layer-optics = { workspace = true }
+semio-s-artifact-energy-model-mut-window-layer-optics-visible = { workspace = true }
 semio-s-artifact-energy-model-mut-zone = { workspace = true }
 semio-s-artifact-energy-model-mutations = { workspace = true }
 semio-s-artifact-energy-model-session = { workspace = true }
@@ -75,6 +83,7 @@ semio-s-plugin-energy-engine-model = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
 semio-framework-async = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-plugin-retained-command = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-initialization = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-s-artifact-energy-model-import = { workspace = true }

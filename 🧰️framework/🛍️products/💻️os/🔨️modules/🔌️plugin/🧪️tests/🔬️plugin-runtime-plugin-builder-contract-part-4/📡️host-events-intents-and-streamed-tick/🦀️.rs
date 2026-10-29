@@ -68,7 +68,7 @@
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`) acceptance: an Activate intent on a test app
     /// produces the mutation's document change AND a command-log entry within the SAME
     /// `handle_intent_frame` call — the reactor's own `poll` never needs a second turn to see it,
-    /// since `plugin_dispatch_intents` (which calls this) runs before the SAME turn's
+    /// since `plugin_dispatch_intent` (which calls this) runs before the SAME turn's
     /// `dirty_render` pass.
     #[semio_framework_async_macros::async_test]
     async fn activate_intent_dispatches_through_the_typed_command_path_same_turn() {
@@ -175,7 +175,7 @@
         assert_eq!(result.inverse_group.inverse_mutations.len(), 1);
         assert_eq!(app.stores.test_snapshot().await.label, "abc");
         app.dispatch_typed(TestCommand::StreamLabel { value: "abcd".into(), commit: true }, &meta(), &mut identity,cx).await.expect("streamLabel commit");
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "");
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");

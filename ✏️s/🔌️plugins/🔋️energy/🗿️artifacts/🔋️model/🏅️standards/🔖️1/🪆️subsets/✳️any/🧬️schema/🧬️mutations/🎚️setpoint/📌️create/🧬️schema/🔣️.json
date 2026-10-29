@@ -340,7 +340,7 @@
     "semantics": {
       "verb": "create",
       "entity": "setpoint-manager",
-      "kind": "create",
+      "kind": "create-setpoint-manager",
       "record": "CreatedSetpointManager"
     },
     "diagnostics": {

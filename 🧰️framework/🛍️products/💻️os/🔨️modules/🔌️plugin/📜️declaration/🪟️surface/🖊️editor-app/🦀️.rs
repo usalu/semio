@@ -193,20 +193,18 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
         }
         if example_id.is_empty() {
             let codec=<E::Snapshot as store::os_store::serialization::ArtifactStoreSnapshot>::reference_snapshot_codec()?;
-            let initial=E::reference_birth()?;return Some(Ok((codec.print_dsl?)(&initial())));
+            let birth=E::reference_birth()?;let print=codec.print_dsl?;return Some(birth().map(|initial|print(&initial)));
         }
         Some(match examples.into_iter().find(|source| source.id() == example_id) {
             Some(source) => Ok(source.document()),
             None => Err(Fault::new(FaultOrigin::App, FaultCode::new("app.example.unknown"), format!("no registered example '{example_id}'"))),
         })
     }
-    fn reference_birth()->Option<fn()->Self::Snapshot>{E::reference_birth()}
+    fn reference_birth()->Option<semio_framework_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>>{E::reference_birth()}
     async fn initial_config() -> Self::Config {
         E::initial_config()
     }
-    fn host_configuration_mutation(action: &str, args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        E::host_configuration_mutation(action, args)
-    }
+    fn original_host_configuration(action:&str)->Option<&'static semio_framework_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{E::original_host_configuration(action)}
     fn typing_fold(net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
         E::typing_fold(net, next)
     }
@@ -239,7 +237,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     async fn command_id(command: &Self::Command) -> &'static str {
         E::command_id(command)
     }
-    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{E::original_action_command_producer()}
+    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{E::original_action_command_producer().or_else(semio_framework_plugin_decl_app::tool_contract::declared_action_command_bridge::<Self>)}
     async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         E::command_from_action(action, args, original_fault)
     }

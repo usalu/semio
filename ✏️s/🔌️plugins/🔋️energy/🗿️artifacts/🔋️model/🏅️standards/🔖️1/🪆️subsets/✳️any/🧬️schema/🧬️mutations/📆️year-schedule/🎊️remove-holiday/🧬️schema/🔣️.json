@@ -112,7 +112,7 @@
     "semantics": {
       "verb": "remove",
       "entity": "annual-schedule",
-      "kind": "schedule",
+      "kind": "remove-annual-schedule-holiday",
       "record": "RemoveAnnualScheduleHoliday"
     },
     "diagnostics": {

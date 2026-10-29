@@ -7,6 +7,7 @@ import {createHash,randomBytes} from "node:crypto";
 import {UNIT_CACHE_POLICY_V1} from "../🔏️key/🟦️.ts";
 import {jobserverProbeShellV1,shellQuoteV1} from "../🎰️jobserver/🟦️.ts";
 import {collectGarbageSingleFlightV1,gcOutOfSpaceV1,gcPressureV1,measureVolumeV1,type GcPressureV1} from "../🧹️gc/🟦️.ts";
+import {releaseBallastV1} from "../🧹️gc/🛟️ballast/🟦️.ts";
 import schema from "../🧬️schema/🔣️.json" with {type:"json"};
 
 const policy=UNIT_CACHE_POLICY_V1;
@@ -113,8 +114,8 @@ export const UNIT_CACHE_OUT_OF_SPACE_RETRIES_V1=policy.gc.outOfSpaceRetries;
 const GIB=1024**3,collectorEnvironmentKeys=Object.freeze(["PATH","HOME","USERPROFILE","TMPDIR","TEMP","TMP","SystemRoot","ComSpec","LANG","LC_ALL","LC_MESSAGES","SEMIO_LANGUAGE"]);
 const gib=(bytes:number):string=>(bytes/GIB).toFixed(1);
 
-/** 🚀️ Starts the background collector: detached, one priority step below its caller, its output in `gc.log` of the cache root; a start that fails is returned, never thrown. The throttle stamp is written first, so a storm of writers starts one process, not many. */
-export function startUnitCacheCollectorV1(options:Readonly<{root:string;capacityBytes:number;environment:Readonly<Record<string,string|undefined>>;runtime?:string;script?:string;watch?:boolean}>):Readonly<{state:"started"}|{state:"failed";reason:string}>{
+/** 🚀️ Starts the background collector: detached, one priority step below its caller, its output in `gc.log` of the cache root; a start that fails is returned, never thrown (on a full image the ballast is given back and the start is tried once more, so the collector that has to free space can still write its stamp and log). The throttle stamp is written first, so a storm of writers starts one process, not many. */
+export function startUnitCacheCollectorV1(options:Readonly<{root:string;capacityBytes:number;environment:Readonly<Record<string,string|undefined>>;runtime?:string;script?:string;watch?:boolean}>,fullImage:boolean=false):Readonly<{state:"started"}|{state:"failed";reason:string}>{
  try{
   const stamp=join(options.root,"gc.stamp"),log=join(options.root,"gc.log"),env:Record<string,string>={SEMIO_CACHE_BACKGROUND:"1"};
   for(const key of collectorEnvironmentKeys){const value=options.environment[key];if(value!==undefined)env[key]=value;}
@@ -126,7 +127,7 @@ export function startUnitCacheCollectorV1(options:Readonly<{root:string;capacity
    if(child.pid!==undefined)try{setPriority(child.pid,10);}catch(error){appendFileSync(log,"priority not lowered: "+String((error as Error).message)+"\n");}
   }finally{closeSync(fd);}
   return{state:"started"};
- }catch(error){return{state:"failed",reason:String((error as Error).message)};}
+ }catch(error){if(!fullImage&&(error as NodeJS.ErrnoException).code==="ENOSPC"&&releaseBallastV1(options.root))return startUnitCacheCollectorV1(options,true);return{state:"failed",reason:String((error as Error).message)};}
 }
 
 /** 🌊️ Looks at the image once and does what its pressure asks: nothing, the quiet periodic maintenance, the background collector, or (below what one compile must find free) a collection right here before the compile starts. Never throws: a cache that cannot be relieved only costs the next compile its headroom check. */

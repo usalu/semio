@@ -1,4 +1,5 @@
-use super::*;
+use semio_s_artifact_stdio_idml::io::admission::change::retained_part::RetainedIdmlPartPatch;
+use semio_framework_value::{RetirementDemand,retained_clone::RetainedCloneGrant};
 use semio_framework_value::{retirement::RetireOwned,retained_clone::RetainedCloneSource};
 fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 fn underfunded(d:RetirementDemand)->Vec<RetainedCloneGrant>{let g=grant(d);let mut rows=vec![RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_depth:0,..g}];if d.copy_bytes!=0{rows.push(RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..g});}if d.capacity_bytes!=0{rows.push(RetainedCloneGrant{maximum_capacity_bytes:d.capacity_bytes-1,..g});}if d.release_bytes!=0{rows.push(RetainedCloneGrant{maximum_release_bytes:d.release_bytes-1,..g});}rows}

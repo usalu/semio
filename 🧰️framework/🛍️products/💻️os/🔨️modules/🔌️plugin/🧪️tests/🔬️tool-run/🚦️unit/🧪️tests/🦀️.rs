@@ -4,7 +4,7 @@ use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPurpose;
 use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
 use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
 use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStoreInitializationAuthority, Mutation, MutationDiff};

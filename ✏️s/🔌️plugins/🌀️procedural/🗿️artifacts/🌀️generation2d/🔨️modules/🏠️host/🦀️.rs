@@ -45,17 +45,13 @@ use semio_s_artifact_procedural_2d_mutations::central_apply::generation2d_retire
 mod publication_leases;
 pub use publication_leases::*;
 
-#[path = "🏗️store-initialization-authority/🦀️.rs"]
-mod store_initialization_authority;
-use store_initialization_authority::*;
+#[path = "🧮️publication-credits/🦀️.rs"]
+mod publication_credits;
+pub use publication_credits::*;
 
-#[path = "🧮️publication-credits-and-snapshot-copy-cursor/🦀️.rs"]
-mod publication_credits_and_snapshot_copy_cursor;
-pub use publication_credits_and_snapshot_copy_cursor::*;
-
-#[path = "🔁️store-initialization-phases-and-job/🦀️.rs"]
-mod store_initialization_phases_and_job;
-pub use store_initialization_phases_and_job::*;
+#[path = "🎭️publication-hostile/🦀️.rs"]
+mod publication_hostile;
+pub use publication_hostile::*;
 
 #[path = "📨️envelope-decode-authorities/🦀️.rs"]
 mod envelope_decode_authorities;

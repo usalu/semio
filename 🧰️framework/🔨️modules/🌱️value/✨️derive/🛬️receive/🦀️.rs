@@ -1,4 +1,4 @@
-//! 🛬️ Native receiving derives independently typed original child owners and funded aggregate assembly.
+//! 🛬️ Native receiving derives independently typed original child owners and funded aggregate assembly; a path default is canonical-wire only, so the original record must carry that field.
 use quote::{quote,format_ident};
 use syn::{DeriveInput,Data,Fields,Type,Member,Index};
 use super::{container_native_owned_path,parse_container_attrs,parse_field_attrs,parse_variant_attrs,field_wire_name,variant_wire_name,FieldDefault};

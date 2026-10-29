@@ -2,7 +2,7 @@
 
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_decl_app::{ArtifactApp, MediaArtifactError};
-use semio_framework_plugin_decl_views::media_contract::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
+use semio_framework_plugin_decl_media::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework::kernel::{Effect, InvocationResult};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};

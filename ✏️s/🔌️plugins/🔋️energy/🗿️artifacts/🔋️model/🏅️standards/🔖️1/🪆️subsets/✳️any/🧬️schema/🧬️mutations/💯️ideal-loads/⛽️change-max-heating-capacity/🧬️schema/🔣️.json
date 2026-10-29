@@ -124,7 +124,7 @@
     "semantics": {
       "verb": "change",
       "entity": "ideal-loads-system",
-      "kind": "change-max-heating-capacity-w",
+      "kind": "change-ideal-loads-system-max-heating-capacity",
       "record": "ChangedIdealLoadsSystemMaxHeatingCapacity"
     },
     "diagnostics": {

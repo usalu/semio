@@ -75,7 +75,7 @@ pub struct KeyedTestJobSources {
         pub interaction: Option<std::sync::Arc<InteractionState>>,
         pub hover: Option<std::sync::Arc<InteractionHoverState>>,
         pub context: Option<ArtifactOwnedContextHandle<KeyedTestApp>>,
-        pub instance_owner: Option<semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle>,
+        pub instance_owner: Option<semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
         pub output: Option<ArtifactOutputChunks>,
         pub parent_document_id: Option<String>,
         pub authoring_seed: Option<String>,
@@ -278,11 +278,11 @@ fn admit_job(&mut self,context:&mut semio_framework_job::StepContext<'_>,operati
             assert!(request.snapshot.label.is_empty());
             let base_count = request.snapshot.count;
             let sources = KeyedTestJobSources { controller_id:Some(request.controller_id),tool_id:Some(request.tool_id),schema_id:Some(request.payload_schema_id), read: Some(request.snapshot_read), snapshot: Some(request.snapshot), config: Some(request.config), history: Some(request.history), window_config: request.window_config, interaction: Some(request.interaction_state), hover: Some(request.interaction_hover), context: Some(request.context), instance_owner: Some(request.instance_operation_owner), output: Some(request.output_chunks), parent_document_id: Some(request.parent_document_id), authoring_seed: Some(request.authoring_seed) };
-            let job = KeyedTestJob { command: Some(request.command), completion: Some(request.completion), raw: request.input.take(), page: 0, base_count, closing: false, sources: Some(sources), rejected: None, admitted: false, retirement: None };
+            let job = KeyedTestJob { command: Some(request.command.into_box()), completion: Some(request.completion), raw: request.input.take(), page: 0, base_count, closing: false, sources: Some(sources), rejected: None, admitted: false, retirement: None };
 
 job})}
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-            Some(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>())
+            Some(store::cold_mutation_apply_preparation_factory::<TestSnapshot, TestMutation>())
         }
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
             TestApp::<false>::build_document_store_disposer()
@@ -308,8 +308,8 @@ job})}
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
             Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_local_root_retirement_factory())
         }
-        fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
-            TestSnapshot::default()
+        fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework::Fault>>{Some(||{
+            Ok(TestSnapshot::default())
         })}
         async fn command_id(command: &TestCommand) -> &'static str {
             TestApp::<false>::command_id(command).await
@@ -353,6 +353,6 @@ pub async fn keyed_test_registry() -> AppActionRegistry {
     /// drives the continuation reads the exact grant production does, not a generous test one.
     #[doc(hidden)]
 pub fn reactor_native_budget(cx:&semio_framework_job::StepContext<'_>) -> semio_framework::kernel::Budget {
-        semio_framework::kernel::Budget { retained: cx.retained_grant(), fuel: cx.fuel_remaining(), deadline_us: cx.deadline_us(), max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 }
+        semio_framework::kernel::Budget { deadline_us: cx.deadline_us(), ..semio_framework::kernel::Budget::original(cx.retained_grant(), cx.fuel_remaining(), 0, 0, 64, 1 << 20, 8) }
     }
 //#endregion 🗝️RegisteredKeyedDispatchFixture

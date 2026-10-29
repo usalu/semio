@@ -17,6 +17,7 @@ extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mut_air_loop as air_loop_mutations;
+extern crate semio_s_artifact_energy_model_mut_air_loop_nodes as air_loop_nodes_mutations;
 extern crate semio_s_artifact_energy_model_mut_battery as battery_mutations;
 extern crate semio_s_artifact_energy_model_mut_boundary as boundary_mutations;
 extern crate semio_s_artifact_energy_model_mut_construction as construction_mutations;
@@ -27,20 +28,26 @@ extern crate semio_s_artifact_energy_model_mut_enclosure as enclosure_mutations;
 extern crate semio_s_artifact_energy_model_mut_equipment_gain as equipment_gain_mutations;
 extern crate semio_s_artifact_energy_model_mut_fault as fault_mutations;
 extern crate semio_s_artifact_energy_model_mut_fenestration as fenestration_mutations;
+extern crate semio_s_artifact_energy_model_mut_fenestration_geometry as fenestration_geometry_mutations;
 extern crate semio_s_artifact_energy_model_mut_finish as finish_mutations;
 extern crate semio_s_artifact_energy_model_mut_fixed_schedule as fixed_schedule_mutations;
 extern crate semio_s_artifact_energy_model_mut_glazing as glazing_mutations;
 extern crate semio_s_artifact_energy_model_mut_humidistat as humidistat_mutations;
 extern crate semio_s_artifact_energy_model_mut_ideal_loads as ideal_loads_mutations;
+extern crate semio_s_artifact_energy_model_mut_ideal_loads_limits as ideal_loads_limits_mutations;
 extern crate semio_s_artifact_energy_model_mut_infiltration as infiltration_mutations;
 extern crate semio_s_artifact_energy_model_mut_leakage as leakage_mutations;
 extern crate semio_s_artifact_energy_model_mut_lighting_gain as lighting_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_lighting_gain_emission as lighting_gain_emission_mutations;
 extern crate semio_s_artifact_energy_model_mut_load_center as load_center_mutations;
 extern crate semio_s_artifact_energy_model_mut_material as material_mutations;
 extern crate semio_s_artifact_energy_model_mut_model as model_mutations;
+extern crate semio_s_artifact_energy_model_mut_model_simulation as model_simulation_mutations;
 extern crate semio_s_artifact_energy_model_mut_outdoor_air as outdoor_air_mutations;
 extern crate semio_s_artifact_energy_model_mut_people_gain as people_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_people_gain_fractions as people_gain_fractions_mutations;
 extern crate semio_s_artifact_energy_model_mut_plant_loop as plant_loop_mutations;
+extern crate semio_s_artifact_energy_model_mut_plant_loop_design as plant_loop_design_mutations;
 extern crate semio_s_artifact_energy_model_mut_pv_system as pv_system_mutations;
 extern crate semio_s_artifact_energy_model_mut_pv_system_performance as pv_system_performance_mutations;
 extern crate semio_s_artifact_energy_model_mut_refrigeration as refrigeration_mutations;
@@ -51,12 +58,14 @@ extern crate semio_s_artifact_energy_model_mut_shading_device as shading_device_
 extern crate semio_s_artifact_energy_model_mut_shading as shading_mutations;
 extern crate semio_s_artifact_energy_model_mut_shw_system as shw_system_mutations;
 extern crate semio_s_artifact_energy_model_mut_site as site_mutations;
+extern crate semio_s_artifact_energy_model_mut_site_ground as site_ground_mutations;
 extern crate semio_s_artifact_energy_model_mut_sizing as sizing_mutations;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_mut_solar_thermal as solar_thermal_mutations;
 extern crate semio_s_artifact_energy_model_mut_space_list as space_list_mutations;
 extern crate semio_s_artifact_energy_model_mut_space as space_mutations;
 extern crate semio_s_artifact_energy_model_mut_surface as surface_mutations;
+extern crate semio_s_artifact_energy_model_mut_surface_properties as surface_properties_mutations;
 extern crate semio_s_artifact_energy_model_mut_thermostat as thermostat_mutations;
 extern crate semio_s_artifact_energy_model_mut_time_series as time_series_mutations;
 extern crate semio_s_artifact_energy_model_mut_ventilation as ventilation_mutations;
@@ -64,7 +73,9 @@ extern crate semio_s_artifact_energy_model_mut_water_system as water_system_muta
 extern crate semio_s_artifact_energy_model_mut_week_schedule as week_schedule_mutations;
 extern crate semio_s_artifact_energy_model_mut_window_layer as window_layer_mutations;
 extern crate semio_s_artifact_energy_model_mut_window_layer_optics as window_layer_optics_mutations;
+extern crate semio_s_artifact_energy_model_mut_window_layer_optics_visible as window_layer_optics_visible_mutations;
 extern crate semio_s_artifact_energy_model_mut_year_schedule as year_schedule_mutations;
+extern crate semio_s_artifact_energy_model_mut_year_schedule_holidays as year_schedule_holidays_mutations;
 extern crate semio_s_artifact_energy_model_mut_zone_equipment as zone_equipment_mutations;
 extern crate semio_s_artifact_energy_model_mut_zone as zone_mutations;
 
@@ -88,17 +99,17 @@ pub enum EnergyModelMutation {
     ChangeSiteElevation(crate::site_mutations::ChangeSiteElevation),
     ChangeSiteTimeZone(crate::site_mutations::ChangeSiteTimeZone),
     ChangeSiteNorthAxis(crate::site_mutations::ChangeSiteNorthAxis),
-    ChangeGroundBuilding(crate::site_mutations::ChangeGroundBuilding),
-    ChangeGroundShallow(crate::site_mutations::ChangeGroundShallow),
-    ChangeGroundDeep(crate::site_mutations::ChangeGroundDeep),
+    ChangeGroundBuilding(crate::site_ground_mutations::ChangeGroundBuilding),
+    ChangeGroundShallow(crate::site_ground_mutations::ChangeGroundShallow),
+    ChangeGroundDeep(crate::site_ground_mutations::ChangeGroundDeep),
     ChangeRunStartMonth(crate::run_mutations::ChangeRunStartMonth),
     ChangeRunStartDay(crate::run_mutations::ChangeRunStartDay),
     ChangeRunEndMonth(crate::run_mutations::ChangeRunEndMonth),
     ChangeRunEndDay(crate::run_mutations::ChangeRunEndDay),
     ChangeRunYear(crate::run_mutations::ChangeRunYear),
-    ReplaceAirflowNetwork(crate::model_mutations::ReplaceAirflowNetwork),
-    AddOutputVariable(crate::model_mutations::AddOutputVariable),
-    RemoveOutputVariable(crate::model_mutations::RemoveOutputVariable),
+    ReplaceAirflowNetwork(crate::model_simulation_mutations::ReplaceAirflowNetwork),
+    AddOutputVariable(crate::model_simulation_mutations::AddOutputVariable),
+    RemoveOutputVariable(crate::model_simulation_mutations::RemoveOutputVariable),
     BindWeatherFile(crate::model_mutations::BindWeatherFile),
     UnbindWeatherFile(crate::model_mutations::UnbindWeatherFile),
     ConnectReferencedModel(crate::model_mutations::ConnectReferencedModel),
@@ -119,13 +130,13 @@ pub enum EnergyModelMutation {
     DeleteSurface(crate::surface_mutations::DeleteSurface),
     RenameSurface(crate::surface_mutations::RenameSurface),
     ChangeSurfaceZone(crate::surface_mutations::ChangeSurfaceZone),
-    ChangeSurfaceClass(crate::surface_mutations::ChangeSurfaceClass),
-    ReplaceSurfaceVertices(crate::surface_mutations::ReplaceSurfaceVertices),
-    ChangeSurfaceConstruction(crate::surface_mutations::ChangeSurfaceConstruction),
+    ChangeSurfaceClass(crate::surface_properties_mutations::ChangeSurfaceClass),
+    ReplaceSurfaceVertices(crate::surface_properties_mutations::ReplaceSurfaceVertices),
+    ChangeSurfaceConstruction(crate::surface_properties_mutations::ChangeSurfaceConstruction),
     ChangeSurfaceBoundaryCondition(crate::boundary_mutations::ChangeSurfaceBoundaryCondition),
     ChangeSurfaceSunExposed(crate::boundary_mutations::ChangeSurfaceSunExposed),
     ChangeSurfaceWindExposed(crate::boundary_mutations::ChangeSurfaceWindExposed),
-    ChangeSurfaceMultiplier(crate::surface_mutations::ChangeSurfaceMultiplier),
+    ChangeSurfaceMultiplier(crate::surface_properties_mutations::ChangeSurfaceMultiplier),
     CreateFenestration(crate::fenestration_mutations::CreateFenestration),
     DeleteFenestration(crate::fenestration_mutations::DeleteFenestration),
     RenameFenestration(crate::fenestration_mutations::RenameFenestration),
@@ -133,7 +144,7 @@ pub enum EnergyModelMutation {
     ChangeFenestrationUValue(crate::glazing_mutations::ChangeFenestrationUValue),
     ChangeFenestrationShgc(crate::glazing_mutations::ChangeFenestrationShgc),
     ChangeFenestrationVlt(crate::glazing_mutations::ChangeFenestrationVlt),
-    ChangeFenestrationArea(crate::fenestration_mutations::ChangeFenestrationArea),
+    ChangeFenestrationArea(crate::fenestration_geometry_mutations::ChangeFenestrationArea),
     ChangeFenestrationFrameConductance(crate::glazing_mutations::ChangeFenestrationFrameConductance),
     ChangeFenestrationDividerConductance(crate::glazing_mutations::ChangeFenestrationDividerConductance),
     CreateShadingSurface(crate::shading_mutations::CreateShadingSurface),
@@ -145,8 +156,8 @@ pub enum EnergyModelMutation {
     DisconnectSurfaces(crate::boundary_mutations::DisconnectSurfaces),
     BindFenestrationGlazingConstruction(crate::glazing_mutations::BindFenestrationGlazingConstruction),
     ClearFenestrationGlazingConstruction(crate::glazing_mutations::ClearFenestrationGlazingConstruction),
-    ChangeFenestrationHeight(crate::fenestration_mutations::ChangeFenestrationHeight),
-    ChangeFenestrationSillHeight(crate::fenestration_mutations::ChangeFenestrationSillHeight),
+    ChangeFenestrationHeight(crate::fenestration_geometry_mutations::ChangeFenestrationHeight),
+    ChangeFenestrationSillHeight(crate::fenestration_geometry_mutations::ChangeFenestrationSillHeight),
     ChangeFenestrationOverhangDepth(crate::shading_device_mutations::ChangeFenestrationOverhangDepth),
     ChangeFenestrationOverhangOffset(crate::shading_device_mutations::ChangeFenestrationOverhangOffset),
     ChangeFenestrationFinDepth(crate::shading_device_mutations::ChangeFenestrationFinDepth),
@@ -173,17 +184,17 @@ pub enum EnergyModelMutation {
     ChangePeopleGainSchedule(crate::people_gain_mutations::ChangePeopleGainSchedule),
     ChangePeopleGainActivitySchedule(crate::people_gain_mutations::ChangePeopleGainActivitySchedule),
     ChangePeopleGainPeoplePerArea(crate::people_gain_mutations::ChangePeopleGainPeoplePerArea),
-    ChangePeopleGainSensibleFraction(crate::people_gain_mutations::ChangePeopleGainSensibleFraction),
-    ChangePeopleGainLatentFraction(crate::people_gain_mutations::ChangePeopleGainLatentFraction),
-    ChangePeopleGainRadiantFraction(crate::people_gain_mutations::ChangePeopleGainRadiantFraction),
+    ChangePeopleGainSensibleFraction(crate::people_gain_fractions_mutations::ChangePeopleGainSensibleFraction),
+    ChangePeopleGainLatentFraction(crate::people_gain_fractions_mutations::ChangePeopleGainLatentFraction),
+    ChangePeopleGainRadiantFraction(crate::people_gain_fractions_mutations::ChangePeopleGainRadiantFraction),
     CreateLightingGain(crate::lighting_gain_mutations::CreateLightingGain),
     DeleteLightingGain(crate::lighting_gain_mutations::DeleteLightingGain),
     ChangeLightingGainZone(crate::lighting_gain_mutations::ChangeLightingGainZone),
     ChangeLightingGainSchedule(crate::lighting_gain_mutations::ChangeLightingGainSchedule),
-    ChangeLightingGainWattsPerArea(crate::lighting_gain_mutations::ChangeLightingGainWattsPerArea),
-    ChangeLightingGainRadiantFraction(crate::lighting_gain_mutations::ChangeLightingGainRadiantFraction),
-    ChangeLightingGainVisibleFraction(crate::lighting_gain_mutations::ChangeLightingGainVisibleFraction),
-    ChangeLightingGainReturnAirFraction(crate::lighting_gain_mutations::ChangeLightingGainReturnAirFraction),
+    ChangeLightingGainWattsPerArea(crate::lighting_gain_emission_mutations::ChangeLightingGainWattsPerArea),
+    ChangeLightingGainRadiantFraction(crate::lighting_gain_emission_mutations::ChangeLightingGainRadiantFraction),
+    ChangeLightingGainVisibleFraction(crate::lighting_gain_emission_mutations::ChangeLightingGainVisibleFraction),
+    ChangeLightingGainReturnAirFraction(crate::lighting_gain_emission_mutations::ChangeLightingGainReturnAirFraction),
     CreateEquipmentGain(crate::equipment_gain_mutations::CreateEquipmentGain),
     DeleteEquipmentGain(crate::equipment_gain_mutations::DeleteEquipmentGain),
     ChangeEquipmentGainZone(crate::equipment_gain_mutations::ChangeEquipmentGainZone),
@@ -229,10 +240,10 @@ pub enum EnergyModelMutation {
     CreateIdealLoadsSystem(crate::ideal_loads_mutations::CreateIdealLoadsSystem),
     DeleteIdealLoadsSystem(crate::ideal_loads_mutations::DeleteIdealLoadsSystem),
     ChangeIdealLoadsSystemZone(crate::ideal_loads_mutations::ChangeIdealLoadsSystemZone),
-    ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp(crate::ideal_loads_mutations::ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp),
-    ChangeIdealLoadsSystemMinCoolingSupplyAirTemp(crate::ideal_loads_mutations::ChangeIdealLoadsSystemMinCoolingSupplyAirTemp),
-    ChangeIdealLoadsSystemMaxHeatingCapacity(crate::ideal_loads_mutations::ChangeIdealLoadsSystemMaxHeatingCapacity),
-    ChangeIdealLoadsSystemMaxCoolingCapacity(crate::ideal_loads_mutations::ChangeIdealLoadsSystemMaxCoolingCapacity),
+    ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp(crate::ideal_loads_limits_mutations::ChangeIdealLoadsSystemMaxHeatingSupplyAirTemp),
+    ChangeIdealLoadsSystemMinCoolingSupplyAirTemp(crate::ideal_loads_limits_mutations::ChangeIdealLoadsSystemMinCoolingSupplyAirTemp),
+    ChangeIdealLoadsSystemMaxHeatingCapacity(crate::ideal_loads_limits_mutations::ChangeIdealLoadsSystemMaxHeatingCapacity),
+    ChangeIdealLoadsSystemMaxCoolingCapacity(crate::ideal_loads_limits_mutations::ChangeIdealLoadsSystemMaxCoolingCapacity),
     ChangeIdealLoadsSystemOutdoorAirPerPerson(crate::ideal_loads_mutations::ChangeIdealLoadsSystemOutdoorAirPerPerson),
     ChangeIdealLoadsSystemOutdoorAirPerArea(crate::ideal_loads_mutations::ChangeIdealLoadsSystemOutdoorAirPerArea),
     CreateZoneEquipment(crate::zone_equipment_mutations::CreateZoneEquipment),
@@ -264,18 +275,18 @@ pub enum EnergyModelMutation {
     CreateAirLoop(crate::air_loop_mutations::CreateAirLoop),
     DeleteAirLoop(crate::air_loop_mutations::DeleteAirLoop),
     RenameAirLoop(crate::air_loop_mutations::RenameAirLoop),
-    ChangeAirLoopSupplyNode(crate::air_loop_mutations::ChangeAirLoopSupplyNode),
-    ChangeAirLoopReturnNode(crate::air_loop_mutations::ChangeAirLoopReturnNode),
-    ChangeAirLoopDesignSupplyAirFlow(crate::air_loop_mutations::ChangeAirLoopDesignSupplyAirFlow),
+    ChangeAirLoopSupplyNode(crate::air_loop_nodes_mutations::ChangeAirLoopSupplyNode),
+    ChangeAirLoopReturnNode(crate::air_loop_nodes_mutations::ChangeAirLoopReturnNode),
+    ChangeAirLoopDesignSupplyAirFlow(crate::air_loop_nodes_mutations::ChangeAirLoopDesignSupplyAirFlow),
     AddAirLoopTerminalZone(crate::air_loop_mutations::AddAirLoopTerminalZone),
     RemoveAirLoopTerminalZone(crate::air_loop_mutations::RemoveAirLoopTerminalZone),
     CreatePlantLoop(crate::plant_loop_mutations::CreatePlantLoop),
     DeletePlantLoop(crate::plant_loop_mutations::DeletePlantLoop),
     RenamePlantLoop(crate::plant_loop_mutations::RenamePlantLoop),
     ChangePlantLoopType(crate::plant_loop_mutations::ChangePlantLoopType),
-    ChangePlantLoopSupplyTemperature(crate::plant_loop_mutations::ChangePlantLoopSupplyTemperature),
-    ChangePlantLoopReturnTemperature(crate::plant_loop_mutations::ChangePlantLoopReturnTemperature),
-    ChangePlantLoopDesignFlow(crate::plant_loop_mutations::ChangePlantLoopDesignFlow),
+    ChangePlantLoopSupplyTemperature(crate::plant_loop_design_mutations::ChangePlantLoopSupplyTemperature),
+    ChangePlantLoopReturnTemperature(crate::plant_loop_design_mutations::ChangePlantLoopReturnTemperature),
+    ChangePlantLoopDesignFlow(crate::plant_loop_design_mutations::ChangePlantLoopDesignFlow),
     AddPlantLoopEquipment(crate::plant_loop_mutations::AddPlantLoopEquipment),
     RemovePlantLoopEquipment(crate::plant_loop_mutations::RemovePlantLoopEquipment),
     CreateOutdoorAirSystem(crate::outdoor_air_mutations::CreateOutdoorAirSystem),
@@ -360,18 +371,18 @@ pub enum EnergyModelMutation {
     RemoveAnnualScheduleRule(crate::year_schedule_mutations::RemoveAnnualScheduleRule),
     ReorderAnnualScheduleRules(crate::year_schedule_mutations::ReorderAnnualScheduleRules),
     ChangeAnnualScheduleDefaultDailySchedule(crate::year_schedule_mutations::ChangeAnnualScheduleDefaultDailySchedule),
-    ChangeAnnualScheduleHolidayDailySchedule(crate::year_schedule_mutations::ChangeAnnualScheduleHolidayDailySchedule),
-    AddAnnualScheduleHoliday(crate::year_schedule_mutations::AddAnnualScheduleHoliday),
-    RemoveAnnualScheduleHoliday(crate::year_schedule_mutations::RemoveAnnualScheduleHoliday),
+    ChangeAnnualScheduleHolidayDailySchedule(crate::year_schedule_holidays_mutations::ChangeAnnualScheduleHolidayDailySchedule),
+    AddAnnualScheduleHoliday(crate::year_schedule_holidays_mutations::AddAnnualScheduleHoliday),
+    RemoveAnnualScheduleHoliday(crate::year_schedule_holidays_mutations::RemoveAnnualScheduleHoliday),
     CreateTimeSeriesSchedule(crate::time_series_mutations::CreateTimeSeriesSchedule),
     DeleteTimeSeriesSchedule(crate::time_series_mutations::DeleteTimeSeriesSchedule),
     ReplaceTimeSeriesScheduleValues(crate::time_series_mutations::ReplaceTimeSeriesScheduleValues),
     ChangeTimeSeriesScheduleTimestep(crate::time_series_mutations::ChangeTimeSeriesScheduleTimestep),
-    ReplaceFenestrationVertices(crate::fenestration_mutations::ReplaceFenestrationVertices),
+    ReplaceFenestrationVertices(crate::fenestration_geometry_mutations::ReplaceFenestrationVertices),
     ChangeGlazingMaterialThickness(crate::window_layer_mutations::ChangeGlazingMaterialThickness),
     ChangeGlazingMaterialConductivity(crate::window_layer_mutations::ChangeGlazingMaterialConductivity),
     ChangeGlazingMaterialSolarTransmittance(crate::window_layer_optics_mutations::ChangeGlazingMaterialSolarTransmittance),
-    ChangeGlazingMaterialVisibleTransmittance(crate::window_layer_optics_mutations::ChangeGlazingMaterialVisibleTransmittance),
+    ChangeGlazingMaterialVisibleTransmittance(crate::window_layer_optics_visible_mutations::ChangeGlazingMaterialVisibleTransmittance),
     ChangeGlazingMaterialInfraredEmissivity(crate::window_layer_optics_mutations::ChangeGlazingMaterialInfraredEmissivity),
     RenameGlazingMaterial(crate::window_layer_mutations::RenameGlazingMaterial),
     ChangeGasMaterialThickness(crate::window_layer_mutations::ChangeGasMaterialThickness),
@@ -380,8 +391,8 @@ pub enum EnergyModelMutation {
     ChangeMaterialRoughness(crate::finish_mutations::ChangeMaterialRoughness),
     ChangeGlazingMaterialSolarReflectanceFront(crate::window_layer_optics_mutations::ChangeGlazingMaterialSolarReflectanceFront),
     ChangeGlazingMaterialSolarReflectanceBack(crate::window_layer_optics_mutations::ChangeGlazingMaterialSolarReflectanceBack),
-    ChangeGlazingMaterialVisibleReflectanceFront(crate::window_layer_optics_mutations::ChangeGlazingMaterialVisibleReflectanceFront),
-    ChangeGlazingMaterialVisibleReflectanceBack(crate::window_layer_optics_mutations::ChangeGlazingMaterialVisibleReflectanceBack),
+    ChangeGlazingMaterialVisibleReflectanceFront(crate::window_layer_optics_visible_mutations::ChangeGlazingMaterialVisibleReflectanceFront),
+    ChangeGlazingMaterialVisibleReflectanceBack(crate::window_layer_optics_visible_mutations::ChangeGlazingMaterialVisibleReflectanceBack),
     ChangeGlazingMaterialInfraredTransmittance(crate::window_layer_optics_mutations::ChangeGlazingMaterialInfraredTransmittance),
     ChangePvSystemTemperatureCoefficient(crate::pv_system_performance_mutations::ChangePvSystemTemperatureCoefficient),
     ChangePvSystemFaimanHeatLossConstant(crate::pv_system_performance_mutations::ChangePvSystemFaimanHeatLossConstant),

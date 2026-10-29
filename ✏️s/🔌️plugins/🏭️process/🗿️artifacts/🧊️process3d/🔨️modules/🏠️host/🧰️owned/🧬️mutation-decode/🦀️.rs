@@ -554,7 +554,7 @@ impl Drop for Process3dMutationDecodeAuthority {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum Process3dRetainedMutationPhase {
+pub(super) enum Process3dRetainedMutationPhase {
     Header,
     Tag,
     Structural,

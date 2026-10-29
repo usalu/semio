@@ -97,7 +97,6 @@ impl EnergyModelState{
  }}
 }
 
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
 
 impl semio_s_plugin_energy_engine_scene::EnergySceneModel for EnergyModelView<'_>{
  fn name(&self)->&str{self.name}

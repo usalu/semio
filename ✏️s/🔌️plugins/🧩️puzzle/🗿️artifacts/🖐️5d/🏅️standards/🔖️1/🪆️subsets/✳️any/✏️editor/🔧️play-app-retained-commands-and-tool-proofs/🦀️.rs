@@ -284,7 +284,7 @@ impl Puzzle5dRetainedCommandProofs {
 /// 📜️ The two framework-injected host-configuration verbs. Deliberately GENERIC proofs (no
 /// `factory_type`): they are not app-owned retained tools — `Puzzle5dRetainedCommandJobFactory` never
 /// claims them — they only need the wire admission and output budget `dispatch_action`'s
-/// host-configuration branch asks for before it applies `host_configuration_mutation`. Without them the
+/// shared-action admission branch requires. Without them the
 /// shell's `setActiveTool`/`setActiveUtility` fall through to `admit_command_json` and fail closed with
 /// `interactive-job.missing-factory`, so the fill TOOL could not even be armed.
 pub struct Puzzle5dHostConfigurationProofs;

@@ -146,3 +146,10 @@ pub fn build_unshaped_export_frame(doc: &LayoutSnapshot, page: &Page, frame: sem
 
 /// 🧳️ Both interactive surfaces retain story identities and geometry without copying story strings.
 pub fn build_deferred_display_list(doc:&LayoutSnapshot,page:&Page,active_page_id:&str,selected_ids:&[String],hovered_id:Option<&str>,chrome_blueprint:bool,camera_x:f64,camera_y:f64,zoom:f64)->DisplayList{assemble_display_list(None,doc,page,active_page_id,selected_ids,hovered_id,chrome_blueprint,zoom<INTERACTIVE_TEXT_ZOOM,camera_x,camera_y,zoom,true)}
+
+#[cfg(feature="testkit")]
+impl LayoutEngine {
+    pub fn test_text_system(&mut self) -> &mut TextSystem { &mut self.text }
+    pub fn test_font_dependency(&self) -> FontDependencyId { self.font }
+    pub fn test_without_builtin_fonts() -> Self { Self::from_text_system(TextSystem::without_builtin_fonts()) }
+}

@@ -34,7 +34,7 @@ fn recursive_dictionary_owns_typed_retirement_under_independent_grants() {
                 let (step,a,r)=observe_ownership(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!(progress.retained_capacity_bytes,a);assert_eq!(progress.released_bytes,r);assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=grant.maximum_copy_bytes);assert!(progress.retained_capacity_bytes<=grant.maximum_capacity_bytes);assert!(progress.released_bytes<=grant.maximum_release_bytes);copied+=progress.copied_bytes;released+=progress.released_bytes;born+=progress.retained_capacity_bytes;
                 assert!(progress.copied_items!=0 || matches!(step,RetainedCloneStep::Complete(_)),"exact Neural owner grant blocked on turn {turn}");
             }
-            assert!(owner.terminal_is_empty());assert_eq!(copied,"nestedvalue".len()+row["text"].as_str().unwrap().len());assert_eq!(released,original_born-original_freed+born);
+            assert!(owner.terminal_is_empty());assert_eq!(copied,"nestedvalue".len());assert_eq!(released,original_born-original_freed+born);
         }
     }
 }
@@ -48,6 +48,7 @@ fn finite_schema_operator_fields_preserve_typed_work_and_physical_custody() {
         let mut owner=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();let mut births=0;let mut released=0;let mut copied=0;
         for turn in 0..1000000 {
             if owner.terminal_is_empty(){break;}
+            let copy=copy.max(owner.next_demand(copy).unwrap().copy_bytes);
             let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()};
             let (zero,a,r)=observe_ownership(||owner.step(RetainedCloneGrant {maximum_items:0,..grant}).unwrap());assert_eq!(zero.progress().copied_items,0);assert_eq!((a,r),(0,0));
             let (step,a,r)=observe_ownership(||owner.step(grant).unwrap());let progress=step.progress();assert_eq!((progress.retained_capacity_bytes,progress.released_bytes),(a,r));assert!(progress.copied_items<=1);assert!(progress.copied_bytes<=copy);assert!(a<=grant.maximum_capacity_bytes);assert!(r<=grant.maximum_release_bytes);births+=a;released+=r;copied+=progress.copied_bytes;assert!(progress.copied_items!=0,"exact finite Neural field grant blocked on turn {turn}");
@@ -55,8 +56,8 @@ fn finite_schema_operator_fields_preserve_typed_work_and_physical_custody() {
         assert!(owner.terminal_is_empty());assert_eq!(copied,expected);assert_eq!(released,original+births);
     }
     for copy in fixture["copyGrants"].as_array().unwrap() {
-        let (schema,a,r)=observe_ownership(||serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());assert_eq!(serde_json::to_value(&schema).unwrap(),fixture["schema"]);close(schema,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["schemaStringBytes"].as_u64().unwrap() as usize);
-        let (operator,a,r)=observe_ownership(||serde_json::from_value::<OperatorInfo>(fixture["operator"].clone()).unwrap());assert_eq!(serde_json::to_value(&operator).unwrap(),fixture["operator"]);close(operator,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["operatorStringBytes"].as_u64().unwrap() as usize);
+        let (schema,a,r)=observe_ownership(||serde_json::from_value::<Schema>(fixture["schema"].clone()).unwrap());assert_eq!(serde_json::to_value(&schema).unwrap(),fixture["schema"]);close(schema,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["schemaOrderedKeyBytes"].as_u64().unwrap() as usize+fixture["expected"]["schemaBoxedValueTypes"].as_u64().unwrap() as usize*2*size_of::<ValueType>());
+        let (operator,a,r)=observe_ownership(||serde_json::from_value::<OperatorInfo>(fixture["operator"].clone()).unwrap());assert_eq!(serde_json::to_value(&operator).unwrap(),fixture["operator"]);close(operator,a-r,copy.as_u64().unwrap() as usize,fixture["expected"]["operatorOrderedKeyBytes"].as_u64().unwrap() as usize+fixture["expected"]["operatorBoxedValueTypes"].as_u64().unwrap() as usize*2*size_of::<ValueType>());
     }
 }
 
@@ -309,4 +310,65 @@ fn retained_entry_storage_preserves_original_vector_allocation_and_order() {
     close(ValueRetirement::from_owner(Owner::Input(protocol::value::DslValue::Object(vec![first,second]))),3);
     let mut owner=ValueRetirement::default();admit_external(&mut owner,entries);let released=close(owner,3);
     assert!(released>=capacity*size_of::<(String,protocol::value::DslValue)>());
+}
+
+/// 🧭️ Law: every grant sized exactly by the quote is funded and strictly advances typed input binding, so the cold loop can never re-issue the same grant.
+#[test]
+fn dictionary_input_quote_equals_funding_and_progress_strictly_increases() {
+    use protocol::value::{DslValue,Number,ToValue};
+    use crate::ColdRetire;
+    fn nested(depth:usize,width:usize)->DslValue {
+        let mut entries=Vec::new();
+        for index in 0..width {
+            let key=format!("key{index:03}");
+            entries.push((key,if depth==0 {DslValue::Number(Number::Int(index as i64))} else {nested(depth-1,width)}));
+        }
+        DslValue::Object(entries)
+    }
+    for (depth,width) in [(0usize,1usize),(1,3),(3,3),(6,2),(20,1)] {
+        let source=nested(depth,width);
+        let mut input=RetainedDictionaryInput::new(source.clone());
+        let mut previous=input.progress().0;
+        let mut result=None;
+        for _ in 0..100_000 {
+            let copy=input.next_copy_byte_demand().unwrap();
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:input.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:input.next_release_byte_demand().unwrap(),maximum_depth:input.next_depth_demand().unwrap()};
+            let step=input.step(grant).unwrap();
+            if let Some(dictionary)=step.dictionary {result=Some(dictionary);break;}
+            assert!(step.progress!=RetainedCloneProgress::default(),"a step funded exactly by its quote must report progress (depth {depth}, width {width}, phase {})",input.progress().2);
+            assert!(input.progress().0>=previous);
+            previous=input.progress().0;
+        }
+        let dictionary=result.expect("typed input binding completes within a finite number of quoted steps");
+        while !input.terminal_is_empty() {
+            let copy=input.next_close_copy_byte_demand().unwrap();
+            let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:input.next_close_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:input.next_close_release_byte_demand().unwrap(),maximum_depth:input.next_close_depth_demand().unwrap().max(1)};
+            input.close_step(grant).unwrap();
+        }
+        assert_eq!(dictionary.to_value(),source);
+        dictionary.retire_cold();
+    }
+}
+
+#[test]
+fn dictionary_projection_identity_follows_the_shared_original_root_across_header_moves() {
+    use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView};
+    use crate::ColdRetire;
+    let law:serde_json::Value=serde_json::from_str(include_str!("../../../📤️projection/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+    let source:Dictionary=serde_json::from_value(law["source"].clone()).unwrap();
+    let root=source.original_root_identity().expect("a populated dictionary owns an original root");
+    assert_eq!(FieldProjectionSource::projection_identity(&source),root);
+    let moved=Box::new(source);
+    assert_ne!(&*moved as *const Dictionary as usize,root);
+    assert_eq!(FieldProjectionSource::projection_identity(&*moved),root);
+    let wrapped=Value::Dictionary((*moved).clone());
+    assert_eq!(FieldProjectionSource::projection_identity(&wrapped),root);
+    wrapped.retire_cold();
+    let keys:Vec<&str>=(0..moved.len()).map(|index|FieldProjectionSource::projection_key(&*moved,&[],index).unwrap()).collect();
+    assert_eq!(serde_json::to_value(&keys).unwrap(),law["rootKeys"]);
+    let path:Vec<usize>=law["textPath"].as_array().unwrap().iter().map(|index|index.as_u64().unwrap() as usize).collect();
+    let text=law["source"]["nested"]["text"].as_str().unwrap();
+    assert!(matches!(FieldProjectionSource::projection_view(&*moved,&path).unwrap(),FieldProjectionView::IntrinsicText(actual) if actual==text));
+    assert!(matches!(FieldProjectionSource::projection_view(&*moved,&[]).unwrap(),FieldProjectionView::IntrinsicObject(5)));
+    (*moved).retire_cold();
 }

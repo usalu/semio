@@ -10,8 +10,8 @@ async fn sample_envelope(id: &str) -> semio_framework_replication_causal::Mutati
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_replication_causal::ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("diff.v1".to_string()), payload: format!("value:{id}").into_bytes() },
-        inverse: semio_framework_replication_causal::InverseMutation { schema: semio_framework_replication_ids::SchemaId("diff.v1".to_string()), payload: Vec::new() },
+        diff: semio_framework_replication_causal::ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("diff.v1".to_string()), payload: semio_framework_replication_causal::CausalPayload::try_from_slice(format!("value:{id}").as_bytes()).unwrap() },
+        inverse: semio_framework_replication_causal::InverseMutation { schema: semio_framework_replication_ids::SchemaId("diff.v1".to_string()), payload: semio_framework_replication_causal::CausalPayload::try_from_slice(&[]).unwrap() },
         timestamp: semio_framework_replication_ids::HybridLogicalTimestamp::new(1, 0),
         transaction: None, verb: None, line: None,
     }
@@ -153,8 +153,8 @@ async fn client_frame_commands_keep_exact_hlc_fields() {
         dependencies: vec![semio_framework_replication_ids::MutationId("op-1".into())],
         observed: None,
         target: vec!["title".into()],
-        diff: semio_framework_replication_causal::ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("semio.history-transition.v1".into()), payload: vec![1, 2, 3] },
-        inverse: semio_framework_replication_causal::InverseMutation { schema: semio_framework_replication_ids::SchemaId("semio.history-transition.v1".into()), payload: Vec::new() },
+        diff: semio_framework_replication_causal::ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("semio.history-transition.v1".into()), payload: semio_framework_replication_causal::CausalPayload::try_from_slice(&[1, 2, 3]).unwrap() },
+        inverse: semio_framework_replication_causal::InverseMutation { schema: semio_framework_replication_ids::SchemaId("semio.history-transition.v1".into()), payload: semio_framework_replication_causal::CausalPayload::try_from_slice(&[]).unwrap() },
         timestamp: semio_framework_replication_ids::HybridLogicalTimestamp { actor: 0xfedc_ba98_7654_3210, physical_ms: (1 << 53) + 1, logical: 1 << 60 },
         transaction: None, verb: None, line: None,
     };

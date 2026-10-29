@@ -1,6 +1,6 @@
 //! 🧪️ Source-owned numeric choices retain full raw carriers and typed nested text paths.
 use super::*;
-use semio_framework_plugin::{action_staging::*,app::staged_form::*};
+use semio_framework_plugin::action_staging::*;use semio_framework_plugin_decl_staged_form::*;
 type Guidance=super::super::super::type_guidance::IfcTypeInputSourceWork<DetailsTestProfile>;
 type Prepared=super::super::super::type_guidance::IfcPreparedTypeInputSource;
 fn request(row:&serde_json::Value)->StagedFormRequest{StagedFormRequest{token:StagedFormToken{action:editing::SET_SNAPSHOT_VALUE_ACTION_ID.into(),window:"numeric-source".into(),generation:"1".into(),revision:"0".repeat(64)},locale:semio_framework_ui_locale::Locale::De,args:super::type_input_tests::raw(&serde_json::json!({"path":"/entities/0","value":{"$ifcType":"IFCQUANTITYNUMBER","$ifcInputs":[{"index":"0","value":row["input"]}]}})),page:None}}

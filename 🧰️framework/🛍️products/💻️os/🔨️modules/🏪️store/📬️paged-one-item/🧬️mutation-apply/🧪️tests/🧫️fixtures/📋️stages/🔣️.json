@@ -1,0 +1,62 @@
+{
+  "schema": "retained.generic.issuer.v1",
+  "stages": [
+    "Birth",
+    "Decide",
+    "Source",
+    "Plan",
+    "Preflight",
+    "Inverse",
+    "Commit",
+    "Join",
+    "Publish",
+    "Done"
+  ],
+  "admitted": [
+    "Birth",
+    "Decide",
+    "Source",
+    "Plan",
+    "Preflight",
+    "Inverse",
+    "Commit",
+    "Join",
+    "Publish",
+    "Done"
+  ],
+  "decisionRefused": [
+    "Birth",
+    "Decide",
+    "Join",
+    "Publish",
+    "Done"
+  ],
+  "preflightRefused": [
+    "Birth",
+    "Decide",
+    "Source",
+    "Plan",
+    "Preflight",
+    "Join",
+    "Publish",
+    "Done"
+  ],
+  "closeOwners": [
+    "semantics",
+    "plan",
+    "source",
+    "diff",
+    "inverseClose",
+    "inverse",
+    "join",
+    "messages",
+    "retirement"
+  ],
+  "constraints": {
+    "decisionBeforePreflight": true,
+    "inverseAfterPreflight": true,
+    "commitAfterInverse": true,
+    "issuerStable": true,
+    "coldApply": false
+  }
+}

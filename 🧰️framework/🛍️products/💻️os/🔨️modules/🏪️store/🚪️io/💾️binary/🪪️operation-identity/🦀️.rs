@@ -18,7 +18,7 @@ impl OperationIdentityCursor{
         loop{
             control.checkpoint()?;
             let capacity=self.cursor.next_capacity_byte_demand()?;control.charge(capacity)?;
-            let step=self.cursor.advance(source,&mut span,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH}).map_err(|error|error.reason)?;
+            let held=span.len();let step=self.cursor.advance(source,&mut span,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:self.cursor.next_minimum_copy_bytes().max(held),maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH}).map_err(|error|error.reason)?;
             control.advance(step.processed_items.checked_add(step.copied_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"operation wire source work overflow"))?)?;
             control.append_bytes(output,&span[..step.written_bytes])?;
             if step.complete{return Ok(());}
@@ -30,7 +30,7 @@ impl OperationIdentityCursor{
         loop{
             control.checkpoint()?;
             let capacity=self.cursor.next_capacity_byte_demand()?;control.charge(capacity)?;
-            let step=self.cursor.advance(source,&mut output,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:64,maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH}).map_err(|error|error.reason)?;
+            let held=output.len();let step=self.cursor.advance(source,&mut output,RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:self.cursor.next_minimum_copy_bytes().max(held),maximum_capacity_bytes:capacity,maximum_release_bytes:0,maximum_depth:ARTIFACT_CANONICAL_JSON_DEPTH}).map_err(|error|error.reason)?;
             control.advance(step.processed_items.checked_add(step.copied_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"operation identity source work overflow"))?)?;
             identity.write(&output[..step.written_bytes],control)?;control.advance(step.written_bytes)?;payload.update(&output[..step.written_bytes]);
             if step.complete{break;}

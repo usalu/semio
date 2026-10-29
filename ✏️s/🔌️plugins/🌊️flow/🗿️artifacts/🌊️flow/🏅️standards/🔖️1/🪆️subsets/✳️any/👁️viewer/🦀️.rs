@@ -108,8 +108,8 @@ impl ArtifactViewer for FlowViewer {
         semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("flow.child-projection"), error.to_string()))
     }
 
-    fn reference_birth()->Option<fn()->FlowSnapshot>{Some(||{
-        FlowSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<FlowSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(FlowSnapshot::default())
     })}
 
     /// 🌱️ Derives the `content` child at boot and on every archive load, so a live shell composes the

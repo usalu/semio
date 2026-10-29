@@ -73,8 +73,8 @@ impl ArtifactViewer for Ifc2x3SavViewer {
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_SAV_DOCUMENT_SCHEMA;
     fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(inspector::topology(doc.snapshot))}
 
-    fn reference_birth()->Option<fn()->Ifc2x3Snapshot>{Some(||{
-        <crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction::new()).expect("valid authored IFC2x3 sav initial owner")
+    fn reference_birth()->Option<fn()->Result<Ifc2x3Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        <crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction::new()).map_err(|error|semio_framework_plugin::reference_birth_fault("valid authored IFC2x3 sav initial owner",format_args!("{error:?}")))
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

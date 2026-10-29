@@ -5,8 +5,8 @@ use semio_framework_os_kernel as pack;
 use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement};
 /// 🏭️ A concrete lane declares its initial state, exact native Pack source and installed Store catalog.
 pub trait OriginalStoreGenesisOwner:'static{
- type State:semio_framework_value::ToValue+semio_framework_value::retirement::RetireOwned+Send+Sync+'static;
- type Mutation:semio_framework_value::ToValue+semio_framework_value::FromValue+semio_framework_value::retirement::RetireOwned+store::Mutation<Self::State>+store::OpBinary+store::OpText+store::ArtifactCanonicalJsonTree+Send+'static;
+ type State:semio_framework_value::retirement::RetireOwned+store::StoreState;
+ type Mutation:semio_framework_value::retirement::RetireOwned+store::ArtifactCanonicalJsonTree+store::StoreMutationFor<Self::State>;
  type Catalog:store::os_store::document_store_owners::DocumentStoreOwnerProducer<Self::State,Self::Mutation>;
  type Initial:OriginalStoreInitialSource<Self::State>;
  const SCHEMA:&'static str;
@@ -52,12 +52,12 @@ use std::mem::{size_of,ManuallyDrop};
 use store::ArtifactStoreInitializationAuthority;
 use pack::record::BorrowedPackDocumentCursor;
 struct Sources<P:RetireOwned+Send+Sync+'static>{window:Option<String>,schema:Option<String>,id:Option<String>,initial:Option<P>,pack:Option<Vec<u8>>,actor:Option<protocol::ActorId>,dialect:Option<semio_framework_artifact_reference::ArtifactDialect>}
-impl<P:RetireOwned+Send+Sync+'static> RetireOwned for Sources<P>{
+impl<P: RetireOwned + store::StoreState> RetireOwned for Sources<P>{
  fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let Self{window,schema,id,initial,pack,actor,dialect}=self;semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(window),semio_framework_value::retirement::deferred(schema),semio_framework_value::retirement::deferred(id),semio_framework_value::retirement::deferred(initial),semio_framework_value::retirement::deferred(pack),semio_framework_value::retirement::deferred(actor),semio_framework_value::retirement::deferred(dialect)])}
  fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.window),semio_framework_value::retirement::deferred_birth_bytes_for(&self.schema),semio_framework_value::retirement::deferred_birth_bytes_for(&self.id),semio_framework_value::retirement::deferred_birth_bytes_for(&self.initial),semio_framework_value::retirement::deferred_birth_bytes_for(&self.pack),semio_framework_value::retirement::deferred_birth_bytes_for(&self.actor),semio_framework_value::retirement::deferred_birth_bytes_for(&self.dialect)])}
  fn controlled_retirement_supported()->bool{true}
 }
-impl<P:RetireOwned+Send+Sync+'static> Sources<P>{fn empty()->Self{Self{window:None,schema:None,id:None,initial:None,pack:None,actor:None,dialect:None}}fn is_empty(&self)->bool{self.window.is_none()&&self.schema.is_none()&&self.id.is_none()&&self.initial.is_none()&&self.pack.is_none()&&self.actor.is_none()&&self.dialect.is_none()}}
+impl<P: RetireOwned + store::StoreState> Sources<P>{fn empty()->Self{Self{window:None,schema:None,id:None,initial:None,pack:None,actor:None,dialect:None}}fn is_empty(&self)->bool{self.window.is_none()&&self.schema.is_none()&&self.id.is_none()&&self.initial.is_none()&&self.pack.is_none()&&self.actor.is_none()&&self.dialect.is_none()}}
 /// 🌱️ One mounted operation retains the exact original sources across every birth, Pack byte, replay and cancellation.
 pub struct OriginalStoreGenesis<O:OriginalStoreGenesisOwner>{sources:ManuallyDrop<Sources<O::State>>,sources_close:Option<ControlledRetirement<Sources<O::State>>>,initial_source:Option<Box<O::Initial>>,cursor:Option<Box<BorrowedPackDocumentCursor>>,initializer:Option<Box<Initialization<O>>>,candidate:Option<Box<NativeStore<O>>>,outcome:JobOutcomeDescriptorSlot,binding:OriginalSourceBinding,decoder:(u64,u64),digest:semio_framework_hash::Hasher,prefix:usize,phase:u8,ready:bool,closing:bool}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,message)}

@@ -51,7 +51,7 @@ pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+::protocol::Cold
     pub(super) preview_input: Option<protocol::InputReplacement>,
     pub(super) replay: Option<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>,
     pub(super) finished: Option<store::os_store::replay::EditReplayResult<P, Mu>>,
-    pub(super) commit_request:Option<store::HistoryFinalization>,pub(super) commit_publisher:Option<Box<store::os_store::original_replay_publication::OriginalReplayPublication<P,Mu>>>,pub(super) commit_receipt:Option<store::os_store::original_replay_publication::OriginalReplayPublicationReceipt>,pub(super) commit_outcome:Option<TimeTravelCommit>,pub(super) commit_failure:Option<semio_framework_job::OriginalTurnFailure>,pub(super) commit_request_close:semio_framework_value::retained_clone::RetainedCloneClose,pub(super) commit_stage:u8,pub(super) commit_closing:bool,
+    pub(super) commit_request:Option<store::HistoryFinalization>,pub(super) commit_publisher:Option<Box<semio_framework_os_store_engine_replay::OriginalReplayPublication<P,Mu>>>,pub(super) commit_receipt:Option<semio_framework_os_store_engine_replay::OriginalReplayPublicationReceipt>,pub(super) commit_outcome:Option<TimeTravelCommit>,pub(super) commit_failure:Option<semio_framework_job::OriginalTurnFailure>,pub(super) commit_request_close:semio_framework_value::retained_clone::RetainedCloneClose,pub(super) commit_stage:u8,pub(super) commit_closing:bool,
     pub(super) head: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
     pub(super) snapshot_aliases: ManuallyDrop<[Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>; 8]>,
     pub(super) snapshot_issuers: ManuallyDrop<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>,
@@ -65,7 +65,7 @@ pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+::protocol::Cold
     pub(super) discarded_factory_close: Option<semio_framework_value::FactoryAuthority>,
 }
 
-impl<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> Drop for TimeTravelStoreState<P,Mu>{
+impl<P,Mu: ::protocol::Mutation<P>+::protocol::ColdMutation<P>+Send+'static> Drop for TimeTravelStoreState<P,Mu>{
     fn drop(&mut self){
         let empty=self.commit_request.is_none()&&self.commit_publisher.is_none()&&self.commit_receipt.is_none()&&self.commit_outcome.is_none()&&self.commit_failure.is_none()&&self.commit_request_close.is_empty()&&self.snapshot_aliases.iter().all(Option::is_none)&&self.snapshot_close.is_none()&&self.snapshot_issuers.is_none()&&self.snapshot_issuer_close.iter().all(Option::is_none);
         assert!(std::thread::panicking()||empty,"original derived snapshot custody requires granted retirement");
@@ -73,7 +73,7 @@ impl<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> Drop for TimeTra
     }
 }
 
-impl<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> TimeTravelStoreState<P,Mu>{
+impl<P,Mu: ::protocol::StoreMutationFor<P>> TimeTravelStoreState<P,Mu>{
     /// 🎟️ Whether discarded operations wait for an issuer the store has not yet lent.
     pub fn discard_issuer_missing(&self)->bool{self.discarded_factory.is_none()&&(!self.discarded.is_empty()||self.discarded_pending.is_some())}
     /// 🎟️ Adopts the store's operation retirement issuer for the discarded operations.
@@ -106,7 +106,7 @@ pub enum TimeTravelPreviewStep {
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum TimeTravelCommit {
     Pending,
-    Finalized { receipt:store::os_store::original_replay_publication::OriginalReplayPublicationReceipt },
+    Finalized { receipt:semio_framework_os_store_engine_replay::OriginalReplayPublicationReceipt },
     Stale,
     Blocked,
     Failed,
@@ -163,8 +163,8 @@ pub enum TimeTravelQueryOutput {
 
 impl<P, Mu> TimeTravelStoreState<P, Mu>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mu: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::ColdMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::protocol::StoreState,
+    Mu: ::protocol::StoreMutationFor<P>,
 {
     pub(super) fn discarded_has_physical_capacity(&self)->bool{size_of::<Mu>()!=0&&self.discarded.capacity()!=0}
     pub(super) fn discarded_terminal_is_empty(&self)->bool{self.discarded.is_empty()&&!self.discarded_has_physical_capacity()}

@@ -6,7 +6,7 @@ use semio_framework::kernel::ActorId;
 use semio_framework_plugin_window_kits::AppActionRegistry;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, ConfigStore, create_config_envelope, MemberFactory, Mutation, ReferenceSpaceMember};
@@ -18,7 +18,7 @@ use semio_framework_plugin_instance_history::history_components::{CommandHistory
 use store::os_store::composition_coordinator::CompositionCoordinator;
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework_plugin_instance_docs::docs_components::{EnvelopeJobs, MediaTransfers};
-use semio_framework::FaultFrom;
+use semio_framework::{Fault,FaultCode,FaultFrom,FaultOrigin};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_interaction::mutations::InteractionConfigMutation;
@@ -41,7 +41,7 @@ use semio_framework_plugin_time_travel as time_travel;
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 🧬️ Constructs a store-only wrapper with an empty registry. Every action and typed
     /// command fails closed before decoding until a registry-backed wrapper is constructed.
-    pub async fn new(app: A, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
+    pub async fn new(app: A, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Self, Fault> {
         Self::with_registry(app, AppActionRegistry::default(), actor, mounted_policy, identity).await
     }
 
@@ -50,23 +50,24 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
 
     /// 🧱 Runs `initial_snapshot` on its own frame so fixture sync cannot nest inside envelope construction.
     #[inline(never)]
-    async fn isolate_artifact_app_initial_snapshot() -> A::Snapshot {
-        A::reference_birth().expect("reference construction requires its explicit initial source")()
+    async fn isolate_artifact_app_initial_snapshot() -> Result<A::Snapshot, Fault> {
+        let birth = A::reference_birth().ok_or_else(|| Fault::new(FaultOrigin::App, FaultCode::new("app.reference-birth.missing"), "reference construction requires its explicit initial source"))?;
+        birth()
     }
 
-    pub async fn with_registry(app: A, registry: AppActionRegistry, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
+    pub async fn with_registry(app: A, registry: AppActionRegistry, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Self, Fault> {
         Self::with_registry_on_bus(app, registry, semio_framework::ActionBus::new(), actor, mounted_policy, identity).await
     }
 
     /// 🫂️ Activates an app controller against Platform's injected shared production registry.
-    pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
+    pub async fn with_registry_on_bus(app: A, registry: AppActionRegistry, tool_jobs: semio_framework::ActionBus, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Self, Fault> {
         let mounted_policy = mounted_policy.validate().expect("explicit app embedding policy");
         let app_id = app.instance_id().await.to_string();
         PluginRuntimeRegistry::publish_framework_schema_documents().expect("the OS's own schema documents never conflict");
         for documents in <A::Mutation as ::protocol::Mutation<A::Snapshot>>::INPUT_SCHEMA_DOCUMENTS {
             semio_framework_schema_registry::register_referenced_schema_documents(documents);
         }
-        let snapshot = Self::isolate_artifact_app_initial_snapshot().await;
+        let snapshot = Self::isolate_artifact_app_initial_snapshot().await?;
         let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, &app_id, snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(A::DIALECT.into());
         let config_id = format!("{}-config", app_id);
@@ -168,7 +169,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
             stores: InstanceStores::new(store, config_store, draft_store, presence_store, window_config_store, window_transient_store, artifact_one_item_factory, config_one_item_factory, draft_one_item_factory, presence_one_item_factory, transient_one_item_factory, presence_local_root_retirement_factory, transient_local_root_retirement_factory, unsupported_publication_contracts, interaction_store),
             roster: PeerRoster::new(),
             ingress: ActionIngress::new(),
-            original_emission:Default::default(),original_typed_command:Default::default(),
+            original_typing:Default::default(),original_emission:Default::default(),original_typed_command:Default::default(),original_typed_tag:std::mem::ManuallyDrop::new(None),original_typed_tag_close:Default::default(),
             interaction: LocalInteraction::new(),
             history: CommandHistory::new(),
             host_events: HostEvents::new(),
@@ -186,6 +187,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         };
         this.child_composition.seed_genesis_children(&mut this.stores, identity).await.expect("ArtifactApp::genesis_child_pack members must open cleanly onto a freshly constructed store");
         this.child_composition.followed_parent_generation = this.stores.store.generation_now();
-        this
+        Ok(this)
     }
 }

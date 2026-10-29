@@ -1,4 +1,7 @@
-use super::*;
+#![cfg(test)]
+
+//! 🧪️ Public container and original admission laws exercise the canonical IDML owners.
+use semio_s_artifact_stdio_idml::*;
 use semio_framework_value::{FromValue as _, ToValue as _};
 
 #[test]
@@ -28,3 +31,12 @@ fn idml_intrinsic_admission_and_roundtrip_match_language_neutral_witness() {
 
 #[path = "native.rs"]
 mod native;
+
+#[path="../🚪️io/🛂️admission/🧪️tests/🦀️.rs"]
+mod admission;
+#[path="../🚪️io/🛂️admission/🔢️version/🧳️retained/🧪️tests/🦀️.rs"]
+mod version;
+#[path="../🚪️io/🛂️admission/🔺️change/🧪️tests/🦀️.rs"]
+mod change;
+#[path="../🚪️io/🛂️admission/🔺️change/🧳️part/🧪️tests/🦀️.rs"]
+mod part;

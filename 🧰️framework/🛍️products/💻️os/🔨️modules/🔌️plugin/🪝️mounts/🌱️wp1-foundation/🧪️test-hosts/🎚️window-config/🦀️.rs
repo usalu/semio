@@ -16,7 +16,7 @@ use semio_framework_value::ValueRefusalKind;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
-use semio_framework_plugin_window_config::registry::WindowRegistry;
+use semio_framework_plugin_window_config_registry::WindowRegistry;
 pub use semio_framework_plugin_window_config::*;
 pub use semio_framework_plugin_window_config::retained::*;
 #[path = "../../../../🪟️window/🎚️config/🧬️preparation/🧪️tests/🦀️.rs"]

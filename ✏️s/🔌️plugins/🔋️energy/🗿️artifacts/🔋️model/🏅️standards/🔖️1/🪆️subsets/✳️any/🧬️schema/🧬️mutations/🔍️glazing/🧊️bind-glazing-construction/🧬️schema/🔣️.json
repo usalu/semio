@@ -83,7 +83,7 @@
     "semantics": {
       "verb": "bind",
       "entity": "glazing-construction",
-      "kind": "bind-glazing-construction",
+      "kind": "bind-fenestration-glazing-construction",
       "record": "ChangedGlazingConstruction"
     },
     "diagnostics": {

@@ -104,8 +104,8 @@ impl ArtifactViewer for Wfc3dViewer {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn reference_birth()->Option<fn()->Wfc3dSnapshot>{Some(||{
-        crate::examples::two_room_corridor::snapshot()
+    fn reference_birth()->Option<fn()->Result<Wfc3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::examples::two_room_corridor::snapshot())
     })}
 
     fn handle(

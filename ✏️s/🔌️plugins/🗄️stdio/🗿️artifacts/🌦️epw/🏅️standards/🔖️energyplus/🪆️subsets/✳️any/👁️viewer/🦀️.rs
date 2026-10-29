@@ -77,8 +77,8 @@ impl ArtifactViewer for EpwViewer {
         semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_framework_plugin::ViewerApp<Self>>::admit_original(request,body,cx)
     }
 
-    fn reference_birth()->Option<fn()->EpwSnapshot>{Some(||{
-        crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot()
+    fn reference_birth()->Option<fn()->Result<EpwSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `EpwViewCommand::Noop` variant never carries a config

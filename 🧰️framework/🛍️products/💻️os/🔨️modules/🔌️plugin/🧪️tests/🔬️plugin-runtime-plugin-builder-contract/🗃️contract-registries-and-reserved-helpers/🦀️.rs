@@ -14,14 +14,14 @@ pub fn meta() -> ActionMeta {
     }
 
     #[doc(hidden)]
-pub async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult) -> semio_framework::InvocationResult {
-        semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted).await.expect("settle reserved")
+pub async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::InvocationResult {
+        semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await.expect("settle reserved")
     }
 
     #[doc(hidden)]
-pub async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> semio_framework::InvocationResult {
-        let admitted = app.handle_action(action, args.cloned(), &meta(), identity).await.expect(action);
-        settle_reserved(app, admitted).await
+pub async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx: &mut semio_framework_job::StepContext<'_>) -> semio_framework::InvocationResult {
+        let admitted = artifact_app_laws::dispatch_fixture_action(app, action, args.cloned(), &meta(), identity, cx, artifact_app_laws::fixture_mounted_policy().maintenance).await.expect(action);
+        settle_reserved(app, admitted, cx).await
     }
 
     /// 🧹️ Drains every maintenance stage, then closes. A law that deliberately leaves a child root, a

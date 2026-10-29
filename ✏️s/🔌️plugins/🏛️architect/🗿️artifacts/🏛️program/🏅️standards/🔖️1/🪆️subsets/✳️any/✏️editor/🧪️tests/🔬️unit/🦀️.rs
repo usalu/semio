@@ -190,7 +190,7 @@ use semio_framework_plugin::HistoryView;
     /// `LoadDocument` effects the host would apply. Without the `bind_instance_id`/settle pair every
     /// typed command is refused with `interactive-job.live-instance`.
     pub async fn dispatch(app: &mut ArchitectApp, command: ArchitectCommand) -> InvocationResult {
-        let mut result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let settled = settle_registered_typed_operation(&mut app.0, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
@@ -561,7 +561,7 @@ async fn view_actions_never_emit_artifact_mutations_under_the_real_registry() {
         ..semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let meta = semio_framework_plugin::ActionMeta { view_state: Some(view), ..semio_framework_plugin::artifact_app_laws::meta("local") };
-    let result = app.0.dispatch_typed(ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("select exact Register window");
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ArchitectCommand::SelectRegister(select_register::SelectRegister { register_id: "risks".into() }), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("select exact Register window");
     let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, semio_framework_plugin::artifact_app_laws::meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("view publication settles");
     assert!(result.mutations.is_empty(), "selectRegister is a view action and must never reach document operations under kind discipline");
     assert!(!settled.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Artifact), "a view row never publishes the document lane: {:?}", settled.lanes);
@@ -607,7 +607,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     let instance = 7;
     app.bind_instance_id(instance).await;
     let meta = semio_framework_plugin::ActionMeta { instance_id: instance, ..artifact_app_laws::meta("fixture") };
-    app.0.dispatch_typed(ArchitectCommand::SetActiveExample(crate::editor::architect::commands::example::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ArchitectCommand::SetActiveExample(crate::editor::architect::commands::example::set_active_example::SetActiveExample { example_id: "demo".into() }), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("example dispatch");
     let mut loaded = None;
     for _ in 0..100_000 {
         app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();

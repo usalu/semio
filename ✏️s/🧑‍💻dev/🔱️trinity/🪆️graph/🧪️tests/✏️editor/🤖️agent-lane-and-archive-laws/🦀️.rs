@@ -61,7 +61,7 @@ async fn foreign_carriers_restore_the_edited_registered_rich_document(){
  let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().unwrap();let mut original_context=original_caller.context();let cx=&mut original_context;
  let mut app=new_app().await;let first=node_id_at(&app,0).await;
  dispatch_rail(&mut app,"patchNodes",&[("nodeIds",&first),("field","name"),("value","Original rich archive")],cx).await.unwrap();
- app.dispatch_typed(TrinityJackCommand::TextEdit{text:"MATCH (n) RETURN n".into()},&meta("local"),&mut artifact_app_laws::fixture_identity(),cx).await.unwrap();settle(&mut app,cx).await;
+ semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::TextEdit{text:"MATCH (n) RETURN n".into()}, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), cx).await.unwrap();settle(&mut app,cx).await;
  let original=PluginApp::document_archive(&app.app).await.unwrap();assert!(!original.members.is_empty());assert!(!original.parent_spr.is_empty());
  let original_bytes=store::channel::encode_document_archive_bytes(&original).unwrap();
  for format in 0..2{

@@ -6,7 +6,7 @@
     use semio_framework_plugin_tests_05::plugin_runtime_plugin_builder_contract_support_1::TestMembers;
 fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
         let TestMembers::Child(child) = &mut app.child_composition.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child owner").member;
-        store::install_funded_member_store_owners(child,&semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer).expect("actual funded member catalog");
+        store::install_funded_member_store_owners(child,&TestMemberStoreProducer).expect("actual funded member catalog");
     }
 
     /// 🪆️ LAW (design §20.15, S4-LOAD wave 4): a COMPOSED document crosses a media edge whole — `produce_media("artifact:out")` carries the
@@ -25,7 +25,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
 
         let mut source = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut source, "child-1").await;
-        source.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
+        semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut source, &TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("composite edit");
         artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("the composite gesture settles");
         let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🎞️media/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original composed media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
         let mut artifact = identity.encode(|native| { let mut owner=semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner::new(native,media_grant); ::semio_framework_async::poll::resolve_ready(PluginApp::produce_media(&mut source, "artifact:out", &mut owner)) }).expect("the composed source hands out its whole document through its original authority");
@@ -104,7 +104,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
         assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "the select wrote the config lane");
         let history = app.render_ctx().test_history().await;
         assert_eq!(history.commands.iter().map(|entry| entry.action_id.as_str()).collect::<Vec<_>>(), vec!["increment"], "only the document row is listed");
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.count, 0, "undo retracts the document edit, never the config one");
         assert_eq!(app.stores.test_config().await.selected, Some("node-1".to_string()), "undo never steps over the config lane");
         close_reserved_app(&mut app, mounted_policy,cx);
@@ -127,7 +127,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } }))), &mut identity).await;
+        reserved_action(&mut app, NOTE_SHELL_COMMAND_ACTION_ID, Some(&dv(json!({ "commandId": "os.setThemeId", "label": "Set Theme", "inverseCommandId": "os.setThemeId", "inverseArgs": { "themeId": "light" } }))), &mut identity, cx).await;
 
         let history = app.render_ctx().test_history().await;
         let entry = history.commands.first().expect("one logged shell row");
@@ -135,7 +135,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
         assert!(entry.revertible, "a Shell row with a stored inverse must be revertible");
         let seq = entry.seq;
 
-        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &mut identity).await;
+        let result = reserved_action(&mut app, REVERT_TO_COMMAND_ACTION_ID, Some(&dv(json!({ "entrySeq": seq }))), &mut identity, cx).await;
 
         assert_eq!(result.requested_effects, vec![Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework::dsl_value!({ "themeId": "light" })) }]);
         assert_eq!(app.render_ctx().test_history().await.commands.len(), history.commands.len(), "bubbling the effect logs nothing new by itself");
@@ -158,7 +158,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity,cx).await.expect("setLabel");
-        let result = reserved_action(&mut app, "copy", None, &mut identity).await;
+        let result = reserved_action(&mut app, "copy", None, &mut identity, cx).await;
         assert!(result.mutations.is_empty(), "copy must not record an undo entry");
         assert_eq!(result.requested_effects.len(), 1);
         let Effect::ClipboardWrite { fragment } = &result.requested_effects[0] else { panic!("expected ClipboardWrite effect") };
@@ -183,7 +183,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let result = reserved_action(&mut app, "copy", None, &mut identity).await;
+        let result = reserved_action(&mut app, "copy", None, &mut identity, cx).await;
         assert!(result.mutations.is_empty());
         assert!(result.requested_effects.is_empty());
 
@@ -207,11 +207,11 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.dispatch_typed(TestCommand::SetLabel { value: "hello".into() }, &meta(), &mut identity,cx).await.expect("setLabel");
-        let result = reserved_action(&mut app, "cut", None, &mut identity).await;
+        let result = reserved_action(&mut app, "cut", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "");
         assert_eq!(result.requested_effects.len(), 1);
         assert!(matches!(&result.requested_effects[0], Effect::ClipboardWrite { fragment } if fragment.dsl_text == "hello"));
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "hello");
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -241,7 +241,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
             label: "pasted".into(),
         };
         let args = dv(json!({ "fragment": fragment, "anchor": "original" }));
-        reserved_action(&mut app, "paste", Some(&args), &mut identity).await;
+        reserved_action(&mut app, "paste", Some(&args), &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "pasted");
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -271,7 +271,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
             label: "pasted".into(),
         };
         let args = dv(json!({ "fragment": fragment, "anchor": "centroid" }));
-        reserved_action(&mut app, "paste", Some(&args), &mut identity).await;
+        reserved_action(&mut app, "paste", Some(&args), &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, format!("pasted-{:?}", PasteAnchor::Centroid));
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -292,7 +292,7 @@ fn install_test_member_owners(app: &mut VcsArtifactApp<TestApp, TestMembers>, ch
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = contract_app(mounted_policy, &mut identity).await;
-        let result = reserved_action(&mut app, "paste", None, &mut identity).await;
+        let result = reserved_action(&mut app, "paste", None, &mut identity, cx).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.stores.test_snapshot().await.label, "");
 

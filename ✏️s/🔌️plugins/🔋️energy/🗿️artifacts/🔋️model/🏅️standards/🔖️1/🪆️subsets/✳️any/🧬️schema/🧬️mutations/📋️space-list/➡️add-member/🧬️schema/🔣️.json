@@ -103,7 +103,7 @@
     "semantics": {
       "verb": "add",
       "entity": "SpaceList",
-      "kind": "AddSpaceListMember",
+      "kind": "add-space-list-member",
       "record": "AddSpaceListMember"
     },
     "diagnostics": {

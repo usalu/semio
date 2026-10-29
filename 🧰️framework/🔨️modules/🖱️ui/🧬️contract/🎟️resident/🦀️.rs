@@ -195,6 +195,10 @@ impl UiResidentPermit {
             None
         }
     }
+    /// 🔎️ Observes the resident slot and epoch of an owning root permit, so conformance can prove slot reuse without private access.
+    pub fn root_slot_epoch(&self) -> Option<(usize, u64)> {
+        self.root_key().map(|key| (key.slot, key.epoch))
+    }
     pub fn terminal_is_empty(&self) -> bool {
         self.key.is_none()
     }

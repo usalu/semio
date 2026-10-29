@@ -90,14 +90,29 @@ pub fn test_app_command_emit<const RETAINED: bool, const TOOLS: u8>(job: &TestAp
 }
 
 pub struct TestAppCommandInputs {
-    controller_id:String,
-    tool_id:String,
-    schema_id:String,
+    controller_id:Option<String>,
+    tool_id:Option<String>,
+    schema_id:Option<String>,
     pub window_config: Option<semio_framework_plugin_window_config::WindowConfigSnapshot>,
-    pub interaction_state: semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionState>,
-    pub interaction_hover: semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionHoverState>,
-    pub instance_operation_owner: semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle,
-    pub output_chunks: ArtifactOutputChunks,
+    pub interaction_state: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionState>>,
+    pub interaction_hover: Option<semio_framework_value::retirement::arc_custody::SharedControlledRetirement<InteractionHoverState>>,
+    pub instance_operation_owner: Option<semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle>,
+    pub output_chunks: Option<ArtifactOutputChunks>,
+}
+
+impl TestAppCommandInputs {
+    /// 🧹️ The next original request input to retire, quoted as the typed retirement lane that owns it: `None` once every input is physically returned.
+    pub fn demands(&self) -> Result<Option<semio_framework_value::RetirementDemand>, semio_framework_value::ValueError> {
+        macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.$field).map(Some); } }; }
+        owned!(controller_id);owned!(tool_id);owned!(schema_id);owned!(window_config);owned!(interaction_state);owned!(interaction_hover);owned!(instance_operation_owner);owned!(output_chunks);
+        Ok(None)
+    }
+
+    pub fn step(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>, semio_framework_value::ValueError> {
+        macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.$field, active, grant).map(Some); } }; }
+        owned!(controller_id);owned!(tool_id);owned!(schema_id);owned!(window_config);owned!(interaction_state);owned!(interaction_hover);owned!(instance_operation_owner);owned!(output_chunks);
+        Ok(None)
+    }
 }
 
 #[doc(hidden)]
@@ -132,7 +147,7 @@ impl<const RETAINED: bool, const TOOLS: u8> TestAppCommandJob<RETAINED, TOOLS> {
         if self.completion.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion); }
         if self.metadata.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.metadata); }
         if self.context.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.context); }
-        if self.residual.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.residual); }
+        if let Some(residual) = self.residual.as_ref() { return Ok(residual.demands()?.unwrap_or(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })); }
         if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture retains original context until its issuing authority is installed")); }
         if self.snapshot_read.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.snapshot_read); }
         Ok(Default::default())
@@ -201,7 +216,7 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
             else if self.completion.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion,&mut self.retirement,grant)}
             else if self.metadata.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.metadata,&mut self.retirement,grant)}
             else if self.context.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context,&mut self.retirement,grant)}
-            else if self.residual.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.residual,&mut self.retirement,grant)}
+            else if let Some(residual)=self.residual.as_mut(){match residual.step(&mut self.retirement,grant){Ok(Some(step))=>Ok(step),Ok(None)=>{self.residual=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}Err(error)=>Err(error)}}
             else if self.snapshot_read.is_some(){store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot_read,&mut self.retirement,grant)}
             else{Ok(RetainedCloneStep::Complete(Default::default()))}
         })?;
@@ -305,9 +320,9 @@ pub fn test_app_command_job<const RETAINED:bool,const TOOLS:u8>(request:&mut Opt
     let job = TestAppCommandJob {
         rejected: None,
         admitted: false,
-        residual: Some(TestAppCommandInputs { controller_id:request.controller_id,tool_id:request.tool_id,schema_id:request.payload_schema_id, window_config: request.window_config, interaction_state: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_state), interaction_hover: semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_hover), instance_operation_owner: request.instance_operation_owner, output_chunks: request.output_chunks }),
+        residual: Some(TestAppCommandInputs { controller_id:Some(request.controller_id),tool_id:Some(request.tool_id),schema_id:Some(request.payload_schema_id), window_config: request.window_config, interaction_state: Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_state)), interaction_hover: Some(semio_framework_value::retirement::arc_custody::SharedControlledRetirement::lease(request.interaction_hover)), instance_operation_owner: Some(request.instance_operation_owner), output_chunks: Some(request.output_chunks) }),
         metadata: Some(AppOperationContext { app_instance_id: request.app_instance_id, parent_document_id: request.parent_document_id, operation_id: request.operation.operation.0, generation: request.operation.generation.0, canonical_base_revision: request.canonical_base_revision, retained: request.retained, authoring_seed: request.authoring_seed }),
-        command: Some(request.command),
+        command: Some(request.command.into_box()),
         snapshot: Some(request.snapshot),
         snapshot_read: Some(request.snapshot_read),
         retirement: None,
@@ -358,14 +373,16 @@ pub fn reactor_native_lifecycle_open(instance: u32, request_sequence: u64, actor
 
 #[doc(hidden)]
 pub async fn reactor_native_lifecycle_poll(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<TestRuntimeApps>, events: Vec<Event>) -> TurnResult {
+    assert!(events.len() <= 1, "a reactor turn admits at most one event");
     for attempt in 0..64 {
-        match semio_framework_plugin_reactor_turn::poll_kernel(runtime, events.clone(), None, None, reactor_native_lifecycle_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
+        let mut event = events.first().cloned();
+        match semio_framework_plugin_reactor_turn::poll_kernel(runtime, &mut event, None, None, reactor_native_lifecycle_budget(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_step_context()).await {
             Ok(result) => return result,
-            Err(fault) if fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable => {
+            Err(failure) if failure.primary_fault().is_some_and(|fault| fault.code.0 == "plugin.reactor-turn-deadline" && fault.retryable) => {
                 eprintln!("retained lifecycle exact-event deadline retry={} events={:?}", attempt + 1, events);
                 std::thread::yield_now();
             }
-            Err(fault) => panic!("actual native lifecycle turn: {fault:?}"),
+            Err(failure) => panic!("actual native lifecycle turn: {failure:?}"),
         }
     }
     panic!("retained lifecycle could not finish within 64 exact-event retries")
@@ -477,8 +494,8 @@ impl ArtifactApp for SingleDocumentApp {
     type TransientMutation = PublicationTransientMutation;
     type Command = TestCommand;
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() })
     })}
 
     async fn handle(
@@ -496,7 +513,7 @@ impl ArtifactApp for SingleDocumentApp {
     /// 📚️ The refresh poll's whole-document replacement, minted the way every app mints one:
     /// `encode_pack` plus a bare `store::os_store::text_format::empty_document_spr` naming the APP, not the live store.
     /// This lane never passed through the runtime's identity stamp.
-    async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
+    async fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &semio_framework_plugin_decl_views::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
         let pack = <TestSnapshot as pack::snapshot::ArtifactPack>::encode_pack(&TestSnapshot { count: 42, label: "example".into(), slot: Vec::new() });
         let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(Self::APP_ID, Self::DOCUMENT_SCHEMA));
         vec![Effect::LoadDocument { pack, spr }]

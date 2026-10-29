@@ -1,5 +1,5 @@
 //! 💰️ Original Drawing fields and scalar relational frontiers survive every cancellation boundary.
-use pack::snapshot::ArtifactSqliteSnapshot as _;
+use pack::snapshot::ArtifactSqliteSnapshot;
 use super::*;
 use semio_framework_os_kernel::sqlite_snapshot::{transfer,artifact::{reconstruct_text_into,reconstruct_blob_into}};
 use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace;
@@ -36,7 +36,7 @@ pub(super)fn reconstruct_components(db:&SqliteDatabase,control:&mut SqliteSnapsh
 fn reconstruct_into(prefix:&mut Prefix,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,schema:&str,single:bool)->Result<(),ValueError>{
  control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;
  transfer::validate_database_into(&mut prefix.validation,db,schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
- transfer::validate_component_into(&mut prefix.validation,db,<SemioDrawingSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
+ transfer::validate_component_into(&mut prefix.validation,db,<SemioDrawingSnapshot as ArtifactSqliteSnapshot>::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
  let Prefix{components,snapshot:slot,validation:_,rows:storage,styles,layers,names,links,built,pending}=prefix;
  let mut rows=indexed::Rows::new(db,storage,control)?;let documents=rows.len("semio_drawing_document")?;if single&&documents!=1{return Err(invalid("drawing document must be a singleton"))}*components=transfer::reserve(documents,control)?;
  let style_count=rows.len("semio_drawing_style")?;let layer_count=rows.len("semio_drawing_layer")?;let count=rows.len("semio_drawing_node")?;let child_count=rows.len("semio_drawing_child")?;let segment_count=rows.len("semio_drawing_segment")?;

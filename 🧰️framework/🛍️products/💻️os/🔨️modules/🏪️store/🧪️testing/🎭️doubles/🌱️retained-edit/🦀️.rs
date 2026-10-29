@@ -47,7 +47,7 @@ impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValu
 impl<M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<DemoSnapshot> + semio_framework_os_spr::ColdMutation<DemoSnapshot> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static> RetainedCloneEdit<DemoSnapshot, M> for ColdRetainedCloneEdit<M> {
     type Cursor = ColdRetainedCloneEditCursor<M>;
 
-    fn preflight(&self, _mutation: &M, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, _mutation: &M, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, &'static str> {
         Ok(ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 65_536 })
     }
 

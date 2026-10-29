@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️EventSourcedHistory
     /// 📥️ Records admitted remote transitions in the log and materializes the projection they fold to — adopting `replayed`
@@ -115,36 +115,9 @@ where
         Ok((running, recorded))
     }
 
-    /// 🧱️ Where a replay of the live order from `length` starts: the head, the tail snapshot, or the nearest retained prefix
-    /// at or before `length` (exact: [`Self::prune_prefix_ring`]), else the genesis; the replay folds the rest of the prefix
-    /// itself ([`EditReplay::new_after_prefix`]).
-    pub fn live_base(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, length: usize) -> (usize, Arc<P>) {
-        let applied = store_log.applied_edit_ids.len();
-        if !self.current_detached && length == applied {
-            return (applied, Arc::clone(&*self.current));
-        }
-        if let Some((_, snapshot)) = self.tail_undo_cache.as_ref().filter(|(edit_id, _)| applied > 0 && length + 1 >= applied && store_log.applied_edit_ids.last() == Some(edit_id)) {
-            return (applied - 1, Arc::clone(snapshot));
-        }
-        match self.prefix_ring.iter().rev().find(|entry| entry.length <= length) {
-            Some(entry) => {
-                #[cfg(test)]
-                self.assert_prefix_entry_is_live(store_log, store_cursor, entry);
-                (entry.length, Arc::clone(&entry.snapshot))
-            }
-            None => (0, store_log.envelope.vcs.genesis.facts().share_snapshot()),
-        }
-    }
 
-    /// 🔬️ Test-build oracle of [`Self::live_prefix_state`]'s trust in the pruned ring: `entry` names the live prefix of its
-    /// length (checked outside the hot-path census).
-    #[cfg(test)]
-    fn assert_prefix_entry_is_live(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, entry: &PrefixSnapshot<P>) {
-        let saved = hot_path_census::take();
-        let digests = forward_prefix_digests::<P, Mutation, _, _>(store_cursor.revision_accumulator.identity_digest, store_log.applied_edit_ids.iter().take(entry.length), &store_log.envelope.vcs.edits, &self.supersessions).expect("the live prefix digests");
-        hot_path_census::count(|census| *census = saved);
-        assert_eq!(digests.last(), Some(&entry.digest), "a pruned prefix ring holds only entries of the live prefix (length {})", entry.length);
-    }
+
+
 
     /// 🩺️ The Report replay `fold` needs: none when its applied order and effective inputs are live or it only drops applied
     /// edits from the tail (every remaining edit keeps its prefix, so its durable messages and inverses stay
@@ -292,30 +265,7 @@ where
         Ok(replay.with_convergence(convergence))
     }
 
-    /// 🚩️ The live projection's retained states from prefix length `horizon` on — the pruned ring's entries (exact:
-    /// [`Self::prune_prefix_ring`]), the tail snapshot and the head — as a convergence probe. Every state is an alias of a root this
-    /// store keeps, so the probe never owns a last reference.
-    pub fn convergence_checkpoints(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, horizon: usize, equal: fn(&P, &P) -> bool) -> Result<ReplayConvergence<P>, VcsError> {
-        let length = store_log.applied_edit_ids.len();
-        let mut checkpoints: Vec<(usize, Arc<P>)> = self
-            .prefix_ring
-            .iter()
-            .filter(|entry| entry.length >= horizon && entry.length < length)
-            .map(|entry| {
-                #[cfg(test)]
-                self.assert_prefix_entry_is_live(store_log, store_cursor, entry);
-                (entry.length, Arc::clone(&entry.snapshot))
-            })
-            .collect();
-        if let Some((edit_id, snapshot)) = self.tail_undo_cache.as_ref() {
-            if length > horizon && store_log.applied_edit_ids.last() == Some(edit_id) && !checkpoints.iter().any(|(known, _)| *known == length - 1) {
-                checkpoints.push((length - 1, Arc::clone(snapshot)));
-            }
-        }
-        checkpoints.push((length, Arc::clone(&self.current)));
-        checkpoints.sort_by_key(|(prefix, _)| *prefix);
-        Ok(ReplayConvergence { horizon, checkpoints, equal })
-    }
+
 
     /// 🔭️ The projection after `applied[..from]` under `supersessions` ([`Self::prefix_state_recorded`]).
     fn prefix_state(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, applied: &[String], from: usize, supersessions: &EffectiveSupersessions) -> Result<Arc<P>, VcsError>  where P: Clone, Mutation: ColdMutation<P> {
@@ -515,3 +465,65 @@ where
 //#endregion 🔖️Backbone
 //#endregion 🔖️Backbone
 //#endregion 🔖️EphemeralLanes
+
+impl<P, Mutation> StoreLive<P, Mutation>
+where
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    /// 🧱️ Where a replay of the live order from `length` starts: the head, the tail snapshot, or the nearest retained prefix
+    /// at or before `length` (exact: [`Self::prune_prefix_ring`]), else the genesis; the replay folds the rest of the prefix
+    /// itself ([`EditReplay::new_after_prefix`]).
+    pub fn live_base(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, length: usize) -> (usize, Arc<P>) {
+        let applied = store_log.applied_edit_ids.len();
+        if !self.current_detached && length == applied {
+            return (applied, Arc::clone(&*self.current));
+        }
+        if let Some((_, snapshot)) = self.tail_undo_cache.as_ref().filter(|(edit_id, _)| applied > 0 && length + 1 >= applied && store_log.applied_edit_ids.last() == Some(edit_id)) {
+            return (applied - 1, Arc::clone(snapshot));
+        }
+        match self.prefix_ring.iter().rev().find(|entry| entry.length <= length) {
+            Some(entry) => {
+                #[cfg(test)]
+                self.assert_prefix_entry_is_live(store_log, store_cursor, entry);
+                (entry.length, Arc::clone(&entry.snapshot))
+            }
+            None => (0, store_log.envelope.vcs.genesis.facts().share_snapshot()),
+        }
+    }
+
+    /// 🚩️ The live projection's retained states from prefix length `horizon` on — the pruned ring's entries (exact:
+    /// [`Self::prune_prefix_ring`]), the tail snapshot and the head — as a convergence probe. Every state is an alias of a root this
+    /// store keeps, so the probe never owns a last reference.
+    pub fn convergence_checkpoints(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, horizon: usize, equal: fn(&P, &P) -> bool) -> Result<ReplayConvergence<P>, VcsError> {
+        let length = store_log.applied_edit_ids.len();
+        let mut checkpoints: Vec<(usize, Arc<P>)> = self
+            .prefix_ring
+            .iter()
+            .filter(|entry| entry.length >= horizon && entry.length < length)
+            .map(|entry| {
+                #[cfg(test)]
+                self.assert_prefix_entry_is_live(store_log, store_cursor, entry);
+                (entry.length, Arc::clone(&entry.snapshot))
+            })
+            .collect();
+        if let Some((edit_id, snapshot)) = self.tail_undo_cache.as_ref() {
+            if length > horizon && store_log.applied_edit_ids.last() == Some(edit_id) && !checkpoints.iter().any(|(known, _)| *known == length - 1) {
+                checkpoints.push((length - 1, Arc::clone(snapshot)));
+            }
+        }
+        checkpoints.push((length, Arc::clone(&self.current)));
+        checkpoints.sort_by_key(|(prefix, _)| *prefix);
+        Ok(ReplayConvergence { horizon, checkpoints, equal })
+    }
+
+    /// 🔬️ Test-build oracle of [`Self::live_prefix_state`]'s trust in the pruned ring: `entry` names the live prefix of its
+    /// length (checked outside the hot-path census).
+    #[cfg(test)]
+    fn assert_prefix_entry_is_live(&self, store_log: &StoreLog<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, entry: &PrefixSnapshot<P>) {
+        let saved = hot_path_census::take();
+        let digests = forward_prefix_digests::<P, Mutation, _, _>(store_cursor.revision_accumulator.identity_digest, store_log.applied_edit_ids.iter().take(entry.length), &store_log.envelope.vcs.edits, &self.supersessions).expect("the live prefix digests");
+        hot_path_census::count(|census| *census = saved);
+        assert_eq!(digests.last(), Some(&entry.digest), "a pruned prefix ring holds only entries of the live prefix (length {})", entry.length);
+    }
+}

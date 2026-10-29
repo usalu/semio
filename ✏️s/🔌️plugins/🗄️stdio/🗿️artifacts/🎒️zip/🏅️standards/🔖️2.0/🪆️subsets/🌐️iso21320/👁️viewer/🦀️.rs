@@ -69,8 +69,8 @@ impl ArtifactViewer for ZipIso21320Viewer {
     const DIALECT: Dialect = ZIP_ISO21320_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_ZIP_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->ZipSnapshot>{Some(||{
-        ZipSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<ZipSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(ZipSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `ZipIso21320ViewCommand::Noop` variant never carries a

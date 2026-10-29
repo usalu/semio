@@ -25,6 +25,7 @@ testkit = []
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-snapshot-projection = { path = "../../../../../../../🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 protocol = { path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust", package = "semio-framework-replication" }
 semio-framework-os-vcs = { path = "../../../../🌿️vcs/📦️packages/🦀️rust" }

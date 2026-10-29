@@ -190,5 +190,26 @@ impl<T:DslOwnedReceivingField,U:RetireOwned> OwnedFieldReceiving<U> for MappedRe
  fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.current.terminal_is_empty()&&self.child_output.terminal_is_empty()&&self.output.terminal_is_empty()}
 }
 
+/// 📐️ A fixed tuple of copy scalars lands in one inline array under a separate metadata turn; the original tuple source retires on its own paid turns.
+pub struct ArrayReceiving<T:OwnedScalar+Copy+Send+'static,const N:usize>{source:OwnedSlot<FieldValue>,output:OwnedSlot<[T;N]>,initialized:bool,complete:bool,closing:bool}
+impl<T:OwnedScalar+Copy+Send+'static,const N:usize> Default for ArrayReceiving<T,N>{fn default()->Self{Self{source:Default::default(),output:Default::default(),initialized:false,complete:false,closing:false}}}
+impl<T:OwnedScalar+Copy+Send+'static,const N:usize> DslOwnedReceivingField for [T;N]{type Cursor=ArrayReceiving<T,N>;}
+impl<T:OwnedScalar+Copy+Send+'static,const N:usize> OwnedFieldReceiving<[T;N]> for ArrayReceiving<T,N>{
+ fn demands(&self,_:&Option<FieldValue>,body:usize)->Result<RetirementDemand,ValueError>{
+  if !self.initialized{return Ok(metadata::<FieldValue>())}if self.output.value.is_none()&&!self.complete{return Ok(metadata::<[T;N]>())}if !self.source.terminal_is_empty(){return self.source.close_demands(body)}Ok(metadata::<bool>())
+ }
+ fn step(&mut self,source:&mut Option<FieldValue>,native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  if self.closing{return Err(invariant())}if self.complete{return Ok(Default::default())}let demand=self.demands(source,body)?;if !funds(grant,demand){return Ok(Default::default())}native.checkpoint()?;
+  if !self.initialized{if !matches!(source.as_ref(),Some(FieldValue::Tuple(items))if items.len()==N){return Err(invalid())}*self.source.value=source.take();self.initialized=true;return Ok(receipt(demand))}
+  if self.output.value.is_none(){let Some(FieldValue::Tuple(items))=self.source.value.as_mut()else{return Err(invariant())};let mut slots:[Option<T>;N]=std::array::from_fn(|_|None);for(slot,item)in slots.iter_mut().zip(items.iter_mut()){let mut taken=Some(std::mem::replace(item,FieldValue::Absent));*slot=Some(T::take_source(&mut taken)?);}*self.output.value=Some(slots.map(|slot|slot.expect("fixed array receiving filled every slot")));return Ok(receipt(demand))}
+  if !self.source.terminal_is_empty(){return close_source(&mut self.source,native,grant)}self.complete=true;Ok(receipt(demand))
+ }
+ fn is_ready(&self)->bool{!self.closing&&self.complete&&self.output.value.is_some()}
+ fn take_into(&mut self,output:&mut Option<[T;N]>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if output.is_some()||!self.is_ready(){return Err(invariant())}let demand=metadata::<[T;N]>();if !funds(grant,demand){return Ok(Default::default())}*output=self.output.value.take();Ok(receipt(demand))}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.output.terminal_is_empty(){return self.output.close_demands(body)}self.source.close_demands(body)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(Default::default())}self.closing=true;if !self.output.terminal_is_empty(){return self.output.close_step(grant)}self.source.close_step(grant)}
+ fn terminal_is_empty(&self)->bool{self.output.terminal_is_empty()&&self.source.terminal_is_empty()}
+}
+
 #[path="🌳️intrinsic/🦀️.rs"]mod intrinsic;
 pub use intrinsic::{NativeIntrinsicRecord,NativeIntrinsicReceiving};

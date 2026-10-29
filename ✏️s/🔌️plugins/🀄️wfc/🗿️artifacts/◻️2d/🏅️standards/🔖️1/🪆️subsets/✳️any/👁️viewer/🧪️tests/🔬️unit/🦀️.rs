@@ -12,7 +12,7 @@ fn viewer_binds_the_artifact_dialect() {
 /// 👁️ Editor and viewer boot the SAME committed example, so one board opens as one scene in both.
 #[test]
 fn viewer_boots_the_same_example_as_the_editor() {
-    assert_eq!(Wfc2dViewer::reference_birth().expect("explicit reference snapshot producer")(), crate::examples::two_room_corridor::document());
+    assert_eq!(Wfc2dViewer::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births"), crate::examples::two_room_corridor::document());
 }
 
 #[test]

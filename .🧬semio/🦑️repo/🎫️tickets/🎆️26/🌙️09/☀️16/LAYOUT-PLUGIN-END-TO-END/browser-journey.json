@@ -1,0 +1,220 @@
+{
+  "version": 2,
+  "demo": {
+    "pageIds": [
+      "layout-document.page.page-1",
+      "layout-document.page.page-2"
+    ],
+    "requiredFrames": [
+      "frame-1",
+      "frame-text-1",
+      "frame-image-1"
+    ],
+    "stockText": "Hello layout"
+  },
+  "frame": {
+    "kind": "rect",
+    "x": 251,
+    "y": 337
+  },
+  "marker": "LAYOUT-EDIT-731",
+  "originalOnlyMarker": "LAYOUT-ORIGINAL-ONLY-731",
+  "geometry": {
+    "width": 400,
+    "height": 500,
+    "patch": {
+      "left": 274,
+      "top": 354,
+      "width": 12,
+      "height": 12
+    },
+    "color": [
+      51,
+      61,
+      77
+    ],
+    "tolerance": 3,
+    "minimumChange": 20,
+    "minimumChangedFraction": 0.95
+  },
+  "steps": [
+    {
+      "step": "boot",
+      "values": {
+        "ready": "layout",
+        "error": null,
+        "painted": true
+      }
+    },
+    {
+      "step": "artifact-panel-baseline",
+      "values": {
+        "observed": true
+      }
+    },
+    {
+      "step": "baseline-media",
+      "values": {
+        "valid": true
+      }
+    },
+    {
+      "step": "exact-create-undo-redo",
+      "values": {
+        "submitted": "keyboard",
+        "exactCreate": true,
+        "exactUndo": true,
+        "exactRedo": true
+      }
+    },
+    {
+      "step": "story-marker",
+      "values": {
+        "committed": true,
+        "marker": "LAYOUT-EDIT-731"
+      }
+    },
+    {
+      "step": "export-svg",
+      "values": {
+        "valid": true,
+        "width": 400,
+        "height": 500
+      }
+    },
+    {
+      "step": "export-png",
+      "values": {
+        "valid": true,
+        "width": 400,
+        "height": 500
+      }
+    },
+    {
+      "step": "edited-geometry",
+      "values": {
+        "valid": true,
+        "pixels": 144
+      }
+    },
+    {
+      "step": "export-pdf",
+      "values": {
+        "valid": true,
+        "authoredMarker": true
+      }
+    },
+    {
+      "step": "export-archive",
+      "values": {
+        "exported": true
+      }
+    },
+    {
+      "step": "diverge-original",
+      "values": {
+        "addedPage": true
+      }
+    },
+    {
+      "step": "reopen-archive",
+      "values": {
+        "restored": true,
+        "newOwner": true,
+        "marker": "LAYOUT-EDIT-731",
+        "excludesOriginalOnlyPage": true,
+        "excludesOriginalOnlyMarker": true
+      }
+    }
+  ],
+  "surfaceHealthCases": [
+    {
+      "name": "Canvas Publishes No Status",
+      "status": null,
+      "board": null,
+      "phase": null,
+      "fault": null,
+      "valid": true
+    },
+    {
+      "name": "World Ready",
+      "status": "{\"phase\":\"ready\",\"fault\":null}",
+      "board": null,
+      "phase": null,
+      "fault": null,
+      "valid": true
+    },
+    {
+      "name": "Board Pending",
+      "status": null,
+      "board": "{\"snapshotParsed\":null,\"refusalReason\":\"\"}",
+      "phase": null,
+      "fault": null,
+      "valid": true
+    },
+    {
+      "name": "Board Parsed",
+      "status": null,
+      "board": "{\"snapshotParsed\":true,\"refusalReason\":\"\"}",
+      "phase": null,
+      "fault": null,
+      "valid": true
+    },
+    {
+      "name": "Malformed World JSON",
+      "status": "{",
+      "board": null,
+      "phase": null,
+      "fault": null,
+      "valid": false
+    },
+    {
+      "name": "Malformed Board JSON",
+      "status": null,
+      "board": "[",
+      "phase": null,
+      "fault": null,
+      "valid": false
+    },
+    {
+      "name": "Primitive Status",
+      "status": "false",
+      "board": null,
+      "phase": null,
+      "fault": null,
+      "valid": false
+    },
+    {
+      "name": "Board Refused Snapshot",
+      "status": null,
+      "board": "{\"snapshotParsed\":false,\"refusalReason\":\"\"}",
+      "phase": null,
+      "fault": null,
+      "valid": false
+    },
+    {
+      "name": "Board Refusal Reason",
+      "status": null,
+      "board": "{\"snapshotParsed\":true,\"refusalReason\":\"refused\"}",
+      "phase": null,
+      "fault": null,
+      "valid": false
+    },
+    {
+      "name": "World Fault",
+      "status": "{\"phase\":\"idle\",\"fault\":{\"code\":\"render-failed\"}}",
+      "board": null,
+      "phase": null,
+      "fault": null,
+      "valid": false
+    },
+    {
+      "name": "Failed Phase",
+      "status": "{\"phase\":\"faulted\",\"fault\":null}",
+      "board": null,
+      "phase": null,
+      "fault": null,
+      "valid": false
+    }
+  ]
+}

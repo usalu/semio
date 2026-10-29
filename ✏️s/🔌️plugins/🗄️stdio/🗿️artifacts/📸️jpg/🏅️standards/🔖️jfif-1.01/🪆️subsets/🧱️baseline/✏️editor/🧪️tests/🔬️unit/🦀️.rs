@@ -72,7 +72,7 @@ async fn natural_file_route_uses_plugin_media_and_isolates_fresh_owner_history()
         },
         data: source.to_vec(),
     };
-    let initial = <JpgBaselineEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
+    let initial = <JpgBaselineEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<JpgBaselineEditor>, _>(async { semio_framework_plugin::App { definition: create_jpg_baseline_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let mut outside = artifact.clone();

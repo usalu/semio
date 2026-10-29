@@ -427,7 +427,7 @@ pub mod beams {
 
     impl SourcingModule for BeamsModule {
         fn module_id(&self) -> &str {
-            "beams"
+            super::SOURCING_AUTHORED_MODULE_IDS[0]
         }
         fn label(&self) -> &str {
             "Beams"
@@ -488,7 +488,7 @@ pub mod windows {
 
     impl SourcingModule for WindowsModule {
         fn module_id(&self) -> &str {
-            "windows"
+            super::SOURCING_AUTHORED_MODULE_IDS[1]
         }
         fn label(&self) -> &str {
             "Windows"
@@ -538,7 +538,7 @@ pub mod reuse {
 
     impl SourcingModule for ReuseModule {
         fn module_id(&self) -> &str {
-            "reuse"
+            super::SOURCING_AUTHORED_MODULE_IDS[3]
         }
         fn label(&self) -> &str {
             "Reuse"
@@ -576,7 +576,7 @@ pub mod slabs {
 
     impl SourcingModule for SlabsModule {
         fn module_id(&self) -> &str {
-            "slabs"
+            super::SOURCING_AUTHORED_MODULE_IDS[2]
         }
         fn label(&self) -> &str {
             "Slabs"
@@ -685,6 +685,9 @@ pub const SOURCING_MAXIMUM_MODULES: usize = 8;
 
 
 
+
+/// 🧷️ Stable identities shared by authored modules and the original host installation policy.
+pub const SOURCING_AUTHORED_MODULE_IDS: &[&str] = &["beams", "windows", "slabs", "reuse"];
 
 /// 🏗️ The authored sourcing modules in their semantic registration order.
 pub fn authored_modules() -> Vec<SourcingModules> {

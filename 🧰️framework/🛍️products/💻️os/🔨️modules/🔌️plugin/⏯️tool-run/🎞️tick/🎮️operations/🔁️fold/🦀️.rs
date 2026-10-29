@@ -20,7 +20,7 @@ pub struct OriginalToolOverlayFold<P,M:Send+Sync+'static>{
 }
 impl<P,M:Send+Sync+'static> Default for OriginalToolOverlayFold<P,M>{fn default()->Self{Self{semantic:None,messages:None,retirement:None,base:None,running:None,checkpoint:None,alias:None,binding:None,ordinal:None,phase:0,accepted:false,dirty:false,closing:false}}}
 impl<P,M> OriginalToolOverlayFold<P,M>
-where P:semio_framework_value::ToValue+Send+Sync+'static,M:semio_framework_value::ToValue+semio_framework_value::FromValue+crate::protocol::Mutation<P>+crate::protocol::OpBinary+crate::protocol::OpText+Send+'static{
+where P: semio_framework_os_kernel::StoreState,M: semio_framework_os_kernel::StoreMutationFor<P>{
  /// 🧭️ Borrows scalar stages and the exact pending demand for original progress witnesses.
  #[cfg(feature="artifact-app-testing")]
  pub fn diagnostic_cursor(&self,store:&ArtifactStore<P,M>)->Result<(u8,u32,RetirementDemand),ValueError>{let flags=u32::from(self.semantic.is_some())|u32::from(self.messages.is_some())<<1|u32::from(self.retirement.is_some())<<2|u32::from(self.base.is_some())<<3|u32::from(self.running.is_some())<<4|u32::from(self.alias.is_some())<<5|u32::from(self.checkpoint.is_some())<<6;let demand=if let Some(owner)=self.semantic.as_ref(){if owner.is_closing(){owner.next_demand(4096)?}else{store.derived_operation_demands(owner,4096)?}}else{Default::default()};Ok((self.phase,flags,demand))}

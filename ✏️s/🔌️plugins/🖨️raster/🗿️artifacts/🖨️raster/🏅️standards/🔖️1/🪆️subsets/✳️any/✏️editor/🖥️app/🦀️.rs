@@ -179,15 +179,6 @@ impl ArtifactEditor for RasterPlayApp {
         Some(semio_s_artifact_raster_raster_host::raster_document_store_owners_admission(grant))
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_s_artifact_raster_raster_host::raster_document_store_initialization_job(envelope, operation, generation, actor))
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
@@ -259,8 +250,8 @@ impl ArtifactEditor for RasterPlayApp {
     /// through the bounded `set-active-example` mutations (the same document flow block2d/forms
     /// use). Found at the first react boots of ticket 26/09/05/RASTER-PLUGIN-END-TO-END
     /// (2026-09-16).
-    fn reference_birth()->Option<fn()->RasterSnapshot>{Some(||{
-        semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot()
+    fn reference_birth()->Option<fn()->Result<RasterSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

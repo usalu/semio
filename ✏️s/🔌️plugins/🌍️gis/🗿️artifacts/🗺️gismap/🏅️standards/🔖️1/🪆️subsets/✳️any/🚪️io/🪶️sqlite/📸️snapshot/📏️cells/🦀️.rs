@@ -40,7 +40,7 @@ pub(super)fn admit_record(source:&R,native:&mut semio_framework_value_native_own
     "signed"=>{let _=scalar::<i64>(value.get(3),native)?;c.row(table,&[8],native)?;},
     "float"=>{let number=scalar::<f64>(value.get(4),native)?;c.row(table,&[if number.is_nan(){11}else if number.is_infinite(){32}else{22}],native)?;},
     "text"=>c.row(table,&[text(value.get(5))?.len()],native)?,
-    "bytes"=>{let F::Bytes64(bytes)=required(value.get(6))? else{return Err(invalid("GIS native octets differ"))};c.row(table,&[],native)?;for _ in bytes{c.row(15,&[24],native)?;}},
+    "bytes"=>{let F::Bytes64(bytes)=required(value.get(6))? else{return Err(invalid("GIS native octets differ"))};c.row(table,&[],native)?;for _ in bytes.iter(){c.row(15,&[24],native)?;}},
     "array"=>{c.row(table,&[],native)?;for item in items{let _=scalar::<u64>(Some(item),native)?;c.row(17,&[24],native)?;}},
     "object"=>{c.row(table,&[],native)?;for member in members{let member=record(Some(member))?;let _=scalar::<u64>(member.get(1),native)?;c.row(19,&[24,text(member.get(0))?.len()],native)?;}},
     _=>unreachable!()

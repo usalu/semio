@@ -16,6 +16,7 @@ use semio_s_fem_mesh::MountedPlanarDomain;
 use semio_s_fem_elements3d::Bar3;
 use semio_s_fem_elements3d::Frame3;
 use semio_s_fem_model::Dof;
+use semio_s_fem_model::Element;
 use semio_s_fem_model::Node;
 use semio_s_fem_static::Elements;
 use semio_s_fem_sparse::Csr;
@@ -57,6 +58,7 @@ use semio_framework_ui_scene::World3dSnapshotPageKind;
 use semio_framework_ui_scene::World3dSnapshotWriteToken;
 use semio_framework_ui_scene::WORLD3D_SNAPSHOT_PAGE_BYTE_CAPACITY;
 use semio_framework_ui_scene::WORLD3D_SNAPSHOT_PAGE_ITEM_CAPACITY;
+use semio_framework_value::RetirementDemand;
 use std::cell::RefCell;
 
 #[path = "🧾️contract/🦀️.rs"]

@@ -71,8 +71,8 @@ impl ArtifactViewer for ImperativeViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->ProcedureSnapshot>{Some(||{
-        default_snapshot()
+    fn reference_birth()->Option<fn()->Result<ProcedureSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `ImperativeViewCommand::Noop` variant never carries a

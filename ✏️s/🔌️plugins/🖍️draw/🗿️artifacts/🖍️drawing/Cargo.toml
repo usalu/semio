@@ -157,9 +157,15 @@ path = "../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/
 path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"
 package = "semio-framework-hash"
 
+[workspace.dependencies.semio-framework-io-ports]
+path = "../../../../../🧰️framework/🔨️modules/🚪️io/🔌️ports/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-os-kernel]
 path = "../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"
 package = "semio-framework-os-kernel"
+
+[workspace.dependencies.semio-framework-os-spr]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-pack-json]
 path = "../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"
@@ -194,6 +200,9 @@ path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/�
 
 [workspace.dependencies.semio-framework-value]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-snapshot-read]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-framework-value-native-owned]
 path = "../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"

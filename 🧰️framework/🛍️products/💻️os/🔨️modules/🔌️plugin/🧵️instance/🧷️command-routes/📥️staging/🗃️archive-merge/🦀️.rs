@@ -55,7 +55,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         };
         self.history.cache = None;
         if self.stores.store.generation() != generation {
-            self.as_dispatch().deliver_base_moved(identity, cx).await?;
+            self.as_dispatch().queue_base_moved();
         }
         self.child_composition.follow_derivable_children(&mut *self.stores, identity).await?;
         Ok((u64::try_from(merge.merged).unwrap_or(u64::MAX), u64::try_from(merge.ahead).unwrap_or(u64::MAX)))

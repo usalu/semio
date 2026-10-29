@@ -10,7 +10,7 @@ fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framewor
 #[path="🏘️envelope/🦀️.rs"]mod envelope;
 #[path="⚙️systems/🦀️.rs"]mod systems;
 #[path="🗓️schedules/🦀️.rs"]mod schedules;
-#[path="📏️cells/🦀️.rs"]pub(super)mod semantic_cells;
+use semio_s_artifact_energy_model_snapshot_sqlite_admission as semantic_cells;
 pub const SCHEMA:&str=include_str!("🗄️.sql");
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for EnergyModelSnapshot{
  
@@ -45,8 +45,8 @@ fn visit_rows(s:&EnergyModelSnapshot,p:&mut RowWriter<'_ ,'_>)->Result<(),ValueE
  if let Some(link)=&s.referenced_model{literal_link(p,"energy_referenced_model_link",link)?;}if let Some(link)=&s.weather_link{literal_link(p,"energy_weather_link",link)?;}
  for n in 0..12{emit(p,"energy_ground_month",n,&[Cell::Real(m.ground_temperature.building_surface_c[n]),Cell::Real(m.ground_temperature.shallow_c[n])],MONTH)?;}
  envelope::project(m,p)?;systems::project(m,p)?;schedules::project(&m.schedules,p)?;Ok(())}
-pub fn project(s:&EnergyModelSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic_cells::admit_extent(c.limits())?;let mut p=RowWriter::new(SCHEMA,c)?;visit_rows(s,&mut p)?;p.finish()}
-pub(super) fn admit(s:&EnergyModelSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic_cells::admit_extent(c.limits())?;let mut p=RowWriter::borrowed(c,SqliteSnapshotPhase::ProjectSnapshot)?;visit_rows(s,&mut p)?;p.finish_borrowed()}
+pub fn project(s:&EnergyModelSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic_cells::admit_extent(c.limits(),SCHEMA.len())?;let mut p=RowWriter::new(SCHEMA,c)?;visit_rows(s,&mut p)?;p.finish()}
+pub(super) fn admit(s:&EnergyModelSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic_cells::admit_extent(c.limits(),SCHEMA.len())?;let mut p=RowWriter::borrowed(c,SqliteSnapshotPhase::ProjectSnapshot)?;visit_rows(s,&mut p)?;p.finish_borrowed()}
 
 struct Reader<'d,'c,'p>{database:&'d SqliteDatabase,control:&'c mut SqliteSnapshotControl<'p>,groups:BTreeMap<&'static str,BTreeMap<i64,Vec<FloatRow<'d>>>>,used:usize,visits:usize}
 impl<'d,'c,'p> Reader<'d,'c,'p>{

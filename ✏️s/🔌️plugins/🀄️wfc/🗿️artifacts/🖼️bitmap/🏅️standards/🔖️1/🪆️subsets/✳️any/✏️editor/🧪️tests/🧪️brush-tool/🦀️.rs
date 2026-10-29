@@ -256,7 +256,7 @@ fn settle<E: std::fmt::Debug>(app: &mut BitmapApp, result: Result<InvocationResu
 fn stroke(app: &mut BitmapApp, points: &[(u32, u32)], phase: Option<&str>) -> InvocationResult {
     let command = BitmapEditorCommand::PaintStroke { xs: points.iter().map(|point| point.0).collect(), ys: points.iter().map(|point| point.1).collect(), color: Some(1), phase: phase.map(str::to_string), reason: None };
     let meta = input_meta();
-    let result = block_on(app.app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     settle(app, result)
 }
 
@@ -298,7 +298,7 @@ fn a_mounted_streamed_stroke_commits_once_and_a_cancelled_one_leaves_zero_trace(
     assert!(edit_rows(&stroke(&mut app, &[(5, 5), (6, 6)], Some("stream"))).is_empty());
     let meta = input_meta();
     let abort = BitmapEditorCommand::PaintStroke { xs: Vec::new(), ys: Vec::new(), color: None, phase: Some("abort".into()), reason: Some("blur".into()) };
-    let result = block_on(app.app.dispatch_typed(abort, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &abort, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     assert!(edit_rows(&settle(&mut app, result)).is_empty(), "a cancel is no history");
     assert_eq!(app.snapshot().expect("projection"), committed, "a cancel leaves zero trace");
     close(&mut app);
@@ -321,7 +321,7 @@ fn pointer(app: &mut BitmapApp, action: &str, args: serde_json::Value) -> Invoca
     args["surfaceId"] = serde_json::Value::from(format!("window:{WFC_BITMAP_WINDOW_INPUT}"));
     let command = <BitmapEditor as semio_framework_plugin::ArtifactEditor>::command_from_action(action, Some((semio_framework_value::DslValue::from(&args)).clone()), None).expect("the canvas verb bridges");
     let meta = input_meta();
-    let result = block_on(app.app.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     settle(app, result)
 }
 

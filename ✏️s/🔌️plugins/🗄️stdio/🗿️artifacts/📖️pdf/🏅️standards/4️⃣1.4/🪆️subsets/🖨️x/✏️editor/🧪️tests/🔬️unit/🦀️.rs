@@ -64,7 +64,7 @@ fn own14_typed_page_command_uses_the_own_mutation_codec() {
     assert_eq!(Pdf14XEditorCommand::decode_op(&native.encode_op().unwrap()).unwrap(), native);
     assert_eq!(Pdf14XEditorCommand::parse_op(&native.print_op()).unwrap(), native);
     let Pdf14XEditorCommand::PageEdit { action, payload } = native else { panic!("actual own page action"); };
-    let original = <Pdf14XEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
+    let original = <Pdf14XEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let emit = page::emit_page_edit(&original, &action, &payload).unwrap();
     assert_eq!(emit.artifact_mutations.len(), 1);
     let op = &emit.artifact_mutations[0];

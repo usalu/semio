@@ -5,7 +5,7 @@ use semio_framework::MediaType;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_plugin_decl_app::ArtifactApp;
 #[allow(unused_imports)]
-use semio_framework_plugin_decl_views::media_contract::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportHandle, ArtifactMediaExportPoll, ArtifactMediaExportResult, ArtifactOutputChunks};
+use semio_framework_plugin_decl_media::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportHandle, ArtifactMediaExportPoll, ArtifactMediaExportResult, ArtifactOutputChunks};
 #[doc(hidden)]
 #[path = "../../../../📜️declaration/🎞️media/🧪️tests/🎟️publication/🦀️.rs"]
 pub mod original_tests;

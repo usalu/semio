@@ -58,7 +58,7 @@ pub fn snapshot_read(app: &Generation2dApp) -> semio_s_artifact_procedural_2d_mo
 /// `dispatch_typed` only ENQUEUES a retained job — the document, config and transient lanes are
 /// published when the host drives the ladder. `settle_registered_typed_operation` is that host loop.
 pub async fn dispatch(app: &mut Generation2dApp, command: Generation2dCommand) -> InvocationResult {
-    let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
     semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("Generation2d dispatched operation settles");
     result
 }

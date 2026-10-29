@@ -179,7 +179,7 @@
     "semantics": {
       "verb": "insert",
       "entity": "annual-schedule",
-      "kind": "schedule",
+      "kind": "insert-annual-schedule-rule",
       "record": "InsertAnnualScheduleRule"
     },
     "diagnostics": {

@@ -1,0 +1,55 @@
+{
+  "schema": "semio.framework.tool-machine.original-scrub.v1",
+  "actor": "actor-1",
+  "window": "w1",
+  "tool": "demo#setOpacity",
+  "base": "r1",
+  "gesture": "slider:1",
+  "leaves": [
+    11,
+    29
+  ],
+  "denials": [
+    {
+      "name": "no-items",
+      "items": 0
+    },
+    {
+      "name": "no-copy",
+      "copyBytes": 0
+    },
+    {
+      "name": "no-capacity",
+      "capacityBytes": 0
+    },
+    {
+      "name": "no-depth",
+      "depth": 0
+    },
+    {
+      "name": "held-original-read",
+      "readHeld": true
+    }
+  ],
+  "expected": {
+    "tick": "open",
+    "commit": "committed",
+    "values": [
+      11,
+      29
+    ],
+    "late": "idle",
+    "refusalPreservesInput": true,
+    "refusalPreservesState": true,
+    "payloadClones": 0,
+    "displacedRetiresOnce": true,
+    "stableResidentKey": true,
+    "retiredClosedPressCanReopen": true
+  },
+  "relocationCuts": [
+    0,
+    1,
+    2,
+    3
+  ]
+}

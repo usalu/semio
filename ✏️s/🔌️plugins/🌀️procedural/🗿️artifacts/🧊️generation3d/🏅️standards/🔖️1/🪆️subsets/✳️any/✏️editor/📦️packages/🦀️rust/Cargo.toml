@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
@@ -52,7 +53,6 @@ semio-s-artifact-procedural-3d-flow-eval-tick = { workspace = true }
 semio-s-artifact-procedural-3d-geometry-service = { workspace = true }
 semio-s-artifact-procedural-3d-host = { workspace = true }
 semio-s-artifact-procedural-3d-import-document = { workspace = true }
-semio-s-artifact-procedural-3d-initialization = { workspace = true }
 semio-s-artifact-procedural-3d-io = { workspace = true }
 semio-s-artifact-procedural-3d-io-text = { workspace = true }
 semio-s-artifact-procedural-3d-mesh-bridge = { workspace = true }

@@ -61,11 +61,11 @@ impl SnapshotAdmissionCursor {
     pub(super) fn step_one(&mut self, snapshot: &Fem2dSnapshot) -> Result<bool, &'static [u8]> {
         if !self.owner_opened && !matches!(self.lane, 4 | 9 | 11) {
             let bytes = match self.lane {
-                0 => snapshot.nodes.capacity() * size_of::<semio_s_fem_node::planar::FemNodeValue>(),
+                0 => snapshot.nodes.len() * size_of::<semio_s_fem_node::planar::FemNodeValue>(),
                 1 => snapshot.elements.capacity() * size_of::<FemElement>(),
                 2 => snapshot.regions.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemRegion>(),
                 3 => 0,
-                5 => snapshot.materials.capacity() * size_of::<semio_s_fem_material::planar::FemMaterialValue>(),
+                5 => snapshot.materials.len() * size_of::<semio_s_fem_material::planar::FemMaterialValue>(),
                 6 => snapshot.sections.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSection>(),
                 7 => snapshot.supports.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemSupport>(),
                 8 => snapshot.load_cases.capacity() * size_of::<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemLoadCase>(),

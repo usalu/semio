@@ -318,7 +318,10 @@
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve",
-        "forwardAllArgs": false
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
       },
       "cache": false,
       "continuous": true,
@@ -344,7 +347,10 @@
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts prepare-test",
-        "forwardAllArgs": false
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
       },
       "metadata": {
         "semio": {
@@ -372,7 +378,10 @@
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "repo ./🔨️modules/🧩️runtime/📜️script.ts serve-test",
-        "forwardAllArgs": false
+        "forwardAllArgs": false,
+        "env": {
+          "SEMIO_BUILD_MODE": "prototype"
+        }
       },
       "continuous": true,
       "metadata": {

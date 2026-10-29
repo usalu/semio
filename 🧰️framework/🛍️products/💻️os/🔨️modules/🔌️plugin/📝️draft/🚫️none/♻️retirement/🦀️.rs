@@ -84,8 +84,8 @@ impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPaylo
 /// 🫙️ Exact owner catalogue for a store whose snapshot and mutation types are statically empty.
 pub(super) fn zero_payload_store_owners<P, M>() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, M>, ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::ColdMutation<P> + store::OpBinary + store::OpText + Send + store::ArtifactCanonicalJsonTree + 'static,
+    P: pack::snapshot::ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::StoreState,
+    M: store::ArtifactCanonicalJsonTree + store::StoreMutationFor<P>,
 {
     let capacity_bytes = store::os_store::document_store_owners::DocumentStoreOwners::<P, M>::source_birth_bytes::<ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<M>, store::ArtifactStoreCursorDisposer<P, M>>()?;
     store::os_store::document_store_owners::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes, depth: 1 }, |grant| {

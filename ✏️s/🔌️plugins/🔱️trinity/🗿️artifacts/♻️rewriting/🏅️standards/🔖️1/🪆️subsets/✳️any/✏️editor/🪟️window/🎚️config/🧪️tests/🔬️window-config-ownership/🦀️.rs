@@ -67,7 +67,7 @@ use crate::editor::rewriting::ids::TRINITY_REWRITING_PLAY_BODY_BEFORE;
                 "set-lod-mode" => TrinityRewritingCommand::SetLodMode { value: mutation["value"].as_str().unwrap().into() },
                 other => return Err(format!("unexpected neutral command {other}")),
             };
-            app.dispatch_typed(command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+            semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("window-config") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
         }
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut receipts = 0;

@@ -26,7 +26,7 @@ pub(super) fn worker_job_begin_close<J>(inner: &WorkerJobSessionInner<J>) -> Wor
     }
 }
 
-pub(super) fn worker_job_close_step<J:InteractiveJob>(inner:&WorkerJobSessionInner<J>,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{if cx.should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}if inner.phase.compare_exchange(SESSION_CLOSE,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){return Ok(if inner.phase()==SESSION_EMPTY{WorkerJobCloseStep::Complete{progress:Default::default()}}else{WorkerJobCloseStep::Blocked})}let mut authority=unsafe{inner.take_authority()};let result=authority.close_step(cx);if matches!(result,Ok(WorkerJobCloseStep::Complete{..})){assert!(authority.terminal_is_empty());drop(authority);inner.phase.store(SESSION_EMPTY,Ordering::Release);inner.raise_wake()}else{unsafe{inner.put_authority(authority,SESSION_CLOSE)}}result}
+pub(super) fn worker_job_close_step<J:InteractiveJob>(inner:&WorkerJobSessionInner<J>,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}if inner.phase.compare_exchange(SESSION_CLOSE,SESSION_TRANSITION,Ordering::AcqRel,Ordering::Acquire).is_err(){return Ok(if inner.phase()==SESSION_EMPTY{WorkerJobCloseStep::Complete{progress:Default::default()}}else{WorkerJobCloseStep::Blocked})}let mut authority=unsafe{inner.take_authority()};let result=authority.close_step(cx);if matches!(result,Ok(WorkerJobCloseStep::Complete{..})){assert!(authority.terminal_is_empty());drop(authority);inner.phase.store(SESSION_EMPTY,Ordering::Release);inner.raise_wake()}else{unsafe{inner.put_authority(authority,SESSION_CLOSE)}}result}
 
 impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
     /// 📏️ Quotes the actual fixed storage births and initialized source/control writes before custody changes.
@@ -263,7 +263,7 @@ impl<J: InteractiveJob + 'static> WorkerJobSession<J> {
     }
 
     pub fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<WorkerJobCloseStep,OriginalTurnFailure>{
-        if cx.should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let grant=cx.retained_grant();if self.inner.0.is_none(){let step=self.release_retirement_slot(grant);return receive_original_worker_close_effects(cx,before,step)}
+        if cx.retirement_should_yield(){return Ok(WorkerJobCloseStep::Pending{progress:Default::default()})}let before=cx.retained_progress();let grant=cx.retained_grant();if self.inner.0.is_none(){let step=self.release_retirement_slot(grant);return receive_original_worker_close_effects(cx,before,step)}
         let step=match worker_job_close_step(&self.inner,cx)?{WorkerJobCloseStep::Complete{progress}if progress!=Default::default()=>WorkerJobCloseStep::Pending{progress},WorkerJobCloseStep::Complete{..}=>{let grant=cx.retained_grant();let result=self.close_original_session_arc(grant).map(|step|match step{WorkerJobCloseStep::Complete{progress}=>WorkerJobCloseStep::Pending{progress},step=>step});return receive_original_worker_close_result(cx,before,result)},step=>step};receive_original_worker_close_effects(cx,before,step)
     }
 

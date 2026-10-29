@@ -377,6 +377,8 @@ impl protocol::OpBinary for Process3dConfigMutation {
 
 //#endregion 🔖️OpCodec
 
+protocol::original_ordinal_operation_receiving!(Process3dConfigMutation);
+
 impl Mutation<Process3dConfig> for Process3dConfigMutation {
     type Diff = Process3dConfigDiff;
 

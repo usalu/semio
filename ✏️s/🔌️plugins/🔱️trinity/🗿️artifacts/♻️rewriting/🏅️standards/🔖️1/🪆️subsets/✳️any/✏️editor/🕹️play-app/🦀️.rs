@@ -114,8 +114,8 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
         window_config::register(registry)
     }
 
-    fn reference_birth()->Option<fn()->RewritingSnapshot>{Some(||{
-        default_rule_state()
+    fn reference_birth()->Option<fn()->Result<RewritingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_rule_state())
     })}
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {

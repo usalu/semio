@@ -149,15 +149,6 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         Some(crate::standards::v1::subsets::any::schema::host::jack_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(crate::standards::v1::subsets::any::schema::host::jack_document_store_initialization_job(envelope, operation, generation, actor))
-    }
-
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::cold_mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
@@ -181,8 +172,8 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         C::genesis_child_pack(snapshot, slot, child_id)
     }
 
-    fn reference_birth()->Option<fn()->JackSnapshot>{Some(||{
-        C::initial_snapshot()
+    fn reference_birth()->Option<fn()->Result<JackSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(C::initial_snapshot())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

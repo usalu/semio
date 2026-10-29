@@ -4,8 +4,8 @@ use super::*;
 
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub fn advance(&mut self, grant: RetainedCloneGrant) -> ConfigStoreHydrationStep<P, M> where M:semio_framework_os_spr::ColdMutation<P> {
         self.last_retirement_progress = Default::default();

@@ -39,7 +39,7 @@ async fn create_docx_editor_builds_a_definition_for_the_editor_role() {
 #[test]
 fn initial_document_matches_the_neutral_empty_paragraph_snapshot_and_renders_one_target() {
     let fixture: serde_json::Value = serde_json::from_str(fixture_text!("../../✏️editor/🧪️tests/🧫️fixtures/🌱️initial-document/🔣️.json")).unwrap();
-    let snapshot = <DocxEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
+    let snapshot = <DocxEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let targets = semio_s_artifact_stdio_docx_base_mutations::standards::v_ecma_376::subsets::base::schema::mutations::docx_top_level_text_targets(&snapshot, 0).unwrap();
     assert_eq!(targets.len(), fixture["body"].as_array().unwrap().len());
     assert_eq!(targets[0].text, fixture["editableTarget"]["text"].as_str().unwrap());

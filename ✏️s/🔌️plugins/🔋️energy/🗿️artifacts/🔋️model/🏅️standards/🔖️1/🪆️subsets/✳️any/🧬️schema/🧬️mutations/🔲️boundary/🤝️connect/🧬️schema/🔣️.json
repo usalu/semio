@@ -112,7 +112,7 @@
     "semantics": {
       "verb": "connect",
       "entity": "surface-adjacency",
-      "kind": "connect",
+      "kind": "connect-surfaces",
       "record": "ConnectedSurfaces"
     },
     "diagnostics": {

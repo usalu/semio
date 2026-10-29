@@ -14,7 +14,7 @@ pub fn deserialize_bytes(bytes: &[u8]) -> Result<crate::snapshot::EnergyModelSna
     if !import.diagnostics.is_empty() {
         return Err(format!("IDF import requires resolving diagnostics: {}", import.diagnostics.iter().map(|diagnostic| format!("{} ({})", diagnostic.message, diagnostic.subject)).collect::<Vec<_>>().join("; ")));
     }
-    Ok(crate::snapshot::EnergyModelSnapshot { model: import.model, ..Default::default() })
+    crate::snapshot::EnergyModelSnapshot::from_model(&import.model).map_err(|error| error.to_string())
 }
 
 /// 🌉️ Positional IDF to native model JSON plus the explicit import diagnostics.

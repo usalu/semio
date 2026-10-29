@@ -46,6 +46,7 @@ export function createPluginRuntimeSupport(dependencies: PluginRuntimeDependenci
       createApp: async () => 0,
       destroyApp: async () => {},
       takeSegmentedDownloadChunk: async () => undefined,
+      acquireOwnedUiSurface: () => undefined,
       handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
       refreshUi: async () => ({}),
       contextMenu: async () => [],

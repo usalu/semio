@@ -93,8 +93,8 @@ impl ArtifactViewer for Grid3dViewer {
 
     /// 👁️ The viewer opens on the subset's own committed default example, exactly as the editor does
     /// — one scene, two surfaces, so a boot `setActiveExample` never finds a different document here.
-    fn reference_birth()->Option<fn()->Grid3dSnapshot>{Some(||{
-        crate::examples::blocks::snapshot()
+    fn reference_birth()->Option<fn()->Result<Grid3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::examples::blocks::snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

@@ -1,0 +1,36 @@
+[package]
+name = "semio-framework-plugin-host-configuration"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+workspace = "../../../../../../../../../.."
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-host-configuration"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[features]
+testkit = ["semio-framework-job/testkit", "dep:semio-framework-trace"]
+
+[dependencies]
+semio-framework-trace = { workspace = true, optional = true }
+semio-framework-plugin-decl-emission = { path = "../../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }
+semio-framework-trace = { workspace = true }
+semio-framework-job = { path = "../../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }

@@ -147,7 +147,7 @@ pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryE
     let mut identity_copied=0;
     let mut envelopes = Vec::with_capacity(edit.ops.len());
     for (index, op) in edit.ops.iter().enumerate() {
-        let payload = op.binary.clone().ok_or_else(|| format!("edit {} op {index} has no binary payload", edit.id))?;
+        let payload = op.binary.as_deref().ok_or_else(|| format!("edit {} op {index} has no binary payload", edit.id)).and_then(|bytes| semio_framework_os_spr::CausalPayload::try_from_slice(bytes).map_err(ValueError::into_message))?;
         let meta = edit.meta.as_ref().and_then(|metas| metas.get(index));
         let dependencies = meta.map(|m| m.dependencies.iter().cloned().map(MutationId).collect()).unwrap_or_default();
         let original_actor=meta.and_then(|meta|meta.author_id.as_ref()).or(edit.actor.as_ref()).expect("original actor presence validated before envelope birth");
@@ -156,7 +156,7 @@ pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryE
             Some((actor, physical_ms, logical)) => semio_framework_os_spr::HybridLogicalTimestamp { actor, physical_ms: u64::try_from(physical_ms).map_err(|_| format!("edit {} op {index} has a negative hybrid-clock physical time", edit.id))?, logical },
             None => semio_framework_os_spr::HybridLogicalTimestamp::new(0, 0),
         };
-        let inverse_payload = edit.inverse.get(index).and_then(|p| p.binary.clone()).unwrap_or_default();
+        let inverse_payload = semio_framework_os_spr::CausalPayload::try_from_slice(edit.inverse.get(index).and_then(|p| p.binary.as_deref()).unwrap_or_default()).map_err(ValueError::into_message)?;
         envelopes.push(MutationEnvelope {
             mutation_id: MutationId(op_ids[index].clone()),
             document_id: ArtifactId(document_id.to_string()),
@@ -194,8 +194,8 @@ pub async fn history_edit_from_envelope(envelope: &MutationEnvelope) -> semio_fr
         actor: Some(envelope.actor.0.clone()),
         started_at: now_ms().await.to_string(),
         finished_at: None, verb: envelope.verb.clone(), line: envelope.line.clone(),
-        ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.clone()) }],
-        inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.clone()) }] },
+        ops: vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(envelope.diff.payload.to_vec_owner()) }],
+        inverse: if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![semio_framework_os_spr::OpPayload { text: None, binary: Some(envelope.inverse.payload.to_vec_owner()) }] },
         meta: Some(vec![semio_framework_os_spr::HistoryOpMeta {
             op_id: Some(envelope.mutation_id.0.clone()),
             dependencies: envelope.dependencies.iter().map(|dependency| dependency.0.clone()).collect(),

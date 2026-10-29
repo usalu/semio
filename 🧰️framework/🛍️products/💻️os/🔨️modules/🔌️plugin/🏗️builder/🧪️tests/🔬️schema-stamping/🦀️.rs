@@ -35,8 +35,8 @@ impl ArtifactEditor for SchemaStampEditorFixture {
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
 
-    fn reference_birth()->Option<fn()->NoConfig>{Some(||{
-        NoConfig::default()
+    fn reference_birth()->Option<fn()->Result<NoConfig,semio_framework_plugin::Fault>>{Some(||{
+        Ok(NoConfig::default())
     })}
 
     fn examples() -> Vec<ExampleSource> {
@@ -76,8 +76,8 @@ impl ArtifactViewer for SchemaStampViewerFixture {
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
 
-    fn reference_birth()->Option<fn()->NoConfig>{Some(||{
-        NoConfig::default()
+    fn reference_birth()->Option<fn()->Result<NoConfig,semio_framework_plugin::Fault>>{Some(||{
+        Ok(NoConfig::default())
     })}
 
     fn handle(
@@ -98,7 +98,7 @@ impl ArtifactViewer for SchemaStampViewerFixture {
 
 use semio_framework::{AppDefinition, *};
 use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use store::ArtifactStoreInitializationAuthority;
 use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, ToolCommandCatalog};

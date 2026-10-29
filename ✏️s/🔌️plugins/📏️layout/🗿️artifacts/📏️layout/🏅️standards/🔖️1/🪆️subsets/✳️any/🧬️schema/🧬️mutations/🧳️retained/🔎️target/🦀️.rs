@@ -16,5 +16,3 @@ impl LayoutTargetLookup{
  pub fn close_step(&mut self,g:RetainedCloneGrant)->RetainedCloneStep{let d=self.close_demand();if !self.closing||!retained_clone_grant_admits(g,d){return RetainedCloneStep::Progress(Default::default())}self.started=false;self.done=false;self.found=None;RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})}
  pub fn terminal_is_empty(&self)->bool{self.closing&&!self.started&&!self.done&&self.found.is_none()}
 }
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]mod tests;

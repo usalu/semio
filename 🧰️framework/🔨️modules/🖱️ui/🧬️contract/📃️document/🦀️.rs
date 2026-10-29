@@ -705,6 +705,11 @@ impl UiDocumentLease {
         self.handle.map_or(0, |handle| handle.generation)
     }
 
+    /// 🔎️ Observes the arena slot and epoch this lease holds, so conformance can prove slot reuse without private access.
+    pub fn slot_epoch(&self) -> Option<(usize, u64)> {
+        self.handle.map(|handle| (handle.slot, handle.epoch))
+    }
+
     pub fn try_alias(&self) -> Result<Self, UiDocumentLeaseError> {
         let handle = self.handle.ok_or(UiDocumentLeaseError::StaleHandle)?;
         let handle = with_ui_document_arena(|arena| arena.alias(handle))?;

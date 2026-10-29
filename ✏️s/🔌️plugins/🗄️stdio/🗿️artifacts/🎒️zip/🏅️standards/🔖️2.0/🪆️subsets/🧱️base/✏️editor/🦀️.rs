@@ -150,8 +150,8 @@ impl ArtifactEditor for ZipAnyEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->ZipSnapshot>{Some(||{
-        ZipSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<ZipSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(ZipSnapshot::default())
     })}
 
     /// ✏️ Renames one unambiguous entry or changes the archive comment.

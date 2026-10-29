@@ -41,6 +41,8 @@ semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-base-examples = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
 
 [dev-dependencies]
 resvg = { workspace = true }

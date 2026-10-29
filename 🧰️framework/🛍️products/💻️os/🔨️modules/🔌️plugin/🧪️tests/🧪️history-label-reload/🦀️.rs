@@ -160,8 +160,8 @@ impl ArtifactApp for LabelReloadApp {
         }
     }
 
-    fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
-        TestSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(TestSnapshot::default())
     })}
 
     async fn handle(

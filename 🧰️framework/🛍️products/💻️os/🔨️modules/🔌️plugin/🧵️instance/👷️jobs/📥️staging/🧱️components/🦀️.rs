@@ -4,7 +4,7 @@ use semio_framework_plugin_window_kits::AppActionRegistry;
 use semio_framework::kernel::{AppEvent, Effect, InvocationResult, UiDirtyScope};
 use semio_framework_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactToolPublicContract, ArtifactToolRegistration};
@@ -110,6 +110,11 @@ impl<A: ArtifactApp> PendingReserved<A> {
 /// 🪐️ Tool operations: typed operation outboxes, tool jobs and registrations, cancellations and latest-wins commands.
 pub struct ToolOperations<A: ArtifactApp> {
     pub pending_tool_lease_admission:ManuallyDrop<Option<OriginalToolLeaseAdmission>>,
+    pub original_tool_follow:ManuallyDrop<Option<Box<semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalToolMachineFollow<A>>>>,
+    pub original_tool_tag_retirement:ManuallyDrop<Option<Box<semio_framework_plugin_scrub_host::OriginalToolTagRetirement>>>,
+    pub original_tool_tag_capture:ManuallyDrop<Option<Box<semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalToolTagCapture>>>,
+    pub original_scrub_dispatch:ManuallyDrop<Option<Box<semio_framework_plugin_scrub_host::OriginalScrubDispatch<semio_framework_plugin_tool_run::tool_jobs_tool_machine::PressLeaf<A::Mutation,A::ConfigMutation>>>>>,
+    pub original_press_settlement:ManuallyDrop<Option<Box<semio_framework_plugin_tool_run::tool_jobs_tool_machine::OriginalPressSettlement<A>>>>,
     pub typed_effect_outbox: ArtifactFixedQueue<Effect>,
     pub typed_event_outbox: ArtifactFixedQueue<AppEvent>,
     pub typed_ui_outbox: ArtifactFixedQueue<UiDirtyScope>,
@@ -136,6 +141,7 @@ pub struct ToolOperations<A: ArtifactApp> {
     /// 🧩️ See [`ComposedGestureResult`] — one entry per composed gesture this actor published.
     pub typed_composed_outbox: ArtifactFixedQueue<ComposedGestureResult>,
     pub declared_tools:ManuallyDrop<Option<DeclaredToolCatalogAlias>>,
+    pub declared_owner:ManuallyDrop<Option<semio_framework_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>,
     pub registry: AppActionRegistry,
     pub tool_job_controller_id: String,
     pub tool_jobs: ToolActionBus,
@@ -185,10 +191,22 @@ impl<A: ArtifactApp> ToolOperations<A> {
     pub fn bounded_proof(&self,id:&str)->Option<&QualifiedBoundedFirstStepProof>{self.bounded_tool_proofs.get(id).or_else(||self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).and_then(|catalog|catalog.bounded(id)))}
     pub fn bounded_contracts(&self)->impl Iterator<Item=&ArtifactToolPublicContract>{self.bounded_tool_contracts.iter().chain(self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).into_iter().flat_map(|catalog|catalog.bounded_contracts.iter()))}
     /// 🔭️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
-    pub fn new(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: semio_framework::ActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {Self::new_with_bus(registry,tool_job_controller_id,ToolActionBus::Reference(tool_jobs),bounded_tool_proofs,bounded_tool_contracts,framework_tool_registrations,app_tool_registrations,instance_operation_owner)}
+    pub fn new(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: semio_framework::ActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, mut bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
+        bounded_tool_contracts.sort_by(|left,right|left.tool_id.cmp(&right.tool_id));
+        let catalog=DeclaredToolCatalog{controller_id:tool_job_controller_id.clone(),bus:semio_framework::RegisteredActionBusSource::reference(tool_jobs.clone()),bounded_proofs:bounded_tool_proofs.into_iter().collect(),bounded_contracts:bounded_tool_contracts.into_iter().collect(),framework:framework_tool_registrations.into_iter().collect(),app:app_tool_registrations.into_iter().collect()};
+        let mut owner=semio_framework_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog::new(catalog);
+        owner.commit_producer();
+        let grant=semio_framework_value::RetainedCloneGrant{maximum_items:usize::MAX,maximum_copy_bytes:usize::MAX,maximum_capacity_bytes:usize::MAX,maximum_release_bytes:usize::MAX,maximum_depth:usize::MAX};
+        let(alias,_)=DeclaredToolCatalogAlias::admit(owner.source().expect("reference tool catalog owner is live at construction"),grant).expect("reference tool catalog source is committed").expect("reference tool catalog lease is funded");
+        let mut value=Self::new_with_bus(registry,tool_job_controller_id,ToolActionBus::Reference(tool_jobs),BTreeMap::new(),Vec::new(),BTreeMap::new(),BTreeMap::new(),instance_operation_owner);
+        *value.declared_tools=Some(alias);
+        *value.declared_owner=Some(owner);
+        value
+    }
     fn new_with_bus(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: ToolActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
         Self {
             pending_tool_lease_admission: ManuallyDrop::new(None),
+            original_tool_follow:ManuallyDrop::new(None),original_scrub_dispatch:ManuallyDrop::new(None),original_press_settlement:ManuallyDrop::new(None),original_tool_tag_capture:ManuallyDrop::new(None),original_tool_tag_retirement:ManuallyDrop::new(None),
             typed_effect_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             typed_event_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             typed_ui_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
@@ -198,6 +216,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             typed_completion_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             typed_composed_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             declared_tools:ManuallyDrop::new(None),
+            declared_owner:ManuallyDrop::new(None),
             registry,
             tool_job_controller_id,
             tool_jobs,

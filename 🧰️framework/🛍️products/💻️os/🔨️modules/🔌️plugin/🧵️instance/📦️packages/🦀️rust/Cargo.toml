@@ -22,7 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-artifact-app-testing = ["dep:semio-framework-test-fixtures"]
+artifact-app-testing = ["dep:semio-framework-test-fixtures", "semio-framework-plugin-instance-render/artifact-app-testing", "semio-framework-plugin-instance-stores/artifact-app-testing", "semio-framework-plugin-instance-children/artifact-app-testing"]
 
 [dependencies]
 semio-framework-value-factory = {path="../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust"}
@@ -33,6 +33,8 @@ semio-framework-plugin-window-config = { path = "../../../🪟️window/🎚️c
 semio-framework-plugin-window-transient = { path = "../../../🪟️window/📦️packages/🦀️rust" }
 semio-framework-plugin-window-kits = { path = "../../../🪟️window-kits/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-tool-contract = { path = "../../../📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-media = { path = "../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-app = { path = "../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-framework-plugin-child = { path = "../../../🪆️child/📦️packages/🦀️rust" }
@@ -48,6 +50,7 @@ semio-framework-plugin-time-travel-panel = { path = "../../../⏪️time-travel/
 semio-framework-plugin-tool-run = { path = "../../../⏯️tool-run/📦️packages/🦀️rust" }
 semio-framework-plugin-time-travel = { path = "../../../⏪️time-travel/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-stores = { path = "../../🏪️stores/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-initialization = { path = "../../🌱️initialization/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-history = { path = "../../📜️history/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-children = { path = "../../🪆️children/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-jobs = { path = "../../👷️jobs/📦️packages/🦀️rust" }

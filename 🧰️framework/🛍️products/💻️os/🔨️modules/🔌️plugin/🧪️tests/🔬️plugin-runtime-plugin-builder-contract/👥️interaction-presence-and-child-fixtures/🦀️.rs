@@ -52,7 +52,7 @@ pub async fn interaction_app_under_test(mounted_policy: semio_framework_plugin_m
     /// laws that move the app into a `PluginRuntime` cell.
     #[doc(hidden)]
 pub async fn interaction_app_raw(mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await.expect("the reference snapshot births");
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
@@ -138,12 +138,46 @@ pub async fn publish_presence_roster(app: &mut VcsArtifactApp<TestApp>, seq: u64
     }
     //#endregion 🔖️InteractionViewPeersTests
 
+    /// 🧭️ Stateless member selection of the fixture child: the cold document family opened through its own pack codec, behind the one-item preparation the fixture app publishes with.
+    #[derive(Clone, Copy)]
+    pub struct TestMemberStoreProducer;
+
+    impl store::os_store::document_store_owners::MemberStoreProducer<TestSnapshot, TestMutation> for TestMemberStoreProducer {
+        type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<TestSnapshot>;
+
+        fn member_store_owners_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
+            Ok(0)
+        }
+
+        fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+            let base = store::os_store::document_store_owners::DocumentStoreOwners::<TestSnapshot, TestMutation>::source_birth_bytes::<semio_framework_value::factory::SharedValueRetirementFactory<TestSnapshot>, semio_framework_value::factory::OwnedValueRetirementFactory<TestSnapshot>, semio_framework_value::factory::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<TestSnapshot, TestMutation>>()?;
+            let preparation = test_member_preparation_birth()?;
+            let capacity_bytes = base.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member original source tree capacity overflow"))?;
+            Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: preparation.depth.max(1) })
+        }
+
+        fn member_store_owners(&self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<TestSnapshot, TestMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<TestSnapshot, TestMutation>> {
+            let preparation = test_member_preparation_birth().expect("fixture member preparation birth quote");
+            store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (
+                semio_framework_value::factory::SharedValueRetirementFactory::<TestSnapshot>::default(),
+                semio_framework_value::factory::OwnedValueRetirementFactory::<TestSnapshot>::default(),
+                semio_framework_value::factory::OwnedValueRetirementFactory::<TestMutation>::default(),
+                store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new(),
+                test_document_preparation_factory(),
+            ))
+        }
+    }
+
+    fn test_member_preparation_birth() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        store::operation_wire_preparation_factory_source_birth_demand::<TestSnapshot, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: semio_framework_value::factory_constructor_birth_bytes::<store::ColdMutationApplyFactory<TestSnapshot, TestMutation>>(0), depth: 1 })
+    }
+
     store::space_members! {
     native_producer:&::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer,
         history_limits:semio_framework_os_kernel::os_store::HistoryReadLimits{file_bytes:67108864,frame_body_bytes:1048576,records:8192,maximum_fields:128,maximum_text_bytes:1048576,maximum_binary_bytes:1048576,maximum_json_bytes:1048576,maximum_json_allocation_bytes:8388608,maximum_json_items:65536,maximum_json_depth:64},
     maximum_history_allocation_bytes:8388608,
     pub enum TestMembers, TestMembersOpen {
-            Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation, semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer, semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer),
+            Child("s.test.child", "native", "*", "semio.test/v1") => (TestSnapshot, TestMutation, TestMemberStoreProducer, TestMemberStoreProducer),
         }
     }
 
@@ -175,10 +209,10 @@ pub async fn register_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>,
     /// of the identical document shape.
     #[doc(hidden)]
 pub async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(test_child_dialect().await);
         let mut child = store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?;
-        store::install_funded_member_store_owners(&mut child,&semio_framework_plugin_testing_fixtures::test_app_mutation_fixture::TestMemberStoreProducer)?;
+        store::install_funded_member_store_owners(&mut child,&TestMemberStoreProducer)?;
         Ok(TestMembers::Child(Box::new(child)))
     }
 
@@ -188,7 +222,7 @@ pub async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
     /// shape exists only to drive the refusal those laws assert.
     #[doc(hidden)]
 pub async fn new_bare_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
-        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         envelope.dialect = Some(test_child_dialect().await);
         Ok(TestMembers::Child(Box::new(store::ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?)))
     }
@@ -248,6 +282,15 @@ pub fn inline_interaction_select(args: DslValue) -> Effect {
     /// 🧵️ Test-only typed task source: the closure is the whole captured state and retires as one leaf.
     #[doc(hidden)]
 pub struct TestTaskSource<F>(F);
+
+    impl<F, Fut> semio_framework_plugin_decl_emission::AsyncTaskSource<TestMutation, TestConfigMutation, NoDraftMutation> for TestTaskSource<F>
+    where
+        F: FnOnce(TaskCtx) -> Fut + Send + 'static,
+        Fut: std::future::Future<Output = Result<TaskResolution<TestMutation, TestConfigMutation, NoDraftMutation>, Fault>> + 'static,
+    {
+        type Future = Fut;
+        fn run(self, context: TaskCtx) -> Fut { (self.0)(context) }
+    }
 
     #[doc(hidden)]
 pub struct TestTaskDrop<F>(std::mem::ManuallyDrop<Option<F>>);

@@ -75,7 +75,7 @@
     "semantics": {
       "verb": "change",
       "entity": "ground-temperature",
-      "kind": "change-month",
+      "kind": "change-ground-shallow",
       "record": "ChangedMonthlyGroundTemperature"
     },
     "diagnostics": {

@@ -60,8 +60,8 @@ impl ArtifactViewer for TiffBaselineViewer {
     const DIALECT: Dialect = TIFF_BASELINE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TIFF_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot())
     })}
 
     fn handle(

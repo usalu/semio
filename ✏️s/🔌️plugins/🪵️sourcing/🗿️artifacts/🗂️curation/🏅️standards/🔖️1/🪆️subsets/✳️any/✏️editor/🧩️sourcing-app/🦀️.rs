@@ -4,6 +4,24 @@ use super::*;
 use semio_framework_2d_compute::EngineHandles;
 use crate::editor::sourcing::editor_vocabulary::{SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES, SOURCING_ROWS_DOMAIN, reset_document_effect, sourcing_curation_io};
 
+/// 🪵️ Declares the owned sourcing module projection before payload production.
+static SOURCING_ORIGINAL_HOST_CONTRIBUTIONS: semio_framework_plugin::OriginalHostConfigurationDeclaration<SourcingCurationConfigMutation> = semio_framework_plugin::OriginalHostConfigurationDeclaration {
+    maximum_input_bytes: crate::standards::v1::subsets::any::schema::domain::SOURCING_JSON_MAX_BYTES,
+    maximum_output_bytes: SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES,
+    projection: semio_framework_plugin::OriginalHostConfigurationProjection::Contributions(semio_framework_plugin::OriginalContributionProjection {
+        maximum_depth: crate::standards::v1::subsets::any::schema::domain::SOURCING_JSON_MAX_DEPTH,
+        maximum_items: crate::standards::v1::subsets::any::schema::domain::SOURCING_JSON_MAX_ITEMS,
+        maximum_string_bytes: crate::standards::v1::subsets::any::schema::domain::SOURCING_JSON_MAX_STRING_BYTES,
+        topic: crate::standards::v1::subsets::any::schema::domain::SOURCING_MODULE_TOPIC,
+        app_id: crate::standards::v1::subsets::any::schema::domain::SOURCING_CURATION_APP_ID,
+        payload_fields: &["appId", "moduleId", "label", "typologyJson", "kindsJson"],
+        excluded_module_ids: crate::standards::v1::subsets::any::schema::domain::SOURCING_AUTHORED_MODULE_IDS,
+        deduplicate_modules: true,
+        maximum_modules: crate::standards::v1::subsets::any::schema::domain::SOURCING_MAXIMUM_MODULES,
+    }),
+    mutation: |json| SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json }),
+};
+
 impl ArtifactEditor for SourcingCurationApp {
     /// 🧩️ Composes `s.stdio.semio@v1/*` children, so every bundle of this surface opens them through the same roster.
     type Members = semio_s_artifact_stdio_semio::SemioMembers;
@@ -94,8 +112,8 @@ impl ArtifactEditor for SourcingCurationApp {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->CurationSnapshot>{Some(||{
-        crate::standards::v1::subsets::any::io::text::snapshot::default_document()
+    fn reference_birth()->Option<fn()->Result<CurationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -150,9 +168,10 @@ impl ArtifactEditor for SourcingCurationApp {
         sourcing_curation_command_from_action(action, args)
     }
 
-    fn host_configuration_mutation(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok((action == "setContributions").then(|| SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]"), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES), })))
+    fn original_host_configuration(action: &str) -> Option<&'static semio_framework_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
+        (action == "setContributions").then_some(&SOURCING_ORIGINAL_HOST_CONTRIBUTIONS)
     }
+
 
     fn handle(
         command: &SourcingCurationCommand,

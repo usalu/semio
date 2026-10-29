@@ -12,8 +12,20 @@ use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
 use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
 use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
+use semio_framework::{AppEvent, AppRole, ArtifactHandle, ArtifactDiff, ArtifactVersion, ActorId, DslValue, Effect, HybridLogicalTimestamp, InvocationId, InvocationResult, InverseMutation, KernelMutation, MutationId, SchemaId, UndoGroup, UndoPolicy};
+use semio_framework::kernel::{EditRef, UiDirtyScope};
+use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit};
+use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
+use semio_framework_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
+use semio_framework_plugin_instance_docs::docs_instance_root::{artifact_handle_of, tool_transaction_shape_fault, viewer_read_only_fault};
+use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
+use semio_framework_plugin_job::{EmitWire, TransactionProposalDraft};
+use semio_framework_plugin_child::ChildContentRetirement;
+use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
+use store::os_store::composition_coordinator::{ChildDispatch, GroupMeta};
+use semio_framework::FaultFrom;
 
-impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: store::ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
 
     /// 🧪️ Lands one app `Emit` through the production `dispatch_emit` seam under a named
     /// verb — the harness for laws about what the reactor does with an emit's effect list before
@@ -340,7 +352,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
         for (reference, entry) in child_refs.iter().zip(self.child_composition.children.entries_mut_physical()) {
             members.push((reference, &mut entry.member));
         }
-        let report = if action == "undo" { CompositionCoordinator::undo_group(&parent_ref, &mut self.stores.store, &mut members, group_id, identity).await } else { CompositionCoordinator::redo_group(&parent_ref, &mut self.stores.store, &mut members, group_id, identity).await };
+        let report = if action == "undo" { CompositionCoordinator::undo_group(&parent_ref, &mut *self.stores.store, &mut members, group_id, identity).await } else { CompositionCoordinator::redo_group(&parent_ref, &mut *self.stores.store, &mut members, group_id, identity).await };
         drop(members);
         self.history.cache = None;
         for (reference, _) in report.undone.iter().filter(|(reference, _)| reference.artifact_id != parent_id) {
@@ -459,7 +471,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
 
         let group_meta = GroupMeta { actor: Some(meta.actor.clone()), group_id, transaction };
         self.stores.store.set_authoring_verb(Some(verb.to_string()));
-        let receipt = self.child_composition.composition.dispatch_group(&parent_ref, &mut self.stores.store, &mut dispatches, parent_ops, Vec::new(), group_meta, identity).await;
+        let receipt = self.child_composition.composition.dispatch_group(&parent_ref, &mut *self.stores.store, &mut dispatches, parent_ops, Vec::new(), group_meta, identity).await;
         self.stores.store.set_authoring_verb(None);
         let receipt = receipt.map_err(|error| plugin_sdk_fault(error.to_string()))?;
         drop(dispatches);
@@ -478,7 +490,7 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                             self.child_composition.child_content_retirements.insert_admitted(publication_generation, ChildContentRetirement::new(next, false));
                         }
                         let mut members: Vec<(&ArtifactRef, &mut M)> = child_refs.iter().zip(child_member_ptrs.iter().copied()).map(|(reference, member)| (reference, unsafe { &mut *member })).collect();
-                        let compensation = CompositionCoordinator::undo_group(&parent_ref, &mut self.stores.store, &mut members, &receipt.invocation_id, identity).await;
+                        let compensation = CompositionCoordinator::undo_group(&parent_ref, &mut *self.stores.store, &mut members, &receipt.invocation_id, identity).await;
                         drop(members);
                         if compensation.undone.len() != receipt.member_edits.len() {
                             return Err(plugin_sdk_fault(format!("child root capture failed ({}) and group compensation moved {}/{} members", fault.message, compensation.undone.len(), receipt.member_edits.len())));
@@ -494,7 +506,10 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
             self.child_composition.child_content_generation = publication_generation;
         }
 
-        self.child_composition.absorb_created_children(&mut *self.stores, receipt.created_children).await?;
+        for (target, member) in receipt.created_children {
+            let (slot, child_id) = self.stores.declared_child_address(&target)?;
+            self.child_composition.register_child(&mut *self.stores, slot, child_id, target.dialect, member, identity).await.map_err(|error| error.fault)?;
+        }
 
         let announced_lanes: Vec<(String, String)> = child_emits.iter().filter(|child_emit| !child_emit.ops.is_empty()).map(|child_emit| (child_emit.slot.clone(), child_emit.child_id.clone())).collect();
         self.child_composition.announce_member_tail_edits(&mut *self.stores, &announced_lanes).await?;
@@ -527,10 +542,10 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                         document,
                         base_version,
                         invocation_id: invocation_id.clone(),
-                        diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: forward_wire },
+                        diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&forward_wire).map_err(|error| plugin_sdk_fault(error.to_string()))? },
                         inverse: InverseMutation {
                             target_mutation: mutation_id,
-                            inverse_diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation.inverse")), payload: identity.encode(|control| control.copy_bytes(&inverse_payload)).map_err(|error| plugin_sdk_fault(error.to_string()))? },
+                            inverse_diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation.inverse")), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&inverse_payload).map_err(|error| plugin_sdk_fault(error.to_string()))? },
                             base_version,
                             dependencies: Vec::new(),
                             undo_policy,
@@ -556,10 +571,10 @@ impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: Instance
                 document,
                 base_version: ArtifactVersion(0),
                 invocation_id: invocation_id.clone(),
-                diff: ArtifactDiff { schema: child_emit.op_schema.clone(), payload: protocol::encode_ops_vec(&child_emit.ops) },
+                diff: ArtifactDiff { schema: child_emit.op_schema.clone(), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&protocol::encode_ops_vec(&child_emit.ops)).map_err(|error| plugin_sdk_fault(error.to_string()))? },
                 inverse: InverseMutation {
                     target_mutation: mutation_id,
-                    inverse_diff: ArtifactDiff { schema: SchemaId(format!("{}.inverse", child_emit.op_schema.0)), payload: protocol::encode_ops_vec(&[]) },
+                    inverse_diff: ArtifactDiff { schema: SchemaId(format!("{}.inverse", child_emit.op_schema.0)), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&protocol::encode_ops_vec(&[])).map_err(|error| plugin_sdk_fault(error.to_string()))? },
                     base_version: ArtifactVersion(0),
                     dependencies: Vec::new(),
                     undo_policy: UndoPolicy::ExactBaseOnly,

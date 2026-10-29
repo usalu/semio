@@ -131,7 +131,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 self.note_time_travel_changed(true, true);
                 self.perform_time_travel_effects(session_effects, Some(meta), effects, identity,Some(cx)).await?;
                 if opening {
-                    self.as_dispatch().deliver_host_event_to_every_window(|window_id| HostEvent::TimeTravelFrozen { window_id }, meta, identity,cx).await?;
+                    self.as_dispatch().queue_host_event_to_every_window(|window_id| HostEvent::TimeTravelFrozen { window_id }, meta);
                 }
                 Ok(TimeTravelActionOutcome::Applied(self.time_travel.session.stage))
             }

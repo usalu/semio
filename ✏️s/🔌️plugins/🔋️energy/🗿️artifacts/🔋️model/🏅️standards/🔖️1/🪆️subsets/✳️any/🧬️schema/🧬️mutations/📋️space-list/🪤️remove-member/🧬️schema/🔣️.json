@@ -82,7 +82,7 @@
     "semantics": {
       "verb": "remove",
       "entity": "SpaceList",
-      "kind": "RemoveSpaceListMember",
+      "kind": "remove-space-list-member",
       "record": "RemoveSpaceListMember"
     },
     "diagnostics": {

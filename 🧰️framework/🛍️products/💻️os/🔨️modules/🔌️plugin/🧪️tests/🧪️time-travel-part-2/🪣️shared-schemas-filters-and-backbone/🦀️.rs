@@ -62,7 +62,7 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
     for value in &declared {
         let args = DslValue::Object(vec![("value".into(), DslValue::String(value.clone()))]);
         let admitted = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&args), &meta, &mut identity).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
-        semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
+        semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
         assert_eq!(&app.render_ctx().history_patch(true).await.expect("history patch").command_filter, value, "the wire echoes the declared option");
         let body = render_history(&mut app, Locale::En).await;
         let select = find_node(&body, "framework.history.filter.control").expect("the filter select");
@@ -72,7 +72,7 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
     }
     let undeclared = DslValue::Object(vec![("value".into(), DslValue::String("withoutOperations".into()))]);
     let refused = match app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&undeclared), &meta, &mut identity).await {
-        Ok(admitted) => semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted).await.err(),
+        Ok(admitted) => semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(&mut app, admitted, cx).await.err(),
         Err(fault) => Some(fault),
     };
     assert!(refused.is_some(), "an undeclared filter value is refused");

@@ -4,7 +4,7 @@ use super::*;
 
 // #region ⏱️EvaluationJobs
 pub struct EvaluationOutput {
- pub(super) output:Option<Dictionary>,pub(super) envelope:Option<pack::record::OwnedProjectedPackWireCursor<EvaluationEnvelopeSource>>,encoded_source:Option<EvaluationEnvelopeSource>,pub(super) pending_source:Option<neural_engine::PendingExtensionEval>,pub(super) wire:Option<Vec<u8>>,pub(super) active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,pub(super) stage:u8,pub(super) units:usize,pub(super) faulted:bool,pub(super) complete:bool,pub(super) external_pending:bool,pub(super) closing:bool,pub(super) normal_progress:RetainedCloneProgress,
+ pub(super) output:Option<Dictionary>,pub(super) envelope:Option<pack::record::OwnedProjectedPackWireCursor<EvaluationEnvelopeSource>>,encoded_source:Option<EvaluationEnvelopeSource>,pub(super) pending_source:Option<neural_engine::PendingExtensionEval>,pub(super) wire:Option<EvaluationWire>,pub(super) active:std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,pub(super) stage:u8,pub(super) units:usize,pub(super) faulted:bool,pub(super) complete:bool,pub(super) external_pending:bool,pub(super) closing:bool,pub(super) normal_progress:RetainedCloneProgress,
 }
 
 impl EvaluationOutput {
@@ -29,7 +29,7 @@ impl EvaluationOutput {
  }
  pub fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Ok(RetirementDemand{depth:1,..Default::default()})}if self.active.is_some(){return evaluation_child_demands(&self.active,copy)}if let Some(cursor)=self.envelope.as_ref(){return cursor.next_demand(copy)}
-  if self.pending_source.is_some(){return Ok(evaluation_owned_birth::<neural_engine::PendingExtensionEval>())}if self.encoded_source.is_some(){return Ok(evaluation_owned_birth::<EvaluationEnvelopeSource>())}if self.output.is_some(){return Ok(evaluation_owned_birth::<Dictionary>())}if self.wire.is_some(){return Ok(evaluation_owned_birth::<Vec<u8>>())}Ok(Default::default())
+  if self.pending_source.is_some(){return Ok(evaluation_owned_birth::<neural_engine::PendingExtensionEval>())}if self.encoded_source.is_some(){return Ok(evaluation_owned_birth::<EvaluationEnvelopeSource>())}if self.output.is_some(){return Ok(evaluation_owned_birth::<Dictionary>())}if self.wire.is_some(){return Ok(evaluation_owned_birth::<EvaluationWire>())}Ok(Default::default())
  }
  pub(super) fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,EvaluationFailure>{
   let empty=RetainedCloneProgress::default();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(empty))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty))}

@@ -30,7 +30,7 @@ fn layer(material: &str, thickness: f64) -> Layer {
 
 /// 🏠️ Storeys `st-ground` (3 m) and `st-first` (2.8 m), wall type `wt-300`, and a type of every other family; no element yet.
 pub fn model() -> ModelSnapshot {
-    let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")();
+    let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     snapshot.walls.clear();
     let color = Rgb { r: 0.5, g: 0.5, b: 0.5 };
     for (id, category) in [("m-glass", MaterialCategory::Glass), ("m-steel", MaterialCategory::Metal), ("m-concrete", MaterialCategory::Concrete)] {
@@ -49,7 +49,7 @@ pub fn model() -> ModelSnapshot {
 
 /// 🧱️ [`model`] with the four walls of the demo room (8 by 6 metres) on the ground storey.
 pub fn room() -> ModelSnapshot {
-    let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")();
+    let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let extras = model();
     snapshot.materials = extras.materials;
     snapshot.slab_types = extras.slab_types;
@@ -260,7 +260,7 @@ pub mod context {
 
     /// 🔁️ Dispatches `command` as the host does (no window addressed), drives its retained publication home and applies any `LoadDocument` effect.
     pub async fn dispatch(app: &mut BimApp, command: BimCommand) -> Dispatched {
-        let mut result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
@@ -275,7 +275,7 @@ pub mod context {
     /// 🪟️ Dispatches `command` addressed at the window instance `view` names, as the shell does for a window-scoped action.
     pub async fn dispatch_in(app: &mut BimApp, command: BimCommand, view: &ViewModel) -> Dispatched {
         let action_meta = semio_framework_plugin::ActionMeta { instance_id: BIM_TEST_INSTANCE, view_state: Some(view.clone()), ..meta("local") };
-        let mut result = app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, BIM_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         Dispatched { result, lanes: settled.lanes }
@@ -344,7 +344,7 @@ pub mod support {
     use semio_framework_plugin::HistoryView;
 
     pub fn demo() -> ModelSnapshot {
-        BimModelApp::reference_birth().expect("explicit reference snapshot producer")()
+        BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births")
     }
 
     pub fn english() -> ViewModel {

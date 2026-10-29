@@ -142,7 +142,7 @@ async fn drive_recursive_replacement_to(
 }
 
 async fn live_recursive_replacement_app() -> Box<VcsArtifactApp<ComposedParentApp, RecursiveTestMembers>> {
-    let mut app = Box::pin(VcsArtifactApp::<ComposedParentApp, RecursiveTestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await;
+    let mut app = Box::pin(VcsArtifactApp::<ComposedParentApp, RecursiveTestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("the reference snapshot births");
     let dialect = test_child_dialect().await;
     let member = Box::pin(RecursiveTestMembers::create("child-1", &dialect, &RecursiveBranchSnapshot { count: 0, label: "live".into(), nested: None }.encode_pack(), app.stores.store.local_actor_id().clone())).await.expect("live recursive child");
     Box::pin(app.register_child("slot", "child-1", dialect, member, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity())).await.expect("live recursive child publication");

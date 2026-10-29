@@ -203,14 +203,14 @@ impl Fem2dVisualJob {
 
     pub fn step_one(&mut self, doc: &Fem2dSnapshot, visual: &Fem2dLiveVisual, freshness: Fem2dVisualFreshness) -> Result<bool, Vec<u8>> {
         match self.stage {
-            Fem2dVisualJobStage::ReserveSnapshot => self.visual_reserve_snapshot(doc, visual),
-            Fem2dVisualJobStage::ReadProgressScalar => self.visual_read_progress_scalar(doc, visual),
+            Fem2dVisualJobStage::ReserveSnapshot => return self.visual_reserve_snapshot(doc, visual),
+            Fem2dVisualJobStage::ReadProgressScalar => return self.visual_read_progress_scalar(doc, visual),
             Fem2dVisualJobStage::OrderRegionKey => {
                 if self.order_region_one(doc) {
                     self.advance(Fem2dVisualJobStage::BuildRegion);
                 }
             }
-            Fem2dVisualJobStage::BuildRegion => self.visual_build_region(doc, visual),
+            Fem2dVisualJobStage::BuildRegion => return self.visual_build_region(doc, visual),
             Fem2dVisualJobStage::OrderElementKey => {
                 if self.item_phase == 0 {
                     if self.order_element_one(doc) {
@@ -222,7 +222,7 @@ impl Fem2dVisualJob {
                     self.advance(Fem2dVisualJobStage::BuildMeshElement);
                 }
             }
-            Fem2dVisualJobStage::BuildMeshElement => self.visual_build_mesh_element(doc),
+            Fem2dVisualJobStage::BuildMeshElement => return self.visual_build_mesh_element(doc),
             Fem2dVisualJobStage::BuildAssemblyMark => {
                 let Some(id) = visual.assembling_element_ids.get(self.cursor) else {
                     self.advance(Fem2dVisualJobStage::BuildLoadGlyph);
@@ -232,7 +232,7 @@ impl Fem2dVisualJob {
                 write!(self.output, "{{\"kind\":\"text\",\"id\":\"assembling-{id}\",\"x\":10,\"y\":36,\"text\":{{\"content\":\"assembling {id}\",\"size\":11}}}}").map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                 self.cursor += 1;
             }
-            Fem2dVisualJobStage::BuildLoadGlyph => self.visual_build_load_glyph(doc),
+            Fem2dVisualJobStage::BuildLoadGlyph => return self.visual_build_load_glyph(doc),
             Fem2dVisualJobStage::BuildSupportGlyph => {
                 let Some(support) = doc.supports.get(self.cursor) else {
                     self.advance(Fem2dVisualJobStage::BuildDisplacementEntry);
@@ -242,8 +242,8 @@ impl Fem2dVisualJob {
                 write!(self.output, "{{\"kind\":\"circle\",\"id\":\"support-{}\",\"x\":12,\"y\":64,\"width\":10,\"height\":10,\"color\":\"#f97316\"}}", support.id).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                 self.cursor += 1;
             }
-            Fem2dVisualJobStage::BuildDisplacementEntry | Fem2dVisualJobStage::BuildResidualEntry | Fem2dVisualJobStage::BuildReactionEntry | Fem2dVisualJobStage::BuildContourEntry | Fem2dVisualJobStage::BuildModeEntry => self.visual_build_displacement_entry_and_more(visual),
-            Fem2dVisualJobStage::BuildLabelEntry => self.visual_build_label_entry(visual),
+            Fem2dVisualJobStage::BuildDisplacementEntry | Fem2dVisualJobStage::BuildResidualEntry | Fem2dVisualJobStage::BuildReactionEntry | Fem2dVisualJobStage::BuildContourEntry | Fem2dVisualJobStage::BuildModeEntry => return self.visual_build_displacement_entry_and_more(visual),
+            Fem2dVisualJobStage::BuildLabelEntry => return self.visual_build_label_entry(visual),
             Fem2dVisualJobStage::SealPages => {
                 if self.page_cursor < FEM2D_MOUNTED_VISUAL_PAGE_COUNT {
                     let mut page = self.output.take_page(self.page_cursor).ok_or_else(|| b"fem2d.visual-seal-page".to_vec())?;
@@ -265,7 +265,7 @@ impl Fem2dVisualJob {
                 self.validated = true;
                 self.stage = Fem2dVisualJobStage::PublishLease;
             }
-            Fem2dVisualJobStage::PublishLease => self.visual_publish_lease(freshness),
+            Fem2dVisualJobStage::PublishLease => return self.visual_publish_lease(freshness),
             Fem2dVisualJobStage::RetireDisplacedLease => self.stage = Fem2dVisualJobStage::Complete,
             Fem2dVisualJobStage::Complete => return Ok(true),
         }
@@ -299,6 +299,7 @@ impl Fem2dVisualJob {
             return Ok(false);
         }
         self.reserve_lane += 1;
+        Ok(false)
     }
 
     /// 🪵️ Runs the `read progress scalar` stage of `step_one`.
@@ -340,6 +341,7 @@ impl Fem2dVisualJob {
             }
         }
         self.scalar_cursor += 1;
+        Ok(false)
     }
 
     /// 🔩️ Runs the `build region` stage of `step_one`.
@@ -390,6 +392,7 @@ impl Fem2dVisualJob {
                 self.item_phase = 0;
             }
         }
+        Ok(false)
     }
 
     /// ⚙️ Runs the `build mesh element` stage of `step_one`.
@@ -398,7 +401,7 @@ impl Fem2dVisualJob {
             if let Some(node) = doc.nodes.get(self.cursor) {
                 self.layer_prefix()?;
                 let (x, y) = screen_2d(node.x, node.y);
-                write!(self.output, "{{\"kind\":\"circle\",\"id\":\"mesh-node-{}\",\"x\":{},\"y\":{},\"width\":8,\"height\":8,\"color\":\"#38bdf8\"}}", node.id, x - 4.0, y - 4.0).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
+                write!(self.output, "{{\"kind\":\"circle\",\"id\":\"mesh-node-{}\",\"x\":{},\"y\":{},\"width\":8,\"height\":8,\"color\":\"#38bdf8\"}}", node.id.as_str(), x - 4.0, y - 4.0).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
                 self.cursor += 1;
             } else {
                 self.cursor = 0;
@@ -414,7 +417,7 @@ impl Fem2dVisualJob {
         let (start, end) = fem2d_element_endpoints(element);
         if self.item_phase == 1 {
             let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem2d.visual-element-start".to_vec()) };
-            if node.id == start {
+            if node.id.as_str() == start {
                 self.endpoint_a = [node.x, node.y];
                 self.lookup_cursor = 0;
                 self.item_phase = 2;
@@ -425,7 +428,7 @@ impl Fem2dVisualJob {
         }
         if self.item_phase == 2 {
             let Some(node) = doc.nodes.get(self.lookup_cursor) else { return Err(b"fem2d.visual-element-end".to_vec()) };
-            if node.id == end {
+            if node.id.as_str() == end {
                 self.endpoint_b = [node.x, node.y];
                 self.lookup_cursor = 0;
                 self.item_phase = 3;
@@ -440,6 +443,7 @@ impl Fem2dVisualJob {
         write!(self.output, "{{\"kind\":\"line\",\"id\":\"mesh-element-{}\",\"x0\":{x0},\"y0\":{y0},\"x1\":{x1},\"y1\":{y1},\"color\":\"#94a3b8\"}}", element_id(element)).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
         self.cursor += 1;
         self.item_phase = 1;
+        Ok(false)
     }
 
     /// 🧲️ Runs the `build load glyph` stage of `step_one`.
@@ -461,6 +465,7 @@ impl Fem2dVisualJob {
         self.layer_prefix()?;
         write!(self.output, "{{\"kind\":\"line\",\"id\":\"load-{id}\",\"x0\":20,\"y0\":52,\"x1\":{},\"y1\":{}}}", 20.0 + vector[0], 52.0 - vector[1]).map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
         self.load_cursor += 1;
+        Ok(false)
     }
 
     /// 🪛️ Runs the `build displacement entry` or `build residual entry` stage of `step_one`.
@@ -493,6 +498,7 @@ impl Fem2dVisualJob {
         }
         .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
         self.cursor += 1;
+        Ok(false)
     }
 
     /// 🔧️ Runs the `build label entry` stage of `step_one`.
@@ -522,6 +528,7 @@ impl Fem2dVisualJob {
         )
         .map_err(|_| b"fem2d.visual-output-capacity".to_vec())?;
         self.cursor += 1;
+        Ok(false)
     }
 
     /// 🔨️ Runs the `publish lease` stage of `step_one`.
@@ -546,6 +553,7 @@ impl Fem2dVisualJob {
             field_order: std::mem::take(&mut self.field_order),
         });
         self.stage = Fem2dVisualJobStage::RetireDisplacedLease;
+        Ok(false)
     }
 
     pub fn take_complete(&mut self) -> Option<Fem2dMountedVisualLease> {

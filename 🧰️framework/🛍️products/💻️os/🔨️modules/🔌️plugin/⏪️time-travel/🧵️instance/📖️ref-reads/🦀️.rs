@@ -9,7 +9,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
     pub(super) fn time_travel_base(&self) -> Option<TimeTravelBase> {
         match self.time_travel_query(TimeTravelStoreQuery::Base)? {
             TimeTravelQueryOutput::Base(base) => Some(base),
-            TimeTravelQueryOutput::Positions(_) | TimeTravelQueryOutput::Value(_) => None,
+            TimeTravelQueryOutput::Positions(_) | TimeTravelQueryOutput::Value(_) | TimeTravelQueryOutput::CommitCloseDemand(_) => None,
         }
     }
 
@@ -158,7 +158,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         }
         match self.time_travel_query(TimeTravelStoreQuery::Positions(targets))? {
             TimeTravelQueryOutput::Positions(positions) => positions,
-            TimeTravelQueryOutput::Base(_) | TimeTravelQueryOutput::Value(_) => None,
+            TimeTravelQueryOutput::Base(_) | TimeTravelQueryOutput::Value(_) | TimeTravelQueryOutput::CommitCloseDemand(_) => None,
         }
     }
 

@@ -4,11 +4,6 @@
 //! which depends on this crate — see `26/07/28/EXTRACT-STORE-INTO-ITS-OWN-TECHNOLOGY`).
 
 use protocol::ColdMutation;
-// This crate's own body spells the trait name bare (`self::Mutation<P>` in `apply_mutation`
-// below, disambiguating the trait from the same-named generic parameter) — a private (non-`pub`)
-// import keeps that ergonomics without re-exposing `protocol::Mutation` on `vcs`'s own public API
-// (dependents import `protocol::Mutation` directly). `MutationDiff` is imported for its `apply`
-// method, called on `Mutation::Diff` inside `apply_mutation`.
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -70,5 +65,29 @@ mod tests;
 mod fault_params_tests;
 //#endregion 🧪️Tests
 
-#[path="🚪️io/🦀️.rs"]
-pub mod io;
+/// 🚪️ Version-control representation boundaries.
+#[path="🚪️io"]
+pub mod io {
+    /// 💾️ Version-control binary identity boundaries.
+    #[path="💾️binary"]
+    pub mod binary {
+        #[path="🪪️checkpoint-identity/🦀️.rs"]
+        pub mod checkpoint_identity;
+
+        #[path="🪪️entity-identity/🦀️.rs"]
+        pub mod entity_identity;
+
+        #[path="🌱️genesis/🦀️.rs"]
+        pub mod genesis;
+    }
+
+    /// 📝️ Version-control text boundaries.
+    #[path="📝️text"]
+    pub mod text {
+        #[path="🌱️genesis/🦀️.rs"]
+        pub mod genesis;
+
+        #[path="🌿️vcs/🦀️.rs"]
+        pub mod vcs;
+    }
+}

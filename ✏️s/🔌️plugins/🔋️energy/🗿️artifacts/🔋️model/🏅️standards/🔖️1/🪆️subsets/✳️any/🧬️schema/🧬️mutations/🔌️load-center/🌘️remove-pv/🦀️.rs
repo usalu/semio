@@ -21,5 +21,3 @@ pub fn remove_electrical_load_center_pv<Op: From<RemoveElectricalLoadCenterPv>>(
 }
 
 //#endregion 🔖️Mutation
-
-#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

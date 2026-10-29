@@ -22,5 +22,3 @@ pub fn add_electrical_load_center_pv<Op: From<AddElectricalLoadCenterPv>>(id: cr
 }
 
 //#endregion 🔖️Mutation
-
-#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

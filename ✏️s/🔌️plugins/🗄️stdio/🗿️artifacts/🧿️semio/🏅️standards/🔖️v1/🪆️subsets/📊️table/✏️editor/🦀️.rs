@@ -220,8 +220,8 @@ impl ArtifactEditor for SemioTableEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_table_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->SemioTableSnapshot>{Some(||{
-        SemioTableSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SemioTableSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SemioTableSnapshot::default())
     })}
 
     fn handle(

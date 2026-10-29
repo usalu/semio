@@ -116,13 +116,13 @@ impl<A: ArtifactApp> InstanceStores<A> {
         let authority = mounted.window_config_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window config receipt lost its captured window authority"))?;
         self.window_config_store.refresh_demands(authority, retained.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
         let step = self.window_config_store.refresh(authority, retained)?;
-        let (semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(progress) | semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(progress)) = step;
+        let (semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(progress) | semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Ready(progress)) = step;
         if progress != RetainedCloneProgress::default() {
             assert!(mounted.publication_ownership_progress.is_none(), "window config refresh cannot overwrite an unreturned original receipt");
             mounted.publication_ownership_progress = Some((retained, progress));
             mounted.publication_progress = mounted.publication_progress.saturating_add(1);
         }
-        if matches!(step, semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_)) { return Ok(false); }
+        if matches!(step, semio_framework_plugin_window_config_mutation::refresh::WindowAuthorityRefreshStep::Pending(_)) { return Ok(false); }
         Ok(true)
     }
 

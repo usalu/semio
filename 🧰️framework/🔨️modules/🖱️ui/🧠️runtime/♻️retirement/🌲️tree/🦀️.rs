@@ -4,7 +4,7 @@ use semio_framework_ui_runtime_presentation::{ComponentTree, TreeNode, UiNativeR
 
 #[derive(Default)]
 pub struct SurfaceTreeRetireCursor {
-    owner: Option<ui_contract::BuiltTreeRetirement>,
+    pub(crate) owner: Option<ui_contract::BuiltTreeRetirement>,
     native_resources: Option<UiNativeResources>,
 }
 

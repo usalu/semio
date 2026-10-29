@@ -212,6 +212,33 @@
     "reason": "unparsable"
    },
    "edges": []
+  },
+  {
+   "name": "h",
+   "root": "pkg/h",
+   "kind": "project",
+   "node": {
+    "name": "h",
+    "root": "pkg/h",
+    "targets": {
+     "build": {
+      "execution": {
+       "kind": "command",
+       "command": "run h build"
+      },
+      "inputs": [
+       "{projectRoot}/src.ts",
+       {
+        "externalDependencies": [
+         "plain",
+         "npm:named"
+        ]
+       }
+      ]
+     }
+    }
+   },
+   "edges": []
   }
  ],
  "global": {
@@ -231,6 +258,10 @@
    "npm:named": {
     "type": "npm",
     "name": "npm:named"
+   },
+   "npm:plain": {
+    "type": "npm",
+    "name": "npm:plain"
    },
    "npm:below": {
     "type": "npm",
@@ -326,6 +357,12 @@
    "name": "an-external-dependency-named-by-an-input-group-without-an-edge",
    "names": [
     "g"
+   ]
+  },
+  {
+   "name": "an-external-dependency-named-by-its-package-name-without-an-edge",
+   "names": [
+    "h"
    ]
   }
  ],
@@ -436,6 +473,27 @@
        }
       ]
      }
+    },
+    "h": {
+     "name": "h",
+     "root": "pkg/h",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run h build"
+       },
+       "inputs": [
+        "{projectRoot}/src.ts",
+        {
+         "externalDependencies": [
+          "plain",
+          "npm:named"
+         ]
+        }
+       ]
+      }
+     }
     }
    },
    "dependencies": [
@@ -511,6 +569,10 @@
     "npm:named": {
      "type": "npm",
      "name": "npm:named"
+    },
+    "npm:plain": {
+     "type": "npm",
+     "name": "npm:plain"
     },
     "npm:below": {
      "type": "npm",
@@ -850,6 +912,53 @@
     "npm:grouped": {
      "type": "npm",
      "name": "npm:grouped"
+    }
+   },
+   "unavailable": []
+  },
+  {
+   "projects": {
+    "h": {
+     "name": "h",
+     "root": "pkg/h",
+     "targets": {
+      "build": {
+       "execution": {
+        "kind": "command",
+        "command": "run h build"
+       },
+       "inputs": [
+        "{projectRoot}/src.ts",
+        {
+         "externalDependencies": [
+          "plain",
+          "npm:named"
+         ]
+        }
+       ]
+      }
+     }
+    }
+   },
+   "dependencies": [
+    {
+     "source": "npm:named",
+     "target": "npm:below",
+     "type": "static"
+    }
+   ],
+   "externalNodes": {
+    "npm:named": {
+     "type": "npm",
+     "name": "npm:named"
+    },
+    "npm:plain": {
+     "type": "npm",
+     "name": "npm:plain"
+    },
+    "npm:below": {
+     "type": "npm",
+     "name": "npm:below"
     }
    },
    "unavailable": []

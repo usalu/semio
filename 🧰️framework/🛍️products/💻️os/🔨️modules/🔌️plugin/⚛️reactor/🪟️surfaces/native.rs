@@ -45,7 +45,7 @@ impl SurfaceContexts{
  pub fn original_terminal_is_empty(&self)->bool{self.slots.iter().all(Option::is_none)&&self.view_state.is_none()&&self.retirement.is_empty()&&self.cached_source.is_none()&&self.cached_capture.is_none()&&self.captured_slot.is_none()}
  /// 🧪️ Source-only fixture setup creates all authored surface roles before receipt observation.
  #[cfg(feature="original-surface-testing")]
- pub fn original_refresh_fixture(view:&ViewModel)->Self{let mut result=Self::default();for(index,(surface,role))in [("window",SurfaceRole::Window("energy-window".into())),("panel",SurfaceRole::Panel),("section",SurfaceRole::Section),("closed",SurfaceRole::Window("closed-window".into()))].into_iter().enumerate(){let mut old=view.clone();old.panel_json=Some("original section".into());result.slots[index]=Some(SurfaceBinding{surface:surface.into(),body_key:surface.into(),role,view_state:Some(old)});}result}
+ pub fn original_refresh_fixture(view:&ViewModel)->Self{let mut result=Self::default();for(index,(surface,role))in [("window",SurfaceRole::Window("energy-window".into())),("panel",SurfaceRole::Panel),("section",SurfaceRole::Section),("closed",SurfaceRole::Window("closed-window".into()))].into_iter().enumerate(){let mut old=view.clone();old.panel_json=Some("original section".into());result.slots[index]=Some(SurfaceBinding{surface:surface.into(),body_key:surface.into(),role,view_state:Some(old),version:0});}result}
  /// 🧪️ The original cached view exists before native read admission begins.
  #[cfg(feature="original-surface-testing")]
  pub fn original_read_fixture(view:&ViewModel)->Self{Self{view_state:Some(view.clone()),..Self::default()}}
@@ -58,4 +58,4 @@ impl SurfaceContexts{
 pub use read::OriginalSurfaceViewCapture;
 
 #[cfg(feature="original-surface-testing")]
-impl SurfaceContexts{#[doc(hidden)]pub fn original_surface_read_fixture(surface:&str,view:&ViewModel)->Self{let mut result=Self::default();let mut cached=view.clone();cached.window_id=Some("cache-window".into());result.view_state=Some(cached);result.slots[0]=Some(SurfaceBinding{surface:"cached".into(),body_key:"section".into(),role:SurfaceRole::Section,view_state:Some(result.view_state.as_ref().unwrap().clone())});result.slots[1]=Some(SurfaceBinding{surface:surface.into(),body_key:"section".into(),role:SurfaceRole::Section,view_state:Some(view.clone())});result}}
+impl SurfaceContexts{#[doc(hidden)]pub fn original_surface_read_fixture(surface:&str,view:&ViewModel)->Self{let mut result=Self::default();let mut cached=view.clone();cached.window_id=Some("cache-window".into());result.view_state=Some(cached);result.slots[0]=Some(SurfaceBinding{surface:"cached".into(),body_key:"section".into(),role:SurfaceRole::Section,view_state:Some(result.view_state.as_ref().unwrap().clone()),version:0});result.slots[1]=Some(SurfaceBinding{surface:surface.into(),body_key:"section".into(),role:SurfaceRole::Section,view_state:Some(view.clone()),version:0});result}}

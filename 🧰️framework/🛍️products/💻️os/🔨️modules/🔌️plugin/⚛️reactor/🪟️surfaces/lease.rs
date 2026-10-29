@@ -33,17 +33,17 @@ impl SurfaceWindowLeaseCursor {
             },
             3=>{
                 let binding=contexts.slots[self.slot.unwrap()].as_ref().ok_or_else(invalid)?;
-                if binding.view_state.locale!=locale{return Err(invalid());}
-                if let Some(equal)=compare(binding.view_state.window_id.as_deref().ok_or_else(invalid)?,window,&mut self.byte){if !equal{return Err(invalid());}self.phase=4;}Ok(None)
+                if binding.view_state.as_ref().ok_or_else(invalid)?.locale!=locale{return Err(invalid());}
+                if let Some(equal)=compare(binding.view_state.as_ref().ok_or_else(invalid)?.window_id.as_deref().ok_or_else(invalid)?,window,&mut self.byte){if !equal{return Err(invalid());}self.phase=4;}Ok(None)
             },
             4=>{
                 let binding=contexts.slots[self.slot.unwrap()].as_ref().ok_or_else(invalid)?;
-                let Some(row)=binding.view_state.window_instances.get(self.row)else{if self.mounted.is_none(){return Err(invalid());}self.phase=5;return Ok(None);};
+                let Some(row)=binding.view_state.as_ref().ok_or_else(invalid)?.window_instances.get(self.row)else{if self.mounted.is_none(){return Err(invalid());}self.phase=5;return Ok(None);};
                 if let Some(equal)=compare(&row.id,window,&mut self.byte){if equal&&self.mounted.replace(self.row).is_some(){return Err(invalid());}self.row+=1;}Ok(None)
             },
             5=>{
                 let slot=self.slot.unwrap();let binding=contexts.slots[slot].as_ref().ok_or_else(invalid)?;
-                let actual=&host.window_instances[self.actual.unwrap()].window_kind_id;let mounted=&binding.view_state.window_instances[self.mounted.unwrap()].window_kind_id;
+                let actual=&host.window_instances[self.actual.unwrap()].window_kind_id;let mounted=&binding.view_state.as_ref().ok_or_else(invalid)?.window_instances[self.mounted.unwrap()].window_kind_id;
                 if let Some(equal)=compare(actual,mounted,&mut self.byte){if !equal{return Err(invalid());}self.phase=6;return Ok(Some(SurfaceWindowLease{source:self.source,context_version:self.version,slot,version:binding.version}));}Ok(None)
             },
             _=>Err(invalid()),

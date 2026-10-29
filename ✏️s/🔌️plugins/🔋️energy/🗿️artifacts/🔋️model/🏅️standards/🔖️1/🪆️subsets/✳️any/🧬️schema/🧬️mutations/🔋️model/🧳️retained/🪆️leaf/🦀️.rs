@@ -1,6 +1,6 @@
 //! 🪆️ Authored identity leaves lend their actual text and exact inverse constructor to the retained semantic owner.
 use super::*;
-use protocol::{Mutation,MutationMessage,MutationMessageLedgerRetirement,mutation::retained::{RetainedMutationLeafPreparation,RetainedMutationCloseContext,RetainedMutationAdvance,RetainedMutationDecision,RetainedDiagnosticPreparation,RetainedDiagnosticSpec}};
+use protocol::{Mutation,MutationMessage,MutationMessageLedgerRetirement,RetainedMutationLeafPreparation,RetainedMutationCloseContext,RetainedMutationAdvance,RetainedMutationDecision,RetainedDiagnosticPreparation,RetainedDiagnosticSpec};
 use semio_framework_value::factory::vector::FactoryVectorRetirement;
 
 /// 🏷️ Each authored schema field supplies its native address and typed inverse, without an erased payload map.

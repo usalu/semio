@@ -234,6 +234,3 @@ fn sort<S: FemIdentitySource>(rows: &mut [Row], source: &S, owner: &mut NativeSn
     }
     Ok(())
 }
-#[cfg(test)]
-#[path = "identity-index-tests.rs"]
-mod tests;

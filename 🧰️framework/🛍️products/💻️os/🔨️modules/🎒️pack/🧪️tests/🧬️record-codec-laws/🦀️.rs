@@ -143,7 +143,7 @@ impl RecordValueGen {
             semio_framework_dsl_record::Shape::UInt => semio_framework_dsl_record::FieldValue::UInt(self.next_uint()),
             semio_framework_dsl_record::Shape::Float => semio_framework_dsl_record::FieldValue::Float(self.next_f64()),
             semio_framework_dsl_record::Shape::Text => semio_framework_dsl_record::FieldValue::Text(self.next_string(12)),
-            semio_framework_dsl_record::Shape::Bytes64 => semio_framework_dsl_record::FieldValue::Bytes64(self.next_bytes(16)),
+            semio_framework_dsl_record::Shape::Bytes64 => semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&self.next_bytes(16)).expect("sixteen bytes fit the record byte backing")),
             semio_framework_dsl_record::Shape::Enum(variants) => {
                 if variants.is_empty() {
                     semio_framework_dsl_record::FieldValue::Enum(0)
@@ -252,7 +252,7 @@ impl RecordValueGen {
             semio_framework_dsl_record::Shape::UInt => semio_framework_dsl_record::FieldValue::UInt(self.next_uint()),
             semio_framework_dsl_record::Shape::Float => semio_framework_dsl_record::FieldValue::Float(self.next_f64()),
             semio_framework_dsl_record::Shape::Text => semio_framework_dsl_record::FieldValue::Text(self.next_string(6)),
-            semio_framework_dsl_record::Shape::Bytes64 => semio_framework_dsl_record::FieldValue::Bytes64(Vec::new()),
+            semio_framework_dsl_record::Shape::Bytes64 => semio_framework_dsl_record::FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::default()),
             semio_framework_dsl_record::Shape::Enum(variants) => semio_framework_dsl_record::FieldValue::Enum(variants.first().map_or(0, |(_, ordinal)| *ordinal)),
             semio_framework_dsl_record::Shape::Tuple(_, _) => semio_framework_dsl_record::FieldValue::Tuple(Vec::new()),
             semio_framework_dsl_record::Shape::List(_) => semio_framework_dsl_record::FieldValue::List(Vec::new()),

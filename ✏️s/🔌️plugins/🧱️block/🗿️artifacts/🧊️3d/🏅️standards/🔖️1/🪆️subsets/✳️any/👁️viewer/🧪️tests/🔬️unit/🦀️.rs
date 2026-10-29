@@ -96,7 +96,7 @@ async fn noop_command_round_trips_and_never_mutates() {
     let mut app = crate::tests::context::app().await;
     let before = app.snapshot().expect("snapshot");
     assert_eq!(protocol::OpBinary::decode_op(&protocol::OpBinary::encode_op(&Block3dViewCommand::Noop).expect("encode")).map(|command: Block3dViewCommand| command), Ok(Block3dViewCommand::Noop), "the sole command round-trips through its own wire form");
-    let refused = app.0.dispatch_typed(Block3dViewCommand::Noop, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    let refused = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &Block3dViewCommand::Noop, &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
     assert!(refused.is_err(), "a viewer declares no command, so the typed channel must refuse it instead of routing it: {refused:?}");
     assert_eq!(app.snapshot().expect("snapshot"), before, "the viewer's document must come through the refusal untouched");
 }

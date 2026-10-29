@@ -17,6 +17,10 @@ pub mod dispatch_host_events;
 pub mod dispatch_typed_command;
 #[path = "📥️staging/🤝️group-history/🦀️.rs"]
 pub mod dispatch_group_history;
+#[path = "📥️staging/🏃️runtime-command/🦀️.rs"]
+pub mod dispatch_runtime_command;
+#[path = "📥️staging/🔁️task-resumes/🦀️.rs"]
+pub mod dispatch_task_resumes;
 #[path = "📥️staging/🧺️bundle/🦀️.rs"]
 pub mod dispatch_bundle;
 

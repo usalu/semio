@@ -3,14 +3,11 @@
 //! shares — written once, below every kind that runs them.
 
 use crate::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
 use crate::standards::v1::subsets::any::schema::structure::element_id;
 use crate::standards::v1::subsets::any::schema::structure::load_id;
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoad;
-use crate::standards::v1::subsets::any::schema::structure::FemMaterial;
-use crate::standards::v1::subsets::any::schema::structure::FemNode;
 use crate::standards::v1::subsets::any::schema::structure::FemSection;
 use crate::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
@@ -43,7 +40,7 @@ pub fn invariant(message: String, target: Vec<String>) -> protocol::MutationOutc
 }
 /// 🔗️ Every record id that would dangle if `id` left `nodes` — elements, then supports, then nodal
 /// loads, each in document order.
-pub fn node_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
+pub fn node_referrers(base: &Fem3dSnapshotValue, id: &str) -> Vec<String> {
     let mut found: Vec<String> = base
         .elements
         .iter()
@@ -57,11 +54,11 @@ pub fn node_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
     found
 }
 /// 🔗️ Every member UDL that would dangle if `id` left `elements`.
-pub fn element_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
+pub fn element_referrers(base: &Fem3dSnapshotValue, id: &str) -> Vec<String> {
     base.load_cases.iter().flat_map(|case| case.loads.iter()).filter(|load| matches!(load, FemLoad::MemberUdl { element_id, .. } if element_id == id)).map(|load| load_id(load).to_string()).collect()
 }
 /// 🔗️ Every element that would dangle if `id` left `sections`.
-pub fn section_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
+pub fn section_referrers(base: &Fem3dSnapshotValue, id: &str) -> Vec<String> {
     base.elements
         .iter()
         .filter(|element| match element {
@@ -71,11 +68,11 @@ pub fn section_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
         .collect()
 }
 /// 🔗️ Every area load that would dangle if `id` left `solids`.
-pub fn solid_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
+pub fn solid_referrers(base: &Fem3dSnapshotValue, id: &str) -> Vec<String> {
     base.load_cases.iter().flat_map(|case| case.loads.iter()).filter(|load| matches!(load, FemLoad::Area { solid_id, .. } if solid_id == id)).map(|load| load_id(load).to_string()).collect()
 }
 /// 🔗️ Every element and solid that would dangle if `id` left `materials`.
-pub fn material_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
+pub fn material_referrers(base: &Fem3dSnapshotValue, id: &str) -> Vec<String> {
     let mut found: Vec<String> = base
         .elements
         .iter()
@@ -88,12 +85,12 @@ pub fn material_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
     found
 }
 /// 🔗️ Every combination that would lose a weighted term if `id` left `load_cases`.
-pub fn load_case_referrers(base: &Fem3dSnapshot, id: &str) -> Vec<String> {
+pub fn load_case_referrers(base: &Fem3dSnapshotValue, id: &str) -> Vec<String> {
     base.combinations.iter().filter(|combination| combination.terms.contains_key(id)).map(|combination| combination.id.clone()).collect()
 }
 /// 🔩️ Resolves an element's four foreign keys in the declared order — start, end, material,
 /// section — so `create-element` and `replace-element` accept exactly the same references.
-pub fn resolve_element(base: &Fem3dSnapshot, element: &FemElement) -> Option<protocol::MutationOutcome<Fem3dDiff>> {
+pub fn resolve_element(base: &Fem3dSnapshotValue, element: &FemElement) -> Option<protocol::MutationOutcome<Fem3dDiff>> {
     if let Some(message) = entity_identity_breach("element", element_id(element)) { return Some(invariant(message, vec![element_id(element).into()])); }
     let (start, end, material_id, section_id) = match element {
         FemElement::Bar { start, end, material_id, section_id, .. } | FemElement::Frame { start, end, material_id, section_id, .. } => (start, end, material_id, section_id),
@@ -114,7 +111,7 @@ pub fn resolve_element(base: &Fem3dSnapshot, element: &FemElement) -> Option<pro
 }
 /// 🏋️ Resolves the node, element or solid a load hangs on, so `add-load` accepts exactly the
 /// references `create-load-case` accepts for the same payload.
-pub fn resolve_load(base: &Fem3dSnapshot, load: &FemLoad) -> Option<protocol::MutationOutcome<Fem3dDiff>> {
+pub fn resolve_load(base: &Fem3dSnapshotValue, load: &FemLoad) -> Option<protocol::MutationOutcome<Fem3dDiff>> {
     if let Some(message) = load_breach(load) { return Some(invariant(message, vec![load_id(load).into()])); }
     let missing = match load {
         FemLoad::Nodal { node_id, .. } => (!base.nodes.iter().any(|node| &node.id == node_id)).then(|| ("Node", node_id.clone())),
@@ -222,7 +219,7 @@ pub fn load_breach(load: &FemLoad) -> Option<String> {
 }
 /// 📦️ Every term of a combination weights a load case this base carries — the SAME resolution
 /// `create-combination` and `replace-combination` run, so the twins accept exactly the same terms.
-pub fn resolve_combination_terms(base: &Fem3dSnapshot, combination: &FemCombination) -> Option<protocol::MutationOutcome<Fem3dDiff>> {
+pub fn resolve_combination_terms(base: &Fem3dSnapshotValue, combination: &FemCombination) -> Option<protocol::MutationOutcome<Fem3dDiff>> {
     combination.terms.keys().find(|case_id| !base.load_cases.iter().any(|case| &case.id == *case_id)).map(|case_id| protocol::MutationOutcome::error("mutation.target-missing", format!("Load case \"{case_id}\" does not exist."), [case_id.clone()]))
 }
 /// 📦️ A combination's factors must be finite — an infinite weight cannot be superposed.

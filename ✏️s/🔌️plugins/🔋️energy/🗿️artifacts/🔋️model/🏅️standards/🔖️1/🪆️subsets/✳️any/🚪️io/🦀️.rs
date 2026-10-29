@@ -22,7 +22,7 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
 pub mod derived_composition {
     use crate::EnergyModelAnalyzer;
     use crate::snapshot::EnergyModelSnapshot;
-    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposer,semio_framework_plugin::ArtifactAnalyzer,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
@@ -30,9 +30,9 @@ pub mod derived_composition {
     const DEP_IDF: Dialect = Dialect { artifact_kind: "s.stdio.idf", standard: StandardId("25.2"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
-    pub struct EnergyModelComposerComposition;
+    pub struct EnergyModelComposer;
 
-    impl ArtifactComposition for EnergyModelComposerComposition {
+    impl ArtifactComposer for EnergyModelComposer {
         type Snapshot = EnergyModelSnapshot;
         const WRITES: Dialect = DIALECT;
 
@@ -89,7 +89,7 @@ pub mod derived_composition {
                     }
                 }
             }
-            Err(ComposeError { message: "EnergyModelComposerComposition: no source in a known read dialect".into(), diagnostics: Vec::new() })
+            Err(ComposeError { message: "EnergyModelComposer: no source in a known read dialect".into(), diagnostics: Vec::new() })
         }
     }
 }
@@ -102,8 +102,7 @@ pub use derived_composition::*;
 /// never an engine; this is the io-registry half rule 5 sends here.
 pub mod io_registry {
     use crate::EnergyModelComposer as EnergyModelAnyComposer;
-    use crate::ModelBuilder as EnergyModelAnyBuilder;
-    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::ArtifactBuilder,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::composer_entry_of,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
     use std::sync::OnceLock;
 
     static ENTRIES: OnceLock<Vec<ComposerEntry>> = OnceLock::new();
@@ -124,11 +123,11 @@ pub mod io_registry {
 
     fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::snapshot::EnergyModelSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == MODEL_DIALECT) {
-            let builder = match &source.payload {
-                IoPayload::Text(t) => EnergyModelAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
-                IoPayload::Binary(b) => EnergyModelAnyBuilder::from_binary(b).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
+            let refused = |message: String| ComposeError { message, diagnostics: Vec::new() };
+            return match &source.payload {
+                IoPayload::Text(text) => <crate::snapshot::EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| refused(error.to_string())),
+                IoPayload::Binary(bytes) => <crate::snapshot::EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes).map_err(|error| refused(error.to_string())),
             };
-            return builder.build().map_err(|diagnostics| ComposeError { message: "EnergyModelComposer export: build() failed".into(), diagnostics });
         }
         if let Some(source) = sources.iter().find(|s| s.dialect == MODEL_JSON_BRIDGE_DIALECT) {
             let bytes: Vec<u8> = match &source.payload {
@@ -183,70 +182,19 @@ pub mod io_registry {
 
 
 
-pub mod derived_construction {
-    use crate::diff::EnergyModelDiff;
-    use crate::mutations::EnergyModelMutation;
-    use crate::snapshot::EnergyModelSnapshot;
-    use semio_framework_plugin::ArtifactBuilder;
-
-    #[derive(Clone, Debug, Default)]
-    pub struct ModelBuilderConstruction {
-        snapshot: EnergyModelSnapshot,
-        diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
-    }
-
-    impl ArtifactBuilder for ModelBuilderConstruction {
-        type Snapshot = EnergyModelSnapshot;
-        type Mutation = EnergyModelMutation;
-        type Diff = EnergyModelDiff;
-        fn empty() -> Self {
-            Self { snapshot: EnergyModelSnapshot::default(), diagnostics: Vec::new() }
-        }
-        fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
-        }
-        fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
-        }
-        fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<EnergyModelSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
-        }
-        fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::ColdMutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
-                Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
-            }
-            (self, outcome)
-        }
-        fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
-            Ok(self)
-        }
-        fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
-            }
-        }
-    }
-}
-pub use derived_construction::*;
 
 pub mod derived_analysis {
     use crate::snapshot::EnergyModelSnapshot;
-    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
+    use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalyzer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct EnergyModelParts {
         pub snapshot: Option<EnergyModelSnapshot>,
     }
 
-    pub struct EnergyModelAnalyzerAnalysis;
+    pub struct EnergyModelAnalyzer;
 
-    impl ArtifactAnalysis for EnergyModelAnalyzerAnalysis {
+    impl ArtifactAnalyzer for EnergyModelAnalyzer {
         type Parts = EnergyModelParts;
         const DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId("*") };
 
@@ -282,16 +230,6 @@ pub mod derived_analysis {
 }
 pub use derived_analysis::*;
 
-semio_framework_plugin::derive_artifact_facets!(
-    pub spec ModelBuilderFacets {
-        construction: ModelBuilderConstruction,
-        analysis: EnergyModelAnalyzerAnalysis,
-        composition: EnergyModelComposerComposition,
-    }
-    builder: ModelBuilder,
-    analyzer: EnergyModelAnalyzer,
-    composer: EnergyModelComposer,
-);
 
 #[cfg(test)]
 mod tests {

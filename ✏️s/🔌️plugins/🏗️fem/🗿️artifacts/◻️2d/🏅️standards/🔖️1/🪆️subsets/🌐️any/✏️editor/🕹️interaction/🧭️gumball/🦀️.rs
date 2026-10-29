@@ -143,7 +143,7 @@ pub fn fem2d_transform_targets(doc: &Fem2dSnapshot, selection_ids: &[String]) ->
         }
     }
     Fem2dTransformTargets {
-        node_ids: doc.nodes.iter().filter(|node| nodes.contains(&node.id)).map(|node| node.id.clone()).collect(),
+        node_ids: doc.nodes.iter().filter(|node| nodes.contains(node.id.as_str())).map(|node| node.id.to_string()).collect(),
         region_ids: doc.regions.iter().filter(|region| regions.contains(&region.id)).map(|region| region.id.clone()).collect(),
     }
 }

@@ -13,7 +13,7 @@ fn close_issuer<R:ArtifactEnvelopeRegistryRelease>(source:&mut Option<Arc<R>>,cl
  if source.is_some(){let d=fixed::<(Option<Arc<R>>,Option<ArtifactEnvelopeRegistryOwner<R>>)>();close_original_retained_step(cx,d,|_|{*close=Some(ArtifactEnvelopeRegistryOwner::from_original(source.take().unwrap()));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;return Ok(false)}Ok(true)
 }
 impl<A,M,O> OriginalSingleWindowRegistration<A,M,O>
-where A:OriginalArtifactAppBirth<Presence=NoPresence,PresenceMutation=NoPresenceMutation,Transient=NoTransient,TransientMutation=NoTransientMutation>,M:SpaceMember+MemberFactory+'static,O:WindowConfigOwner{
+where A:OriginalArtifactAppBirth<Presence=NoPresence,PresenceMutation=NoPresenceMutation,Transient=NoTransient,TransientMutation=NoTransientMutation>,M:ReferenceSpaceMember+MemberFactory+'static,O:WindowConfigOwner{
  pub(super) fn close_original(&mut self,cx:&mut StepContext<'_>)->Result<bool,OriginalTurnFailure>{self.validate(cx)?;cx.with_original_retirement(|cx|{
   if !self.closing{let d=fixed::<bool>();close_original_retained_step(cx,d,|_|{self.closing=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;return Ok(false)}
   if let Some(source)=self.tools_source.as_mut(){if source.terminal_is_empty(){clear(&mut self.tools_source,cx,OriginalDeclaredEmptyOperationSource::boxed_release_demands().release_bytes)?;}else{source.close_step(cx)?;}return Ok(false)}

@@ -230,8 +230,8 @@ fn sized_envelope(index: usize, payload_bytes: usize) -> semio_framework_os_spr:
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("block.2d".into()), payload: vec![7; payload_bytes] },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("block.2d".into()), payload: Vec::new() },
+        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("block.2d".into()), payload: semio_framework_os_spr::CausalPayload::try_from_slice(&vec![7; payload_bytes]).unwrap() },
+        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("block.2d".into()), payload: semio_framework_os_spr::CausalPayload::try_from_slice(&[]).unwrap() },
         timestamp: semio_framework_os_spr::HybridLogicalTimestamp::new(1, 1),
         transaction: None, verb: None, line: None,
     }

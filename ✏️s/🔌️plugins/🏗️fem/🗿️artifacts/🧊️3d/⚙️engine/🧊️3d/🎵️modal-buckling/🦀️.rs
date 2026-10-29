@@ -71,7 +71,7 @@ pub fn fem3d_buckling(doc: &Fem3dSnapshot, case_id: &str) -> Result<semio_s_fem_
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let case = buckling_case(doc, case_id, &solids)?;
     let model = semio_s_fem_analyses_model::AnalysisModel { nodes, elements, supports };
-    semio_s_fem_analyses::buckling(&model, &case, doc.analysis.buckling_count).map_err(Fem3dError::from)
+    semio_s_fem_analyses::buckling(&model, &case, doc.analysis.buckling_count, [0.0, 0.0, -crate::fem3d_engine::meshing::GRAVITY_G]).map_err(Fem3dError::from)
 }
 
 /// 🌉️ Richer buckling entry point: mirrors `fem3d_modal_mode_values` — solves the same buckling
@@ -82,7 +82,7 @@ pub fn fem3d_buckling_mode_values(doc: &Fem3dSnapshot, case_id: &str, mode_index
     let order = mode_dof_order(&nodes, &elements);
     let case = buckling_case(doc, case_id, &solids)?;
     let model = semio_s_fem_analyses_model::AnalysisModel { nodes, elements, supports };
-    let result = semio_s_fem_analyses::buckling(&model, &case, doc.analysis.buckling_count)?;
+    let result = semio_s_fem_analyses::buckling(&model, &case, doc.analysis.buckling_count, [0.0, 0.0, -crate::fem3d_engine::meshing::GRAVITY_G])?;
     let factor = *result.factors.get(mode_index).ok_or(Fem3dError::ModeIndexOutOfRange(mode_index))?;
     let shape = result.shapes.get(mode_index).ok_or(Fem3dError::ModeIndexOutOfRange(mode_index))?;
     let mut values: std::collections::HashMap<String, [f64; 6]> = std::collections::HashMap::new();

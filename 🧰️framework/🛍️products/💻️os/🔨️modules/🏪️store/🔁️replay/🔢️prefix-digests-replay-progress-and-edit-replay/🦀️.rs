@@ -191,41 +191,18 @@ impl<P, Mutation: super::Mutation<P>> std::ops::DerefMut for EditReplay<P, Mutat
     fn deref_mut(&mut self) -> &mut Self::Target { &mut self.original }
 }
 
-impl<P: Clone, Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary> EditReplay<P, Mutation> {
+impl<P,Mutation:super::Mutation<P>+OpBinary> EditReplay<P,Mutation>{
+        /// 🎟️ Executes one replay operation frontier under the caller's unchanged original resource allowance.
+    pub fn step_granted(&mut self,edits:&impl ReplayEdits<Mutation>,grant:RetainedCloneGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<ReplayStep,VcsError>{if self.retiring{return Err(VcsError::HistoryReplaying);}if deadline()||grant.maximum_items==0{return Ok(ReplayStep::Pending(self.progress));}{self.native_receipt=Default::default();self.original.advance_with_operation_cap(edits,1,Some(grant),Some(control),None,&mut||true)}}
+}
+
+impl<P,Mutation:super::Mutation<P>> EditReplay<P,Mutation>{
     pub fn retain(original: ReplayOwnedState<P, Mutation>) -> Self { Self { original: std::mem::ManuallyDrop::new(original), raw_retirement: std::mem::ManuallyDrop::new(None), raw_factory: std::mem::ManuallyDrop::new(None), retiring: false } }
-    pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new(mode, base, order, from, schema, supersessions, edits).map(Self::retain) }
     pub fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_framework_os_vcs::HistoryPageStack<String>, from: usize, schema: String, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> { ReplayOwnedState::new_counted(mode, base, order, from, schema, supersessions, total).map(Self::retain) }
-    pub fn new_after_prefix(mode: ReplayMode, base_length: usize, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new_after_prefix(mode, base_length, base, order, from, schema, supersessions, edits).map(Self::retain) }
-    pub fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self { self.original.replace_convergence(convergence); self }
-    pub fn recording(mut self, stride: usize, prefixes: Vec<(usize, Arc<P>)>) -> Self { self.original.record_stride = stride.max(1); self.original.recorded.extend(prefixes); self.original.record(); self }
     pub fn with_base(mut self, generation: u64, revision: [u8; 32]) -> Self { self.original.generation = generation; self.original.revision = revision; self }
     pub fn with_drafts(mut self, drafts: protocol::HistoryInputDrafts) -> Self { self.original.drafts = drafts; self }
     pub fn with_retirement_factories(mut self, snapshots: Arc<dyn ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>) -> Self where P: Send + Sync + 'static, Mutation: Send + 'static { self.original.replay_retirement_factory = Some(semio_framework_os_spr::command::registered_replay_retirement_factory(snapshots, mutations)); self }
     pub fn with_operation_preparation(mut self, factory: Arc<dyn ArtifactReplayPreparationFactory<P, Mutation>>) -> Self { self.original.operation_preparation_factory = Some(factory); self }
-    pub fn step(&mut self, edits: &impl ReplayEdits<Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
-        if self.retiring { return Err(VcsError::HistoryReplaying); }
-        self.original.step(edits, deadline)
-    }
-        /// 🎟️ Executes one replay operation frontier under the caller's unchanged original resource allowance.
-    pub fn step_granted(&mut self,edits:&impl ReplayEdits<Mutation>,grant:RetainedCloneGrant,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<ReplayStep,VcsError>{if self.retiring{return Err(VcsError::HistoryReplaying);}if deadline()||grant.maximum_items==0{return Ok(ReplayStep::Pending(self.progress));}{self.native_receipt=Default::default();self.original.step_with_operation_cap(edits,1,Some(grant),Some(control),&mut||true)}}
-pub fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
-        if self.retiring { return Err(VcsError::HistoryReplaying); }
-        self.original.step_operations(edits, maximum_operations, deadline)
-    }
-    /// 🏃️ Steps the replay to its result without a deadline; a refusal retires the raw replay unscheduled before it surfaces.
-    pub fn run(mut self, edits: &impl ReplayEdits<Mutation>) -> Result<EditReplayResult<P, Mutation>, VcsError> where P: 'static, Mutation: 'static {
-        let outcome = loop {
-            match self.step(edits, &mut || false) {
-                Ok(ReplayStep::Pending(_)) => {}
-                Ok(ReplayStep::Finished(_)) => break self.finish(),
-                Err(error) => break Err(error),
-            }
-        };
-        if outcome.is_err() {
-            let _ = self.retire_unscheduled();
-        }
-        outcome
-    }
 
     /// 🏁️ The finished replay's result; refused while operations remain.
     pub fn finish(&mut self) -> Result<EditReplayResult<P, Mutation>, VcsError> {
@@ -258,6 +235,43 @@ pub fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_op
         *residual.raw_factory = self.raw_factory.take();
         Ok(EditReplayResult { original: std::mem::ManuallyDrop::new(result), residual: std::mem::ManuallyDrop::new(Some(residual)) })
     }
+}
+
+impl<P: Clone, Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary> EditReplay<P, Mutation> {
+
+    pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new(mode, base, order, from, schema, supersessions, edits).map(Self::retain) }
+
+    pub fn new_after_prefix(mode: ReplayMode, base_length: usize, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new_after_prefix(mode, base_length, base, order, from, schema, supersessions, edits).map(Self::retain) }
+    pub fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self { self.original.replace_convergence(convergence); self }
+    pub fn recording(mut self, stride: usize, prefixes: Vec<(usize, Arc<P>)>) -> Self { self.original.record_stride = stride.max(1); self.original.recorded.extend(prefixes); self.original.record(); self }
+
+
+
+
+    pub fn step(&mut self, edits: &impl ReplayEdits<Mutation>, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+        if self.retiring { return Err(VcsError::HistoryReplaying); }
+        self.original.step(edits, deadline)
+    }
+
+pub fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_operations: usize, deadline: &mut dyn FnMut() -> bool) -> Result<ReplayStep, VcsError> {
+        if self.retiring { return Err(VcsError::HistoryReplaying); }
+        self.original.step_operations(edits, maximum_operations, deadline)
+    }
+    /// 🏃️ Steps the replay to its result without a deadline; a refusal retires the raw replay unscheduled before it surfaces.
+    pub fn run(mut self, edits: &impl ReplayEdits<Mutation>) -> Result<EditReplayResult<P, Mutation>, VcsError> where P: 'static, Mutation: 'static {
+        let outcome = loop {
+            match self.step(edits, &mut || false) {
+                Ok(ReplayStep::Pending(_)) => {}
+                Ok(ReplayStep::Finished(_)) => break self.finish(),
+                Err(error) => break Err(error),
+            }
+        };
+        if outcome.is_err() {
+            let _ = self.retire_unscheduled();
+        }
+        outcome
+    }
+
 
 }
 

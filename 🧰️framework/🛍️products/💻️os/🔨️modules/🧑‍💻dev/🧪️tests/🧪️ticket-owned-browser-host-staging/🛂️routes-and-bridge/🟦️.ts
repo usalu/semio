@@ -63,28 +63,34 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
 
   //#region 🔖️T-P8-tests
   describe("pluginComponentBridgeSource", () => {
-    itLong("holds a canonical command page unchanged as producer input and never stages it or carries it through poll", async () => {
+    itLong("stages a command page and a cold-pair page through the guest exports before its single-event poll, like the native component host", async () => {
       const { createShardCommandIngressPages } = await import("@semio-tech/framework-actor/shard-client");
       const fixture = JSON.parse(readFileSync(actorPageFixtureUrl, "utf8"));
       const vectors = fixture.vectors.filter((row: { length: number }) => row.length !== 0);
-      const bridge = await generatedBridge(retainedGuestSource({ extra: `stageCommandPage: async () => { globalThis.__bridgeStaged?.(); },` }));
-      const reached: string[] = [];
-      Object.assign(globalThis, { __bridgePolled: () => reached.push("poll"), __bridgeStaged: () => reached.push("stage") });
+      const bridge = await generatedBridge(retainedGuestSource({ extra: `stageCommandPage: async (cursor, bytes) => { globalThis.__bridgeStaged?.("command", cursor, bytes); }, stageColdPairPage: async (page) => { globalThis.__bridgeStaged?.("cold", page); },` }));
+      const reached: unknown[][] = [];
+      Object.assign(globalThis, { __bridgePolled: (events: unknown) => reached.push(["poll", events]), __bridgeStaged: (kind: string, ...args: unknown[]) => reached.push(["stage", kind, ...args]) });
       try {
         for (const [index, row] of vectors.entries() as Iterable<[number, { length: number }]>) {
           const command = Uint8Array.from({ length: row.length }, (_, byte) => (byte * fixture.bytePattern.multiplier + fixture.bytePattern.addend) % fixture.bytePattern.modulus);
           const page = createShardCommandIngressPages({ owner: 7n, generation: 11n, commandIndex: index, commandCount: vectors.length, instance: 13, seq: BigInt(index + 17), command })[0]!;
           const api = await bridge.activate(1n);
-          const refusal = await api.poll([], page, undefined, budget).then(() => undefined, (failure: unknown) => failure as { message: string; originalProducer: { phase: string; commandPage: unknown } });
-          expect(refusal?.message).toBe("original-turn.canonical-input-held");
-          expect(refusal?.originalProducer.phase).toBe("canonical-input");
-          expect(refusal?.originalProducer.commandPage).toBe(page);
-          expect(api.originalSource.producerRefusal).toBe(refusal?.originalProducer);
-          expect(bridge.held.at(-1)).toBe(refusal?.originalProducer);
-          await expect(api.poll([], undefined, undefined, budget)).rejects.toThrow("original-turn.source-not-ready");
+          reached.length = 0;
+          await api.poll([], page, undefined, budget);
+          expect(reached.map((step) => step[0])).toEqual(["stage", "poll"]);
+          expect(reached[0]![1]).toBe("command");
+          expect(reached[0]![2]).toBe(page.cursor);
+          expect(reached[0]![3]).toBe(page.bytes);
+          expect(reached[1]![1]).toEqual([]);
+          expect(api.originalSource.producerRefusal).toBeUndefined();
+          await api.poll([], undefined, undefined, budget);
         }
-        expect(bridge.held).toHaveLength(vectors.length);
-        expect(reached).toEqual([]);
+        expect(bridge.held).toHaveLength(0);
+        const cold = { header: {}, pageIndex: 0, bytes: new Uint8Array([1]) };
+        reached.length = 0;
+        await (await bridge.activate(1n)).poll([], undefined, cold, budget);
+        expect(reached.map((step) => step.slice(0, 2))).toEqual([["stage", "cold"], ["poll", []]]);
+        expect(reached[0]![2]).toBe(cold);
       } finally {
         delete (globalThis as Record<string, unknown>).__bridgePolled;
         delete (globalThis as Record<string, unknown>).__bridgeStaged;
@@ -92,7 +98,7 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
       }
     });
 
-    itLong("maps issued UI patch receipts through the generated bridge and holds every patch ACK or rejection as producer input", async () => {
+    itLong("maps issued UI patch receipts through the generated bridge and delivers every patch ACK or rejection as the poll's single event", async () => {
       const fixture = JSON.parse(readFileSync(actorLifetimePatchFixtureUrl, "utf8"));
       const convert = (value: { lifetime: { activationGeneration: string; instanceId: number; guestLifetime: string }; patchSequence: string }) => ({ lifetime: { activationGeneration: BigInt(value.lifetime.activationGeneration), instanceId: value.lifetime.instanceId, guestLifetime: BigInt(value.lifetime.guestLifetime) }, patchSequence: BigInt(value.patchSequence) });
       const result = (receipt: unknown, count: number) => ({ uiPatches: Array.from({ length: count }, () => ({})), uiPatchReceipt: receipt });
@@ -110,10 +116,12 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
           expect(actual.uiPatchReceipt instanceof Uint8Array ? Buffer.from(actual.uiPatchReceipt).toString("hex") : null).toBe(vector.hex);
           for (const kind of fixture.feedback.kinds) {
             const payload = { receipt, surface: { instance: receipt.lifetime.instanceId, surface: fixture.feedback.surface }, revision: BigInt(fixture.feedback.revision), ...(kind === "rejected" ? { reason: "fixture rejection" } : {}) };
-            const before = bridge.held.length;
-            await expect(answer(receipt.lifetime.activationGeneration, result(undefined, 0), [{ kind: "patch-" + kind, payload }])).rejects.toThrow("original-turn.canonical-input-held");
-            expect(bridge.held).toHaveLength(before + 1);
-            expect(bridge.held.at(-1)).toMatchObject({ phase: "canonical-input", events: [{ kind: "patch-" + kind, payload }] });
+            const before = polled.length;
+            await answer(receipt.lifetime.activationGeneration, result(undefined, 0), [{ kind: "patch-" + kind, payload }]);
+            expect(polled).toHaveLength(before + 1);
+            expect(polled.at(-1)).toEqual([{ tag: "patch-" + kind, val: payload }]);
+            expect(bridge.held).toHaveLength(0);
+            await expect(answer(receipt.lifetime.activationGeneration, result(undefined, 0), [{ kind: "wake", payload: undefined }, { kind: "wake", payload: undefined }])).rejects.toThrow("a reactor turn admits at most one event");
           }
         }
         const receipt = convert(fixture.vectors[1].value);
@@ -125,7 +133,7 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
           await expect(answer(receipt.lifetime.activationGeneration, raw)).rejects.toThrow();
         }
         expect(polled.length).toBeGreaterThan(0);
-        expect(polled.every((events) => (events as unknown[]).length === 0), "a held patch ACK or rejection never reaches the guest poll").toBe(true);
+        expect(polled.every((events) => (events as unknown[]).length <= 1), "no guest poll carries more than one event").toBe(true);
       } finally {
         delete (globalThis as Record<string, unknown>).__bridgeNext;
         delete (globalThis as Record<string, unknown>).__bridgePolled;
@@ -133,11 +141,13 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
       }
     });
 
-    itLong("maps canonical lifecycle receipts through the real generated bridge and holds every lifecycle request or ACK as producer input", async () => {
+    itLong("maps canonical lifecycle receipts through the real generated bridge and delivers every lifecycle request or ACK as the poll's single event", async () => {
       const fixture = JSON.parse(readFileSync(actorLifetimeFixtureUrl, "utf8"));
       const bigint = (value: unknown) => JSON.parse(JSON.stringify(value), (key, entry) => ["activationGeneration", "guestLifetime", "closeGeneration"].includes(key) ? BigInt(entry) : entry);
       const body = (receipt: { lifetime: unknown; requestSequence: string; kind: string; closeGeneration?: bigint }) => ({ lifetime: receipt.lifetime, requestSequence: BigInt(receipt.requestSequence), ...(receipt.kind === "captured" ? {} : { closeGeneration: receipt.closeGeneration }) });
       const bridge = await generatedBridge(retainedGuestSource());
+      const delivered: unknown[] = [];
+      (globalThis as Record<string, unknown>).__bridgePolled = (events: unknown) => delivered.push(events);
       const answer = async (generation: bigint, next: Record<string, unknown>, events: readonly { kind: string; payload: unknown }[] = []) => {
         (globalThis as Record<string, unknown>).__bridgeNext = next;
         return (await bridge.activate(generation)).poll(events, undefined, undefined, budget);
@@ -154,14 +164,18 @@ export async function registerRouteAndBridgeTests(vitest: NonNullable<ImportMeta
           }
           const kind = value.kind === "open" ? "instance-open" : value.kind === "close" ? "instance-close" : "instance-lifecycle-ack";
           const payload = value.kind === "open" ? { instance: value.instanceId, activationGeneration: value.activationGeneration, requestSequence: value.requestSequence, appId: "fixture", actor: "tester", config: [], assets: [], capabilities: [], quotas: [] } : value;
-          await expect(answer(generation, {}, [{ kind, payload }]), value.kind).rejects.toThrow("original-turn.canonical-input-held");
-          expect(bridge.held.at(-1)).toMatchObject({ phase: "canonical-input", events: [{ kind, payload }] });
+          const before = delivered.length;
+          await answer(generation, {}, [{ kind, payload }]);
+          expect(delivered, value.kind).toHaveLength(before + 1);
+          expect(delivered.at(-1), value.kind).toMatchObject([{ tag: kind }]);
+          expect(bridge.held, value.kind).toHaveLength(0);
         }
         for (const raw of [{ tag: "open", val: {} }, { tag: "captured", val: { lifetime: { activationGeneration: 1n, instanceId: 7, guestLifetime: 13n }, requestSequence: 9007199254740992n } }]) {
           await expect(answer(1n, { lifecycleReceipt: raw })).rejects.toThrow();
         }
       } finally {
         delete (globalThis as Record<string, unknown>).__bridgeNext;
+        delete (globalThis as Record<string, unknown>).__bridgePolled;
         bridge.dispose();
       }
     });

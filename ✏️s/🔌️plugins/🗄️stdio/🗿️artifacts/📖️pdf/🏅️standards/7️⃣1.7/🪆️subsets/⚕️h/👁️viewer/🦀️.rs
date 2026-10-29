@@ -54,8 +54,8 @@ impl ArtifactViewer for Pdf17HViewer {
     const DIALECT: Dialect = PDF17H_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF17_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->PdfSnapshot>{Some(||{
-        crate::standards::v1_7::subsets::base::io::export::blank_pdf_snapshot()
+    fn reference_birth()->Option<fn()->Result<PdfSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v1_7::subsets::base::io::export::blank_pdf_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change. Kept as a

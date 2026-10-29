@@ -10,6 +10,7 @@ pub fn test_raw_allocation_close<A: ArtifactApp>() {
         let mut raw = Vec::with_capacity(case["capacity"].as_u64().unwrap() as usize);
         raw.resize(case["initializedBytes"].as_u64().unwrap() as usize, 42);
         let mut job = ArtifactRetainedCommandJob::<A> {
+            original_command_admitted:false,
             command: None,
             command_received:false,
             snapshot: None,

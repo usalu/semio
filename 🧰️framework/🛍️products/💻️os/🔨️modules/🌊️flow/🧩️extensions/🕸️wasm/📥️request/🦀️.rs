@@ -39,7 +39,7 @@ pub struct EvaluationInvokeCursor {
     root:Option<Value>,request:Option<EvaluateRequest>,reply_pending:Option<neural_engine::PendingExtensionEval>,active:Option<Box<dyn ErasedSnapshotRetirement>>,
     field:usize,result_field:usize,result_required:u8,required:u8,decoded:bool,normal_context_posted:bool,normal_progress:RetainedCloneProgress,
     pub slot:Option<usize>,lookup:Option<EvaluationSlotLookup>,insertion:Option<EvaluationOriginalInsertion>,insertion_registry:Option<neural_engine::SharedRegistry>,round_units:u64,
-    suppressed_wire:Option<Vec<u8>>,ready_wire:Option<Vec<u8>>,ready_complete:bool,ready_faulted:bool,ready_external:bool,wait_terminal:bool,fault:Option<EvaluationFailure>,close_failure:Option<original_failure::EvaluationCloseFailure>,response:Option<EvaluationOutput>,response_failed:bool,context:Option<EvaluationRequestContext>,context_prepared:bool,closing:bool,
+    suppressed_wire:Option<EvaluationWire>,ready_wire:Option<EvaluationWire>,ready_complete:bool,ready_faulted:bool,ready_external:bool,wait_terminal:bool,fault:Option<EvaluationFailure>,close_failure:Option<original_failure::EvaluationCloseFailure>,response:Option<EvaluationOutput>,response_failed:bool,context:Option<EvaluationRequestContext>,context_prepared:bool,closing:bool,
 }
 impl EvaluationInvokeCursor {
     pub fn new(operation:u64,generation:u64,request:&[u8])->Self {
@@ -56,7 +56,7 @@ impl EvaluationInvokeCursor {
         if self.active.is_some(){return evaluation_child_demands(&self.active,copy);}
         if self.parser.is_some(){return Ok(evaluation_owned_birth::<JsonGrammarCursor<Value>>());}
         if self.root.is_some(){return Ok(evaluation_owned_birth::<Value>());}
-        if self.ready_wire.is_some()||self.suppressed_wire.is_some(){return Ok(evaluation_owned_birth::<Vec<u8>>());}
+        if self.ready_wire.is_some()||self.suppressed_wire.is_some(){return Ok(evaluation_owned_birth::<EvaluationWire>());}
         if self.insertion.is_some(){return Ok(evaluation_owned_birth::<EvaluationOriginalInsertion>());}
         if self.insertion_registry.is_some(){return Ok(evaluation_owned_birth::<neural_engine::SharedRegistry>());}
         if self.request.is_some(){return Ok(evaluation_owned_birth::<EvaluateRequest>());}
@@ -357,7 +357,7 @@ pub fn evaluate_invoke_json(owner:&mut ExtensionEvaluationResources,request:&[u8
     let pending=owner.invoke.get_mut().unwrap_or_else(std::sync::PoisonError::into_inner);
     let cursor=pending.as_mut().unwrap();let before_fuel=cx.fuel_remaining();let result=cursor.step(owner.registry.as_ref().expect("admitted original registry"),request,cx);
     let (reply,receipt,refusal)=match result{Ok((reply,receipt))=>{let refusal=if cursor.normal_context_posted{None}else{cx.consume_retained(receipt).err().map(Into::into)};(reply,receipt,refusal)},Err(closure)=>{let receipt=cursor.normal_step_progress();let receipt_refusal=if cursor.normal_context_posted{None}else{cx.consume_retained(receipt).err()};assert!(cursor.close_failure.is_none());cursor.close_failure=Some(original_failure::EvaluationCloseFailure{initial:cursor.fault.take(),closure,receipt_refusal});cursor.begin_close();(None,receipt,None)}};
-    if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items as u64)}let mut reply=reply;let refusal=match reply.as_mut().and_then(|reply|reply.refusal.take()){Some(EvaluationFailure::Original(original))=>Some(original),Some(original)=>{cursor.fail(original);refusal},None=>refusal};let payload=reply.and_then(|reply|reply.wire);
+    if cx.fuel_remaining()==before_fuel{cx.consume_fuel(receipt.copied_items as u64)}let mut reply=reply;let refusal=match reply.as_mut().and_then(|reply|reply.refusal.take()){Some(EvaluationFailure::Original(original))=>Some(original),Some(original)=>{cursor.fail(original);refusal},None=>refusal};let payload=reply.and_then(|reply|reply.wire).map(|wire|wire.to_vec_owner());
     if payload.is_some(){assert!(cursor.terminal_is_empty());*pending=None;}else if refusal.is_some()&&cursor.terminal_is_empty(){*pending=None;}
     Ok(semio_framework_plugin::ExtensionInvokeStep{payload,retained_progress:receipt,refusal})
 }

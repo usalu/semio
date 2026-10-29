@@ -358,8 +358,8 @@ impl ArtifactEditor for PlaygroundEditor {
         semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, PlaygroundCommand::command_id, PLAYGROUND_RETAINED_RAW_BYTES, PLAYGROUND_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, playground_retained_reduce, playground_retained_extent))
     }
 
-    fn reference_birth()->Option<fn()->PlaygroundSnapshot>{Some(||{
-        empty_playground_snapshot()
+    fn reference_birth()->Option<fn()->Result<PlaygroundSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(empty_playground_snapshot())
     })}
 
     fn command_id(command: &PlaygroundCommand) -> &'static str {

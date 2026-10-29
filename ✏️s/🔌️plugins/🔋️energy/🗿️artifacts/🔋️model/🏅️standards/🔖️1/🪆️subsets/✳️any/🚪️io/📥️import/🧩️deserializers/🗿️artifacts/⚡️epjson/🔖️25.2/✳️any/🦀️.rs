@@ -490,7 +490,7 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
         let layered = || {
             let stack = model.constructions.iter().find(|candidate| candidate.name.eq_ignore_ascii_case(construction))?.id;
             let fallback = glazing_material_name(name);
-            fallbacks.iter().find(|(material, _, _, _)| material.eq_ignore_ascii_case(fallback)).map(|(_, u_value, shgc, vlt)| (Some(stack), *u_value, *shgc, *vlt))
+            fallbacks.iter().find(|(material, _, _, _)| material.eq_ignore_ascii_case(&fallback)).map(|(_, u_value, shgc, vlt)| (Some(stack), *u_value, *shgc, *vlt))
         };
         let Some((glazing_construction_id, u_value, shgc, vlt)) = simple.or_else(layered) else {
             diagnostics.push(EpJsonDiagnostic::new(
@@ -748,7 +748,7 @@ pub fn register() {}
 /// 📥️ The io-leaf entry point: an epJSON document tree as this artifact's snapshot.
 pub fn deserialize(document: &Value) -> Result<EnergyModelSnapshot, semio_framework_diagnostic::TextError> {
     let import = decode_model(document).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-    Ok(EnergyModelSnapshot { model: import.model, ..Default::default() })
+    EnergyModelSnapshot::from_model(&import.model).map_err(|error| semio_framework_diagnostic::TextError::new(error.kind, error.to_string(), semio_framework_diagnostic::TextSpan::at(1, 1)))
 }
 
 /// 📥️ The io-leaf byte entry point: epJSON text as this artifact's snapshot.

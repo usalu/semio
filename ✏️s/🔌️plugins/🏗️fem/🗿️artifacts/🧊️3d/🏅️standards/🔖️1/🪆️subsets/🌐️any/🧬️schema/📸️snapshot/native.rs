@@ -4,7 +4,7 @@ use semio_framework_value::{
     ErasedSnapshotRetirement, RetirementDemand, ValueError, ValueRefusalKind,
     retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneSourceTake, RetainedCloneStep, retained_clone_grant_admits},
 };
-use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeControl, NativeReceive, NativeReceiver, owned::NativePersistentListReceiver};
+use semio_framework_value_native_owned::native_decoding::{NativeDecodeConstructionRecipient, NativeDecodeControl, NativeDecodeRetirementRecipient, NativeReceive, NativeReceiver, owned::NativePersistentListReceiver};
 use semio_framework_value_persistent::list::persistent::PersistentList;
 use semio_s_fem_material::volumetric::{FemMaterial, FemMaterialValue};
 use semio_s_fem_node::volumetric::{FemNode, FemNodeValue};
@@ -88,6 +88,59 @@ impl Fem3dSnapshot {
                 }
             })
         })
+    }
+}
+
+impl Fem3dSnapshot {
+    /// ❄️ Reference projection copies the persistent rows into the explicit authoring value for cold algebra and reports.
+    pub fn to_reference(&self) -> Fem3dSnapshotValue {
+        Fem3dSnapshotValue {
+            nodes: self.nodes.iter().map(|n| FemNodeValue { id: n.id.to_string(), x: n.x, y: n.y, z: n.z }).collect(),
+            elements: self.elements.clone(),
+            materials: self.materials.iter().map(|m| FemMaterialValue { id: m.id.to_string(), name: m.name.to_string(), e: m.e, g: m.g, nu: m.nu, rho: m.rho }).collect(),
+            sections: self.sections.clone(),
+            solids: self.solids.clone(),
+            supports: self.supports.clone(),
+            load_cases: self.load_cases.clone(),
+            combinations: self.combinations.clone(),
+            analysis: self.analysis.clone(),
+        }
+    }
+    /// ❄️ Reference construction receives one explicit authoring value under an effectively unbounded wallet and retires its own receiving frames before returning.
+    pub fn from_reference(value: Fem3dSnapshotValue) -> Result<Self, ValueError> {
+        let wallet = RetainedCloneGrant { maximum_items: 1 << 40, maximum_copy_bytes: 1 << 40, maximum_capacity_bytes: 1 << 40, maximum_release_bytes: 1 << 40, maximum_depth: 128 };
+        let mut recipient = NativeDecodeRetirementRecipient::new();
+        let mut callback = |_| true;
+        let mut native = NativeDecodeControl::new(1 << 40, &mut callback);
+        native.install_retirement_recipient(&mut recipient)?;
+        let mut owner = store::NativeSnapshotDecodeOwner::new(&mut native, wallet);
+        let mut input = Some(value);
+        let received = Self::receive_authoring(&mut input, &mut owner);
+        drop(owner);
+        native.with_retirement(wallet, |native| {
+            while native.has_retirement_owner() {
+                native.close_retirement_recipient(wallet)?;
+            }
+            Ok(())
+        })?;
+        received
+    }
+}
+
+/// ❄️ Persistent snapshots decode from wire values through the explicit authoring rows and retire a decoded-but-unused owner through the funded protocol.
+impl semio_framework_value::FromValue for Fem3dSnapshot {
+    fn from_value(value: semio_framework_value::DslValue) -> Result<Self, ValueError> {
+        Self::from_reference(<Fem3dSnapshotValue as semio_framework_value::FromValue>::from_value(value)?)
+    }
+    fn retire_decoded(self) {
+        let wallet = RetainedCloneGrant { maximum_items: 1 << 40, maximum_copy_bytes: 1 << 40, maximum_capacity_bytes: 1 << 40, maximum_release_bytes: 1 << 40, maximum_depth: 128 };
+        if let Ok(mut owner) = semio_framework_value::retirement::controlled::ControlledRetirement::new(self) {
+            while !owner.terminal_is_empty() {
+                if owner.step(wallet).is_err() {
+                    break;
+                }
+            }
+        }
     }
 }
 
@@ -478,6 +531,3 @@ impl Drop for Fem3dReceiving {
         assert!(self.terminal_is_empty() || std::thread::panicking(), "FEM receiving requires original funded closure");
     }
 }
-#[cfg(test)]
-#[path = "native-tests.rs"]
-mod tests;

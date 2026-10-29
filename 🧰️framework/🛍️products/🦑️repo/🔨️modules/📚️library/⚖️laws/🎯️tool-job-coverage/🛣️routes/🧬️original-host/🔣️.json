@@ -1,0 +1,115 @@
+{
+  "schema": "semio.original-reserved-host.source.v1",
+  "cases": [
+    {
+      "name": "actual-original-source",
+      "gate": null,
+      "accepted": true
+    },
+    {
+      "name": "refuse-sourceBinding",
+      "gate": "sourceBinding",
+      "needle": "OriginalToolSourceBinding::borrow(cx)",
+      "replacement": "OriginalToolSourceBinding::borrow(foreign)",
+      "accepted": false
+    },
+    {
+      "name": "refuse-missing-owner-mount",
+      "gate": "sourceBinding",
+      "needle": "mount_original_reserved_owners(",
+      "replacement": "removed_original_reserved_owners(",
+      "accepted": false
+    },
+    {
+      "name": "refuse-sourceValidation",
+      "gate": "sourceValidation",
+      "needle": "self.producer_source.is_some_and(|binding|!binding.matches(cx))",
+      "replacement": "false",
+      "accepted": false
+    },
+    {
+      "name": "refuse-callerParent",
+      "gate": "callerParent",
+      "needle": "cx.original_source_parent()?.admit_loan(cx)",
+      "replacement": "cx.recreated_source()",
+      "accepted": false
+    },
+    {
+      "name": "refuse-candidateCustody",
+      "gate": "candidateCustody",
+      "needle": "RefusedWorkerSource::pending(job,(self.source_identity.operation(),self.source_identity.generation()))",
+      "replacement": "RefusedWorkerSource::pending(job,(foreign.operation(),foreign.generation()))",
+      "accepted": false
+    },
+    {
+      "name": "refuse-producerContext",
+      "gate": "producerContext",
+      "needle": "ArtifactReservedToolJob::admit_mounted(&mut self.reserved_producer,&mut candidate,&self.operation,cx)",
+      "replacement": "ArtifactReservedToolJob::admit_mounted(&mut self.reserved_producer,&mut candidate,&self.operation,foreign)",
+      "accepted": false
+    },
+    {
+      "name": "refuse-workerContext",
+      "gate": "workerContext",
+      "needle": "self.validate_original_producer_source(cx)?;",
+      "replacement": "",
+      "accepted": false
+    },
+    {
+      "name": "refuse-workerBudget",
+      "gate": "workerBudget",
+      "needle": "cx.with_original_work_loan(step_fuel,step_deadline_us,|same|session.pump_one_for_interactive_turn(same))",
+      "replacement": "session.pump_one_for_interactive_turn(foreign)",
+      "accepted": false
+    },
+    {
+      "name": "refuse-pendingCustody",
+      "gate": "pendingCustody",
+      "needle": "rejected.admit_pending(config,cx)",
+      "replacement": "rejected.admit_pending(config,foreign)",
+      "accepted": false
+    },
+    {
+      "name": "refuse-outcomeAck",
+      "gate": "outcomeAck",
+      "needle": "session.acknowledge_checked_out_outcome(grant)",
+      "replacement": "Default::default()",
+      "accepted": false
+    },
+    {
+      "name": "refuse-terminalClose",
+      "gate": "terminalClose",
+      "needle": "progress.fits(grant)&&session.terminal_is_empty()",
+      "replacement": "progress.fits(grant)",
+      "accepted": false
+    },
+    {
+      "name": "refuse-cancellation",
+      "gate": "cancellation",
+      "needle": "mounted.cancellation_lease.as_ref()",
+      "replacement": "mounted.replacement_lease.as_ref()",
+      "accepted": false
+    },
+    {
+      "name": "refuse-outputLimit",
+      "gate": "outputLimit",
+      "needle": "self.raw.len() > self.contract.max_output_bytes",
+      "replacement": "false",
+      "accepted": false
+    },
+    {
+      "name": "refuse-publicationFreshness",
+      "gate": "publicationFreshness",
+      "needle": "canonical_revision == live_revision",
+      "replacement": "true",
+      "accepted": false
+    },
+    {
+      "name": "refuse-noReconstructedContext",
+      "gate": "noReconstructedContext",
+      "needle": "let before=cx.retained_progress();let mut candidate=None;",
+      "replacement": "let before=cx.retained_progress();let mut candidate=None;let same=StepContext::new();",
+      "accepted": false
+    }
+  ]
+}

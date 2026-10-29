@@ -28,7 +28,7 @@ pub use set_sun::SetSun;
 
 /// 🧮️ [`Generation3dConfig`]'s operation enum — one newtype variant per authored leaf, in binary-tag
 /// order. Appending is safe, reordering is a wire-format break.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutations(snapshot = Generation3dConfig, diff = Generation3dConfigPatch, schema = "generation3dcfg", reference = Generation3dConfig, reference_diff = Generation3dConfigPatch)]
 pub enum Generation3dConfigMutation {

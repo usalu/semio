@@ -108,7 +108,7 @@ fn original_bounded_config_factory_retains_source_until_exact_physical_retiremen
 pub fn bounded_config_store_owners<C, M>(grant: RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<C, M>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<C, M>>
 where
     C: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<C> + semio_framework_os_kernel::ColdMutation<C> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree,
+    M: semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + semio_framework_os_kernel::StoreMutationFor<C>,
 {
     store::os_store::document_store_owners::bounded_artifact_store_owners::<C, M>(grant)
 }
@@ -125,7 +125,7 @@ where
 pub fn bounded_config_store_one_item_preparation_factory<C, M>(prefix: &'static str, maximum_bytes: usize) -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<C, M>>
 where
     C: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: Clone + OpBinary + Mutation<C> + semio_framework_os_kernel::ColdMutation<C> + store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Sync + semio_framework_os_kernel::StoreMutationFor<C>,
 {
     std::sync::Arc::new(BoundedConfigPreparationFactory::<C, M> { prefix, maximum_bytes, marker: std::marker::PhantomData, snapshot_factory: std::sync::Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<C>::default()), mutation_factory: std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<M>::default()) })
 }
@@ -177,7 +177,7 @@ fn bounded_config_mutation_retained_bytes<M: OpBinary>(prefix: &str, mutation: &
 /// 🧺️ The ONE fold-contract declaration every bounded config lane makes: the mutation's own
 /// forward row plus its schema-declared inverse rows ([`store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf`],
 /// design §20.5), so `ArtifactStore::fold_batch_item` measures exactly what the lane declares.
-fn admit_bounded_config_mutation<C, M: OpBinary + Mutation<C>>(prefix: &str, maximum_bytes: usize, mutation: &M) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+fn admit_bounded_config_mutation<C, M: semio_framework_os_kernel::StoreMutationFor<C>>(prefix: &str, maximum_bytes: usize, mutation: &M) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = bounded_config_mutation_retained_bytes(prefix, mutation)?;
     if retained_bytes > maximum_bytes {
         return Err(format!("{prefix}-mutation-envelope"));
@@ -188,7 +188,7 @@ fn admit_bounded_config_mutation<C, M: OpBinary + Mutation<C>>(prefix: &str, max
 impl<C, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<C, M> for BoundedConfigPreparationFactory<C, M>
 where
     C: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: store::ArtifactCanonicalJsonTree + Clone + OpBinary + Mutation<C> + semio_framework_os_kernel::ColdMutation<C> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Sync + semio_framework_os_kernel::StoreMutationFor<C>,
 {
     fn begin_batch_digest(&self,edit:&mut Option<Box<protocol::Edit<M>>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>,RetainedCloneProgress)>,ValueError>{store::admit_artifact_batch_digest(edit,grant)}
     fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
@@ -237,7 +237,7 @@ where
 
 impl<C, M> BoundedConfigPreparation<C, M>
     where C: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-          M: Clone + OpBinary + Mutation<C> + semio_framework_os_kernel::ColdMutation<C> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static {
+          M: semio_framework_value::retirement::RetireOwned + Sync + 'static + semio_framework_os_kernel::StoreMutationFor<C> {
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   let nested=|mut demand:RetirementDemand|->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"bounded config preparation depth overflow"))?;Ok(demand)};
   if let Some(owner)=self.active_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of_val(owner.as_ref()),depth:1,..Default::default()})}else{nested(owner.next_demand(body)?)};}
@@ -255,7 +255,7 @@ impl<C, M> BoundedConfigPreparation<C, M>
 impl<C, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<C, M> for BoundedConfigPreparation<C, M>
 where
     C: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
-    M: Clone + OpBinary + Mutation<C> + semio_framework_os_kernel::ColdMutation<C> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+    M: semio_framework_value::retirement::RetireOwned + Sync + semio_framework_os_kernel::StoreMutationFor<C>,
 {
     fn advance(&mut self, body:usize,grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, ValueError> {
         if !grant.permits_one() || self.cancelled {
@@ -310,8 +310,8 @@ where
 /// 🧹️ Explicit close adapter paired with [`bounded_config_store_owners`].
 pub fn bounded_config_store_disposer<C, M>() -> Box<dyn ArtifactOwnedDisposer<ConfigStore<C, M>>>
 where
-    C: semio_framework_value::ToValue + Send + Sync + 'static,
-    M: semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<C> + OpBinary + OpText + Send + 'static,
+    C: semio_framework_os_kernel::StoreState,
+    M: semio_framework_os_kernel::StoreMutationFor<C>,
 {
     Box::new(ArtifactDocumentStoreDisposer::<C, M>::new())
 }
@@ -319,8 +319,8 @@ where
 /// 🧮️ Prices the exact bounded document constructor without creating a catalog.
 pub fn bounded_document_store_owners_birth_bytes<P, M>() -> usize
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + semio_framework_os_kernel::ColdMutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_os_kernel::StoreState,
+    M: semio_framework_value::retirement::RetireOwned + semio_framework_os_kernel::StoreMutationFor<P>,
 {
     store::os_store::document_store_owners::bounded_artifact_store_owners_birth_bytes::<P, M>()
 }
@@ -328,8 +328,8 @@ where
 /// 🗃️ Exact one-page retirement catalog for an explicitly bounded document store.
 pub fn bounded_document_store_owners<P, M>(grant: RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, M>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, M>>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-    M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + semio_framework_os_kernel::ColdMutation<P> + OpBinary + OpText + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + semio_framework_os_kernel::StoreState,
+    M: semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + semio_framework_os_kernel::StoreMutationFor<P>,
 {
     bounded_config_store_owners::<P, M>(grant)
 }
@@ -337,8 +337,8 @@ where
 /// 🧽️ Explicit close adapter paired with [`bounded_document_store_owners`].
 pub fn bounded_document_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<ArtifactStore<P, M>>>
 where
-    P: semio_framework_value::ToValue + Send + Sync + 'static,
-    M: semio_framework_value::ToValue + semio_framework_value::FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_kernel::StoreState,
+    M: semio_framework_os_kernel::StoreMutationFor<P>,
 {
     Box::new(ArtifactDocumentStoreDisposer::<P, M>::new())
 }
@@ -367,8 +367,8 @@ impl<P, Mutation> ArtifactDocumentStoreDisposer<P, Mutation> {
 
 impl<P, Mutation> ArtifactOwnedDisposer<ArtifactStore<P, Mutation>> for ArtifactDocumentStoreDisposer<P, Mutation>
 where
-    P: semio_framework_value::ToValue + Send + Sync + 'static,
-    Mutation: semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_kernel::StoreState,
+    Mutation: semio_framework_os_kernel::StoreMutationFor<P>,
 {
     fn retirement_demands(&self, owner: &ArtifactStore<P, Mutation>, body: usize) -> Result<RetirementDemand, ValueError> {
         owner.close_owned_demands(body)
@@ -390,8 +390,8 @@ where
 
 pub struct ArtifactStoreInitializationJob<P, Mutation>
 where
-    P: semio_framework_value::ToValue,
-    Mutation: semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
+    P: semio_framework_os_kernel::StoreState,
+    Mutation: semio_framework_os_kernel::StoreMutationFor<P>,
 {
     authority: ManuallyDrop<Option<Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>>>,
     cancel_requested: ManuallyDrop<std::sync::Arc<std::sync::atomic::AtomicBool>>,
@@ -401,8 +401,8 @@ where
 
 impl<P, Mutation> ArtifactStoreInitializationJob<P, Mutation>
 where
-    P: semio_framework_value::ToValue,
-    Mutation: semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
+    P: semio_framework_os_kernel::StoreState,
+    Mutation: semio_framework_os_kernel::StoreMutationFor<P>,
 {
     pub fn new(authority: Box<dyn ArtifactStoreInitializationAuthority<P, Mutation>>) -> Self {
         Self { authority: ManuallyDrop::new(Some(authority)), cancel_requested: ManuallyDrop::new(std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false))), cancel_arc_live: true, terminal_handoff: false }
@@ -465,8 +465,8 @@ where
 
 impl<P, Mutation> semio_framework_job::InteractiveJob for ArtifactStoreInitializationJob<P, Mutation>
 where
-    P: semio_framework_value::ToValue + Send,
-    Mutation: semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + Send,
+    P: semio_framework_os_kernel::StoreState,
+    Mutation: semio_framework_os_kernel::StoreMutationFor<P>,
 {
     fn next_close_copy_byte_demand(&self) -> Result<usize,ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self,body:usize) -> Result<usize,ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }
@@ -524,8 +524,8 @@ where
 
 impl<P, Mutation> Drop for ArtifactStoreInitializationJob<P, Mutation>
 where
-    P: semio_framework_value::ToValue,
-    Mutation: semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
+    P: semio_framework_os_kernel::StoreState,
+    Mutation: semio_framework_os_kernel::StoreMutationFor<P>,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.authority.is_none() && !self.cancel_arc_live && self.terminal_handoff, "artifact store initialization job reached Drop before exact candidate handoff or terminal retained close");

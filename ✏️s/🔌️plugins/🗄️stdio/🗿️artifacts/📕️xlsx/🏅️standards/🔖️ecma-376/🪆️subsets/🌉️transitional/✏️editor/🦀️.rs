@@ -166,8 +166,8 @@ impl ArtifactEditor for XlsxTransitionalEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->XlsxSnapshot>{Some(||{
-        XlsxSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<XlsxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(XlsxSnapshot::default())
     })}
 
     /// ✏️ Resolves the rendered worksheet/row/column identity and optimistic revision, then emits

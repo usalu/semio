@@ -3,7 +3,7 @@
 //! 🪜️ The retained-field rung of one hosted app's close ladder: every owned field the app retains
 //! beyond its stores is released through exact per-axis quotes and an unchanged caller grant.
 use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput;
+use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use semio_framework_plugin_decl_emission::Emit;

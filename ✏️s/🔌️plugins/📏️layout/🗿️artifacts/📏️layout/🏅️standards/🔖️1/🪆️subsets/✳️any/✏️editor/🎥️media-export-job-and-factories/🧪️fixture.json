@@ -1,0 +1,71 @@
+{
+  "port": "layout:out",
+  "schema": "2d.layout",
+  "mime": "application/json",
+  "xmlNamespace": "http://www.w3.org/2000/svg",
+  "root": "svg",
+  "cases": [
+    {
+      "name": "complete",
+      "cancel": false
+    },
+    {
+      "name": "cancel-before-work",
+      "cancel": true
+    }
+  ],
+  "projectionSchema": "2d.layout",
+  "projectionCases": [
+    {
+      "name": "unicode-and-escaping",
+      "documentId": "original港-\"\\\n",
+      "frontierRevision": "abababababababababababababababababababababababababababababababab",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>雪\\\n\t\r\u0001</text></svg>",
+      "expected": {
+        "schema": "2d.layout",
+        "source": {
+          "documentId": "original港-\"\\\n",
+          "frontierRevision": "abababababababababababababababababababababababababababababababab"
+        },
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"><text>雪\\\n\t\r\u0001</text></svg>"
+      }
+    },
+    {
+      "name": "minimal-svg",
+      "documentId": "actual-parent",
+      "frontierRevision": "0101010101010101010101010101010101010101010101010101010101010101",
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>",
+      "expected": {
+        "schema": "2d.layout",
+        "source": {
+          "documentId": "actual-parent",
+          "frontierRevision": "0101010101010101010101010101010101010101010101010101010101010101"
+        },
+        "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\"/>"
+      }
+    },
+    {
+      "name": "utf8-and-escape-cross-byte-frontier",
+      "documentId": "actual-parent",
+      "frontierRevision": "0202020202020202020202020202020202020202020202020202020202020202",
+      "svg": "<svg>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx港\"\\\u0001雪</svg>",
+      "expected": {
+        "schema": "2d.layout",
+        "source": {
+          "documentId": "actual-parent",
+          "frontierRevision": "0202020202020202020202020202020202020202020202020202020202020202"
+        },
+        "svg": "<svg>xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx港\"\\\u0001雪</svg>"
+      },
+      "repeat": 1024
+    }
+  ],
+  "mountedChild": {
+    "slot": "pages",
+    "childId": "page-drawing-1",
+    "sourceCase": 5,
+    "expectedSvgCommand": "Q",
+    "minimumPaths": 1,
+    "cancelAfterOutputBytes": 1
+  }
+}

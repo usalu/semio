@@ -19,7 +19,7 @@ use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_plugin_decl_views::child_view::ChildContentView;
-use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ArtifactOutputChunks;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJob;
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage;
@@ -47,6 +47,10 @@ use semio_framework_plugin_decl_emission::Emit;
 
 
 #[doc(hidden)]
+/// 🧭️ The original tool publication advances one retained semantic stage at a time.
+#[derive(Clone,Copy,PartialEq,Eq)]
+pub enum OriginalToolSettlementStage{Capture,Plain,Scrub,Typing,Complete}
+
 pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub verb: String,
     pub meta: ActionMeta,
@@ -87,8 +91,10 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub terminal_seen: bool,
     pub worker_resume_pending: bool,
     pub publication: Option<ArtifactToolCompletionValue<A>>,
+    pub tool_stage:OriginalToolSettlementStage,
+    pub tool_press_result:Option<bool>,
     pub pending_artifact_publication: Option<PendingArtifactStorePublication<A>>,
-    pub pending_stream_abort:Option<Box<store::original_replay_publication::abort::OriginalStreamAbort<A::Snapshot,A::Mutation>>>,
+    pub pending_stream_abort:Option<Box<semio_framework_os_store_engine_replay::abort::OriginalStreamAbort<A::Snapshot,A::Mutation>>>,
     pub stream_abort_completed:bool,
     pub pending_publication_outcome:PendingPublicationOutcome,
     pub pending_window_config_receipt:Option<store::os_store::presence::LaneItemReceipt>,
@@ -137,9 +143,9 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
 
 impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  /// 🪃️ Original streamed aborts need their real Store while returning retained replay reads.
- pub fn stream_abort_close_demands(&self,store:&store::ConfigStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=self.pending_stream_abort.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){Ok(store::original_replay_publication::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands())}else{owner.close_demands(store,body)}}
+ pub fn stream_abort_close_demands(&self,store:&store::ConfigStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=self.pending_stream_abort.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){Ok(semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands())}else{owner.close_demands(store,body)}}
  /// ♻️ Contextual retirement drains the actual abort before the mounted generic frame can close.
- pub fn close_stream_abort(&mut self,store:&mut store::ConfigStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let Some(owner)=self.pending_stream_abort.as_mut()else{return Ok(true)};if !owner.terminal_is_empty(){owner.close_step(store,cx)?;return Ok(false)}let d=store::original_replay_publication::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();semio_framework_job::close_original_retained_step(cx,d,|_|{self.pending_stream_abort=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(self.pending_stream_abort.is_none())}
+ pub fn close_stream_abort(&mut self,store:&mut store::ConfigStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let Some(owner)=self.pending_stream_abort.as_mut()else{return Ok(true)};if !owner.terminal_is_empty(){owner.close_step(store,cx)?;return Ok(false)}let d=semio_framework_os_store_engine_replay::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();semio_framework_job::close_original_retained_step(cx,d,|_|{self.pending_stream_abort=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(self.pending_stream_abort.is_none())}
  /// 📏️ Quotes the actual fixed mounted header and original input transfers before admission.
  pub fn original_frame_release_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Box<Self>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
  /// 📐️ Fresh boxed placement writes the fixed header once and moves original field headers.

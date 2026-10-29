@@ -71,8 +71,8 @@ impl ArtifactViewer for LasAnyViewer {
     const DIALECT: Dialect = LAS_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LAS_ANY_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->LasSnapshot>{Some(||{
-        LasSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<LasSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(LasSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

@@ -9,8 +9,8 @@ use protocol::SemanticDescriptor;
 use protocol::ColdMutationKind;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
-use semio_s_artifact_fem_2d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode;
-use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::replace_region::ReplaceRegion;
+use crate::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode;
+use semio_s_artifact_fem_2d_mesh_regions::standards::v1::subsets::any::schema::mutations::change_region::ChangeRegion;
 
 //#region 🔖️Mutation
 /// 🧭️ One gumball gesture over the selection's geometry, stated RELATIVELY so it replays on any base: every named
@@ -91,7 +91,7 @@ fn number(value: f64, german: bool) -> String {
 
 impl<Op> MutationKind<Fem2dSnapshot, Op> for MoveSelection
 where
-    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ReplaceNode> + From<ReplaceRegion>, {
+    Op: protocol::Mutation<Fem2dSnapshot, Diff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeNode> + From<ChangeRegion>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "selection", kind: "move-selection", record: "MovedSelection" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -121,7 +121,7 @@ where
 }
 impl<Op> protocol::ColdMutationKind<Fem2dSnapshotValue, Op> for MoveSelection
 where
-    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ReplaceNode> + From<ReplaceRegion>, {
+    Op: protocol::ColdMutation<Fem2dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> + From<ChangeNode> + From<ChangeRegion>, {
 
 
     fn diff(&self, base: &Fem2dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff> {

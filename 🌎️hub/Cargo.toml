@@ -110,6 +110,8 @@ members = [
     "🧩️compositions/🗄️stdio/🏭️bridge/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/🏗️projection/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️definition/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/🧩️component/📦️packages/🦀️rust",
@@ -267,6 +269,8 @@ semio-framework-plugin-guest-contract = { path = "../🧰️framework/🛍️pro
 semio-s-plugin-stdio = { path = "../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }
 semio-hub-stdio = { path = "../🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust" }
 semio-hub-stdio-catalog = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📦️packages/🦀️rust" }
+semio-hub-stdio-catalog-projection = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/🏗️projection/📦️packages/🦀️rust" }
+semio-hub-stdio-catalog-definition = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️definition/📦️packages/🦀️rust" }
 semio-framework-artifact-playbook-playbook = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust" }
 semio-framework-artifact-space-space = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust" }
 semio-s-artifact-writer-writer = { path = "../✏️s/🔌️plugins/✒️writer/🗿️artifacts/✒️writer/📦️packages/🦀️rust" }
@@ -401,6 +405,7 @@ semio-s-artifact-stdio-step-cc5-editor = { path = "../✏️s/🔌️plugins/�
 semio-s-artifact-stdio-step-cc6 = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-step-cc6-editor = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/6️⃣cc6/✏️editor/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-ifc-catalog = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🧩️composition/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-4-descriptor = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-4-inferences = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ifc-4-mutations = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }

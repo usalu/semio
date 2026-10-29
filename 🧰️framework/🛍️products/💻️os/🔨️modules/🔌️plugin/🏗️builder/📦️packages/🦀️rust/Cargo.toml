@@ -38,6 +38,8 @@ semio-framework-plugin-decl-registry = { path = "../../../📜️declaration/�
 semio-framework-plugin-plugin-program = { path = "../../🔌️program/📦️packages/🦀️rust" }
 semio-framework-plugin-extension = { path = "../../../🧩️extension/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-app = { path = "../../../🧵️instance/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-construction = { path = "../../../🧵️instance/🧱️construction/📦️packages/🦀️rust" }
+semio-framework-plugin-instance-initialization = { path = "../../../🧵️instance/🌱️initialization/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-canvas-assets = { path = "../../../../../../../🔨️modules/🖼️canvas/🔌️runtime-assets/📦️packages/🦀️rust", optional = true }

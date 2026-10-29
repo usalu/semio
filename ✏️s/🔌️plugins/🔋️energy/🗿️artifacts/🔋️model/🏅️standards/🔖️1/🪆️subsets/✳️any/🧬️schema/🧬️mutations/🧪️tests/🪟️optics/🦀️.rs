@@ -1,6 +1,7 @@
 //! 🧪️ Neutral optical mutation intent reaches the existing central applier without replacing peer fields.
 use super::*;
-use crate::window_layer_optics_mutations::{change_glazing_material_solar_reflectance_front, change_glazing_material_solar_reflectance_back, change_glazing_material_visible_reflectance_front, change_glazing_material_visible_reflectance_back, change_glazing_material_infrared_transmittance};
+use crate::window_layer_optics_mutations::{change_glazing_material_solar_reflectance_front, change_glazing_material_solar_reflectance_back, change_glazing_material_infrared_transmittance};
+use crate::window_layer_optics_visible_mutations::{change_glazing_material_visible_reflectance_front, change_glazing_material_visible_reflectance_back};
 use protocol::{ColdMutation, Mutation,SemanticMutation};
 use semio_framework_value::ToValue;
 

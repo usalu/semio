@@ -1198,7 +1198,9 @@
       "files": [
         "🦀️cargo/🗃️unit-cache/🧪️tests/🟦️.ts",
         "🦀️cargo/🗃️unit-cache/🧹️gc/🌱️incremental/🧪️tests/🟦️.ts",
+        "🦀️cargo/🗃️unit-cache/🧹️gc/🏦️headroom/🧪️tests/🟦️.ts",
         "🦀️cargo/🗃️unit-cache/🧹️gc/📈️fill/🧪️tests/🟦️.ts",
+        "🦀️cargo/🗃️unit-cache/🧹️gc/🛟️ballast/🧪️tests/🟦️.ts",
         "🦀️cargo/🗃️unit-cache/🧹️gc/🧪️tests/🟦️.ts",
         "🦀️cargo/🗃️unit-cache/🧹️gc/🧱️units/🧪️tests/🟦️.ts"
       ],

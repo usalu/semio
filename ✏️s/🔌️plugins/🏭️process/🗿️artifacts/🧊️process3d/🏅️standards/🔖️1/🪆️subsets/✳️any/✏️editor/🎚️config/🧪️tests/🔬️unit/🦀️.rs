@@ -1,4 +1,5 @@
 use super::*;
+use protocol::ColdMutation as _;
 
 #[semio_framework_async_macros::async_test]
 async fn process3d_config_dsl_and_pack_round_trip() {

@@ -1,6 +1,7 @@
 //! 🧬️ Bounded semantic edit capabilities shared by publication and replay producers.
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,RetirementDemand,ValueError,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
-pub use semio_framework_value::snapshot_projection::post::{OriginalPostRead,PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
+use semio_framework_value_snapshot_projection::snapshot_projection::post::OriginalPostRead;
+pub use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 pub enum PagedOneItemEditStep<M> {
     Progress(RetainedCloneProgress),
     Complete(RetainedCloneProgress, M),

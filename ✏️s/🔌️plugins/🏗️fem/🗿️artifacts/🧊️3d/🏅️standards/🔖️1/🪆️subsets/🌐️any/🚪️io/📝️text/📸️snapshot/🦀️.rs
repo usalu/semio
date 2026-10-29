@@ -28,8 +28,8 @@ pub fn print_dsl(document: &Fem3dSnapshot) -> String {
 /// supports and both load cases at once, so it is the document every law about concrete entity ids
 /// (`n20_l1`, `sol1`, `steel`, `hea200`, …) is stated over. Distinct from the io boot document (`fem3d_boot_snapshot`)
 /// since the boot document became the `concrete-forest` example (frames only, no solids).
-pub fn fem3d_demo_snapshot() -> Fem3dSnapshot {
-    parse_dsl(FEM3D_EXAMPLE_TEXT).expect("the bundled demo fixture parses")
+pub fn fem3d_demo_snapshot() -> Result<Fem3dSnapshot, semio_framework_diagnostic::TextError> {
+    parse_dsl(FEM3D_EXAMPLE_TEXT)
 }
 
 // #region 🧪️Tests

@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     //#region 🔖️DeferredReprojection
     /// 🐢️ Steps the Report replay a remote history change needs — a supersession, undo or redo another replica authored —
@@ -43,10 +43,7 @@ where
         self.local_replay_budget = budget.filter(|budget| budget.operations > 0 && budget.wall_us > 0);
     }
 
-    /// ⏳️ Whether a local history step still replays ([`Self::defer_local_replays`]).
-    pub fn local_step_pending(&self) -> bool {
-        self.pending_reprojection.as_ref().is_some_and(|pending| pending.local.is_some())
-    }
+
 
     /// 🗑️ Drops the local history step that still replays ([`Self::defer_local_replays`]): nothing of it was recorded,
     /// announced or shown, so the store is exactly as before its dispatch; a waiting remote change keeps waiting and
@@ -293,3 +290,14 @@ where
 //#endregion 🔖️Backbone
 //#endregion 🔖️Backbone
 //#endregion 🔖️EphemeralLanes
+
+impl<P, Mutation> StoreReplay<P, Mutation>
+where
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    /// ⏳️ Whether a local history step still replays ([`Self::defer_local_replays`]).
+    pub fn local_step_pending(&self) -> bool {
+        self.pending_reprojection.as_ref().is_some_and(|pending| pending.local.is_some())
+    }
+}

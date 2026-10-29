@@ -6,7 +6,7 @@ use crate::viewer::equation::EquationViewer;
 
 #[semio_framework_async_macros::async_test]
 async fn equation_viewer_never_mutates() {
-    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<EquationViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<EquationViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -25,8 +25,9 @@ async fn equation_editor_and_viewer_share_dialect() {
 /// close state machine instead of letting the harness drop it mid-flight.
 #[semio_framework_async_macros::async_test]
 async fn equation_viewer_instantiates_through_new_viewer() {
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&crate::viewer::equation::create_equation_viewer());
     let mut app: semio_framework_plugin::app::VcsArtifactApp<semio_framework_plugin::ViewerApp<EquationViewer>, semio_s_artifact_stdio_semio::SemioMembers> =
-        semio_framework_plugin::app::VcsArtifactApp::with_registry(semio_framework_plugin::ViewerApp::<EquationViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+        semio_framework_plugin::app::VcsArtifactApp::with_registry(semio_framework_plugin::ViewerApp::<EquationViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), scope.cx()).expect("original caller paid app close");
 }

@@ -1,0 +1,100 @@
+{
+  "tick": [
+    12,
+    3
+  ],
+  "preview": [
+    12,
+    3
+  ],
+  "committed": [
+    0,
+    0
+  ],
+  "cancelled": [
+    0,
+    0
+  ],
+  "historyRows": 0,
+  "sourceClosed": true,
+  "settlement": {
+    "members": [
+      "one",
+      "two"
+    ],
+    "cancelRemaining": [
+      "one"
+    ],
+    "committed": [
+      "one",
+      "two"
+    ],
+    "baseRevision": "0707070707070707070707070707070707070707070707070707070707070707",
+    "turnItems": 1
+  },
+  "tagCases": [
+    {
+      "kind": "tick",
+      "window": "layout-blueprint-1",
+      "app": "s.layout.layout",
+      "action": "translateSelection",
+      "value": "gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪gesture-港雪"
+    },
+    {
+      "kind": "commit",
+      "window": null,
+      "app": "s.layout.layout",
+      "action": "setScale",
+      "value": "gesture-commit"
+    },
+    {
+      "kind": "abort",
+      "window": "layout-blueprint-1",
+      "app": "s.layout.layout",
+      "action": "translateSelection",
+      "value": "gesture-abort",
+      "reason": "captureLost"
+    },
+    {
+      "kind": "typing",
+      "window": "layout-blueprint-1",
+      "app": "s.layout.layout",
+      "action": "editStory",
+      "value": "story-δ😀"
+    }
+  ],
+  "metadataExpiry": {
+    "actor": "original-港",
+    "instance": 1,
+    "expiredClockUs": 1600,
+    "semanticBlocked": true,
+    "restored": true,
+    "sameActorPointer": true,
+    "closed": true
+  },
+  "typingMetadata": {
+    "actor": "typing-original-港",
+    "replacement": "replacement-must-stay",
+    "instance": 1,
+    "clockMs": 101
+  },
+  "directIntentQualification": {
+    "scope": "s.layout.layout",
+    "typing": "direct-buffer",
+    "typingCommit": "enter",
+    "cases": [
+      {
+        "action": "unknownDirectIntent",
+        "qualified": false
+      },
+      {
+        "action": "patchDocument",
+        "qualified": true
+      }
+    ],
+    "catalog": {
+      "patchDocument": true
+    },
+    "changedAction": "patchDocumenX"
+  }
+}

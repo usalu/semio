@@ -195,7 +195,7 @@ fn explore_scrub_ledger(ledger: &ScrubLedger<Value>, alphabet: &[(&str, &str, Sc
     }
     for (tool, base, input) in alphabet {
         let late = match input {
-            ScrubInput::Tick { gesture, .. } | ScrubInput::Commit { gesture, .. } => ledger.closed.get("w") == Some(gesture),
+            ScrubInput::Tick { gesture, .. } | ScrubInput::Commit { gesture, .. } => ledger.closed("w")==Some(gesture.as_str()),
             ScrubInput::Abort { .. } => false,
         };
         let mut next = ledger.reference_fork();

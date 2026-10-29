@@ -11,6 +11,7 @@ async fn acceptance_withdraw_restore<A, M>(app: &mut VcsArtifactApp<A, M>,cx:&mu
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let target = app
         .stores.store
@@ -56,6 +57,7 @@ async fn acceptance_session<A, M>(
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let target = app
         .stores.store
@@ -89,6 +91,7 @@ async fn acceptance_row_label<A, M>(app: &mut VcsArtifactApp<A, M>, edited: &A::
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let target = app.stores.store.mutation_ops().map_err(|error| format!("{error:?}"))?.first().map(|op| op.mutation_id.0.clone()).unwrap_or_default();
     let patch = app.render_ctx().history_patch(true).await.map_err(|fault| AcceptanceError::from(fault).context("the history does not project".into()))?;
@@ -108,6 +111,7 @@ pub(super) async fn acceptance_scenario<A, M>(manifest: fn() -> App, case: &Acce
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let seed: Vec<&A::Mutation> = std::iter::once(&case.op).chain(downstream).collect();
     let mut overwrite = match acceptance_seeded::<A, M>(manifest, &case.base, &seed, true,cx).await {
@@ -233,6 +237,7 @@ async fn acceptance_alternative<A, M>(
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     match acceptance_session(branched, Some(change), Some(ACCEPTANCE_ALTERNATIVE), as_of, None,cx).await {
         Err(AcceptanceVerdict::Skip(reason)) => AcceptanceVerdict::Fail((format!("the change the overwrite accepted fails as a new alternative: {reason}")).into()),
@@ -267,6 +272,7 @@ pub(super) async fn acceptance_first_pass<A, M>(plugin: &str, manifest: fn() -> 
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut unloadable = BTreeSet::new();
     for case in cases {

@@ -1,0 +1,187 @@
+{
+  "contract": "semio.original-typing-commit.v1",
+  "rows": [
+    {
+      "window": "",
+      "tool": "fixture#type-global",
+      "buffer": "global",
+      "leaves": [
+        "g0"
+      ],
+      "deadline": 2900,
+      "states": [
+        "root",
+        "typing"
+      ]
+    },
+    {
+      "window": "a",
+      "tool": "fixture#type-a",
+      "buffer": "first",
+      "leaves": [
+        "a0",
+        "a1"
+      ],
+      "deadline": 900,
+      "states": [
+        "root",
+        "typing"
+      ]
+    },
+    {
+      "window": "b",
+      "tool": "fixture#type-b",
+      "buffer": "second",
+      "leaves": [
+        "b0"
+      ],
+      "deadline": 1900,
+      "states": [
+        "root",
+        "typing"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "name": "explicit-commit-suppresses-verb",
+      "now": 500,
+      "typing": true,
+      "commit": "enter",
+      "window": "b",
+      "roster": [
+        "a",
+        "b"
+      ],
+      "view": false,
+      "expected": [
+        "b"
+      ],
+      "suppress": true,
+      "pass": "control"
+    },
+    {
+      "name": "absent-window-commits-original-run",
+      "now": 500,
+      "typing": true,
+      "commit": null,
+      "window": "b",
+      "roster": [
+        "b"
+      ],
+      "view": false,
+      "expected": [
+        "a"
+      ],
+      "suppress": false,
+      "pass": "control"
+    },
+    {
+      "name": "lapse-before-view",
+      "now": 1000,
+      "typing": false,
+      "commit": null,
+      "window": "b",
+      "roster": [
+        "a",
+        "b"
+      ],
+      "view": true,
+      "expected": [
+        "a"
+      ],
+      "suppress": false,
+      "pass": "preverb"
+    },
+    {
+      "name": "other-verb-commits-in-window-order",
+      "now": 500,
+      "typing": false,
+      "commit": null,
+      "window": "b",
+      "roster": [
+        "a",
+        "b"
+      ],
+      "view": false,
+      "expected": [
+        "",
+        "a",
+        "b"
+      ],
+      "suppress": false,
+      "pass": "preverb"
+    },
+    {
+      "name": "invalid-commit-does-not-suppress",
+      "now": 500,
+      "typing": true,
+      "commit": "unknown",
+      "window": "b",
+      "roster": [
+        "b"
+      ],
+      "view": false,
+      "expected": [],
+      "suppress": false,
+      "pass": "control"
+    },
+    {
+      "name": "empty-roster-is-not-retirement-authority",
+      "now": 500,
+      "typing": true,
+      "commit": null,
+      "window": "b",
+      "roster": [],
+      "view": false,
+      "expected": [],
+      "suppress": false,
+      "pass": "control"
+    },
+    {
+      "name": "plain-view-does-not-retire-missing-window",
+      "pass": "control",
+      "now": 500,
+      "typing": false,
+      "commit": null,
+      "window": "b",
+      "roster": [
+        "b"
+      ],
+      "view": true,
+      "expected": [],
+      "suppress": false
+    },
+    {
+      "name": "preverb-commit-does-not-suppress-unvalidated-action",
+      "pass": "preverb",
+      "now": 500,
+      "typing": true,
+      "commit": "enter",
+      "window": "b",
+      "roster": [
+        "b"
+      ],
+      "view": false,
+      "expected": [],
+      "suppress": false
+    }
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    2,
+    3,
+    7,
+    31
+  ],
+  "sameTransaction": true,
+  "sameMutationBacking": true,
+  "foreignDecoderRefused": true
+}

@@ -162,7 +162,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildGroupRow<M> {
         let lane = self.lane.as_mut().expect("private lane is admitted before preparation");
         if lane.staged() { return Ok((true, Default::default())); }
         if lane.prepared_for_staging() && !self.receipt_copied { return Ok((false, Default::default())); }
-        let step = lane.advance(member, visibility, body, grant, receiving).map_err(plugin_sdk_fault)?;
+        let step = lane.advance(member, visibility, body, grant, receiving).map_err(|error|plugin_sdk_fault(error.to_string()))?;
         Ok((false, step.ownership_progress()))
     }
     pub fn terminal_is_empty(&self) -> bool { self.input.terminal_is_empty() && self.source.is_none() && self.metadata.is_none() && self.request.is_none() && self.opening_source.is_none() && self.open.is_none() && self.member.is_none() && self.raw.is_none() && self.lane.is_none() && self.identity.is_none() && self.entry.is_none() && self.slot.is_none() && self.admission.is_none() }
@@ -467,7 +467,7 @@ impl<M: SpaceMember + MemberFactory> PrivateChildPublicationGroup<M> {
         if let Some(parent_lane) = self.parent_lane.as_mut() {
             if let Some(origins)=self.origins.as_mut(){if let Some(progress)=parent_lane.advance_original_origins(&mut origins[0],grant).map_err(|error|error.into_fault())?{return Ok(RetainedCloneStep::Progress(progress))}}
             if parent_lane.prepared_for_staging() && !self.parent_receipt_copied { return Ok(RetainedCloneStep::Progress(Default::default())); }
-            if !parent_lane.staged() { let step = parent_lane.advance(parent, visibility, body, item, receiving).map_err(plugin_sdk_fault)?; return Ok(RetainedCloneStep::Progress(step.ownership_progress())); }
+            if !parent_lane.staged() { let step = parent_lane.advance(parent, visibility, body, item, receiving).map_err(|error|plugin_sdk_fault(error.to_string()))?; return Ok(RetainedCloneStep::Progress(step.ownership_progress())); }
         }
         if self.lane_cursor == self.count { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let row = self.rows[self.lane_cursor].as_mut().unwrap();

@@ -143,7 +143,7 @@ pub(crate) mod context {
     }
 
     pub async fn dispatch(instance: &mut VcsApp, command: VcsCommand) -> Dispatched {
-        let result = instance.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx()).await.expect("dispatch");
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut instance.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), instance.1.cx()).await.expect("dispatch");
         let lanes = settle(instance).await;
         Dispatched { result, lanes }
     }
@@ -206,7 +206,7 @@ pub(crate) mod context {
         let mut next = app.snapshot().expect("materialize snapshot");
         mutate(&mut next);
         let text = serde_json::to_string(&next).expect("serialize snapshot");
-        app.0.dispatch_typed(VcsCommand::TextEdit(text_edit::TextEdit { text }), local, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("seeded edit is admitted");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &VcsCommand::TextEdit(text_edit::TextEdit { text }), local, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("seeded edit is admitted");
         settle(app).await;
     }
 
@@ -441,7 +441,7 @@ fn bounded_command_factory_matches_the_language_neutral_maximum_oracle() {
     assert_eq!(maximum, VCS_BOUNDED_RAW_BYTES);
     assert_eq!(expected_items, VCS_BOUNDED_WORK_ITEMS);
     assert_eq!(tool_ids, VCS_BOUNDED_TOOL_IDS);
-    let snapshot = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")();
+    let snapshot = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let interaction = protocol::InteractionState::default();
     let accepted = VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: "v".repeat(maximum) });
     let rejected = VcsCommand::ChangeNotes(change_notes::ChangeNotes { notes: "v".repeat(maximum + additional) });
@@ -527,7 +527,7 @@ fn canvas_pointer_wire_requires_samples_and_cancelled() {
     let VcsCommand::CanvasPointerMove(moved) = VcsPlayApp::command_from_action("canvasPointerMove", Some((batched).clone()), None).expect("batched move") else { panic!("move") };
     assert_eq!(moved.samples, vec![[1.0, 1.5], [3.0, 4.0]]);
     assert_eq!(moved.last_sample(), Some([3.0, 4.0]));
-    let snapshot = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")();
+    let snapshot = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let interaction = protocol::InteractionState::default();
     assert_eq!(vcs_bounded_extent(&VcsCommand::CanvasPointerMove(moved), &snapshot, &interaction), Some(VCS_BOUNDED_WORK_ITEMS), "two samples are priced within the bounded raw budget");
     let refused = |action: &str, args: Option<&semio_framework_value::DslValue>| VcsPlayApp::command_from_action(action, args, None).err().map(|fault| fault.code);
@@ -555,7 +555,7 @@ fn resumable_text_edit_matches_the_serde_json_batch_oracle() {
     assert_eq!(fixture.get("maximumOutputBytes").and_then(Value::as_u64), Some(VCS_EDIT_MAXIMUM_OUTPUT_BYTES as u64));
     assert_eq!(fixture.get("maximumWorkItems").and_then(Value::as_u64), Some(VCS_EDIT_MAXIMUM_WORK_ITEMS as u64));
 
-    let mut current = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")();
+    let mut current = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     current.title = "before".into();
     current.tags = vec!["keep".into(), "remove".into()];
     let mut next = current.clone();
@@ -585,13 +585,13 @@ fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
     let maximum = fixture.get("maximumTextBytes").and_then(Value::as_u64).expect("maximumTextBytes") as usize;
     let additional = fixture.get("rejectedAdditionalBytes").and_then(Value::as_u64).expect("rejectedAdditionalBytes") as usize;
     assert!(VcsPlayApp::command_from_action("textEdit", Some((action_args([("text", "x".repeat(maximum + additional))])).clone()), None).is_err());
-    let mut oversized_snapshot = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")();
+    let mut oversized_snapshot = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     oversized_snapshot.tags = (0..=VCS_EDIT_MAXIMUM_TAGS).map(|index| format!("tag-{index}")).collect();
     let command = VcsCommand::Edit(edit_command::Edit { text: "{}".into() });
     assert_eq!(vcs_edit_extent(&command, &oversized_snapshot, &protocol::InteractionState::default()), None);
 
     let mut work = VcsEditCommandWork::new("edit");
-    work.next = Some(VcsSnapshot { tags: vec!["retire".into()], ..VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")() });
+    work.next = Some(VcsSnapshot { tags: vec!["retire".into()], ..VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births") });
     work.current_tags.insert("current".into());
     work.next_tags.insert("next".into());
     work.mutations.push(semio_s_artifact_vcs_vcs_editor::mutations::add_tag("mutation".into()));
@@ -611,7 +611,7 @@ fn resumable_text_edit_enforces_maximum_plus_one_and_retires_incrementally() {
 
 #[test]
 fn every_resumable_edit_turn_stays_below_the_interaction_ceiling() {
-    let mut current = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")();
+    let mut current = VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     current.tags = (0..64).map(|index| format!("current-{index:04}-{}", "x".repeat(32))).collect();
     let mut next = current.clone();
     next.notes = "n".repeat(256);

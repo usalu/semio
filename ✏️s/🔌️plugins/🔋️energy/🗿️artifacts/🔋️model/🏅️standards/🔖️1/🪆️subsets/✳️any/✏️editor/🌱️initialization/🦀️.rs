@@ -6,4 +6,4 @@ impl semio_framework_plugin::OriginalArtifactEditorBirth for super::EnergyModelE
 }
 
 /// 🎟️ Native surface registration retains its actual declared tools and persisted model-window authority.
-pub type EnergyModelNativeRegistration=semio_framework_plugin::app::original_instance_admission::OriginalSingleWindowRegistration<semio_framework_plugin::EditorApp<super::EnergyModelEditor>,semio_s_artifact_stdio_semio::SemioMembers,super::editor_edit::windows::model::config::EnergyModelWindowConfigOwner>;
+pub type EnergyModelNativeRegistration=semio_framework_plugin_instance_initialization::registration::OriginalSingleWindowRegistration<semio_framework_plugin::EditorApp<super::EnergyModelEditor>,semio_s_artifact_stdio_semio::SemioMembers,super::editor_edit::windows::model::config::EnergyModelWindowConfigOwner>;

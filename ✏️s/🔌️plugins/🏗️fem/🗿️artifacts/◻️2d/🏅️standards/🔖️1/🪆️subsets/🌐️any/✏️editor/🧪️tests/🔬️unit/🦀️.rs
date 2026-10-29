@@ -350,7 +350,7 @@ async fn fem2d_io_declares_geometry_in_and_results_out_ports() {
 /// must have something to paint at first frame.
 #[semio_framework_async_macros::async_test]
 async fn the_editor_boots_on_the_bundled_example_document() {
-    let boot = <Fem2dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
+    let boot = <Fem2dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     assert!(!boot.nodes.is_empty(), "expected the bundled example fixture's nodes");
     assert!(!boot.elements.is_empty(), "expected the bundled example fixture's elements");
     assert_ne!(boot, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
@@ -363,7 +363,7 @@ async fn the_editor_boots_on_the_bundled_example_document() {
 async fn undo_restores_document_after_add_node() {
     let mut app = fem2d_app();
     let before = app.snapshot().expect("snapshot").nodes.len();
-    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Fem2dCommand::AddNode(Fem2dCommand::AddNode { x: 1.0, y: 1.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+    semio_framework_plugin::artifact_app_laws::assert_undo_redo_round_trip(&mut app.0, Fem2dCommand::AddNode(add_node::AddNode { x: 1.0, y: 1.0 }), |app| app.snapshot().expect("snapshot").nodes.len(), before, before + 1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -381,7 +381,7 @@ async fn two_instances_converge_on_disjoint_edits() {
         "mem://fem2d-convergence",
         || async { semio_framework_plugin::App { definition: create_fem2d_app(), examples: Vec::new() } },
         Fem2dCommand::AddMaterial(add_material::AddMaterial { name: "Steel".into(), e: 2.1e11 }),
-        Fem2dCommand::AddNode(Fem2dCommand::AddNode { x: 5.0, y: 5.0 }),
+        Fem2dCommand::AddNode(add_node::AddNode { x: 5.0, y: 5.0 }),
         |app| {
             let projection = app.snapshot().expect("snapshot");
             (projection.materials.iter().any(|material| material.name == "Steel"), projection.nodes.iter().any(|node| node.x == 5.0), projection.nodes.len())
@@ -405,6 +405,7 @@ async fn two_actors_reconnect_after_local_edits_without_freezing_or_duplicate_re
     let row: serde_json::Value = serde_json::from_str(include_str!("🔣️.json")).expect("portable reconnect fixture");
     let policy = fixture_mounted_policy();
     let mut identity = fixture_identity();
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let (mut a, mut b) = paired_registered_apps::<EditorApp<Fem2dPlayApp>, _, _>("mem://fem2d-reconnect-initial", || async { context::manifest() }, policy, &mut identity).await;
     let before = a.snapshot().expect("initial projection").nodes.len();
     a.detach_backbone().await.expect("short disconnect a");
@@ -412,16 +413,16 @@ async fn two_actors_reconnect_after_local_edits_without_freezing_or_duplicate_re
     for (app, actor, key) in [(&mut a, "actor-a", "a"), (&mut b, "actor-b", "b")] {
         let point = &row[key];
         let action = meta(actor);
-        app.dispatch_typed(Fem2dCommand::AddNode(Fem2dCommand::AddNode { x: point["x"].as_f64().expect("x"), y: point["y"].as_f64().expect("y") }), &action, &mut identity).await.expect("local command remains responsive");
-        settle_registered_typed_operation(app, action.instance_id, policy, &mut identity).await.expect("local persisted publication");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(app, &Fem2dCommand::AddNode(add_node::AddNode { x: point["x"].as_f64().expect("x"), y: point["y"].as_f64().expect("y") }), &action, policy, &mut identity, scope.cx()).await.expect("local command remains responsive");
+        settle_registered_typed_operation(app, action.instance_id, policy, &mut identity, scope.cx()).await.expect("local persisted publication");
         assert_eq!(app.snapshot().expect("disconnected local projection").nodes.len(), before + 1);
     }
     let (near, far) = store::os_store::backbone::MemoryBackbone::pair("mem://fem2d-reconnect-resumed", "mem://fem2d-reconnect-resumed").await;
     a.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("reconnect a");
     b.attach_backbone(store::os_store::backbone::Backbones::Memory(far)).await.expect("reconnect b");
     for _ in 0..3 {
-        a.tick_backbone(&mut identity).await.expect("a folds queued events");
-        b.tick_backbone(&mut identity).await.expect("b folds queued events");
+        a.tick_backbone(&mut identity, scope.cx()).await.expect("a folds queued events");
+        b.tick_backbone(&mut identity, scope.cx()).await.expect("b folds queued events");
     }
     let left = a.snapshot().expect("a converged projection");
     let right = b.snapshot().expect("b converged projection");
@@ -430,14 +431,14 @@ async fn two_actors_reconnect_after_local_edits_without_freezing_or_duplicate_re
     for key in ["a", "b"] {
         assert!(left.nodes.iter().any(|node| node.x == row[key]["x"].as_f64().unwrap() && node.y == row[key]["y"].as_f64().unwrap()));
     }
-    a.tick_backbone(&mut identity).await.expect("duplicate pump a");
-    b.tick_backbone(&mut identity).await.expect("duplicate pump b");
+    a.tick_backbone(&mut identity, scope.cx()).await.expect("duplicate pump a");
+    b.tick_backbone(&mut identity, scope.cx()).await.expect("duplicate pump b");
     assert_eq!(a.snapshot().expect("idempotent a"), left);
     assert_eq!(b.snapshot().expect("idempotent b"), right);
     a.detach_backbone().await.expect("release a");
     b.detach_backbone().await.expect("release b");
-    close_registered_fixture_app(&mut a, policy);
-    close_registered_fixture_app(&mut b, policy);
+    close_registered_fixture_app(&mut a, policy, scope.cx()).expect("original caller paid close a");
+    close_registered_fixture_app(&mut b, policy, scope.cx()).expect("original caller paid close b");
 }
 
 //#endregion 🔖️CrossCutting
@@ -564,7 +565,7 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
     let expected = protocol::PresenceWindowView::from_value(semio_framework_value::DslValue::from(&fixture["admission"][0]["value"])).expect("admitted shared camera");
-    let boot = <Fem2dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
+    let boot = <Fem2dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let node = boot.nodes.first().expect("bundled structural node");
     let selected = protocol::wire::encode_scoped_identity(&["node", &node.id]).expect("canonical node target");
     let window_kind = model_window::WINDOW_KIND_ID;

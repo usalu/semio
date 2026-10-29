@@ -1,6 +1,6 @@
 #[semio_framework_async_macros::async_test]
 async fn sequence_viewer_never_mutates() {
-    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<crate::viewer::sequence::SequenceViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_viewer_never_mutates::<crate::viewer::sequence::SequenceViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[semio_framework_async_macros::async_test]

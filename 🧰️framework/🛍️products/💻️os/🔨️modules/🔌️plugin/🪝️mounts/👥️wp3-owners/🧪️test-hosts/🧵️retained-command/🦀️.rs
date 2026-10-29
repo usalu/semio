@@ -35,7 +35,7 @@ pub async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
         let fixture: Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🔗️tool-latest-wins-integration.json")).unwrap();
         let pool = semio_framework_async::process_worker_pool(semio_framework_async::WorkerPoolConfig::new(semio_framework_async::ProcessKind::InteractiveNative, std::thread::available_parallelism().map(std::num::NonZeroUsize::get).unwrap_or(1)));
         for case in fixture["cases"].as_array().unwrap() {
-            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone(), protocol::ActorId("fixture".into()), mounted_policy, identity).await;
+            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone(), protocol::ActorId("fixture".into()), mounted_policy, identity).await.expect("the reference snapshot births");
             artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
             app.tools.test_tool_clock = clock;
             app.bind_instance_id(7).await;
@@ -122,7 +122,7 @@ pub async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
             eprintln!("[TRACE] actual registered keyed dispatch {} preserved exact target supersession, rebased its worker, published count{expected}, and closed every retained owner", case["id"]);
         }
         for case in fixture["lostReservations"].as_array().unwrap() {
-            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone(), protocol::ActorId("fixture".into()), mounted_policy, identity).await;
+            let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry.clone(), protocol::ActorId("fixture".into()), mounted_policy, identity).await.expect("the reference snapshot births");
             artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
             app.bind_instance_id(7).await;
             let meta = ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None };
@@ -179,7 +179,7 @@ pub async fn test_retained_keyed_dispatch<A: ArtifactApp + Default>(
     #[doc(hidden)]
 pub async fn test_typed_operation_slot_preadmission<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         const VACANT: usize = 11;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await.expect("the reference snapshot births");
         app.bind_instance_id(7).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None };
         for slot in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
@@ -236,7 +236,7 @@ pub async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + D
         const ACTIONS: usize = 200;
         const HOST_CONTINUATIONS_PER_ACTION: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await.expect("the reference snapshot births");
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         let mut highest = 0;
@@ -260,7 +260,7 @@ pub async fn test_typed_operation_slot_retirement_under_storm<A: ArtifactApp + D
 pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         const CONTINUATIONS: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await.expect("the reference snapshot births");
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         admit_fixture_typed_action(&mut app, verb, Box::new(command("settled", 1)), &meta, identity).await;
@@ -383,7 +383,7 @@ pub async fn test_typed_operation_slot_release_on_every_outcome<A: ArtifactApp +
 pub async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         const CONTINUATIONS: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await.expect("the reference snapshot births");
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         admit_fixture_typed_action(&mut app, verb, Box::new(command("own-call", 1)), &meta, identity).await;
@@ -398,7 +398,7 @@ pub async fn test_typed_operation_never_parks_a_turn_that_reports_no_runnable_wo
 pub async fn test_typed_operation_completes_under_a_status_only_host_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         const CONTINUATIONS: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await.expect("the reference snapshot births");
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         admit_fixture_typed_action(&mut app, verb, Box::new(command("drain-call", 2)), &meta, identity).await;
@@ -418,7 +418,7 @@ pub async fn test_typed_operation_completes_under_a_status_only_host_call<A: Art
 pub async fn test_typed_operation_lands_its_edit_inside_the_admitting_call<A: ArtifactApp + Default>(registry: AppActionRegistry, verb: &str, command: fn(&str, i32) -> A::Command, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
         const CONTINUATIONS: usize = 512;
         const RECEIVER: u32 = 7;
-        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await;
+        let mut app = VcsArtifactApp::<A>::with_registry(A::default(), registry, protocol::ActorId("fixture".into()), mounted_policy, identity).await.expect("the reference snapshot births");
         app.bind_instance_id(RECEIVER).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: RECEIVER, view_state: None };
         admit_fixture_typed_action(&mut app, verb, Box::new(command("admitting-call", 3)), &meta, identity).await;

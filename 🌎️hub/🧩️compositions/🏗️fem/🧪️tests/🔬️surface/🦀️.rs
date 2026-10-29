@@ -2,7 +2,7 @@ use semio_framework_plugin::artifact_app_laws::{assert_editor_and_viewer_share_d
 
 #[semio_framework_async_macros::async_test]
 async fn fem2d_viewer_never_mutates() {
-    assert_viewer_never_mutates::<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>().await;
+    assert_viewer_never_mutates::<semio_s_artifact_fem_2d_viewer::viewer::fem2d::Fem2dViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[semio_framework_async_macros::async_test]
@@ -12,7 +12,7 @@ async fn fem2d_editor_and_viewer_share_dialect() {
 
 #[semio_framework_async_macros::async_test]
 async fn fem3d_viewer_never_mutates() {
-    assert_viewer_never_mutates::<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>().await;
+    assert_viewer_never_mutates::<semio_s_artifact_fem_3d_viewer::viewer::fem3d::Fem3dViewer>(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
 }
 
 #[semio_framework_async_macros::async_test]

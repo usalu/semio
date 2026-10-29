@@ -30,6 +30,8 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  /// 🪪️ Observes fixed issued-source and projection coordinates without retaining or authorizing access.
  pub fn reference_identity(self)->(u64,usize,usize,usize){(self.lease.get().id,self.projection.parent,self.projection.address,self.projection.discriminator)}
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
+ /// 🪤️ Projects through a fallible accessor so an absent original child refuses instead of aborting.
+ pub fn try_project<U:?Sized,E,F>(self,discriminator:usize,project:F)->Result<RetainedCloneRef<'a,U>,E>where F:for<'source>FnOnce(&'source T)->Result<&'source U,E>{let value=project(self.value)?;Ok(RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}})}
  pub fn binding_copy_bytes(self)->usize{0}
  /// ✅️ Checks the original issued source and exact projected path without granting a new alias.
  pub fn check_binding(self,binding:&Option<RetainedCloneBinding>)->Result<bool,crate::ValueError>{self.binding_demand(binding).map(|demand|demand.is_none())}

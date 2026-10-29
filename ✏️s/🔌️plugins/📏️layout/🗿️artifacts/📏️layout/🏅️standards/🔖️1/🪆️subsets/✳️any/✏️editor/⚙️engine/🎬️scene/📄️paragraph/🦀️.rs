@@ -92,4 +92,9 @@ impl LayoutParagraphState{
 
 }
 
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+
+
+#[cfg(feature="testkit")]
+impl LayoutParagraphState {
+    pub fn test_source_count(&self) -> usize { self.owners.plans.len() }
+}

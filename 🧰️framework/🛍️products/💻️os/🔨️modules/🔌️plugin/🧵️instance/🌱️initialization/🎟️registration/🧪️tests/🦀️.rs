@@ -1,7 +1,8 @@
 //! 🧪️ The actual declared native Window App opens, donates its original allocation and closes under mounted authority.
 use crate::fixture;
 use semio_framework_plugin_decl_app::ArtifactApp;
-use semio_framework_plugin_instance_app::{OriginalVcsApp,original_instance_admission::{OriginalSingleWindowRegistration,original_instance_factory}};
+use semio_framework_plugin_instance_construction::{OriginalVcsApp,factory::original_instance_factory};
+use semio_framework_plugin_instance_initialization::registration::OriginalSingleWindowRegistration;
 use semio_framework_plugin_reactor_app::{PluginApp,PluginAppDelegate,OriginalPluginAppSource};
 use semio_framework_plugin_window_kits::RegisteredAppDefinition;
 use semio_framework_os_kernel::NoMembers;

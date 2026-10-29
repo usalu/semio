@@ -32,7 +32,7 @@ fn the_winding_census_agrees_with_the_kernels_consistency_flag_on_every_fixture_
     assert!(meshes.len() >= 5);
     for recipe in meshes {
         let mesh = support::build_mesh(&recipe);
-        assert_eq!(inconsistent_edges(&mesh.polygons()) == 0, mesh.quality_report().consistent_winding, "{recipe}");
+        assert_eq!(inconsistent_edges(&mesh.polygons()) == 0, semio_framework_3d_mesh_quality::mesh_quality_report(&mesh).consistent_winding, "{recipe}");
     }
 }
 

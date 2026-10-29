@@ -1,10 +1,10 @@
 //! 📏️ Energy native syntax admits each authored relational cell before either typed owner.
-use super::*;
 use semio_framework_dsl_record::{FieldValue as F,RecordValue as R,DslField};
-use semio_framework_value::{DslValue as D, FromValue, ValueRefusalKind};
+use semio_framework_value::{DslValue as D, FromValue, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as N;
-use store::sqlite_snapshot::SqliteDatabaseLimits;
+use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
 type Result<T>=std::result::Result<T,ValueError>;
+fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 type Roles<'a>=&'a[(&'a str,Role)];
 #[derive(Clone,Copy)]enum Role{U8,U16,U32,Bool,Text,Float,OptionalId,OptionalFloat,Enum(&'static[&'static str])}
 use Role::*;
@@ -175,10 +175,10 @@ fn schedules(s:&D,c:&mut Census,n:&mut N<'_>)->Result<()>{
  for v in items(member(s,"time_series",n)?)?{entity("energy_time_series_schedule",v,&[("id",U32),("timestep_seconds",U32)],c,n)?;for value in items(member(v,"values",n)?)?{c.row("energy_time_series_value",add(24,cost(value,Float,n)?)?,n)?;}}Ok(())
 }
 /// 🏛️ Admits the actual complete handwritten Energy schema extent before native work.
-pub(super)fn admit_extent(limits:SqliteDatabaseLimits)->Result<()>{if WIDTHS.len()>limits.max_tables||WIDTHS.iter().any(|(_,width)|*width>limits.max_columns)||SCHEMA.len()>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Energy authored schema exceeds caller limits"));}Ok(())}
+pub fn admit_extent(limits:SqliteDatabaseLimits,schema_bytes:usize)->Result<()>{if WIDTHS.len()>limits.max_tables||WIDTHS.iter().any(|(_,width)|*width>limits.max_columns)||schema_bytes>limits.max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"Energy authored schema exceeds caller limits"));}Ok(())}
 /// 🔋️ Completes every SQL semantic role on borrowed native syntax without building any domain shadow.
-pub(in super::super)fn admit_record(source:&R,n:&mut N<'_>,limits:SqliteDatabaseLimits)->Result<()>{
- n.scoped_stage(|n|{n.begin_stage(0)?;admit_extent(limits)?;let mut c=Census{limits,rows:0,bytes:0};let F::Value(model)=required(source.get(1))? else{return Err(invalid("Energy native model field differs"))};
+pub fn admit_record(source:&R,n:&mut N<'_>,limits:SqliteDatabaseLimits,schema_bytes:usize)->Result<()>{
+ n.scoped_stage(|n|{n.begin_stage(0)?;admit_extent(limits,schema_bytes)?;let mut c=Census{limits,rows:0,bytes:0};let F::Value(model)=required(source.get(1))? else{return Err(invalid("Energy native model field differs"))};
  let site=member(model,"site",n)?;let ground=member(model,"ground_temperature",n)?;let period=member(model,"run_period",n)?;
  let bytes=add(8,add(record_text(source.get(0))?.len(),add(fields(model,&[("name",Text),("version",Text)],n)?,add(fields(site,&[("latitude_deg",Float),("longitude_deg",Float),("elevation_m",Float),("time_zone_hours",Float),("north_axis_deg",Float)],n)?,add(fields(ground,&[("deep_c",Float)],n)?,fields(period,&[("start_month",U8),("start_day",U8),("end_month",U8),("end_day",U8),("year",U16)],n)?)?)?)?)?)?;
  c.row("energy_document",bytes,n)?;child(source.get(2),"energy_structure_child",&mut c,n)?;child(source.get(3),"energy_zones_child",&mut c,n)?;link(source.get(4),"energy_referenced_model_link",&mut c,n)?;link(source.get(5),"energy_weather_link",&mut c,n)?;

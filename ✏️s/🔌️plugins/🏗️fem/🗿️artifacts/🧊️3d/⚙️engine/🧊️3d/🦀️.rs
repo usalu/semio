@@ -23,6 +23,7 @@ pub enum Fem3dError {
     LoadCaseNotFound(String),
     ModeIndexOutOfRange(usize),
     Fem(semio_s_fem_model::FemError),
+    ResultSource(semio_s_fem_analyses_model::ResultSourceIdentityError),
 }
 
 impl std::fmt::Display for Fem3dError {
@@ -36,6 +37,7 @@ impl std::fmt::Display for Fem3dError {
             Self::LoadCaseNotFound(id) => write!(formatter, "load case not found: {id}"),
             Self::ModeIndexOutOfRange(index) => write!(formatter, "mode index out of range: {index}"),
             Self::Fem(error) => std::fmt::Display::fmt(error, formatter),
+            Self::ResultSource(error) => std::fmt::Display::fmt(error, formatter),
         }
     }
 }
@@ -44,6 +46,7 @@ impl std::error::Error for Fem3dError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Fem(error) => Some(error),
+            Self::ResultSource(error) => Some(error),
             _ => None,
         }
     }
@@ -79,6 +82,9 @@ pub fn fem3d_solve(doc: &Fem3dSnapshot, case_id: &str) -> Result<semio_s_fem_mod
 /// fixed at `[0.0, 0.0, -9.81]` — this crate is Z-up, per `FemNode`'s `{x,y,z}` fields and the existing
 /// cantilever test's `Dof::Tz` tip load). Returns results keyed by case id ∪ combination id.
 pub fn fem3d_solve_all(doc: &Fem3dSnapshot) -> Result<HashMap<String, semio_s_fem_model::StaticResult>, Fem3dError> {
+    for (kind, id) in doc.load_cases.iter().map(|case| ("loadCase", case.id.as_str())).chain(doc.combinations.iter().map(|combination| ("combination", combination.id.as_str()))) {
+        semio_s_fem_analyses_model::validate_result_source_parts(kind, id).map_err(Fem3dError::ResultSource)?;
+    }
     let (nodes, elements, solids, supports) = meshing::resolve_geometry(doc)?;
     let model = semio_s_fem_analyses_model::AnalysisModel { nodes, elements, supports };
     let mut cases = Vec::with_capacity(doc.load_cases.len());
@@ -87,7 +93,7 @@ pub fn fem3d_solve_all(doc: &Fem3dSnapshot) -> Result<HashMap<String, semio_s_fe
         cases.push(semio_s_fem_analyses_model::LoadCase { id: case.id.clone(), nodal_loads, member_loads, self_weight: case.self_weight });
     }
     let combinations: Vec<semio_s_fem_analyses_model::Combination> = doc.combinations.iter().map(|combination| semio_s_fem_analyses_model::Combination { id: combination.id.clone(), terms: combination.terms.iter().map(|(id, factor)| (id.clone(), *factor)).collect() }).collect();
-    semio_s_fem_analyses::solve_multi_case(&model, &cases, &combinations, [0.0, 0.0, -9.81]).map_err(Fem3dError::from)
+    semio_s_fem_analyses::solve_multi_case(&model, &cases, &combinations, [0.0, 0.0, -meshing::GRAVITY_G]).map_err(Fem3dError::from)?.into_iter().map(|(source, result)| semio_s_fem_analyses_model::encode_result_source_identity(&source).map(|identity| (identity, result)).map_err(Fem3dError::ResultSource)).collect()
 }
 // #endregion 🔖️Bridge
 

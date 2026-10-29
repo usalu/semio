@@ -169,8 +169,8 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     /// 🌱️ Boots on the bundled `📚️examples/🎬️demo` document so the playground paints a real structure
     /// at first frame instead of an empty canvas — the same snapshot `Fem2dViewer` already booted on.
-    fn reference_birth()->Option<fn()->Fem2dSnapshot>{Some(||{
-        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+    fn reference_birth()->Option<fn()->Result<Fem2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().map_err(|error|semio_framework_plugin::reference_birth_fault("fem2d bundled boot document",error))
     })}
 
     fn io() -> Option<AppIo> {
@@ -514,7 +514,7 @@ impl ArtifactEditor for Fem2dPlayApp {
     ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
         let rendered:semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree>=(||{
         let clock = transient.window::<results_window::transient::Fem2dResultsWindowTransientOwner>().and_then(|window| window.clock);
-        let preview = transient.snapshot.preview::<Fem2dSnapshot, Fem2dMutation>(doc.snapshot);
+        let preview = transient.snapshot.preview::<Fem2dSnapshot, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue, Fem2dMutation>(doc.snapshot, Fem2dSnapshot::to_reference, |value| Fem2dSnapshot::from_reference(value).ok());
         Self::render_body(body_key, doc, preview.as_ref(), cfg, view_state, Fem2dInteractionSnapshot::from_interaction(interaction), clock)
 
         })();

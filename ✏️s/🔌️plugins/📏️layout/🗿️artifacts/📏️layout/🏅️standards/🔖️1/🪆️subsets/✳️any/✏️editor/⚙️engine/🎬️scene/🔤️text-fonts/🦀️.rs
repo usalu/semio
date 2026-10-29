@@ -146,29 +146,48 @@ pub fn install_package_text_fonts(read: impl Fn(&str) -> Option<&'static [u8]>) 
 }
 //#endregion ⚙️Scene
 
-/// 📚️ Existing first-party bytes are compiled without UI registration or runtime file access.
-static HEADLESS_TEXT_FONTS:[&[u8];15]=[
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf"),
-    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf"),
-];
+/// 💾️ Native headless jobs borrow the asset catalog once without registering a UI text system.
+#[cfg(not(target_arch = "wasm32"))]
+fn native_export_fonts() -> Option<TextFontSet<'static>> {
+    static FILES: OnceLock<TextFontFiles> = OnceLock::new();
+    cached_font_files(&FILES, || native_text_fonts_directory().and_then(|directory| TextFontFiles::read(&directory).ok())).map(TextFontFiles::set)
+}
 
-/// 📚️ Immutable built-in font sources for resumable CPU text jobs, with Layout Sans first.
-pub fn export_font_source(index: usize) -> Option<&'static [u8]> {if index==0{return Some(LAYOUT_SANS);}HEADLESS_TEXT_FONTS.get(index-1).copied()}
+#[cfg(not(target_arch = "wasm32"))]
+fn cached_font_files(files: &OnceLock<TextFontFiles>, load: impl FnOnce() -> Option<TextFontFiles>) -> Option<&TextFontFiles> {
+    if files.get().is_none() { let _ = files.set(load()?); }
+    files.get()
+}
 
-/// 🔢️ The frozen installed source roster never performs font registration or host I/O.
-pub fn export_font_count() -> usize {1+HEADLESS_TEXT_FONTS.len()}
+fn export_font_source_from_set<'a>(index: usize, fonts: &TextFontSet<'a>) -> Option<&'a [u8]> {
+    if index == 0 { return Some(LAYOUT_SANS); }
+    TextFontRole::ALL.get(index - 1).map(|role| fonts.get(*role))
+}
 
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod headless_tests;
+fn cached_export_font_set(fonts: &OnceLock<TextFontSet<'static>>, load: impl FnOnce() -> Option<TextFontSet<'static>>) -> Option<&TextFontSet<'static>> {
+    if fonts.get().is_none() { let _ = fonts.set(load()?); }
+    fonts.get()
+}
+
+/// 📚️ Export identities freeze the first available installed or native catalog, with Layout Sans first.
+/// Native resolution needs no UI registration; guests borrow their delivered package assets directly.
+pub fn export_font_source(index: usize) -> Option<&'static [u8]> {
+    static FONTS: OnceLock<TextFontSet<'static>> = OnceLock::new();
+    if index == 0 { return Some(LAYOUT_SANS); }
+    if index >= export_font_count() { return None; }
+    let fonts = cached_export_font_set(&FONTS, || {
+        if let Some(fonts) = TEXT_FONTS.get() { return Some(*fonts); }
+        #[cfg(not(target_arch = "wasm32"))]
+        { native_export_fonts() }
+        #[cfg(target_arch = "wasm32")]
+        { package_text_font_set(semio_framework_plugin::reactor::package_asset).ok() }
+    })?;
+    export_font_source_from_set(index, fonts)
+}
+
+/// 🔢️ Catalog identities remain fixed before any font source is requested.
+pub fn export_font_count() -> usize { 1 + TextFontRole::ALL.len() }
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod headless_tests;

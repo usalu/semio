@@ -11,7 +11,7 @@ use semio_framework::{MediaClass, MediaType};
 use semio_framework_value::ValueError;
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_plugin_decl_emission::Emit;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob;
 #[allow(unused_imports)]
 use semio_framework_plugin_document_media::MediaArtifact;

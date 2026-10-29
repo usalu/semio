@@ -27,8 +27,10 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, Fem3dSnapshot>
         id if id == semio_s_artifact_fem_3d_io::examples::house::ID => Some(semio_s_artifact_fem_3d_io::examples::house::PRIMARY_TEXT),
         _ => None,
     };
-    let document = text.map(|text| <Fem3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).unwrap_or_default()).unwrap_or_default();
-    eprintln!("[TRACE] fem3d setActiveExample id={} nodes={} elements={} solids={}", payload.example_id, document.nodes.len(), document.elements.len(), document.solids.len());
+    let document = match text {
+        Some(text) => <Fem3dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text).map_err(|error| Fault::from(format!("fem3d.set-active-example.load: {error}")))?,
+        None => Fem3dSnapshot::default(),
+    };
     Ok(Emit { effects: vec![semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::reset_document_effect(&document)], ..Default::default() })
 }
 

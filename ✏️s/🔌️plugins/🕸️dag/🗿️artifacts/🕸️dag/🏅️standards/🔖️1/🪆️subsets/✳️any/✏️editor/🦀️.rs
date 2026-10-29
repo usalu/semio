@@ -700,8 +700,8 @@ impl ArtifactEditor for DagPlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->DagSnapshot>{Some(||{
-        crate::default_snapshot()
+    fn reference_birth()->Option<fn()->Result<DagSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::default_snapshot())
     })}
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by

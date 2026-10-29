@@ -132,8 +132,8 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// when it is actually switched to: warming them here parsed the Concrete Forest and Nakagin documents on
     /// every construction of this app — every mount, and every `codec` call of a hub creating or validating a
     /// document, where the interpreter paid for two documents the snapshot never reads.
-    fn reference_birth()->Option<fn()->Puzzle2dPlaySnapshot>{Some(||{
-        Puzzle2dPlaySnapshot::new(crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot())
+    fn reference_birth()->Option<fn()->Result<Puzzle2dPlaySnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Puzzle2dPlaySnapshot::new(crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot()))
     })}
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
@@ -193,10 +193,6 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// rebuilt from the next dispatch anyway. Without this hook (and the proofs below) both verbs fell
     /// through to `admit_command_json` and failed closed with `interactive-job.missing-factory`, so
     /// the Fill tool tab could not even be selected.
-    fn host_configuration_mutation(_action: &str, _args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok(None)
-    }
-
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = Puzzle2dRetainedCommandProofs::proofs();
         proofs.extend(Puzzle2dHostConfigurationProofs::proofs());

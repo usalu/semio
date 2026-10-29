@@ -95,16 +95,6 @@ impl WindowConfigOwnerRegistry {
     pub fn preview_input_demands(&self,kind:&str,window:&str,epoch:u64,body:usize)->Result<RetirementDemand,ValueError>{self.owners.get(kind).ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original Window preview owner is absent"))?.preview_input_demands(window,epoch,body)}
     /// 👁️ Borrows the current original published preview.
     pub fn preview_or<'a>(&'a self,committed:&'a WindowConfigSnapshot)->&'a WindowConfigSnapshot{self.owners.get(committed.window_kind_id()).map_or(committed,|owner|owner.preview_or(committed,self.preview_visible_epoch))}
-    /// 🧹️ Retires a [`Self::preview`] through its partition's store.
-    /// 🪞️ Moves one retained press operation toward window `window_id`'s provisional config of `epoch`; `Some` carries the progress of the catalog, birth or input step, `None` a refusal that waits for its owners.
-    #[doc(hidden)]
-    pub fn preview_input(&mut self,input:&semio_framework_value::retained_clone::RetainedOwnedProjection<WindowConfigMutation>,epoch:u64,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{let kind=input.borrow()?.get().window_kind_id;self.preview_owner_mut(kind)?.preview_input(input,epoch,grant)}
-    /// ✅️ Whether the press operations admitted for `epoch` are completely applied to window `window_id`'s provisional config.
-    #[doc(hidden)]
-    pub fn preview_leaf_ready(&self,window_kind_id:&str,window_id:&str,epoch:u64)->bool{self.owners.get(window_kind_id).is_some_and(|owner|owner.preview_leaf_ready(window_id,epoch))}
-    /// 🔒️ Whether window `window_id` still holds an admitted press operation of `epoch`.
-    #[doc(hidden)]
-    pub fn preview_input_held(&self,window_kind_id:&str,window_id:&str,epoch:u64)->bool{self.owners.get(window_kind_id).is_some_and(|owner|owner.preview_input_held(window_id,epoch))}
     /// 🔢️ The generation of window `window_id`'s published provisional config.
     #[doc(hidden)]
     pub fn preview_generation(&self,window_kind_id:&str,window_id:&str)->Option<u64>{self.owners.get(window_kind_id)?.preview_generation(window_id)}
@@ -123,16 +113,6 @@ impl WindowConfigOwnerRegistry {
         let Some((owner,local))=self.preview_locate(index)else{return Ok(Default::default());};
         self.owners.get_index(owner).expect("located preview owner remains registered").preview_partition_demands(local,epoch,closing,body)
     }
-    /// ⏯️ Advances partition `index` of the pass: finishing publishes its provisional config of `epoch` and retires the previous one, closing cancels the unfinished source and keeps the published config. The flag answers whether the partition has nothing left for this pass.
-    #[doc(hidden)]
-    pub fn preview_partition_step(&mut self,index:usize,epoch:u64,closing:bool,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),ValueError>{
-        let Some((owner,local))=self.preview_locate(index)else{return Ok((true,Default::default()));};
-        let mut proceed=|_|true;let mut receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut proceed);
-        self.owners.get_index_mut(owner).expect("located preview owner remains registered").preview_partition_step(local,epoch,closing,grant,&mut receiving)
-    }
-    /// 🪞️ The window config a render seam reads for `committed`'s window: its published provisional config when it was folded on that very generation, else `committed`.
-    #[doc(hidden)]
-    pub fn preview_or<'a>(&'a self,committed:&'a WindowConfigSnapshot)->&'a WindowConfigSnapshot{self.owners.get(committed.window_kind_id).map_or(committed,|owner|owner.preview_or(committed))}
     #[doc(hidden)]
     pub fn preview_retirement_pending(&self)->bool{self.owners.values().any(|owner|owner.preview_retirement_pending())}
     #[doc(hidden)]

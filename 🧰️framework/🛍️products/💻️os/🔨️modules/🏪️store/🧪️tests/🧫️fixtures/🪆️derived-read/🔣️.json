@@ -19,5 +19,26 @@
     "StoreTypedMutation",
     "StoreHistoryLedger"
   ],
-  "forbiddenInput": "CallerSnapshotAlias"
+  "forbiddenInput": "CallerSnapshotAlias",
+  "checkpointRead": {
+    "checkpoint": {
+      "n": 7
+    },
+    "live": {
+      "n": 11
+    },
+    "next": {
+      "n": 12
+    },
+    "admission": {
+      "genuine": true,
+      "foreign": false,
+      "stale": false
+    },
+    "underfundedAxes": [
+      "items",
+      "copy",
+      "depth"
+    ]
+  }
 }

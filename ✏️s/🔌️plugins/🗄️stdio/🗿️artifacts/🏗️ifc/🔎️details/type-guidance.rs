@@ -12,7 +12,7 @@ use choice_rows::Choices;
 const CARDINALITY:[&str;16]=["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15"];
 use semio_framework_job::{OriginalConstructionDemand, OriginalSourceBinding, OriginalTurnFailure, StepContext, admit_original_construction};
 use semio_framework_plugin::action_staging::*;
-use semio_framework_plugin::app::staged_form::*;
+use semio_framework_plugin_decl_staged_form::*;
 use semio_framework_value::retained_clone::{RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, retained_clone_grant_admits};
 use semio_framework_value::retirement::{RetireOwned, RetirementCursor};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};

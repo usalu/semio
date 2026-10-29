@@ -1,0 +1,18 @@
+# 1029 result testmig
+Status: IN PROGRESS (10:15 10/29) - migration DONE, native test compile BLOCKED by non-test library drift (see Blockers). Mechanical rewrite of all `.dispatch_typed(` call sites under `✏️s/**` + `🌎️hub/**` DONE by script (233 sites, 118 files); 8 multi-line/odd sites finished by hand/script v2; compile + run per plugin pending (queue; first attempt hit ENOSPC on the rust cache image, 3.3 GiB free).
+
+## Method
+- `C/1029-tools/testmig/migrate.py`: `RECV.dispatch_typed(CMD, META, IDENTITY, CX)` -> `semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut RECV, &CMD, META, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, IDENTITY, CX)` (exact generation3d reference shape; plain-identifier receivers that are `&mut` params become `&mut *recv`).
+- NOTE for main: `artifact_app_laws` ALSO gained a `DispatchTypedFixture` trait (`app.dispatch_typed(cmd,&meta,&mut identity,cx)` over `drive_typed`, added by `resume` ~07:11). It would have made the old call shape compile unchanged; per brief this migration uses the canonical action-ingress helper instead (the real UI path), so the trait is unused by ✏️s/🌎️hub.
+
+## Done
+- ALL `.dispatch_typed(` call sites under `✏️s/**` and `🌎️hub/**` rewritten to `artifact_app_laws::dispatch_original_fixture_command` (script `C/1029-tools/testmig/migrate.py`; 238 sites in 121 files) EXCEPT the hub space-engine fixture helper (`🌎️hub/🧩️compositions/🪐️space/⚙️engine/🪐️space/🧪️tests/🔬️unit/🦀️.rs:27`, 2-arg pre-cx shape: that whole fixture tree predates the cx/identity/policy API and needs a fixture-scope port, not a call rewrite).
+- Hand-ported (stale beyond the call shape): fem2d reconnect test (OriginalFixtureScope + cx on settle/tick/close; also repaired the mangled `Fem2dCommand::AddNode(Fem2dCommand::AddNode{..})` literals), puzzle2d presence test setup line.
+- puzzle3d (`semio-s-artifact-puzzle-3d-editor`): `Puzzle3dCommand` has no `ToValue`, so its fixtures go through `dispatch_fixture_action` (action id + args, window id folded into args as the shell sends it) instead of `dispatch_original_fixture_command`; shared `🧰️context` fixture repaired (prelude re-imports for the crate split taken from rustc suggestions, `settle_framework_reserved_admission`/`take_typed_operation_result_page`/`pending_effects` cx+grant arities, `pack::snapshot` -> `dsl::snapshot`).
+
+## Blockers found by the first native `check --tests --workspace` sweep (logs `C/🗑️generated/1029/testmig-<ws>.txt`)
+- `semio-framework-plugin-testing-laws` (artifact-app-laws, the library EVERY plugin test depends on) did not compile natively at 10:10: `bounded-viewer-fixture-and-viewer-laws/🦀️.rs:133-134` (`semio_framework_plugin_job::Fault` private, `reference_birth_fault` not in that crate; file edited by a peer at 10:07) -> sourcing/process/... test crates cannot even start. Not touched (changed <10 min ago).
+- Native lib drift (wasm lanes green, native red) found per workspace: generation3d (`geometry-inputs` super/Sync/iterator, `io-export`/`io-import` `Generation3dSnapshot: ArtifactDsl`, `preview-eval` 38 errors `FlowEvalSession::preview_mesh_pack`, `sqlite-native` `RetireOwned`), cad (`geometry-import` missing `semio_mesh_snapshot_from_mesh_data`/`mesh_extent`, `cad-transient` `transient_root!` needs `pack`+`semio_framework_os_kernel`, `cad-picking` private `GeometryOrder`, `cad-presence` duplicate `RetireOwned`, `cad-host` `CadStore::new` type annotation, `cad-inferences` stale `crate::CadWorkingScene`, `cad-config` tests `diff`/`inverse` need the trait import).
+
+## Per plugin
+(filled in as compiled)

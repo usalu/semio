@@ -7,7 +7,7 @@ use crate::snapshot::reference::EnergyModelSnapshot;
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
 pub fn inverse<Op>(payload: &super::DeleteAnnualSchedule, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
 where
-    Op: From<super::DeleteAnnualSchedule> + From<crate::AddAnnualScheduleHoliday> + From<crate::CreateAnnualSchedule> + From<crate::InsertAnnualScheduleRule>,
+    Op: From<super::DeleteAnnualSchedule> + From<crate::year_schedule_holidays_mutations::AddAnnualScheduleHoliday> + From<crate::CreateAnnualSchedule> + From<crate::InsertAnnualScheduleRule>,
 {
     Ok((|| {
     let Some(index) = base.model.schedules.annual.iter().position(|item| item.id == payload.id) else {
@@ -37,7 +37,7 @@ where
         steps.push(vocabulary::insert_annual_schedule_rule(existing.id, position as u32, rule.start_month, rule.start_day, rule.end_month, rule.end_day, rule.daily_schedule_id));
     }
     for (position, holiday) in existing.holiday_dates.iter().enumerate() {
-        steps.push(vocabulary::add_annual_schedule_holiday(existing.id, position as u32, holiday.0, holiday.1, holiday.2));
+        steps.push(crate::year_schedule_holidays_mutations::add_annual_schedule_holiday(existing.id, position as u32, holiday.0, holiday.1, holiday.2));
     }
     steps.reverse();
     steps

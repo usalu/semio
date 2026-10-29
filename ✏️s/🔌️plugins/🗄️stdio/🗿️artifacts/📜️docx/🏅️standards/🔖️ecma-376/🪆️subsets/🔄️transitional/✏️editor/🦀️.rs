@@ -101,7 +101,7 @@ fn required_docx_xml_address(args: Option<&semio_framework_value::DslValue>) -> 
     Ok(DocxXmlAddress { part_path: text("partPath")?, node_path, expected_name: text("expectedName")?, revision: text("revision")? })
 }
 
-semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::canonical_docx_set_page_work!(
+semio_s_artifact_stdio_docx_base::canonical_docx_set_page_work!(
     DocxTransitionalSetPageWork,
     docx_transitional_set_page_work,
     DocxTransitionalEditor,
@@ -186,11 +186,11 @@ impl ArtifactEditor for DocxTransitionalEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->DocxSnapshot>{Some(||{
-        semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
+    fn reference_birth()->Option<fn()->Result<DocxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
             body: vec![semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default())],
             styles: Vec::new(),
-        })
+        }))
     })}
 
     /// ✏️ Replaces the addressed paragraph's text after its optimistic revision matches.

@@ -2,11 +2,14 @@
 #[path="🎮️command/🎯️action/🦀️.rs"]
 pub mod original_action_command;
 pub use original_action_command::{ArtifactOriginalCommandProducer,ArtifactOriginalCommandProducerFactory};
+#[path="🎮️command/🧬️op-binary/🦀️.rs"]
+pub mod original_op_binary_command;
+pub use original_op_binary_command::{admit_op_binary_producer,declared_action_command_bridge,OriginalActionCommandBridge,OriginalCommandBirth,RUNTIME_COMMAND_WIRE_MAXIMUM};
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_framework_diagnostic::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_plugin_decl_views::gesture_contract::GestureSlot;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin_decl_views::gesture_contract::GestureCapture;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunView;
 use semio_framework_job::JobOutcomeBorrow;
@@ -47,8 +50,8 @@ use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure;
 use semio_framework_plugin_decl_views::child_view::ChildContentView;
 use semio_framework_plugin_decl_views::history_view::HistoryView;
-use semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput;
-pub use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
+pub use semio_framework_plugin_decl_media::ArtifactOutputChunks;
 
 use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal;

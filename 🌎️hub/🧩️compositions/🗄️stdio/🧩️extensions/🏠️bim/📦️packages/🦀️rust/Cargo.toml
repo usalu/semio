@@ -21,6 +21,7 @@ path = "../../🦀️.rs"
 semio-framework-pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 # 🧩️ Composition Dependencies
 semio-s-artifact-stdio-ifc = { workspace = true }
+semio-s-artifact-stdio-ifc-catalog = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-model = { workspace = true }
 semio-s-artifact-stdio-ifc-2x3-base-mutations = { workspace = true }

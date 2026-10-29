@@ -101,7 +101,7 @@ async fn assert_editor<E: ArtifactEditor + SnapshotEditingEditor>(definition: Ap
         assert_eq!(replay.encode_op().unwrap(), bytes, "replay preserves every argument of {id}");
     }
     let registry = AppActionRegistry::from_definition(&definition);
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| EditorSurfaceApp::<E>::with_registry(EditorApp::<E>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| EditorSurfaceApp::<E>::with_registry(EditorApp::<E>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
     let family = definition.id.strip_prefix("s.stdio.").unwrap().split('@').next().unwrap();
     let edits = &fixture["snapshotEdits"];
     let case = edits.get(&definition.id).or_else(|| edits.get(family)).unwrap_or_else(|| panic!("{} needs a meaningful edit fixture", definition.id));

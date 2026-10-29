@@ -39,16 +39,16 @@ pub trait ArtifactEditor: Default + Send + 'static {
     fn examples() -> Vec<ExampleSource> {
         Vec::new()
     }
-    type Snapshot: PartialEq + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactPackMetadata + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
-    type Mutation: protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type Snapshot: ::semio_framework_os_kernel::StoreState + PartialEq + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactPack + pack::snapshot::ArtifactPackMetadata + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
+    type Mutation: ::semio_framework_os_kernel::StoreMutationFor<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: Clone + ::protocol::ColdMutation<Self::Config> + ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::replication::OpBinaryReceiving + 'static;
     type Draft: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type DraftMutation: Clone + ::protocol::ColdMutation<Self::Draft> + ::protocol::Mutation<Self::Draft> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
-    type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type PresenceMutation: Clone + ::protocol::ColdMutation<Self::Presence> + ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Transient: semio_framework_value::retirement::RetireOwned + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
-    type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type TransientMutation: Clone + ::protocol::ColdMutation<Self::Transient> + ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Command: ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static;
 
     /// 📜️ Exact owner-local bounded reducer proofs forwarded by `EditorApp<Self>`.
@@ -249,8 +249,12 @@ pub trait ArtifactEditor: Default + Send + 'static {
         generation: semio_framework_job::Generation,
         actor: ActorId,
     ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
+        Self::admit_document_store_publication_authority(operation, generation);
         Ok(bounded_document_store_initialization_job::<_,_,EditorDocumentStoreOwnerProducer<Self>>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
+
+    /// 🎟️ Grants the lease the framework-default initializer's replacement presents to [`Self::validate_document_store_publication`]; a domain with [`Self::REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY`] admits its own here, every other domain keeps this no-op.
+    fn admit_document_store_publication_authority(_operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation) {}
 
     fn validate_document_store_publication(_operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
         if Self::REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY {
@@ -307,9 +311,7 @@ pub trait ArtifactEditor: Default + Send + 'static {
     }
     /// 🧭️ Resolves a host-owned control-plane action to one configuration mutation.
     /// `EditorApp<E>` forwards this exact owner hook to the runtime adapter.
-    fn host_configuration_mutation(_action: &str, _args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok(None)
-    }
+    fn original_host_configuration(_action:&str)->Option<&'static semio_framework_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{None}
     fn initial_draft() -> Self::Draft {
         Self::Draft::default()
     }

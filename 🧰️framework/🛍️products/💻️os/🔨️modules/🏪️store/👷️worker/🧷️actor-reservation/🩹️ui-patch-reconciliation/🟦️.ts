@@ -79,13 +79,14 @@ export class ReservationUiPatches {
     let mutations = 0;
     let lastRejection: string | null = null;
     const jobs: BrowserActorSpawnedJob[] = [];
-    const acknowledgements: BrowserActorChildValue[] = [];
+    const owed: BrowserActorChildValue[] = [];
+    let patchCount = 0;
     try {
-      for (let patchCount = 0; patchCount < 8; patchCount += 1) {
+      for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
         const routed = await this.hub.effects.routeTurnEffects(value, publication ?? "ordinary", receiveReply);
         mutations += routed.mutations;
         jobs.push(...routed.jobs);
-        acknowledgements.push(...routed.acknowledgements);
+        owed.push(...routed.acknowledgements);
         if (publication !== null) {
           publication.frames += routed.publications;
           publication.refusals.push(...routed.refusals);
@@ -98,14 +99,16 @@ export class ReservationUiPatches {
         }
         if (mutations > BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM) throw new Error("document browser actor: mutation effect limit");
         const captured = this.captureUiPatch(value, lifetime);
-        if (captured === null && (jobs.length !== 0 || acknowledgements.length !== 0)) {
-          const completions = await this.hub.lanes.driveSpawnedJobs(child, jobs.splice(0), assertCurrent);
+        if (captured === null && (jobs.length !== 0 || owed.length !== 0)) {
+          owed.push(...(await this.hub.lanes.driveSpawnedJobs(child, jobs.splice(0), assertCurrent)));
           wipeBrowserActorValue(value);
           value = null;
-          value = await this.hub.lanes.invokePoll(child, [...acknowledgements.splice(0), ...completions], null, assertCurrent);
+          value = await this.hub.lanes.invokePoll(child, owed.splice(0, 1), null, assertCurrent);
           continue;
         }
         if (captured === null) return { moreWork: browserActorRecord(browserActorTurnResult(value).status, "document browser actor: invalid render status").tag === "more-work", mutations };
+        if (patchCount === 8) break;
+        patchCount += 1;
         const fields = this.session.lease.fields();
         const offer: BrowserActorUiPatchOfferV1 = {
           kind: "browser-actor-ui-patch",
@@ -136,7 +139,8 @@ export class ReservationUiPatches {
         });
         const windowVerdict = result.verdicts.find((verdict) => verdict.surface === this.session.windowKindId);
         if (windowVerdict?.outcome === "acknowledged") this.session.renderedUiPatch = true;
-        value = await this.hub.lanes.invokePoll(child, [...feedback, ...acknowledgements.splice(0)], null, assertCurrent);
+        owed.unshift(...feedback);
+        value = await this.hub.lanes.invokePoll(child, owed.splice(0, 1), null, assertCurrent);
         assertCurrent();
         if (browserActorColdStatus(value).kind !== "idle") throw new Error("document browser actor: cold ingress after patch feedback");
         if (windowVerdict?.outcome === "acknowledged") this.session.acknowledgedUiRevision = windowVerdict.revision;

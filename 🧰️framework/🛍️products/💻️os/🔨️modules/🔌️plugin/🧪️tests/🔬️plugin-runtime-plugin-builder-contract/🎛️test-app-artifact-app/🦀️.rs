@@ -16,7 +16,7 @@
 
         fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             if RETAINED {
-                return Some(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>());
+                return Some(store::cold_mutation_apply_preparation_factory::<TestSnapshot, TestMutation>());
             }
             (TOOLS != TEST_APP_TOOLS_NONE).then(test_document_preparation_factory)
         }
@@ -26,11 +26,11 @@
         }
 
         fn build_presence_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Presence, Self::PresenceMutation>>> {
-            (TOOLS != TEST_APP_TOOLS_NONE).then(semio_framework_plugin_ownership::transient_publication::bounded_transient_preparation_factory::<Self::Presence, Self::PresenceMutation>)
+            None
         }
 
         fn build_transient_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<Self::Transient, Self::TransientMutation>>> {
-            (TOOLS != TEST_APP_TOOLS_NONE).then(semio_framework_plugin_ownership::transient_publication::bounded_transient_preparation_factory::<Self::Transient, Self::TransientMutation>)
+            None
         }
 
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
@@ -113,8 +113,8 @@
             Some(semio_framework_plugin_ownership::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default())))
         }
 
-        fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
-            TestSnapshot::default()
+        fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework::Fault>>{Some(||{
+            Ok(TestSnapshot::default())
         })}
 
         async fn ephemeral(

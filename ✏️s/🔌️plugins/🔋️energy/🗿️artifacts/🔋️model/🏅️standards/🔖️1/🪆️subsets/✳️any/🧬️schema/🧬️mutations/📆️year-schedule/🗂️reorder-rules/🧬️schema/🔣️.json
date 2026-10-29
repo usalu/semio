@@ -96,7 +96,7 @@
     "semantics": {
       "verb": "reorder",
       "entity": "annual-schedule",
-      "kind": "schedule",
+      "kind": "reorder-annual-schedule-rules",
       "record": "ReorderAnnualScheduleRules"
     },
     "diagnostics": {

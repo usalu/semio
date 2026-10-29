@@ -1,10 +1,10 @@
 //! 🔢️ Scalar row policies use the shared original semantic leaf owner.
 use super::*;
 use crate::leaf::{RowFieldPreparation,RowLeafSpec,RowLeafPreparation};
-use protocol::mutation::retained::RetainedDiagnosticSpec;
+use protocol::RetainedDiagnosticSpec;
 /// 🏷️ Each authored schema field supplies its native address and typed inverse, without an erased payload map.
 pub trait ScalarLeafSpec<L,M>:ScalarRowPath{
- const INVALID_REFERENCE:protocol::mutation::retained::RetainedDiagnosticSpec=Self::INVALID;
+ const INVALID_REFERENCE:protocol::RetainedDiagnosticSpec=Self::INVALID;
  const INVALID:RetainedDiagnosticSpec;
  const UNCHANGED:RetainedDiagnosticSpec;
  const MISSING:RetainedDiagnosticSpec;
@@ -17,7 +17,7 @@ pub trait ScalarLeafSpec<L,M>:ScalarRowPath{
 
 /// 🧭️ Scalar recipe policy keeps its copied inverse type while sharing the diagnostic and factory owner.
 pub struct ScalarSpec<S>(std::marker::PhantomData<fn()->S>);
-impl<L,M,S:ScalarLeafSpec<L,M>> RowLeafSpec<L,M> for ScalarSpec<S>{type Input=S::Scalar;type Inverse=S::Scalar;type Core=ScalarRowPreparation<S>;const INVALID:RetainedDiagnosticSpec=S::INVALID;const INVALID_REFERENCE:RetainedDiagnosticSpec=S::INVALID_REFERENCE;const UNCHANGED:RetainedDiagnosticSpec=S::UNCHANGED;const MISSING:RetainedDiagnosticSpec=S::MISSING;fn input(p:RetainedCloneRef<'_,L>)->RetainedCloneRef<'_,Self::Input>{S::input(p)}fn key(p:RetainedCloneRef<'_,L>)->Option<RetainedCloneRef<'_,u32>>{Some(S::key(p))}fn inverse(p:RetainedCloneRef<'_,L>,v:Self::Inverse)->M{S::inverse(p,v)}fn diagnostic_targets(p:RetainedCloneRef<'_,L>,o:ScalarOutcome)->Result<[protocol::mutation::retained::RetainedDiagnosticTarget<'_>;1],ValueError>{Ok([protocol::mutation::retained::RetainedDiagnosticTarget::Unsigned(if o==ScalarOutcome::InvalidReference{S::reference_target(p)}else{S::key(p)})])}}
+impl<L,M,S:ScalarLeafSpec<L,M>> RowLeafSpec<L,M> for ScalarSpec<S>{type Input=S::Scalar;type Inverse=S::Scalar;type Core=ScalarRowPreparation<S>;const INVALID:RetainedDiagnosticSpec=S::INVALID;const INVALID_REFERENCE:RetainedDiagnosticSpec=S::INVALID_REFERENCE;const UNCHANGED:RetainedDiagnosticSpec=S::UNCHANGED;const MISSING:RetainedDiagnosticSpec=S::MISSING;fn input(p:RetainedCloneRef<'_,L>)->RetainedCloneRef<'_,Self::Input>{S::input(p)}fn key(p:RetainedCloneRef<'_,L>)->Option<RetainedCloneRef<'_,u32>>{Some(S::key(p))}fn inverse(p:RetainedCloneRef<'_,L>,v:Self::Inverse)->M{S::inverse(p,v)}fn diagnostic_targets(p:RetainedCloneRef<'_,L>,o:ScalarOutcome)->Result<[protocol::RetainedDiagnosticTarget<'_>;1],ValueError>{Ok([protocol::RetainedDiagnosticTarget::Unsigned(if o==ScalarOutcome::InvalidReference{S::reference_target(p)}else{S::key(p)})])}}
 pub type ScalarLeafPreparation<L,M,S>=RowLeafPreparation<L,M,ScalarSpec<S>>;
 impl<S:ScalarRowPath> RowFieldPreparation for ScalarRowPreparation<S>{
  type Input=S::Scalar;type Inverse=S::Scalar;

@@ -23,6 +23,24 @@ pub(super) fn process3d_render_body(body_key: &str, doc: &Process3dSnapshot, con
     }
 }
 
+/// 🏭️ Declares the owned machine contribution projection before payload production.
+static PROCESS3D_ORIGINAL_HOST_CONTRIBUTIONS: semio_framework_plugin::OriginalHostConfigurationDeclaration<Process3dConfigMutation> = semio_framework_plugin::OriginalHostConfigurationDeclaration {
+    maximum_input_bytes: semio_s_artifact_process_process3d_kit::PROCESS_CONTRIBUTION_MAX_BYTES,
+    maximum_output_bytes: PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES,
+    projection: semio_framework_plugin::OriginalHostConfigurationProjection::Contributions(semio_framework_plugin::OriginalContributionProjection {
+        maximum_depth: semio_s_artifact_process_process3d_kit::PROCESS_CONTRIBUTION_MAX_DEPTH,
+        maximum_items: semio_s_artifact_process_process3d_kit::PROCESS_CONTRIBUTION_MAX_ITEMS,
+        maximum_string_bytes: semio_s_artifact_process_process3d_kit::PROCESS_CONTRIBUTION_MAX_STRING_BYTES,
+        topic: "process.machines",
+        app_id: semio_s_artifact_process_process3d_kit::PROCESS_3D_PLAY_APP_ID,
+        payload_fields: &["appId", "moduleId", "label", "iconId", "machinesJson"],
+        excluded_module_ids: &[],
+        deduplicate_modules: false,
+        maximum_modules: usize::MAX,
+    }),
+    mutation: |json| Process3dConfigMutation::SetContributions(Process3dConfigSetContributions { json }),
+};
+
 impl ArtifactEditor for Process3dPlayApp {
     /// 📢️ The localized notices of this editor's user-reachable refusals (design §20.12).
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
@@ -105,13 +123,9 @@ impl ArtifactEditor for Process3dPlayApp {
         Some(semio_s_artifact_process_process3d_host::process3d_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_s_artifact_process_process3d_host::process3d_document_store_initialization_job(envelope, operation, generation, actor))
+    /// 🎟️ Admits the lease that [`Self::validate_document_store_publication`] consumes when the framework-default initializer's replacement commits.
+    fn admit_document_store_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) {
+        let _ = semio_s_artifact_process_process3d_host::process3d_admit_app_publication_authority(operation, generation);
     }
 
     /// 🔐️ The exact publication gate the host consults once, right before its non-rejecting commit
@@ -170,8 +184,8 @@ impl ArtifactEditor for Process3dPlayApp {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Process3dSnapshot>{Some(||{
-        semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document()
+    fn reference_birth()->Option<fn()->Result<Process3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -327,11 +341,10 @@ impl ArtifactEditor for Process3dPlayApp {
         }
     }
 
-    fn host_configuration_mutation(action: &str, args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok((action == "setContributions").then(|| Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{
-            json: installable_contributions(args.and_then(|value| value.get("json")).and_then(DslValue::as_str).unwrap_or("[]"), PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES),
-        })))
+    fn original_host_configuration(action: &str) -> Option<&'static semio_framework_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
+        (action == "setContributions").then_some(&PROCESS3D_ORIGINAL_HOST_CONTRIBUTIONS)
     }
+
 
     /// 🕹️ FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM (26/08/14): reads the framework-owned
     /// `"geometry"` domain selection once per dispatch and threads it through `Process3dDispatchCtx`

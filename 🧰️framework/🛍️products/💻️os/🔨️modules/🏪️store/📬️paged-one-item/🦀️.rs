@@ -9,7 +9,7 @@ use semio_framework_value_snapshot_read::{artifact_retirement_admit_owned, artif
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 pub use semio_framework_os_store_one_item::{PagedOneItemEdit,PagedOneItemEditStep};
-use semio_framework_os_store_one_item::{OriginalPostRead,PagedOneItemPostMode};
+use semio_framework_value_snapshot_projection::snapshot_projection::post::{OriginalPostRead,PagedOneItemPostMode};
 use semio_framework_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES};
 use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared};
 use semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
@@ -281,7 +281,7 @@ struct PagedOneItemPreparation<S: SnapshotProjection<Output = S>, M: Send + Sync
     pub closing: bool,
 }
 
-impl<S:SnapshotProjection,M:semio_framework_value::retirement::RetireOwned+Send+Sync+'static,E:PagedOneItemEdit<S,M>> PagedOneItemPreparation<S,M,E>{
+impl<S:SnapshotProjection<Output=S>,M:semio_framework_value::retirement::RetireOwned+Send+Sync+'static,E:PagedOneItemEdit<S,M>> PagedOneItemPreparation<S,M,E>{
     fn placement_demand(&self)->Result<RetirementDemand,ValueError>{
         let mut demand=S::Output::placement_demand();
         demand.copy_bytes=demand.copy_bytes.checked_add(2*size_of::<Option<S::Output>>()+2*size_of::<S>()).ok_or_else(||fault(E::PREFIX,"projection-placement-quote"))?;

@@ -22,7 +22,7 @@ use std::sync::Arc;
 use typed_input_law::{typed_command_retirement_law, typed_input_retirement_law};
 
 fn boot() -> Block3dSnapshot {
-    <Block3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")()
+    <Block3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births")
 }
 
 fn representation() -> BlockRepresentation {

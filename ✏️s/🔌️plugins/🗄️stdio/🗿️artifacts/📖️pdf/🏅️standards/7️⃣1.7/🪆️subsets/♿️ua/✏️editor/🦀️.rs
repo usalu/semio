@@ -149,8 +149,8 @@ impl ArtifactEditor for Pdf17UaEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->PdfSnapshot>{Some(||{
-        <crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction::new("und")).expect("authored blank UA owner must satisfy its profile")
+    fn reference_birth()->Option<fn()->Result<PdfSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        <crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction::new("und")).map_err(|error|semio_framework_plugin::reference_birth_fault("authored blank UA owner must satisfy its profile",format_args!("{error:?}")))
     })}
 
     /// ✏️ Replaces the addressed page's Unicode text projection while retaining encoded text,

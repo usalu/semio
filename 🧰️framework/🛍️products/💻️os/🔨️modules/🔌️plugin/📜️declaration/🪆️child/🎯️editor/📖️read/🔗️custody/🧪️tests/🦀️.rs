@@ -1,6 +1,6 @@
 //! 🔗️ A qualified child retains the actual original registry payload through every funded issue/cancel cut.
 use super::*;
-use crate::child_view::{ChildContentEntry,editor::source::{ChildEditorFields,ChildEditorRequest,ChildEditorSourceCursor,ChildEditorSourceStep}};
+use crate::child_view::{ChildContentEntry,child_editor::source::{ChildEditorFields,ChildEditorRequest,ChildEditorSourceCursor,ChildEditorSourceStep}};
 use std::sync::Arc;
 static EDITOR:ChildEditorCapability=ChildEditorCapability{artifact_kind:"s.fixture.child",standard:"1",subset:"*",editor_id:"s.fixture.child@1/*#editor",command_id:"edit"};
 fn original()->RetainedCloneGrant{let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🧭️source/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let g=&fixture["custodyGrant"];RetainedCloneGrant{maximum_items:g["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:g["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:g["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:g["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:g["maximumDepth"].as_u64().unwrap()as usize}}

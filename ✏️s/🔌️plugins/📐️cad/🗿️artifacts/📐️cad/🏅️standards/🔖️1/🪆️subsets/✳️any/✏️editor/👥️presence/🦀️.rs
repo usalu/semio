@@ -26,7 +26,9 @@ pub mod retirement;
 #[artifact(extension = "cad.presence")]
 #[dsl(layout = "lines")]
 pub struct CadPresence {
+    #[value(required)]
     pub camera_position: [f64; 3],
+    #[value(required)]
     pub camera_target: [f64; 3],
     pub camera_zoom: f64,
     pub camera_fov: f64,

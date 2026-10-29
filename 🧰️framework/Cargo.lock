@@ -5016,6 +5016,7 @@ dependencies = [
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-ordered",
  "semio-framework-value-paged-text",
  "semio-framework-value-persistent",
  "serde",
@@ -6508,6 +6509,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-projection",
  "serde",
 ]
 
@@ -7798,6 +7800,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-trace",
  "semio-framework-value",
+ "serde_json",
 ]
 
 [[package]]
@@ -8289,6 +8292,7 @@ dependencies = [
  "semio-framework-ui-draw-contract",
  "semio-framework-ui-prepared",
  "semio-framework-ui-prepared-staging",
+ "semio-framework-ui-scene",
  "semio-framework-ui-theme",
  "semio-framework-value",
  "serde_json",
@@ -8373,6 +8377,7 @@ dependencies = [
  "parley",
  "semio-framework-test-fixtures",
  "semio-framework-ui-render-packet",
+ "semio-framework-value",
  "serde_json",
  "swash",
 ]

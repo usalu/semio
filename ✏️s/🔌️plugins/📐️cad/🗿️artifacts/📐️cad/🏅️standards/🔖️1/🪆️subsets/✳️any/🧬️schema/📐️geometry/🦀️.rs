@@ -546,7 +546,7 @@ fn curve_mesh_from_wire(kernel: &mut Brep, wire: &GeometryHandle) -> Option<Mesh
 /// indexed positions verbatim, no normals/uvs since `MeshData` carries indices shared across a
 /// flat position pool rather than glTF-style parallel per-vertex arrays — `None` for degenerate
 /// input (not a multiple of 3 indices), never a fabricated triangle).
-pub(crate) fn semio_mesh_snapshot_from_mesh_data(mesh: &MeshData) -> Option<SemioMeshSnapshot> {
+pub fn semio_mesh_snapshot_from_mesh_data(mesh: &MeshData) -> Option<SemioMeshSnapshot> {
     if mesh.indices.is_empty() || !mesh.indices.len().is_multiple_of(3) || mesh.positions.is_empty() {
         return None;
     }
@@ -566,7 +566,7 @@ pub(crate) fn semio_mesh_snapshot_from_mesh_data(mesh: &MeshData) -> Option<Semi
 /// kernel's OBJ reader can round-trip into a solid; `None` when the mesh has no real triangles.
 
 
-pub(crate) fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
+pub fn mesh_extent(mesh: &MeshData) -> Option<[f64; 3]> {
     if mesh.positions.is_empty() {
         return None;
     }

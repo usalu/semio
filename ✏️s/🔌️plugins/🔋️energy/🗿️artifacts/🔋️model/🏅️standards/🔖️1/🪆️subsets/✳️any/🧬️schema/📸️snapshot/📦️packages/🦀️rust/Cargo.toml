@@ -43,11 +43,13 @@ semio-s-plugin-energy-engine-air-exchange = { workspace = true }
 semio-s-plugin-energy-engine-calendar = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
+semio-s-artifact-energy-model-snapshot-sqlite-admission = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-async = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-replication = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }

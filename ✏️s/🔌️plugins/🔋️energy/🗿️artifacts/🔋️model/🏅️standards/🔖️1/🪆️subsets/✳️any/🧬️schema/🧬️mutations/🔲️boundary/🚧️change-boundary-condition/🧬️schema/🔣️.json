@@ -155,7 +155,7 @@
     "semantics": {
       "verb": "change",
       "entity": "surface",
-      "kind": "change-boundary-condition",
+      "kind": "change-surface-boundary-condition",
       "record": "ChangedSurfaceBoundaryCondition"
     },
     "diagnostics": {

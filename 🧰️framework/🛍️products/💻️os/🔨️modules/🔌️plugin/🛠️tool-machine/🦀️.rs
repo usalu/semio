@@ -31,6 +31,8 @@ use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(test)]
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use pack::snapshot::ArtifactPack;
+use std::collections::BTreeMap;
+use semio_framework_plugin_window_config::WindowConfigSnapshot;
 use semio_framework_plugin_decl_emission::{ChildEmit, Emit, HostEvent};
 use semio_framework_value::{DslValue, ValueError};
 use semio_framework::{Fault, FaultFrom};
@@ -56,8 +58,6 @@ use std::sync::Arc;
 #[doc(hidden)]
 #[path="🖐️gesture/🎟️issuer/🦀️.rs"]
 pub mod gesture_issuer;
-#[path="🪞️window-preview/🦀️.rs"]
-pub mod window_preview;
 use crate::tool_jobs_tool_machine::gesture_issuer::GestureOperation;
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
@@ -83,7 +83,7 @@ fn fold_leaf<P: Clone, M: Mutation<P>+protocol::ColdMutation<P>>(committed: &Arc
 //#region 🔖️Tag
 /// 🏷️ One continuous-control dispatch as its operation carries it to publication: the dispatching window, the tool
 /// `<appId>#<verb>` and where the dispatch sits in its press.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct ScrubTag {
     pub window: String,
     pub tool: String,
@@ -92,7 +92,7 @@ pub struct ScrubTag {
 
 /// ⌨️ One live typing delivery as its operation carries it to publication: the typing window, the tool `<appId>#<verb>` and
 /// the buffer typed into.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub struct TypingTag {
     pub window: String,
     pub tool: String,
@@ -100,7 +100,7 @@ pub struct TypingTag {
 }
 
 /// 🏷️ What an admitted operation carries to its publication: a press of a continuous control or a typed edit.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetireOwned)]
 pub enum ToolTag {
     Scrub(ScrubTag),
     Typing(TypingTag),
@@ -145,7 +145,7 @@ pub fn gesture_host_event(event: &HostEvent) -> GestureHostEvent {
 /// them all: a tick holds them as the press's provisional overlay, the release commits them as ONE transaction, a late input
 /// of a closed press and a refused input leave every lane as it was, a host abort drops them all with zero trace.
 #[doc(hidden)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(Clone, semio_framework_value::RetireOwned)]
 pub enum PressLeaf<M, CM> {
     Member(M),
     Child(ChildEmit),
@@ -237,7 +237,7 @@ impl<P, M:RetireOwned+Send+'static, C, CM> Default for ToolMachineRuntime<P, M, 
     }
 }
 
-impl<P, M: Mutation<P> + ColdMutation<P> + Clone + RetireOwned+Send+'static, C, CM: Mutation<C> + ColdMutation<C> + Clone + 'static> ToolMachineRuntime<P, M, C, CM> {
+impl<P, M: RetireOwned + protocol::StoreMutationFor<P>, C, CM: Mutation<C> + ColdMutation<C> + Clone + 'static> ToolMachineRuntime<P, M, C, CM> {
     /// 🔎️ The open typing runs.
     pub fn typing(&self) -> &TypingLedger<M> {
         &self.typing
@@ -278,27 +278,11 @@ impl<P, M: Mutation<P> + ColdMutation<P> + Clone + RetireOwned+Send+'static, C, 
         semio_framework_tool_machine::authoring_clock(self.tick)
     }
 
-    /// 🏷️ Keeps `tag` for the admitted `operation` until its completion publishes; the oldest tag of an operation that
-    /// never completed (a superseded latest-wins tick) yields its place.
-    pub fn bind(&mut self, operation: u64, tag: ToolTag) {
-        if self.operations.len() >= ARTIFACT_LIVE_OUTPUT_SLOTS {
-            self.operations.remove(0);
-        }
-        self.operations.push((operation, tag));
-    }
-
-    pub fn operation_tag(&self,operation:u64)->Option<&ToolTag>{self.operations.iter().find(|(owner,_)|*owner==operation).map(|(_,tag)|tag)}
-
-    pub fn take_operation(&mut self, operation: u64) -> Option<ToolTag> {
-        let index = self.operations.iter().position(|(owner, _)| *owner == operation)?;
-        Some(self.operations.remove(index).1)
-    }
-
     /// 🪞️ Refolds the overlay on `committed` (store generation `generation`) when a press or run changed or the document
     /// moved under one. Scrub leaves are absolute and fold on any base (a leaf the base refuses is skipped); a typing run
     /// whose leaves the moved base refuses is a conflict and aborts with zero trace (`baseMoved`). Answers every snapshot
     /// alias the refold displaced (the caller retires them through the store, never plainly) and every aborted run.
-    pub fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) where P: Clone,M:protocol::ColdMutation<P> {
+    pub fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) where P: Clone,M: protocol::StoreMutationFor<P> {
         if self.presses.provisional().all(|leaf| leaf.member().is_none()) && self.gestures.is_empty() && self.typing.is_empty() {
             let dropped: Vec<Arc<P>> = self.overlay.take().into_iter().collect();
             self.provisional_generation = self.provisional_generation.wrapping_add(u64::from(!dropped.is_empty()));
@@ -359,8 +343,25 @@ impl<P, M: Mutation<P> + ColdMutation<P> + Clone + RetireOwned+Send+'static, C, 
 //#endregion 🧪️Tests
 
 /// 🔁️ Continuous overlays use the same original semantic producer as retained run operations.
-pub use crate::original_operations::OriginalToolOverlayFold;
 
 #[path="🔁️follow/🦀️.rs"]
 mod original_follow;
 pub use original_follow::OriginalToolMachineFollow;
+
+#[path="🧵️settlement/🦀️.rs"]
+mod original_press_settlement;
+pub use original_press_settlement::OriginalPressSettlement;
+
+#[path="🏷️tag/🧵️original/🦀️.rs"]
+mod original_tool_tag;
+pub use original_tool_tag::{OriginalToolTagCapture,OriginalToolTagSource,OriginalToolTagKind,OriginalToolWindow};
+
+impl<P,M:RetireOwned+Send+'static,C,CM> ToolMachineRuntime<P,M,C,CM>{
+    pub fn operation_tag(&self,operation:u64)->Option<&ToolTag>{self.operations.iter().find(|(owner,_)|*owner==operation).map(|(_,tag)|tag)}
+
+    pub fn take_operation(&mut self, operation: u64) -> Option<ToolTag> {
+        let index = self.operations.iter().position(|(owner, _)| *owner == operation)?;
+        Some(self.operations.remove(index).1)
+    }
+
+}

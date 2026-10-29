@@ -111,7 +111,9 @@ pub async fn pump_brush_suggestions(app: &mut Puzzle3dApp, what: &str, until: im
     let mut settled = Puzzle3dSettled::default();
     for turn in 0..FILL_RUN_TURNS {
         let view = app.window_view(semio_s_artifact_puzzle_3d_editor_config::WINDOW_KIND_ID);
-        for effect in app.pending_effects(Some(&view)).await {
+        let (raw, cx) = app.parts();
+        let pending = raw.pending_effects(Some(&view), cx).await.expect("pending effects of the live app");
+        for effect in pending {
             if let Effect::DispatchAction { action, args, .. } = effect {
                 tool_run_action(app, &action, args.as_ref().map(semio_framework_pack_json::from_dsl_value).unwrap_or(Value::Null)).await;
             }

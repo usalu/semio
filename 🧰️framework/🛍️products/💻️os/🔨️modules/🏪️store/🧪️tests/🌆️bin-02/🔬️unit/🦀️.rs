@@ -698,6 +698,75 @@ async fn derived_child_reads_require_the_exact_store_frontier_and_genuine_operat
     assert_eq!(registry, stale.as_ref().unwrap().registry.identity());
     assert!(stale.as_ref().unwrap().replay.is_none(), "stale planning never begins projection work");
     drop(stale);
+    let checkpoint_case=&fixture["checkpointRead"];
+    assert_eq!(store.snapshot_ref().n,checkpoint_case["checkpoint"]["n"].as_i64().map(|value|value as i32));
+    store.dispatch(ArtifactCommand::CommitCheckpoint{message:None,authors:Vec::new()},&mut identity).await.expect("actual selected checkpoint publication");
+    let checkpoint_id=store.envelope().vcs.checkpoints[0].id.clone();
+    store.dispatch(ArtifactCommand::Apply{mutations:vec![DemoMutation::SetN(SetN{n:checkpoint_case["live"]["n"].as_i64().unwrap()as i32})],transaction:None},&mut identity).await.expect("distinct live frontier after checkpoint");
+    let grant=physical_test_close_grant();
+    let birth=ArtifactStore::<DemoSnapshot,DemoMutation>::derived_checkpoint_preview_admission_demands();
+    let birth_grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:birth.copy_bytes,maximum_capacity_bytes:birth.capacity_bytes,maximum_release_bytes:birth.release_bytes,maximum_depth:birth.depth};
+    for denied in [RetainedCloneGrant{maximum_items:0,..birth_grant},RetainedCloneGrant{maximum_copy_bytes:birth.copy_bytes-1,..birth_grant},RetainedCloneGrant{maximum_depth:0,..birth_grant}]{assert!(store.begin_derived_checkpoint_preview(&checkpoint_id,denied).unwrap().is_none());}
+    let(mut preview,birth_receipt)=store.begin_derived_checkpoint_preview(&checkpoint_id,birth_grant).expect("actual checkpoint source").expect("exact checkpoint source frame");
+    assert_eq!(birth_receipt,semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:birth.copy_bytes,..Default::default()});
+    assert!(store.finished_history_preview_read_demands(&preview).is_err(),"unfinished checkpoint cannot issue a read");
+    for _ in 0..100_000{
+        if preview.finished{break}
+        receiving_fixture.receive(|receiving|store.step_derived_checkpoint_preview(&mut preview,&checkpoint_id,grant,receiving,&mut||false)).expect("fold exact checkpoint ledger");
+    }
+    assert!(preview.finished,"checkpoint source reaches its exact selected state");
+    let selected=preview.state.as_ref().expect("finished selected checkpoint");
+    let selected_pointer=Arc::as_ptr(selected);
+    assert_eq!(selected.n,checkpoint_case["checkpoint"]["n"].as_i64().map(|value|value as i32));
+    assert_eq!(store.snapshot_ref().n,checkpoint_case["live"]["n"].as_i64().map(|value|value as i32));
+    assert_ne!(selected_pointer,store.snapshot_ref()as*const DemoSnapshot);
+    let portable:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(selected.as_ref())).unwrap();
+    assert_eq!(portable,checkpoint_case["checkpoint"]);
+    assert_eq!(portable,serde_json::to_value(selected.as_ref()).expect("independent selected projection output"));
+    let demand=store.finished_history_preview_read_demands(&preview).unwrap();
+    let exact=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth};
+    let mut selected_read=None;
+    for axis in checkpoint_case["underfundedAxes"].as_array().unwrap(){
+        let mut denied=exact;
+        match axis.as_str().unwrap(){"items"=>denied.maximum_items-=1,"copy"=>denied.maximum_copy_bytes-=1,"depth"=>denied.maximum_depth-=1,_=>panic!("unknown original read grant axis")}
+        let frontier=(preview.cursor,preview.operation,preview.progress);
+        let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.admit_finished_history_preview_read(&preview,&mut selected_read,denied).unwrap());
+        assert_eq!(step.progress(),RetainedCloneProgress::default());
+        assert!(selected_read.is_none());
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+        assert_eq!(frontier,(preview.cursor,preview.operation,preview.progress));
+        assert_eq!(Arc::as_ptr(preview.state.as_ref().unwrap()),selected_pointer);
+    }
+    assert_eq!(foreign.admit_finished_history_preview_read(&preview,&mut selected_read,exact).is_ok(),checkpoint_case["admission"]["foreign"].as_bool().unwrap());
+    assert!(selected_read.is_none());
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store.admit_finished_history_preview_read(&preview,&mut selected_read,exact).unwrap());
+    assert!(step.progress().fits(exact));
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    assert_eq!(selected_read.is_some(),checkpoint_case["admission"]["genuine"].as_bool().unwrap());
+    let read=selected_read.as_ref().unwrap();
+    assert_eq!(read.get()as*const DemoSnapshot,selected_pointer);
+    assert_ne!(read.get()as*const DemoSnapshot,store.snapshot_ref()as*const DemoSnapshot);
+    assert!(read.commit_authority_matches(preview.generation,preview.revision));
+    store.dispatch(ArtifactCommand::Apply{mutations:vec![DemoMutation::SetN(SetN{n:checkpoint_case["next"]["n"].as_i64().unwrap()as i32})],transaction:None},&mut identity).await.expect("actual next frontier revokes captured issuer");
+    assert!(!selected_read.as_ref().unwrap().commit_authority_matches(preview.generation,preview.revision));
+    let mut stale_read=None;
+    assert!(store.finished_history_preview_read_demands(&preview).is_err());
+    assert_eq!(store.admit_finished_history_preview_read(&preview,&mut stale_read,exact).is_ok(),checkpoint_case["admission"]["stale"].as_bool().unwrap());
+    assert!(stale_read.is_none());
+    assert_eq!(Arc::as_ptr(preview.state.as_ref().unwrap()),selected_pointer);
+    let(mut read_source,_)=selected_read.take().unwrap().admit_retained_clone_source(grant).unwrap_or_else(|_|panic!("actual selected read close source"));
+    while !read_source.terminal_is_empty(){read_source.close_step(grant).expect("controlled original selected read return");}
+    let mut preview=Some(preview);
+    let mut preview_retirement=None;
+    while preview.is_some(){
+        if let Some((owner,progress))=receiving_fixture.receive(|native|native.with_retirement(grant,|original|store.retire_derived_history_preview_controlled(&mut preview,grant,original))).expect("actual preview input close"){
+            assert!(progress.fits(grant));preview_retirement=Some(owner);
+        }
+    }
+    while preview_retirement.is_some(){
+        receiving_fixture.receive(|native|native.with_retirement(grant,|original|semio_framework_value::close_factory_ticket_controlled(&mut preview_retirement,grant,original))).expect("actual selected snapshot and registry close");
+    }
+
     close_demo_artifact_store(&mut store);
     close_demo_artifact_store(&mut foreign);
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");

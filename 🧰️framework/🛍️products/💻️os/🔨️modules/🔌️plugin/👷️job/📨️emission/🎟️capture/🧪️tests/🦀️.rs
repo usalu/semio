@@ -51,3 +51,37 @@ fn close_input(input:Input<App>,caller:&mut OriginalJobFixtureCaller,decoder:&mu
   if let Some(mut capture)=capture{for index in 0..262144{if capture.terminal_is_empty(){break}actual_turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|capture.close_step(cx)));assert!(index<262143)}}if let Some(meta)=meta.take(){close_input(Input::<App>{verb:String::new(),meta,emit:Emit::default()},&mut caller,&mut decoder,g)}while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(4096)?;close_original_retained_step(cx,d,|g|decoder.close_step(g))?;Ok(())})).unwrap();}caller.retire(g);
  }
 }
+
+#[test]fn original_emission_owned_producer_preserves_accepted_lanes_and_metadata_through_paid_capture(){
+ use semio_framework_plugin_job::original_emission::OriginalEmissionSource as Source;
+ let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let law=&fixture["ownedProducer"];let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096};
+ for cut in law["cancelAfter"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize)).chain([None]){
+  let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut source=Source::<App>::default();let mut view=semio_framework::ViewModel::new(semio_framework_ui_locale::Locale::De,semio_framework_ui_locale::Terminology::Native);view.panel_json=Some("owned original metadata α🙂".repeat(1024));let text=view.panel_json.as_ref().unwrap().as_ptr();let emit=Emit::mutations(law["mutationValues"].as_array().unwrap().iter().map(|value|fixture::Mutation::Zoom{zoom:value.as_f64().unwrap()}).collect());let backing=emit.artifact_mutations.as_ptr();let capacity=emit.artifact_mutations.capacity();let mut input=Some(Input::<App>{verb:law["verb"].as_str().unwrap().to_owned(),meta:ActionMeta{actor:"owned-source".into(),instance_id:71,view_state:Some(view)},emit});let mut records=Vec::new();
+  for index in 0..1000{
+   if cut==Some(index){caller.cancel().cancel_now();break}
+   for denied in [RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_copy_bytes:0,..g},RetainedCloneGrant{maximum_depth:0,..g}]{let before=input.is_some();let received=actual_turn(&mut caller,&mut decoder,denied,|cx|source.admit_owned(&mut input,cx));assert!(!received);assert_eq!(input.is_some(),before);assert_eq!(caller.receipt(),RetainedCloneProgress::default());}
+   let ready=actual_turn(&mut caller,&mut decoder,g,|cx|source.admit_owned(&mut input,cx));let owner=source.input.as_ref().or(input.as_ref()).unwrap();let values:Vec<f64>=owner.emit.artifact_mutations.iter().map(|mutation|match mutation{fixture::Mutation::Zoom{zoom}=>*zoom,_=>panic!("owned fixture mutation changed")}).collect();records.push(serde_json::json!({"phase":index,"producer":input.is_some(),"source":source.input.is_some(),"operations":owner.emit.artifact_mutations.as_ptr()as usize,"capacity":owner.emit.artifact_mutations.capacity(),"metadata":owner.meta.view_state.as_ref().unwrap().panel_json.as_ref().unwrap().as_ptr()as usize,"values":values,"receipt":caller.receipt()}));if ready{if cut.is_some(){caller.cancel().cancel_now()}break}assert!(index<999);
+  }
+  if cut.is_none(){assert!(input.is_none());let retained=source.input.as_ref().unwrap();assert_eq!(retained.emit.artifact_mutations.as_ptr(),backing);assert_eq!(retained.emit.artifact_mutations.capacity(),capacity);assert_eq!(retained.meta.view_state.as_ref().unwrap().panel_json.as_ref().unwrap().as_ptr(),text);let mut foreign=OriginalJobDecodeOwner::empty();actual_turn(&mut caller,&mut foreign,g,|cx|{assert!(source.admit_owned(&mut input,cx).is_err());Ok(())});assert!(foreign.terminal_is_empty());}
+  println!("[OWNED-EMISSION] {}",serde_json::json!({"cancelled":cut.is_some(),"records":records,"originalOperations":backing as usize,"originalMetadata":text as usize,"originalCapacity":capacity}));
+  for index in 0..262144{if !source.pending(){break}actual_turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|source.close_step(cx)));assert!(index<262143)}if let Some(input)=input.take(){close_input(input,&mut caller,&mut decoder,g);}while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(4096)?;close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}caller.retire(g);
+ }
+}
+
+#[test]
+fn original_host_source_pins_after_preverb_publication_and_refuses_a_changed_frontier(){
+ use semio_framework_plugin_job::original_emission::OriginalEmissionSource as Source;
+ use semio_framework_plugin_decl_emission::{OriginalHostConfigurationDeclaration,OriginalHostConfigurationProjection};
+ fn never(_:String)-><App as semio_framework_plugin_decl_app::ArtifactApp>::ConfigMutation{panic!("the base fence law never advances the host producer")}
+ static DECLARATION:OriginalHostConfigurationDeclaration<<App as semio_framework_plugin_decl_app::ArtifactApp>::ConfigMutation>=OriginalHostConfigurationDeclaration{maximum_input_bytes:usize::MAX,maximum_output_bytes:usize::MAX,projection:OriginalHostConfigurationProjection::RawText,mutation:never};
+ const VERB:&str="actual-host-base-fence";
+ let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();assert_eq!(law["ownedProducer"]["hostBase"]["deferredUntilTypingSettled"],true);assert_eq!(law["ownedProducer"]["hostBase"]["changedFrontierRefused"],true);
+ let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096};let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut source=Source::<App>::default();let mut args=Some(semio_framework_value::DslValue::Object(vec![("json".into(),semio_framework_value::DslValue::String("original host input".into()))]));let original=args.as_ref().unwrap().get("json").unwrap().as_str().unwrap().as_ptr();
+ for step in 0..1000{if actual_turn(&mut caller,&mut decoder,g,|cx|source.admit_host(&DECLARATION,VERB,&mut args,[1;32],cx)){break}assert!(step<999)}
+ assert!(args.is_none());assert!(source.host_base.is_none());assert_eq!(source.host_args().unwrap().get("json").unwrap().as_str().unwrap().as_ptr(),original);
+ assert!(!actual_turn(&mut caller,&mut decoder,RetainedCloneGrant{maximum_items:0,..g},|cx|source.pin_host_base([2;32],cx)));assert_eq!(caller.receipt(),Default::default());assert!(source.host_base.is_none());
+ assert!(actual_turn(&mut caller,&mut decoder,g,|cx|source.pin_host_base([2;32],cx)));assert_eq!(source.host_base,Some([2;32]));
+ actual_turn(&mut caller,&mut decoder,g,|cx|{assert!(source.admit_host(&DECLARATION,VERB,&mut args,[3;32],cx).is_err());assert!(source.pin_host_base([3;32],cx).is_err());Ok(())});assert_eq!(caller.receipt(),Default::default());assert_eq!(source.host_base,Some([2;32]));assert_eq!(source.host_args().unwrap().get("json").unwrap().as_str().unwrap().as_ptr(),original);
+ caller.cancel().cancel_now();for step in 0..262144{if !source.pending(){break}actual_turn(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|source.close_step(cx)));assert!(step<262143)}
+ while !decoder.terminal_is_empty(){caller.turn(g,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(4096)?;close_original_retained_step(cx,d,|grant|decoder.close_step(grant))?;Ok(())})).unwrap();}caller.retire(g);
+}

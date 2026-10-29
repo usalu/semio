@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_plugin::action_staging::*;
 use semio_framework_job::{admit_original_construction,OriginalConstructionDemand,OriginalSourceBinding};
-use semio_framework_plugin::app::staged_form::*;
+use semio_framework_plugin_decl_staged_form::*;
 use semio_framework_ui_locale::Locale;
 use semio_framework_value::retained_clone::{RetainedCloneOwner,RetainedCloneSource};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};

@@ -165,8 +165,8 @@ impl ArtifactEditor for FlowPlayApp {
         Box::new(FlowInstanceOperationOwner::new())
     }
 
-    fn reference_birth()->Option<fn()->FlowSnapshot>{Some(||{
-        FlowSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<FlowSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(FlowSnapshot::default())
     })}
 
     /// 🌱️ Derives the `content` child at boot and on every archive load, so a live shell composes the

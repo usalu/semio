@@ -8,6 +8,14 @@ import type { TestRouteContext } from "../🧭️route-context/🟦️.ts";
 
 /** 🔏️ Runs the crate tree, mutation family, publication, configuration and source ownership routes; true when one matched. */
 export async function runOwnershipLawRoutes(context: TestRouteContext, segments: string[]): Promise<boolean> {
+  if (segments[0] === "original-reserved-host") {
+    if (segments.length !== 1) throw new Error("Expected test original-reserved-host");
+    const source = join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🛣️routes/🧬️original-host/🧪️tests/🟦️.ts");
+    const input = join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🧬️original-input/🧪️tests/🟦️.ts");
+    const worker = join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🔒️lifecycle/🧬️original-worker/🧪️tests/🟦️.ts");
+    await runRepositoryTestCommand(process.execPath, ["test", source, input, worker], { cwd: context.repoRoot, env: repoTestArtifactEnvironment(context.repoRoot, "original-reserved-host"), budgetMs: 60_000 });
+    return true;
+  }
   if (segments[0] === "crate-tree") {
     if (segments.length !== 1) throw new Error("Expected test crate-tree");
     const source = join(context.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧪️tests/📦️crate-tree/🟦️.ts");

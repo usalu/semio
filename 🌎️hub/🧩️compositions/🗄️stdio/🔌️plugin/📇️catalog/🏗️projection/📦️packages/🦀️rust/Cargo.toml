@@ -1,0 +1,28 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-hub-stdio-catalog-projection"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Roster-independent stdio artifact catalog projection: the native catalog commitment, its budget, the native-openable receipt closure and the compiled dependency"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

@@ -71,7 +71,7 @@ pub(crate) mod context {
     }
     
     pub async fn dispatch(app: &mut Generation3dViewerFixture, command: Generation3dViewCommand) -> InvocationResult {
-        app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
     }
     
     pub async fn render(app: &mut Generation3dViewerFixture, body_key: &str) -> String {
@@ -101,7 +101,7 @@ pub(crate) mod context {
     
     pub async fn dispatch_with_view(app: &mut Generation3dViewerFixture, command: Generation3dViewCommand, view_state: ViewModel) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin::Fault> {
         let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-        app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))?;
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))?;
         settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|failure| semio_framework_plugin::Fault::from(format!("{failure:?}")))
     }
     

@@ -29,7 +29,7 @@ async fn set_lod_mode_reflects_in_window_measures() {
     let mut app = new_app().await;
     let view = ViewModel { window_instances: vec![semio_framework_plugin::ViewWindowInstance { id: "jack-graph-main".into(), window_kind_id: "trinity-jack-graph".into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
     let addressed = view.for_window_instance("jack-graph-main").unwrap();
-    app.dispatch_typed(TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("lod");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::SetLodMode { value: "compact".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(addressed), ..meta("local") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("lod");
     let receipt = settle(&mut app,cx).await;
     assert!(!receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Fault));
     let measures = app.window_measures(&view).await;
@@ -103,7 +103,7 @@ async fn set_active_example_loads_the_example_with_its_preset_query() {
     let cx=&mut original_context;
 
     let mut app = new_app().await;
-    let result = app.dispatch_typed(TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("set active example");
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::SetActiveExample { example_id: "branch-chain".into() }, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("set active example");
     let receipt = settle(&mut app,cx).await;
     let loaded = result.requested_effects.iter().chain(receipt.effects.iter()).find_map(|effect| match effect {
         semio_framework_plugin::Effect::LoadDocument { pack, .. } => Some(<jack::standards::v1::subsets::any::schema::snapshot::JackSnapshot as pack::snapshot::ArtifactPack>::decode_pack(pack).expect("the loaded example decodes")),
@@ -132,7 +132,7 @@ async fn delete_selection_removes_selected_node() {
     let mut app = new_app().await;
     let node_id = node_id_at(&app, 0).await;
     select_ast(&mut app, &[&node_id],cx).await;
-    let result = app.dispatch_typed(TrinityJackCommand::DeleteSelection, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx).await.expect("delete");
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TrinityJackCommand::DeleteSelection, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("delete");
     let receipt = settle(&mut app,cx).await;
     assert!(result.mutations.is_empty(), "deleteSelection writes no parent leaf: {:?}", result.mutations);
     assert!(receipt.lanes.contains(&semio_framework_plugin::app::TypedOperationResultLane::Child), "deleteSelection must publish one content child edit: lanes {:?}", receipt.lanes);

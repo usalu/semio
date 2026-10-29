@@ -1,6 +1,6 @@
 //! 🌳️ Original prepared branch headers stage before central unpublished adoption and keep every inverse alias.
 use super::{EnergyModelState,EnergyModelStatePatch};
-use protocol::{ApplyCapability,MutationMessage,mutation::retained::{RetainedDiffFragment,RetainedDiffApply,RetainedDiffPreflightAdvance,retained_mutation_demand_fits,patch::RetainedRowPatchApply}};
+use protocol::{ApplyCapability,MutationMessage,RetainedDiffFragment,RetainedDiffApply,RetainedDiffPreflightAdvance,retained_mutation_demand_fits,RetainedRowPatchApply};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneGrant,RetainedCloneStep}};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 

@@ -10,7 +10,7 @@ use std::pin::Pin;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
-use semio_framework_plugin_window_config::registry::WindowRegistry;
+use semio_framework_plugin_window_config_registry::WindowRegistry;
 use semio_framework_os_kernel as protocol;
 use semio_framework_os_kernel as store;
 use std::collections::BTreeMap;

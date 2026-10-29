@@ -160,7 +160,7 @@ fn fem2d_window_config_runtime_isolates_same_kind_instances_and_restores_packs()
                     let command_id = command.command_id();
                     let meta = ActionMeta { instance_id: 71, view_state: Some(view.clone()), ..artifact_app_laws::meta("fem2d-window-ownership") };
                     let mut identity = semio_framework_plugin::artifact_app_laws::fixture_identity();
-                    let dispatch = app.dispatch_typed(command, &meta, &mut identity, cx);
+                    let dispatch = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, cx);
                     Box::pin(dispatch).await.map_err(|error| format!("{error:?}"))?;
                     let receipt = Box::pin(artifact_app_laws::settle_registered_typed_operation(app, 71, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                     let actual = receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count();

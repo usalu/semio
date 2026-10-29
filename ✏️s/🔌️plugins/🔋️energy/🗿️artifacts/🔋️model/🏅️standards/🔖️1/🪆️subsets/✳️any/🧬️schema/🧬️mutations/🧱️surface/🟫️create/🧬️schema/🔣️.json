@@ -466,7 +466,7 @@
     "semantics": {
       "verb": "create",
       "entity": "surface",
-      "kind": "create",
+      "kind": "create-surface",
       "record": "CreatedSurface"
     },
     "diagnostics": {

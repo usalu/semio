@@ -1,17 +1,17 @@
 //! 🧬️ Genuine retained decision, central preflight, inverse and capability commit share one original issuer.
 use super::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
-use semio_framework_os_store_one_item::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
+use semio_framework_value_snapshot_projection::snapshot_projection::post::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection;
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationFactory;
-use semio_framework_os_spr::{MutationDiff,RetainedMutation,RetainedMutationOwner,RetainedDiffOwner,RetainedMutationDecisionStep,RetainedDiffPreflightStep,RetainedMutationInverseStep,RetainedMutationCloseContext,MutationMessage,MutationMessageConcat,retained_mutation_birth_demand,begin_retained_mutation,decide_retained_mutation,begin_retained_diff,preflight_retained_diff,inverse_retained_mutation,commit_retained_diff,Mutation};
+use semio_framework_os_spr::{MutationDiff,RetainedMutation,RetainedMutationOwner,RetainedDiffOwner,RetainedMutationDecisionStep,RetainedDiffPreflightStep,RetainedMutationInverseStep,RetainedMutationCloseContext,MutationMessage,retained_mutation_birth_demand,begin_retained_mutation,decide_retained_mutation,begin_retained_diff,preflight_retained_diff,inverse_retained_mutation,commit_retained_diff,Mutation};
 use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},RetirementDemand,ValueError,ValueRefusalKind,RetainedCloneSource,RetainedCloneRef,retained_clone::{RetainedClone,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedCloneClose,admit_retained_clone_progress}};
 use semio_framework_value_factory::{ArtifactOwnedValueRetirementFactory,vector::{FactoryVectorRetirement,FactoryIssuerIdentity}};
 use std::{mem::{size_of,ManuallyDrop},sync::Arc};
 use protocol::MutationMessageConcat;
 fn fault(reason:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,reason)}
 fn scalar(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
-#[derive(Clone,Copy,PartialEq,Eq)]
+#[derive(Clone,Copy,PartialEq,Eq,Debug)]
 pub enum Stage{Birth,Decide,Source,Plan,Preflight,Inverse,Commit,Join,Publish,Done}
 
 /// 🧬️ Owns original retained semantics, the admitted central diff plan and separately funded publication rows.
@@ -105,9 +105,6 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> PagedOneItemEdit<S,M> for Mutat
 impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
  pub fn stage(&self)->Stage{self.stage}
  pub fn inverse_rows(&self)->Option<&[M]>{self.inverse.as_deref()}
- fn parent_copy()->usize{size_of::<Self>()*2}
- fn context(mutations:&dyn ArtifactOwnedValueRetirementFactory<M>)->RetainedMutationCloseContext<'_,M>{RetainedMutationCloseContext{mutations}}
- fn progress(grant:RetainedCloneGrant,mut progress:RetainedCloneProgress)->Result<RetainedCloneProgress,ValueError>{progress.copied_bytes=progress.copied_bytes.checked_add(Self::parent_copy()).ok_or_else(||fault("retained issuer parent copy overflow"))?;progress.copied_items=progress.copied_items.max(1);admit_retained_clone_progress(grant,progress,"retained generic issuer fixed owner movement")}
  fn issuer_capture_bytes(&self)->usize{if self.issuer.is_none()&&!<Self as PagedOneItemEdit<S,M>>::terminal_is_empty(self){FactoryIssuerIdentity::<M>::capture_copy_bytes()}else{0}}
  fn owner_close_demands(&self,mutations:&dyn ArtifactOwnedValueRetirementFactory<M>,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(o)=self.semantics.as_ref(){return if o.terminal_is_empty(){Ok(scalar(size_of::<Option<RetainedMutationOwner<S,M>>>()))}else{o.close_demand(Self::context(mutations),body)};}
@@ -139,7 +136,7 @@ impl<S:SnapshotProjection,M:RetainedMutation<S>> MutationApplyEdit<S,M>{
 }
 impl<S:SnapshotProjection,M:RetainedMutation<S>> Drop for MutationApplyEdit<S,M>{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"retained mutation edit requires complete original ownership closure");if empty{unsafe{ManuallyDrop::drop(&mut self.semantics);ManuallyDrop::drop(&mut self.diff);ManuallyDrop::drop(&mut self.source);ManuallyDrop::drop(&mut self.plan);ManuallyDrop::drop(&mut self.inverse);ManuallyDrop::drop(&mut self.messages);ManuallyDrop::drop(&mut self.join);}}}}
 /// 🏭️ Every mounted mutation family supplies required retained semantics and a typed central apply plan.
-pub fn mutation_apply_preparation_factory<S,M>()->Arc<dyn ArtifactStoreOneItemPreparationFactory<S,M>>where S:SnapshotProjection,M:RetainedMutation<S>+ArtifactCanonicalJsonTree{Arc::new(PagedOneItemPreparationFactory::<S,M,MutationApplyEdit<S,M>>::default())}
+pub fn mutation_apply_preparation_factory<S,M>()->Arc<dyn ArtifactStoreOneItemPreparationFactory<S,M>>where S:SnapshotProjection<Output=S>,M:RetainedMutation<S>+ArtifactCanonicalJsonTree{Arc::new(PagedOneItemPreparationFactory::<S,M,MutationApplyEdit<S,M>>::default())}
 
 #[cfg(test)]
 #[path="🧪️tests/📋️stages/🦀️.rs"]mod stage_contract;

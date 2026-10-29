@@ -66,8 +66,8 @@ impl semio_framework_plugin::ArtifactViewer for PlaybookViewer {
     const DIALECT: Dialect = PLAYBOOK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->PlaybookSnapshot>{Some(||{
-        crate::empty_playbook_snapshot()
+    fn reference_birth()->Option<fn()->Result<PlaybookSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::empty_playbook_snapshot())
     })}
 
     /// 📣️ The localized notices of the composed reads this viewer refuses with (design §20.12).

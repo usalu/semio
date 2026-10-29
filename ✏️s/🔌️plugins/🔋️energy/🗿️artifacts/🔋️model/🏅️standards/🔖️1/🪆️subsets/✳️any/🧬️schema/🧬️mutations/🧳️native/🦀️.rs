@@ -1,4 +1,4 @@
-//! 🧳️ Native Energy semantic pipelines compose only actual original typed sources and sparse persistent paths.
+//! 🧳️ Native Energy row, membership and adjacency pipelines compose only actual original typed sources and sparse persistent paths.
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 extern crate semio_s_artifact_energy_model_diff as diff;
@@ -21,24 +21,12 @@ extern crate semio_s_plugin_energy_engine_model as model;
 
 #[path="🪆️leaf/🦀️.rs"]pub mod leaf;
 
-#[path="🔹️single/🦀️.rs"]pub mod single;
-
 extern crate semio_s_plugin_energy_engine_calendar as calendar;
 
 #[path="🧬️value/🦀️.rs"]pub mod owned;
 
-#[path="🌱️construction/🦀️.rs"]pub mod construction;
-
-#[path="✂️deletion/🦀️.rs"]pub mod deletion;
-
 #[path="📋️membership/🦀️.rs"]pub mod membership;
 
-#[path="🔗️root/🦀️.rs"]pub mod root;
-
 #[path="🔲️adjacency/🦀️.rs"]pub mod adjacency;
-#[path="📊️outputs/🦀️.rs"]pub mod outputs;
 #[cfg(test)]#[path="🗓️schedule/🧪️tests/🦀️.rs"]mod schedule_tests;
 
-#[path="🫧️network/🦀️.rs"]pub mod network;
-
-#[path="🎯️action/🦀️.rs"]pub mod action;

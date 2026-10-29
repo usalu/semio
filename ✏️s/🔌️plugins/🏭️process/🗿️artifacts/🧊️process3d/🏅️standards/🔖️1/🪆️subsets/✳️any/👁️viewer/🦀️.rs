@@ -111,8 +111,8 @@ impl ArtifactViewer for Process3dViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->Process3dSnapshot>{Some(||{
-        semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document()
+    fn reference_birth()->Option<fn()->Result<Process3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document())
     })}
 
     /// 👁️ Structurally read-only: the sole `Process3dViewCommand::Noop` variant never carries a

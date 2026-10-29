@@ -18,7 +18,7 @@ export function runLayoutCanonicalTests(repositoryRoot: string) {
   const mutations = join(root, '🧬️schema/🧬️mutations');
   const schemaFiles = [
     join(root, '🧬️schema/🔣️.json'), join(mutations, '🔣️.json'),
-    join(repositoryRoot, '🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🔣️.json'),
+    join(repositoryRoot, '🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🧬️schema/🔣️.json'),
     ...['🔣️.json', '🔗️link/🧬️schema/🔣️.json', '🪆️child/🧬️schema/🔣️.json', '📦️blob/🧬️schema/🔣️.json'].map(file => join(repositoryRoot, '🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference', file)),
   ];
   for (const entry of readdirSync(mutations, { withFileTypes: true })) if (entry.isDirectory()) {

@@ -70,12 +70,10 @@ pub struct MeshQualityReport {
     pub mass: Option<MeshMassProperties>,
 }
 
-impl HalfedgeMesh {
-    /// 🔬 The mesh's full quality report, see [`analyze_polygon_soup`].
-    pub fn quality_report(&self) -> MeshQualityReport {
-        let (positions, faces) = self.polygon_soup();
-        analyze_polygon_soup(&positions, &faces)
-    }
+/// 🔬 The mesh's full quality report, see [`analyze_polygon_soup`].
+pub fn mesh_quality_report(mesh: &HalfedgeMesh) -> MeshQualityReport {
+    let (positions, faces) = mesh.polygon_soup();
+    analyze_polygon_soup(&positions, &faces)
 }
 
 type P3 = [f64; 3];

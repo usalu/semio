@@ -32,7 +32,7 @@ fn sequence_window_ownership_runtime_isolates_restores_and_resets_exact_windows(
             async fn dispatch(app: &mut SequenceApp, command: SequenceCommand, view: &ViewModel) -> Result<(usize, usize, usize), String> {
                 let command_id = command.command_id();
                 let meta = ActionMeta { instance_id: 83, view_state: Some(view.clone()), ..artifact_app_laws::meta("sequence-window-ownership") };
-                app.0.dispatch_typed(command, &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{command_id}: {error:?}"))?;
                 let lanes = (
                     receipt.lanes.iter().filter(|lane| **lane == semio_framework_plugin::app::TypedOperationResultLane::WindowConfig).count(),

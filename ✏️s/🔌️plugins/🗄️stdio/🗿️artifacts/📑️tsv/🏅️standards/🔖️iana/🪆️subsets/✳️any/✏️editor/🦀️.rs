@@ -542,8 +542,8 @@ impl ArtifactEditor for TsvEditor {
         tsv_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->TsvSnapshot>{Some(||{
-        TsvSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<TsvSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(TsvSnapshot::default())
     })}
 
     /// ✏️ Stale revisions, rows, and columns fault without publishing a mutation.

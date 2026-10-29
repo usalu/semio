@@ -5,7 +5,7 @@
 async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
     let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(actor) };
     let settled = match app.handle_action(action, None, &meta, identity).await {
-        Ok(admitted) => semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted).await,
+        Ok(admitted) => semio_framework_plugin_instance_app::plugin_app_impl::settle_framework_reserved_admission(app, admitted, cx).await,
         Err(fault) => Err(fault),
     };
     settled.err().map(|fault| fault.code.0)

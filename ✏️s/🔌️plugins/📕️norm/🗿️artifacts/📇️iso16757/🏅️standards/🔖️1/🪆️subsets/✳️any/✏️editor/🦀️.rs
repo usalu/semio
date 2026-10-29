@@ -132,8 +132,8 @@ impl ArtifactEditor for Iso16757PlayApp {
         registry.register::<results::ResultsWindowConfigOwner>()
     }
 
-    fn reference_birth()->Option<fn()->Iso16757Snapshot>{Some(||{
-        Iso16757Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<Iso16757Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Iso16757Snapshot::default())
     })}
 
     fn io() -> Option<AppIo> {

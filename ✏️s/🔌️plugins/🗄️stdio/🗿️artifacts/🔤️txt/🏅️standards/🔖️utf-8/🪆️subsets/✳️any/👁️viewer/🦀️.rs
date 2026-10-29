@@ -66,8 +66,8 @@ impl ArtifactViewer for TxtViewer {
     const DIALECT: Dialect = TXT_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TXT_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->TxtSnapshot>{Some(||{
-        TxtSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<TxtSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(TxtSnapshot::default())
     })}
 
     fn handle(

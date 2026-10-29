@@ -2,7 +2,6 @@ use super::*;
 use semio_framework_test_fixtures::fixture_text;
 use semio_framework_ui_declaration::layout::ActionDescriptor;
 use semio_framework_ui_declaration::ui::{ui_tree_stamp_presence, UiButtonNode, UiControlNode, UiPresence, UiStackNode, UiTextNode, UiToggleNode};
-use crate::tree::NodeFlags;
 
 fn action() -> ActionDescriptor {
     ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }

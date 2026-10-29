@@ -17,6 +17,22 @@ pub struct TransactionRef {
 }
 
 impl TransactionRef {
+    pub fn original_mint_demands(actor:&semio_framework_replication_ids::ActorId,timestamp:&semio_framework_replication_ids::HybridLogicalTimestamp,tool:&str)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        let width=|value:u64|((64-value.leading_zeros()as usize).max(1)+6)/7;
+        let material=actor.0.len().checked_add(tool.len()).and_then(|bytes|bytes.checked_add(width(actor.0.len()as u64)+width(tool.len()as u64)+width(timestamp.actor)+width(timestamp.physical_ms)+width(timestamp.logical))).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original transaction identity extent overflow"))?;
+        let capacity_bytes=material.checked_add(19).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original transaction identity extent overflow"))?;let copy_bytes=capacity_bytes.checked_add(std::mem::size_of::<Self>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original transaction identity extent overflow"))?;Ok(semio_framework_value::RetirementDemand{copy_bytes,capacity_bytes,release_bytes:material,depth:1})
+    }
+    pub fn mint_original(actor:&semio_framework_replication_ids::ActorId,timestamp:&semio_framework_replication_ids::HybridLogicalTimestamp,tool:String,grant:semio_framework_value::RetainedCloneGrant)->Result<(Self,semio_framework_value::RetainedCloneProgress),(semio_framework_value::ValueError,String)>{
+        let demand=match Self::original_mint_demands(actor,timestamp,&tool){Ok(demand)=>demand,Err(error)=>return Err((error,tool))};
+        if grant.maximum_items==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original transaction identity requires its full allocation and release grant"),tool))}
+        let mut material=Vec::new();if material.try_reserve_exact(demand.release_bytes).is_err(){return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original transaction material allocation refused"),tool))}
+        semio_framework_replication_wire_core::write_str(&mut material,&actor.0);semio_framework_replication_wire_core::write_varint_u64(&mut material,timestamp.actor);semio_framework_replication_wire_core::write_varint_u64(&mut material,timestamp.physical_ms);semio_framework_replication_wire_core::write_varint_u64(&mut material,timestamp.logical);semio_framework_replication_wire_core::write_str(&mut material,&tool);
+        let digest=semio_framework_replication_crypto::RecordHasher::hash(&semio_framework_replication_wire_core::Blake3Hasher,&material);
+        let mut id=String::new();if id.try_reserve_exact(19).is_err(){let bytes=material.capacity();return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original transaction identity allocation refused").with_retained_progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:material.len(),retained_capacity_bytes:bytes,released_bytes:bytes}),tool))}
+        id.push_str("tx-");const HEX:&[u8;16]=b"0123456789abcdef";for byte in &digest[..8]{id.push(HEX[usize::from(byte>>4)]as char);id.push(HEX[usize::from(byte&15)]as char)}
+        let progress=semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:material.capacity()+id.capacity(),released_bytes:material.capacity()};Ok((Self{id,tool},progress))
+    }
+
     /// 🪪️ `tx-{hex16(blake3(actor | hlc | tool))}`: deterministic per author, tick and tool.
     pub fn mint(actor: &semio_framework_replication_ids::ActorId, timestamp: &semio_framework_replication_ids::HybridLogicalTimestamp, tool: impl Into<String>) -> Self {
         let tool = tool.into();

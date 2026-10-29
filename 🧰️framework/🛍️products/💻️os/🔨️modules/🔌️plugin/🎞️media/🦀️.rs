@@ -1,10 +1,10 @@
 //! 🎞️ Media exports and segmented downloads.
-use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportResult;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportCompletion;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportCredit;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPoll;
+use semio_framework_plugin_decl_media::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ArtifactMediaExportResult;
+use semio_framework_plugin_decl_media::ArtifactMediaExportCompletion;
+use semio_framework_plugin_decl_media::ArtifactMediaExportCredit;
+use semio_framework_plugin_decl_media::ArtifactMediaExportHandle;
+use semio_framework_plugin_decl_media::ArtifactMediaExportPoll;
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 /// 🎞️ The `Media`/`MediaPayload`/`MediaFingerprint`/`MediaError` value vocabulary backing
 /// `ArtifactApp::{media_ports, export_media, import_media, media_fingerprint}` — re-exported so
@@ -153,7 +153,7 @@ pub struct MediaDownloadPreparation{
  pub document_identity:(usize,usize),pub mime_identity:(usize,usize),pub chunks_identity:usize,pub coordinates:(u32,semio_framework_job::RevisionId,semio_framework_job::Generation),
  pub buffers:std::mem::ManuallyDrop<Option<[Vec<u8>;2]>>,pub buffers_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<[Vec<u8>;2]>>>,pub stage:usize,
  pub handle:std::mem::ManuallyDrop<Option<ArtifactMediaExportHandle>>,pub handle_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactMediaExportHandle>>>,
- pub output:std::mem::ManuallyDrop<Option<semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput>>,pub output_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput>>>,pub published:bool,
+ pub output:std::mem::ManuallyDrop<Option<semio_framework_plugin_decl_media::ArtifactDownloadOutput>>,pub output_close:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_decl_media::ArtifactDownloadOutput>>>,pub published:bool,
 }
 impl MediaDownloadPreparation{
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -171,9 +171,9 @@ impl MediaDownloadPreparation{
 
 /// ♻️ Complete segmented output fields retain their actual controlled physical close owner.
 #[doc(hidden)]
-pub struct MediaDownloadRetirement{pub original:std::mem::ManuallyDrop<Option<semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput>>,pub active:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput>>>}
+pub struct MediaDownloadRetirement{pub original:std::mem::ManuallyDrop<Option<semio_framework_plugin_decl_media::ArtifactDownloadOutput>>,pub active:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_decl_media::ArtifactDownloadOutput>>>}
 impl MediaDownloadRetirement{
- pub fn pending(output:semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput)->Self{Self{original:std::mem::ManuallyDrop::new(Some(output)),active:std::mem::ManuallyDrop::new(None)}}
+ pub fn pending(output:semio_framework_plugin_decl_media::ArtifactDownloadOutput)->Self{Self{original:std::mem::ManuallyDrop::new(Some(output)),active:std::mem::ManuallyDrop::new(None)}}
  pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.original,&self.active,body)}
  pub fn close_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{let demand=self.retirement_demands(grant.maximum_copy_bytes)?;semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|_,grant|semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.original,&mut self.active,grant).map(|step|(PluginLifecycleStep::Progress(step.progress()),self.terminal_is_empty())).map_err(Into::into))}
  pub fn terminal_is_empty(&self)->bool{self.original.is_none()&&self.active.is_none()}

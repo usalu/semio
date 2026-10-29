@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-fem-3d-snapshot-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "FEM 3d persistent snapshot laws: native receiving, identity index, Pack publication, load receiving and bundled example loading (test-only crate)"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-s-fem-material = { path = "../../../../../../../../../⚙️engine/🧱️material/📦️packages/🦀️rust" }
+semio-s-fem-node = { path = "../../../../../../../../../⚙️engine/📍node/📦️packages/🦀️rust" }
+pack = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-persistent = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-fem-2d-model = { workspace = true }
+semio-s-fem-sqlite = { workspace = true }
+
+semio-s-artifact-fem-3d-model = { workspace = true }
+semio-s-artifact-fem-3d-io = { workspace = true }
+
+[dev-dependencies]
+serde_json = { workspace = true }

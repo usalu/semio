@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-store-engine-command = { path = "../../../../🕰️history/🎮️command/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-backbone = { path = "../../../../🔗️backbone/📦️packages/🦀️rust" }

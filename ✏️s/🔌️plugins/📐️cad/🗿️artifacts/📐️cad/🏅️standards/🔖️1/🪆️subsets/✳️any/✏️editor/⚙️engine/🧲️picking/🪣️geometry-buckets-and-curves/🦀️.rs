@@ -45,7 +45,7 @@ pub struct GeometryBuckets<'a> {
     pub(super) order: GeometryOrder<'a>,
 }
 
-struct GeometryOrder<'a> {
+pub(crate) struct GeometryOrder<'a> {
     pub(super) vertices: Vec<&'a CadVertex>,
     pub(super) edges: Vec<&'a CadEdge>,
     pub(super) wires: Vec<&'a CadWire>,

@@ -75,7 +75,7 @@
     "semantics": {
       "verb": "remove",
       "entity": "annual-schedule",
-      "kind": "schedule",
+      "kind": "remove-annual-schedule-rule",
       "record": "RemoveAnnualScheduleRule"
     },
     "diagnostics": {

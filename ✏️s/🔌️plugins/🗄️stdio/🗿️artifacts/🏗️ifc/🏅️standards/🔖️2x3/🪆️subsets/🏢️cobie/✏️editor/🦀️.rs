@@ -225,8 +225,8 @@ impl ArtifactEditor for Ifc2x3CobieEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); ifc2x3_cobie_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->Ifc2x3Snapshot>{Some(||{
-        <crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction::new()).expect("valid authored IFC2x3 cobie initial owner")
+    fn reference_birth()->Option<fn()->Result<Ifc2x3Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        <crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::cobie::io::Ifc2x3CobieBuilderConstruction::new()).map_err(|error|semio_framework_plugin::reference_birth_fault("valid authored IFC2x3 cobie initial owner",format_args!("{error:?}")))
     })}
 
     fn handle(

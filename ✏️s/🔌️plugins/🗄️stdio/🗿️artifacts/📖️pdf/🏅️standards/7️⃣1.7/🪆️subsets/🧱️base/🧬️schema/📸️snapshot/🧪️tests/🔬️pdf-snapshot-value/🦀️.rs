@@ -72,7 +72,7 @@ fn fresh_ids_avoid_every_collection() {
 #[test]
 fn ordinary_and_controlled_initial_record_pack_body_diagnostic() {
     use pack::record as pack_rt;
-    let owner = <crate::editor::pdf17::Pdf17Editor as semio_framework_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
+    let owner = <crate::editor::pdf17::Pdf17Editor as semio_framework_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births");
     let original_spec = crate::standards::v1_7::subsets::base::io::text::snapshot::spec();
     let original_record = crate::standards::v1_7::subsets::base::io::text::snapshot::to_record(&owner);
     let maximum = semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default().max_allocation_bytes;

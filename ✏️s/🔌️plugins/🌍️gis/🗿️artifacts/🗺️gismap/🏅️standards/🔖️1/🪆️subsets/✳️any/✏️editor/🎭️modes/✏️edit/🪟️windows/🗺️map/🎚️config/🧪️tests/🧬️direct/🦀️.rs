@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 #[allow(unused_imports)]
 use serde::{Deserialize, Serialize};
 use crate::editor::gis2d::modes::edit::windows::map::config::*;
-use protocol::{ColdMutation, Mutation, MutationLeaf, OpBinary, OpText};
+use protocol::{ColdMutation, ColdMutationDiff, Mutation, MutationLeaf, OpBinary, OpText};
 
 //#region 🧪️DirectContracts
 fn fixture() -> serde_json::Value {

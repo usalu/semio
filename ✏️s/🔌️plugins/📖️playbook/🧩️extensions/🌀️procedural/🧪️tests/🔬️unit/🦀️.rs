@@ -132,7 +132,7 @@ impl std::ops::DerefMut for ModuleTestApp {
 async fn new_app() -> ModuleTestApp {
     let definition = create_module_app().await.expect("module definition").definition;
     let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut app = VcsArtifactApp::with_registry(ModuleApp, AppActionRegistry::from_definition(&definition), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     app.bind_instance_id(meta().instance_id).await;
     ModuleTestApp(app, scope)
@@ -247,7 +247,7 @@ async fn export_solid_declares_only_format_arg_and_materializes_default() {
     assert_eq!(export.args.len(), 1, "export exposes exactly the format choice");
     let registry = AppActionRegistry::from_definition(&definition);
     let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = VcsArtifactApp::with_registry(ModuleApp, registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut app = VcsArtifactApp::with_registry(ModuleApp, registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     app.bind_instance_id(meta().instance_id).await;
     let mut app = ModuleTestApp(app, scope);

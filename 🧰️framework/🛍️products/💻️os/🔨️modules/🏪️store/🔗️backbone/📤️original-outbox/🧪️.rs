@@ -1,7 +1,5 @@
 //! 🧪️ Original queued byte owners retain FIFO identity through retries, denial and cancellation.
 use super::*;
-#[global_allocator]
-static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn fund(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
 fn observed<T>(run:impl FnOnce()->(T,RetainedCloneProgress))->T{let((result,p),h)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);assert_eq!((h.requested_bytes,h.released_bytes),(p.retained_capacity_bytes,p.released_bytes));result}
 #[test]

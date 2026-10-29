@@ -3,28 +3,12 @@
 use super::*;
 use semio_framework_os_spr::ColdMutation;
 
-//#region 🔖️EphemeralLanes
-//#region 🔖️Backbone
-//#region 🔖️Backbone
-//#region 🔖️Authority
-//#region 🔖️EphemeralLanes
-//#region 🔖️Text
-//#region 🔖️Pack
-//#region 🔖️CodecRegistry
-//#region 🔖️TextFormat
-//#region 🔖️History
-//#region 🔖️ArtifactStore
-//#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
-    /// 🪞️ Delegates to [`StoreWire::ensure_durable_group_idle`].
-    #[inline] pub fn ensure_durable_group_idle(&self) -> Result<(), VcsError> { self.wire.ensure_durable_group_idle() }
 
-    /// 🪞️ Delegates to [`StoreCursor::generation`].
-    #[inline] pub fn generation(&self) -> u64 { self.cursor.generation(&self.wire) }
 
     /// 🪞️ Delegates to [`StoreWire::artifact_revision`].
     #[inline] pub fn artifact_revision(&self) -> ArtifactRevision { self.wire.artifact_revision(&self.log) }
@@ -35,8 +19,6 @@ where
     /// 🪞️ Delegates to [`StoreLog::clock_now`].
     #[inline] pub fn clock_now(&self) -> HybridLogicalTimestamp { self.log.clock_now() }
 
-    /// 🪞️ Delegates to [`StoreCursor::content_revision`].
-    #[inline] pub fn content_revision(&self) -> [u8; 32] { self.cursor.content_revision(&self.wire) }
 
     /// 🪞️ Delegates to [`StoreCursor::content_revision_now`].
     #[inline] pub fn content_revision_now(&self) -> [u8; 32] { self.cursor.content_revision_now(&self.wire) }
@@ -80,8 +62,6 @@ where
     /// 🪞️ Delegates to [`StoreLog::current_checkpoint_id`].
     #[inline] pub fn current_checkpoint_id(&self) -> Option<&str> { self.log.current_checkpoint_id() }
 
-    /// 🪞️ Delegates to [`StoreLog::local_actor_id`].
-    #[inline] pub fn local_actor_id(&self) -> &ActorId { self.log.local_actor_id() }
 
     /// 🪞️ Delegates to [`StoreLog::authoring_verb`].
     #[inline] pub fn authoring_verb(&self) -> Option<&str> { self.log.authoring_verb() }
@@ -149,9 +129,7 @@ where
     /// 🪞️ Delegates to [`StoreLive::step_derived_report_replay`].
     
 
-    /// 🪞️ Delegates to [`StoreCursor::finish_derived_report_replay`].
-    /// 🎁️ Moves the completed original result while preserving all typed source and recipient identity.
-    #[inline] pub fn take_derived_report_result(&self,owner:&mut Option<ArtifactDerivedReplay<P,Mutation>>)->Result<EditReplayResult<P,Mutation>,VcsError>{self.cursor.take_derived_report_result(&self.owners,&self.wire,owner)}
+
     #[inline] pub fn finish_derived_report_replay(&self, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> { self.cursor.finish_derived_report_replay(&self.owners, &self.wire, owner) }
 
     /// 🪞️ Delegates to [`StoreLive::snapshot_read`].
@@ -323,15 +301,31 @@ where
     #[inline] pub fn replay_edits(&self) -> &ArtifactHistoryLedger<Edit<Mutation>> { self.log.replay_edits() }
 
 }
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️History
-//#endregion 🔖️TextFormat
-//#endregion 🔖️CodecRegistry
-//#endregion 🔖️Pack
-//#endregion 🔖️Text
-//#endregion 🔖️EphemeralLanes
-//#endregion 🔖️Authority
-//#endregion 🔖️Backbone
-//#endregion 🔖️Backbone
-//#endregion 🔖️EphemeralLanes
+
+impl<P, Mutation> ArtifactStore<P, Mutation>
+where
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+{
+    /// 🪞️ Delegates to [`StoreWire::ensure_durable_group_idle`].
+    #[inline] pub fn ensure_durable_group_idle(&self) -> Result<(), VcsError> { self.wire.ensure_durable_group_idle() }
+
+    /// 🪞️ Delegates to [`StoreCursor::generation`].
+    #[inline] pub fn generation(&self) -> u64 { self.cursor.generation(&self.wire) }
+
+    /// 🪞️ Delegates to [`StoreCursor::content_revision`].
+    #[inline] pub fn content_revision(&self) -> [u8; 32] { self.cursor.content_revision(&self.wire) }
+
+    /// 🪞️ Delegates to [`StoreLog::local_actor_id`].
+    #[inline] pub fn local_actor_id(&self) -> &ActorId { self.log.local_actor_id() }
+}
+
+impl<P, Mutation> ArtifactStore<P, Mutation>
+where
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+{
+    /// 🪞️ Delegates to [`StoreCursor::finish_derived_report_replay`].
+    /// 🎁️ Moves the completed original result while preserving all typed source and recipient identity.
+    #[inline] pub fn take_derived_report_result(&self,owner:&mut Option<ArtifactDerivedReplay<P,Mutation>>)->Result<EditReplayResult<P,Mutation>,VcsError>{self.cursor.take_derived_report_result(&self.owners,&self.wire,owner)}
+}

@@ -1,7 +1,7 @@
 //! 🌱️ Energy document genesis retains its authored native fields and actual semantic Store authorities.
 use semio_framework_os_kernel as store;
 use semio_framework_plugin_ownership::original_store_genesis::{OriginalStoreGenesisOwner};
-use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError};
+use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,ValueError,retained_clone::RetainedCloneBirthDemand};
 use semio_s_artifact_energy_model_snapshot::EnergyModelSnapshot;
 use semio_s_artifact_energy_model_mutations::EnergyModelMutation;
 use std::mem::size_of;
@@ -21,8 +21,8 @@ fn source_copy()->usize{2*size_of::<Disposer>()+2*size_of::<Owners>()}
 /// 🏭️ Original document construction installs one semantic issuer for publication and replay.
 pub struct EnergyModelCatalog;
 impl store::os_store::document_store_owners::DocumentStoreOwnerProducer<EnergyModelSnapshot,EnergyModelMutation> for EnergyModelCatalog{
- fn source_demands()->Result<RetirementDemand,ValueError>{Owners::shared_semantic_source_demands::<SnapshotRetirement,SnapshotRetirement,MutationRetirement,Disposer,EnergyModelStorePreparationFactory>(Default::default(),source_copy())}
- fn admit_sources(grant:RetainedCloneGrant)->Result<(Owners,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<EnergyModelSnapshot,EnergyModelMutation>>{Owners::admit_source_constructor_with_shared_semantic_preparation(grant,Default::default(),source_copy(),||(SnapshotRetirement::new(),SnapshotRetirement::new(),MutationRetirement::new(),Disposer::new(),EnergyModelStorePreparationFactory::default())).map(|(mut owners,p)|{owners.operation_wire=semio_framework_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)));(owners.with_batch_digest(),p)})}
+ fn source_demands()->Result<RetirementDemand,ValueError>{Owners::shared_semantic_source_demands::<SnapshotRetirement,SnapshotRetirement,MutationRetirement,Disposer,EnergyModelStorePreparationFactory>(RetainedCloneBirthDemand{capacity_bytes:0,depth:0},source_copy())}
+ fn admit_sources(grant:RetainedCloneGrant)->Result<(Owners,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<EnergyModelSnapshot,EnergyModelMutation>>{Owners::admit_source_constructor_with_shared_semantic_preparation(grant,RetainedCloneBirthDemand{capacity_bytes:0,depth:0},source_copy(),||(SnapshotRetirement::new(),SnapshotRetirement::new(),MutationRetirement::new(),Disposer::new(),EnergyModelStorePreparationFactory::default())).map(|(mut owners,p)|{owners.operation_wire=semio_framework_os_store_operation_wire::original_edit::with_original_edit_message(store::ArtifactOperationWire::canonical().with_original_receiving().with_original_target(|operation|Some(operation)));(owners.with_batch_digest(),p)})}
 }
 /// 🧬️ The native document supplies its intrinsic Pack source directly from its sole persistent model.
 pub struct EnergyModelGenesis;

@@ -173,7 +173,7 @@ pub fn time_travel_arg_text<'a>(args: Option<&'a DslValue>, key: &str) -> Option
 #[doc(hidden)]
 pub fn time_travel_admits_withdrawal<P, Mu>(operation: &Mu) -> bool
 where
-    Mu: ::protocol::Mutation<P> + ::protocol::OpBinary,
+    Mu: ::semio_framework_os_kernel::StoreMutationFor<P>,
 {
     store::os_store::replay::admit_replacement::<P, Mu>(operation, &protocol::InputReplacement::Withdrawn, "").is_ok()
 }
@@ -232,7 +232,7 @@ fn history_mutation_views_of<P, Mu>(
     store: Option<&str>,
 ) -> Vec<MutationView>
 where
-    Mu: ::protocol::Mutation<P> + ::protocol::OpBinary,
+    Mu: ::semio_framework_os_kernel::StoreMutationFor<P>,
 {
     let outcome_of = |op: &store::AppliedMutation<'_, Mu>| outcomes.get(op.mutation_id.0.as_str()).copied();
     let flagged = ops.iter().enumerate().filter_map(|(index, op)| (op.supersession.is_some() || outcome_of(op).is_some_and(|outcome| outcome.worst.is_some())).then(|| (index, outcome_of(op).and_then(|outcome| outcome.worst))));
@@ -269,7 +269,7 @@ pub fn history_mutation_view_of<P, Mu>(
     store: Option<&str>,
 ) -> MutationView
 where
-    Mu: ::protocol::Mutation<P> + ::protocol::OpBinary,
+    Mu: ::semio_framework_os_kernel::StoreMutationFor<P>,
 {
     let id = op.mutation_id.0.as_str();
     let effective = match op.supersession.map(|supersession| &supersession.replacement) {
@@ -396,8 +396,8 @@ impl store::MemberStoreVisitor for MemberHistoryVisitor<'_, '_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: semio_framework_value::ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
     {
         let edits = &store.envelope().vcs.edits;
         let history = |edit: &protocol::Edit<Mu>, position: Option<usize>| {
@@ -454,8 +454,8 @@ impl store::MemberStoreVisitor for MemberMutationPageVisitor<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: semio_framework_value::ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
     {
         let unlabelled = HashMap::new();
         self.wanted
@@ -550,8 +550,8 @@ pub struct HistoryStoreStamp {
 #[doc(hidden)]
 pub fn history_store_stamp<P, Mu>(store: &ArtifactStore<P, Mu>) -> HistoryStoreStamp
 where
-    P: semio_framework_value::ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+    P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
+    Mu: ::semio_framework_os_kernel::StoreMutationFor<P>,
 {
     let envelope = store.envelope();
     let tail = |stack: &dsl::HistoryPageStack<String>| stack.iter_from(stack.len().saturating_sub(HISTORY_STAMP_TAIL)).cloned().collect::<Vec<_>>();
@@ -644,8 +644,8 @@ impl store::MemberStoreVisitor for MemberLedgerTailVisitor<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: semio_framework_value::ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
     {
         let edits = &store.envelope().vcs.edits;
         let len = edits.len();
@@ -669,8 +669,8 @@ impl store::MemberStoreVisitor for MemberHistoryStampVisitor<'_> {
 
     fn visit<P, Mu>(self, store: &ArtifactStore<P, Mu>) -> Self::Output
     where
-        P: semio_framework_value::ToValue + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
-        Mu: semio_framework_value::ToValue + semio_framework_value::FromValue + ::protocol::Mutation<P> + protocol::SemanticMutation<P> + ::protocol::OpBinary + ::protocol::OpText + Send + 'static,
+        P: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + ::semio_framework_os_kernel::StoreState,
+        Mu: protocol::SemanticMutation<P> + ::semio_framework_os_kernel::StoreMutationFor<P>,
     {
         let stamp = history_store_stamp(store);
         let change = self.previous.and_then(|previous| history_store_change(previous, &stamp, store.applied_edit_ids()));

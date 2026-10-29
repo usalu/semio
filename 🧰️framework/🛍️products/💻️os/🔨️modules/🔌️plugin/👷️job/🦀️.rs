@@ -1,4 +1,5 @@
 extern crate semio_framework_os_kernel as store;
+pub use semio_framework_plugin_host_configuration::OriginalHostConfiguration;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_os_kernel as pack;
@@ -96,14 +97,7 @@ use crate::reserved_jobs::QualifiedBoundedFirstStepProof;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use crate::lifted_full_operation_job::TypedCommandFullOperationJobFactory;
 
-
-
 pub use crate::lifted_job::is_tool_run_action_id;
-
-
-
-
-
 
 /// 🧬️ Generic wrapper turning any typed {@link ArtifactApp} into the object-safe runtime
 /// {@link PluginApp}. Owns a persistent `ArtifactStore<Snapshot, Mutation>` — the single source of
@@ -233,8 +227,6 @@ where
 /// that declares the app-wide default instead refuses the real pack with
 /// `typed command raw JSON exceeds its registered retained-page admission`.
 pub const CONTRIBUTIONS_COMMAND_RAW_WIRE_BYTES: usize = 49_152;
-
-
 
 pub const TYPED_OPERATION_MAXIMUM_RETRIES: u8 = 2;
 
@@ -413,7 +405,6 @@ pub struct TypedOperationCompletionWitness {
     pub ui_scope: UiDirtyScope,
 }
 
-
 /// 📦️ The Download lane's wire shape is a flat 4-element JSON array — matching what
 /// `serde_json` produced for the ad hoc `(&str, &str, Option<&str>, usize)` tuple this
 /// replaces. `ToValue`'s tuple impls (`🧰️framework/🔨️modules/🌱️value/🔁️codec/🦀️.rs`) stop at
@@ -432,8 +423,6 @@ impl semio_framework_value::ToValue for DownloadResultPayload<'_> {
         DslValue::Array(vec![semio_framework_value::ToValue::to_value(&self.filename), semio_framework_value::ToValue::to_value(&self.mime_type), semio_framework_value::ToValue::to_value(&self.encoding), semio_framework_value::ToValue::to_value(&self.bytes)])
     }
 }
-
-
 
 /// 📸️ Every root one typed command is reduced against — see `VcsArtifactApp::capture_typed_command_roots`.
 #[doc(hidden)]
@@ -904,17 +893,5 @@ pub mod lifted_full_operation_job;
 #[path="📨️emission/🎟️capture/🦀️.rs"]
 pub mod original_emission;
 
-#[path="🛬️receiving/⚠️failure.rs"]
-pub mod original_pack_failure;
-
-#[path="🛬️receiving/🦀️.rs"]
-pub mod original_pack_receiving;
-
-#[path="🛬️receiving/🧾️copies/🦀️.rs"]
-pub mod original_value_copies;
-
 #[path="🏛️registration/🦀️.rs"]
 pub mod original_declared_tools;
-
-#[path="🛬️receiving/🔀️transaction/🦀️.rs"]
-pub mod original_transaction_prepare;

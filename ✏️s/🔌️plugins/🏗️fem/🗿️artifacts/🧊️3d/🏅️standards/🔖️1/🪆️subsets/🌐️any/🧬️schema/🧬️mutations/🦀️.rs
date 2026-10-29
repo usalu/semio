@@ -251,3 +251,14 @@ pub const KINDS: &[&str] = &[
 #[path = "🧪️tests/🔬️kinds-conformance/🦀️.rs"]
 mod kinds_conformance;
 //#endregion 🧪️KindsConformance
+
+/// ❄️ Cold algebra over the persistent snapshot runs on the explicit reference projection of its rows.
+impl protocol::ColdMutation<Fem3dSnapshot> for Fem3dMutation {
+    type ReferenceDiff = Fem3dDiff;
+    fn diff(&self, base: &Fem3dSnapshot) -> protocol::MutationOutcome<Fem3dDiff> {
+        <Self as protocol::ColdMutation<Fem3dSnapshotValue>>::diff(self, &base.to_reference())
+    }
+    fn inverse(&self, base: &Fem3dSnapshot) -> Result<Vec<Self>, semio_framework_value::ValueError> {
+        <Self as protocol::ColdMutation<Fem3dSnapshotValue>>::inverse(self, &base.to_reference())
+    }
+}

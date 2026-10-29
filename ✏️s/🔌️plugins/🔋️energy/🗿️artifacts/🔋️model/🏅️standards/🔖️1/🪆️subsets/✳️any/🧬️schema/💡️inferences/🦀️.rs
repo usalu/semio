@@ -4,12 +4,9 @@
 //! slug dirs directly — `🦀️.rs` is the sole mounting mechanism, same as mutations); each named
 //! inference gets its own `<emoji><slug>/` child (currently: `🗃️entries/`).
 //!
-//! Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM: the old opaque `model_json` field is gone —
-//! `structure`/`zones` are composed `s.stdio.semio.value`/`table` children, so the whole-snapshot
-//! derivation now reads the real typed `crate::model::Model` behind them (via
-//! `crate::energy_model`, the working-scene accessor) and census over ITS OWN
-//! first-party `pack::json` serialization (`Model` derives `ToValue`) — always a full JSON object,
-//! never a possibly-malformed opaque body.
+//! The whole-snapshot derivation reads the native `EnergyModelState` behind the snapshot's `model`
+//! field and census over ITS OWN first-party `pack::json` serialization (the state derives
+//! `ToValue`) — always a full JSON object, never a possibly-malformed opaque body.
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
@@ -53,7 +50,7 @@ impl protocol::InferenceSpec<EnergyModelSnapshot> for EnergyModelInference {
         1
     }
     fn fields() -> &'static [protocol::InferenceFieldSpec] {
-        &[protocol::InferenceFieldSpec { id: "s.energy.model.inference.entries", reads: &["structure", "zones"] }]
+        &[protocol::InferenceFieldSpec { id: "s.energy.model.inference.entries", reads: &["model"] }]
     }
 }
 //#endregion 🔖️Inference

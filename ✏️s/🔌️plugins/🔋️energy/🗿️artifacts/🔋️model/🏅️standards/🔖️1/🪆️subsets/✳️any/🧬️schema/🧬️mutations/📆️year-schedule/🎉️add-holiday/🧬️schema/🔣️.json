@@ -133,7 +133,7 @@
     "semantics": {
       "verb": "add",
       "entity": "annual-schedule",
-      "kind": "schedule",
+      "kind": "add-annual-schedule-holiday",
       "record": "AddAnnualScheduleHoliday"
     },
     "diagnostics": {

@@ -80,9 +80,10 @@ async fn settled_document_pack(runtime: &WfcRuntime) -> store::os_store::seriali
 /// reactor turns, so the retained window transients, the history ledger and the engagement frames all
 /// grow with the session length.
 async fn replay_session(runtime: &WfcRuntime, loads: usize, turns_per_load: usize) {
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     for _ in 0..loads {
         let pack = settled_document_pack(runtime).await;
-        semio_framework_plugin::artifact_app_laws::plugin_load_document(runtime, CLOSE_INSTANCE, &pack).await.expect("the instance reloads its own document");
+        semio_framework_plugin::artifact_app_laws::plugin_load_document(runtime, CLOSE_INSTANCE, &pack, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("the instance reloads its own document");
         for _ in 0..turns_per_load {
             turn(runtime, Vec::new()).await;
         }

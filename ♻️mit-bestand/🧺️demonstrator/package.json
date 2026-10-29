@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@semio-tech/framework-os-dev": "workspace:*",
+    "@semio-tech/framework-renderer-react": "workspace:*",
     "@semio-tech/gis-gismap-js": "workspace:*",
     "@semio-tech/puzzle-2d": "workspace:*",
     "@semio-tech/s-dev-catalog-ts": "workspace:*",

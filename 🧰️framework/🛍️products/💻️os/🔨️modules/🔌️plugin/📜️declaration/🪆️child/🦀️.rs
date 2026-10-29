@@ -563,12 +563,12 @@ impl ChildContentView {
     }
 
     /// 🧵️ Selects an immutable child snapshot capability without exposing concrete ownership.
-    pub fn typed_read<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static>(&self, slot: &str, child_id: &str) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
+    pub fn typed_read<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState>(&self, slot: &str, child_id: &str) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
         self.typed_read_at(MemberKeyRef::root(slot, child_id))
     }
 
     /// 🪡️ [`Self::typed_read`] of the member at one exact owner edge, whatever its depth.
-    pub fn typed_read_at<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + Send + Sync + 'static>(&self, key: MemberKeyRef<'_>) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
+    pub fn typed_read_at<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState>(&self, key: MemberKeyRef<'_>) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'_, S>, Fault> {
         let (slot, child_id) = (key.slot, key.child_id);
         let snapshot = &self.find(key)?.ok_or_else(|| plugin_sdk_fault(format!("no live child store for slot {slot} child {child_id}")))?.snapshot;
         snapshot.typed::<S>().ok_or_else(|| plugin_sdk_fault(format!("child snapshot type mismatch for slot {slot} child {child_id}")))
@@ -680,6 +680,6 @@ mod lifted_read;
 pub use lifted_read::*;
 
 #[path="🎯️editor/🦀️.rs"]
-pub mod editor;
+pub mod child_editor;
 
 #[path="📖️vector/🦀️.rs"]pub mod vector_read;

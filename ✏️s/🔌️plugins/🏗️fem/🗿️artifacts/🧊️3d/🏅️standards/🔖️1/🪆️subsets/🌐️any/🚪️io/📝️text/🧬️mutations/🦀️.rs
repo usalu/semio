@@ -65,7 +65,7 @@ pub fn mutation_grammar_recognizer()->Result<semio_framework_dsl::Recognizer,sem
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load::ChangeLoad>("change-load-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh_elements::standards::v1::subsets::any::schema::mutations::change_element::ChangeElement>("change-element-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_boundary::standards::v1::subsets::any::schema::mutations::change_support::ChangeSupport>("change-support-fields"),
-        semio_framework_dsl_record::record_fields_matcher::<crate::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid>("change-solid-fields"),
+        semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid>("change-solid-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_load::ReplaceLoad>("replace-load-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::change_load_case_name::ChangeLoadCaseName>("change-load-case-name-fields"),
         semio_framework_dsl_record::record_fields_matcher::<semio_s_artifact_fem_3d_load::standards::v1::subsets::any::schema::mutations::replace_combination::ReplaceCombination>("replace-combination-fields"),
@@ -78,7 +78,7 @@ mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff;
-use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::element_id;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::load_id;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemAnalysisSettings;
@@ -133,7 +133,7 @@ use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations
 /// A generated test host links only `semio-repo-test-host` and, behind its `sut` feature, this crate —
 /// no third-party codec or `protocol` is reachable from an adapter, and this crate's
 /// `protocol`/`store` extern-crate aliases are private — so neither `Fem3dMutation` nor
-/// `Fem3dSnapshot` can be named there, and hand-transcribing either into a Rust literal
+/// `Fem3dSnapshotValue` can be named there, and hand-transcribing either into a Rust literal
 /// would be a second copy of the committed specification vector, free to drift away from it. This
 /// bridge is the whole surface an adapter needs, and every type in its signature is a `str`.
 ///
@@ -145,19 +145,19 @@ use semio_s_artifact_fem_3d_mesh::standards::v1::subsets::any::schema::mutations
 ///
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn fem3d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<Fem3dSnapshot, String> {
-        let decoded: Fem3dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let decode_snapshot = |text: &str| -> Result<Fem3dSnapshotValue, String> {
+        let decoded: Fem3dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         Ok(decoded)
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
     let mutation: Fem3dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let (applied, forward) = store::os_store::replay::apply_outcome(&base, <Fem3dMutation as ColdMutation<Fem3dSnapshot>>::diff(&mutation, &base));
-    let inverse = <Fem3dMutation as ColdMutation<Fem3dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
+    let (applied, forward) = store::os_store::replay::apply_outcome(&base, <Fem3dMutation as ColdMutation<Fem3dSnapshotValue>>::diff(&mutation, &base));
+    let inverse = <Fem3dMutation as ColdMutation<Fem3dSnapshotValue>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in inverse.iter().rev() {
-        let (next, outcome) = store::os_store::replay::apply_outcome(&undone, <Fem3dMutation as ColdMutation<Fem3dSnapshot>>::diff(step, &undone));
+        let (next, outcome) = store::os_store::replay::apply_outcome(&undone, <Fem3dMutation as ColdMutation<Fem3dSnapshotValue>>::diff(step, &undone));
         undone = next;
         inverse_messages.extend(outcome.messages().iter().cloned());
     }

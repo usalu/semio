@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-window-config-registry"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Paged exact-window registry of the window config: ordered entries, bounded insertion, grant-fitting and paid closure"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-window-config-registry"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }

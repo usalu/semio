@@ -5,9 +5,9 @@ use semio_framework_value::retained_clone::RetainedCloneProgress;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use crate::ArtifactApp;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactSnapshotCloseLease;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportCompletion;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportCredit;
-use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ArtifactMediaExportCompletion;
+use semio_framework_plugin_decl_media::ArtifactMediaExportCredit;
+use semio_framework_plugin_decl_media::ArtifactOutputChunks;
 use semio_framework_plugin_interaction::retirement;
 
 #[path="📖️read/🦀️.rs"]mod original_read;

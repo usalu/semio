@@ -105,8 +105,8 @@ impl ArtifactEditor for SurfaceEditorFixture {
     fn build_transient_store_disposer() -> semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
         Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
-    fn reference_birth()->Option<fn()->SurfaceSnapshot>{Some(||{
-        SurfaceSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SurfaceSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SurfaceSnapshot::default())
     })}
 
     fn handle(
@@ -208,8 +208,8 @@ impl ArtifactViewer for SurfaceViewerFixture {
     fn build_transient_store_disposer() -> semio_framework_plugin_ownership::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
         Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
-    fn reference_birth()->Option<fn()->SurfaceSnapshot>{Some(||{
-        SurfaceSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SurfaceSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SurfaceSnapshot::default())
     })}
 
     fn handle(

@@ -12,6 +12,7 @@
 //! written via `config::Process3dConfigMutation`s; every action dispatches through the single typed
 //! `Process3dCommand` channel via `ArtifactEditor::handle`.
 
+extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
@@ -34,6 +35,7 @@ use semio_s_artifact_process_process3d_modes::windows::workpiece;
 use semio_s_artifact_process_process3d_panels::{catalogue, document as document_panel, inspection, workshop as workshop_panel};
 use semio_s_artifact_process_process3d_presence::{Process3dPresence, Process3dPresenceMutation};
 use semio_s_artifact_process_process3d_kit::{editor::process3d::terminology::process3d_labels, internal_action, process3d_action_fault, process3d_interaction_definition, installable_contributions, reset_process3d_document_effect, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES, PROCESS3D_EXAMPLE_CONCRETE_FOREST, PROCESS3D_EXAMPLE_PLATE, PROCESS3D_EXAMPLE_TIMBER, PROCESS3D_INTERACTION_DOMAIN};
+use semio_s_artifact_process_process3d_kit::Process3dDispatchCtx;
 use semio_s_artifact_process_process3d_mutations::Process3dMutation;
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 use semio_s_artifact_process_process3d_model::{snapshot::Capability, snapshot::CapabilityRule, snapshot::MachineCatalog, snapshot::MachineCatalogs, snapshot::MeasureRecipe, snapshot::Process3dSnapshot, snapshot::ProcessMeasure, snapshot::ProcessStep, snapshot::StepOrigin, snapshot::Stock, snapshot::WorkingSolid, snapshot::WorkshopMachine};

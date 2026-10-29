@@ -292,8 +292,6 @@ impl<K: Ord, V> FixedTable<K, V> {
 // #endregion 🔖️FixedTable
 impl semio_framework_dsl_record::BorrowedDslField for EntityId { const SHAPE: semio_framework_dsl_record::BorrowedShape = semio_framework_dsl_record::BorrowedShape::UInt; }
 
-
-
 impl semio_framework_value_persistent::RetainedEqualityElement for EntityId{fn inline_eq(left:&Self,right:&Self)->bool{left.0==right.0}}
 impl semio_framework_value_persistent::RetainedEquality for EntityId{type Equality=semio_framework_value_persistent::retained_equality::RetainedInlineEquality<Self>;const INLINE_PAIR_BYTES:Option<usize>=Some(2*std::mem::size_of::<Self>());fn equality_cursor()->Self::Equality{Self::Equality::new()}fn inline_equal(left:&Self,right:&Self)->Option<bool>{Some(left.0==right.0)}}
 

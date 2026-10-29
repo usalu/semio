@@ -21,7 +21,7 @@ use semio_framework::{
     AssetDeclaration, ExecutionMode, ExtensionPointDeclaration, Fault, FaultCode, FaultFrom, FaultOrigin, PluginManifest, TopicContribution, ViewModel,
 };
 /// 🎯️ M1/M2 (ticket 26/08/17 `design-unified.md`): `UiIntent`/`PresenceUpdate` for
-/// `plugin_dispatch_intents`/`plugin_render_surface` — this module (a sibling of `pub mod app`, not
+/// `plugin_dispatch_intent`/`plugin_render_surface` — this module (a sibling of `pub mod app`, not
 /// nested inside it) has no glob import of the contract crate the way `mod app` does.
 use semio_framework_ui_contract as ui_contract;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-helpers`): `sdk-flip` flipped `plugin_render`/

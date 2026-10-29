@@ -29,6 +29,7 @@ semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/�
 semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-media = { path = "../../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-emission = { path = "../../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-app = { path = "../../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-framework-plugin-child = { path = "../../../../🪆️child/📦️packages/🦀️rust" }

@@ -102,7 +102,7 @@ fn required_docx_xml_address(args: Option<&semio_framework_value::DslValue>) -> 
     Ok(DocxXmlAddress { part_path: text("partPath")?, node_path, expected_name: text("expectedName")?, revision: text("revision")? })
 }
 
-semio_s_artifact_stdio_docx_base::editor::docx::standards::v_ecma_376::subsets::base::canonical_docx_set_page_work!(DocxStrictSetPageWork, docx_strict_set_page_work, DocxStrictEditor, DocxStrictEditorCommand::SetPage, DocxStrictEditorCommand::SetRunFormatting);
+semio_s_artifact_stdio_docx_base::canonical_docx_set_page_work!(DocxStrictSetPageWork, docx_strict_set_page_work, DocxStrictEditor, DocxStrictEditorCommand::SetPage, DocxStrictEditorCommand::SetRunFormatting);
 //#endregion 🔖️Helpers
 
 //#region 🔖️Editor
@@ -181,8 +181,8 @@ impl ArtifactEditor for DocxStrictEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->DocxSnapshot>{Some(||{
-        crate::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default()).build().expect("the schema-authored initial strict DOCX is conformant")
+    fn reference_birth()->Option<fn()->Result<DocxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        crate::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default()).build().map_err(|error|semio_framework_plugin::reference_birth_fault("the schema-authored initial strict DOCX is conformant",format_args!("{error:?}")))
     })}
 
     /// ✏️ Replaces the addressed paragraph's text after its optimistic revision matches.

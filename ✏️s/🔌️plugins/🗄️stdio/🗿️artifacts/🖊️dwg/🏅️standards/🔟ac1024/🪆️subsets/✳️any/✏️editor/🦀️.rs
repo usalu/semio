@@ -220,8 +220,8 @@ impl ArtifactEditor for DwgAc1024Editor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); dwg_ac1024_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->DwgSnapshot>{Some(||{
-        DwgSnapshot { version: "AC1024".into(), ..DwgSnapshot::default() }
+    fn reference_birth()->Option<fn()->Result<DwgSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(DwgSnapshot { version: "AC1024".into(), ..DwgSnapshot::default() })
     })}
 
     fn handle(

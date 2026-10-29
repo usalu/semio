@@ -1,0 +1,74 @@
+# 1028 result: puzzlehub
+
+Status: AMBER. The store-engine source-gate blocker is fixed (census: 13 files / 254646 B / 2841 lines, wasm cfg identical). `semio-hub-puzzle` itself is not reached yet: the native check of the new engine crates is blocked in other shared crates (list under "Remaining frontier"). wasm-bindgen left to the coordinator.
+
+## 1. Store-engine source split (SHARED CHANGE)
+Cause: `semio-framework-os-store-engine` (`maxSourceBytes 262144`, 32 files, 4000 lines) reached 30 files / 607408 B. Not a gate-limit change: the 1 MiB raise a peer made in the engine `Cargo.toml` was reverted to 262144 / 32 / 4000.
+Rule found: `admitCargoSourceBoundariesV1` (`🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🎟️admission/🟦️.ts`) sums cfg-active bytes/files/lines reachable from the lib via `#[path]`, bounded by the crate's `rust-source-boundary` metadata. I measured with `measureRustCrate` (script `C/1028-tools/puzzlehub/measure.ts`).
+New crates (acyclic: graph is upstream of engine; branch -> replay -> command are downstream of engine):
+- `semio-framework-os-store-engine-checkpoint-graph` @ `store/⚙️engine/🌳️checkpoint-graph`: `checkpoint_ancestors, merge_base, reconcile_alternative, checkpoint_identity, preflight_merge_by_id, merge_by_id, retract_history_transitions_from_spr` (pure free functions, 7.6 KB).
+- `semio-framework-os-store-engine-branch` @ `store/⚙️engine/🌿️branch` (93 KB, was `original_history_branch`).
+- `semio-framework-os-store-engine-replay` @ `store/🕰️history/🏁️replay` (187 KB): replay publication, abort/checkout/checkpoint/repin, `original_replay_metadata`, `failure` (`ArtifactOriginalVcsFailure`, moved from command to break a replay<->command cycle), `checkpoint_order` (`OriginalCheckpointEditOrder`, moved from engine `checkpoint-read/order.rs`).
+- `semio-framework-os-store-engine-command` @ `store/🕰️history/🎮️command` (59 KB): native VCS command. Its former inherent `impl ArtifactStore { admit/advance/take/ack/close_native_vcs_command, native_vcs_command_close_demands }` became the public trait `ArtifactStoreNativeVcsTurn` (+ private helper trait), implemented for `ArtifactStore` (inherent impls cannot live downstream). Callers import `store::os_store::ArtifactStoreNativeVcsTurn as _`.
+Engine changes: removed the `original_*` modules from `engine/🦀️.rs`; lifted store lost the command mount, `OriginalCheckpointEditOrder`, the free functions above and 9.8 KB of repeated nested `//#region 🔖️…` marker stacks; removed the duplicated second mounts of `derived_operation_store` / `original_report_replay_store` (merge duplicate from 1e27248a0ba); `CheckpointSource` is now `pub` (re-exported by `lifted_store`); `begin_checkpoint_report_replay`, `begin_selected_report_replay`, `step_derived_report_replay_in_order`, `original_report_key` went `pub(crate)` -> `pub`.
+Consumers updated (no shims): os-kernel facade `🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust/{🦀️.rs? no: store/🦀️.rs,Cargo.toml}` (store facade `🏪️store/🦀️.rs` dropped its second `#[path]` mount of the command file; re-exports now come from the new crates), space-member (`native-vcs` and 3 trait files + Cargo), store testing doubles/prelude (+Cargo), sync native actor (+Cargo), plugin `close-ladder` and `command-routes` (trait import).
+Registrations: root `Cargo.toml` members (+4), `📋️build-owners.json` (+4 owners, sorted), `os/🧪️tests/🧫️fixtures/📦️crate-boundaries/🔣️.json` (+4 rows). Each crate has `📦️packages/🦀️rust/{Cargo.toml,📋️project.json}`.
+
+## 2. Other fixes found on the path (framework, shared)
+All three come from the 15:06 merge `1e27248a0ba` ("stashed edits") mixing two designs of `NativeReceive` (14:10 `?Sized`/`dyn NativeValueSource` vs stash `Box` receivers):
+- `value/🛬️decode/🧳️owned/🌳️value/🦀️.rs` + `📋️list/🦀️.rs`: 3-way merged (`git merge-file`, base 8b89a887, ours 2aaf5b27, theirs HEAD): `?Sized` design restored, stash `Box<T::Receiver>` slot and `saturating_sub` bodies kept. Originals saved in `C/1028-tools/puzzlehub/value-native-owned-orig/`.
+- `value/🛬️decode/🧳️owned/🗂️map/🦀️.rs` (new in the stash): adapted to the `dyn` design (`V: NativeReceive<dyn NativeValueSource>`, slot `NativeReceiveSlot<dyn NativeValueSource,V>`, `record_name`, `PhantomData<fn(&I)>` marker).
+- `value/📦️paged/🛬️receive/🗂️map/🦀️.rs`: `+Sync` on `V` for the struct, inherent impl and `Drop` impl (the `NativeReceiver` impl already required it).
+`semio-framework-value-native-owned` and `semio-framework-value` now compile.
+
+## 3. Remaining frontier (chk11, native, root workspace)
+Seen after the fixes, all other agents' areas or shared:
+- `ui-locale` `🖱️ui/🌐️locale/.../🏷️label/🛬️receiving/🦀️.rs` and `artifact-reference` blob schema: `#[derive(NativeReceive)]` expansion (`value/✨️derive/⚙️expansion/🦀️.rs`, being edited by someone: modified in the working tree) emits the pre-`dyn` shape: `NativeRecordKey` used like `&str` (`.len()`, `==`), `RetainedCloneRef<'_, I>` vs `<'_, _>`. 10 + 5 errors.
+- `replication-wire-core` `⚙️codec/🛬️retained/🦀️.rs:206`: `OriginalWireSourceIdentity` lacks the initializer field `range_start`.
+- `dsl-record-model` `🗣️dsl/🧬️schema/📐️model/.../🛬️receive/🦀️.rs:36`: `PagedBytes::get` missing (`Bytes64` arm).
+- `value-snapshot-read` `🌱️value/📸️snapshot/👁️read/.../🦀️.rs:524/533`: duplicate `capture_copy_byte_demand` (const `size_of::<Self>()` vs `size_of::<Self>()+size_of::<Arc<T>>()`; merge duplicate, keep the second quote, the `Arc` one).
+Errors in the new engine crates (branch/replay/command/graph) have NOT been seen yet; rustc has not reached them. Expect visibility (`pub(super)`/private engine items), import-prelude and trait-method-resolution fixes in `command` and `replay`.
+
+## 4. Check history
+chk1 lock refresh race (draw peer), chk2 gate refusal (store-engine; now fixed), chk4/5 gate vs concurrent `os-vcs` boundary raise by a peer, chk5-chk11 compile frontier moving through value-native-owned -> value -> ui-locale et al. Logs `C/🗑️generated/1028/puzzlehub-chk*.txt`. Script `C/1028-tools/puzzlehub/runchk.sh <n> <cargo check args>` (detached, `.rc` marker). Native root-workspace check is `-p` of the 5 engine crates; the real hub target is `--manifest-path 🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust/Cargo.toml --target wasm32-unknown-unknown -p semio-hub-puzzle`.
+
+## 5. wasm-bindgen route (unchanged)
+Puzzle `wasm` = wasm-pack web build (target `wasm32-unknown-unknown`, installed). Resolver hard-fails unless `wasm-bindgen 0.2.129` is found (`SEMIO_WASM_BINDGEN_BIN`, else `<rust cache partition>/cargo/home/bin`, else PATH); only `workspace:deps-wasm` installs (`cargo install wasm-bindgen-cli --version 0.2.129 --locked`). `~/.cargo/bin/wasm-bindgen` is 0.2.126.
+
+## Files changed
+Engine/consumer/registration files listed in sections 1-2; new dirs under `🏪️store/⚙️engine/{🌳️checkpoint-graph,🌿️branch/📦️packages}`, `🏪️store/🕰️history/{🏁️replay,🎮️command}/📦️packages`. Temporary `/tmp/ph` helpers only; scripts in `C/1028-tools/puzzlehub/`.
+
+## 6. Assignment 2: artifact-reference / pack-record-retained / ui-viewport
+- SHARED CHANGE `🎒️pack/🌱️value/🛬️decode/🎮️driver/🦀️.rs`: `RetainedValueDriver::one` declared the stale `(&mut self,&[u8],usize)`; both implementors (`RetainedDocumentDriver`, intrinsic `BodyDriver`) and the caller `🫴️receiving/📦️document` use `one<S:RetainedWireByteSource+?Sized>(&mut self,&S,(usize,usize),usize)`. Trait declaration completed in that direction (+ `RetainedWireByteSource` import; the crate already depends on replication-wire-core).
+- artifact-reference (4 errors) and ui-viewport (2) are only the `#[derive(NativeReceive)]` expansion bug, owned by fwwasm; no edit by me.
+- Check chk12 (native, root workspace, `-p` artifact-reference, pack-record-retained, ui-viewport, pack-intrinsic): exit 0 at the time of the run (the derive fix had landed by then).
+
+## 7. Assignment 3 (hub check + split fallout), state at chk17
+SHARED CHANGE (merge-damage from 1e27248a0ba, not split-caused):
+- `store/🔁️replay/🎮️operation/🦀️.rs`: removed the stray 175-line `impl crate::ReplayOwnedState` block (already present in store-replay `⏩️replay-owned-state-operations`; it referenced `crate::ReplayMode/ReplayOwnedState` that do not exist in the operation crate) and the then-unused `Arc` import; `OperationMessageSettlement::new` -> `pub` (caller in store-replay). Original saved in `C/1028-tools/puzzlehub/value-native-owned-orig/replay-operation.rs`.
+- `store/🔁️replay/⏩️replay-owned-state-operations/🦀️.rs`: `settlement.step(..)` now yields `(done, progress)`; progress is stored in `native_receipt`.
+- `store/🔁️replay/🦀️.rs:8`: `pub use … as replay_preparation` (os-store-read, engine and others name `store_replay::replay_preparation::…`).
+- `store/🧵️operation-wire/🦀️.rs`: removed identical duplicate `begin_copy_byte_demand` (E0201).
+- No other consumers of moved store-engine items exist (grep over framework, s, hub, semio-tech, mit-bestand).
+Checks: hub1/hub2 (wasm32-unknown-unknown, `semio-hub-puzzle`) pass the source gate and stop in other owners' crates (replication-edit [derive, since fixed by fwwasm], os-history `range_start` [since fixed by a peer], mesh-engine, manifest-view-model). hub3 started before the latest fixes. Native engine batch chk17 (engine, 4 split crates, replay-operation, operation-wire) now stops in: `os-store-codec-registry` (`📸️native-snapshot/writing.rs:112` `declared_binary_prefix_byte` returns `Option<u8>`, caller expects `u8`), `os-store-one-item-batch` (`📬️paged-one-item/🧬️mutation-apply:139` `SnapshotProjection::Output != S`; `📥️lifted/📬️publication:239` `ArtifactStoreBatchStage` lost fields `group_preparation`, `transaction`, `transaction_close`, `lane_close`, `lane_insert`, `preparation` and `begin_close`): stash/14:10 divergence in one-item publication, owners: puzzleplugin/energy per coordination. The 4 new engine crates have still not been reached by rustc.
+
+## 8. Free-fix round (21:30)
+- `os-store-engine-branch`: 9 signatures still carried the pre-strengthening bounds; all brought to `P: Clone+ToValue+FromValue+Send+Sync+'static, M: Clone+ColdMutation<P>+ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static` (matches `ArtifactStore`'s impl). chk20 (native): `os-store-engine-command` + `os-store-engine-branch` GREEN (exit 0). command was last edited by peers (21:03) before my check; I made no edit to it.
+- Hub (wasm32-unknown-unknown) hub6: all engine/split crates pass; remaining errors are in `os-store-space` (duplicate import `ReferenceSpaceMember` at `📜️space-history/🏠️space/…/📥️lifted/🏪️store/🦀️.rs:37`), `os-store-config` (hydration types: `ArtifactStore<P,M>` needs the strengthened `P/M` bounds: `📥️retained/🧬️hydration-types-constructor-and-drive`, `…drop-and-completion`) and `os-store-member-open-store` (`RetainedPersistedDocumentHydration<P,M>` bounds, `🚪️open/🏭️operation/🦀️.rs:104`). All three had files edited <10 min ago by sweepstore, so per the 19:55 rule I did not touch them.
+
+## 9. State at 21:55 (hub8)
+`semio-hub-puzzle` (wasm32-unknown-unknown) RED, frontier moved past the whole store layer: engine, the 4 split crates, store-space/config/member-open-store all compile. Remaining: framework-plugin layer, i.e. the `StoreState`/`StoreMutationFor<P>` bound sweep that puzzleplugin owns:
+- `plugin-document-media` (781; `🗃️document/…/🔁️store-replacement-admission-and-member-drive` 407, `🧰️store-replacement-initializer-and-retirement` 314, `🗄️document-archive-load` 60): unsatisfied store bounds.
+- `plugin-command` (41, `🛬️lifted/⏪️time-travel`), `plugin-tool-run` (37, `member-owners-and-visitors` 29, tool-machine 3): same.
+- `plugin-decl-surface` (10; editor-app/viewer-app `PresenceMutation: ColdMutation<Presence>` missing on the associated type): same family.
+- `plugin-composition-publication` (6; `🤝️group/🦀️.rs:55,110` `String: From<MemberValueError>` / `From<VcsError>`: error-type drift of `with_native_receiving` / `stage_one_item_publication`).
+None edited in the last 10 min except decl-surface (2 files); not touched by me to avoid colliding with the sweep. Re-run: `C/1028-tools/puzzlehub/runhub.sh <n>`.
+
+## 10. plugin-composition-publication error typing (SHARED CHANGE)
+`🔌️plugin/🧩️composition/📬️publication/🤝️group/🦀️.rs`: `PrivateOwnedPublicationLane::advance` returned `Result<_, String>` while its body already returned `VcsError::InverseRefused` and its caller captures the failure as `OriginalMemberPublicationFailure{source: VcsError}` inside `with_native_receiving` (needs `E: From<ValueError>`). Signature now `Result<_, store::VcsError>`; the `SpaceMember` string results (`begin_one_item_owned_publication`, `prepare_one_item_publication`, `stage_one_item_publication`) are mapped with `VcsError::ValidationFailed`. `📦️owner/🦀️.rs` (2 callers): `.map_err(|error| plugin_sdk_fault(error.to_string()))`. hub9: composition-publication no longer fails; remaining: plugin-document-media (5), plugin-decl-surface (10), plugin-tool-run (5), artifact-flow-flow-document (1) (bounds/puzzleplugin sweep).
+
+## 11. CHECKPOINT 22:55 STATUS
+STATUS: AMBER. Store layer + my 4 split crates GREEN (native chk20, hub9 passes them). `semio-hub-puzzle` wasm32-unknown-unknown RED only in the plugin layer (plugin-document-media 5, plugin-decl-surface 10, plugin-tool-run 5, artifact-flow-flow-document 1; bounds sweep = puzzleplugin). No edit in flight; all my files compile-atomic.
+Test-target task (check --tests over today's new crates): NOT done. chk22 (batched root-workspace `--tests` for the engine family + store-replay, replay-operation, operation-wire, space-member, testing-fixtures, testing-prelude, sync-native, os-kernel) was still queued behind machine load; I killed my own queued wrapper (pid 62162 + child 62165). The 18 other new crates (plugin-*, energy/layout/ifc/stdio/hub, listed by `git status --short --untracked-files=all | /usr/bin/grep Cargo.toml`) were not started.
+Next step: `cd /Users/ueli/Documents/semio && C=.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️28/DEMONSTRATOR-END-TO-END-ALL-APPS && A=(); for p in <packages>; do A+=(-p "$p"); done; nohup $C/1028-tools/puzzlehub/runchk.sh 23 --manifest-path Cargo.toml --keep-going --tests "${A[@]}" &` (package list in this section's chk22 description; args must be separate array words, a single string fails). Then iterate stale test imports to moved items (store-engine tests referencing `original_*`, `lifted_store::{merge_base,...}`; dev-deps `store`/trace on the new crates: the new crates have no dev-dependencies yet) and `hub` wasm check via `C/1028-tools/puzzlehub/runhub.sh <n>`.
+Known test-side debt from my split: unit tests that used to be mounted in the engine (`⚙️engine/🧪️tests/🔬️unit`) and test files beside replay/branch/command (`*-tests.rs`, `🧪️tests/`) are orphaned/unmounted and refer to `store::os_store::original_*`; they need mounting in the new crates with a `semio-framework-os-kernel` dev-dependency (dev-cycle allowed).

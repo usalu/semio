@@ -36,7 +36,7 @@ pub(crate) fn snapshot(app: &Generation3dApp) -> Generation3dSnapshotRead { Gene
 /// 🎯️ Completes the registered typed publication before returning a live document read.
 pub(crate) async fn dispatch(app: &mut Generation3dAppFixture, command: Generation3dCommand) -> TypedOperationFixtureReceipt {
     let action_meta = meta("local");
-    app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
     settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("retained publication")
 }
 pub(crate) async fn render_body(app: &mut Generation3dAppFixture, body: &str) -> String {

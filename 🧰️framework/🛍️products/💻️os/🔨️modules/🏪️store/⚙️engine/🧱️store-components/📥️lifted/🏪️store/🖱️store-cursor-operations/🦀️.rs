@@ -127,14 +127,14 @@ where
     
 
     /// 🏁️ Returns a finished replay and its genuine complete projection for preview and subsequent publication.
-    pub fn finish_derived_report_replay(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> {
+    pub fn finish_derived_report_replay(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> where P: Clone, Mutation: protocol::ColdMutation<P> {
         let result=self.take_derived_report_result(store_owners,store_wire,owner)?;
         let head = result.state().map(|owner| self.seal_derived_snapshot(store_owners, store_wire, Arc::clone(owner)));
         Ok((result, head))
     }
 
     /// 🎁️ Transfers the actual completed result without issuing an unused projection alias.
-    pub fn take_derived_report_result(&self,store_owners:&StoreOwners<P,Mutation>,store_wire:&StoreWire<P,Mutation>,owner:&mut Option<ArtifactDerivedReplay<P,Mutation>>)->Result<EditReplayResult<P,Mutation>,VcsError>{
+    pub fn take_derived_report_result(&self,store_owners:&StoreOwners<P,Mutation>,store_wire:&StoreWire<P,Mutation>,owner:&mut Option<ArtifactDerivedReplay<P,Mutation>>)->Result<EditReplayResult<P,Mutation>,VcsError> {
         let replay = owner.as_ref().ok_or_else(|| VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"derived replay owner is absent")))?;
         self.admit_derived_source(store_owners, store_wire, &replay.registry, replay.generation, replay.revision)?;
         if !replay.replay.as_ref().is_some_and(|replay|replay.is_finished()) { return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"derived replay has not finished"))); }
@@ -496,7 +496,7 @@ operation,
             announce_items: 0,
             transaction_open: false,
         
-            lane_insert:None,lane_close:None,
+            lane_insert:None,lane_close:None,lane_ready:false,
 })
     }
 

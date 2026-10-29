@@ -33,8 +33,8 @@ pub fn drain_channel_for_test(remote: &ChannelBackboneRemote) -> Result<Vec<Back
 /// the test, which then installs and closes them explicitly.
 pub struct ArtifactStore<P, Mutation>(pub semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>, pub Option<fn(&mut semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>)>)
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>;
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>;
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
@@ -75,8 +75,8 @@ where
 
 impl<P, Mutation> std::ops::Deref for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     type Target = semio_framework_os_store_engine::lifted_store::ArtifactStore<P, Mutation>;
 
@@ -87,8 +87,8 @@ where
 
 impl<P, Mutation> std::ops::DerefMut for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
@@ -138,8 +138,8 @@ where
 
 impl<P, Mutation> Drop for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn drop(&mut self) {
         if let Some(close) = self.1.take() {
@@ -156,9 +156,9 @@ where
     Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn member_native_vcs_capture_demands(&self)->semio_framework_value::RetirementDemand{SpaceMember::member_native_vcs_capture_demands(&self.0)}
-    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::admit_member_native_vcs_command(&self.0,request,cx,output)}
-    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{SpaceMember::advance_member_native_vcs_command(&mut self.0,owner,cx)}
-    fn take_member_native_vcs_result(&self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::take_member_native_vcs_result(&self.0,owner,cx,output)}
+    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_framework_os_store_engine_command::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::admit_member_native_vcs_command(&self.0,request,cx,output)}
+    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_engine_command::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{SpaceMember::advance_member_native_vcs_command(&mut self.0,owner,cx)}
+    fn take_member_native_vcs_result(&self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_framework_os_store_engine_command::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::take_member_native_vcs_result(&self.0,owner,cx,output)}
     fn ack_member_native_vcs_command(&self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::ack_member_native_vcs_command(&self.0,owner,cx)}
     fn member_native_vcs_close_demands(&self,owner:&dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{SpaceMember::member_native_vcs_close_demands(&self.0,owner,body)}
     fn close_member_native_vcs_command(&mut self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::close_member_native_vcs_command(&mut self.0,owner,cx)}
@@ -197,10 +197,10 @@ where
     fn begin_one_item_owned_publication(&self, request: &mut MemberStoreOwnedBatchRequest, grant: ArtifactStoreOneItemGrant) -> Result<Option<(Box<dyn ErasedMemberStoreOneItemPublication>, semio_framework_value::RetainedCloneProgress)>, String> {
         SpaceMember::begin_one_item_owned_publication(&self.0, request, grant)
     }
-    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, semio_framework_os_vcs::VcsError> {
+    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String> {
         SpaceMember::advance_one_item_publication(&mut self.0, publication, body, grant,receiving)
     }
-    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_os_vcs::VcsError> {
+    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         SpaceMember::prepare_one_item_publication(&mut self.0, publication, body, grant,receiving)
     }
     fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {

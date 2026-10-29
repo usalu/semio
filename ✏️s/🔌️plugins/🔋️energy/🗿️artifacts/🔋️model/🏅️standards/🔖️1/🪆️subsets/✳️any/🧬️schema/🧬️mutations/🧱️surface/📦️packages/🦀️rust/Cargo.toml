@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-s-artifact-energy-model-native-derive = { workspace = true }
 semio-s-artifact-energy-model-native-mutations = { workspace = true }
+semio-s-artifact-energy-model-native-mutations-lifecycle = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
@@ -31,5 +32,6 @@ semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-diff-patch = { workspace = true }
 semio-s-artifact-energy-model-mut-boundary = { workspace = true }
 semio-s-artifact-energy-model-mut-fenestration = { workspace = true }
+semio-s-artifact-energy-model-mut-fenestration-geometry = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }

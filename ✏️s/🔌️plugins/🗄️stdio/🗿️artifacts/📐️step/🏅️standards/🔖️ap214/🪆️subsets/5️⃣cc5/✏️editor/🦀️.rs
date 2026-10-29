@@ -223,8 +223,8 @@ impl ArtifactEditor for StepCc5Editor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); step_cc5_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->StepSnapshot>{Some(||{
-        <semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc5 initial owner")
+    fn reference_birth()->Option<fn()->Result<StepSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        <semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc5::standards::v_ap214::subsets::cc5::io::StepCc5BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).map_err(|error|semio_framework_plugin::reference_birth_fault("valid authored AP214 cc5 initial owner",format_args!("{error:?}")))
     })}
 
     fn handle(

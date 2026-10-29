@@ -12,7 +12,7 @@ use semio_framework_plugin_reactor_lifecycle::life_cleanup_vocabulary::{RUNTIME_
 use crate::inst_opening::{RUNTIME_CLOSE_INNER_GRANT_US, RUNTIME_CLOSE_STALL_CREDIT_US, RUNTIME_CLOSE_ZERO_PROGRESS_LIMIT};
 use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_plugin_reactor_lifecycle::life_app_cell::{RuntimeAppCell, RuntimeInstanceRefusal};
-use semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::{RuntimeCloseCleanupJob, RuntimeCloseCleanupPump, RuntimeLiveCleanupJob, RuntimeLiveCleanupPump, plugin_begin_instance_close, runtime_close_phase};
+use semio_framework_plugin_reactor_lifecycle::life_cleanup_pumps::{RuntimeCloseCleanupJob, RuntimeCloseCleanupPump, RuntimeLiveCleanupJob, RuntimeLiveCleanupPump, plugin_begin_instance_close, runtime_close_phase, runtime_drain_maintenance_source, runtime_close_owned_app_source};
 use semio_framework_plugin_reactor_app::app_runtime_helpers::{debug_runtime_line, plugin_internal_fault};
 use std::mem::size_of_val;
 #[doc(hidden)]
@@ -54,13 +54,18 @@ fn runtime_live_cleanup_publish_turn<PA: PluginApp>(cell: &RuntimeAppCell<PA>, s
     cell.maintenance_status.store(verdict.repr(), Ordering::SeqCst);
 }
 fn run_runtime_live_cleanup_turn<PA:PluginApp+'static>(cell:&std::sync::Arc<RuntimeAppCell<PA>>,generation:semio_framework_job::Generation,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-    if cx.should_yield(){return Ok(())}
+    if cx.retirement_should_yield(){return Ok(())}
     let mut clock_source=cx.clock_source();let clock=runtime_callback_clock_begin(&mut clock_source);
     let status=cx.with_original_native_weak_parent(cell,|cx|match cell.maintenance_pump.try_lock(){Ok(mut pump)=>runtime_live_cleanup_pump_one(cell,generation,&mut pump,cx),Err(_)=>Ok(RuntimeMaintenanceStatus::Ready)})?;
     let elapsed=clock.and_then(|clock|runtime_callback_clock_elapsed(&mut clock_source,clock));
     runtime_live_cleanup_publish_turn(cell,status,elapsed);Ok(())
 }
 fn runtime_live_cleanup_pump_one<PA: PluginApp + 'static>(cell: &std::sync::Arc<RuntimeAppCell<PA>>, generation: semio_framework_job::Generation, pump: &mut RuntimeLiveCleanupPump<PA>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<RuntimeMaintenanceStatus,semio_framework_job::OriginalTurnFailure> {
+    if cx.is_cancelled()||cx.deadline_exceeded(){
+        let step=runtime_drain_maintenance_source(cell,cx)?;
+        if !matches!(step,PluginLifecycleStep::Complete(progress) if progress==RetainedCloneProgress::default()){return Ok(RuntimeMaintenanceStatus::Ready)}
+    }
+    if cx.deadline_exceeded(){let _=pump.close_step(cx)?;return Ok(RuntimeMaintenanceStatus::Ready)}
     let grant=cx.retained_grant();
     if pump.closing {let _=pump.close_step(cx)?;return Ok(RuntimeMaintenanceStatus::Fault(RuntimeCleanupFault::AlreadyClosing));}
     if let Some(rejected)=pump.rejected.as_mut().filter(|pending|!pending.admission_pending()||cx.is_cancelled()){
@@ -243,6 +248,12 @@ pub fn runtime_close_fault<PA: PluginApp>(state: &RuntimeCloseWorkerState<PA>, c
 #[doc(hidden)]
 pub fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync::Arc<RuntimeCloseWorkerState<PA>>, pump: &mut RuntimeCloseCleanupPump<PA>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<RuntimeCloseStatus,semio_framework_job::OriginalTurnFailure> {
     runtime_close_phase(state, 0);
+    if cx.is_cancelled()||cx.deadline_exceeded(){
+        let app=runtime_close_owned_app_source(state,cx)?;
+        if !matches!(app,semio_framework_job::InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){return Ok(RuntimeCloseStatus::Ready)}
+        let worker=pump.close_step(cx)?;
+        return Ok(if matches!(worker,semio_framework_job::InteractiveJobCloseStep::Complete{progress} if progress==RetainedCloneProgress::default()){RuntimeCloseStatus::Complete}else{RuntimeCloseStatus::Ready});
+    }
     let grant=cx.retained_grant();
     if let Some(rejected)=pump.rejected.as_mut().filter(|pending|!pending.admission_pending()||cx.is_cancelled()){
         if rejected.terminal_is_empty(){if grant.maximum_copy_bytes<size_of_val(rejected){return Ok(RuntimeCloseStatus::Ready);}drop(pump.rejected.take());return Ok(runtime_close_fault(state,RuntimeCleanupFault::AdmissionRejected));}
@@ -318,7 +329,7 @@ pub fn runtime_close_cleanup_pump_one<PA: PluginApp + 'static>(state: &std::sync
     Ok(RuntimeCloseStatus::Ready)
 }
 fn run_runtime_close_turn<PA:PluginApp+'static>(state:&std::sync::Arc<RuntimeCloseWorkerState<PA>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
-    if cx.should_yield(){return Ok(())}
+    if cx.retirement_should_yield(){return Ok(())}
     state.status.store(RuntimeCloseStatus::Queued.repr(),Ordering::SeqCst);
     let mut clock=cx.clock_source();let measured=runtime_callback_clock_begin(&mut clock);
     let Some(status)=run_runtime_close_turn_inner(state,cx)?else{return Ok(())};
@@ -366,14 +377,16 @@ pub async fn plugin_destroy_app<PA: PluginApp + 'static>(runtime: &PluginRuntime
 /// `ZeroProgress` quotes the stall credit it actually spent; every other cause quotes the
 /// turn cost it was measured against.
 pub fn plugin_step_close_cleanup<PA: PluginApp + 'static>(runtime:&PluginRuntime<PA>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    cx.with_original_retirement(|cx|{
     let quarantine=runtime.close_quarantine.try_borrow().map_err(|_|plugin_internal_fault("runtime close quarantine is busy"))?;
     let Some((index,instance_id,entry))=quarantine.next_entry_from(runtime.close_cleanup_cursor.get())else{return Ok(false)};
     let state=&entry.state;runtime.close_cleanup_cursor.set((index+1)%PLUGIN_RUNTIME_INSTANCE_SLOTS);
     match RuntimeCloseStatus::from_repr(state.status.load(Ordering::SeqCst)){
         RuntimeCloseStatus::Complete=>{drop(quarantine);let removed=runtime.close_quarantine.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime close quarantine is busy"))?.take(instance_id);drop(removed);Ok(true)}
         RuntimeCloseStatus::Fault(cause)=>{let elapsed_us=if cause==RuntimeCleanupFault::ZeroProgress{state.stall_credit_spent_us.load(Ordering::SeqCst)}else{state.last_callback_elapsed_us.load(Ordering::SeqCst)};drop(quarantine);let removed=runtime.close_quarantine.try_borrow_mut().map_err(|_|plugin_internal_fault("runtime close quarantine is busy"))?.take(instance_id);drop(removed);Err(runtime_cleanup_fault("close",cause,instance_id,elapsed_us).into())}
-        _=>{if cx.should_yield(){return Ok(false)}run_runtime_close_turn(state,cx)?;Ok(true)}
+        _=>{if cx.retirement_should_yield(){return Ok(false)}run_runtime_close_turn(state,cx)?;Ok(true)}
     }
+    })
 }
 
 /// 🌡️ Whether the instance the last [`plugin_step_live_cleanup`] stepped still reports
@@ -387,13 +400,15 @@ pub fn plugin_live_cleanup_under_pressure<PA: PluginApp + 'static>(runtime: &Plu
 /// burst drains faster than any cadence fills while the fair single step stays the idle cost.
 pub const LIVE_CLEANUP_PRESSURE_STEPS_PER_TURN: usize = 32;
 pub fn plugin_step_live_cleanup<PA: PluginApp + 'static>(runtime:&PluginRuntime<PA>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+    cx.with_original_retirement(|cx|{
     let instances=runtime.instances.try_borrow().map_err(|_|plugin_internal_fault("runtime instance authority is busy"))?;
     let Some((index,_,cell))=instances.next_entry_from(runtime.live_cleanup_cursor.get())else{runtime.live_cleanup_pressure.set(false);return Ok(false)};
     runtime.live_cleanup_cursor.set((index+1)%PLUGIN_RUNTIME_INSTANCE_SLOTS);let stepped=plugin_step_live_cleanup_cell(cell,cx);runtime.live_cleanup_pressure.set(cell.maintenance_pressure.load(Ordering::Relaxed));stepped
+    })
 }
 
 fn plugin_step_live_cleanup_cell<PA:PluginApp+'static>(cell:&std::sync::Arc<RuntimeAppCell<PA>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-    if cx.should_yield(){return Ok(false)}
+    if cx.retirement_should_yield(){return Ok(false)}
     if let RuntimeMaintenanceStatus::Fault(cause)=RuntimeMaintenanceStatus::from_repr(cell.maintenance_status.load(Ordering::SeqCst)){return Err(runtime_cleanup_fault("live",cause,cell.id,cell.maintenance_fault_us.load(Ordering::SeqCst)).into())}
     let generation=semio_framework_job::Generation(cell.maintenance_generation.load(Ordering::SeqCst));
     run_runtime_live_cleanup_turn(cell,generation,cx)?;Ok(true)

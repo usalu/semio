@@ -5,8 +5,8 @@ use crate::retained_config_hydration::hydration_types_constructor_and_drive::Ret
 
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub fn retirement_demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
@@ -66,8 +66,8 @@ where
 
 impl<P, M> ErasedSnapshotRetirement for RetainedConfigStoreHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { self.retirement_demands(0).map(|demand| demand.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { self.retirement_demands(copy).map(|demand| demand.capacity_bytes) }
@@ -290,8 +290,8 @@ where
 
 impl<P, M> Drop for RetainedConfigStoreHydration<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: ToValue + FromValue + Mutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty_unbounded(), "retained config hydration reached Drop before exact handoff or bounded retirement");
@@ -300,8 +300,8 @@ where
 
 impl<P, M> RetainedConfigStoreHydration<P, M>
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub fn terminal_is_empty_unbounded(&self) -> bool {
         self.terminal

@@ -47,6 +47,7 @@ semio-framework-plugin-decl-emission = { path = "../../../📜️declaration/�
 semio-framework-plugin-window-config = { path = "../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio_framework_ui_contract = { path = "../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-locale = { path = "../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-replay = { path = "../../../../🏪️store/🕰️history/🏁️replay/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-trace = { workspace = true }

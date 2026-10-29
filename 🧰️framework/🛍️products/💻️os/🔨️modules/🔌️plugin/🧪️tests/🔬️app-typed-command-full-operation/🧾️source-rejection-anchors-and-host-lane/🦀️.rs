@@ -127,30 +127,26 @@
 
     #[test]
     fn host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate() {
-        let source = instance_source();
-        let start = source.find("async fn dispatch_action_received").expect("action route");
-        let end = source[start..].find("async fn dispatch_command(").map(|offset| start + offset).expect("command route");
-        let route = &source[start..end];
-        let hook = route.find("A::host_configuration_mutation(action, args)?").expect("host configuration owner hook");
-        let admission = route[hook..].find("self.tools.admit_host_configuration_json(&*self.stores, action, args).await?").expect("bounded host admission") + hook;
-        let authority = route[admission..].find("self.media.require_tool_operation_authority(&admission)?").expect("bounded host authority") + admission;
-        let event = route[authority..].find("Emit::config(vec![config_mutation])").expect("single event-sourced configuration mutation") + authority;
-        let generic_gate = route[event..].find("self.media.require_complete_tool_operation_pipeline(&admission)?").expect("generic retained operation gate") + event;
-        assert!(hook < admission && admission < authority && authority < event && event < generic_gate);
-
-        let command_start = end;
-        let command_end = source[command_start..].find("async fn fill_agent_revisions(").map(|offset| command_start + offset).expect("manifest command route end");
-        let command_route = &source[command_start..command_end];
-        let command_hook = command_route.find("A::host_configuration_mutation(command_id, args)?").expect("manifest command host configuration owner hook");
-        let command_admission = command_route[command_hook..].find("self.tools.admit_host_configuration_json(&*self.stores, command_id, args).await?").expect("manifest command bounded host admission") + command_hook;
-        let command_authority = command_route[command_admission..].find("self.media.require_tool_operation_authority(&admission)?").expect("manifest command bounded host authority") + command_admission;
-        let command_event = command_route[command_authority..].find("Emit::config(vec![config_mutation])").expect("manifest command single event-sourced configuration mutation") + command_authority;
-        let command_generic_gate = command_route[command_event..].find("self.media.require_complete_tool_operation_pipeline(&admission)?").expect("manifest command generic retained operation gate") + command_event;
-        assert!(command_hook < command_admission && command_admission < command_authority && command_authority < command_event && command_event < command_generic_gate);
-
-        let proof_start = source.find("fn qualified_host_configuration_tool_proof").expect("host configuration proof resolver");
-        let proof_end = source[proof_start..].find("async fn admit_command_wire_with_proof").map(|offset| proof_start + offset).expect("host configuration proof resolver end");
-        let proof = &source[proof_start..proof_end];
-        assert!(proof.contains("QualifiedToolProof::Bounded(proof.clone())"));
-        assert!(!proof.contains("interactive-job.missing-owned-reducer"));
+        let source=instance_source();
+        let start=source.find("async fn drive_original_host_configuration").expect("original host source driver");
+        let end=source[start..].find("async fn drive_original_emission").map(|offset|start+offset).expect("original mounted emission driver");
+        let host=&source[start..end];
+        let classify=host.find("A::original_host_configuration(action)").expect("classification before producer");
+        let admit=host.find("self.original_emission.admit_host(").expect("actual original source admission");
+        let control=host.find("prepare_original_tool_dispatch(").expect("retained control decision");
+        let produce=host.find("self.original_emission.advance_host(cx)").expect("native configuration producer");
+        let settle=host.find("render.settle_press(").expect("actual retained press settlement");
+        let finish=host.find("self.original_emission.finish_host(").expect("original metadata and emission handoff");
+        assert!(classify<admit&&admit<control&&control<produce&&produce<settle&&settle<finish);
+        assert!(host.contains("&mut source.original_tool_dispatch"));
+        assert!(host.contains("&mut source.original_press_result"));
+        assert!(host.contains("&meta.actor"));
+        assert!(host.contains("self.original_emission.host_base.as_ref()"));
+        assert!(host.contains("finish_empty_host(action,metadata,cx)"));
+        assert!(host.contains("self.drive_original_emission(cx).await"));
+        let action=source.find("async fn dispatch_action_received").expect("action driver");
+        let command=source[action..].find("async fn dispatch_command(").map(|offset|action+offset).expect("manifest command driver");
+        assert!(source[action..command].contains("A::original_host_configuration(action).is_some()"));
+        assert!(source[command..].contains("A::original_host_configuration(command_id).is_some()"));
+        for cold in ["A::host_configuration_mutation(","admit_host_configuration_json(","OpBinary::encode_op(&config_mutation)","dispatch_emit(command_id, Emit::config"]{assert!(!source.contains(cold),"cold host producer route returned: {cold}");}
     }

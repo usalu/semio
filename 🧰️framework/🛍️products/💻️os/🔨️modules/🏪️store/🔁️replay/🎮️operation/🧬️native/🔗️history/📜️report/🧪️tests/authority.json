@@ -1,0 +1,21 @@
+{
+  "schema": "semio.original-replay-authority.v1",
+  "operationFixture": "🔣️.json",
+  "cases": [
+    {
+      "authority": "original",
+      "producerInstalled": false,
+      "accepted": false,
+      "error": "UnsupportedOwner",
+      "unchanged": true,
+      "expectedZoom": "genesisZoom"
+    },
+    {
+      "authority": "cold",
+      "producerInstalled": false,
+      "accepted": true,
+      "unchanged": false,
+      "expectedZoom": "authoredZoom"
+    }
+  ]
+}

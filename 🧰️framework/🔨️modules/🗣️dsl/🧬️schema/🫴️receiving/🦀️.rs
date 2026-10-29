@@ -47,6 +47,13 @@ impl<T:DslReceivingField> DslReceivingField for Option<T>{
 impl<T:DslReceivingField> DslReceivingRecord for Option<T>{
  fn receive_record(record:&RecordValue,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{if record.fields.len()>1||record.fields.keys().any(|id|*id!=0){return Err(invalid())}match record.get(0){None|Some(FieldValue::Absent)=>{work(owner,size_of::<Self>(),1)?;Ok(None)},Some(value)=>owner.receive_nested::<Option<T>,Self>(|slot,original|{*slot=Some(None);*slot.as_mut().unwrap()=Some(T::receive_value(value,original)?);work(original,size_of::<Self>(),1)?;Ok(slot.take().unwrap())})}}
 }
+impl<T:DslReceivingField+Copy,const N:usize> DslReceivingField for [T;N]{
+ fn receive_value(value:&FieldValue,owner:&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<Self,ValueError>{
+  let FieldValue::Tuple(values)=value else{return Err(invalid())};if values.len()!=N{return Err(invalid())}work(owner,size_of::<Self>(),1)?;
+  let mut slots:[Option<T>;N]=std::array::from_fn(|_|None);for(slot,value)in slots.iter_mut().zip(values){*slot=Some(T::receive_value(value,owner)?);}
+  Ok(slots.map(|slot|slot.expect("fixed array receiving filled every slot")))
+ }
+}
 #[derive(semio_framework_value::RetireOwned)]
 struct Sequence<T:RetireOwned>{values:Vec<T>,child:Option<T>}
 impl<T:DslReceivingField> DslReceivingField for Vec<T>{

@@ -44,6 +44,8 @@ semio-framework-plugin-decl-app = { path = "../../../📜️declaration/🧩️a
 semio-framework-plugin-decl-emission = { path = "../../../📜️declaration/📨️emission/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-surface = { path = "../../../📜️declaration/🪟️surface/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-tool-contract = { path = "../../../📜️declaration/👁️view/🛬️lifted/👷️job/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-media = { path = "../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-children = { path = "../../../🧵️instance/🪆️children/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-ladders = { path = "../../../🪜️maintenance-ladder/📦️packages/🦀️rust" }
 semio-framework-plugin-instance-stores = { path = "../../../🧵️instance/🏪️stores/📦️packages/🦀️rust" }

@@ -1,5 +1,5 @@
 //! ⚠️ Dynamic diagnostic rows copy only bounded original UTF8 fragments into their final contiguous String owner.
-use crate::LayoutMutation;
+use crate::{LayoutMutationSource,LayoutMutationView as LayoutMutation};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_os_kernel::{RetainedFieldPreparation,MutationMessage,MutationMessageLedgerRetirement};
 use semio_framework_diagnostic::{Severity,FaultCode};
@@ -7,8 +7,8 @@ use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retaine
 use std::mem::{ManuallyDrop,size_of};
 #[path="🔣debug/🦀️.rs"]mod debug;
 #[derive(Clone,Copy)]pub enum MessagePiece<'a>{Literal(&'static str),Original(RetainedCloneRef<'a,String>),EscapedOriginal(RetainedCloneRef<'a,String>),Unsigned(usize)}
-pub trait DynamicMessageSource{
- fn mutation(&self)->RetainedCloneRef<'_,LayoutMutation>;
+pub trait DynamicMessageSource{type Mutation:LayoutMutationSource;
+ fn mutation(&self)->RetainedCloneRef<'_,Self::Mutation>;
  fn baseline(&self)->RetainedCloneRef<'_,LayoutSnapshot>;
  fn identity(&self)->usize;
  fn level(&self)->Severity;
@@ -57,5 +57,3 @@ impl DynamicMessagePreparation{
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.m.is_none()&&self.b.is_none()&&self.piece_binding.is_none()&&self.field.terminal_is_empty()&&self.text.is_none()&&self.code.is_none()&&self.targets.is_none()&&self.rows.is_none()&&self.ledger.is_none()&&self.retirement.is_empty()}
 }
 impl Drop for DynamicMessagePreparation{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"dynamic diagnostic requires exact original controlled closure")}}
-
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

@@ -1,0 +1,24 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-layout-layout-sqlite-member-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Native Layout Drawing member relational ownership laws through the public snapshot interface"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dev-dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-s-artifact-layout-layout-model = { workspace = true }
+pack = { workspace = true }
+serde_json = { workspace = true }

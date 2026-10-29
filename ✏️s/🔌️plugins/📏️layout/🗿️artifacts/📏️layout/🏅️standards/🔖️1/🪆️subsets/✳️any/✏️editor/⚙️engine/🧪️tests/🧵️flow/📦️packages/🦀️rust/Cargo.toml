@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-s-artifact-layout-layout-engine-flow-tests"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+[package.metadata.semio]
+role = "library"
+[lints]
+workspace = true
+[lib]
+path = "../../🦀️.rs"
+[dev-dependencies]
+semio-framework-pack-json = { workspace = true }
+semio-s-artifact-layout-layout-model = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }
+semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+semio-s-artifact-layout-layout-engine = { workspace = true, features = ["testkit"] }
+semio-framework-value = { workspace = true }

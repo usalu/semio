@@ -59,7 +59,7 @@ pub struct ToolRunFinalize<A: ArtifactApp> {
 pub struct ToolRunEntry<A: ArtifactApp> {
     pub retired_next:Option<Box<ToolRunEntry<A>>>,
     pub native:crate::original_native_tick::OriginalToolRunNativeState,
-    pub operations:crate::original_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>,
+    pub operations:semio_framework_plugin_tool_run_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>,
     pub tool_id: String,
     pub actor: semio_framework_value::SharedUtf8,
     pub definition: ToolRunDefinition,

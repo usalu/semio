@@ -95,8 +95,8 @@ impl ArtifactViewer for Block2dViewer {
     /// renders real handle kinds/handles instead of two bare header lines — the artifact-side
     /// `default_block2d_snapshot` the editor boots on too (no editor import: this is
     /// `crate::standards::v1::subsets::any::io::text::snapshot`).
-    fn reference_birth()->Option<fn()->Block2dSnapshot>{Some(||{
-        semio_s_artifact_block_2d_io::text::snapshot::default_block2d_snapshot()
+    fn reference_birth()->Option<fn()->Result<Block2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_block_2d_io::text::snapshot::default_block2d_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `Block2dViewCommand::Noop` variant never carries a config

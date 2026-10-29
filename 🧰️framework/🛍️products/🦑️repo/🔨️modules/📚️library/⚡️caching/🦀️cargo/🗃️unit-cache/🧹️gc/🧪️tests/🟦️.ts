@@ -206,7 +206,7 @@ test("the watching collector collects whenever the image falls below its floor, 
  try{
   const time=clock();let free=30*gib,collected=0;const measure=()=>({volumeBytes:volume,freeBytes:free}),collect=(async()=>{collected++;free+=8*gib;return{running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:3}};}) as never;
   const quiet=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect});
-  expect(quiet).toMatchObject({state:"done",reason:"quiet",collections:0});expect(quiet.state==="done"&&quiet.rounds).toBe(Math.floor(rules.watchQuietMilliseconds/rules.watchPollMilliseconds)+1);
+  expect(quiet).toMatchObject({state:"done",reason:"quiet",collections:0});expect(quiet.state==="done"&&quiet.rounds).toBe(Math.floor(rules.watchQuietMilliseconds/rules.watchSenseMilliseconds)+1);
   free=5*gib;const relieved=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect});
   expect(relieved).toMatchObject({state:"done",reason:"quiet",collections:1});expect(collected).toBe(1);expect(relieved.state==="done"&&relieved.freedBytes).toBe(8*gib);
   free=9*gib;const alert=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect:(async()=>({running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:0}})) as never});
@@ -214,6 +214,20 @@ test("the watching collector collects whenever the image falls below its floor, 
   free=2*gib;const stalled=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure,collect:(async()=>({running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:0}})) as never});
   expect(stalled).toMatchObject({state:"done",reason:"stalled",collections:rules.watchStalledRounds});
   expect(readFillSamplesV1(root).length).toBeGreaterThan(100);const scans=readFillSamplesV1(root).filter(row=>row.profiles!==undefined);expect(scans.length).toBeGreaterThan(2);expect(scans.some((row,index)=>index>0&&row.atMs-scans[index-1]!.atMs>=rules.watchScanMilliseconds),"a long watch scans the profiles again after the scan interval").toBe(true);expect(scans.filter(row=>row.atMs>1_000_000+rules.watchQuietMilliseconds*2).length).toBeGreaterThan(0);expect(readFillSamplesV1(root).every(row=>row.volumeBytes===volume)).toBe(true);
+ }finally{rmSync(root,{recursive:true,force:true});}
+});
+
+test("the watching collector senses a burst within one sense interval, retries a fruitless collection only after the poll interval, and samples the fill at the poll interval",async()=>{
+ const root=scratch();mkdirSync(join(root,UNIT_CACHE_POLICY_V1.layout.locks),{recursive:true});
+ try{
+  const time=clock(),dropAt=1_000_000+20_000;let free=30*GIB;const collectedAt:number[]=[],measure=()=>({volumeBytes:volume,freeBytes:time.now()>=dropAt?free:30*GIB});
+  const collect=(async()=>{collectedAt.push(time.now());return{running:false as const,plan:{removeLanes:[],removeIncremental:[],removeObjects:[]},applied:{lanes:0,incremental:0,objects:0,sessions:0,units:collectedAt.length<3?0:2}};}) as never;
+  free=2*GIB;const done=await watchUnitCachePressureV1(root,volume,{now:time.now,sleep:time.sleep,measure:()=>{const row=measure();if(collectedAt.length>=3)free=30*GIB;return row;},collect});
+  expect(collectedAt[0]!-dropAt,"the burst is met within one sense interval").toBeLessThanOrEqual(rules.watchSenseMilliseconds);
+  expect(collectedAt[1]!-collectedAt[0]!,"a fruitless collection is not repeated every second").toBeGreaterThanOrEqual(rules.watchPollMilliseconds);
+  expect(collectedAt[2]!-collectedAt[1]!).toBeGreaterThanOrEqual(rules.watchPollMilliseconds);
+  expect(done).toMatchObject({state:"done",reason:"quiet",collections:3});
+  const samples=readFillSamplesV1(root);expect(samples.length).toBeGreaterThan(1);expect(samples.every((row,index)=>index===0||row.atMs-samples[index-1]!.atMs>=rules.watchPollMilliseconds)).toBe(true);
  }finally{rmSync(root,{recursive:true,force:true});}
 });
 

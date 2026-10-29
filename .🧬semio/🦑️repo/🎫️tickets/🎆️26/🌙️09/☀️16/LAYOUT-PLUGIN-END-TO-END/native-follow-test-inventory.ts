@@ -1,0 +1,4 @@
+import {readFile} from "node:fs/promises";
+import {readRustSourceClosureV1} from "../../../../../../../🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/📥️source/🟦️.ts";
+const base="✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/";
+for(const [name,entry] of [["editor-test","🦀️.rs"],["editor-tests","🧪️tests/🔬️unit/🧪️cases.rs"],["editor-transform-tests","🧪️tests/🧪️transform-tool-transactions/🦀️.rs"]]){const inputs=await readRustSourceClosureV1([base+entry],process.cwd(),["target_arch=aarch64","target_os=macos","target_family=unix","unix","feature=testkit","feature=artifact-app-testing","test"],async path=>await readFile(path).catch(error=>error.code==="ENOENT"?null:Promise.reject(error)));console.log(JSON.stringify({name,files:inputs.length,bytes:inputs.reduce((sum,row)=>sum+row.bytes,0),lines:inputs.reduce((sum,row)=>sum+row.activeLines,0)}));}

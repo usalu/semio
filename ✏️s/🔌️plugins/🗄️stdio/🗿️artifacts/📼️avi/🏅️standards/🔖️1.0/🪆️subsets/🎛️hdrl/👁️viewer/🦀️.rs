@@ -64,8 +64,8 @@ impl ArtifactViewer for AviViewer {
         registry.register(crate::standards::v1_0::subsets::any::io::playback::AviMediaExportJobFactory::<semio_framework_plugin::ViewerApp<Self>>::new(registry.controller_id()))
     }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        AviSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(AviSnapshot::default())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

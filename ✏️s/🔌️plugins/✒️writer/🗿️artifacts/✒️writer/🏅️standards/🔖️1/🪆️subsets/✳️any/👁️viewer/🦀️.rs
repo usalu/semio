@@ -76,8 +76,8 @@ impl ArtifactViewer for WriterViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->WriterSnapshot>{Some(||{
-        schema::empty_writer_snapshot()
+    fn reference_birth()->Option<fn()->Result<WriterSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(schema::empty_writer_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `WriterViewCommand::Noop` variant never carries a config

@@ -23,7 +23,7 @@ fn dag_artifact_schema() -> String {
 
 /// 🧾️ The persistent DAG projection — nodes and edges only. Camera/viewport and selection are
 /// ephemeral view state kept in the plugin runtime, never recorded in the document's undo history.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[dsl(layout="lines")]

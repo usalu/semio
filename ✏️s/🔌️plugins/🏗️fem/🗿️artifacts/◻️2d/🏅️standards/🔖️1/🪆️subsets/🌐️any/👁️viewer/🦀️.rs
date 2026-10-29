@@ -67,8 +67,8 @@ impl ArtifactViewer for Fem2dViewer {
     /// 🌱️ A real, non-empty default scene: the artifact-side boot document (the bundled `fem2d`
     /// example DSL, falling back to the empty document on a parse error) the sibling editor boots on
     /// too — no editor import, this is `semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema`.
-    fn reference_birth()->Option<fn()->Fem2dSnapshot>{Some(||{
-        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
+    fn reference_birth()->Option<fn()->Result<Fem2dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot().map_err(|error|semio_framework_plugin::reference_birth_fault("fem2d bundled boot document",error))
     })}
 
     /// 👁️ Structurally read-only: the sole `Fem2dViewCommand::Noop` variant never carries a config

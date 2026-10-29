@@ -23,8 +23,10 @@ use pack::snapshot::ArtifactPack;
 pub struct Process3dPresence {
     pub engagement_input: String,
     #[dsl(coord)]
+    #[value(required)]
     pub camera_position: [f64; 3],
     #[dsl(coord)]
+    #[value(required)]
     pub camera_target: [f64; 3],
     pub camera_fov: f64,
 }

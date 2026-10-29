@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-canvas = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
@@ -40,19 +41,5 @@ semio-framework-2d-engine = { path = "../../../../../../../../../../../../../�
 
 semio-framework-value-persistent = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 
-[dev-dependencies]
-semio-framework-async-macros = { workspace = true }
-semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
-semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-semio-s-artifact-layout-layout-io = { workspace = true }
-semio-s-artifact-layout-layout-mutations = { workspace = true }
-semio-s-artifact-layout-layout-mutations-frames = { workspace = true }
-semio-framework-io-ports = { workspace = true, features = ["testkit"] }
-semio-s-artifact-layout-layout-editor-commands = { workspace = true }
-semio-s-artifact-layout-layout-engine-export = { workspace = true, features = ["testkit"] }
-semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
-
-ttf-parser = "0.25.1"
-
-semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }
-semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+[features]
+testkit = []

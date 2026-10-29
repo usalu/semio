@@ -4,8 +4,6 @@ use super::{CadPresence, CadPresenceMutation};
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, ValueError};
 use std::sync::Arc;
 
-semio_framework_value::artifact_retire_struct!(CadPresence { camera_position, camera_target, camera_zoom, camera_fov, engagement_step, engagement_pane });
-
 //#region 🧹️SnapshotRetirement
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct CadPresenceRetirementFactory;

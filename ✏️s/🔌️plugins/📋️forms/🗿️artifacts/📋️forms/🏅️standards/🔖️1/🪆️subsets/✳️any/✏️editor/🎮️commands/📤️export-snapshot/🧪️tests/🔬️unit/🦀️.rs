@@ -12,7 +12,7 @@ use ExportSnapshot;
 #[semio_framework_async_macros::async_test]
 async fn export_snapshot_downloads_the_forms_dsl_text() {
     let mut app = forms_app().await;
-    app.0.dispatch_typed(FormsCommand::ExportSnapshot(ExportSnapshot {}), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &FormsCommand::ExportSnapshot(ExportSnapshot {}), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
     let receipt = settle(&mut app).await;
     let (filename, data) = receipt.effects.iter().find_map(|effect| match effect {
         semio_framework::kernel::Effect::DownloadMediaExport { filename, data, .. } => Some((filename, data)),

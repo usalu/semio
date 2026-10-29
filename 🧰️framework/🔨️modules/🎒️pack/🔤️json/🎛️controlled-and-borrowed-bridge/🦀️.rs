@@ -90,6 +90,14 @@ impl JsonBorrowedWriteCursor {
     pub fn new() -> Self { Self { frames: Vec::new(), path: Vec::new(), writer: ControlledWriter { bytes: 0, output: None }, phase: 0, normal_step_progress:Default::default() } }
     /// 📍️ Returns the current canonical output byte count and measure/write phase.
     pub fn progress(&self) -> (usize, bool) { (self.writer.bytes, self.phase == 2) }
+    /// ⚖️ Borrows the complete measured extent before output storage is admitted.
+    pub fn measured_bytes(&self)->Option<usize>{(self.phase==1&&self.frames.is_empty()).then_some(self.writer.bytes)}
+    /// 🔄️ Reuses only paid measure frames after their previous source walk reached its frontier.
+    pub fn restart_measurement(&mut self)->Result<RetainedCloneProgress,ValueError>{
+        if self.measured_bytes().is_none()||self.writer.output.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON measurement still owns an unfinished source or output"))}
+        self.path.clear();self.writer.bytes=0;self.frames.push(JsonWriteFrame{state:0,index:0,position:0});
+        Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<JsonWriteFrame>()+size_of::<usize>(),..Default::default()})
+    }
     /// ⏱️ Advances at most the supplied structural or scalar-character transitions.
     pub fn normal_step_progress(&self)->RetainedCloneProgress{self.normal_step_progress}
     /// 📏️ Quotes one actual scalar write, natural frame birth or final output allocation.

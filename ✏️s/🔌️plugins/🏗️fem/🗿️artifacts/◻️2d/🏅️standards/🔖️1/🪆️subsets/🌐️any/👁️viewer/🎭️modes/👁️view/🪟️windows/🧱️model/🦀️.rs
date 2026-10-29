@@ -34,8 +34,8 @@ fn screen_2d(x: f64, y: f64) -> (f64, f64) {
     (x * SCALE_2D + ORIGIN_2D, -y * SCALE_2D + ORIGIN_2D)
 }
 
-fn find_node_2d<'a>(nodes: &'a [semio_s_fem_node::planar::FemNodeValue], id: &str) -> Option<&'a semio_s_fem_node::planar::FemNodeValue> {
-    nodes.iter().find(|n| n.id == id)
+fn find_node_2d<'a>(nodes: &'a semio_framework_value_persistent::list::persistent::PersistentList<semio_s_fem_node::planar::FemNode>, id: &str) -> Option<&'a semio_s_fem_node::planar::FemNode> {
+    nodes.iter().find(|n| n.id.as_str() == id)
 }
 
 fn fem2d_element_endpoints(element: &FemElement) -> (&str, &str) {
@@ -50,7 +50,7 @@ fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color: &st
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
-        layers.push(semio_framework_pack_json::json!({ "kind": "circle", "id": format!("node-{}", node.id), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
+        layers.push(semio_framework_pack_json::json!({ "kind": "circle", "id": format!("node-{}", node.id.as_str()), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
     }
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);

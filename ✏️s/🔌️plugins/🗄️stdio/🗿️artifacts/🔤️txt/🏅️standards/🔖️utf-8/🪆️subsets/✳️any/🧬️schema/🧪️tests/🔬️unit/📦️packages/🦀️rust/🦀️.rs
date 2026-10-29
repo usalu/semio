@@ -41,3 +41,4 @@ pub use crate::standards::v_utf_8::artifact_items_7::{contribution};
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;
 pub use mirror::*;
+pub use mirror::editor;

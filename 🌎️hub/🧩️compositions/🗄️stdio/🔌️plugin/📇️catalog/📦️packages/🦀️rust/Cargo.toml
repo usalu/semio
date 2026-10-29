@@ -16,6 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-hub-stdio-catalog-projection = { workspace = true }
 semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
@@ -44,7 +45,7 @@ semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
-semio-s-artifact-stdio-ifc = { workspace = true }
+semio-s-artifact-stdio-ifc-catalog = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
 semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
@@ -70,6 +71,9 @@ semio-s-artifact-stdio-idf = { workspace = true }
 # /🧩️ Composition Dependencies
 serde = { workspace = true }
 serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-hub-stdio-catalog-definition = { workspace = true }
 
 [features]
 full-artifact-catalog = []

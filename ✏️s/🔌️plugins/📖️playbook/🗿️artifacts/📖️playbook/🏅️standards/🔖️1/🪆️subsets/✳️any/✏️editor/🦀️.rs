@@ -564,8 +564,8 @@ impl ArtifactEditor for PlaybookPlayApp {
         crate::playbook_fault_notices()
     }
 
-    fn reference_birth()->Option<fn()->PlaybookSnapshot>{Some(||{
-        crate::empty_playbook_snapshot()
+    fn reference_birth()->Option<fn()->Result<PlaybookSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::empty_playbook_snapshot())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

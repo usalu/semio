@@ -32,7 +32,7 @@ use evaluate_request_admission_and_drive::{
 mod reply_failure_and_child_demands;
 pub use reply_failure_and_child_demands::{
     evaluation_admit_original, evaluation_child_close, evaluation_child_demands,
-    evaluation_owned_birth, EvaluationFailure, EvaluationReply,
+    evaluation_owned_birth, EvaluationFailure, EvaluationReply, EvaluationWire,
 };
 use reply_failure_and_child_demands::evaluation_value_demands;
 

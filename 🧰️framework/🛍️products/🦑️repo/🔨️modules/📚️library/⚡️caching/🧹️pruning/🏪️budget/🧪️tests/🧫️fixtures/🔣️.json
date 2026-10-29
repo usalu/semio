@@ -101,12 +101,12 @@
   ],
   "targets": [
     {
-      "target": "cache-retire-inactive-preview",
+      "target": "inactive-preview",
       "operation": "preview",
       "verb": "clean"
     },
     {
-      "target": "cache-retire-inactive",
+      "target": "inactive",
       "operation": "retire",
       "verb": "clean"
     }

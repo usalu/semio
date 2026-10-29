@@ -25,14 +25,14 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 use std::collections::hash_map::DefaultHasher;
 use std::hash::{Hash, Hasher};
 
-/// 🗃️ `entryCount` = number of top-level `Model` fields (its own `DslValue::Object` always has
-/// one key per field — `Model` derives `Default`, never a partial object); `byteSize` = real UTF-8
-/// byte length of that JSON; `contentDigest` = a deterministic (within-process) fingerprint over
-/// those same bytes. Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external
-/// hash crate needed for a single scalar byte-string digest.
+/// 🗃️ `entryCount` = number of top-level model fields (the native state's own `DslValue::Object`
+/// has one key per flattened field); `byteSize` = real UTF-8 byte length of the model's canonical
+/// JSON; `contentDigest` = a deterministic (within-process) fingerprint over those same bytes.
+/// Std-only (`DefaultHasher`), same reasoning as `🏠️home/🆔digest`: no external hash crate needed
+/// for a single scalar byte-string digest.
 pub fn compute_energy_model_entries(snapshot: &EnergyModelSnapshot) -> EnergyModelEntries {
-    let model = crate::snapshot::energy_model(snapshot);
-    let json = semio_framework_pack_json::to_json_string(&model);
+    let model = &snapshot.model;
+    let json = semio_framework_pack_json::to_json_string(model);
     let bytes = json.as_bytes();
     let entry_count = match model.to_value() {
         DslValue::Object(entries) => entries.len() as u32,
@@ -57,15 +57,12 @@ impl protocol::Inference<EnergyModelSnapshot> for EnergyModelInference {
         })
     }
 }
-/// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of whether
-/// `EnergyModelSnapshot::default()`'s `model_json` ever stops being `"{}"`. Same "match `infer` of
-/// the real default, don't derive structurally" trick `AddInference` uses in
-/// `📡️spr/🎮️command/🦀️.rs`.
+/// 🌱 Defined in terms of `infer` (not derived) — keeps the law correct regardless of how many
+/// fields the canonical empty model carries. Same "match `infer` of the real default, don't derive
+/// structurally" trick `AddInference` uses in `📡️spr/🎮️command/🦀️.rs`.
 impl Default for EnergyModelInference {
     fn default() -> Self {
-        let snapshot = &EnergyModelSnapshot::default();
-
-        Self { entries: compute_energy_model_entries(snapshot) }
+        Self { entries: compute_energy_model_entries(&EnergyModelSnapshot::default()) }
     }
 }
 }

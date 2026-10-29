@@ -54,9 +54,11 @@ pub use evaluator::*;
 mod original_lookup;
 pub use original_lookup::OriginalDictionaryLookup;
 
-#[path="../📤️projection/🦀️.rs"]
-mod dictionary_projection;
+#[path="../📥️receive/🦀️.rs"]
+mod native_receive;
 
+#[path="../📝️dsl/🦀️.rs"]
+mod dsl_binding;
 #[path = "../🚦️native/🦀️.rs"]
 mod native_controlled;
 #[path="../⚠️failure/🦀️.rs"]

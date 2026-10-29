@@ -6,7 +6,7 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
-use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep};
+use semio_framework_plugin::plugin_app_close_prelude::store::{self as app_store, PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPost, PagedOneItemPostMode, PagedOneItemPostRead};
 use std::sync::Arc;
 
 const MAXIMUM_STRUCTURAL_ITEMS: usize = 4_096;
@@ -119,12 +119,17 @@ impl PagedOneItemEdit<ZipSnapshot, ZipMutation> for ZipTextEdit {
         }
     }
 
-    fn advance_demands(&self, _before: RetainedCloneRef<'_, ZipSnapshot>, _mutation: RetainedCloneRef<'_, ZipMutation>, _post: &ZipSnapshot, _body: usize) -> Result<RetirementDemand, ValueError> {
+    fn post_mode(&self) -> PagedOneItemPostMode {
+        PagedOneItemPostMode::Mutable
+    }
+
+    fn advance_demands(&self, _before: RetainedCloneRef<'_, ZipSnapshot>, _mutation: RetainedCloneRef<'_, ZipMutation>, _post: PagedOneItemPostRead<'_, ZipSnapshot>, _body: usize) -> Result<RetirementDemand, ValueError> {
         Ok(RetirementDemand::default())
     }
 
-    fn advance(&mut self, _before: RetainedCloneRef<'_, ZipSnapshot>, mutation: RetainedCloneRef<'_, ZipMutation>, post: &mut ZipSnapshot, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
+    fn advance(&mut self, _before: RetainedCloneRef<'_, ZipSnapshot>, mutation: RetainedCloneRef<'_, ZipMutation>, post: PagedOneItemPost<'_, ZipSnapshot>, _body: usize, grant: RetainedCloneGrant, _receiving: &mut NativeDecodeControl<'_>) -> Result<PagedOneItemEditStep<ZipMutation>, ValueError> {
         let mutation = mutation.get();
+        let post = post.mutable()?;
         if !self.admitted {
             return self.envelope(post);
         }

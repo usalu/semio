@@ -80,7 +80,7 @@ async fn flow_viewer_member_factory_and_full_store_close_match_neutral_contract(
         .collect::<Vec<_>>();
     assert_eq!(document_rights, fixture["documentRights"].as_array().unwrap().iter().map(|right| right.as_str().unwrap()).collect::<Vec<_>>());
     let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = plugin.create_app(&id, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("registered Flow viewer factory must retain its typed member fleet");
+    let mut app = plugin.create_app(&id, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).expect("registered Flow viewer factory births its snapshot").expect("registered Flow viewer factory must retain its typed member fleet");
     assert!(matches!(&app, FlowViewerTestApps::FlowViewer(_)));
     let items = fixture["grant"]["items"].as_u64().unwrap() as usize;
     let body = fixture["grant"]["bytes"].as_u64().unwrap() as usize;

@@ -45,7 +45,7 @@ fn triangle_area(p0: [f64; 2], p1: [f64; 2], p2: [f64; 2]) -> f64 {
 /// loads placed on that node reach the mesh; otherwise a node is synthesized once per unique mesh
 /// point as `{region_id}_m{point_index}`.
 pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGeometry, Fem2dError> {
-    let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id == id);
+    let node_exists = |id: &str| doc.nodes.iter().any(|n| n.id.as_str() == id);
     let mut nodes: Vec<Node> = doc.nodes.iter().map(|n| Node { id: n.id.clone(), pos: [n.x, n.y, 0.0] }).collect();
 
     let mut elements: Vec<Elements> = Vec::with_capacity(doc.elements.len());
@@ -60,7 +60,7 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGe
         if !node_exists(end) {
             return Err(Fem2dError::UnknownNodeId(end.clone()));
         }
-        let material = doc.materials.iter().find(|m| &m.id == material_id).ok_or_else(|| Fem2dError::UnknownMaterialId(material_id.clone()))?;
+        let material = doc.materials.iter().find(|m| m.id.as_str() == material_id.as_str()).ok_or_else(|| Fem2dError::UnknownMaterialId(material_id.clone()))?;
         let section = doc.sections.iter().find(|s| &s.id == section_id).ok_or_else(|| Fem2dError::UnknownSectionId(section_id.clone()))?;
         match element {
             FemElement::Bar { .. } => {
@@ -77,7 +77,7 @@ pub(crate) fn build_nodes_and_elements(doc: &Fem2dSnapshot) -> Result<ResolvedGe
         let domain = semio_s_fem_mesh::PlanarDomain { outer: region.outline.clone(), holes: region.holes.clone() };
         let opts = semio_s_fem_mesh::MeshOpts { max_edge: region.mesh_size, min_angle_deg: 20.0 };
         let tri_mesh = semio_s_fem_mesh::triangulate(&domain, &opts).map_err(|e| Fem2dError::MeshFailed { region_id: region.id.clone(), reason: e.to_string() })?;
-        let material = doc.materials.iter().find(|m| m.id == region.material_id).ok_or_else(|| Fem2dError::UnknownMaterialId(region.material_id.clone()))?;
+        let material = doc.materials.iter().find(|m| m.id.as_str() == region.material_id.as_str()).ok_or_else(|| Fem2dError::UnknownMaterialId(region.material_id.clone()))?;
 
         let mut node_ids = Vec::with_capacity(tri_mesh.points.len());
         for (point_index, p) in tri_mesh.points.iter().enumerate() {
@@ -120,7 +120,7 @@ pub(crate) fn self_weight_nodal_loads(doc: &Fem2dSnapshot, regions: &[MeshedRegi
             FemElement::Beam { start, end, material_id, section_id, .. } => (start, end, material_id, section_id),
         };
         let (Some(material), Some(section), Some(n0), Some(n1)) =
-            (doc.materials.iter().find(|m| &m.id == material_id), doc.sections.iter().find(|s| &s.id == section_id), doc.nodes.iter().find(|n| &n.id == start), doc.nodes.iter().find(|n| &n.id == end))
+            (doc.materials.iter().find(|m| m.id.as_str() == material_id.as_str()), doc.sections.iter().find(|s| &s.id == section_id), doc.nodes.iter().find(|n| n.id.as_str() == start.as_str()), doc.nodes.iter().find(|n| n.id.as_str() == end.as_str()))
         else {
             continue;
         };
@@ -131,7 +131,7 @@ pub(crate) fn self_weight_nodal_loads(doc: &Fem2dSnapshot, regions: &[MeshedRegi
     }
 
     for region in regions {
-        let Some(material) = doc.materials.iter().find(|m| m.id == region.material_id) else { continue };
+        let Some(material) = doc.materials.iter().find(|m| m.id.as_str() == region.material_id.as_str()) else { continue };
         for tri in &region.tris {
             let area = triangle_area(region.points[tri[0] as usize], region.points[tri[1] as usize], region.points[tri[2] as usize]);
             let weight = material.rho * region.thickness * area * GRAVITY_G;

@@ -3,7 +3,7 @@ use semio_framework::Effect;
 use std::collections::BTreeSet;
 use std::mem::ManuallyDrop;
 use crate::child_view::ChildContentView;
-use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin_window_config::WindowConfigSnapshot;
 use semio_framework_tool_run::ToolRunDefinition;
 use semio_framework_tool_run::ToolRunIdentity;

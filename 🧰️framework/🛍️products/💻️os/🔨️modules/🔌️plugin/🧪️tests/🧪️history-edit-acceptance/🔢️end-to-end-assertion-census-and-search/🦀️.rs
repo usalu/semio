@@ -15,6 +15,7 @@ pub async fn assert_history_edits_end_to_end<A, M>(plugin: &str, manifest: fn() 
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut original_caller=artifact_app_laws::OriginalFixtureCaller::admit().expect("original acceptance caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let descriptors = <A::Mutation as ::protocol::Mutation<A::Snapshot>>::DESCRIPTORS;
@@ -41,6 +42,7 @@ async fn acceptance_offered<A, M>(manifest: fn() -> App, case: &AcceptanceCase<A
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut app = match acceptance_seeded::<A, M>(manifest, &case.base, &[&case.op], true,cx).await {
         Ok(app) => app,
@@ -80,6 +82,7 @@ async fn acceptance_census<A, M>(plugin: &str, manifest: fn() -> App, fixtures: 
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let leaves: Vec<&str> = <A::Mutation as ::protocol::Mutation<A::Snapshot>>::DESCRIPTORS.iter().map(|descriptor| descriptor.semantic_kind).filter(|kind| !withdraw_only.contains(*kind)).collect();
     let mut cases = acceptance_cases::<A>(fixtures);
@@ -212,6 +215,7 @@ pub(super) async fn acceptance_search<A, M>(plugin: &str, manifest: fn() -> App,
 where
     A: ArtifactApp + Default,
     M: ReferenceSpaceMember + MemberFactory + Send + 'static,
+    <A as ArtifactApp>::Snapshot: pack::snapshot::ArtifactDsl,
 {
     let mut skipped = Vec::new();
     let committed = acceptance_cases::<A>(fixtures);

@@ -10,8 +10,8 @@ use semio_framework_plugin_window_transient::window_transient::WindowTransientSt
 use semio_framework_plugin_window_transient::window_transient::ErasedWindowTransientPublication;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-use semio_framework_plugin_window_config::registry::WindowRegistry;
-use semio_framework_plugin_window_config::registry::fits;
+use semio_framework_plugin_window_config_registry::WindowRegistry;
+use semio_framework_plugin_window_config_registry::fits;
 use semio_framework_value::RetirementDemand;
 use semio_framework_value::ValueError;
 use semio_framework_value::RetainedCloneGrant;

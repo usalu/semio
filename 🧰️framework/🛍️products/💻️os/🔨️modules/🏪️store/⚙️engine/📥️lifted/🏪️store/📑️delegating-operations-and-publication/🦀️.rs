@@ -3,22 +3,10 @@
 use super::*;
 use semio_framework_os_spr::ColdMutation;
 
-//#region 🔖️EphemeralLanes
-//#region 🔖️Backbone
-//#region 🔖️Backbone
-//#region 🔖️Authority
-//#region 🔖️EphemeralLanes
-//#region 🔖️Text
-//#region 🔖️Pack
-//#region 🔖️CodecRegistry
-//#region 🔖️TextFormat
-//#region 🔖️History
-//#region 🔖️ArtifactStore
-//#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: ToValue + Send + Sync + 'static,
-    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     /// 🪞️ Delegates to [`StoreLive::mutation_ops`].
     #[inline] pub fn mutation_ops(&self) -> Result<Vec<AppliedMutation<'_, Mutation>>, VcsError> { self.live.mutation_ops(&self.log, &self.wire, &self.cursor) }
@@ -220,8 +208,7 @@ where
     /// 🪞️ Delegates to [`StoreReplay::defer_local_replays`].
     #[inline] pub fn defer_local_replays(&mut self, budget: Option<ReplayTurnBudget>) { self.replay.defer_local_replays(budget) }
 
-    /// 🪞️ Delegates to [`StoreReplay::local_step_pending`].
-    #[inline] pub fn local_step_pending(&self) -> bool { self.replay.local_step_pending() }
+
 
     /// 🪞️ Delegates to [`StoreReplay::discard_local_step`].
     #[inline] pub fn discard_local_step(&mut self) -> bool { self.replay.discard_local_step(&mut self.owners) }
@@ -367,15 +354,12 @@ where
     /// 🪞️ Delegates to [`StoreReplay::assert_mirrors_are_live`].
     #[doc(hidden)] #[inline] pub fn assert_mirrors_are_live(&self) { self.replay.assert_mirrors_are_live(&self.log, &self.cursor, &self.live) }
 }
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️ArtifactStore
-//#endregion 🔖️History
-//#endregion 🔖️TextFormat
-//#endregion 🔖️CodecRegistry
-//#endregion 🔖️Pack
-//#endregion 🔖️Text
-//#endregion 🔖️EphemeralLanes
-//#endregion 🔖️Authority
-//#endregion 🔖️Backbone
-//#endregion 🔖️Backbone
-//#endregion 🔖️EphemeralLanes
+
+impl<P, Mutation> ArtifactStore<P, Mutation>
+where
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
+{
+    /// 🪞️ Delegates to [`StoreReplay::local_step_pending`].
+    #[inline] pub fn local_step_pending(&self) -> bool { self.replay.local_step_pending() }
+}

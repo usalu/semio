@@ -8,7 +8,7 @@ use semio_framework_value::FactoryBoxedValue;
 use std::future::Future;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use semio_framework_plugin_window_config::registry::WindowRegistry;
+use semio_framework_plugin_window_config_registry::WindowRegistry;
 use crate::window_config_tests::{pack_identity_tests, retained_pack_load_tests};
 use semio_framework_os_kernel as protocol;
 use semio_framework_os_kernel as store;

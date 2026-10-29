@@ -1,6 +1,5 @@
 use semio_s_artifact_procedural_3d_host::*;
 use semio_s_artifact_procedural_3d_envelope::*;
-use semio_s_artifact_procedural_3d_initialization::*;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::drive_erased_released;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::exact_grant;
 use semio_s_artifact_procedural_3d_testkit::retirement_driver::retire_owned_for_test;
@@ -130,19 +129,22 @@ fn small_move_widget_feature_matches_the_test_only_third_party_oracle() {
 //#endregion 🔮️ThirdPartyOracle
 
 //#region ⏱️BoundedInitializer
-/// 🔐️ The lease table is process-global and four slots deep — every initializer law holds this for
-/// its whole body (`crate::publication_authority`).
+type Generation3dStoreInitializationAuthority = store::ArtifactStoreReplayInitializer<Generation3dSnapshot, Generation3dMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>;
+
 fn initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> Generation3dStoreInitializationAuthority {
-    generation3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, semio_s_artifact_procedural_3d_host::Generation3dPublicationCredits { maximum_items: GENERATION3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: GENERATION3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: GENERATION3D_MOUNTED_CONTROL_CREDITS })
-        .expect("P3 initializer law publication authority");
-    Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    Generation3dStoreInitializationAuthority::new(store::os_store::document_materialize::create_document_envelope(semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, "generation3d-bounded-initializer", Generation3dSnapshot::default(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer), semio_s_artifact_procedural_3d_model::GENERATION_3D_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
 fn close_initializer(authority: &mut Generation3dStoreInitializationAuthority) {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    let cancel = semio_framework_job::CancelToken::root_now();
+    let mut sequence = 0;
     for _ in 0..100_000 {
+        authority.begin_close();
         let demand = authority.retirement_demands(GENERATION3D_OWNER_BYTES).expect("P3 initializer close quote");
-        if matches!(authority.close_step(exact_grant(demand)).expect("P3 initializer bounded close"), store::RetainedCloneStep::Complete(_)) {
+        let mut receipt = store::RetainedCloneProgress::default();
+        let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, exact_grant(demand)), cancel.clone(), semio_framework_job::default_now_us, &mut sequence, &mut receipt);
+        if matches!(authority.close_step(&mut cx).expect("P3 initializer bounded close"), store::RetainedCloneStep::Complete(_)) {
             assert!(authority.terminal_is_empty());
             return;
         }
@@ -176,11 +178,10 @@ fn insufficient_fuel_and_expired_deadline_yield_before_initializer_progress() {
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut sequence = 0;
     assert_eq!(step_initializer(&mut authority, 0, u64::MAX, &cancel, operation, generation, &mut sequence), Stepped::Yield);
-    assert!(matches!(authority.phase, Generation3dStoreInitializationPhase::ValidateEnvelope));
+    assert_eq!(format!("{:?}", authority.phase), "ValidateEnvelope");
     assert_eq!(step_initializer(&mut authority, 1, 0, &cancel, operation, generation, &mut sequence), Stepped::Yield);
-    assert!(matches!(authority.phase, Generation3dStoreInitializationPhase::ValidateEnvelope));
+    assert_eq!(format!("{:?}", authority.phase), "ValidateEnvelope");
     close_initializer(&mut authority);
-    assert!(generation3d_release_publication_authority(operation, generation));
 }
 
 #[test]
@@ -203,7 +204,6 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
     }
     assert_eq!(cancelled_outcome.expect("cancelled P3 initializer must terminate within its bounded owner budget"), Stepped::Cancelled);
     assert!(cancelled.terminal_is_empty());
-    assert!(generation3d_release_publication_authority(cancelled_operation, cancelled_generation));
 
     let stale_operation = semio_framework_job::OperationId(u64::MAX - 303);
     let stale_generation = semio_framework_job::Generation(303);
@@ -220,7 +220,6 @@ fn cancelled_and_stale_aba_initializers_retire_to_terminal_empty() {
     }
     assert_eq!(stale_outcome.expect("stale P3 initializer must terminate within its bounded owner budget"), Stepped::Fault);
     assert!(stale.terminal_is_empty());
-    assert!(generation3d_release_publication_authority(stale_operation, stale_generation));
 }
 //#endregion ⏱️BoundedInitializer
 

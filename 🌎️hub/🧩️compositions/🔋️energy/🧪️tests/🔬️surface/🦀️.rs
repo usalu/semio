@@ -43,8 +43,9 @@ async fn energy_model_editor_and_viewer_share_dialect() {
 /// `interactive-job.catalog-authority` … `generated_migrated=false`, `migrated={}` (tool `setCamera`).
 #[semio_framework_async_macros::async_test]
 async fn new_viewer_builds_a_runnable_energy_model_viewer_app() {
+    let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let registry = semio_framework_plugin::AppActionRegistry::from_definition(&semio_s_artifact_energy_model_viewer::create_energy_model_viewer());
     let mut app: semio_framework_plugin::app::VcsArtifactApp<ViewerApp<semio_s_artifact_energy_model_viewer::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers> =
-        semio_framework_plugin::app::VcsArtifactApp::with_registry(ViewerApp::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into())).await;
-    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app);
+        semio_framework_plugin::app::VcsArtifactApp::with_registry(ViewerApp::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::os_spr::LOCAL_ACTOR_ID.into()), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
+    semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy(), scope.cx()).expect("original caller paid app close");
 }

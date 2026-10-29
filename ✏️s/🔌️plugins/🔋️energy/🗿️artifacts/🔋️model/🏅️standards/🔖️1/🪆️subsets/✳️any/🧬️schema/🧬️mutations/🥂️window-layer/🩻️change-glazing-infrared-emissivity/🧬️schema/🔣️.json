@@ -103,7 +103,7 @@
     "semantics": {
       "verb": "change",
       "entity": "glazing-optical-facet",
-      "kind": "change-infrared-emissivity",
+      "kind": "change-glazing-material-infrared-emissivity",
       "record": "ChangedGlazingInfraredEmissivities"
     },
     "diagnostics": {

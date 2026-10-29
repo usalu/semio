@@ -133,7 +133,7 @@ pub struct Fem2dMountedVisualLease {
 }
 
 impl Fem2dMountedVisualLease {
-    pub(crate) fn matches(&self, app_instance_id: u32, base_revision: u64, generation: u64) -> bool {
+    pub fn matches(&self, app_instance_id: u32, base_revision: u64, generation: u64) -> bool {
         self.app_instance_id == app_instance_id && self.base_revision == base_revision && self.generation == generation
     }
 

@@ -1,5 +1,5 @@
 use semio_framework_3d::mesh::*;
-use semio_framework_3d_mesh_quality::{analyze_polygon_soup, MeshQualityReport};
+use semio_framework_3d_mesh_quality::{analyze_polygon_soup, mesh_quality_report, MeshQualityReport};
 use std::collections::{BTreeMap,HashMap,HashSet};
 use semio_framework_value::{ToValue,FromValue};
 use semio_framework_3d::mesh::FaceId;
@@ -111,7 +111,7 @@ fn halfedge_meshes_report_what_their_polygon_soup_reports() {
     for case in fixtures["cases"].as_array().unwrap() {
         let (positions, faces) = soup(case);
         let Ok(mesh) = HalfedgeMesh::from_faces(&positions, &faces) else { continue };
-        assert_eq!(mesh.quality_report(), analyze_polygon_soup(&positions, &faces), "{}", case["name"]);
+        assert_eq!(mesh_quality_report(&mesh), analyze_polygon_soup(&positions, &faces), "{}", case["name"]);
         checked += 1;
     }
     assert!(checked >= 8, "only {checked} fixture meshes build as half-edge meshes");
@@ -120,10 +120,10 @@ fn halfedge_meshes_report_what_their_polygon_soup_reports() {
 #[test]
 fn a_flipped_face_in_a_halfedge_mesh_is_reported_through_the_flip_flag() {
     let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
-    let before = mesh.quality_report();
+    let before = mesh_quality_report(&mesh);
     assert!(before.closed && before.consistent_winding);
     mesh.flip_faces(&[FaceId(0)]).unwrap();
-    let after = mesh.quality_report();
+    let after = mesh_quality_report(&mesh);
     assert!(after.closed);
     assert_eq!(after.euler_characteristic, 2);
     close(after.area, before.area, "area survives a flip");

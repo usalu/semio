@@ -20,9 +20,9 @@ fn native_zone_scalar_preparation_rebuilds_only_changed_original_paths_and_cance
 struct VolumeOperation{id:u32,value:f64}
 impl protocol::Mutation<EnergyModelSnapshot> for VolumeOperation{type Diff=EnergyModelDiff;const DESCRIPTORS:&'static[protocol::MutationLeafDescriptor]=&[];fn descriptor(&self)->&'static protocol::MutationLeafDescriptor{panic!("fixture exercises only retained semantic ports")}}
 impl semio_s_artifact_energy_model_native_mutations::scalar::ScalarLeafSpec<VolumeOperation,VolumeOperation> for Volume{
- const INVALID:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"A zone volume must be positive and finite."};
- const MISSING:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Error,code:"mutation.target-missing",message:"The addressed zone does not exist."};
- const UNCHANGED:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The zone already has this volume."};
+ const INVALID:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"A zone volume must be positive and finite."};
+ const MISSING:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Error,code:"mutation.target-missing",message:"The addressed zone does not exist."};
+ const UNCHANGED:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The zone already has this volume."};
  fn input(payload:RetainedCloneRef<'_,VolumeOperation>)->RetainedCloneRef<'_,f64>{payload.project(0,|p|&p.value)}
  fn key(payload:RetainedCloneRef<'_,VolumeOperation>)->RetainedCloneRef<'_,u32>{payload.project(1,|p|&p.id)}
  fn inverse(payload:RetainedCloneRef<'_,VolumeOperation>,value:f64)->VolumeOperation{VolumeOperation{id:payload.get().id,value}}
@@ -30,7 +30,7 @@ impl semio_s_artifact_energy_model_native_mutations::scalar::ScalarLeafSpec<Volu
 #[test]
 fn shared_native_scalar_leaf_preserves_typed_decisions_numeric_targets_and_exact_inverse_custody(){
  use semio_s_artifact_energy_model_native_mutations::scalar::ScalarLeafPreparation;
- use protocol::mutation::retained::{RetainedMutationLeafPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext};
+ use protocol::{RetainedMutationLeafPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext};
  type Owner=ScalarLeafPreparation<VolumeOperation,VolumeOperation,Volume>;
  assert!(size_of::<Owner>()<=4096);
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

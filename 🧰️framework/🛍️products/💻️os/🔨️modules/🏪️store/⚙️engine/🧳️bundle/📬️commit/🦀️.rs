@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMetadata;
 
 pub(super) fn advance_original_commit<P,M>(store:&mut StoreParts<'_,P,M>,publication:&mut ArtifactStoreBatchPublication<P,M>,body:usize,grant:ArtifactStoreOneItemGrant)->Result<ArtifactStoreOneItemAdvance,VcsError>
-where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static{
+where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P>{
  if let Some(step)=original_message::prepare_original_outgoing(store,publication,body,grant)?{return Ok(step)}
  let stage=publication.stage.as_mut().expect("original commit retains its batch stage");
  let fail=|message:&'static str|VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,message));

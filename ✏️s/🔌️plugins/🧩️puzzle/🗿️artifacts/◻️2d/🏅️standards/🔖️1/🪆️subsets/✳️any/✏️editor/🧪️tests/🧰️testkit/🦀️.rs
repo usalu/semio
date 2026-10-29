@@ -8,7 +8,7 @@ use semio_framework_plugin::{Fault, InteractionTarget};
 use crate::editor::puzzle2d::config::Puzzle2dPlayRuntime;
 use crate::editor::puzzle2d::modes::edit::windows::{detail, overview, selection};
 use crate::editor::puzzle2d::recorder::{self, Puzzle2dRecorder};
-use crate::editor::puzzle2d::snapshot::{self, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, Puzzle2dCommand, Puzzle2dInteractionSnapshot, Puzzle2dScene};
+use crate::editor::puzzle2d::snapshot::{self, PUZZLE2D_INTERACTION_DOMAIN, PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, Puzzle2dInteractionSnapshot, Puzzle2dScene};
 use crate::editor::puzzle2d::window;
 use crate::editor::puzzle2d::{create_puzzle2d_app, Puzzle2dPlayApp};
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
@@ -132,7 +132,7 @@ fn action_meta(args: Option<&Value>, window_id: Option<&str>) -> ActionMeta {
 /// operation has retired (`settle_registered_typed_operation`'s shape). Returning on it un-ACKed left the
 /// faulted operation awaiting its ACK for ever, so the NEXT dispatch never settled either.
 fn drain_settled(app: &mut Puzzle2dApp, result: &mut InvocationResult, fault: &mut Option<Fault>) -> Result<(), Fault> {
-    while let Some(page) = app.take_typed_operation_result_page(1) {
+    while let Some(page) = take_page(app)? {
         if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
             fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
         }
@@ -211,18 +211,34 @@ pub fn dispatch(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, windo
             | "hostEvent"
     ) {
         let dsl_args = args.map(semio_framework_value::ToValue::to_value);
-        let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, dsl_args.clone(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted))).map_err(fault_of);
+        let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, dsl_args.clone(), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()))).map_err(fault_of);
         return settle(app, result);
     }
-    let result = block_on(app.0.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, action_args(args, window_id), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).map_err(fault_of);
     settle(app, result)
+}
+
+/// 🧾️ The addressed window rides in the action arguments, exactly as the shell sends it.
+fn action_args(args: Option<&Value>, window_id: Option<&str>) -> Option<semio_framework_value::DslValue> {
+    let mut value = args.cloned();
+    if let Some(window_id) = window_id {
+        if let Value::Object(object) = value.get_or_insert_with(|| Value::Object(Default::default())) {
+            object.insert("windowId", Value::String(window_id.into()));
+        }
+    }
+    value.as_ref().map(semio_framework_value::ToValue::to_value)
+}
+
+/// 📤️ One fixed result page of the testkit's instance, borrowed under the mounted maintenance grant.
+fn take_page(app: &mut Puzzle2dApp) -> Result<Option<semio_framework_plugin::app::TypedOperationResultPage>, Fault> {
+    Ok(app.take_typed_operation_result_page(1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance)?.0)
 }
 
 /// 🧰️ [`dispatch`] of an app verb from an explicit window view — for a law that needs what the view carries,
 /// such as the window's active utility.
 pub fn dispatch_in_view(app: &mut Puzzle2dApp, action: &str, args: Option<&Value>, window_id: Option<&str>, view_state: ViewModel) -> Result<InvocationResult, Fault> {
     let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-    let result = block_on(app.0.dispatch_typed(Puzzle2dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, action_args(args, window_id), &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).map_err(fault_of);
     settle(app, result)
 }
 

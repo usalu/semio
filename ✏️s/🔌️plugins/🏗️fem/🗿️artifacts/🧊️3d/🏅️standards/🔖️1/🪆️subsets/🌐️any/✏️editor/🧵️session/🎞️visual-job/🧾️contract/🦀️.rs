@@ -145,3 +145,19 @@ impl Fem3dNumericalStage {
 }
 
 //#endregion 🔖️Contract
+
+/// 🧮️ Source and mode indices belong to the admitted generation original document.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Fem3dResultRequest {
+    pub source: Fem3dResultSource,
+    pub mode: Option<usize>,
+    pub buckling: Option<usize>,
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum Fem3dResultSource {
+    #[default]
+    FirstCase,
+    Case(usize),
+    Combination(usize),
+}

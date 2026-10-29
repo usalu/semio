@@ -2,7 +2,7 @@
 use semio_framework_job::{OriginalTurnFailure, StepContext};
 use semio_framework_plugin_actor_host::requests::SharedRequestReceiver;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJobPort;
-use semio_framework_os_kernel::native_snapshot::OriginalSnapshotRecordReceiving;
+use semio_framework_os_kernel::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving;
 use semio_framework_value::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use semio_framework_value_native_owned::native_decoding::{NativeConstructionStepFailure, NativeDecodeControl, NativeDecodeCloseControl};

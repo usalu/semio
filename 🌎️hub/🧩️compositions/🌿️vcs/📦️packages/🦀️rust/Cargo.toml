@@ -29,7 +29,7 @@ semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules
 semio-s-artifact-vcs-vcs = { workspace = true }
 semio-framework-ui-contract.workspace = true
 semio-framework-hash = { path = "../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
-semio-hub-stdio-catalog = { workspace = true }
+semio-hub-stdio-catalog-definition = { workspace = true }
 semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-xlsx = { workspace = true }

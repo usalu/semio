@@ -2,13 +2,13 @@
 use super::*;
 #[test]
 fn original_stream_abort_restores_projection_without_history_or_transport_trace(){
- type Abort=store::original_replay_publication::abort::OriginalStreamAbort<State,Mutation>;
+ type Abort=semio_framework_os_store_engine_replay::abort::OriginalStreamAbort<State,Mutation>;
  let law:serde_json::Value=serde_json::from_str(include_str!("abort.json")).unwrap();
  for cut in law["cancelCuts"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize)).chain([None]){
   let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut store=native_document_store(&mut caller,&mut decoder);
   assert_eq!(store.snapshot().unwrap().zoom,law["genesis"].as_f64().unwrap());
   let g=RetainedCloneGrant{maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,..TURN};
-  let result=crate::original_replay_publication::prepare_report(&mut store,&mut caller,&mut decoder);
+  let result=semio_framework_os_store_engine_replay::prepare_report(&mut store,&mut caller,&mut decoder);
   close_report_fixture(result,&mut caller,&mut decoder);
   let transaction=law["transaction"].as_str().unwrap().to_owned();
   {let parts=store.parts();parts.log.edit_sequence=1;parts.log.envelope.vcs.edits.iter_mut().next().unwrap().sequence_number=1;let edit_id=parts.log.envelope.vcs.edits.get(0).unwrap().id.clone();parts.log.envelope.open_transaction=Some(store::os_store::store_schema::OpenToolTransaction{transaction:protocol::TransactionRef{id:transaction.clone(),tool:String::from("energy#edit")},edit_id});*parts.live.current=Arc::new(State{zoom:law["streamed"].as_f64().unwrap()});}

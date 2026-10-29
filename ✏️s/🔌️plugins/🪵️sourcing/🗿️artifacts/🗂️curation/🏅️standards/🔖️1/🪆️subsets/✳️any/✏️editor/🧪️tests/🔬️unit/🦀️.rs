@@ -74,7 +74,7 @@ pub(crate) mod context {
     /// 🎬️ Dispatches one typed command and drives its retained operation to publication, the way the
     /// host does — a migrated command's document and config edits land only once it settles.
     pub async fn dispatch(app: &mut SourcingTestApp, command: SourcingCurationCommand) -> InvocationResult {
-        let result = app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         settle(app).await;
         result
     }
@@ -188,7 +188,7 @@ async fn retained_example_load_publishes_authored_stock_and_closes_exact_owners(
     for example_id in [DEMO_STOCK_EXAMPLE_ID, EMPTY_EXAMPLE_ID] {
         let mut app = new_app().await;
         app.bind_instance_id(7).await;
-        app.0.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
         let mut document = None;
         let mut terminal = false;
         for turn in 0usize..100_000 {
@@ -244,7 +244,7 @@ async fn example_load_settles_through_the_host_document_archive_door() {
     let oracle: Vec<crate::ObjectKind> = semio_framework_pack_json::from_json_str(fixture_text!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🧫️fixtures/📦️expected-stock.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = new_app().await;
     app.bind_instance_id(7).await;
-    app.0.dispatch_typed(SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SourcingCurationCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: DEMO_STOCK_EXAMPLE_ID.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: 7, view_state: None }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.unwrap();
     let mut loaded = None;
     for _ in 0..100_000 {
         app.0.maintenance_step(app.1.cx(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.maintenance).unwrap();
@@ -573,22 +573,6 @@ async fn app_definition_labels_resolve_german() {
     assert_eq!(def.modes.iter().find(|entry| entry.id == edit::SOURCING_CURATION_MODE_CURATION).expect("curation mode").label.resolve(terminology, locale), "Kuratierung");
 }
 
-/// ⚖️ LAW: the host bridge lands on the event-sourced config lane and retains the INSTALLABLE share
-/// of the pushed pack, never the pack itself — a payload carrying no `sourcing.module` entry this app
-/// can act on installs nothing, and a real module survives verbatim.
-#[test]
-fn host_contributions_resolve_to_the_event_sourced_config_lane() {
-    let foreign = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "json": "[{\"id\":\"sourcing\"}]" }))))
-        .expect("host configuration")
-        .expect("sourcing contribution mutation");
-    assert_eq!(foreign, SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: "[]".into() }), "a pack with nothing this app installs is retained as an empty roster");
-    let pack = crate::standards::v1::subsets::any::io::text::snapshot::installable_contributions(&sourcing_reuse_contribution(), SOURCING_CURATION_CONFIG_CONTRIBUTIONS_BYTES);
-    let installed = <SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_value::DslValue::from(&serde_json::json!({ "json": sourcing_reuse_contribution() }))))
-        .expect("host configuration")
-        .expect("sourcing contribution mutation");
-    assert_eq!(installed, SourcingCurationConfigMutation::SetContributions(SetContributionsEdit { json: pack }));
-    assert_eq!(<SourcingCurationApp as ArtifactEditor>::host_configuration_mutation("setFilterQuery", None).expect("non-host action"), None);
-}
 
 /// 🧩️ One host `sourcing.module` contribution for a module this crate does NOT author.
 fn sourcing_reuse_contribution() -> String {

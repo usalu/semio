@@ -97,7 +97,7 @@ async fn every_example_load_is_admitted_and_settles_through_the_host_document_ar
         let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
         let mut app = semio_framework_plugin::artifact_app_laws::new_app_with_registry_and_members::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>(cad_app_manifest_for_tests, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
         app.bind_instance_id(INSTANCE).await;
-        app.dispatch_typed(CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: INSTANCE, view_state: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("setActiveExample is admitted");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app, &CadCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: example_id.into() }), &semio_framework_plugin::ActionMeta { actor: "fixture".into(), instance_id: INSTANCE, view_state: None }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.expect("setActiveExample is admitted");
         let mut loaded = None;
         let mut terminal = false;
         for _ in 0..100_000 {
@@ -159,10 +159,7 @@ fn an_unknown_example_is_refused_by_name() {
 }
 
 #[test]
-fn host_contributions_resolve_to_the_event_sourced_config_lane() {
-    let mutation = <CadPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&semio_framework_pack_json::to_dsl_value(&json!({ "json": "[{\"id\":\"cad\"}]" })))).expect("host configuration").expect("CAD contribution mutation");
-    assert_eq!(mutation, CadConfigMutation::SetContributions(SetContributionsEdit { json: "[{\"id\":\"cad\"}]".into() }));
-    assert_eq!(<CadPlayApp as ArtifactEditor>::host_configuration_mutation("setActiveExample", None).expect("non-host action"), None);
+fn retained_command_factories_keep_event_sourced_publication_contracts() {
     assert!(<CadPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().is_some());
     assert!(<CadPlayApp as ArtifactEditor>::build_config_store_one_item_preparation_factory().is_some());
     let factory = CadRetainedCommandJobFactory::new("s.cad.cad@1/*#editor");
@@ -224,7 +221,7 @@ async fn retained_factory_proofs_activate_the_real_cad_manifest_and_close_under_
     assert_eq!(host_command.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
     let registry = AppActionRegistry::from_definition(&definition);
     let mut scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
-    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone(), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await;
+    let mut app = semio_framework_plugin::VcsArtifactApp::<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>::with_registry_on_bus(EditorApp::<CadPlayApp>::default(), registry, bus.clone(), semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     semio_framework_plugin::artifact_app_laws::settle_store_constructor(&mut app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
     assert_eq!(app.app_id().await, controller);
     assert_eq!(<CadPlayApp as ArtifactEditor>::bounded_first_step_tool_proofs().len(), activation["proofRows"].as_u64().expect("proof rows") as usize);

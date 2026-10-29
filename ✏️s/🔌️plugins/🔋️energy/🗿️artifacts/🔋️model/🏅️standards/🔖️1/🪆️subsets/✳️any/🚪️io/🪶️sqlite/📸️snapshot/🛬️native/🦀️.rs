@@ -14,7 +14,7 @@ fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framewor
 fn error(error:ValueError)->TextError{TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1))}
 
 fn construct(record:&RecordValue,c:&mut NativeDecodeControl<'_>,limits:store::sqlite_snapshot::SqliteDatabaseLimits)->Result<EnergyModelSnapshot,ValueError>{
- crate::sqlite::semantic_cells::admit_record(record,c,limits)?;let record=EnergyModelPackRecord::__dsl_from_record_controlled(record,c)?;let model=crate::model::Model::from_value_controlled(&record.model,c)?;
+ semio_s_artifact_energy_model_snapshot_sqlite_admission::admit_record(record,c,limits,super::SCHEMA.len())?;let record=EnergyModelPackRecord::__dsl_from_record_controlled(record,c)?;let model=crate::model::Model::from_value_controlled(&record.model,c)?;
  Ok(EnergyModelSnapshot{schema:record.schema,model,structure:record.structure,zones:record.zones,referenced_model:record.referenced_model,weather_link:record.weather_link})
 }
 pub(crate)fn decode(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<EnergyModelSnapshot,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),EnergyModelPackRecord::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {construct(record,native,limits)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
@@ -27,4 +27,4 @@ fn project(snapshot:&EnergyModelSnapshot,c:&mut NativeEncodeControl<'_>)->Result
  out.insert(2,field(&snapshot.structure,c)?)?;c.step()?;out.insert(3,field(&snapshot.zones,c)?)?;c.step()?;out.insert(4,optional(&snapshot.referenced_model,c)?)?;c.step()?;out.insert(5,optional(&snapshot.weather_link,c)?)?;c.step()?;Ok(out.take())
  })
 }
-pub(crate)fn encode(snapshot:&EnergyModelSnapshot,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{crate::sqlite::admit(snapshot,c)?;store::encode_sqlite_snapshot_record_native(encoding,<EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),EnergyModelPackRecord::__dsl_spec_producer(),|native|project(snapshot,native),c,native_owner)}
+pub(crate)fn encode(snapshot:&EnergyModelSnapshot,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{super::admit(snapshot,c)?;store::encode_sqlite_snapshot_record_native(encoding,<EnergyModelSnapshot as pack::snapshot::ArtifactDsl>::envelope_id(),EnergyModelPackRecord::__dsl_spec_producer(),|native|project(snapshot,native),c,native_owner)}

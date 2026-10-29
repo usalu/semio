@@ -10,7 +10,7 @@ pub use semio_framework_value_shared_issuance as shared_issuance;
 
 #[path = "../../🦀️.rs"]
 pub mod owned;
-pub use owned::{NativeReceive, NativeReceiver};
+pub use owned::{blocking, NativeReceive, NativeReceiver};
 
 /// 🎟️ The native decoding vocabulary composed with its receivers: the decoding core and the owned receiving tree under one module.
 pub mod native_decoding {

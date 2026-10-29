@@ -34,16 +34,18 @@ impl CreateBuildingStorey {
 impl protocol::CompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildingStorey {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "building-storey", kind: "create-building-storey", record: "CreatedBuildingStorey" };
 
-    fn plan(&self, _base: &CadSnapshot, planner: &mut protocol::Planner<CadSnapshot, CadMutation>) -> Result<(), protocol::PlanError> {
-        planner.call(CadMutation::CreateNode(CreateNode { node: CadNode { id: self.storey_id.clone(), label: self.storey_label(), kind: "building-storey".into() } , index: None }))
-    }
-
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
         semio_framework_ui_locale::LocalizedLabel::native(&format!("Create building storey \"{}\"", self.storey_label()), &format!("Gebäudegeschoss \"{}\" erstellen", self.storey_label()))
     }
 
     fn target(&self) -> Vec<String> {
         vec![self.storey_id.clone()]
+    }
+}
+
+impl protocol::ColdCompositeMutationKind<CadSnapshot, CadMutation> for CreateBuildingStorey {
+    fn plan(&self, _base: &CadSnapshot, planner: &mut protocol::Planner<CadSnapshot, CadMutation>) -> Result<(), protocol::PlanError> {
+        planner.call(CadMutation::CreateNode(CreateNode { node: CadNode { id: self.storey_id.clone(), label: self.storey_label(), kind: "building-storey".into() } , index: None }))
     }
 }
 

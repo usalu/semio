@@ -69,8 +69,8 @@ impl ArtifactViewer for ZipAnyViewer {
     const DIALECT: Dialect = ZIP_ANY_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_ZIP_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->ZipSnapshot>{Some(||{
-        ZipSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<ZipSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(ZipSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `ZipAnyViewCommand::Noop` variant never carries a config

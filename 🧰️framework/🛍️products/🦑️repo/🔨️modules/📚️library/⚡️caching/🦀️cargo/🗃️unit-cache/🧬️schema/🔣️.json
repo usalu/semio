@@ -9,7 +9,7 @@
         "namespace": "semio.cargo.unit-cache/v1",
         "layout": {
           "objects": "o", "entries": "e", "locks": "k", "slots": "s", "tickets": "q", "events": "x", "lanes": "l",
-          "stamps": "m", "admissions": "a", "foreign": "f", "plans": "p", "runs": "r", "temporary": "w", "target": "t", "build": "b", "live": "v", "metadata": "lane.json", "size": "lane.size", "destination": "lane.ledger"
+          "stamps": "m", "headroom": "h", "admissions": "a", "foreign": "f", "plans": "p", "runs": "r", "temporary": "w", "target": "t", "build": "b", "live": "v", "metadata": "lane.json", "size": "lane.size", "destination": "lane.ledger"
         },
         "lock": {
           "heartbeatMilliseconds": 2000, "staleMilliseconds": 20000,
@@ -51,7 +51,7 @@
           "casShare": 0.25, "casProtectedShare": 0.1, "laneShare": 0.2, "incrementalShare": 0.1, "admissionShare": 0.03, "admissionRetentionMilliseconds": 604800000, "admissionTemporaryMilliseconds": 3600000,
           "highWaterShare": 0.875, "lowWaterShare": 0.75, "collectorIntervalMilliseconds": 300000, "maintenanceIntervalMilliseconds": 600000, "collectorClaim": "gc",
           "outOfSpacePatterns": ["\\(os error (28|112)\\)", "No space left on device", "ENOSPC", "There is not enough space on the disk"], "outOfSpaceRetries": 1,
-          "laneIdleMilliseconds": 86400000, "liveMarkerStaleMilliseconds": 30000, "eventLogMaximumBytes": 4194304, "emergencyFreeBytes": 4294967296, "watchClaim": "watch", "watchPollMilliseconds": 30000, "watchQuietMilliseconds": 600000, "watchMaximumMilliseconds": 7200000, "watchStalledRounds": 10, "watchScanMilliseconds": 900000, "recheckMilliseconds": 60000, "unitStamp": "units.stamp", "unitIntervalMilliseconds": 21600000
+          "laneIdleMilliseconds": 86400000, "liveMarkerStaleMilliseconds": 30000, "eventLogMaximumBytes": 4194304, "emergencyFreeBytes": 4294967296, "ballastFile": "ballast", "ballastBytes": 33554432, "watchClaim": "watch", "watchSenseMilliseconds": 1000, "watchPollMilliseconds": 30000, "watchQuietMilliseconds": 600000, "watchMaximumMilliseconds": 7200000, "watchStalledRounds": 10, "watchScanMilliseconds": 900000, "recheckMilliseconds": 60000, "unitStamp": "units.stamp", "unitIntervalMilliseconds": 21600000
         },
         "pool": {
           "maximumLanes": 16, "maximumLiveLanes": 32, "pollMilliseconds": 50, "pollMaximumMilliseconds": 1000, "pollBackoffBasisPoints": 15000, "listedCrates": 16, "machineStore": "rust", "reserved": ["d"]

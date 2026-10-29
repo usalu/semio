@@ -85,7 +85,6 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/🏠️host/✉️envelope/📦️packages/🦀️rust",
-    "🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust",
     "🔨️modules/🏠️host/📐️geometry-service/📦️packages/🦀️rust",
     "🔨️modules/🏠️host/📦️packages/🦀️rust",
     "🧪️tests/⏱️geometry-phased-job-support/📦️packages/🦀️rust",
@@ -445,9 +444,6 @@ path = "🔨️modules/🏠️host/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-procedural-3d-envelope]
 path = "🔨️modules/🏠️host/✉️envelope/📦️packages/🦀️rust"
-
-[workspace.dependencies.semio-s-artifact-procedural-3d-initialization]
-path = "🔨️modules/🏠️host/🌱️initialization/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-procedural-3d-preview-eval]
 path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧵️preview-eval/📦️packages/🦀️rust"

@@ -127,7 +127,7 @@ pub(super) async fn push_transition(rng: &mut SplitMix64, clock: &mut u64, adver
     let hlt = (rng.next_range(4).await, *clock, rng.next_range(2).await);
     let id = next_ident(rng, "transition", transitions.len(), adversarial).await;
     let dependencies = transitions.last().map(|prior| vec![prior.id.clone()]).unwrap_or_default();
-    transitions.push(crate::HistoryTransitionRecord { id, actor:actor.into(), hlt, dependencies, observed: None, payload: crate::encode_history_transition(&transition) });
+    transitions.push(crate::HistoryTransitionRecord { id, actor:actor.into(), hlt, dependencies, observed: None, payload: semio_framework_value::paged::PagedBytes::try_from_slice(&crate::encode_history_transition(&transition)).expect("history payload") });
 }
 
 /// 🎞️ Deterministic seeded `crate::HistoryLog` fabricator.
@@ -245,8 +245,8 @@ impl OpDagGen {
                 dependencies,
                 observed: None,
                 target: Vec::new(),
-                diff: crate::ArtifactDiff { schema: crate::SchemaId("testkit.op".to_string()), payload: format!("index:{i}").into_bytes() },
-                inverse: crate::InverseMutation { schema: crate::SchemaId("testkit.op".to_string()), payload: Vec::new() },
+                diff: crate::ArtifactDiff { schema: crate::SchemaId("testkit.op".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(format!("index:{i}").as_bytes()).expect("diff payload") },
+                inverse: crate::InverseMutation { schema: crate::SchemaId("testkit.op".to_string()), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&[]).expect("inverse payload") },
                 timestamp: crate::HybridLogicalTimestamp::new(i as u64, i as u64 * 10),
                 transaction: None, verb: None, line: None,
             });

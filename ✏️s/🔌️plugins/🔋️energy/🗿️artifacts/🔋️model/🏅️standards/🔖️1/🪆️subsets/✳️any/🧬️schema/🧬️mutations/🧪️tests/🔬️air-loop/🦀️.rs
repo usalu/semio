@@ -2,6 +2,7 @@
 
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mut_air_loop as air_loop_mutations;
+extern crate semio_s_artifact_energy_model_mut_air_loop_nodes as air_loop_nodes_mutations;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
@@ -10,7 +11,7 @@ extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 #[path = "."]
 mod change_air_loop_supply_node {
-    pub use crate::air_loop_mutations::change_air_loop_supply_node::*;
+    pub use crate::air_loop_nodes_mutations::change_air_loop_supply_node::*;
     #[path = "../../🌬️air-loop/↗️change-supply-node/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🌬️air-loop/↗️change-supply-node/🧪️tests/✅️repoints/🦀️.rs"]
@@ -19,7 +20,7 @@ mod change_air_loop_supply_node {
 
 #[path = "."]
 mod change_air_loop_return_node {
-    pub use crate::air_loop_mutations::change_air_loop_return_node::*;
+    pub use crate::air_loop_nodes_mutations::change_air_loop_return_node::*;
     #[path = "../../🌬️air-loop/↘️change-return-node/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🌬️air-loop/↘️change-return-node/🧪️tests/✅️repoints/🦀️.rs"]
@@ -28,7 +29,7 @@ mod change_air_loop_return_node {
 
 #[path = "."]
 mod change_air_loop_design_supply_air_flow {
-    pub use crate::air_loop_mutations::change_air_loop_design_supply_air_flow::*;
+    pub use crate::air_loop_nodes_mutations::change_air_loop_design_supply_air_flow::*;
     #[path = "../../🌬️air-loop/🍥️change-design-supply-air-flow/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🌬️air-loop/🍥️change-design-supply-air-flow/🧪️tests/✅️uprates/🦀️.rs"]

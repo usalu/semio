@@ -88,8 +88,8 @@ fn nested(mut demand: RetirementDemand) -> Result<RetirementDemand, ValueError> 
 /// 🔗️ [`ArtifactStoreInitializationRuntime`] · [`ArtifactStore::from_initialized_runtime_with_owners`]
 pub struct ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: ToValue + RetireOwned + Send + Sync + 'static,
-    M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    P: RetireOwned + semio_framework_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     pub producer:PhantomData<fn()->C>,
@@ -127,8 +127,8 @@ where
 
 impl<P, M, C> ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: ToValue + RetireOwned + Send + Sync + 'static,
-    M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    P: RetireOwned + semio_framework_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     /// 🌱️ Captures the completed `envelope` of a document of `schema` for the replay `operation` of `generation`, owned by `actor`.
@@ -530,24 +530,6 @@ where
         }
     }
 
-    fn close_core_is_terminal(&self) -> bool {
-        self.supersession_native.terminal_is_empty() && self.registry_birth.terminal_is_empty() && self.native.terminal_is_empty() && self.envelope.is_none()
-            && self.owners.is_none()
-            && self.catalog.is_none()
-            && self.runtime.is_none()
-            && self.factory.is_none()
-            && self.candidate.is_none()
-            && self.active.is_none()
-            && self.envelope_retirement.is_none()
-            && self.actor.is_none()
-            && self.actor_close.is_none()
-            && !self.index_open
-    }
-
-    fn close_is_terminal(&self) -> bool {
-        self.close_core_is_terminal() && self.publication.terminal_is_empty()
-    }
-
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.supersession_native.active(){return self.supersession_native.close_demands(body);}
         if !self.registry_birth.terminal_is_empty(){return self.registry_birth.close_demands();}
@@ -728,8 +710,8 @@ where
 
 impl<P, M, C> ArtifactStoreInitializationAuthority<P, M> for ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: ToValue + RetireOwned + Send + Sync + 'static,
-    M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    P: RetireOwned + semio_framework_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     fn step<'a>(&'a mut self, cx: &mut StepContext<'_>) -> Result<Option<JobOutcomeBorrow<'a>>,semio_framework_job::OriginalTurnFailure> {
@@ -810,10 +792,35 @@ where
     }
 }
 
+impl<P, M, C> ArtifactStoreReplayInitializer<P, M, C>
+where
+    P: RetireOwned + semio_framework_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
+    C:DocumentStoreOwnerProducer<P,M>,
+{
+    fn close_core_is_terminal(&self) -> bool {
+        self.supersession_native.terminal_is_empty() && self.registry_birth.terminal_is_empty() && self.native.terminal_is_empty() && self.envelope.is_none()
+            && self.owners.is_none()
+            && self.catalog.is_none()
+            && self.runtime.is_none()
+            && self.factory.is_none()
+            && self.candidate.is_none()
+            && self.active.is_none()
+            && self.envelope_retirement.is_none()
+            && self.actor.is_none()
+            && self.actor_close.is_none()
+            && !self.index_open
+    }
+
+    fn close_is_terminal(&self) -> bool {
+        self.close_core_is_terminal() && self.publication.terminal_is_empty()
+    }
+}
+
 impl<P, M, C> Drop for ArtifactStoreReplayInitializer<P, M, C>
 where
-    P: ToValue + RetireOwned + Send + Sync + 'static,
-    M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + RetireOwned + Send + 'static + semio_framework_pack_json::ArtifactCanonicalJsonTree,
+    P: RetireOwned + semio_framework_os_spr::StoreState,
+    M: RetireOwned + semio_framework_pack_json::ArtifactCanonicalJsonTree + semio_framework_os_spr::StoreMutationFor<P>,
     C:DocumentStoreOwnerProducer<P,M>,
 {
     fn drop(&mut self) {

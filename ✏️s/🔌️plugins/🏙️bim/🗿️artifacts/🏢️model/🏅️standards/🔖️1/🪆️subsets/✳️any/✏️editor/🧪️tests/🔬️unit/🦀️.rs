@@ -31,7 +31,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn the_editor_starts_from_the_demo_model() {
-    assert!(!BimModelApp::reference_birth().expect("explicit reference snapshot producer")().storeys.is_empty());
+    assert!(!BimModelApp::reference_birth().expect("explicit reference snapshot producer")().expect("the reference snapshot births").storeys.is_empty());
 }
 
 #[semio_framework_async_macros::async_test]

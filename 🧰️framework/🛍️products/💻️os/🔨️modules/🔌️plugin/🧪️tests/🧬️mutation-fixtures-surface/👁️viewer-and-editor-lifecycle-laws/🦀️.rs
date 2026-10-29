@@ -51,7 +51,7 @@ async fn new_viewer_constructs_a_registry_less_wrapper() {
 async fn editor_fixture_still_mutates_normally() {
     let mut original_caller=crate::app_testing::artifact_app_laws::OriginalFixtureCaller::admit().expect("original caller policy admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
     let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
-    app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("increment");
+    crate::app_testing::artifact_app_laws::dispatch_original_fixture_command(&mut app, &SurfaceEditorCommand::Increment, &meta("local"), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), cx).await.expect("increment");
     let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity(),cx).await.expect("the admitted operation settles");
     assert!(receipt.lanes.contains(&crate::tool_contract::TypedOperationResultLane::Artifact), "the increment settles on the Artifact publication lane it declares, got {:?}", receipt.lanes);
     assert_eq!(app.snapshot().unwrap().count, 1);

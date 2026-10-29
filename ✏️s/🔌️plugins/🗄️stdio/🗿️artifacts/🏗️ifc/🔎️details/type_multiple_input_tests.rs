@@ -13,7 +13,7 @@ fn multiple_request(target: &str, rows: &serde_json::Value) -> semio_framework_p
 }
 #[test]
 fn original_multiple_reference_guidance_keeps_all_fields_and_denies_each_published_axis() {
-    use semio_framework_plugin::app::staged_form::StagedBodySource;
+    use semio_framework_plugin_decl_staged_form::StagedBodySource;
     let law = multiple_contract();
     for row in law["cases"].as_array().unwrap() {
         let snapshot = multiple_source(&law, row["source"].as_str().unwrap());

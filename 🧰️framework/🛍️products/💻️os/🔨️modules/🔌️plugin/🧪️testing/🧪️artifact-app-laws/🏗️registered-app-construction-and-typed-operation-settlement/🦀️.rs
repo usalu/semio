@@ -29,7 +29,7 @@ pub fn meta(actor: &str) -> ActionMeta {
 /// 🧬️ A registry-less wrapper (`VcsArtifactApp::new`) for store-only tests. UI and typed
 /// command dispatch fail closed until a real registry and exact factory are supplied.
 pub async fn new_app<A: ArtifactApp + Default>(actor: protocol::ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<A> {
-    let mut app = VcsArtifactApp::new(A::default(), actor, mounted_policy, identity).await;
+    let mut app = VcsArtifactApp::new(A::default(), actor, mounted_policy, identity).await.expect("the reference snapshot births");
     settle_store_constructor(&mut app, mounted_policy);
     app
 }
@@ -46,7 +46,7 @@ pub async fn new_app_with_registry_and_members<A: ArtifactApp + Default, M: stor
     let definition = manifest().definition;
     let registry = AppActionRegistry::from_definition(&definition);
     drop(definition);
-    let mut app = VcsArtifactApp::with_registry(A::default(), registry, actor, mounted_policy, identity).await;
+    let mut app = VcsArtifactApp::with_registry(A::default(), registry, actor, mounted_policy, identity).await.expect("the reference snapshot births");
     settle_store_constructor(&mut app, mounted_policy);
     app
 }
@@ -82,7 +82,7 @@ where
     Manifest: std::future::Future<Output = App>,
 {
     let definition = manifest.await.definition;
-    let mut app = VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition), actor, mounted_policy, identity).await;
+    let mut app = VcsArtifactApp::with_registry(A::default(), AppActionRegistry::from_definition(&definition), actor, mounted_policy, identity).await.expect("the reference snapshot births");
     app.bind_instance_id(meta("local").instance_id).await;
     settle_store_constructor(&mut app, mounted_policy);
     app
@@ -149,6 +149,8 @@ pub struct TypedOperationFixtureReceipt {
     pub completions: usize,
     pub completion_operations: Vec<u64>,
     pub revisions: Vec<u64>,
+    /// 🔁️ One entry per task follow-up this settle saw settled: its mounted command's receipt, or the fault that refused its delivery.
+    pub resume_outcomes: Vec<Result<semio_framework::kernel::InvocationResult, semio_framework::Fault>>,
     /// 🧩️ One entry per composed gesture this settle observed — see
     /// [`crate::app::ComposedGestureResult`].
     pub composed: Vec<semio_framework_plugin_composition_publication::ComposedGestureResult>,
@@ -182,9 +184,9 @@ pub async fn capture_fixture_window_config<O: semio_framework_plugin_window_conf
 /// history edit (ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING, forms frozen-press law).
 pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiver: u32, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<TypedOperationFixtureReceipt, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let mut turns=0;let maximum_turns=OriginalFixtureCaller::maximum_turns();
-    let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), composed: Vec::new() };
+    let mut receipt = TypedOperationFixtureReceipt { ownership_receipts: Vec::new(), lanes: Vec::new(), effects: Vec::new(), events: Vec::new(), ui_scope: None, completions: 0, completion_operations: Vec::new(), revisions: Vec::new(), resume_outcomes: Vec::new(), composed: Vec::new() };
     retain_registered_ownership_receipts(app, mounted_policy, &mut receipt)?;
-    while app.has_pending_typed_operations() {
+    while app.has_pending_typed_operations() || !app.maintenance_terminal_is_empty() {
         if cx.should_yield()||turns>=maximum_turns{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture settlement exhausted its caller opportunity").into())}turns+=1;
         let grant = mounted_policy.maintenance;
         let demand = app.maintenance_retirement_demands(grant.maximum_copy_bytes)?;
@@ -215,6 +217,9 @@ pub async fn settle_registered_typed_operation<P: PluginApp>(app: &mut P, receiv
         }
         while let Some(progress) = app.take_typed_operation_ui_progress() {
             receipt.ui_scope = receipt.ui_scope.or(Some(progress.ui_scope));
+        }
+        while let Some(outcome) = app.take_task_resume_outcome() {
+            receipt.resume_outcomes.push(outcome);
         }
         while let Some(composed) = app.take_typed_operation_composed_result() {
             receipt.composed.push(composed);
@@ -327,7 +332,7 @@ pub async fn settle_extension_invocations<P: PluginApp>(
         });
         let Ok((instance, action, args, original_fault)) = semio_framework_plugin_reactor_tasks::tasks_extension_continuation::take_extension_response(req, outcome) else { continue };
         let meta = ActionMeta { instance_id: instance, ..action_meta.clone() };
-        dispatch_fixture_response_action(app,&action,Some(args),original_fault,&meta,identity,cx,mounted_policy.close).await?;
+        dispatch_fixture_response_action(app,&action,Some(args),original_fault,&mut Some(meta),identity,cx,mounted_policy.close).await?;
         let receipt = settle_registered_typed_operation(app, receiver, mounted_policy, identity,cx).await?;
         settled.ownership_receipts.extend(receipt.ownership_receipts);
         settled.effects.extend(receipt.effects);
@@ -351,7 +356,7 @@ pub fn close_registered_fixture_app<A: PluginApp>(app: &mut A, mounted_policy: s
     retain_original_ownership_receipts(app, mounted_policy, &mut ownership_receipts)?;
     while close_turn<maximum_turns {
         if app.close_terminal_is_empty() { return Ok(ownership_receipts); }
-        if cx.should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture close exhausted its caller opportunity").into())}
+        if cx.retirement_should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original fixture close exhausted its caller opportunity").into())}
         let grant = fixture_close_grant(mounted_policy);
         let demand = app.close_retirement_demands(grant.maximum_copy_bytes)?;
         last_quote = Some((demand, grant));

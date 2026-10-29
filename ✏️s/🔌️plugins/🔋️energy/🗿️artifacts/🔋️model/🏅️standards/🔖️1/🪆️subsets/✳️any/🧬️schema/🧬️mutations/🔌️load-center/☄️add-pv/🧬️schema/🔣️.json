@@ -101,7 +101,7 @@
     "semantics": {
       "verb": "add",
       "entity": "ElectricalLoadCenter",
-      "kind": "AddElectricalLoadCenterPv",
+      "kind": "add-electrical-load-center-pv",
       "record": "AddElectricalLoadCenterPv"
     },
     "diagnostics": {

@@ -20,6 +20,7 @@ pub struct LayoutExportJob {
     pub output: ChunkRope,
     pub encoded: ChunkRope,
     pub(super) base64_cursor: usize,
+    pub(super) media_projection_phase:u8,
     pub(super) png_adler_s1: u32,
     pub(super) png_adler_s2: u32,
     pub(super) png_idat_crc: u32,
@@ -96,6 +97,7 @@ impl LayoutExportJob {
             output: ChunkRope::new(),
             encoded: ChunkRope::new(),
             base64_cursor: 0,
+            media_projection_phase:0,
             png_adler_s1: 1,
             png_adler_s2: 0,
             png_idat_crc: 0,
@@ -350,8 +352,10 @@ impl LayoutExportJob {
         Ok(job)
     }
 
+    pub(super) fn projected_media(&self)->bool{self.media_output_credit.is_some()&&self.request.as_ref().is_some_and(|request|request.kind==LayoutExportKind::Svg)}
+
     pub(super) fn active_output(&self) -> &ChunkRope {
-        if self.request.as_ref().unwrap().kind.binary() && matches!(self.stage, ExportStage::Base64 | ExportStage::PackageCommit | ExportStage::Complete) {
+        if (self.request.as_ref().unwrap().kind.binary()||self.projected_media()) && matches!(self.stage, ExportStage::Base64 | ExportStage::PackageCommit | ExportStage::Complete) {
             &self.encoded
         } else {
             &self.output

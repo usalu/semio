@@ -28,7 +28,7 @@ pub(crate) use semio_framework_plugin_decl_views::child_view;
 pub(crate) use semio_framework_plugin_decl_views::gesture_contract;
 pub(crate) use semio_framework_plugin_decl_views::history_view;
 pub(crate) mod media_contract {
-    pub use semio_framework_plugin_decl_views::media_contract::*;
+    pub use semio_framework_plugin_decl_media::*;
     pub use semio_framework_plugin_decl_app::media_contract::{ArtifactMediaExportJobRequest, ArtifactMediaExportRequestRetirement};
 }
 pub(crate) use semio_framework_plugin_decl_surface::natural_file_import;
@@ -50,7 +50,7 @@ pub(crate) mod app_emission {
 }
 pub(crate) mod tool_contract {
     pub use semio_framework_plugin_decl_app::tool_contract::*;
-    pub use semio_framework_plugin_decl_views::tool_contract::{ArtifactInstanceOperationOwner, InstanceInferenceSessions, original_inference_close_demands, original_inference_close_step, ArtifactInstanceOperationOwnerHandle, ArtifactInferenceSessionAccess, ArtifactInstanceOperationOwnerAliasRetirement, EmptyArtifactInstanceOperationOwner};
+    pub use semio_framework_plugin_decl_tool_contract::{ArtifactInstanceOperationOwner, InstanceInferenceSessions, original_inference_close_demands, original_inference_close_step, ArtifactInstanceOperationOwnerHandle, ArtifactInferenceSessionAccess, ArtifactInstanceOperationOwnerAliasRetirement, EmptyArtifactInstanceOperationOwner};
 }
 //#endregion 📜️DeclarationFacet
 //#region 📬️PublicationFacet

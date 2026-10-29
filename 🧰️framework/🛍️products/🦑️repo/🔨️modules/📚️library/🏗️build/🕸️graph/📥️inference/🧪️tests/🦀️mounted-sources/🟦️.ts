@@ -17,6 +17,7 @@ const build=(root:string,files:Record<string,string>)=>{for(const[path,text]of O
 const entriesOf=(root:string,crate:string):string[]=>{
  const directory=join(root,crate),manifest=readFileSync(join(directory,"Cargo.toml"),"utf8"),lib=/^path\s*=\s*"([^"]+)"/mu.exec(manifest.split("[lib]")[1]??"")?.[1]??"src/lib.rs",found=[lib];
  for(const folder of ["tests"])if(existsSync(join(directory,folder)))found.push(...["t.rs"].filter(name=>existsSync(join(directory,folder,name))).map(name=>`${folder}/${name}`));
+ if(existsSync(join(directory,"build.rs")))found.push("build.rs");
  return found.filter(entry=>existsSync(join(directory,entry)));
 };
 const rustc=(root:string,crate:string,flags:string[]):string[]=>{
@@ -41,7 +42,7 @@ test("the corpus is closed by its schema",()=>{
 for(const row of corpus.cases)test(`${row.name}: ${row.mechanism}`,()=>{
  const root=mkdtempSync(join(realpathSync(tmpdir()),"rust-mounted-"));
  try{
-  build(root,row.files);
+  build(root,row.files as unknown as Record<string,string>);
   const named=row.flavor==="named",set=cacheInternals.cargoSourceSetV1(row.crate,root,new Map(),named,!named);
   expect(ajv.validate(factSchema,set),JSON.stringify(ajv.errors)).toBe(true);
   const read=named?rustc(root,row.crate,["--test"]):[],outside=read.filter(path=>!path.startsWith(row.crate+"/")).sort();
@@ -72,7 +73,7 @@ test("a tests-only crate has no compiled entry as a dependency but its test targ
  const root=mkdtempSync(join(realpathSync(tmpdir()),"rust-tests-only-"));
  try{
   const row=corpus.cases.find(candidate=>candidate.name.startsWith("tests-only"))!;
-  build(root,row.files);
+  build(root,row.files as unknown as Record<string,string>);
   const set=cacheInternals.cargoSourceSetV1(row.crate,root,new Map(),true,false);
   expect(set.resolved).toBe(true);
   expect(set.files).toEqual([prefix+row.crate+"/tests/t.rs"]);
@@ -99,4 +100,20 @@ test("dimensional FEM node source mounts resolve without macro expansion",()=>{
  const set=cacheInternals.cargoSourceSetV1(femNode+"/📦️packages/🦀️rust",workspace,new Map(),true,false);
  expect(set.resolved,JSON.stringify(set)).toBe(true);
  for(const path of ["🧬️schema/◻️2d/🦀️.rs","🧬️schema/🧊️3d/🦀️.rs","🧪️tests/🦀️.rs","🧪️tests/🧫️fixtures/🔣️.json"])expect(set.files).toContain(prefix+femNode+"/"+path);
+});
+
+const renderer="🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust";
+test.skipIf(!existsSync(join(workspace,renderer,"build.rs")))("the renderer crate of this repository, whose ASCII-named build script only reads the environment and mounts the canonical builder, resolves to the files rustc reads for the script and mounts its library",()=>{
+ const set=cacheInternals.cargoSourceSetV1(renderer,workspace,new Map(),false,true);
+ expect(set.resolved,JSON.stringify(set)).toBe(true);
+ const derived=new Set<string>(set.files.map((path:string)=>path.slice(prefix.length))),directory=join(workspace,renderer),out=join(tmpdir(),`rust-build-script-${process.pid}.d`),manifest=readFileSync(join(directory,"Cargo.toml"),"utf8"),lib=/^path\s*=\s*"([^"]+)"/mu.exec(manifest.split("[lib]")[1]??"")![1]!;
+ spawnSync("rustc",["--edition=2021","--crate-type=lib","--crate-name=probe","--cap-lints=allow",`--emit=dep-info=${out}`,join(directory,"build.rs")],{cwd:tmpdir(),encoding:"utf8"});
+ try{
+  const reads=readFileSync(out,"utf8").split("\n")[0]!.split(": ")[1]!.trim().split(/\s+/u).map(path=>slash(relative(workspace,resolve(directory,path))));
+  expect(reads.length).toBeGreaterThan(1);
+  for(const path of reads)expect(derived.has(path),`rustc reads ${path}`).toBe(true);
+ }finally{rmSync(out,{force:true});}
+ expect(derived.has(`${renderer}/build.rs`)).toBe(true);
+ expect(derived.has(`${renderer}/${lib}`)).toBe(true);
+ expect(cacheInternals.cargoSourcesOrRefuseV1(renderer,workspace,new Map(),false,true)).toEqual(set.files);
 });

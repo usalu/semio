@@ -65,6 +65,13 @@ pub struct WindowConfigMutation {
     pub mutation: Box<dyn ErasedWindowMutationValue>,
 }
 
+/// 🧬️ A copy owns a fresh payload box and shares the captured retirement issuer.
+impl Clone for WindowConfigMutation {
+    fn clone(&self) -> Self {
+        Self { window_id: self.window_id.clone(), window_kind_id: self.window_kind_id, mutation: self.mutation.clone_boxed() }
+    }
+}
+
 impl std::fmt::Debug for WindowConfigMutation {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         formatter.debug_struct("WindowConfigMutation").field("window_id", &self.window_id).field("window_kind_id", &self.window_kind_id).finish_non_exhaustive()
@@ -93,7 +100,7 @@ impl WindowConfigMutation {
     }
 
     #[doc(hidden)]
-    pub fn from_issued<T:Send+Sync+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
+    pub fn from_issued<T:Clone+Send+Sync+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
 
     pub fn window_id(&self) -> &str {
         &self.window_id

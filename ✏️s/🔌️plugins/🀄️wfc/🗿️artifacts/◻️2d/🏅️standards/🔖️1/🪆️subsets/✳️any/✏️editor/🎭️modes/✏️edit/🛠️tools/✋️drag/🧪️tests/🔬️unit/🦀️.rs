@@ -141,7 +141,7 @@ fn settle<E: std::fmt::Debug>(app: &mut Wfc2dApp, result: Result<InvocationResul
 fn drag(app: &mut Wfc2dApp, gesture: &str, node_ids: &[&str], dx: f64, dy: f64) -> InvocationResult {
     let row = record(gesture, node_ids, dx * WFC_2D_GRAPH_VIEW_SCALE, dy * WFC_2D_GRAPH_VIEW_SCALE).to_row();
     let command = Wfc2dEditorCommand::NodeGraphEdit { operations_json: semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Array(vec![row])) };
-    let result = block_on(app.app.dispatch_typed(command, &graph_meta(), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
+    let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.app, &command, &graph_meta(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.scope.cx()));
     settle(app, result)
 }
 

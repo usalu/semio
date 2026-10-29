@@ -19,15 +19,17 @@ use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 
 /// 📚️ Turns a registered example body into the app snapshot. A `{` body is the JSON a deferred
-/// producer emits; anything else is the subset's own DSL.
+/// producer emits; anything else is the subset's own DSL, parsed by the owner's declared reference codec.
 pub(crate) fn catalogue_snapshot_from_document<S>(body: &str) -> Result<S, Fault>
 where
-    S: pack::snapshot::ArtifactDsl + semio_framework_value::FromValue,
+    S: semio_framework_value::FromValue + store::os_store::serialization::ArtifactStoreSnapshot,
 {
+    let unreadable = |detail: String| Fault::new(FaultOrigin::App, FaultCode::new("app.example.unreadable"), detail);
     if body.trim_start().starts_with('{') {
-        semio_framework_pack_json::from_json_str(body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.example.unreadable"), error.to_string()))
+        semio_framework_pack_json::from_json_str(body, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| unreadable(error.to_string()))
     } else {
-        <S as pack::snapshot::ArtifactDsl>::parse_dsl(body).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("app.example.unreadable"), error.to_string()))
+        let parse = S::reference_snapshot_codec().and_then(|codec| codec.parse_dsl).ok_or_else(|| unreadable("the snapshot owner declares no reference DSL parser".to_string()))?;
+        parse(body).map_err(|error| unreadable(error.to_string()))
     }
 }
 

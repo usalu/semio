@@ -8,8 +8,6 @@ pub use semio_framework_os_kernel::os_store;
 #[path = "../🧬️schema/📸️snapshot/🦀️.rs"]
 pub mod artifact;
 pub use artifact::*;
-#[path = "../🚪️io/📝️text/📸️snapshot/🦀️.rs"]
-pub mod component_dsl;
 #[path = "../🎚️parameter/📨️intent/🦀️.rs"]
 pub mod graph_parameter;
 #[path = "../🧵️retained/🦀️.rs"]

@@ -5,12 +5,13 @@ extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_mut_plant_loop as plant_loop_mutations;
+extern crate semio_s_artifact_energy_model_mut_plant_loop_design as plant_loop_design_mutations;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 #[path = "."]
 mod change_plant_loop_supply_temperature {
-    pub use crate::plant_loop_mutations::change_plant_loop_supply_temperature::*;
+    pub use crate::plant_loop_design_mutations::change_plant_loop_supply_temperature::*;
     #[path = "../../🏭️plant-loop/☕️change-supply-temperature/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🏭️plant-loop/☕️change-supply-temperature/🧪️tests/✅️cools/🦀️.rs"]
@@ -73,7 +74,7 @@ mod add_plant_loop_equipment {
 
 #[path = "."]
 mod change_plant_loop_design_flow {
-    pub use crate::plant_loop_mutations::change_plant_loop_design_flow::*;
+    pub use crate::plant_loop_design_mutations::change_plant_loop_design_flow::*;
     #[path = "../../🏭️plant-loop/🚤️change-design-flow/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🏭️plant-loop/🚤️change-design-flow/🧪️tests/✅️uprates/🦀️.rs"]
@@ -82,7 +83,7 @@ mod change_plant_loop_design_flow {
 
 #[path = "."]
 mod change_plant_loop_return_temperature {
-    pub use crate::plant_loop_mutations::change_plant_loop_return_temperature::*;
+    pub use crate::plant_loop_design_mutations::change_plant_loop_return_temperature::*;
     #[path = "../../🏭️plant-loop/🫖️change-return-temperature/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../🏭️plant-loop/🫖️change-return-temperature/🧪️tests/✅️cools/🦀️.rs"]

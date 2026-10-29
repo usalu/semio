@@ -42,6 +42,7 @@ semio-framework-job-publication = { path = "../../../../../../../../🔨️modul
 semio-framework-os-vcs = { path = "../../../../../🌿️vcs/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-os-store-replay-operation = { path = "../../../../🔁️replay/🎮️operation/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-job = { workspace = true, features = ["testkit"] }

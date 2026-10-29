@@ -16,7 +16,8 @@ pub const JSON_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", stand
 pub fn from_json_text(text: &str) -> Result<Fem2dSnapshot, IoError> {
     let value = parse_json_text(text).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→fem2d: parse failed: {error}"))))?;
     let raw: semio_framework_value::DslValue = JsonSnapshot::from_value(value).to_serde_value().into();
-    semio_framework_value::FromValue::from_value(raw).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→fem2d: {error}"))))
+    let rows: semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue = semio_framework_value::FromValue::from_value(raw).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("json→fem2d: {error}"))))?;
+    Fem2dSnapshot::from_reference(rows).map_err(IoError::from_value_error)
 }
 
 /// 🧩️ `s.stdio.json@rfc8259/*` → `s.fem.fem2d@1/*`.

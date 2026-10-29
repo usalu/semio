@@ -79,6 +79,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
 use protocol::{ColdMutation, Mutation};
 
 use semio_framework_value_derive::FromValue;
@@ -135,19 +136,19 @@ use semio_s_artifact_fem_2d_analysis::standards::v1::subsets::any::schema::mutat
 ///
 /// @see ../../🔣️oracle.json — the catalog and the recorded no-oracle decision.
 pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_json: &str) -> Result<String, String> {
-    let decode_snapshot = |text: &str| -> Result<Fem2dSnapshot, String> {
-        let decoded: Fem2dSnapshot = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let decode_snapshot = |text: &str| -> Result<Fem2dSnapshotValue, String> {
+        let decoded: Fem2dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
         Ok(decoded)
     };
     let base = decode_snapshot(base_json)?;
     let expected = decode_snapshot(after_json)?;
     let mutation: Fem2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let (applied, forward) = store::os_store::replay::apply_outcome(&base, <Fem2dMutation as ColdMutation<Fem2dSnapshot>>::diff(&mutation, &base));
-    let inverse = <Fem2dMutation as ColdMutation<Fem2dSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
+    let (applied, forward) = store::os_store::replay::apply_outcome(&base, <Fem2dMutation as ColdMutation<Fem2dSnapshotValue>>::diff(&mutation, &base));
+    let inverse = <Fem2dMutation as ColdMutation<Fem2dSnapshotValue>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?;
     let mut undone = applied.clone();
     let mut inverse_messages = Vec::new();
     for step in inverse.iter().rev() {
-        let (next, outcome) = store::os_store::replay::apply_outcome(&undone, <Fem2dMutation as ColdMutation<Fem2dSnapshot>>::diff(step, &undone));
+        let (next, outcome) = store::os_store::replay::apply_outcome(&undone, <Fem2dMutation as ColdMutation<Fem2dSnapshotValue>>::diff(step, &undone));
         undone = next;
         inverse_messages.extend(outcome.messages().iter().cloned());
     }
@@ -164,13 +165,19 @@ pub fn fem2d_mutation_report_json(base_json: &str, mutation_json: &str, after_js
     Ok(semio_framework_pack_json::to_json_string(&report))
 }
 
+/// ❄️ Decodes reference JSON into the authoring value, then receives it into the persistent snapshot the engine reads.
+fn decode_reference(text: &str) -> Result<Fem2dSnapshot, String> {
+    let value: Fem2dSnapshotValue = semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    Fem2dSnapshot::from_reference(value).map_err(semio_framework_value::ValueError::into_message)
+}
+
 /// 🗂️ The three projection axes of an analysis report, computed from the document so that two
 /// implementations order the same values the same way: every node a `bar`/`beam` element references
 /// in document order, every restrained-and-active `(node, dof)` pair in that same order, and the
 /// `bar`/`beam` members in document order. Regions are outside the projection — a meshed continuum
 /// is not something a frame solver can express, and this subset's region geometry already has its own
 /// two third-party oracles.
-pub(crate) fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String, String)>, Vec<String>) {
+pub fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String, String)>, Vec<String>) {
     let ends = |element: &semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement| match element {
         semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Bar { start, end, .. } => (start.clone(), end.clone(), false),
         semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FemElement::Beam { start, end, .. } => (start.clone(), end.clone(), true),
@@ -187,7 +194,7 @@ pub(crate) fn fem2d_frame_axes(doc: &Fem2dSnapshot) -> (Vec<String>, Vec<(String
             }
         }
     }
-    let nodes: Vec<String> = doc.nodes.iter().map(|node| node.id.clone()).filter(|id| active.iter().any(|(node, _)| node == id)).collect();
+    let nodes: Vec<String> = doc.nodes.iter().map(|node| node.id.to_string()).filter(|id| active.iter().any(|(node, _)| node == id)).collect();
     let mut pairs = Vec::new();
     for node in &nodes {
         let flags = active.iter().find(|(id, _)| id == node).map_or([false; 3], |(_, flags)| *flags);
@@ -271,7 +278,7 @@ pub(crate) fn fem2d_dof_name_of(dof: semio_s_fem_model::Dof) -> &'static str {
 ///
 /// @see ../../../📈️analysis/🧪️tests/🧮️solves-fem2d-1-benchmarks/🥒️.feature
 pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let doc = decode_reference(snapshot_json)?;
     let (nodes, pairs, members) = fem2d_frame_axes(&doc);
     let axes = |value: semio_framework_value::DslValue| {
         semio_framework_value::DslValue::Object(vec![
@@ -303,7 +310,7 @@ pub fn fem2d_analysis_report_json(snapshot_json: &str) -> Result<String, String>
 /// 🧱️ Continuum responses in authored-node order with stress extrema and resolved eigen answers.
 pub fn fem2d_continuum_report_json(snapshot_json: &str, include_eigen: bool) -> Result<String, String> {
     use semio_framework_value::DslValue as Value;
-    let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let doc = decode_reference(snapshot_json)?;
     let results = semio_s_artifact_fem_2d_engine::fem2d_engine::fem2d_solve_all(&doc).map_err(|error| error.to_string())?;
     let array = |values: &[f64]| Value::Array(values.iter().map(|value| Value::float(*value)).collect());
     let mut cases = Vec::new();
@@ -312,10 +319,10 @@ pub fn fem2d_continuum_report_json(snapshot_json: &str, include_eigen: bool) -> 
         let mut displacements = Vec::new();
         let mut reactions = Vec::new();
         for node in &doc.nodes {
-            let value = result.displacements.iter().find(|value| value.node_id == node.id).ok_or_else(|| format!("missing displacement {}", node.id))?;
+            let value = result.displacements.iter().find(|value| value.node_id == *node.id).ok_or_else(|| format!("missing displacement {}", node.id.as_str()))?;
             displacements.push(array(&value.values[..2]));
             for dof in [semio_s_fem_model::Dof::Tx, semio_s_fem_model::Dof::Ty] {
-                if let Some(reaction) = result.reactions.iter().find(|value| value.node_id == node.id && value.dof == dof) {
+                if let Some(reaction) = result.reactions.iter().find(|value| value.node_id == *node.id && value.dof == dof) {
                     reactions.push(reaction.value);
                 }
             }
@@ -356,9 +363,9 @@ pub fn fem2d_continuum_report_json(snapshot_json: &str, include_eigen: bool) -> 
 /// `fem2d_mutation_report_json` uses, then reports the analysis of what it left behind — the
 /// mutate-then-solve half of `🧮️solves-fem2d-1-benchmarks`.
 pub fn fem2d_mutated_analysis_report_json(base_json: &str, mutation_json: &str) -> Result<String, String> {
-    let base: Fem2dSnapshot = semio_framework_pack_json::from_json_str(base_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let base: Fem2dSnapshotValue = semio_framework_pack_json::from_json_str(base_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let mutation: Fem2dMutation = semio_framework_pack_json::from_json_str(mutation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
-    let (applied, outcome) = store::os_store::replay::apply_outcome(&base, <Fem2dMutation as ColdMutation<Fem2dSnapshot>>::diff(&mutation, &base));
+    let (applied, outcome) = store::os_store::replay::apply_outcome(&base, <Fem2dMutation as ColdMutation<Fem2dSnapshotValue>>::diff(&mutation, &base));
     let faults: Vec<String> = outcome.messages().iter().filter(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)).map(|message| format!("{:?}", message.code)).collect();
     if !faults.is_empty() {
         return Err(format!("the mutation was rejected with {faults:?}"));
@@ -369,7 +376,7 @@ pub fn fem2d_mutated_analysis_report_json(base_json: &str, mutation_json: &str) 
 /// 🎵️ One JSON report of the modal analysis of `snapshot_json` — the natural frequencies in hertz,
 /// as many as the document's own `analysis.modalCount` asks for.
 pub fn fem2d_modal_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let doc = decode_reference(snapshot_json)?;
     match semio_s_artifact_fem_2d_engine::fem2d_engine::modal_buckling::fem2d_modal(&doc) {
         Err(error) => Ok(semio_framework_pack_json::to_json_string(&semio_framework_value::DslValue::Object(vec![("error".to_string(), semio_framework_value::DslValue::String(error.to_string()))]))),
         Ok(result) => {
@@ -381,7 +388,7 @@ pub fn fem2d_modal_report_json(snapshot_json: &str) -> Result<String, String> {
 /// 🏛️ One JSON report of the linear-buckling analysis of `snapshot_json` — the lowest load factor of
 /// every load case the document declares, keyed by case id.
 pub fn fem2d_buckling_report_json(snapshot_json: &str) -> Result<String, String> {
-    let doc: Fem2dSnapshot = semio_framework_pack_json::from_json_str(snapshot_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
+    let doc = decode_reference(snapshot_json)?;
     let mut factors = Vec::new();
     for case in &doc.load_cases {
         match semio_s_artifact_fem_2d_engine::fem2d_engine::modal_buckling::fem2d_buckling(&doc, &case.id) {

@@ -37,3 +37,4 @@ pub use crate::standards::v_raw::artifact_items_8::{contribution};
 #[path = "🪞️mirror/🦀️.rs"]
 mod mirror;
 pub use mirror::*;
+pub use mirror::editor;

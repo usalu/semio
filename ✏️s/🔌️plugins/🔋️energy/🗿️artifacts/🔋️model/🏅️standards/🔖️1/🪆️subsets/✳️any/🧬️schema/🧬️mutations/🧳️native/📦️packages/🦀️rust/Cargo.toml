@@ -11,7 +11,6 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 [dependencies]
-semio-framework-value-native-owned = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
 semio-framework-value-edit = { workspace = true }
 semio-s-plugin-energy-engine-calendar = { workspace = true }
@@ -24,6 +23,7 @@ semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 
 [dev-dependencies]
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }

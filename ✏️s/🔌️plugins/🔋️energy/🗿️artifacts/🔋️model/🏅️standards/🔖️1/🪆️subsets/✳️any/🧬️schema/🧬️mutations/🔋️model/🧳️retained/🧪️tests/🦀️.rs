@@ -22,14 +22,14 @@ impl protocol::Mutation<EnergyModelSnapshot> for IdentityOperation{
 }
 impl IdentityPayload<IdentityOperation> for IdentityOperation{
  const FIELD:IdentityField=IdentityField::Name;
- const INVALID:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"An energy model name must not be blank."};
- const UNCHANGED:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The energy model already has this name."};
+ const INVALID:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"An energy model name must not be blank."};
+ const UNCHANGED:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The energy model already has this name."};
  fn source(payload:RetainedCloneRef<'_,Self>)->RetainedCloneRef<'_,String>{payload.project(0,|p|&p.value)}
  fn inverse(value:String)->IdentityOperation{Self{value}}
 }
 #[test]
 fn native_identity_leaf_owns_original_diagnostics_and_exact_inverse_issuer(){
- use protocol::mutation::retained::{RetainedMutationLeafPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext};
+ use protocol::{RetainedMutationLeafPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext};
  type Owner=IdentityLeafPreparation<IdentityOperation,IdentityOperation>;
  assert!(std::mem::size_of::<Owner>()<=4096,"actual native identity leaf frame={} core={} exceeds one bounded birth",std::mem::size_of::<Owner>(),std::mem::size_of::<IdentityChangePreparation>());
  let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();

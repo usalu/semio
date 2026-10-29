@@ -121,7 +121,7 @@ impl<O:WindowConfigOwner> WindowConfigPartition<O>{
         if clear_published&&self.published_preview.is_some(){self.pending_preview=self.published_preview.take();return Ok(RetainedCloneStep::Progress(p));}
         if self.finish_preview_read.is_some(){self.pending_preview_projection_read=self.finish_preview_read.take();return Ok(RetainedCloneStep::Progress(p));}
         if self.finish_preview_base.is_some(){self.pending_preview_projection=self.finish_preview_base.take();return Ok(RetainedCloneStep::Progress(p));}
-        if self.semantic_preview.as_ref().is_some_and(WindowSemanticPreview::needs_cancellation){self.semantic_preview.as_mut().unwrap().cancel();return Ok(RetainedCloneStep::Progress(p));}self.preview_retirement_step(grant,None)
+        if self.semantic_preview.as_ref().is_some_and(WindowSemanticPreview::needs_cancellation){self.semantic_preview.as_mut().unwrap().cancel();return Ok(RetainedCloneStep::Progress(p));}self.preview_retirement_step(grant)
     }
     pub(super)  fn preview_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(owner)=self.semantic_preview.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<WindowSemanticPreview<O>>>(),depth:1,..Default::default()})}else{owner.demand(&self.store,body)};}
@@ -430,7 +430,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
     }
     fn preview_retirement_pending(&self)->bool{self.partitions.values().any(WindowConfigPartition::preview_retirement_pending)}
     fn preview_retirement_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.partitions.values().find(|partition|partition.preview_retirement_pending()).map_or(Ok(Default::default()),|partition|partition.preview_retirement_demand(body))}
-    fn preview_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}self.partitions.values_mut().find(|partition|partition.preview_retirement_pending()).map_or(Ok(RetainedCloneStep::Complete(Default::default())),|partition|partition.preview_retirement_step(grant,None))}
+    fn preview_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}self.partitions.values_mut().find(|partition|partition.preview_retirement_pending()).map_or(Ok(RetainedCloneStep::Complete(Default::default())),|partition|partition.preview_retirement_step(grant))}
 
     fn pointer_values(&self, pointers: &[String]) -> Vec<(String, Vec<Option<semio_framework_value::DslValue>>)> {
         self.partitions

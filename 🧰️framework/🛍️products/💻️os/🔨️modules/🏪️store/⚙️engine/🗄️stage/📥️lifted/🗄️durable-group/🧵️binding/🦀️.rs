@@ -57,7 +57,7 @@ where P:ArtifactPack+pack::snapshot::ArtifactDsl+semio_framework_dsl_record::Bor
 
 #[cfg(feature="deflate")]
 impl<P,M> DurableStorePreparedOwnerV1<P,M>
-where P:ValueToValue,M:StoreMutation<P>+ArtifactCanonicalJsonTree+ValueToValue,
+where P:Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ArtifactCanonicalJsonTree+ValueToValue+ValueFromValue+semio_framework_os_spr::ColdMutation<P>+semio_framework_os_spr::OpBinary+semio_framework_os_spr::OpText,
 {
     pub fn advance_bound(&mut self,store:&StorePartsRef<'_,P,M>,group:&str,grant:RetainedCloneGrant,native:&mut NativeEncodeControl<'_>)->Result<Option<RetainedCloneProgress>,DurableOwnedGroupDecisionError>{
         if self.plan.is_some(){return Ok(Some(Default::default()));}
@@ -80,7 +80,7 @@ impl<P,M> DurableStorePreparedOwnerV1<P,M>{
 }
 
 pub fn prepare_staged_diagnostics<P,M>(store:&mut StoreParts<'_,P,M>,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),DurableOwnedGroupDecisionError>
-where P:ValueToValue,M:StoreMutation<P>+ValueToValue,
+where P:Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ValueToValue+ValueFromValue+semio_framework_os_spr::ColdMutation<P>+semio_framework_os_spr::OpBinary+semio_framework_os_spr::OpText,
 {
     let root=store.wire.durable_group_root.as_mut().ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
     if root.diagnostics.row_count()==0||root.diagnostics.prepared(){return Ok((true,Default::default()));}

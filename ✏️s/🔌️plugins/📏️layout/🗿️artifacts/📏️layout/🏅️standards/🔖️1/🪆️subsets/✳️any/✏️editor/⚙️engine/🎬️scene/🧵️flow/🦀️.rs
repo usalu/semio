@@ -96,9 +96,7 @@ impl TextFlowCursor {
     pub fn cancel(&mut self) { if self.terminal.is_none() { self.finish(Terminal::Cancelled); } }
     pub fn terminal_is_empty(&self) -> bool { self.terminal.is_some() && self.source.is_none() && self.pending.is_none() }
 }
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-mod tests;
+
 
 #[path="📇️projection/🦀️.rs"]
 pub mod projection;

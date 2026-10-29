@@ -276,7 +276,7 @@ pub fn settled_dispatch_with_utility(app: &mut Process3dApp, command: Process3dC
     let mut view_state = ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view_state.active_utility_id = Some(active_utility_id.into());
     let action_meta = ActionMeta { view_state: Some(view_state), ..meta("local") };
-    let mut result = ::semio_framework_async::poll::resolve_ready(app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("dispatch");
+    let mut result = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx())).expect("dispatch");
     let receipt = settle(app);
     result.requested_effects.extend(receipt.effects.iter().cloned());
     (result, receipt)

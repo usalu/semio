@@ -216,7 +216,7 @@ impl Puzzle3dRetainedCommandProofs {
 /// `factory_type`): they are not app-owned retained tools — `Puzzle3dRetainedCommandJobFactory` never
 /// claims them and `retained_command_catalog_excludes_framework_owned_shared_actions` pins that — they
 /// only need the wire admission and output budget `dispatch_action`'s host-configuration branch asks
-/// for before it applies `host_configuration_mutation`'s single Config mutation.
+/// for shared-action admission.
 pub(super) struct Puzzle3dHostConfigurationProofs;
 
 impl Puzzle3dHostConfigurationProofs {

@@ -53,7 +53,7 @@ async fn rejected_creation_returns_a_fault_and_leaves_the_document_unchanged() {
     for value in cases["invalid"].as_array().unwrap().iter().chain(cases["unsupportedOperators"].as_array().unwrap()) {
         let args: semio_framework_value::DslValue = value.clone().into();
         let command = semio_s_artifact_procedural_3d_editor::Generation3dPlayApp::command_from_action("addWidget", Some((args).clone()), None).expect("decoded");
-        let admission = app.0.dispatch_typed(command, &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
+        let admission = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &semio_framework_plugin::artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await;
         let fault = match admission {
             Err(fault) => fault,
             Ok(_) => semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, 1, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.err().expect("creation must fail"),

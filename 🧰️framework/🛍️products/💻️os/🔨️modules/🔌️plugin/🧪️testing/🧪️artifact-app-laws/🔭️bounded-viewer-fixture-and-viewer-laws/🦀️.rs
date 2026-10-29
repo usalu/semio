@@ -130,8 +130,9 @@ fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store:
         V::config_schema()
     }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        V::reference_birth().expect("explicit reference snapshot producer")()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework::Fault>>{Some(||{
+        let birth=V::reference_birth().ok_or_else(||semio_framework_plugin_decl_app::reference_birth_fault("bounded viewer fixture","the viewer declares no explicit reference snapshot producer"))?;
+        birth()
     })}
 
     fn initial_config() -> Self::Config {
@@ -170,7 +171,7 @@ fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store:
     }
 
     fn render_with_request_context(
-        owner: &semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle,
         body_key: &str,
         doc: &semio_framework_plugin_decl_views::ArtifactView<'_, Self::Snapshot>,
         cfg: &semio_framework_plugin_decl_views::ConfigView<'_, Self::Config>,
@@ -182,7 +183,7 @@ fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store:
         V::render_with_request_context(owner, body_key, doc, cfg, view_state, transient, interaction,cx)
     }
 
-    fn pending_effects(owner: &semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin_decl_views::ArtifactPendingView<'_, Self::Snapshot>, cfg: &semio_framework_plugin_decl_views::ConfigView<'_, Self::Config>, view: Option<&semio_framework::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
+    fn pending_effects(owner: &semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle, doc: &semio_framework_plugin_decl_views::ArtifactPendingView<'_, Self::Snapshot>, cfg: &semio_framework_plugin_decl_views::ConfigView<'_, Self::Config>, view: Option<&semio_framework::ViewModel>) -> Vec<semio_framework::kernel::Effect> {
         V::pending_effects(owner, doc, cfg, view)
     }
 
@@ -259,7 +260,7 @@ fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store:
     }
 
     fn export_media_with_request_context(
-        owner: &semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle,
+        owner: &semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle,
         port: &str,
         doc: &semio_framework_plugin_decl_views::ArtifactView<'_, Self::Snapshot>,
         transient: &semio_framework_plugin_window_transient::window_transient::TransientView<'_, Self::Transient>,
@@ -309,7 +310,7 @@ where
     let mut original_context=original_caller.context();let cx=&mut original_context;
     let result=async{
     use super::super::{ArtifactView, ConfigView, DraftView, InteractionHoverState, InteractionView, NoDraft, PeerPresenceRoot};
-    let mut app: VcsArtifactApp<ViewerApp<BoundedViewerFixture<V>>, V::Members> = VcsArtifactApp::new(ViewerApp::<BoundedViewerFixture<V>>::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
+    let mut app: VcsArtifactApp<ViewerApp<BoundedViewerFixture<V>>, V::Members> = VcsArtifactApp::new(ViewerApp::<BoundedViewerFixture<V>>::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await.expect("the reference snapshot births");
     app.render_ctx().refresh_cache().await.expect("viewer fixture cache");
     let result = {
         let (_, snapshot, config, history) = app.history.cache.as_ref().expect("viewer fixture cache populated");

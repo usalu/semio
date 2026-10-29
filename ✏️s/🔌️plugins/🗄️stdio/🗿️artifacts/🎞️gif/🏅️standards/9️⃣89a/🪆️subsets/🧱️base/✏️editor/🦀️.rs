@@ -181,8 +181,8 @@ impl ArtifactEditor for Gif89aEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); gif89a_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        crate::standards::v89a::subsets::any::schema::blank_gif_snapshot()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::standards::v89a::subsets::any::schema::blank_gif_snapshot())
     })}
 
     fn handle(

@@ -68,12 +68,7 @@ impl pack::snapshot::ArtifactDsl for Fem2dSnapshot {
             Err(_) => text,
         };
         let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        let snapshot = Self::__dsl_from_record(&record)?;
-        if let Err(error) = snapshot.validate_interaction_identities() {
-            <Self as semio_framework_value::FromValue>::retire_decoded(snapshot);
-            return Err(semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::default()));
-        }
-        Ok(snapshot)
+        Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
@@ -155,31 +150,10 @@ pub fn empty_fem2d_snapshot() -> crate::standards::v1::subsets::any::schema::sna
     crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot::default()
 }
 
-/// 🌱️ The document every fresh fem2d surface boots on: the bundled `📚️examples/🎬️demo` DSL, so the
-/// editor and the viewer both paint a real structure at first frame instead of an empty canvas. A
-/// fixture that ever stops parsing degrades to `empty_fem2d_snapshot` rather than faulting the boot,
-/// and says so on the console.
-pub fn default_fem2d_snapshot() -> crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot {
-    match <crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT) {
-        Ok(snapshot) => {
-            eprintln!(
-                "[TRACE] fem2d boot snapshot: loaded the bundled example — nodes={} elements={} regions={} materials={} sections={} supports={} loadCases={} combinations={}",
-                snapshot.nodes.len(),
-                snapshot.elements.len(),
-                snapshot.regions.len(),
-                snapshot.materials.len(),
-                snapshot.sections.len(),
-                snapshot.supports.len(),
-                snapshot.load_cases.len(),
-                snapshot.combinations.len()
-            );
-            snapshot
-        }
-        Err(error) => {
-            eprintln!("[TRACE] fem2d boot snapshot: the bundled example failed to parse, falling back to the empty document — {error}");
-            empty_fem2d_snapshot()
-        }
-    }
+/// 🌱️ The document every fresh fem2d surface boots on: the bundled `📚️examples/🎬️demo` DSL received into persistent ownership through the reference wallet, so the
+/// editor and the viewer both paint a real structure at first frame. A fixture that stops loading is a typed error, never an empty document.
+pub fn default_fem2d_snapshot() -> Result<crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot, semio_framework_diagnostic::TextError> {
+    <crate::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::FEM2D_EXAMPLE_TEXT)
 }
 }
 pub use snapshot_wire2_codec::*;

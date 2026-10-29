@@ -10,7 +10,7 @@ import{layoutMutationFromNativeJson}from'../../../🪪️native-json/🟦️.ts'
 import original from'../../🎚️simple/🧪️tests/🔣️.json'with{type:'json'};
 import corpus from'./🔣️.json'with{type:'json'};
 import schema from'../🧬️schema/🔣️.json'with{type:'json'};
-import dictionarySchema from'../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🔣️.json'with{type:'json'};
+import dictionarySchema from'../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧾️dictionary/🧬️schema/🔣️.json'with{type:'json'};
 export interface DataOracle{validate(schema:unknown,value:unknown,primary:unknown):boolean;equal(left:unknown,right:unknown):boolean;apply(before:unknown,delta:LayoutDataFieldsDelta):unknown}
 const grant={maximumItems:1,maximumCopyBytes:8192,maximumCapacityBytes:32768,maximumReleaseBytes:32768,maximumDepth:128};
 /** 🧪️ Real data-field decisions compare exact typed original fields under every positive undergrant axis. */

@@ -47,6 +47,7 @@ semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
 semio-s-plugin-energy-engine-sim-wire = { workspace = true }
 
 [dev-dependencies]
+semio-framework-test-fixtures = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 csv = "1"
 semio-s-plugin-energy-engine-sim = { workspace = true, features = ["testing"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }

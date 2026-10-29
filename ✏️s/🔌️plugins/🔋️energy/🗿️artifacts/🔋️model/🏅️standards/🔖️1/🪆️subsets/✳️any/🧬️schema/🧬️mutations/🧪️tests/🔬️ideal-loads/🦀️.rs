@@ -3,6 +3,7 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_mutation_fixtures as fixtures;
 extern crate semio_s_artifact_energy_model_mut_ideal_loads as ideal_loads_mutations;
+extern crate semio_s_artifact_energy_model_mut_ideal_loads_limits as ideal_loads_limits_mutations;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
@@ -10,7 +11,7 @@ extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 #[path = "."]
 mod change_ideal_loads_system_max_heating_capacity {
-    pub use crate::ideal_loads_mutations::change_ideal_loads_system_max_heating_capacity::*;
+    pub use crate::ideal_loads_limits_mutations::change_ideal_loads_system_max_heating_capacity::*;
     #[path = "../../💯️ideal-loads/⛽️change-max-heating-capacity/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../💯️ideal-loads/⛽️change-max-heating-capacity/🧪️tests/✅️caps/🦀️.rs"]
@@ -37,7 +38,7 @@ mod change_ideal_loads_system_outdoor_air_per_area {
 
 #[path = "."]
 mod change_ideal_loads_system_max_heating_supply_air_temp {
-    pub use crate::ideal_loads_mutations::change_ideal_loads_system_max_heating_supply_air_temp::*;
+    pub use crate::ideal_loads_limits_mutations::change_ideal_loads_system_max_heating_supply_air_temp::*;
     #[path = "../../💯️ideal-loads/🔴️change-max-heating-supply-air-temp/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../💯️ideal-loads/🔴️change-max-heating-supply-air-temp/🧪️tests/✅️cools/🦀️.rs"]
@@ -46,7 +47,7 @@ mod change_ideal_loads_system_max_heating_supply_air_temp {
 
 #[path = "."]
 mod change_ideal_loads_system_min_cooling_supply_air_temp {
-    pub use crate::ideal_loads_mutations::change_ideal_loads_system_min_cooling_supply_air_temp::*;
+    pub use crate::ideal_loads_limits_mutations::change_ideal_loads_system_min_cooling_supply_air_temp::*;
     #[path = "../../💯️ideal-loads/🔵️change-min-cooling-supply-air-temp/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../💯️ideal-loads/🔵️change-min-cooling-supply-air-temp/🧪️tests/✅️lowers/🦀️.rs"]
@@ -55,7 +56,7 @@ mod change_ideal_loads_system_min_cooling_supply_air_temp {
 
 #[path = "."]
 mod change_ideal_loads_system_max_cooling_capacity {
-    pub use crate::ideal_loads_mutations::change_ideal_loads_system_max_cooling_capacity::*;
+    pub use crate::ideal_loads_limits_mutations::change_ideal_loads_system_max_cooling_capacity::*;
     #[path = "../../💯️ideal-loads/🟧️change-max-cooling-capacity/🧪️tests/⛔️refuses/🦀️.rs"]
     mod tests_refuses;
     #[path = "../../💯️ideal-loads/🟧️change-max-cooling-capacity/🧪️tests/✅️caps/🦀️.rs"]

@@ -253,6 +253,11 @@ interface reactor {
   write-poll-input: async func(page: poll-input-page, budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
   /// ♻️ Partial source custody closes under the original actor caller before context closure.
   close-poll-input: async func(budget: budget) -> result<actor-poll-input-call, actor-call-refusal>;
+  /// ⚖️ LAW: `events` carries AT MOST ONE event. A turn serves one event slot and owns one pending output, and turn results
+  /// are not mergeable, so the host queues further events and delivers them one per `poll`; a guest refuses a longer list
+  /// with `a reactor turn admits at most one event`. The type stays a `list` only because a `list` crosses the canonical
+  /// ABI as two flat values where an inlined `option<event>` would exceed the 16-value flat limit and leak its indirect
+  /// parameter area (see the `stage-command-page` note above).
   poll: async func(events: list<event>, budget: budget) -> result<turn-result, actor-call-refusal>;
 
   /// 🤝️ The app-channel version this guest was compiled for (`CHANNEL_VERSION`). A host reads it exactly once, right after

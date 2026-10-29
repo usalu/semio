@@ -1,5 +1,5 @@
 //! 🪆️ Genuine Drawing-owned child registrations retain the editor dialect and canonical admission producer.
-use semio_framework_plugin::app::editor::{registration::ChildEditorRegistration,source::ChildEditorCapability};
+use semio_framework_plugin::app::child_editor::{registration::ChildEditorRegistration,source::ChildEditorCapability};
 use semio_s_artifact_draw_drawing_model::{snapshot::DrawingSnapshot,validation::DRAWING_ADMITTER,vector_source::DRAWING_VECTOR_SOURCE,DRAWING_DIALECT};
 use std::sync::LazyLock;
 static EDITOR_ID:LazyLock<String>=LazyLock::new(||semio_framework::surface_app_id(&DRAWING_DIALECT.into(),semio_framework::AppRole::Editor));

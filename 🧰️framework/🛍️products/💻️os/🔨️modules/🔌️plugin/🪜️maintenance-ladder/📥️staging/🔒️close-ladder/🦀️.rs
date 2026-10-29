@@ -178,6 +178,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         if !self.tools.tool_jobs.original_terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.tools.tool_jobs.original_close_step(child).progress()))}
         if let Some(owner)=self.tools.declared_tools.as_mut(){if owner.terminal_is_empty(){self.tools.declared_tools.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_framework_plugin_instance_jobs::jobs_components::DeclaredToolCatalogAlias>>(),..Default::default()})}return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
+        if let Some(owner)=self.tools.declared_owner.as_mut(){if owner.terminal_is_empty(){self.tools.declared_owner.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_framework_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>(),..Default::default()})}return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
         if self.tools.bounded_tool_proofs.pop_first().is_some() {
             return done(handoff());
         }
@@ -262,6 +263,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         }
         if !self.tools.tool_jobs.original_terminal_is_empty(){return nested(self.tools.tool_jobs.original_close_demands())}
         if let Some(owner)=self.tools.declared_tools.as_ref(){return nested(if owner.terminal_is_empty(){RetirementDemand{copy_bytes:std::mem::size_of::<Option<semio_framework_plugin_instance_jobs::jobs_components::DeclaredToolCatalogAlias>>(),depth:1,..Default::default()}}else{owner.close_demands(body)?})}
+        if let Some(owner)=self.tools.declared_owner.as_ref(){return nested(if owner.terminal_is_empty(){RetirementDemand{copy_bytes:std::mem::size_of::<Option<semio_framework_plugin_job::original_declared_tools::OriginalDeclaredToolCatalog>>(),depth:1,..Default::default()}}else{owner.close_demands(body)?})}
         if !self.tools.bounded_tool_proofs.is_empty() || !self.tools.bounded_tool_contracts.is_empty() || !self.tools.framework_tool_registrations.is_empty() || !self.tools.app_tool_registrations.is_empty() {
             return Ok(handoff_demand());
         }
@@ -297,6 +299,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
             && self.tools.typed_composed_outbox.len() == 0
             && self.tools.registry.terminal_is_empty()
             && self.tools.declared_tools.is_none()
+            && self.tools.declared_owner.is_none()
             && self.tools.tool_jobs.original_terminal_is_empty()
             && self.tools.bounded_tool_proofs.is_empty()
             && self.tools.bounded_tool_contracts.is_empty()

@@ -229,8 +229,8 @@ impl ArtifactEditor for Ifc4AnyEditor {
 
     fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(crate::standards::v4::subsets::any::io::inspector::topology(doc.snapshot))}
 
-    fn reference_birth()->Option<fn()->IfcSnapshot>{Some(||{
-        IfcSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<IfcSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(IfcSnapshot::default())
     })}
 
     fn handle(

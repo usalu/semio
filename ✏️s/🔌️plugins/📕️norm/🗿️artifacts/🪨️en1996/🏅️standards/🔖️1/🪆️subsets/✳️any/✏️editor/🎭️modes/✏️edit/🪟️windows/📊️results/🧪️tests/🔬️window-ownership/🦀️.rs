@@ -99,7 +99,7 @@ fn norm_results_window_ownership_runtime_isolates_focused_inspection_and_reopens
 
             async fn dispatch(app: &mut ClosingFixtureApp<NormApp>, instance_id: u32, index: Option<u32>, view: &ViewModel) -> Result<artifact_app_laws::TypedOperationFixtureReceipt, String> {
                 let meta = ActionMeta { instance_id, view_state: Some(view.clone()), ..artifact_app_laws::meta("norm-results-window-ownership") };
-                app.0.dispatch_typed(En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index }), &meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
+                semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &En1996Command::SetSelectedCheckIndex(selected_check::SetSelectedCheckIndex { index }), &meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))?;
                 artifact_app_laws::settle_registered_typed_operation(&mut *app.0, meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.map_err(|error| format!("{error:?}"))
             }
 

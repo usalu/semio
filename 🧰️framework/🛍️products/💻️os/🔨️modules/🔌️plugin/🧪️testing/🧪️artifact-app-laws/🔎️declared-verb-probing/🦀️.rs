@@ -77,7 +77,7 @@ where
     A: ArtifactApp + Default,
     M: store::ReferenceSpaceMember + store::MemberFactory + Send + 'static,
 {
-    let mut app = VcsArtifactApp::<A, M>::with_registry(A::default(), AppActionRegistry::from_definition(definition), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await;
+    let mut app = VcsArtifactApp::<A, M>::with_registry(A::default(), AppActionRegistry::from_definition(definition), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await.expect("the reference snapshot births");
     app.bind_instance_id(meta("local").instance_id).await;
     settle_store_constructor(&mut app, mounted_policy);
     if let Some(boot) = boot {
@@ -235,10 +235,10 @@ where A:ArtifactApp+Default,M:store::ReferenceSpaceMember+store::MemberFactory+S
 
 /// 🫴️ Deferred addressed fixture dispatch keeps its actual input slots and initiating context over every step.
 pub async fn dispatch_addressed_fixture_on_original<PA:semio_framework_plugin_reactor_app::PluginApp>(app:&mut PA,address:&semio_framework::manifest::ActionAddress,args:&mut Option<semio_framework_value::DslValue>,fault:&mut Option<semio_framework::Fault>,active_mode:Option<&str>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework::InvocationResult,semio_framework_job::OriginalTurnFailure>{
-    let maximum_turns=OriginalFixtureCaller::maximum_turns();
+    let maximum_turns=OriginalFixtureCaller::maximum_turns();let mut original_meta=Some(meta.clone());
     for _ in 0..maximum_turns{
         if cx.should_yield(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original addressed fixture exhausted its initiating work").into())}
-        if let Some(result)=app.handle_action_invocation(address,args,fault,active_mode,meta,identity,cx).await?{return Ok(result)}
+        if let Some(result)=app.handle_action_invocation(address,args,fault,active_mode,&mut original_meta,identity,cx).await?{return Ok(result)}
         let grant=cx.retained_grant();app.maintenance_step(cx,grant)?;
     }
     Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original addressed fixture reached its finite step limit").into())

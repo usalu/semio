@@ -6,14 +6,14 @@ use semio_framework::kernel::{Effect,RequestId};
 use semio_s_plugin_energy_engine_sim::testing::OriginalEnergyCaller;
 use semio_framework_job::{OperationId,Generation};
 
-const ANNUAL:&str=include_str!("../../🧪️tests/🧫️fixtures/🌦️denver-tmy/🌦️.epw");
-const EPW:&str=include_str!("../../../../../../../../../🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🖼️assets/🎬️demo/🧪️example/🌦️.epw");
+static ANNUAL:std::sync::LazyLock<&'static str>=std::sync::LazyLock::new(||semio_framework_test_fixtures::fixture_text!("../../../🧪️tests/🧫️fixtures/🌦️denver-tmy/🌦️.epw"));
+static EPW:std::sync::LazyLock<&'static str>=std::sync::LazyLock::new(||semio_framework_test_fixtures::fixture_text!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🌦️epw/🏅️standards/🔖️energyplus/🪆️subsets/✳️any/🖼️assets/🎬️demo/🧪️example/🌦️.epw"));
 
 #[test]
-fn linked_weather_uses_original_pack_and_matches_independent_csv_for_two_sources(){ capture_sources(EPW,&[0.0,20.0],24); }
+fn linked_weather_uses_original_pack_and_matches_independent_csv_for_two_sources(){ capture_sources(*EPW,&[0.0,20.0],24); }
 
 #[test]
-fn annual_linked_weather_decodes_under_original_one_mib_birth_grants(){ capture_sources(ANNUAL,&[0.0],8760); }
+fn annual_linked_weather_decodes_under_original_one_mib_birth_grants(){ capture_sources(*ANNUAL,&[0.0],8760); }
 
 fn capture_sources(text:&str,offsets:&[f64],records:usize){
  let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();

@@ -18,3 +18,9 @@ pub mod typed_publication;
 pub mod typed_typing;
 #[path = "📥️staging/🧺️bundle/🦀️.rs"]
 pub mod typed_bundle;
+
+#[path="📥️staging/⌨️typing/🏷️tag/🦀️.rs"]
+mod original_tool_tag;
+
+#[path="📥️staging/⌨️typing/🎟️original/🦀️.rs"]
+pub mod original_typing;

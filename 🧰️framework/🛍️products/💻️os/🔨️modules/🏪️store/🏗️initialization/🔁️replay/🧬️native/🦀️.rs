@@ -1,7 +1,7 @@
 //! 🧬️ Initialization folds the actual ledger operation through its installed original semantic producer.
 use super::*;
-use semio_framework_os_store_replay::replay_preparation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode,ArtifactReplayPreparationContext,ArtifactReplayPreparationMode,ArtifactReplayPreparationRequest,ArtifactReplayPreparationTask};
-use semio_framework_os_store_replay::replay_preparation::native::history::OriginalHistorySource;
+use semio_framework_os_store_replay_operation::{ArtifactDerivedOperation,ArtifactDerivedOperationMode,ArtifactReplayPreparationContext,ArtifactReplayPreparationMode,ArtifactReplayPreparationRequest,ArtifactReplayPreparationTask};
+use semio_framework_os_store_replay_operation::native::history::OriginalHistorySource;
 use semio_framework_value::retained_clone::{RetainedOwnedProjection,retained_clone_grant_admits};
 
 pub struct NativeInitializationFold<P,M:Sync+'static>{
@@ -92,7 +92,7 @@ where P:ToValue+RetireOwned+Send+Sync+'static,M:Mutation<P>+ToValue+FromValue+Op
                     Self::physical(cx,quote,|grant|{if capacity!=0{return index.reserve_insert_step(&key,grant).map_err(|(error,receipt)|error.with_retained_progress(receipt));}index.insert_reserved(key,true,grant).map_err(|_|invalid("native initialization original foreign flag insertion refused"))?;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:quote.copy_bytes,..Default::default()})})?;return Ok(false);
                 }
             }
-            Self::physical(cx,demand::<semio_framework_os_store_replay::replay_preparation::ArtifactReplayPrepared<P,M>>(),|_|{let mut prepared=owner.prepared.take().ok_or_else(||invalid("native initialization result owner absent"))?;if !matches!(&prepared.inverse,Ok(rows)if rows.terminal_is_empty())||prepared.messages.capacity()!=0||prepared.apply_refusal.is_some()||prepared.input_refusal.is_some(){*owner.prepared=Some(prepared);return Err(invalid("native initialization producer left unsettled result fields"));}self.next=prepared.next.take();owner.cancel();self.phase=4;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<semio_framework_os_store_replay::replay_preparation::ArtifactReplayPrepared<P,M>>(),..Default::default()})})?;return Ok(false);
+            Self::physical(cx,demand::<semio_framework_os_store_replay_operation::ArtifactReplayPrepared<P,M>>(),|_|{let mut prepared=owner.prepared.take().ok_or_else(||invalid("native initialization result owner absent"))?;if !matches!(&prepared.inverse,Ok(rows)if rows.terminal_is_empty())||prepared.messages.capacity()!=0||prepared.apply_refusal.is_some()||prepared.input_refusal.is_some(){*owner.prepared=Some(prepared);return Err(invalid("native initialization producer left unsettled result fields"));}self.next=prepared.next.take();owner.cancel();self.phase=4;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<semio_framework_os_store_replay_operation::ArtifactReplayPrepared<P,M>>(),..Default::default()})})?;return Ok(false);
         }
         let grant=cx.retained_grant();let quote=owner.demands(cx.generation().0,self.revision,grant.maximum_copy_bytes)?;
         if cx.should_yield()||!retained_clone_grant_admits(grant,quote){return Ok(false);}

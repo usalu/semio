@@ -82,6 +82,11 @@ pub fn artifact_render_publication_revision<P>(doc: &ArtifactView<'_, P>) -> UiA
 }
 
 impl AppOperationContext {
+    /// 👁️ Keeps the admitted read operation's exact identity and physical grant without granting entity authoring.
+    pub fn for_read_only(app_instance_id:u32,parent_document_id:String,operation:semio_framework_job::Operation,canonical_base_revision:[u8;32],retained:RetainedCloneGrant)->Self{
+        Self{app_instance_id,parent_document_id,operation_id:operation.operation.0,generation:operation.generation.0,canonical_base_revision,retained,authoring_seed:String::new()}
+    }
+
     /// 🌱️ Mints a replay-stable entity identity from the document and actor-clock command admission.
     pub fn entity_id(&self, prefix: &str, local_key: &str) -> Result<String, Fault> {
         if self.authoring_seed.is_empty() {

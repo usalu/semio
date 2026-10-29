@@ -60,6 +60,8 @@ pub enum PropertyValue {
 mod retirement;
 #[path="🌲️canonical/🦀️.rs"]
 mod canonical_tree;
+#[path="🛬️receive/🦀️.rs"]
+mod property_receiving;
 #[path="🗂️properties/🦀️.rs"]
 mod property_members;
 pub use property_members::PropertyBag;

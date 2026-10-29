@@ -20,7 +20,7 @@
         }
         app.dispatch_typed(TestCommand::StreamLabel { value: "abc".into(), commit: true }, &meta(), &mut identity,cx).await.expect("streamLabel commit");
         assert_eq!(app.stores.test_snapshot().await.label, "abc");
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "");
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -46,7 +46,7 @@
         for value in ["a", "ab", "abc"] {
             app.dispatch_typed(TestCommand::SetLabel { value: value.into() }, &meta(), &mut identity,cx).await.expect("setLabel");
         }
-        reserved_action(&mut app, "undo", None, &mut identity).await;
+        reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.label, "ab");
 
         artifact_app_laws::close_registered_fixture_app(&mut app.0,app.1,cx).expect("original contract fixture paid terminal close");
@@ -71,15 +71,15 @@
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity,cx).await.expect("inc2");
         assert_eq!(app.stores.test_snapshot().await.count, 2);
 
-        let undo = reserved_action(&mut app, "undo", None, &mut identity).await;
+        let undo = reserved_action(&mut app, "undo", None, &mut identity, cx).await;
         assert!(undo.mutations.is_empty());
         assert!(undo.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.stores.test_snapshot().await.count, 1);
 
-        reserved_action(&mut app, "redo", None, &mut identity).await;
+        reserved_action(&mut app, "redo", None, &mut identity, cx).await;
         assert_eq!(app.stores.test_snapshot().await.count, 2);
 
-        let checkpoint = reserved_action(&mut app, "commitCheckpoint", None, &mut identity).await;
+        let checkpoint = reserved_action(&mut app, "commitCheckpoint", None, &mut identity, cx).await;
         assert!(checkpoint.mutations.is_empty());
         assert!(checkpoint.events.iter().any(|event| event.kind == "history-changed"));
 
@@ -114,7 +114,7 @@
             arguments: Default::default(),
         };
         let mut args=Some(DslValue::Object(invocation.arguments.into_iter().collect()));let mut fault=None;let admitted=artifact_app_laws::dispatch_addressed_fixture_on_original(&mut app.0,&invocation.address,&mut args,&mut fault,Some("edit"),&meta(),&mut identity,cx).await.expect("reserved undo without window ownership");
-        let result = settle_reserved(&mut app, admitted).await;
+        let result = settle_reserved(&mut app, admitted, cx).await;
         assert!(result.mutations.is_empty());
         artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");
 
@@ -144,7 +144,7 @@
         assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)));
         assert!(admitted.events.iter().all(|event| event.kind != "history-changed"));
         assert_eq!(app.stores.test_snapshot().await.count, 1, "first turn answers without committing");
-        let settled = settle_reserved(&mut app, admitted).await;
+        let settled = settle_reserved(&mut app, admitted, cx).await;
         assert!(settled.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.stores.test_snapshot().await.count, 0, "driving the spawned job must run commit_framework_history_route");
         artifact_app_laws::close_registered_fixture_app(&mut app.0, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(),cx).expect("original contract fixture paid terminal close");

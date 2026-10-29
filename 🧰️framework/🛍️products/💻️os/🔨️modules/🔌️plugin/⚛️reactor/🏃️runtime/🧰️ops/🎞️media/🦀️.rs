@@ -1,7 +1,7 @@
 //! 🎞️ Media consumption, export and production operations of the runtime.
 
 use semio_framework_plugin_decl_app::{ArtifactApp, MediaArtifactDescriptor, MediaArtifactError, MediaConsumption};
-use semio_framework_plugin_decl_views::media_contract::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
+use semio_framework_plugin_decl_media::{ArtifactMediaExportHandle, ArtifactMediaExportPoll};
 use semio_framework::{Fault, FaultFrom, MediaError};
 use semio_framework_value::{FromValue, ToValue};
 use semio_framework_plugin_document_media::lifted_app::MediaArtifact;
@@ -38,7 +38,7 @@ pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<P
     instance.app.submit_media_export_checked(port_id, expected_parent_document_id, expected_base_revision,checkpoint_id,receiver,cx).await
 }
 /// 📡️ Interactive workflow entry receives the actual initiating context and its complete failure.
-pub async fn plugin_poll_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<ArtifactMediaExportPoll>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+pub async fn plugin_poll_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: semio_framework_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<ArtifactMediaExportPoll>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let cell = runtime_instance_cell(runtime, instance_id)?;
     let mut instance = cell.host_instance().ok_or_else(|| plugin_internal_fault("media export original instance is busy or poisoned"))?;
     instance.app.poll_media_export(handle,receiver,cx).await
@@ -49,10 +49,10 @@ pub async fn plugin_cancel_media_export<PA: PluginApp>(runtime: &PluginRuntime<P
     let mut instance = cell.host_instance().ok_or_else(|| MediaError::Payload(handle.parent_document_id.clone(), format!("instance busy or poisoned: {instance_id}")))?;
     instance.app.cancel_media_export(handle).await
 }
-pub async fn plugin_retain_media_export_result<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+pub async fn plugin_retain_media_export_result<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,handle:semio_framework_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,source:&mut Option<ArtifactMediaExportPoll>,status:&mut Option<semio_framework_plugin_decl_media::ArtifactMediaExportPublishedStatus>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     let cell=runtime_instance_cell(runtime,instance_id)?;let mut instance=cell.host_instance().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"download publication requires its original instance loan"))?;instance.app.retain_media_export_result(handle,source,status,cx).await
 }
-pub async fn plugin_take_media_export_chunk<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,handle:semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+pub async fn plugin_take_media_export_chunk<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,handle:semio_framework_plugin_decl_media::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<Vec<u8>>,terminal:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
     let cell=runtime_instance_cell(runtime,instance_id)?;let mut instance=cell.host_instance().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"media chunk requires its original instance loan"))?;instance.app.take_media_export_chunk(handle,receiver,terminal,cx).await
 }
 /// 🧵️ Takes one already-produced bounded action-download chunk without blocking another instance.

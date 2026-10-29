@@ -171,8 +171,8 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         Some(crate::editor::animate::config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->PresentationSnapshot>{Some(||{
-        default_presentation_snapshot()
+    fn reference_birth()->Option<fn()->Result<PresentationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_presentation_snapshot())
     })}
 
     fn io() -> Option<AppIo> {

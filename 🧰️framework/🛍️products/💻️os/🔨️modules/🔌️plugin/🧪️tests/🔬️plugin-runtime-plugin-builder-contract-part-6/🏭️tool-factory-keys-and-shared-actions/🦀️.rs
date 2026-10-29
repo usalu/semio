@@ -49,8 +49,8 @@ fn admit_job(&mut self,cx:&mut semio_framework_job::StepContext<'_>,operation:&s
         type TransientMutation = NoTransientMutation;
         type Command = TestCommand;
 
-        fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
-            TestSnapshot::default()
+        fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework_plugin::Fault>>{Some(||{
+            Ok(TestSnapshot::default())
         })}
 
         async fn command_id(_command: &TestCommand) -> &'static str {
@@ -112,7 +112,7 @@ pub fn instance_source() -> String {
         let registry = contract_registry().await;
         let declared = registry.test_migrated_tool_ids();
         let controller_id = registry.test_controller_id().to_string();
-        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         let registered: std::collections::BTreeSet<String> = app.tools.test_registered_tool_keys()
             .into_iter()
@@ -157,8 +157,8 @@ pub fn instance_source() -> String {
         let verb = <TestApp<false, TEST_APP_TOOLS_NONE> as ArtifactApp>::command_id(&TestCommand::IncrementViaCommand).await;
         assert!(!registered.contains(verb), "the unproved verb has no activated factory of its own");
         assert!(!declared.contains(verb), "and this registry does not declare it migrated either");
-        let error = app.dispatch_typed(TestCommand::IncrementViaCommand, &meta(), &mut identity).await.expect_err("an unproved typed command must remain fail closed");
-        assert_eq!(error.code.0, "interactive-job.not-ui-safe");
+        let error = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::IncrementViaCommand, &meta(), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect_err("an unproved typed command must remain fail closed");
+        assert_eq!(error.primary_fault().expect("a diagnostic fault").code.0, "interactive-job.not-ui-safe");
         assert_eq!(platform.action_bus.dispatch_count(), before);
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy,cx).expect("original contract fixture paid terminal close");
 
@@ -187,7 +187,7 @@ pub fn instance_source() -> String {
         let platform = Platform::new(None).await;
         let registry = contract_registry().await;
         let controller_id = registry.test_controller_id().to_string();
-        let app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry, platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry, platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
         type UnprovedFrameworkOwner = TestApp<false, TEST_APP_TOOLS_NONE>;
         let expected: [(&str, &str, std::any::TypeId, &'static str, usize); 12] = [
             ("copy", "framework.reserved.copy.v1", std::any::TypeId::of::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), std::any::type_name::<FrameworkCopyJobFactory<UnprovedFrameworkOwner>>(), 8_192),

@@ -18,6 +18,7 @@ members = [
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/📦️packages/🦀️rust",
   "🏅️standards/🔖️2x3/🪆️subsets/🧱️base/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
   "📦️packages/🦀️rust",
+  "🧩️composition/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",
@@ -112,6 +113,12 @@ redundant_clone = "warn"
   [workspace.lints.clippy.all]
   level = "warn"
   priority = -1
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc]
+path = "📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-ifc-catalog]
+path = "🧩️composition/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-ifc-4-descriptor]
 path = "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust"

@@ -3,7 +3,7 @@ use super::DeleteAnnualSchedule;
 use crate::{diff::ReferenceEnergyModelDiff as EnergyModelDiff,snapshot::reference::EnergyModelSnapshot};
 impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DeleteAnnualSchedule
 where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteAnnualSchedule> + From<crate::AddAnnualScheduleHoliday> + From<crate::CreateAnnualSchedule> + From<crate::InsertAnnualScheduleRule>,
+    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DeleteAnnualSchedule> + From<crate::year_schedule_holidays_mutations::AddAnnualScheduleHoliday> + From<crate::CreateAnnualSchedule> + From<crate::InsertAnnualScheduleRule>,
 {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "delete", entity: "annual-schedule", kind: "delete-annual-schedule", record: "DeletedAnnualSchedule" };
 
@@ -19,7 +19,7 @@ where
 
 impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for DeleteAnnualSchedule
 where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<DeleteAnnualSchedule> + From<crate::AddAnnualScheduleHoliday> + From<crate::CreateAnnualSchedule> + From<crate::InsertAnnualScheduleRule>,
+    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<DeleteAnnualSchedule> + From<crate::year_schedule_holidays_mutations::AddAnnualScheduleHoliday> + From<crate::CreateAnnualSchedule> + From<crate::InsertAnnualScheduleRule>,
 {
     fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
         super::diff::diff(self, base)

@@ -970,6 +970,19 @@
         "linux",
         "win32"
       ]
+    },
+    {
+      "id": "native-child-cleanup",
+      "budgetMs": 30000,
+      "typecheck": "strict",
+      "files": [
+        "📦️artifacts/🏗️native-build/💾️storage/🌐️platform/🧪️tests/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
     }
   ],
   "codeSuites": [

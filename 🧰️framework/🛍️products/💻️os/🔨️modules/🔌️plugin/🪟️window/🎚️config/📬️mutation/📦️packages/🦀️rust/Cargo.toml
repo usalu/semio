@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../../../../.."
+name = "semio-framework-plugin-window-config-mutation"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Original window mutation payloads of the window config: the erased payload trait with its typed retirement issuer and the displaced-snapshot refresh step"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-window-config-mutation"
+
+[package.metadata.semio.rust-source-boundary]
+maxSourceBytes = 262144
+maxSourceFiles = 32
+maxActiveLines = 4000
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-retirement-queue = { path = "../../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }

@@ -284,7 +284,7 @@ where
     P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, _body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled {
             return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
@@ -389,6 +389,11 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     fn begin_demand(&self, _mutation: &GisTerrainMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Gis3dOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>(), depth: 1 })
     }
+
+    fn begin_copy_byte_demand(&self, mutation: &GisTerrainMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<usize, semio_framework_value::ValueError> {
+        self.begin_demand(mutation, lane)?;
+        size_of::<store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation, GisTerrainMutation>>().checked_add(size_of::<Gis3dOneItemPreparation<GisTerrainSnapshot, GisTerrainMutation>>()).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "original preparation header quote overflow"))
+    }
     fn begin(
         &self,
         request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<GisTerrainSnapshot, GisTerrainMutation, GisTerrainMutation>,
@@ -470,8 +475,8 @@ impl ArtifactEditor for Gis3dPlayApp {
         semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent))
     }
 
-    fn reference_birth()->Option<fn()->GisTerrainSnapshot>{Some(||{
-        default_terrain_document()
+    fn reference_birth()->Option<fn()->Result<GisTerrainSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_terrain_document())
     })}
 
     /// 🔌️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit

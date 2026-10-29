@@ -109,7 +109,7 @@ impl OriginalPackWriting {
                     return Ok(Default::default());
                 }
                 for i in self.prefix_written..self.prefix_written + count {
-                    self.wire[i] = semio_framework_os_semio::declared_binary_prefix_byte(self.envelope, semio_framework_os_semio::Component::Pack, 1, i)?;
+                    self.wire[i] = semio_framework_os_semio::declared_binary_prefix_byte(self.envelope, semio_framework_os_semio::Component::Pack, 1, i)?.ok_or_else(invalid)?;
                 }
                 self.prefix_written += count;
                 return Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: count, ..Default::default() });

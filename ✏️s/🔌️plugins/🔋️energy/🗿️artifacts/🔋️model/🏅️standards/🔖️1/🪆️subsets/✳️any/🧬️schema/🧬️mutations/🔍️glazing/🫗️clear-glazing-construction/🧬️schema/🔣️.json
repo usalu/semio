@@ -59,7 +59,7 @@
     "semantics": {
       "verb": "clear",
       "entity": "glazing-construction",
-      "kind": "clear-glazing-construction",
+      "kind": "clear-fenestration-glazing-construction",
       "record": "ChangedGlazingConstruction"
     },
     "diagnostics": {

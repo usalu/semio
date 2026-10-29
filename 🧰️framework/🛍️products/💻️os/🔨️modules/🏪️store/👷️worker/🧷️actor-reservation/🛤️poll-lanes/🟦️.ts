@@ -17,6 +17,7 @@ export class ReservationPollLanes {
   private invokeWithPages(child: DocumentBrowserActorChild, events: BrowserActorChildValue[], commandPage: ShardCommandIngressPage | null, coldPairPage: BrowserActorChildValue | null, assertCurrent: () => void, allowClosing = false): Promise<BrowserActorChildValue> {
     const work = this.session.pollTail.then(async () => {
       if ((!allowClosing && this.session.closed) || this.session.child !== child) throw new Error("document browser actor: closed poll lane");
+      if (events.length > 1) throw new Error("document browser actor: a reactor turn admits at most one event");
       assertCurrent();
       if (commandPage) await child.invoke(["reactor", "stageCommandPage"], [commandPage.cursor as unknown as BrowserActorChildValue, commandPage.bytes as unknown as BrowserActorChildValue]);
       if (coldPairPage) await child.invoke(["reactor", "stageColdPairPage"], [coldPairPage]);
@@ -58,6 +59,7 @@ export class ReservationPollLanes {
     return events;
   }
 
+  /** 🎟️ One guest turn serves at most one event (`reactor.wit` `poll`), so a batch is a host defect refused before it crosses the child boundary; callers queue and deliver one event per poll. */
   invokePoll(child: DocumentBrowserActorChild, events: BrowserActorChildValue[], coldPairPage: BrowserActorChildValue | null, assertCurrent: () => void, allowClosing = false): Promise<BrowserActorChildValue> {
     return this.invokeWithPages(child, events, null, coldPairPage, assertCurrent, allowClosing);
   }

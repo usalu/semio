@@ -71,8 +71,8 @@ impl ArtifactViewer for SemioTableViewer {
     const DIALECT: Dialect = SEMIO_TABLE_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_TABLE_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->SemioTableSnapshot>{Some(||{
-        SemioTableSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SemioTableSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SemioTableSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

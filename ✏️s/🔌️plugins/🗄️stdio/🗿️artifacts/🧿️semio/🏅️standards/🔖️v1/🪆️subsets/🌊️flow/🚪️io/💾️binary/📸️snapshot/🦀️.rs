@@ -3,7 +3,7 @@ pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio"
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
 use crate::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
-use semio_framework_job::StepContext;
+use semio_framework_job::{OriginalTurnFailure, StepContext};
 use std::mem::ManuallyDrop;
 use store::{ErasedSnapshotRetirement, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberSnapshotOpenOperation, MemberSnapshotOpenStep};
 
@@ -423,19 +423,19 @@ impl MemberSnapshotOpenOperation for SemioFlowSnapshotDecode {
         })
     }
 
-    fn step(&mut self, cx: &mut StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> MemberSnapshotOpenStep {
-        match SemioFlowSnapshotDecode::step(self, cx) {
+    fn step(&mut self, cx: &mut StepContext<'_>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<MemberSnapshotOpenStep, OriginalTurnFailure> {
+        Ok(match SemioFlowSnapshotDecode::step(self, cx) {
             SemioFlowSnapshotDecodeStep::Pending { consumed_bytes } => MemberSnapshotOpenStep::Pending(store::MemberSnapshotOpenProgress {
                 opening: MemberOpenProgress { phase: MemberOpenPhase::Snapshot, completed: consumed_bytes as u64, total: self.retained_input_bytes() as u64 },
                 retained_progress: semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: usize::from(consumed_bytes > 0 && grant.maximum_items > 0), copied_bytes: consumed_bytes.min(grant.maximum_copy_bytes), ..Default::default() },
             }),
             SemioFlowSnapshotDecodeStep::Ready => MemberSnapshotOpenStep::Ready,
             SemioFlowSnapshotDecodeStep::Rejected(diagnostic) => MemberSnapshotOpenStep::Rejected(diagnostic),
-        }
+        })
     }
 
-    fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Option<(Self::Snapshot, MemberOpenRequest)> {
-        SemioFlowSnapshotDecode::take_ready(self, cx)
+    fn take_ready(&mut self, cx: &mut StepContext<'_>) -> Result<Option<(Self::Snapshot, MemberOpenRequest)>, OriginalTurnFailure> {
+        Ok(SemioFlowSnapshotDecode::take_ready(self, cx))
     }
 }
 

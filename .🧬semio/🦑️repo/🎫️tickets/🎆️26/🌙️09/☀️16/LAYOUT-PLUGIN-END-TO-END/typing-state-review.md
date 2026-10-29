@@ -1,0 +1,11 @@
+# Typing Persisted State Correction Review
+
+Fresh narrow read-only review of the original typing core, its private native harness and neutral fixture/schema after the actual retry2 failure. No compiler/test rerun or log watch was performed; native retry3 is owned elsewhere.
+
+The correction matches the actual machine contract. Framework machine/persist source54–58 maps snapshot.configuration.iter_ones() into stable IDs. Configuration declares ascending NodeId iteration (machine root90–91; implementation138–139). TypingMachine nodes131–133 define compound root at0 and typing at2 with root as parent. Therefore an active typing configuration persists the canonical ordered pair root,typing, rather than the old leaf-only typing shape. The production original commit gate now requires exactly that pair and still requires row.transaction.tool==row.tool (original typing39). It does not accept arbitrary state vectors or remove the transaction-tool fence.
+
+The harness seed function invokes real TypingLedger::send with TypingInput::Edit and real clock, then reads ledger.open and asserts its actual states equal the fixture states and transaction.tool equals tool. It does not directly fabricate an admitted TypingState or set private phases to pass the production gate. Each of the three neutral rows now declares the canonical pair, and the language-neutral schema enforces that exact const pair.
+
+All eight policy cases remain present, including preverb/non-suppression, global/absent/empty roster and invalid commit. Six cancellation cuts0,1,2,3,7,31 remain. Four undergrant axes, actual transaction and leaf-allocation pointer assertions, foreign decoder refusal, observed-heap/receipt equality and paid source/decoder/caller retirement remain in the current harness. No cfg skip, positive-only filtering or budget increase was introduced in this state correction. Existing fixture alias/quote helpers still operate through original admission and retirement rather than bypassing the state gate.
+
+No concrete defect was found in this bounded correction. The exact canonical pair is supported by source and asserted against a real seeded ledger; the pending native retry must still execute it. Reference fixtures and this source review are not a native PASS, and no result for retry3 is claimed here.

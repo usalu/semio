@@ -2,6 +2,7 @@
 use semio_framework_value::{DslValue,RetirementDemand,retained_clone::{RetainedCloneRef,RetainedCloneSource,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::{RetireOwned,controlled::ControlledRetirement}};
 use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection,SnapshotProjectionCursor};
 use semio_framework_value_native_owned::native_decoding::{NativeDecodeControl,NativeReceive,NativeReceiver};
+use super::PostFixture;
 pub(crate) fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../../../../🧪️tests/🧫️fixtures/📸️snapshot/🧳️state/🔣️.json")).unwrap()}
 pub(crate) fn grant(d:RetirementDemand)->RetainedCloneGrant{assert!(d.copy_bytes<=4096,"actual original Energy frontier exceeds4096: {d:?}");RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
 struct OriginalConstruction{grant:RetainedCloneGrant,issued:bool}

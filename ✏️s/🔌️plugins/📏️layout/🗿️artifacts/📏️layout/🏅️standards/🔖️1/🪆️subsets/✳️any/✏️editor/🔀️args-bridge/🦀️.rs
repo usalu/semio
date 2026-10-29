@@ -149,6 +149,15 @@ fn catalogue_args(action: &str, args: Option<&DslValue>) -> Result<DslValue, Fau
     Ok(folded)
 }
 
+fn preflight_args<'a>(action: &str, args: Option<&'a DslValue>) -> Result<Option<&'a DslValue>, Fault> {
+    let Some(DslValue::Object(entries)) = args else { return Ok(args) };
+    match entries.iter().find(|(key, _)| key == "issue") {
+        Some((_, issue @ DslValue::Object(_))) => Ok(Some(issue)),
+        Some(_) => Err(Fault::new(FaultOrigin::App, FaultCode::new("app.command.invalid-args"), format!("layout action '{action}' requires an issue object"))),
+        None => Ok(args),
+    }
+}
+
 pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<LayoutCommand, Fault> {
     const PAGE: &[(&str, &str)] = &[("id", "page_id"), ("value", "page_id")];
     const TEXT: &[(&str, &str)] = &[("text", "value"), ("input", "value")];
@@ -156,7 +165,7 @@ pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Layo
     let plain = || fold(args, &[], &[]);
     Ok(match action {
         "setActivePage" => LayoutCommand::SetActivePage(decode(action, fold(args, PAGE, &[]))?),
-        "focusPreflightIssue" => LayoutCommand::FocusPreflightIssue(decode(action, fold(args, &[("id", "object_id"), ("frame_id", "object_id")], &[]))?),
+        "focusPreflightIssue" => LayoutCommand::FocusPreflightIssue(decode(action, fold(preflight_args(action, args)?, &[("id", "object_id"), ("frame_id", "object_id")], &[]))?),
         "engagementInput" => LayoutCommand::EngagementInput(decode(action, with_text_value(fold(args, TEXT, &[("value", text(""))])))?),
         "canvasPointerDown" => LayoutCommand::CanvasPointerDown(decode(action, fold(args, &[("shift_key", "extend")], &[("button", DslValue::Number(semio_framework_value::Number::Int(0))), ("extend", DslValue::Bool(false))]))?),
         "canvasPointerMove" => LayoutCommand::CanvasPointerMove(decode(action, fold(args, &[], &[("samples", DslValue::Array(Vec::new()))]))?),
@@ -185,3 +194,30 @@ pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Layo
     })
 }
 //#endregion 🔖️ActionBridge
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn preflight_host_payloads_keep_the_issue_target() {
+        let raw = include_str!("🧪️fixture.json");
+        let oracle: serde_json::Value = serde_json::from_str(raw).expect("third-party fixture decoder");
+        let fixture = semio_framework_pack_json::from_json_str::<DslValue>(raw, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("native fixture decoder");
+        assert_eq!(semio_framework_pack_json::to_json_string(&fixture).parse::<serde_json::Value>().unwrap(), oracle);
+        for case in oracle["cases"].as_array().unwrap() {
+            let target = case["args"].get("issue").unwrap_or(&case["args"]);
+            assert_eq!(target["objectId"], case["expected"]["objectId"]);
+            assert_eq!(target["pageId"], case["expected"]["pageId"]);
+            let args = semio_framework_pack_json::from_json_str::<DslValue>(&case["args"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            let LayoutCommand::FocusPreflightIssue(payload) = command_from_action("focusPreflightIssue", Some(&args)).expect("preflight target") else { panic!("preflight command") };
+            assert_eq!(payload.object_id.as_deref(), case["expected"]["objectId"].as_str());
+            assert_eq!(payload.page_id.as_deref(), case["expected"]["pageId"].as_str());
+        }
+        for args in oracle["refusals"].as_array().unwrap() {
+            assert!(!args["issue"].is_object());
+            let args = semio_framework_pack_json::from_json_str::<DslValue>(&args.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+            assert!(command_from_action("focusPreflightIssue", Some(&args)).is_err());
+        }
+    }
+}

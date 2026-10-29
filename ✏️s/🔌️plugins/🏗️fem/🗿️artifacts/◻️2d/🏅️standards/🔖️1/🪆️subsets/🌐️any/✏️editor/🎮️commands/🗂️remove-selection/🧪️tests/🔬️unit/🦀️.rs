@@ -128,7 +128,7 @@ async fn mounted_delete_body() {
         let mut app = fem2d_empty_app();
         log_phase(format!("[DEBUG] FEM2d mounted delete {selection}: app constructed"));
         let semio_framework::kernel::Effect::LoadDocument { pack, spr } = semio_s_artifact_fem_2d_io::standards::v1::subsets::any::io::reset_document_effect(&before) else { panic!("document fixture effect") };
-        semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("mount shared wire fixture");
+        semio_framework_plugin::artifact_app_laws::load_document(&mut app.0, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("mount shared wire fixture");
         log_phase(format!("[DEBUG] FEM2d mounted delete {selection}: document mounted"));
         let ids: Vec<String> = serde_json::from_value(fixture[selection].clone()).expect("selection ids");
         dispatch(&mut app, Fem2dCommand::RemoveSelection(RemoveSelection { ids })).await;

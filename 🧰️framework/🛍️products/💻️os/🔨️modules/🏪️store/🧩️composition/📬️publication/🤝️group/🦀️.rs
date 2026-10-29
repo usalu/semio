@@ -1,9 +1,7 @@
 //! 🤝️ Retains one private member root until its shared visibility owner decides.
 
 use std::sync::Arc;
-use pack::snapshot::ArtifactPack;
 use semio_framework_os_store_engine_live::lifted_store::StoreParts;
-use crate::lifted_store::ArtifactStore;
 use semio_framework_os_store_one_item_batch::lifted_one_item_publication::ArtifactStoreBatchPublication;
 use semio_framework_os_store_read::{ArtifactStoreDisplacedOwnerReservation, ArtifactStoreDisplacedRetirements, ArtifactStoreRevisionAccumulatorRetirement, ArtifactStoreStringRetirement, ArtifactStoreStringVectorRetirement};
 use semio_framework_os_store_ledger::{ArtifactStoreHistoryCommitReservation, CursorRevisionAccumulator, CursorRevisionRecord};
@@ -27,8 +25,8 @@ pub trait ApplyBatchGroup<P, Mu> {
 
 impl<P, Mu> ApplyBatchGroup<P, Mu> for StoreParts<'_, P, Mu>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mu: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    Mu: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn stage_apply_batch_group(&mut self, publication: &mut ArtifactStoreBatchPublication<P, Mu>, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         let group = publication.group_preparation.as_mut().ok_or("member group lacks its retained preparation")?;
@@ -42,13 +40,13 @@ where
         let checkpoint=publication.progress();
         let metadata=&mut publication.group_preparation.as_mut().unwrap().metadata;
         let stage=publication.stage.as_mut().unwrap();
-        match semio_framework_os_store_engine_bundle::advance_batch_metadata(&mut self.parts(),metadata,stage.edit.as_ref().ok_or("member metadata lost its original edit")?,stage.digest,&mut stage.unit_flags,&mut stage.diagnostics,grant)?{
+        match semio_framework_os_store_engine_bundle::advance_batch_metadata(self,metadata,stage.edit.as_ref().ok_or("member metadata lost its original edit")?,stage.digest,&mut stage.unit_flags,&mut stage.diagnostics,grant)?{
             semio_framework_os_store_engine_bundle::BatchCommitMetadataStep::Blocked=>Ok(ArtifactStoreOneItemPreparationStep::Blocked),
             semio_framework_os_store_engine_bundle::BatchCommitMetadataStep::Progress(ownership)=>Ok(ArtifactStoreOneItemPreparationStep::Progress(checkpoint,ownership)),
             semio_framework_os_store_engine_bundle::BatchCommitMetadataStep::Ready=>{
                 let capacity=size_of::<semio_framework_os_store_durable_group_wire::lifted_durable_group::StagedRootRetirement<P,Mu>>();let release=size_of::<Edit<Mu>>();publication.group_preparation.as_mut().unwrap().metadata.demand=capacity;
                 if grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<release{return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}
-                let ownership=semio_framework_os_store_engine_stage::lifted_durable_group::stage_prebuilt_batch_root(&mut self.parts(),publication,grant)?;let metadata=&mut publication.group_preparation.as_mut().unwrap().metadata;metadata.phase=12;metadata.completed=metadata.completed.saturating_add(1);
+                let ownership=semio_framework_os_store_engine_stage::lifted_durable_group::stage_prebuilt_batch_root(self,publication,grant)?;let metadata=&mut publication.group_preparation.as_mut().unwrap().metadata;metadata.phase=12;metadata.completed=metadata.completed.saturating_add(1);
                 Ok(ArtifactStoreOneItemPreparationStep::Prepared(checkpoint,ownership))
             }
         }

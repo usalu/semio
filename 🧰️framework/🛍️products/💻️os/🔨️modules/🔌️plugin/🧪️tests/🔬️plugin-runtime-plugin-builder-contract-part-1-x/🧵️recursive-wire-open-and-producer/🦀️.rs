@@ -239,7 +239,7 @@ store::space_members! {
 }
 
 async fn assert_parent_restore_case<const HAS_CHILD: bool>(row: &Value, cx:&mut semio_framework_job::StepContext<'_>) {
-    let mut app = VcsArtifactApp::<ComposedParentApp<HAS_CHILD>, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut app = VcsArtifactApp::<ComposedParentApp<HAS_CHILD>, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     let dialect = test_child_dialect().await;
     let child_id = row["childId"].as_str().unwrap();
     let slot = row["slot"].as_str().unwrap();

@@ -76,10 +76,10 @@ fn writer_window_state_retained_publications_isolate_two_windows_and_reload_only
                         (&right, WriterCommand::SetFontPx(set_font_px::SetFontPx { value: 16 })),
                         (&left, WriterCommand::EngagementInput(engagement_input::EngagementInput { value: "format".into() })),
                     ] {
-                        app.dispatch_typed(command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+                        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { view_state: Some(context.clone()), ..artifact_app_laws::meta("writer-window-state") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
                     }
                     let (mut config_receipts, mut transient_receipts) = drain(&mut app, 1, scope.cx()).await?;
-                    app.dispatch_typed(WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
+                    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &WriterCommand::LintDocument(lint_document::LintDocument {}), &ActionMeta { view_state: Some(left.clone()), ..artifact_app_laws::meta("writer-window-state") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()).await.map_err(|error| format!("{error:?}"))?;
                     let (next_config_receipts, next_transient_receipts) = drain(&mut app, 1, scope.cx()).await?;
                     config_receipts += next_config_receipts;
                     transient_receipts += next_transient_receipts;

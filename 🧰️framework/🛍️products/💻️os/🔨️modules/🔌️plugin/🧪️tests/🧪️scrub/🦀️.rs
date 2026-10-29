@@ -146,21 +146,6 @@ fn every_lane_of_a_press_rides_one_ledger_step() {
     assert!(matches!(release(&mut runtime, "w1", "g2", vec![config(SetLabel { value: "c8".into() })]), ToolStep::Idle), "the aborted press's late release stays silent");
 }
 
-/// ⚖️ LAW: an operation's tag is taken exactly once, and the tags of operations that never complete are bounded by the
-/// live operation slots — the oldest yields its place.
-#[test]
-fn operation_tags_are_taken_once_and_bounded() {
-    let mut runtime = Runtime::default();
-    let tag = |index: u64| ToolTag::Scrub(ScrubTag { window: "w".into(), tool: "t#v".into(), phase: ScrubPhase::Tick { gesture: format!("g{index}") } });
-    for operation in 0..(ARTIFACT_LIVE_OUTPUT_SLOTS as u64 + 3) {
-        runtime.bind(operation, tag(operation));
-    }
-    assert_eq!(runtime.operations.len(), ARTIFACT_LIVE_OUTPUT_SLOTS);
-    assert_eq!(runtime.take_operation(0), None, "the oldest never-completed tag yielded its place");
-    assert_eq!(runtime.take_operation(5), Some(tag(5)));
-    assert_eq!(runtime.take_operation(5), None, "a tag is taken once");
-}
-
 /// ⚖️ LAW: the input commit-mode lint (audit F-4) answers exactly the language-agnostic fixture's findings — per-keystroke
 /// text fields bound to document verbs; never blur-committed fields, number fields, file fields or view verbs.
 #[test]

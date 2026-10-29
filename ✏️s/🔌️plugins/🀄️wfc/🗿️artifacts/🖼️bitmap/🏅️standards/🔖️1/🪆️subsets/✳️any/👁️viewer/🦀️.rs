@@ -93,8 +93,8 @@ impl ArtifactViewer for BitmapViewer {
 
     /// 👁️ The viewer boots the same committed example the editor does, so opening one document in
     /// either surface shows the same scene rather than an empty default.
-    fn reference_birth()->Option<fn()->BitmapSnapshot>{Some(||{
-        crate::examples::rooms_16::snapshot()
+    fn reference_birth()->Option<fn()->Result<BitmapSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(crate::examples::rooms_16::snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

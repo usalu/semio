@@ -24,6 +24,7 @@ impl super::NativeDecodeConstructionRecipient for OriginalConstructionFixture{
 
 #[path="🌳️value/🦀️.rs"]pub mod tree;
 #[path="🗂️map/🦀️.rs"]pub mod map;
+#[path="🧺️set/🦀️.rs"]pub mod set;
 
 fn receiving_child_body_budget(body:usize,metadata:usize)->usize{body.saturating_sub(metadata)}
 
@@ -61,4 +62,6 @@ pub trait NativeReceiver<I:?Sized,T>:Send+'static{
 
 #[path="🔄️map/🦀️.rs"]
 pub mod mapped;
+#[path="🔁️blocking/🦀️.rs"]
+pub mod blocking;
 pub use mapped::{NativeReceiveMap,NativeMappedReceiver};

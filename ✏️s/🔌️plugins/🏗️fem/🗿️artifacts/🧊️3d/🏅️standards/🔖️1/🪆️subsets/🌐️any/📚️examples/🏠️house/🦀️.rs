@@ -29,6 +29,7 @@ use semio_s_fem_node::volumetric::FemNodeValue;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSolid;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::structure::FemSupport;
 use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot;
+use semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue;
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 use std::collections::BTreeMap;
@@ -101,8 +102,13 @@ fn gable_outline() -> Vec<[f64; 2]> {
     vec![[0.0, 0.0], [WIDTH, 0.0], [WIDTH, STOREY], [WIDTH - seat, STOREY], [mid, RIDGE], [seat, STOREY], [0.0, STOREY]]
 }
 
-/// 🏠️ Builds the house document — the committed `🗣️.dsl.semio` is exactly `print_dsl(&build())`.
-pub fn build() -> Fem3dSnapshot {
+/// 🏠️ Builds the house document — the committed `🗣️.dsl.semio` is exactly `print_dsl(&build()?)`; the explicit authoring rows are received into persistent ownership.
+pub fn build() -> Result<Fem3dSnapshot, semio_framework_value::ValueError> {
+    Fem3dSnapshot::from_reference(build_rows())
+}
+
+/// 🏠️ The explicit authoring rows of the house document.
+pub fn build_rows() -> Fem3dSnapshotValue {
     let inner_y = (THICKNESS, LENGTH - THICKNESS);
     let inner_x = (THICKNESS, WIDTH - THICKNESS);
     let mut nodes = Vec::new();
@@ -127,7 +133,7 @@ pub fn build() -> Fem3dSnapshot {
         solid("attic_slab", "Attic Slab", rect(inner_x.0, inner_y.0, inner_x.1, inner_y.1), vec![], FemAxis::Z, STOREY - THICKNESS, THICKNESS, "concrete"),
         solid("roof", "Gable Roof", roof_section(), vec![], FemAxis::Y, 0.0, LENGTH, "timber"),
     ];
-    Fem3dSnapshot {
+    Fem3dSnapshotValue {
         nodes,
         elements: vec![],
         materials: vec![

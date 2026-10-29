@@ -120,8 +120,8 @@ impl ArtifactViewer for EquationViewer {
 })())
 }
 
-    fn reference_birth()->Option<fn()->EquationSnapshot>{Some(||{
-        EquationSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<EquationSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(EquationSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `EquationViewCommand::Noop` variant never carries a

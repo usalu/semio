@@ -3,7 +3,7 @@ use crate::{snapshot::{original::EnergyModelSnapshot,state::fields::{EntityRow,R
 use semio_framework_value::{RetirementDemand,ValueError,RetainedOwnedProjection,shared_issuance::SealedShared,retained_clone::{RetainedClone,RetainedCloneRef,RetainedCloneBinding,RetainedCloneSource,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use semio_framework_value_persistent::{RetainedEquality,RetainedEqualityOwner,list::persistent::PersistentList};
 use semio_framework_value_snapshot_projection::snapshot_projection::SnapshotProjection;
-use protocol::mutation::retained::{RetainedFieldPreparation,retained_mutation_demand_fits};
+use protocol::{RetainedFieldPreparation,retained_mutation_demand_fits};
 use std::mem::{size_of,ManuallyDrop};
 /// 🧭️ Authored field policies supply exact original value storage, collection and native validation owner.
 pub trait OwnedRowPath:Send+Sync+'static{

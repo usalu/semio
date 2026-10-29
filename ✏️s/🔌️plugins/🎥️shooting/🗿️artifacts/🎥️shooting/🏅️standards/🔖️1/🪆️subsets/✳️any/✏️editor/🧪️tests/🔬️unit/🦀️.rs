@@ -211,7 +211,7 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     /// apply any `LoadDocument` the way the host would.
     pub async fn dispatch(app: &mut ShootingApp, command: ShootingCommand) -> Dispatched {
         let mut identity = artifact_app_laws::fixture_identity();
-        let mut result = app.0.dispatch_typed(command, &meta("local"), &mut identity, app.1.cx()).await.expect("dispatch");
+        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("dispatch");
         let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
@@ -228,7 +228,7 @@ use crate::{editor::shooting::commands::shot::add_shot, editor::shooting::comman
     /// a gesture leaves.
     pub async fn dispatch_rows(app: &mut ShootingApp, command: ShootingCommand) -> Vec<semio_framework::kernel::HistoryEntry> {
         let mut identity = artifact_app_laws::fixture_identity();
-        app.0.dispatch_typed(command, &meta("local"), &mut identity, app.1.cx()).await.expect("dispatch");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity, app.1.cx()).await.expect("dispatch");
         let deadline = std::time::Instant::now() + std::time::Duration::from_secs(30);
         let mut rows = Vec::new();
         while app.has_pending_typed_operations() {
@@ -771,7 +771,7 @@ async fn every_example_load_settles_through_the_host_document_archive_door() {
     use set_active_example::{SetActiveExample, SHOOTING_EXAMPLE_DEFAULT_ID, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT};
     for (archive_id, example_id) in [(91_u64, SHOOTING_EXAMPLE_HEXAGONAL_CUT_CONCRETE_FOREST_LEFT), (92, SHOOTING_EXAMPLE_DEFAULT_ID)] {
         let mut app = shooting_app().await;
-        app.0.dispatch_typed(ShootingCommand::SetActiveExample(SetActiveExample { example_id: example_id.into() }), &artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("setActiveExample is admitted");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &ShootingCommand::SetActiveExample(SetActiveExample { example_id: example_id.into() }), &artifact_app_laws::meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("setActiveExample is admitted");
         let settled = artifact_app_laws::settle_registered_typed_operation(&mut app.0, context::SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the example settles");
         let loaded = settled.effects.into_iter().find_map(|effect| if let Effect::LoadDocument { pack, spr } = effect { Some((pack, spr)) } else { None });
         let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");

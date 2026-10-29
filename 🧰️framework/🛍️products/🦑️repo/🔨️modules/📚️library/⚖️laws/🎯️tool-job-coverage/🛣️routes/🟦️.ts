@@ -2,6 +2,7 @@
  * @see 🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚖️laws/🎯️tool-job-coverage/🏁️run/🟦️.ts
  */
 import { TOOL_JOB_PLUGIN_RESERVED_IDS, toolJobRustBlock } from "../📋️inventory/🟦️.ts";
+import {toolJobOriginalReservedHostExact} from "./🧬️original-host/🟦️.ts";
 
 export function toolJobSegmentedTerminalDrainExact(source: string): boolean {
   const start = source.indexOf("async fn take_segmented_download_chunk(&mut self, operation_id: u64)");
@@ -66,20 +67,7 @@ export function toolJobPuzzleReservedRoutesExact(source: string, host: string, j
     jobs.includes("descriptor.complete(None, self.commit.published())") &&
     jobs.includes("self.commit.close_step_granted(grant)") &&
     jobs.includes("a_prepared_commit_output_rides_on_the_completion_and_closes_exactly");
-  const hostProtocol =
-    host.includes("async fn run_framework_reserved_job") &&
-    host.includes("proof.admits::<A>(&admission)") &&
-    host.includes("*applied_progress < checkpoint_progress") &&
-    host.includes("retained_payload_eq_slice(output, raw)") &&
-    host.includes("interactive-job.output-envelope") &&
-    host.includes("session.resume()") &&
-    host.includes("session.begin_close()") &&
-    host.includes("Ok(semio_framework_job::WorkerJobCloseStep::Complete { .. }) if session.terminal_is_empty() => break") &&
-    host.includes("self.validate_framework_reserved_commit(action, permit).await?") &&
-    host.includes("semio_framework_job::validate_commit(&permit.operation, live_revision, live_generation)") &&
-    host.includes("lease.is_cancelled().await") &&
-    host.includes("async fn ensure_reserved_emit_bounded(") &&
-    host.includes("permit.finish()");
+  const hostProtocol=toolJobOriginalReservedHostExact(host);
   return exactFactories && resumableJobs && fixedIngress && retainedProtocol && hostProtocol && implementation.body.includes("ArtifactReservedToolInput::Media") && implementation.body.includes("ArtifactReservedToolJob::new(Puzzle5dImportJob::new(");
 }
 
@@ -131,10 +119,7 @@ export function toolJobPuzzle2dReservedRoutesExact(source: string, host: string,
     && source.includes("impl ArtifactReservedJob for Puzzle2dClipboardJob")
     && jobs.includes("JobTurn::Prepare(bytes)")
     && jobs.includes("admit_complete(cx, None, self.commit.published())");
-  const hostProtocol = host.includes("async fn run_framework_reserved_job")
-    && host.includes("self.validate_framework_reserved_commit(action, permit).await?")
-    && host.includes("async fn ensure_reserved_emit_bounded(")
-    && host.includes("permit.is_cancelled().await");
+  const hostProtocol=toolJobOriginalReservedHostExact(host);
   return exactFactories && ownedFragment && routedHere && resumableJob && hostProtocol;
 }
 

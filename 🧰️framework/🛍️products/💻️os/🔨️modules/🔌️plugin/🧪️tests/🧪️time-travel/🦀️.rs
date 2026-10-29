@@ -15,7 +15,7 @@ use semio_framework_plugin_app_builder::App;
 use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
 use semio_framework_plugin_decl_app::{ArtifactApp, NaturalFileDecodeCursor};
 use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::{ArtifactOwnedToolJobFactory, ArtifactReservedJob};
 use store::ArtifactStoreInitializationAuthority;
 use semio_framework_plugin_decl_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
@@ -122,8 +122,8 @@ impl ArtifactApp for ToyHistoryApp {
         (example_id == "five").then(|| Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&example)))))
     }
 
-    fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
-        TestSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<TestSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(TestSnapshot::default())
     })}
 
     async fn handle(

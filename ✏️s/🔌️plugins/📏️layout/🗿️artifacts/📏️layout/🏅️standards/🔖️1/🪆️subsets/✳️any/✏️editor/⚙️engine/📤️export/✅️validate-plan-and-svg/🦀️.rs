@@ -268,6 +268,7 @@ impl LayoutExportJob {
     pub(super) fn output_work_demand(&self,encoded:bool)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
         use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind};let output=if encoded{&self.encoded}else{&self.output};if !output.has_room(OUTPUT_BODY_BYTES){return output.prepare_demand(OUTPUT_BODY_BYTES);}
         let mut demand=RetirementDemand{copy_bytes:OUTPUT_COPY_BYTES,depth:output.write_depth()?.max(1),..Default::default()};
+        if encoded&&self.stage==ExportStage::Base64&&(!self.projected_media()||self.media_projection_phase==5){demand.depth=demand.depth.max(self.output.read_depth(self.base64_cursor)?);}
         if !encoded&&self.stage==ExportStage::Encode&&self.request.as_ref().is_some_and(|request|request.kind==LayoutExportKind::Pdf){let child=self.pdf_offset_demand()?;demand.copy_bytes=demand.copy_bytes.checked_add(child.copy_bytes).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"layout output original copy quote overflow"))?;demand.capacity_bytes=child.capacity_bytes;demand.release_bytes=child.release_bytes;demand.depth=demand.depth.max(child.depth);}
         if !encoded&&self.stage==ExportStage::Encode&&self.request.as_ref().is_some_and(|request|request.kind==LayoutExportKind::Png)&&self.png_row_section==PngRowSection::Initialize&&self.png_row.capacity()==0{let page=self.page().map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"layout output PNG page is missing"))?;let width=finite_dimension(page.width).map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"layout output PNG width is invalid"))?;demand.capacity_bytes=width as usize*4+1;demand.copy_bytes+=size_of::<Vec<u8>>()*2;}
         Ok(demand)
@@ -318,7 +319,7 @@ impl LayoutExportJob {
                 if fidelity.svg_byte < proxy.len() { let end = (fidelity.svg_byte + OUTPUT_CHUNK_BYTES).min(proxy.len()); self.output.append(&proxy.as_bytes()[fidelity.svg_byte..end],work)?; fidelity.svg_byte = end; return Ok(()); }
                 self.output.append(b"\"/>",work)?;
             }
-            None => { self.output.append(b"</svg>",work)?; self.stage = ExportStage::PackageCommit; return Ok(()); }
+            None => { self.output.append(b"</svg>",work)?; self.stage = if self.media_output_credit.is_some(){ExportStage::Base64}else{ExportStage::PackageCommit}; return Ok(()); }
         }
         self.encode_cursor += 1; fidelity.svg_phase = 0; fidelity.svg_segment = 0; fidelity.svg_byte = 0; Ok(())
     }

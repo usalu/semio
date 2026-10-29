@@ -1,6 +1,7 @@
 //! 🧼️ Staged slice of the `command-routes` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
 //! 🧷️ Command routes of the mounted artifact instance: framework-reserved routes, action dispatch and command dispatch.
+use store::os_store::ArtifactStoreNativeVcsTurn as _;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;

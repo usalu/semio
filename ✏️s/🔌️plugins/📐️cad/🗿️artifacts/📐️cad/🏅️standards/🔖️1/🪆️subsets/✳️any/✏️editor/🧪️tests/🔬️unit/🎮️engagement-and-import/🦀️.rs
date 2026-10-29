@@ -181,7 +181,7 @@ async fn import_cad_file_action_imports_obj_by_extension() {
     let mut app = new_app().await;
     let parent = app.snapshot().expect("snapshot");
     let before = pane_objects(&app, CadPaneId::Shape).await.len();
-    app.0.dispatch_typed(CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: "triangle.obj".into(), payload: obj_data_url }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("import dispatch");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::ImportCadFile(import_cad_file::ImportCadFile { name: "triangle.obj".into(), payload: obj_data_url }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("import dispatch");
     settle(&mut app).await;
     assert_eq!(pane_objects(&app, CadPaneId::Shape).await.len(), before + 1, "the imported object is one more element of the shape pane's model child");
     assert_eq!(app.snapshot().expect("snapshot"), parent, "an object import never moves the parent document");

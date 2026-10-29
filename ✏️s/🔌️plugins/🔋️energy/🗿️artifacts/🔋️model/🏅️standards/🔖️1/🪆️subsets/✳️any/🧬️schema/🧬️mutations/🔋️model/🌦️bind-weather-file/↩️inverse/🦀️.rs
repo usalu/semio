@@ -10,7 +10,7 @@ where
     Op: From<super::BindWeatherFile> + From<crate::UnbindWeatherFile>,
 {
     Ok((|| {
-    if !::semio_s_artifact_energy_model_native_mutations::root::valid_link(&payload.link) { return Vec::new(); }
+    if !::semio_s_artifact_energy_model_native_mutations_singletons::root::valid_link(&payload.link) { return Vec::new(); }
     let link = payload.link.clone();
     match &base.weather_link {
         Some(existing) if existing == &link => Vec::new(),

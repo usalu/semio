@@ -133,8 +133,8 @@ impl ArtifactEditor for PptxEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->PptxSnapshot>{Some(||{
-        semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot()
+    fn reference_birth()->Option<fn()->Result<PptxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot())
     })}
 
     /// ✏️ Replaces the addressed text-bearing shape after its optimistic revision matches.

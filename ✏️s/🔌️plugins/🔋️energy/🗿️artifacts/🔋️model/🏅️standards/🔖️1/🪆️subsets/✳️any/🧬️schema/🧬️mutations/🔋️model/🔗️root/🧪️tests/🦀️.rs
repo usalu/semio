@@ -1,7 +1,7 @@
 //! 🧪️ Four authored root-link leaves run their actual generated diagnostics, sparse decision, full inverse and physical close.
 use crate::snapshot::original::EnergyModelSnapshot;
 use crate::diff::original::EnergyModelDiff;
-use protocol::mutation::retained::{RetainedMutationLeaf,RetainedMutationLeafPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext};
+use protocol::{RetainedMutationLeaf,RetainedMutationLeafPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext};
 use semio_framework_value::{DslValue,retirement::RetireOwned};
 #[path="../../../../📸️snapshot/🧳️state/🧪️tests/🧰️helpers/🦀️.rs"]mod helpers;
 use helpers::{receive,source,grant,observe,drain,denied_axes};

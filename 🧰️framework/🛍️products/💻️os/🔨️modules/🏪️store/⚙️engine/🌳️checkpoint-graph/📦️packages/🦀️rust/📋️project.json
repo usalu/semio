@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/os-store-engine-checkpoint-graph-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

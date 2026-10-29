@@ -8,13 +8,18 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️HostSnapshot
 /// 🧩️ Flow-host retained fixture encoded through the first-party value contract.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord, crate::os_dsl::DslArtifact)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
+#[dsl(layout = "lines")]
+#[artifact(id = "flow.flow")]
 pub struct FlowHostSnapshot {
     pub schema: String,
+    #[dsl(block)]
     pub camera: CameraJson,
+    #[dsl(statements, block)]
     pub widgets: Vec<Widget>,
+    #[dsl(table)]
     pub synapses: Vec<SynapseSpec>,
     #[value(default)]
     pub layout: OrderedMap<WidgetLayout>,

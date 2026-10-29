@@ -9,5 +9,5 @@ Feature: Guarded Current Compiler Store Maintenance Controls
 
     Examples:
       | target                        | operation |
-      | cache-retire-inactive-preview  | preview   |
-      | cache-retire-inactive          | retire    |
+      | inactive-preview               | preview   |
+      | inactive                       | retire    |

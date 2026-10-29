@@ -15,8 +15,8 @@ use super::{StoreCloseAdmission, StoreCloseWitness};
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreCloseAdmission for StoreParts<'_, P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         self.wire.close_take_backbone_retirement(grant)
@@ -147,7 +147,7 @@ where
 
 impl<P, Mutation> StoreCloseWitness for StorePartsRef<'_, P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
+    P: semio_framework_os_spr::StoreState,
     Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn snapshot_read_leases_terminal_is_empty(&self) -> bool {

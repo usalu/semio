@@ -95,11 +95,11 @@ use semio_framework_plugin_decl_app::MediaConsumption;
 #[cfg(test)]
 use semio_framework_plugin_decl_app::MediaArtifactError;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportResult;
+use semio_framework_plugin_decl_media::ArtifactMediaExportResult;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPoll;
+use semio_framework_plugin_decl_media::ArtifactMediaExportPoll;
 #[cfg(test)]
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle;
+use semio_framework_plugin_decl_media::ArtifactMediaExportHandle;
 #[cfg(test)]
 use semio_framework_plugin_decl_app::EphemeralSnapshot;
 #[cfg(test)]
@@ -145,14 +145,14 @@ use semio_framework_plugin_ownership::store_lifecycle::bounded_config_store_disp
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_disposer;
 use semio_framework_plugin_ownership::store_lifecycle::bounded_document_store_initialization_job;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactBoundedFirstStepProof;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobRequest;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolInput;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedToolJobRequest;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
-use semio_framework_plugin_decl_views::tool_contract::EmptyArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::EmptyArtifactInstanceOperationOwner;
 use crate::natural_file_import::NaturalFileImportJob;
 use semio_framework_plugin_decl_views::tool_run_contract::ToolRunJob;
 use semio_framework_plugin_decl_app::tool_run_contract::ToolRunJobRequest;

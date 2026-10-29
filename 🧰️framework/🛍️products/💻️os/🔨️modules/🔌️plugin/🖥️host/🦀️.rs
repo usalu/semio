@@ -8,6 +8,7 @@ pub mod activation;
 pub mod package_assets;
 
 use semio_framework_plugin_guest_contract::PluginHostError;
+use semio_framework::FaultFrom;
 pub use semio_framework_actor::{PackageHash, PackageId};
 use semio_framework_value_derive::FromValue;
 use std::collections::HashMap;
@@ -128,7 +129,11 @@ impl SessionLanePack {
             self.pending_binary_ops = ops;
             return;
         }
-        match (codec.reference().map_err(|error|error.into_fault())?.apply_ops_binary)(&self.pack, &self.spr, &ops,identity).await {
+        let Ok(reference) = codec.reference() else {
+            self.pending_binary_ops = ops;
+            return;
+        };
+        match (reference.apply_ops_binary)(&self.pack, &self.spr, &ops,identity).await {
             Ok((pack, spr, ops_text)) => {
                 self.pack = pack;
                 self.spr = spr;

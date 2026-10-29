@@ -256,8 +256,8 @@ impl ArtifactEditor for AviEditor {
         avi_editor_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        AviSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(AviSnapshot::default())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

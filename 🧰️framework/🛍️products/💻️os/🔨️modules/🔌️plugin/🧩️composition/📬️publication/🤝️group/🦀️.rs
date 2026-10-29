@@ -91,17 +91,17 @@ pub struct PrivateOwnedPublicationLane {
             let step=self.publication.as_mut().unwrap().admit_original_origins(origins,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,..grant})?;let mut progress=step.progress();if matches!(step,RetainedCloneStep::Complete(_)){self.origins_assigned=true;progress.copied_bytes+=overhead;}Ok(Some(progress))
         }
         /// 🪜️ Advances only one retained lane phase; staging never changes live authority.
-        pub fn advance(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut store::MemberNativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
+        pub fn advance(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut store::MemberNativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, store::VcsError> {
             if grant.maximum_items == 0 { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
             match self.phase {
                 PrivateOwnedPublicationPhase::Admission => {
-                    let Some((publication,progress)) = member.begin_one_item_owned_publication(self.request.as_mut().expect("private source retained until admission"), grant)? else { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); };
+                    let Some((publication,progress)) = member.begin_one_item_owned_publication(self.request.as_mut().expect("private source retained until admission"), grant).map_err(store::VcsError::ValidationFailed)? else { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); };
                     *self.publication = Some(publication);
                     self.phase = PrivateOwnedPublicationPhase::Preparation;
                     Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.progress(), progress))
                 }
                 PrivateOwnedPublicationPhase::Preparation => {
-                    let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), body, grant, receiving)?;
+                    let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), body, grant, receiving).map_err(store::VcsError::ValidationFailed)?;
                     if let store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(checkpoint, progress) = step { self.phase = PrivateOwnedPublicationPhase::Staging; return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, progress)); }
                     Ok(step)
                 }

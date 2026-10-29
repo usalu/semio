@@ -81,10 +81,7 @@ async fn run_query_populates_results_and_a_set_query_mutates_projection() {
     let mut app = new_app().await;
     let view = query_windows();
     let editor = view.for_window_instance("editor-main").unwrap();
-    app.dispatch_typed(
-        TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()), results_window_id: "results-main".into() },
-        &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("local") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity()
-    ,cx)
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::RunQuery { query: Some("MATCH (a:Piece) WHERE a.name = 'b' SET a.label = 'ran-label'".into()), results_window_id: "results-main".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor), ..meta("local") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)
     .await
     .expect("run");
     drive_query_ownership_operations(&mut app,cx).await.expect("query completes");
@@ -159,7 +156,7 @@ async fn text_edit_puts_the_query_into_the_document() {
     let mut app = new_app().await;
     let view = query_windows();
     let editor = view.for_window_instance("editor-main").unwrap();
-    app.dispatch_typed(TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(),cx)
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &TrinityJackCommand::TextEdit { text: "MATCH (a:Piece) RETURN a.name".into() }, &semio_framework_plugin::ActionMeta { view_state: Some(editor.clone()), ..meta("local") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx)
         .await
         .expect("edit");
     drive_query_ownership_operations(&mut app,cx).await.expect("edit completes");

@@ -81,8 +81,14 @@ pub struct HostEvents {
     pub host_event_roster: Vec<semio_framework::ViewWindowInstance>,
     /// 📨️ The typed operations a [`HostEvent`] admitted: never history rows of their own.
     pub host_event_operations: HashSet<u64>,
-    /// 🔁️ Set while a host event dispatches, so its own dispatch delivers none.
-    pub delivering_host_event: bool,
+    /// 📬️ The window facts waiting for their original typed delivery, front first; the front is the one in flight while `delivering`.
+    pub queue: std::collections::VecDeque<semio_framework_plugin_decl_emission::HostEvent>,
+    /// 🏃️ Set from the first queued delivery until the queue has drained through the shared typed source.
+    pub delivering: bool,
+    /// 💬️ Set while the `hostEvent` action itself waits for its queued fact: the reply follows the last delivery.
+    pub reply: bool,
+    /// 🔁️ The resolved task follow-ups waiting for their original typed delivery.
+    pub resumes: semio_framework_plugin_command::command_admission::original_typed_command::TaskResumes,
 }
 
 impl HostEvents {
@@ -93,7 +99,10 @@ impl HostEvents {
             host_event_utilities: HashMap::new(),
             host_event_roster: Vec::new(),
             host_event_operations: HashSet::new(),
-            delivering_host_event: false,
+            queue: std::collections::VecDeque::new(),
+            delivering: false,
+            reply: false,
+            resumes: semio_framework_plugin_command::command_admission::original_typed_command::TaskResumes::new(),
         }
     }
 }

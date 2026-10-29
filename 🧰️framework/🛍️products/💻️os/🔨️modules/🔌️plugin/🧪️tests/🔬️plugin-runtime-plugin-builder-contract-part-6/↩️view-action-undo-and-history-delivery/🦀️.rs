@@ -68,7 +68,7 @@
                 "inverseCommandId": "setActiveExample",
                 "inverseArgs": { "exampleId": "forest" }
             }))),
-         &mut identity)
+         &mut identity, cx)
         .await;
         reserved_action(
             &mut app,
@@ -79,7 +79,7 @@
                 "inverseCommandId": "os.resizeWindow",
                 "inverseArgs": { "width": 800, "height": 600 }
             }))),
-         &mut identity)
+         &mut identity, cx)
         .await;
         let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit chrome undo");
         assert!(

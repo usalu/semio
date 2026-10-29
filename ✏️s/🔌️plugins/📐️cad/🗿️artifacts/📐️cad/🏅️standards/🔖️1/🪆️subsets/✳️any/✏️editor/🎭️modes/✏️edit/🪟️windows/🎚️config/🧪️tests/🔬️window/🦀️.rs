@@ -82,7 +82,7 @@ fn cad_document_contract_world_window_runtime_isolates_commands_and_restores_exa
                 }
 
                 async fn dispatch(app: &mut VcsArtifactApp<EditorApp<CadPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, view: &ViewModel, command: CadCommand, cx: &mut semio_framework_plugin::StepContext<'_>) -> Result<(), String> {
-                    app.dispatch_typed(command, &ActionMeta { instance_id: INSTANCE, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
+                    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &command, &ActionMeta { instance_id: INSTANCE, view_state: Some(view.clone()), ..artifact_app_laws::meta(semio_framework_os_kernel::LOCAL_ACTOR_ID) }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.map_err(|error| format!("{error:?}"))?;
                     if drain(app, cx).await? != 1 {
                         return Err("CAD command did not publish exactly one exact-window config result".into());
                     }

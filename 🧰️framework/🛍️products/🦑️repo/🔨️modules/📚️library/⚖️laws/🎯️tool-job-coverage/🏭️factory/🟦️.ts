@@ -8,6 +8,8 @@ import { policyAllRustFiles } from "../../🧩️plugin-consistency/🏛️found
 import { TOOL_JOB_FRAMEWORK_RESERVED_IDS, TOOL_JOB_HOST_CONFIGURATION_IDS, toolJobAppOwnedRows, toolJobDispositions, toolJobProductionProtocolSource, toolJobProductionSource, type ToolJobProof, toolJobProofIdentity, toolJobProofs, toolJobResolveTypeAlias, toolJobRustBlock, toolJobScanThenMonolithRows, type ToolJobStaticRow, toolJobStaticRows, toolJobFactoryModuleFile } from "../📋️inventory/🟦️.ts";
 import { toolJobMountedDispatchOneTurnExact, toolJobRetainedDispatchSetup } from "../📤️publication/🟦️.ts";
 
+import {toolJobOriginalReservedHostExact} from "../🛣️routes/🧬️original-host/🟦️.ts";
+
 //#region 🧭️ConcreteFactoryResolution
 /** 🏭️ Resolves a compiler type token, including an explicit import alias, to one concrete source type; a path through a carved sibling crate's re-export resolves to the one definition of that name inside the owner's artifact. */
 function toolJobFactoryType(files: ReadonlyMap<string, string>, ownerFile: string, reference: string): { file: string; name: string } | undefined {
@@ -368,86 +370,26 @@ export function toolJobReservedSpecs(source: string): ToolJobReservedSpec[] {
   return specs;
 }
 
-export function toolJobFrameworkReservedRoutesExact(source: string): boolean {
-  const start = source.lastIndexOf("async fn dispatch_action");
-  const open = start < 0 ? -1 : source.indexOf("{", start);
-  const block = open < 0 ? undefined : toolJobRustBlock(source, open);
-  const macroIds = TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter((id) => id !== "configuration-binary");
-  const specs = toolJobReservedSpecs(source).filter((spec) => macroIds.includes(spec.id as (typeof macroIds)[number]));
-  const ids = new Set(specs.map((spec) => spec.id));
-  const uniqueJobs = new Set(specs.map((spec) => spec.job));
-  const uniqueFactories = new Set(specs.map((spec) => spec.factory));
-  if (!block || specs.length !== macroIds.length || ids.size !== macroIds.length || uniqueJobs.size !== macroIds.length || uniqueFactories.size !== macroIds.length || macroIds.some((id) => !ids.has(id))) return false;
-  if (specs.some((spec) => spec.lanes.join("\0") !== (["cut", "paste", "import-media"].includes(spec.id) ? ["Artifact", "Child"] : ["HostOnly"]).join("\0"))) return false;
-  const reservedStart = source.lastIndexOf("async fn dispatch_framework_reserved_action");
-  const reservedOpen = reservedStart < 0 ? -1 : source.indexOf("{", reservedStart);
-  const reserved = reservedOpen < 0 ? undefined : toolJobRustBlock(source, reservedOpen);
-  const runnerStart = source.lastIndexOf("async fn run_framework_reserved_job");
-  const runnerOpen = runnerStart < 0 ? -1 : source.indexOf("{", runnerStart);
-  const runner = runnerOpen < 0 ? undefined : toolJobRustBlock(source, runnerOpen);
-  if (!reserved || !runner) return false;
-  const noDirectBranches = !block.body.includes("else if HISTORY_ACTION_IDS.contains(&action)") && !block.body.includes("else if CLIPBOARD_ACTION_IDS.contains(&action)") && !block.body.includes("self.store.dispatch(command)");
-  const exactGuard = block.body.includes("return self.dispatch_framework_reserved_action(action, args, meta).await");
-  const exactRoutes = specs.every(
-    (spec) => source.includes(`registry.register(${spec.factory}::<A>::new(&controller_id))`) && reserved.body.includes(`${spec.job}::new(`),
-  );
-  const configurationExact =
-    source.includes("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for FrameworkConfigurationBinaryJob<A>") &&
-    source.includes("registry.register(FrameworkConfigurationBinaryJobFactory::<A>::new(&controller_id))") &&
-    source.includes('const TOOL_IDS: &\'static [&\'static str] = &["configuration-binary"]') &&
-    source.includes('run_framework_reserved_job("configuration-binary"') &&
-    source.includes("FrameworkConfigurationBinaryStage::Envelope") &&
-    source.includes("FrameworkConfigurationBinaryStage::Decode") &&
-    source.includes("FrameworkConfigurationBinaryStage::Complete");
-  const pluginSeamExact =
-    source.includes("fn register_tool_job_factories(_registry: &mut ArtifactToolFactoryRegistry<'_, Self>)") &&
-    source.includes("fn build_reserved_tool_job(_request: ArtifactReservedToolJobRequest<Self>)") &&
-    source.includes("A::register_tool_job_factories(&mut app_tool_registry)") &&
-    source.includes("A::build_reserved_tool_job(request)") &&
-    source.includes("registry.register(FrameworkCopyJobFactory::<A>::new(&controller_id))") &&
-    source.includes("registry.register(FrameworkCutJobFactory::<A>::new(&controller_id))") &&
-    source.includes("registry.register(FrameworkPasteJobFactory::<A>::new(&controller_id))") &&
-    !source.includes("registry.register(FrameworkImportMediaJobFactory::<A>::new(&controller_id))");
-  const routeStateMachines = !/impl\s+FrameworkReservedCursor\s*\{[\s\S]*?fn\s+step\s*\(/.test(source) && source.includes('cx.set_stage(concat!("framework-reserved-", $route, "-envelope"))');
-  const exactRunner =
-    runner.body.includes("admit_exact_wire") &&
-    runner.body.includes("proof.admits::<A>") &&
-    ((runner.body.includes("WorkerJobSession::new") && runner.body.includes("session.step(&pool")) ||
-      (runner.body.includes("MountedWorkerJobSession::try_new") && runner.body.includes("session.pump_one(&pool") && runner.body.includes("session.close_step("))) &&
-    runner.body.includes("CheckpointReady(checkpoint)") &&
-    runner.body.includes("candidate.output.len() > proof.contract().max_output_bytes");
-  const commitPermit = source.includes("struct FrameworkReservedCommitPermit") && source.includes("validate_framework_reserved_commit(action, &permit).await?") && source.indexOf("permit.finish();", reservedStart) > source.indexOf("let result = if HISTORY_ACTION_IDS", reservedStart);
-  const importStart = source.lastIndexOf("async fn dispatch_import_media");
-  const importOpen = importStart < 0 ? -1 : source.indexOf("{", importStart);
-  const importBlock = importOpen < 0 ? undefined : toolJobRustBlock(source, importOpen);
-  const configStart = source.lastIndexOf("async fn dispatch_config_command_inner");
-  const configOpen = configStart < 0 ? -1 : source.indexOf("{", configStart);
-  const configBlock = configOpen < 0 ? undefined : toolJobRustBlock(source, configOpen);
-  const binaryFailClosed =
-    !!importBlock &&
-    !!configBlock &&
-    importBlock.body.includes("build_artifact_reserved_media_job") &&
-    importBlock.body.includes('run_framework_reserved_job("import-media"') &&
-    !importBlock.body.includes("A::import_media(") &&
-    configBlock.body.includes("FrameworkConfigurationBinaryJob::<A>") &&
-    configBlock.body.includes('run_framework_reserved_job("configuration-binary"') &&
-    !configBlock.body.includes("decode_op(") &&
-    source.includes("ArtifactCommand<A::ConfigMutation> as ::protocol::OpBinary>::decode_op(&self.raw)");
-  const boundedPreparationAndHeldCommit =
-    source.includes("FrameworkReservedStage::Admitted") &&
-    source.includes("FrameworkReservedStage::Cursor") &&
-    source.includes("FrameworkReservedStage::Retiring") &&
-    reserved.body.includes("framework_reserved_work_items(action, args).await?") &&
-    reserved.body.includes("validate_framework_reserved_commit(action, &permit).await?") &&
-    reserved.body.includes("permit.finish()") &&
-    source.includes("if permit.is_cancelled().await") &&
-    !reserved.body.includes("dispatch_history_action(") &&
-    !reserved.body.includes("dispatch_clipboard_action(") &&
-    !importBlock?.body.includes("serde_json::to_vec(&(port, media))") &&
-    !importBlock?.body.includes("media.clone()") &&
-    source.includes("framework reserved mounted worker transition was rejected") &&
-    source.includes("commit_framework_shared_host_route") &&
-    source.includes("self.validate_framework_reserved_commit(action, permit).await?") &&
-    source.includes("framework route '{verb}' completed against a stale revision or generation");
-  return block.body.includes("interactive-job.unknown-key") && noDirectBranches && exactGuard && exactRoutes && configurationExact && pluginSeamExact && routeStateMachines && exactRunner && commitPermit && binaryFailClosed && boundedPreparationAndHeldCommit;
+export function toolJobFrameworkReservedRoutesExact(raw: string): boolean {
+ const source=toolJobProductionSource(raw),compact=(value:string)=>value.replace(/\s+/g,"");
+ const body=(name:string):string|undefined=>{
+  const at=source.lastIndexOf("fn "+name);return at<0?undefined:toolJobRustBlock(source,source.indexOf("{",at))?.body;
+ };
+ const dispatch=body("dispatch_action"),reserved=body("dispatch_framework_reserved_action");
+ const imported=body("dispatch_import_media"),configuration=body("dispatch_config_command_inner");
+ if(!dispatch||!reserved||!imported||!configuration||!toolJobOriginalReservedHostExact(source))return false;
+ const macroIds=TOOL_JOB_FRAMEWORK_RESERVED_IDS.filter(id=>id!=="configuration-binary");
+ const specs=toolJobReservedSpecs(source).filter(spec=>macroIds.includes(spec.id as (typeof macroIds)[number]));
+ if(specs.length!==macroIds.length||new Set(specs.map(spec=>spec.id)).size!==macroIds.length||new Set(specs.map(spec=>spec.job)).size!==macroIds.length||new Set(specs.map(spec=>spec.factory)).size!==macroIds.length||macroIds.some(id=>!specs.some(spec=>spec.id===id)))return false;
+ if(specs.some(spec=>spec.lanes.join("\0")!==(["cut","paste","import-media"].includes(spec.id)?["Artifact","Child"]:["HostOnly"]).join("\0")))return false;
+ const registration=specs.every(spec=>source.includes("registry.register("+spec.factory+"::<A>::new(&controller_id))")&&(spec.id==="import-media"||source.includes(spec.job+"::new(")));
+ const entry=compact(dispatch),route=compact(reserved),media=compact(imported),config=compact(configuration);
+ const originalDispatch=entry.includes("returnself.dispatch_framework_reserved_action(action,args,meta,cx).await")&&dispatch.includes("interactive-job.unknown-key")&&!dispatch.includes("self.store.dispatch(command)");
+ const originalRoute=route.includes("admit_reserved_emit_producer(action,meta,cx)")&&route.includes("dispatch_reserved_original_producer(action,&raw,decoded_items,job,")&&route.includes("admit_framework_reserved_spawn(action,&raw,decoded_items,meta,cx)")&&route.includes("pending_reserved.insert_admitted(");
+ const originalImport=media.includes("pending_media_import_permit.take()")&&media.includes("(source.0,source.1)!=(cx.operation(),cx.generation())")&&media.includes("build_artifact_reserved_media_job(port,media,meta)")&&media.includes('dispatch_reserved_original_producer("import-media",&raw,1,job,completion,meta,Some(admission),authority,cx)')&&!media.includes("serde_json::to_vec")&&!media.includes("A::import_media(");
+ const originalConfiguration=config.includes("pending_configuration_source.is_some_and(|source|!source.matches(cx))")&&config.includes("pending_configuration_worker.as_mut().unwrap().advance(cx,permit.lease.cancel_token())")&&config.includes("worker.terminal_is_empty()")&&config.includes("semio_framework_job::validate_commit(&operation,revision,")&&config.includes("ConfigurationWorker::new(")&&config.includes("self.mounted_policy.preparation,self.mounted_policy.close,cx)")&&!config.includes("decode_op(");
+ const registeredConfiguration=source.includes("registry.register(FrameworkConfigurationBinaryJobFactory::<A>::new(&controller_id))")&&source.includes("FrameworkConfigurationBinaryStage::Envelope")&&source.includes("FrameworkConfigurationBinaryStage::Decode")&&source.includes("FrameworkConfigurationBinaryStage::Complete");
+ const appBuilders=source.includes("A::register_tool_job_factories(&mut app_tool_registry)")&&source.includes("A::build_reserved_tool_job(request)");
+ const staged=source.includes("FrameworkReservedStage::Admitted")&&source.includes("FrameworkReservedStage::Cursor")&&source.includes("FrameworkReservedStage::Retiring");
+ return registration&&originalDispatch&&originalRoute&&originalImport&&originalConfiguration&&registeredConfiguration&&appBuilders&&staged;
 }

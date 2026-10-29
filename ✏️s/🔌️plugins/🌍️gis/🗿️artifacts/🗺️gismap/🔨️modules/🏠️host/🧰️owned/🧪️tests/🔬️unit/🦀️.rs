@@ -3,11 +3,9 @@ use crate::{GisMapSnapshot, MapFeature};
 use semio_framework_value::{retained_clone::RetainedCloneGrant, retained_clone::RetainedCloneProgress, retained_clone::RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
 #[allow(unused_imports)]
-use semio_framework_job_publication::{RetainedJobPublication, JobPublicationKind};
 #[allow(unused_imports)]
 use protocol::{Mutation, OpBinary};
 #[allow(unused_imports)]
-use initialization_authority::*;
 use crate::host::owned::*;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data, set_position_property, remove_position_property, set_route_property, remove_route_property, set_region_property, remove_region_property};
 use crate::standards::v1::subsets::any::io::text::snapshot::{default_document};
@@ -61,9 +59,15 @@ async fn gis_map_document_text_round_trips_through_store() {
     close_gis_map_candidate(store);
 }
 
+type GisMapStoreInitializationAuthority = store::ArtifactStoreReplayInitializer<GisMapSnapshot, GisMapMutation, store::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>;
+
+fn gis_map_initializer(envelope: store::os_store::store_schema::ArtifactEnvelope<GisMapSnapshot, GisMapMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> GisMapStoreInitializationAuthority {
+    GisMapStoreInitializationAuthority::new(envelope, GIS_MAP_SCHEMA, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+}
+
 fn empty_gis_map_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> GisMapStoreInitializationAuthority {
     let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-retained-load", empty_gis_map_snapshot(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
-    GisMapStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+    gis_map_initializer(envelope, operation, generation)
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -94,14 +98,17 @@ fn drive_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority,
 
 fn close_gis_map_initializer(authority: &mut GisMapStoreInitializationAuthority) {
     use semio_framework_plugin::ArtifactStoreInitializationAuthority;
+    let cancel = semio_framework_job::root_cancel_token();
+    let mut preview_sequence = 0;
     for _ in 0..100_000 {
         if authority.terminal_is_empty() {
             return;
         }
         authority.begin_close();
         let grant = grant_for(authority.retirement_demands(GIS_MAP_OWNED_FIELD_BYTES).expect("GIS initializer close quote"));
-        let step = authority.close_step(grant).expect("GIS initializer close step");
-        assert!(step.progress().fits(grant));
+        let mut retained = semio_framework_job::RetainedCloneProgress::default();
+        let mut context = semio_framework_job::StepContext::new(semio_framework_job::OperationId(0), semio_framework_job::Generation(0), semio_framework_job::StepBudget::new(1, u64::MAX, grant), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut retained);
+        authority.close_step(&mut context).expect("GIS initializer close step");
     }
     panic!("GIS initializer did not reach terminal-empty close")
 }
@@ -232,7 +239,7 @@ fn close_candidate_store(store: store::ArtifactStore<GisMapSnapshot, GisMapMutat
     close_gis_map_candidate(store);
 }
 
-/// 🧾️ LAW: the candidate this crate's OWN store-initialization authority hands the replacement pump
+/// 🧾️ LAW: the candidate the framework-default store initializer hands the replacement pump
 /// must project into the bounded child authority the pump demands, and no candidate is EVER exposed
 /// before the initializer is terminal.
 ///
@@ -244,9 +251,8 @@ fn close_candidate_store(store: store::ArtifactStore<GisMapSnapshot, GisMapMutat
 /// reports (ticket 26/09/19). The sibling law
 /// `every_gis_map_parent_snapshot_projects_its_canonical_child_handles` already pins every snapshot
 /// this crate can CONSTRUCT; this one pins the object the pump actually holds — the candidate the
-/// initializer builds field-by-field out of `GisMapSnapshotCloneAuthority`, whose working value
-/// starts as `empty_child()` placeholders (all five handle fields empty, exactly the shape
-/// `ChildRestoreProjection`'s visitor rejects as `InvalidReference`). If a candidate ever escapes
+/// initializer builds, whose working value could start as `empty_child()` placeholders (all five handle
+/// fields empty, exactly the shape `ChildRestoreProjection`'s visitor rejects as `InvalidReference`). If a candidate ever escapes
 /// mid-clone, THIS is the law that names it instead of the pump's erased string.
 #[semio_framework_async_macros::async_test]
 async fn the_initialization_candidate_projects_its_canonical_child_handles() {
@@ -257,7 +263,7 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
         let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let operation = semio_framework_job::OperationId(u64::MAX - 401);
         let generation = semio_framework_job::Generation(61);
-        let mut authority = GisMapStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
+        let mut authority = gis_map_initializer(envelope, operation, generation);
         let cancel = semio_framework_job::CancelToken::root_now();
         let mut preview_sequence = 0;
         let mut complete = false;

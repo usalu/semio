@@ -1,0 +1,17 @@
+semio-s-artifact-gis-gismap-config
+semio-s-artifact-gis-gismap-gis2d
+semio-s-artifact-gis-gismap-gis2d-unit-tests
+semio-s-artifact-gis-gismap-terminology-tests
+semio-s-artifact-gis-gismap-windows
+semio-s-artifact-gis-gismap-gismap
+semio-s-artifact-gis-gismap-demo-asset
+semio-s-artifact-gis-gismap-inferences
+semio-s-artifact-gis-gismap-tests
+semio-s-artifact-gis-gismap-schema
+semio-s-artifact-gis-gismap-snapshot
+semio-s-artifact-gis-gismap-mutations
+semio-s-artifact-gis-gismap-mut-family
+semio-s-artifact-gis-gismap-mut-any
+semio-s-artifact-gis-gismap-mcp
+semio-s-artifact-gis-gismap
+semio-s-artifact-gis-gismap-tile-coordinates

@@ -41,6 +41,7 @@ semio-s-artifact-stdio-contract = { workspace = true }
 semio-s-artifact-stdio-semio-base = { workspace = true }
 semio-s-artifact-stdio-semio-base-examples = { workspace = true }
 semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-framework-dsl-record-derive = { workspace = true }
 
 [dev-dependencies]
 semio-framework-async-macros = { workspace = true }

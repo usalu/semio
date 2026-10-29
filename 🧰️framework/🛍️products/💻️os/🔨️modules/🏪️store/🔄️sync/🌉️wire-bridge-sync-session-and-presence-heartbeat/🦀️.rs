@@ -126,8 +126,8 @@ pub async fn next_timestamp(seed: u64, counter: &mut u64) -> semio_framework_os_
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    P: pack::snapshot::ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub store: ArtifactStore<P, Mutation>,
     pub cmd_tx: Option<ArtifactMailboxSender>,
@@ -137,8 +137,8 @@ where
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + pack::snapshot::ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + semio_framework_os_spr::OpText + Send + 'static,
+    P: pack::snapshot::ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_os_spr::StoreState,
+    Mutation: semio_framework_os_spr::StoreMutationFor<P>,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: ArtifactSyncStatus::default() }

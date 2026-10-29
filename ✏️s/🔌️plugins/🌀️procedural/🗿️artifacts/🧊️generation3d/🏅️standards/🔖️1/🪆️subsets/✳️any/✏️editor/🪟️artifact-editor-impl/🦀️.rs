@@ -56,13 +56,9 @@ impl ArtifactEditor for Generation3dPlayApp {
         Some(semio_framework_plugin::bounded_transient_root_retirement_factory::<Self::Transient>())
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_s_artifact_procedural_3d_initialization::generation3d_document_store_initialization_job(envelope, operation, generation, actor))
+    /// 🎟️ Admits the lease that [`Self::validate_document_store_publication`] consumes when the framework-default initializer's replacement commits.
+    fn admit_document_store_publication_authority(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) {
+        let _ = semio_s_artifact_procedural_3d_host::generation3d_admit_app_publication_authority(operation, generation);
     }
 
     fn validate_document_store_publication(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, live_generation: semio_framework_job::Generation) -> Result<(), Fault> {
@@ -189,8 +185,8 @@ impl ArtifactEditor for Generation3dPlayApp {
         Some(semio_s_artifact_procedural_3d_editor_config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->Generation3dSnapshot>{Some(||{
-        semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot()
+    fn reference_birth()->Option<fn()->Result<Generation3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

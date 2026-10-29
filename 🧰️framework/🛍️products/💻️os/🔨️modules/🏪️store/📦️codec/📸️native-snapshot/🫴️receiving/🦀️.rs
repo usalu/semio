@@ -95,7 +95,7 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
 }
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> Drop for OriginalSnapshotRecordReceiving<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original snapshot receiver abandoned paid source or partial typed owners")}}
 
-impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::RetireOwned for OriginalSnapshotRecordReceiving<T>{
+impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::retirement::RetireOwned for OriginalSnapshotRecordReceiving<T>{
  fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{self.closing=true;Box::new(self)}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
  fn controlled_retirement_supported()->bool{true}

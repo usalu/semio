@@ -1,0 +1,190 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "name": "queue-pipeline",
+      "owner": "async fn dispatch_typed_command_inner(",
+      "before": "require_complete_tool_operation_pipeline",
+      "after": "unchecked_pipeline",
+      "gate": "retainedQueue",
+      "wrapper": null
+    },
+    {
+      "name": "queue-capacity",
+      "owner": "async fn dispatch_typed_command_inner(",
+      "before": "admit_typed_operation_slot",
+      "after": "unchecked_slot",
+      "gate": "retainedQueue",
+      "wrapper": null
+    },
+    {
+      "name": "reserved-root",
+      "owner": "async fn start_typed_command_operation(",
+      "before": "can_insert(operation_id.0)",
+      "after": "can_insert(0)",
+      "gate": "capturedRoots",
+      "wrapper": null
+    },
+    {
+      "name": "registered-producer",
+      "owner": "async fn start_typed_command_operation(",
+      "before": "QualifiedToolProof::AppOwned(_)",
+      "after": "QualifiedToolProof::Unchecked(_)",
+      "gate": "capturedRoots",
+      "wrapper": null
+    },
+    {
+      "name": "original-request",
+      "owner": "async fn start_typed_command_operation(",
+      "before": "source_binding:",
+      "after": "unchecked_binding:",
+      "gate": "producerRequest",
+      "wrapper": null
+    },
+    {
+      "name": "original-wire",
+      "owner": "async fn start_typed_command_operation(",
+      "before": "input: retained_wire.take()",
+      "after": "input: None",
+      "gate": "producerRequest",
+      "wrapper": null
+    },
+    {
+      "name": "original-caller",
+      "owner": "async fn start_typed_command_operation(",
+      "before": "original_caller.take()",
+      "after": "None",
+      "gate": "sourceAuthority",
+      "wrapper": null
+    },
+    {
+      "name": "decoder-source",
+      "owner": "async fn start_typed_command_operation(",
+      "before": "Some(original_decoder)",
+      "after": "None",
+      "gate": "sourceAuthority",
+      "wrapper": null
+    },
+    {
+      "name": "worker-source",
+      "owner": "pub fn drive_worker_step(",
+      "before": "self.source_identity.matches(cx)",
+      "after": "true",
+      "gate": "producerHandoff",
+      "wrapper": null
+    },
+    {
+      "name": "producer-validation",
+      "owner": "pub fn drive_worker_step(",
+      "before": "self.validate_original_producer_source(cx)?",
+      "after": "()",
+      "gate": "producerHandoff",
+      "wrapper": null
+    },
+    {
+      "name": "registered-builder",
+      "owner": "fn drive_original_producer(",
+      "before": "A::build_tool_job(",
+      "after": "A::unchecked_tool_job(",
+      "gate": "producerHandoff",
+      "wrapper": null
+    },
+    {
+      "name": "retained-job",
+      "owner": "fn drive_original_producer(",
+      "before": "RefusedWorkerSource::pending(",
+      "after": "RefusedWorkerSource::unchecked(",
+      "gate": "producerHandoff",
+      "wrapper": null
+    },
+    {
+      "name": "funded-worker",
+      "owner": "pub fn drive_worker_step(",
+      "before": "cx.with_original_work_loan(",
+      "after": "cx.with_unfunded_loan(",
+      "gate": "singleTurn",
+      "wrapper": null
+    },
+    {
+      "name": "one-worker-turn",
+      "owner": "pub fn drive_worker_step(",
+      "before": "session.pump_one_for_interactive_turn(same)",
+      "after": "session.run_to_terminal(same)",
+      "gate": "singleTurn",
+      "wrapper": null
+    },
+    {
+      "name": "worker-loop",
+      "owner": "pub fn drive_worker_step(",
+      "before": "let step_fuel=",
+      "after": "while true{} let step_fuel=",
+      "gate": "singleTurn",
+      "wrapper": null
+    },
+    {
+      "name": "reconstructed-producer",
+      "owner": "fn drive_original_producer(",
+      "before": "let before=",
+      "after": "let _bad=StepContext::new();let before=",
+      "gate": "producerHandoff",
+      "wrapper": null
+    },
+    {
+      "name": "worker-for-loop",
+      "owner": "pub fn drive_worker_step(",
+      "before": "|same|session.pump_one_for_interactive_turn(same)",
+      "after": "|same|{let mut output=None;for _ in 0..2{output=Some(session.pump_one_for_interactive_turn(same));}output.unwrap()}",
+      "gate": "singleTurn",
+      "wrapper": null
+    },
+    {
+      "name": "worker-for-each",
+      "owner": "pub fn drive_worker_step(",
+      "before": "match cx.with_original_work_loan(",
+      "after": "",
+      "gate": "singleTurn",
+      "wrapper": {
+        "prefix": "{let mut result=None;(0..2).for_each(|_|{result=Some(",
+        "suffix": ");});result.unwrap()}"
+      }
+    },
+    {
+      "name": "worker-map-callback",
+      "owner": "pub fn drive_worker_step(",
+      "before": "match cx.with_original_work_loan(",
+      "after": "",
+      "gate": "singleTurn",
+      "wrapper": {
+        "prefix": "(0..2).map(|_|",
+        "suffix": ").last().unwrap()"
+      }
+    },
+    {
+      "name": "worker-custom-repeat",
+      "owner": "pub fn drive_worker_step(",
+      "before": "match cx.with_original_work_loan(",
+      "after": "",
+      "gate": "singleTurn",
+      "wrapper": {
+        "prefix": "repeat(||",
+        "suffix": ")"
+      }
+    },
+    {
+      "name": "worker-recursive-ufcs",
+      "owner": "pub fn drive_worker_step(",
+      "before": "let grant=cx.retained_grant()",
+      "after": "Self::drive_worker_step(self,cx)?;let grant=cx.retained_grant()",
+      "gate": "singleTurn",
+      "wrapper": null
+    },
+    {
+      "name": "worker-recursive-reference",
+      "owner": "pub fn drive_worker_step(",
+      "before": "let grant=cx.retained_grant()",
+      "after": "let again=Self::drive_worker_step;let _=again(self,cx)?;let grant=cx.retained_grant()",
+      "gate": "singleTurn",
+      "wrapper": null
+    }
+  ]
+}

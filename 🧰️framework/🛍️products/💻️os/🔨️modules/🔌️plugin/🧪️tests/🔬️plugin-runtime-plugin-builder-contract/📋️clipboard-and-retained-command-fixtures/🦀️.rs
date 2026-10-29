@@ -141,7 +141,7 @@ pub struct TestRetainedCommandWork {
         }
 
         fn step(&mut self, input: &semio_framework_plugin_retained_command::ArtifactCommandInputs<'_, TestApp>, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<semio_framework_plugin_retained_command::ArtifactCommandWorkStep<TestApp>, semio_framework_job::OriginalTurnFailure> {
-            let semio_framework_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
+            let semio_framework_plugin_retained_command::ArtifactCommandInputs { snapshot_owner: _, snapshot_read: _, command: _command, snapshot: _snapshot, config: _config, history: _history, interaction: _interaction, hover: _hover, context: _context, operation: _operation } = *input;
             TEST_RETAINED_COMMAND_STEP_CALLS.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
             if self.cursor < 2 {
                 self.cursor += 1;
@@ -342,7 +342,7 @@ pub fn test_prepared_operation_wire_source(operation: &TestMutation) -> Option<s
 
     #[doc(hidden)]
 pub fn test_document_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation>> {
-        store::operation_wire_preparation_factory(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>(), test_prepared_operation_wire_source, |operation| {
+        store::operation_wire_preparation_factory(store::cold_mutation_apply_preparation_factory::<TestSnapshot, TestMutation>(), test_prepared_operation_wire_source, |operation| {
             let semantics = protocol::SemanticMutation::semantics(operation);
             Some((semantics.entity, semantics.kind))
         })

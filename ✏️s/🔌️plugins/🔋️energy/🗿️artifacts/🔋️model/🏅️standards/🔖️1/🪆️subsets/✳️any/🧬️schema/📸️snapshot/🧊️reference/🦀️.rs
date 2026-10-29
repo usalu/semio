@@ -112,9 +112,6 @@ impl FromValue for EnergyModelSnapshot {
 //#endregion 🔖️HandcraftedArtifactCodecs
 
 //#region 🧪️Tests
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️round-trip/🦀️.rs"]
-mod round_trip_tests;
 
 //#endregion 🧪️Tests
 
@@ -408,9 +405,6 @@ pub fn energy_snapshot_with_links(model: &Model, links: &EnergyModelLinkSlots) -
 }
 //#endregion ♻️WholeDocumentLoad
 
-#[cfg(test)]
-#[path = "../🧪️tests/🔬️composition/🦀️.rs"]
-mod composition_tests;
 
 //#region 🔖️ArtifactKind
 /// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.model`).

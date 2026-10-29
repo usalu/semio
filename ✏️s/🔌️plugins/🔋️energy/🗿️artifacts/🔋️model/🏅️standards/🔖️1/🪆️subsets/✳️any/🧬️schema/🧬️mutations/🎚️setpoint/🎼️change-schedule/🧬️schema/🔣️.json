@@ -121,7 +121,7 @@
     "semantics": {
       "verb": "change",
       "entity": "schedule-reference",
-      "kind": "change-schedule-id",
+      "kind": "change-setpoint-manager-schedule",
       "record": "ChangedOptionalSchedule"
     },
     "diagnostics": {

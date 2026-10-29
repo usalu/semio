@@ -133,7 +133,7 @@ pub fn required_docx_bool_argument(args: Option<&semio_framework_value::DslValue
     }
 }
 
-pub(crate) const DOCX_TEXT_WORK_PAGE_BYTES: usize = 4_096;
+pub const DOCX_TEXT_WORK_PAGE_BYTES: usize = 4_096;
 
 struct DocxSetPageWork {
     tool_id: &'static str,
@@ -243,13 +243,13 @@ impl ArtifactCommandWork<EditorApp<DocxEditor>> for DocxSetPageWork {
 }
 
 /// 📏️ The copy and capacity quote of the address strings one formatting mutation owns.
-pub(crate) fn docx_address_demand(address: &DocxXmlAddress) -> semio_framework_value::RetirementDemand {
+pub fn docx_address_demand(address: &DocxXmlAddress) -> semio_framework_value::RetirementDemand {
     let bytes = address.part_path.len().saturating_add(address.expected_name.len()).saturating_add(address.revision.len()).saturating_add(address.node_path.len().saturating_mul(size_of::<usize>()));
     semio_framework_value::RetirementDemand { copy_bytes: bytes, capacity_bytes: bytes.saturating_add(size_of::<DocxMutation>()), release_bytes: 0, depth: 1 }
 }
 
 /// 📏️ The quote of one set-page turn: one admitted text page plus the address and mutation owners.
-pub(crate) fn docx_set_page_demand(address: &DocxXmlAddress, text: &str) -> semio_framework_value::RetirementDemand {
+pub fn docx_set_page_demand(address: &DocxXmlAddress, text: &str) -> semio_framework_value::RetirementDemand {
     let mut demand = docx_address_demand(address);
     let page = text.len().min(DOCX_TEXT_WORK_PAGE_BYTES);
     demand.copy_bytes = demand.copy_bytes.max(page);
@@ -269,6 +269,7 @@ fn docx_set_page_work(tool_id: &'static str) -> Box<dyn ArtifactCommandWork<Edit
     Box::new(DocxSetPageWork { tool_id, ..Default::default() })
 }
 
+#[macro_export]
 macro_rules! canonical_docx_set_page_work {
     ($work:ident, $factory:ident, $editor:ty, $page_command:path, $formatting_command:path) => {
         struct $work {
@@ -300,12 +301,12 @@ macro_rules! canonical_docx_set_page_work {
                 match command {
                     semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($page_command { address, text }) => {
                         let address_bytes = address.part_path.len().checked_add(address.expected_name.len())?.checked_add(address.revision.len())?.checked_add(address.node_path.len().checked_mul(std::mem::size_of::<usize>())?)?;
-                        (address_bytes <= crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES && text.len() <= semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES)
-                            .then_some(text.len().div_ceil(crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES).saturating_add(1))
+                        (address_bytes <= $crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES && text.len() <= semio_s_artifact_stdio_contract::editing::SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES)
+                            .then_some(text.len().div_ceil($crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES).saturating_add(1))
                     }
                     semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($formatting_command { address, .. }) => {
                         let address_bytes = address.part_path.len().checked_add(address.expected_name.len())?.checked_add(address.revision.len())?.checked_add(address.node_path.len().checked_mul(std::mem::size_of::<usize>())?)?;
-                        (address_bytes <= crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES).then_some(1)
+                        (address_bytes <= $crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES).then_some(1)
                     }
                     _ => None,
                 }
@@ -313,8 +314,8 @@ macro_rules! canonical_docx_set_page_work {
 
             fn work_demands(&self, input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, semio_framework_plugin::EditorApp<$editor>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
                 match input.command {
-                    semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($page_command { address, text }) => Ok(crate::editor::docx::standards::v_ecma_376::subsets::base::docx_set_page_demand(address, text)),
-                    semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($formatting_command { address, .. }) => Ok(crate::editor::docx::standards::v_ecma_376::subsets::base::docx_address_demand(address)),
+                    semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($page_command { address, text }) => Ok($crate::editor::docx::standards::v_ecma_376::subsets::base::docx_set_page_demand(address, text)),
+                    semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($formatting_command { address, .. }) => Ok($crate::editor::docx::standards::v_ecma_376::subsets::base::docx_address_demand(address)),
                     _ => Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "stdio.docx.command-mismatch")),
                 }
             }
@@ -329,7 +330,7 @@ macro_rules! canonical_docx_set_page_work {
                     return Err(semio_framework_plugin::Fault::from("stdio.docx.set-page.work-closed"));
                 }
                 if let semio_s_artifact_stdio_contract::editing::SnapshotEditingCommand::Native($formatting_command { address, bold, italic, underline }) = input.command {
-                    let mutation = crate::editor::docx::standards::v_ecma_376::subsets::base::build_set_run_formatting_mutation(input.snapshot, address, *bold, *italic, *underline)?;
+                    let mutation = $crate::editor::docx::standards::v_ecma_376::subsets::base::build_set_run_formatting_mutation(input.snapshot, address, *bold, *italic, *underline)?;
                     self.complete = true;
                     return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(semio_framework_plugin::Emit { artifact_mutations: mutation.into_iter().collect(), ..Default::default() }));
                 }
@@ -344,7 +345,7 @@ macro_rules! canonical_docx_set_page_work {
                     self.validated = true;
                 }
                 self.copied_text
-                    .advance(text, crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES)
+                    .advance(text, $crate::editor::docx::standards::v_ecma_376::subsets::base::DOCX_TEXT_WORK_PAGE_BYTES)
                     .map_err(|message| semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.docx.set-page.copy-refused"), message))?;
                 if !self.copied_text.is_complete() {
                     return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Replay { stage: "docx-copy-run-text", preview: br#"{"en":"Preparing paragraph text","de":"Absatztext wird vorbereitet"}"# });
@@ -399,7 +400,6 @@ macro_rules! canonical_docx_set_page_work {
     };
 }
 
-pub(crate) use canonical_docx_set_page_work;
 //#endregion 🔖️Helpers
 
 //#region 🔖️Editor
@@ -478,11 +478,11 @@ impl ArtifactEditor for DocxEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->DocxSnapshot>{Some(||{
-        semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
+    fn reference_birth()->Option<fn()->Result<DocxSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
             body: vec![semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default())],
             styles: Vec::new(),
-        })
+        }))
     })}
 
     /// ✏️ Replaces the addressed paragraph's text after its optimistic revision matches.

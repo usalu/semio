@@ -73,7 +73,9 @@ pub struct RetainedOriginalSlotKey{issuance:u64,generation:u64}
 pub struct RetainedOriginalSlot<T>{original:Option<T>,read:Option<Box<dyn RetainedOriginalReadOwner<T>>>,issuance:u64,generation:u64}
 static ORIGINAL_SLOT_ISSUANCE:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
 impl<T> RetainedOriginalSlot<T>{
- pub fn new(original:T)->Self{Self{original:Some(original),read:None,issuance:ORIGINAL_SLOT_ISSUANCE.fetch_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|issuance|issuance.checked_add(1)).expect("original slot issuance exhausted"),generation:0}}
+ pub fn new(original:T)->Self{let mut slot=Self::vacant();slot.original=Some(original);slot}
+ /// 🪹️ Admits a fresh sealed resident address without inventing a semantic payload.
+ pub fn vacant()->Self{Self{original:None,read:None,issuance:ORIGINAL_SLOT_ISSUANCE.fetch_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|issuance|issuance.checked_add(1)).expect("original slot issuance exhausted"),generation:0}}
  /// 🪟️ Exclusive mutation borrows are available only while the original slot has no immutable source loan.
  pub fn get_mut_unissued(&mut self)->Option<&mut T>{if self.read.is_some(){None}else{self.original.as_mut()}}
  pub fn get(&self)->&T{self.original.as_ref().unwrap_or_else(||self.read.as_ref().expect("original slot retains value or source").get())}
@@ -91,6 +93,10 @@ impl<T> RetainedOriginalSlot<T>{
  pub fn try_into_original(mut self)->Result<T,Self>{if self.read.is_some()||self.original.is_none(){return Err(self);}Ok(self.original.take().unwrap())}
  /// 📏️ Quotes only original field exchange; variable payload allocations keep their native owners.
  pub fn replace_demand()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<T>()+size_of::<Option<T>>()+size_of::<u64>(),depth:1,..Default::default()}}
+ /// 🧮️ Quotes one exclusive ownership transform and its caller-owned result without duplicating a payload.
+ pub fn transform_demand<R>()->RetirementDemand{RetirementDemand{copy_bytes:3*size_of::<T>()+size_of::<Option<T>>()+2*size_of::<R>()+size_of::<u64>(),depth:1,..Default::default()}}
+ /// 🔀️ A pre-admitted infallible move transforms one sealed native row after every immutable reader returns.
+ pub fn transform_original<R>(&mut self,key:RetainedOriginalSlotKey,grant:RetainedCloneGrant,transform:impl FnOnce(Option<T>)->(Option<T>,R))->Result<Option<(R,RetainedCloneProgress)>,ValueError>{self.admit_key(key)?;if self.read.is_some(){return Err(fault("original slot transform requires every reader returned"))}let generation=self.generation.checked_add(1).ok_or_else(||fault("original slot generation exhausted"))?;let demand=Self::transform_demand::<R>();if grant.maximum_items==0||!retained_clone_grant_admits(grant,demand){return Ok(None)}let(next,result)=transform(self.original.take());self.original=next;self.generation=generation;Ok(Some((result,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))}
  /// 🔁️ Exchanges actual native fields after all readers return and every original currency is admitted.
  pub fn replace(&mut self,original:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<(T,RetainedCloneProgress)>,ValueError>{if self.read.is_some(){return Err(fault("original slot mutation requires every reader returned"));}let generation=self.generation.checked_add(1).ok_or_else(||fault("original slot generation exhausted"))?;let d=Self::replace_demand();if !retained_clone_grant_admits(grant,d){return Ok(None);}let next=original.take().ok_or_else(||fault("original slot replacement absent"))?;let previous=self.original.replace(next).expect("owned original slot value");self.generation=generation;Ok(Some((previous,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
  pub fn demands(&self,key:RetainedOriginalSlotKey)->Result<RetirementDemand,ValueError>where T:Send+Sync+'static{self.admit_key(key)?;self.read.as_ref().map_or(Ok(RetainedOriginalRead::<T>::initial_demands()),|read|read.birth_demands())}

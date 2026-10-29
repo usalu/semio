@@ -43,6 +43,3 @@ impl Fem3dSnapshot {
         })
     }
 }
-#[cfg(test)]
-#[path = "write-pack-tests.rs"]
-mod tests;

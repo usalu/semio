@@ -12,8 +12,9 @@ use super::*;
 /// goes through — one implementation, not two (the eventual `world actor-async` runner calls this
 /// SAME function, which is why it is `pub`, not `pub(crate)`).
 ///
-/// Returns whether entries remain queued (the round cap was hit) — folded into `poll`'s
-/// `turn-status::more-work` so a saturated resume queue is never silently dropped.
+/// Returns whether entries remain queued (the round cap was hit) or a `Command` resume was handed to its
+/// instance, which delivers it across the following turns — folded into `poll`'s `turn-status::more-work`
+/// so neither a saturated resume queue nor a queued delivery is ever silently dropped.
 ///
 /// 🚫️async: E5 executor bridge — `plugin_resume_task` stays genuinely `async fn`; see
 /// `poll`'s `plugin_exchange` call for the same safety argument.
@@ -25,9 +26,10 @@ use super::*;
 /// executor may have fresh ready work by the time this returns — folded into `more_work` below
 /// rather than requiring a second `run_until_idle` pass this turn (the next `poll` picks it up).
 pub fn drain_task_resumes<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> bool {
+    let mut delivering = false;
     for _ in 0..max_rounds {
         let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()) else {
-            return false;
+            return delivering;
         };
         if native_close_key(runtime, resume.instance).is_err() {
             TASK_RESUMES.with(|resumes| resumes.borrow_mut().push_admitted(resume));
@@ -38,7 +40,10 @@ pub fn drain_task_resumes<PA: semio_framework_plugin_reactor_app::PluginApp>(run
                 effects.push(shell_fault_effect(resume.instance, &fault));
                 continue;
             }
-            TaskResumeOutcome::Command(bytes) => semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes),
+            TaskResumeOutcome::Command(bytes) => {
+                delivering = true;
+                semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(bytes)
+            }
             TaskResumeOutcome::Emit { artifact_ops, config_ops, draft_ops } => semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Emit { artifact_ops, config_ops, draft_ops },
         };
         let output = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(runtime, resume.instance, &resume.meta, input, identity, cx));
@@ -56,7 +61,7 @@ pub fn drain_task_resumes<PA: semio_framework_plugin_reactor_app::PluginApp>(run
             }
         }
     }
-    !TASK_RESUMES.with(|resumes| resumes.borrow().is_empty())
+    delivering || !TASK_RESUMES.with(|resumes| resumes.borrow().is_empty())
 }
 
 // 🚫️async: E5 executor bridge — `store::pack_rt::decode_wire_value` is genuinely `async fn`

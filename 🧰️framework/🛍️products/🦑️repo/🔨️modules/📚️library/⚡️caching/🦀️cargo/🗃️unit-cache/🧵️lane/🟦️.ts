@@ -85,6 +85,9 @@ export function listLanesV1(root:string,nowMs:number):{id:string;bytes:number;in
   return{id,bytes,incrementalBytes,lastUsedMs,live:laneLiveV1(paths,nowMs)};});
 }
 
+/** 📐️ The logical bytes a lane holds right now, measured with the same bound as the collector's measurement; `0` for a lane that does not exist. */
+export function measureLaneBytesV1(root:string,id:string):number{return treeBytes(lanePathsV1(root,id).base,{files:2_000_000});}
+
 /** 🗑️ Removes a whole lane or only its incremental directories. It takes the lane's own claim first, so it can never race an acquirer, and refuses while the claim is held or a live marker exists; `beforeRemoval` runs for a whole lane under that claim, once the lane is known to be idle and before anything is deleted (the retention of what a holder that is gone left behind). */
 export function removeLaneV1(root:string,id:string,scope:"lane"|"incremental",nowMs:number,beforeRemoval?:(paths:ReturnType<typeof lanePathsV1>)=>void):boolean{
  const paths=lanePathsV1(root,id),claim=tryClaimV1(join(root,layout.locks),"lane-"+id);if(!claim)return false;

@@ -76,7 +76,7 @@ async fn sqlite_snapshot_rewriting_full_child_existing_registry_lifetime(){
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_rewriting_real_command_reads_exact_declared_full_child(){
  let mut app=full_frame_app().await;
- app.0.dispatch_typed(TrinityRewritingCommand::PatchNodes{node_ids:vec!["a".into()],field:"name".into(),value:"edited !@/\0引用😀".into()}, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("admit actual document command");
+ semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &TrinityRewritingCommand::PatchNodes{node_ids:vec!["a".into()],field:"name".into(),value:"edited !@/\0引用😀".into()}, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("admit actual document command");
  artifact_app_laws::settle_registered_typed_operation(&mut app.0, REWRITING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("actual reducer obtains the declared full child without local Any materialization");
  let view=app.test_child_content_view();
  let id=full_frame_contract()["childId"].as_str().expect("declared member key").to_owned();

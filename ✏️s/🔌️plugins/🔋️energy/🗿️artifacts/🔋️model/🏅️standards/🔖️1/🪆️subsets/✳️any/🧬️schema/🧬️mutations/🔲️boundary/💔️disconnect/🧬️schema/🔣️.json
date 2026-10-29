@@ -79,7 +79,7 @@
     "semantics": {
       "verb": "disconnect",
       "entity": "surface-adjacency",
-      "kind": "disconnect",
+      "kind": "disconnect-surfaces",
       "record": "DisconnectedSurfaces"
     },
     "diagnostics": {

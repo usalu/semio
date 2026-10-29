@@ -96,7 +96,7 @@ pub fn fem2d_structure_layers(doc: &Fem2dSnapshot, node_color: &str, line_color:
     let mut layers = Vec::new();
     for node in &doc.nodes {
         let (sx, sy) = screen_2d(node.x, node.y);
-        layers.push(semio_framework_pack_json::json!({ "kind": "circle", "id": format!("node-{}", node.id), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
+        layers.push(semio_framework_pack_json::json!({ "kind": "circle", "id": format!("node-{}", node.id.as_str()), "x": sx - 4.0, "y": sy - 4.0, "width": 8.0, "height": 8.0, "color": node_color }));
     }
     for element in &doc.elements {
         let (start, end) = fem2d_element_endpoints(element);
@@ -279,8 +279,8 @@ pub fn fem2d_deformed_shape_layers(doc: &Fem2dSnapshot, disp_map: &HashMap<Strin
         let (Some(n1), Some(n2)) = (find_node_2d(&doc.nodes, start), find_node_2d(&doc.nodes, end)) else { continue };
         let (x0, y0) = screen_2d(n1.x, n1.y);
         let (x1, y1) = screen_2d(n2.x, n2.y);
-        let d1 = disp_map.get(&n1.id).copied().unwrap_or([0.0; 6]);
-        let d2 = disp_map.get(&n2.id).copied().unwrap_or([0.0; 6]);
+        let d1 = disp_map.get(n1.id.as_str()).copied().unwrap_or([0.0; 6]);
+        let d2 = disp_map.get(n2.id.as_str()).copied().unwrap_or([0.0; 6]);
         let dx0 = d1[Dof::Tx.index()] * deform_scale * SCALE_2D;
         let dy0 = -d1[Dof::Ty.index()] * deform_scale * SCALE_2D;
         let dx1 = d2[Dof::Tx.index()] * deform_scale * SCALE_2D;

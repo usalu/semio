@@ -56,10 +56,7 @@ fn equation_graph_window_config_retained_publications_isolate_and_reload_two_win
                     for row in fixture["cases"].as_array().unwrap() {
                         let context = view.for_window_instance(row["windowId"].as_str().unwrap()).unwrap();
                         let camera: EquationCamera = serde_json::from_value(row["mutation"]["camera"].clone()).map_err(|error| error.to_string())?;
-                        app.dispatch_typed(
-                            EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }),
-                            &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("equation-window-config") },&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx()
-                        )
+                        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut *app, &EquationCommand::NodeGraphViewport(node_graph_viewport::NodeGraphViewport { viewport: semio_framework_os_kernel::Viewport2d { x: camera.x, y: camera.y, zoom: camera.zoom } }), &ActionMeta { view_state: Some(context), ..artifact_app_laws::meta("equation-window-config") }, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), scope.cx())
                             .await
                             .map_err(|error| format!("{error:?}"))?;
                     }

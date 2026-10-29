@@ -6,11 +6,11 @@
 //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
 //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
 
-use semio_framework_plugin_decl_views::media_contract::ARTIFACT_OUTPUT_CHUNK_BYTES;
+use semio_framework_plugin_decl_media::ARTIFACT_OUTPUT_CHUNK_BYTES;
 use semio_framework_plugin_decl_views::AppOperationContext;
 use semio_framework_artifact_reference::ArtifactDialect;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportPoll;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportResult;
+use semio_framework_plugin_decl_media::ArtifactMediaExportPoll;
+use semio_framework_plugin_decl_media::ArtifactMediaExportResult;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobContext;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletion;
 use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
@@ -42,7 +42,7 @@ use semio_framework_plugin_abi::ArtifactComposer;
 use semio_framework_plugin_abi::ArtifactComposition;
 use semio_framework_plugin_abi::ArtifactDecomposer;
 use semio_framework_plugin_decl_surface::ArtifactEditor;
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactOwnedToolJobFactory;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use store::ArtifactStoreInitializationAuthority;
@@ -75,9 +75,9 @@ use semio_framework_plugin_app_builder::App;
 use semio_framework_plugin_decl_app::{ArtifactApp, EphemeralSnapshot};
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_window_kits::AppActionRegistry;
-use semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput;
-use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle;
-use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ArtifactDownloadOutput;
+use semio_framework_plugin_decl_media::ArtifactMediaExportHandle;
+use semio_framework_plugin_decl_media::ArtifactOutputChunks;
 use semio_framework_plugin_decl_views::{InteractionHoverState, NoDraftMutation};
 use semio_framework_plugin_decl_views::history_view::HistoryView;
 use semio_framework_plugin_instance_app::VcsArtifactApp;

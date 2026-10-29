@@ -82,13 +82,15 @@ pub async fn poll<PA: semio_framework_plugin_reactor_app::PluginApp + 'static>(
     cx:&mut semio_framework_job::StepContext<'_>,
 ) -> Result<semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::TurnResult, semio_framework_job::OriginalTurnFailure> {
     turn::note_turn_events(events.len(), wit_events_payload_bytes(&events));
-    let mut kernel_events = Vec::with_capacity(events.len());
+    let mut kernel_event = None;
     for event in events {
-        kernel_events.push(wit_event_to_kernel(event));
+        if kernel_event.replace(wit_event_to_kernel(event)).is_some() {
+            return Err(staging_fault("a reactor turn admits at most one event").into());
+        }
     }
     let kernel_budget = semio_framework::kernel::Budget { retained:wit_retained_input_to_kernel(budget.retained)?, retained_policy:wit_retained_grant_to_kernel(budget.retained_policy)?,work_fuel:budget.work_fuel, fuel: budget.fuel, deadline_us: budget.deadline_us, max_effects: budget.max_effects, max_patch_bytes: budget.max_patch_bytes, max_frames: budget.max_frames };
     let staged = STAGED_PAGES.with(|pages| pages.try_borrow_mut().map(|mut pages| std::mem::take(&mut *pages)).map_err(|_| staging_fault("turn page staging authority busy")))?;
-    turn::poll_kernel_output(runtime, kernel_events, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
+    turn::poll_kernel_output(runtime, &mut kernel_event, staged.command.map(|(cursor, page)| (cursor, *page)), staged.cold_pair.map(|page| *page), kernel_budget, |result| kernel_turn_result_to_wit(result, budget), |_, prepared| prepared, identity,cx).await
 }
 
 /// 🩺️ Bulk bytes a turn's events carry across the component boundary — every `pack`/`list<u8>`
@@ -97,8 +99,8 @@ pub async fn poll<PA: semio_framework_plugin_reactor_app::PluginApp + 'static>(
 /// `eventsBytes=0` genuinely carried no payload. Read by the per-turn guest memory trace.
 fn wit_events_payload_bytes(events: &[semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor::Event]) -> usize {
     use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
-    let completion_bytes = |outcome: &semio_framework_plugin_abi::wasip2::CompletionResult| match outcome {
-        semio_framework_plugin_abi::wasip2::CompletionResult::Ok(pack) | semio_framework_plugin_abi::wasip2::CompletionResult::Fault(pack) => pack.len(),
+    let completion_bytes = |outcome: &wit_events::CompletionResult| match outcome {
+        wit_events::CompletionResult::Ok(pack) | wit_events::CompletionResult::Fault(pack) => pack.len(),
     };
     events
         .iter()
@@ -255,42 +257,42 @@ fn decode_wire_quotas(bytes: &[u8]) -> semio_framework::kernel::QuotaSchema {
 /// 🔀️ WIT `event` → kernel `Event`. Thin field-for-field translation — the WIT side already
 /// mirrors the kernel shape (see `📓️design-abi.md` §2 / `events.wit`'s own doc comments).
 #[doc(hidden)]
-pub fn wit_lifetime_to_kernel(value: semio_framework_plugin_abi::wasip2::Lifetime) -> semio_framework::kernel::ActorInstanceLifetime {
+pub fn wit_lifetime_to_kernel(value: wit_lifetime::Lifetime) -> semio_framework::kernel::ActorInstanceLifetime {
     semio_framework::kernel::ActorInstanceLifetime { activation_generation: value.activation_generation, instance_id: value.instance_id, guest_lifetime: value.guest_lifetime }
 }
 
 #[doc(hidden)]
-pub fn kernel_lifetime_to_wit(value: semio_framework::kernel::ActorInstanceLifetime) -> semio_framework_plugin_abi::wasip2::Lifetime {
-    semio_framework_plugin_abi::wasip2::Lifetime { activation_generation: value.activation_generation, instance_id: value.instance_id, guest_lifetime: value.guest_lifetime }
+pub fn kernel_lifetime_to_wit(value: semio_framework::kernel::ActorInstanceLifetime) -> wit_lifetime::Lifetime {
+    wit_lifetime::Lifetime { activation_generation: value.activation_generation, instance_id: value.instance_id, guest_lifetime: value.guest_lifetime }
 }
 
 #[doc(hidden)]
-pub fn wit_patch_receipt_to_kernel(value: semio_framework_plugin_abi::wasip2::UiPatchReceipt) -> ActorUiPatchReceipt {
+pub fn wit_patch_receipt_to_kernel(value: wit_lifetime::UiPatchReceipt) -> ActorUiPatchReceipt {
     ActorUiPatchReceipt { lifetime: wit_lifetime_to_kernel(value.lifetime), patch_sequence: value.patch_sequence }
 }
 
 #[doc(hidden)]
-pub fn kernel_patch_receipt_to_wit(value: ActorUiPatchReceipt) -> semio_framework_plugin_abi::wasip2::UiPatchReceipt {
-    semio_framework_plugin_abi::wasip2::UiPatchReceipt { lifetime: kernel_lifetime_to_wit(value.lifetime), patch_sequence: value.patch_sequence }
+pub fn kernel_patch_receipt_to_wit(value: ActorUiPatchReceipt) -> wit_lifetime::UiPatchReceipt {
+    wit_lifetime::UiPatchReceipt { lifetime: kernel_lifetime_to_wit(value.lifetime), patch_sequence: value.patch_sequence }
 }
 
 #[doc(hidden)]
-pub fn wit_lifecycle_receipt_to_kernel(value: semio_framework_plugin_abi::wasip2::Receipt) -> ActorInstanceLifecycleReceipt {
+pub fn wit_lifecycle_receipt_to_kernel(value: wit_lifetime::Receipt) -> ActorInstanceLifecycleReceipt {
     use semio_framework::kernel::ActorInstanceLifecycleReceipt as R;
     match value {
-        semio_framework_plugin_abi::wasip2::Receipt::Captured(value) => R::Captured { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence },
-        semio_framework_plugin_abi::wasip2::Receipt::Accepted(value) => R::Accepted { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence, close_generation: value.close_generation },
-        semio_framework_plugin_abi::wasip2::Receipt::Retired(value) => R::Retired { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence, close_generation: value.close_generation },
+        wit_lifetime::Receipt::Captured(value) => R::Captured { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence },
+        wit_lifetime::Receipt::Accepted(value) => R::Accepted { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence, close_generation: value.close_generation },
+        wit_lifetime::Receipt::Retired(value) => R::Retired { lifetime: wit_lifetime_to_kernel(value.lifetime), request_sequence: value.request_sequence, close_generation: value.close_generation },
     }
 }
 
 #[doc(hidden)]
-pub fn kernel_lifecycle_receipt_to_wit(value: ActorInstanceLifecycleReceipt) -> semio_framework_plugin_abi::wasip2::Receipt {
+pub fn kernel_lifecycle_receipt_to_wit(value: ActorInstanceLifecycleReceipt) -> wit_lifetime::Receipt {
     use semio_framework::kernel::ActorInstanceLifecycleReceipt as R;
     match value {
-        R::Captured { lifetime, request_sequence } => semio_framework_plugin_abi::wasip2::Receipt::Captured(semio_framework_plugin_abi::wasip2::CapturedReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence }),
-        R::Accepted { lifetime, request_sequence, close_generation } => semio_framework_plugin_abi::wasip2::Receipt::Accepted(semio_framework_plugin_abi::wasip2::CloseReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence, close_generation }),
-        R::Retired { lifetime, request_sequence, close_generation } => semio_framework_plugin_abi::wasip2::Receipt::Retired(semio_framework_plugin_abi::wasip2::CloseReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence, close_generation }),
+        R::Captured { lifetime, request_sequence } => wit_lifetime::Receipt::Captured(wit_lifetime::CapturedReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence }),
+        R::Accepted { lifetime, request_sequence, close_generation } => wit_lifetime::Receipt::Accepted(wit_lifetime::CloseReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence, close_generation }),
+        R::Retired { lifetime, request_sequence, close_generation } => wit_lifetime::Receipt::Retired(wit_lifetime::CloseReceipt { lifetime: kernel_lifetime_to_wit(lifetime), request_sequence, close_generation }),
     }
 }
 
@@ -337,29 +339,29 @@ fn wit_event_to_kernel(event: semio_framework_plugin_abi::wasip2::exports::semio
 }
 
 /// 🎟️ Preserves broker changes as changes rather than turning them into resource shutdown.
-fn wit_capability_change_to_kernel(change: semio_framework_plugin_abi::wasip2::CapabilityChange) -> semio_framework::kernel::CapabilityChange {
+fn wit_capability_change_to_kernel(change: wit_capabilities::CapabilityChange) -> semio_framework::kernel::CapabilityChange {
     use semio_framework::kernel::{BrokerCapabilityGrant, CapabilityChange, CapabilityId, CapabilityToken};
-    let grant = |value: semio_framework_plugin_abi::wasip2::CapabilityGrant| BrokerCapabilityGrant {
+    let grant = |value: wit_capabilities::CapabilityGrant| BrokerCapabilityGrant {
         id: CapabilityId(value.token.id),
         token: CapabilityToken(u128::from(value.token.token)),
         scope: value.scope,
         expires_ms: value.expires_ms.and_then(|value| u64::try_from(value).ok()),
     };
     match change {
-        semio_framework_plugin_abi::wasip2::CapabilityChange::Granted(value) => {
+        wit_capabilities::CapabilityChange::Granted(value) => {
             let grant = grant(value);
             CapabilityChange::Granted { id: grant.id.clone(), grant }
         }
-        semio_framework_plugin_abi::wasip2::CapabilityChange::Revoked(id) => CapabilityChange::Revoked { id: CapabilityId(id) },
-        semio_framework_plugin_abi::wasip2::CapabilityChange::Narrowed(value) => {
+        wit_capabilities::CapabilityChange::Revoked(id) => CapabilityChange::Revoked { id: CapabilityId(id) },
+        wit_capabilities::CapabilityChange::Narrowed(value) => {
             let grant = grant(value);
             CapabilityChange::Narrowed { id: grant.id.clone(), grant }
         }
     }
 }
 
-fn wit_activation_to_kernel(reason: semio_framework_plugin_abi::wasip2::ActivationEvent) -> semio_framework::kernel::ActivationEvent {
-    use semio_framework_plugin_abi::wasip2::ActivationEvent as W;
+fn wit_activation_to_kernel(reason: wit_events::ActivationEvent) -> semio_framework::kernel::ActivationEvent {
+    use wit_events::ActivationEvent as W;
     match reason {
         W::OnCommand(id) => semio_framework::kernel::ActivationEvent::OnCommand { id },
         W::OnViewVisible(id) => semio_framework::kernel::ActivationEvent::OnViewVisible { id },
@@ -370,16 +372,16 @@ fn wit_activation_to_kernel(reason: semio_framework_plugin_abi::wasip2::Activati
     }
 }
 
-fn wit_completion_to_kernel(result: semio_framework_plugin_abi::wasip2::CompletionResult) -> RequestOutcome {
-    use semio_framework_plugin_abi::wasip2::CompletionResult as W;
+fn wit_completion_to_kernel(result: wit_events::CompletionResult) -> RequestOutcome {
+    use wit_events::CompletionResult as W;
     match result {
         W::Ok(bytes) => RequestOutcome::Ok(bytes),
         W::Fault(bytes) => RequestOutcome::Err(bytes),
     }
 }
 
-fn wit_endpoint_to_kernel(endpoint: semio_framework_plugin_abi::wasip2::MessageEndpoint) -> MessageEndpoint {
-    use semio_framework_plugin_abi::wasip2::MessageEndpoint as W;
+fn wit_endpoint_to_kernel(endpoint: wit_types::MessageEndpoint) -> MessageEndpoint {
+    use wit_types::MessageEndpoint as W;
     match endpoint {
         W::Shell(instance) => MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId(instance.to_string()) },
         W::Backbone(uri) => MessageEndpoint::Backbone { uri },
@@ -442,7 +444,7 @@ fn kernel_ui_patch_to_wit(patch: &UiPatch) -> semio_framework_plugin_abi::wasip2
     use semio_framework_plugin_abi::wasip2::exports::semio::framework::reactor as wit;
     let (instance, surface) = patch.surface.0.split_once(':').unwrap_or(("0", patch.surface.0.as_str()));
     wit::UiPatch {
-        surface: semio_framework_plugin_abi::wasip2::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() },
+        surface: wit_ui::SurfaceRef { instance: instance.parse().unwrap_or(0), surface: surface.to_owned() },
         revision: patch.revision.0,
         base_revision: patch.base_revision.0,
         ops: patch.ops.iter().map(kernel_patch_op_to_wit).collect(),
@@ -478,19 +480,19 @@ pub struct ActivityPatchPayload<'a> {
     pub disabled: bool,
 }
 
-fn kernel_patch_op_to_wit(op: &UiPatchOp) -> semio_framework_plugin_abi::wasip2::PatchOp {
+fn kernel_patch_op_to_wit(op: &UiPatchOp) -> wit_ui::PatchOp {
     match op {
-        UiPatchOp::Upsert(record) => semio_framework_plugin_abi::wasip2::PatchOp::Upsert(semio_framework_plugin_abi::wasip2::PatchUpsert { node: pack_patch_field(&record) }),
-        UiPatchOp::SetComponent { id, component } => semio_framework_plugin_abi::wasip2::PatchOp::SetComponent(semio_framework_plugin_abi::wasip2::PatchSetComponent { node: id.0, component: pack_patch_field(&component) }),
-        UiPatchOp::SetLayout { id, layout } => semio_framework_plugin_abi::wasip2::PatchOp::SetLayout(semio_framework_plugin_abi::wasip2::PatchSetLayout { node: id.0, layout: pack_patch_field(&layout) }),
-        UiPatchOp::SetActivity { id, activity, disabled } => semio_framework_plugin_abi::wasip2::PatchOp::SetActivity(semio_framework_plugin_abi::wasip2::PatchSetActivity { node: id.0, activity: pack_patch_field(&ActivityPatchPayload { activity, disabled: *disabled }) }),
-        UiPatchOp::SetChildren { id, children } => semio_framework_plugin_abi::wasip2::PatchOp::SetChildren(semio_framework_plugin_abi::wasip2::PatchSetChildren { node: id.0, children: children.iter().map(|child| child.0).collect() }),
-        UiPatchOp::SetStyle { id, style } => semio_framework_plugin_abi::wasip2::PatchOp::SetStyle(semio_framework_plugin_abi::wasip2::PatchSetStyle { node: id.0, style: pack_patch_field(&style) }),
-        UiPatchOp::SetAccessibility { id, accessibility } => semio_framework_plugin_abi::wasip2::PatchOp::SetAccessibility(semio_framework_plugin_abi::wasip2::PatchSetAccessibility { node: id.0, accessibility: pack_patch_field(&accessibility) }),
-        UiPatchOp::SetBindings { id, bindings } => semio_framework_plugin_abi::wasip2::PatchOp::SetBindings(semio_framework_plugin_abi::wasip2::PatchSetBindings { node: id.0, bindings: pack_patch_field(&bindings) }),
-        UiPatchOp::SetMenu { id, menu } => semio_framework_plugin_abi::wasip2::PatchOp::SetMenu(semio_framework_plugin_abi::wasip2::PatchSetMenu { node: id.0, menu: pack_patch_field(&menu) }),
-        UiPatchOp::Remove { id } => semio_framework_plugin_abi::wasip2::PatchOp::Remove(id.0),
-        UiPatchOp::SetRoot { id } => semio_framework_plugin_abi::wasip2::PatchOp::SetRoot(id.0),
+        UiPatchOp::Upsert(record) => wit_ui::PatchOp::Upsert(wit_ui::PatchUpsert { node: pack_patch_field(&record) }),
+        UiPatchOp::SetComponent { id, component } => wit_ui::PatchOp::SetComponent(wit_ui::PatchSetComponent { node: id.0, component: pack_patch_field(&component) }),
+        UiPatchOp::SetLayout { id, layout } => wit_ui::PatchOp::SetLayout(wit_ui::PatchSetLayout { node: id.0, layout: pack_patch_field(&layout) }),
+        UiPatchOp::SetActivity { id, activity, disabled } => wit_ui::PatchOp::SetActivity(wit_ui::PatchSetActivity { node: id.0, activity: pack_patch_field(&ActivityPatchPayload { activity, disabled: *disabled }) }),
+        UiPatchOp::SetChildren { id, children } => wit_ui::PatchOp::SetChildren(wit_ui::PatchSetChildren { node: id.0, children: children.iter().map(|child| child.0).collect() }),
+        UiPatchOp::SetStyle { id, style } => wit_ui::PatchOp::SetStyle(wit_ui::PatchSetStyle { node: id.0, style: pack_patch_field(&style) }),
+        UiPatchOp::SetAccessibility { id, accessibility } => wit_ui::PatchOp::SetAccessibility(wit_ui::PatchSetAccessibility { node: id.0, accessibility: pack_patch_field(&accessibility) }),
+        UiPatchOp::SetBindings { id, bindings } => wit_ui::PatchOp::SetBindings(wit_ui::PatchSetBindings { node: id.0, bindings: pack_patch_field(&bindings) }),
+        UiPatchOp::SetMenu { id, menu } => wit_ui::PatchOp::SetMenu(wit_ui::PatchSetMenu { node: id.0, menu: pack_patch_field(&menu) }),
+        UiPatchOp::Remove { id } => wit_ui::PatchOp::Remove(id.0),
+        UiPatchOp::SetRoot { id } => wit_ui::PatchOp::SetRoot(id.0),
     }
 }
 
@@ -511,49 +513,49 @@ fn kernel_effect_to_wit(effect: Effect) -> Result<semio_framework_plugin_abi::wa
         store::pack_rt::encode_wire_value(&value)
     }
     Ok(match effect {
-        Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(semio_framework_plugin_abi::wasip2::OpenWindowEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::OpenWindowParams { kind: kind.0, params: pack(&params) } }),
-        Effect::CloseWindow { window } => wit::Effect::CloseWindow(semio_framework_plugin_abi::wasip2::CloseWindowEffect { window: window.0 as u64 }),
-        Effect::Notify { message } => wit::Effect::Notify(semio_framework_plugin_abi::wasip2::NotifyEffect { message }),
-        Effect::ClipboardWrite { fragment } => wit::Effect::ClipboardWrite(semio_framework_plugin_abi::wasip2::ClipboardWriteEffect { fragment: pack(&fragment) }),
+        Effect::OpenWindow { req, kind, params } => wit::Effect::OpenWindow(wit_effects::OpenWindowEffect { req: req.0, params: wit_effects::OpenWindowParams { kind: kind.0, params: pack(&params) } }),
+        Effect::CloseWindow { window } => wit::Effect::CloseWindow(wit_effects::CloseWindowEffect { window: window.0 as u64 }),
+        Effect::Notify { message } => wit::Effect::Notify(wit_effects::NotifyEffect { message }),
+        Effect::ClipboardWrite { fragment } => wit::Effect::ClipboardWrite(wit_effects::ClipboardWriteEffect { fragment: pack(&fragment) }),
         Effect::RequestSync => wit::Effect::RequestSync,
-        Effect::Navigate { uri } => wit::Effect::Navigate(semio_framework_plugin_abi::wasip2::NavigateEffect { uri }),
-        Effect::LoadDocument { pack: doc_pack, spr } => wit::Effect::LoadDocument(semio_framework_plugin_abi::wasip2::LoadDocumentEffect { doc_pack, spr }),
-        Effect::OpenExternalUrl { url } => wit::Effect::OpenExternalUrl(semio_framework_plugin_abi::wasip2::OpenExternalUrlEffect { url }),
-        Effect::SetPanel { panel_json } => wit::Effect::SetPanel(semio_framework_plugin_abi::wasip2::SetPanelEffect { panel_json }),
-        Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(semio_framework_plugin_abi::wasip2::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
-        Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(semio_framework_plugin_abi::wasip2::IconRenderExportEffect { items: pack(&items) }),
-        Effect::VideoRenderExport { filename, program } => wit::Effect::VideoRenderExport(semio_framework_plugin_abi::wasip2::VideoRenderExportEffect { filename, program: pack(&program) }),
+        Effect::Navigate { uri } => wit::Effect::Navigate(wit_effects::NavigateEffect { uri }),
+        Effect::LoadDocument { pack: doc_pack, spr } => wit::Effect::LoadDocument(wit_effects::LoadDocumentEffect { doc_pack, spr }),
+        Effect::OpenExternalUrl { url } => wit::Effect::OpenExternalUrl(wit_effects::OpenExternalUrlEffect { url }),
+        Effect::SetPanel { panel_json } => wit::Effect::SetPanel(wit_effects::SetPanelEffect { panel_json }),
+        Effect::DownloadMediaExport { filename, mime_type, data, encoding } => wit::Effect::DownloadMediaExport(wit_effects::DownloadMediaExportEffect { filename, mime_type, data, encoding }),
+        Effect::IconRenderExport { items } => wit::Effect::IconRenderExport(wit_effects::IconRenderExportEffect { items: pack(&items) }),
+        Effect::VideoRenderExport { filename, program } => wit::Effect::VideoRenderExport(wit_effects::VideoRenderExportEffect { filename, program: pack(&program) }),
         Effect::RequestFileOpen { req, accept, read_as, import_action, args, multiple } => {
-            wit::Effect::RequestFileOpen(semio_framework_plugin_abi::wasip2::RequestFileOpenEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::RequestFileOpenParams { accept, read_as, multiple, import_action, args: args.map(|value| pack(&value)) } })
+            wit::Effect::RequestFileOpen(wit_effects::RequestFileOpenEffect { req: req.0, params: wit_effects::RequestFileOpenParams { accept, read_as, multiple, import_action, args: args.map(|value| pack(&value)) } })
         }
-        Effect::RequestMediaFrames { req, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => wit::Effect::RequestMediaFrames(semio_framework_plugin_abi::wasip2::RequestMediaFramesEffect {
+        Effect::RequestMediaFrames { req, accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args } => wit::Effect::RequestMediaFrames(wit_effects::RequestMediaFramesEffect {
             req: req.0,
-            params: semio_framework_plugin_abi::wasip2::RequestMediaFramesParams { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args: args.map(|value| pack(&value)) },
+            params: wit_effects::RequestMediaFramesParams { accept, frame_action, done_action, fallback_action, sample_stride, max_frames, max_long_edge_px, fps_hint, payload, args: args.map(|value| pack(&value)) },
         }),
         Effect::SpawnPluginInstance { req, plugin_id, app_id, os_instance_id, label, document_json } => {
-            wit::Effect::SpawnPluginInstance(semio_framework_plugin_abi::wasip2::SpawnPluginInstanceEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::SpawnPluginInstanceParams { plugin_id, app_id, os_instance_id, label, artifact_json: document_json } })
+            wit::Effect::SpawnPluginInstance(wit_effects::SpawnPluginInstanceEffect { req: req.0, params: wit_effects::SpawnPluginInstanceParams { plugin_id, app_id, os_instance_id, label, artifact_json: document_json } })
         }
-        Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => wit::Effect::OpenPluginInstance(semio_framework_plugin_abi::wasip2::OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
-        Effect::SetActiveUtility { window_id, utility_id } => wit::Effect::SetActiveUtility(semio_framework_plugin_abi::wasip2::SetActiveUtilityEffect { window_id, utility_id }),
-        Effect::SetActiveTool { tool_id } => wit::Effect::SetActiveTool(semio_framework_plugin_abi::wasip2::SetActiveToolEffect { tool_id }),
-        Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(semio_framework_plugin_abi::wasip2::OpenDialogEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::OpenDialogParams { dialog_id, args: args.map(|value| pack(&value)) } }),
-        Effect::DispatchAction { req, action, args, delay_ms } => wit::Effect::DispatchAction(semio_framework_plugin_abi::wasip2::DispatchActionEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::DispatchActionParams { action, args: args.map(|value| pack(&value)), delay_ms } }),
-        Effect::ReplayShellCommand { action_id, args } => wit::Effect::ReplayShellCommand(semio_framework_plugin_abi::wasip2::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
+        Effect::OpenPluginInstance { plugin_id, app_id, os_instance_id } => wit::Effect::OpenPluginInstance(wit_effects::OpenPluginInstanceEffect { plugin_id, app_id, os_instance_id }),
+        Effect::SetActiveUtility { window_id, utility_id } => wit::Effect::SetActiveUtility(wit_effects::SetActiveUtilityEffect { window_id, utility_id }),
+        Effect::SetActiveTool { tool_id } => wit::Effect::SetActiveTool(wit_effects::SetActiveToolEffect { tool_id }),
+        Effect::OpenDialog { req, dialog_id, args } => wit::Effect::OpenDialog(wit_effects::OpenDialogEffect { req: req.0, params: wit_effects::OpenDialogParams { dialog_id, args: args.map(|value| pack(&value)) } }),
+        Effect::DispatchAction { req, action, args, delay_ms } => wit::Effect::DispatchAction(wit_effects::DispatchActionEffect { req: req.0, params: wit_effects::DispatchActionParams { action, args: args.map(|value| pack(&value)), delay_ms } }),
+        Effect::ReplayShellCommand { action_id, args } => wit::Effect::ReplayShellCommand(wit_effects::ReplayShellCommandEffect { action_id, args: args.map(|value| pack(&value)) }),
         Effect::InvokeExtension { req, extension_id, capability, request_json, .. } => {
-            wit::Effect::InvokeExtension(semio_framework_plugin_abi::wasip2::InvokeExtensionEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::InvokeExtensionParams { extension_id, capability, payload: request_json.into_bytes() } })
+            wit::Effect::InvokeExtension(wit_effects::InvokeExtensionEffect { req: req.0, params: wit_effects::InvokeExtensionParams { extension_id, capability, payload: request_json.into_bytes() } })
         }
-        Effect::SendMessage { target, payload } => wit::Effect::SendMessage(semio_framework_plugin_abi::wasip2::SendMessageEffect { target: kernel_endpoint_to_wit(target), payload }),
-        Effect::PublishEvent { topic, payload } => wit::Effect::PublishEvent(semio_framework_plugin_abi::wasip2::PublishEventEffect { topic, payload }),
-        Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(semio_framework_plugin_abi::wasip2::BlobWriteEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::BlobWriteParams { media_type: pack(&media_type), bytes } }),
-        Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(semio_framework_plugin_abi::wasip2::BlobLoadEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::BlobLoadParams { hash } }),
-        Effect::HttpRequest { req, method, url, headers, body, stream } => wit::Effect::HttpRequest(semio_framework_plugin_abi::wasip2::HttpRequestEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::HttpParams { method, url, headers, body, streaming: stream } }),
-        Effect::DocumentRead { req, doc, lane } => wit::Effect::ArtifactRead(semio_framework_plugin_abi::wasip2::ArtifactReadEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::ArtifactReadParams { doc: doc.0 as u64, lane } }),
-        Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::ArtifactWrite(semio_framework_plugin_abi::wasip2::ArtifactWriteEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::ArtifactWriteParams { doc: doc.0 as u64, lane, ops } }),
-        Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(semio_framework_plugin_abi::wasip2::LinkResolveEffect { req: req.0, link: link.into_bytes() }),
-        Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(semio_framework_plugin_abi::wasip2::RegistryQueryEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::RegistryQueryParams { kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() } }),
-        Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(semio_framework_plugin_abi::wasip2::IoComposeEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::IoComposeParams { key: key.into_bytes(), sources: pack(&sources) } }),
-        Effect::CacheDerive { req, engine_id, input } => wit::Effect::CacheDerive(semio_framework_plugin_abi::wasip2::CacheDeriveEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::CacheDeriveParams { engine_id, input } }),
-        Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(semio_framework_plugin_abi::wasip2::CacheReadEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::CacheReadParams { engine_id, key: key.into_bytes() } }),
+        Effect::SendMessage { target, payload } => wit::Effect::SendMessage(wit_effects::SendMessageEffect { target: kernel_endpoint_to_wit(target), payload }),
+        Effect::PublishEvent { topic, payload } => wit::Effect::PublishEvent(wit_effects::PublishEventEffect { topic, payload }),
+        Effect::BlobWrite { req, media_type, bytes } => wit::Effect::BlobWrite(wit_effects::BlobWriteEffect { req: req.0, params: wit_effects::BlobWriteParams { media_type: pack(&media_type), bytes } }),
+        Effect::BlobLoad { req, hash } => wit::Effect::BlobLoad(wit_effects::BlobLoadEffect { req: req.0, params: wit_effects::BlobLoadParams { hash } }),
+        Effect::HttpRequest { req, method, url, headers, body, stream } => wit::Effect::HttpRequest(wit_effects::HttpRequestEffect { req: req.0, params: wit_effects::HttpParams { method, url, headers, body, streaming: stream } }),
+        Effect::DocumentRead { req, doc, lane } => wit::Effect::ArtifactRead(wit_effects::ArtifactReadEffect { req: req.0, params: wit_effects::ArtifactReadParams { doc: doc.0 as u64, lane } }),
+        Effect::DocumentWrite { req, doc, lane, ops } => wit::Effect::ArtifactWrite(wit_effects::ArtifactWriteEffect { req: req.0, params: wit_effects::ArtifactWriteParams { doc: doc.0 as u64, lane, ops } }),
+        Effect::LinkResolve { req, link } => wit::Effect::LinkResolve(wit_effects::LinkResolveEffect { req: req.0, link: link.into_bytes() }),
+        Effect::RegistryQuery { req, kind, filter } => wit::Effect::RegistryQuery(wit_effects::RegistryQueryEffect { req: req.0, params: wit_effects::RegistryQueryParams { kind, filter: filter.map(|value| pack(&value)).unwrap_or_default() } }),
+        Effect::IoCompose { req, key, sources } => wit::Effect::IoCompose(wit_effects::IoComposeEffect { req: req.0, params: wit_effects::IoComposeParams { key: key.into_bytes(), sources: pack(&sources) } }),
+        Effect::CacheDerive { req, engine_id, input } => wit::Effect::CacheDerive(wit_effects::CacheDeriveEffect { req: req.0, params: wit_effects::CacheDeriveParams { engine_id, input } }),
+        Effect::CacheRead { req, engine_id, key } => wit::Effect::CacheRead(wit_effects::CacheReadEffect { req: req.0, params: wit_effects::CacheReadParams { engine_id, key: key.into_bytes() } }),
         Effect::SetTimer { id, after_ms, repeat } => {
             if !ARMED_TIMERS.with(|timers| timers.borrow().contains(id)) {
                 return Err(semio_framework::Fault::new(
@@ -562,48 +564,48 @@ fn kernel_effect_to_wit(effect: Effect) -> Result<semio_framework_plugin_abi::wa
                     "timer effect reached the WIT boundary without exact pre-admitted instance ownership",
                 ));
             }
-            wit::Effect::SetTimer(semio_framework_plugin_abi::wasip2::SetTimerEffect { id, after_ms: after_ms as u32, repeat })
+            wit::Effect::SetTimer(wit_effects::SetTimerEffect { id, after_ms: after_ms as u32, repeat })
         }
-        Effect::SpawnJob { job, kind, input, placement } => wit::Effect::SpawnJob(semio_framework_plugin_abi::wasip2::SpawnJobEffect { job, kind, input, placement: kernel_placement_to_wit(placement) }),
-        Effect::CancelJob { job } => wit::Effect::CancelJob(semio_framework_plugin_abi::wasip2::CancelJobEffect { job }),
-        Effect::Respond { req, result } => wit::Effect::Respond(semio_framework_plugin_abi::wasip2::RespondEffect { req: req.0, outcome: kernel_outcome_to_wit_respond(result) }),
-        Effect::StorageRead { req, key } => wit::Effect::StorageRead(semio_framework_plugin_abi::wasip2::StorageReadEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::StorageReadParams { key } }),
-        Effect::StorageWrite { req, key, bytes } => wit::Effect::StorageWrite(semio_framework_plugin_abi::wasip2::StorageWriteEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::StorageWriteParams { key, value: bytes } }),
-        Effect::StorageDelete { req, key } => wit::Effect::StorageDelete(semio_framework_plugin_abi::wasip2::StorageDeleteEffect { req: req.0, params: semio_framework_plugin_abi::wasip2::StorageDeleteParams { key } }),
-        Effect::RequestCapability { req, capability } => wit::Effect::RequestCapability(semio_framework_plugin_abi::wasip2::RequestCapabilityEffect {
+        Effect::SpawnJob { job, kind, input, placement } => wit::Effect::SpawnJob(wit_effects::SpawnJobEffect { job, kind, input, placement: kernel_placement_to_wit(placement) }),
+        Effect::CancelJob { job } => wit::Effect::CancelJob(wit_effects::CancelJobEffect { job }),
+        Effect::Respond { req, result } => wit::Effect::Respond(wit_effects::RespondEffect { req: req.0, outcome: kernel_outcome_to_wit_respond(result) }),
+        Effect::StorageRead { req, key } => wit::Effect::StorageRead(wit_effects::StorageReadEffect { req: req.0, params: wit_effects::StorageReadParams { key } }),
+        Effect::StorageWrite { req, key, bytes } => wit::Effect::StorageWrite(wit_effects::StorageWriteEffect { req: req.0, params: wit_effects::StorageWriteParams { key, value: bytes } }),
+        Effect::StorageDelete { req, key } => wit::Effect::StorageDelete(wit_effects::StorageDeleteEffect { req: req.0, params: wit_effects::StorageDeleteParams { key } }),
+        Effect::RequestCapability { req, capability } => wit::Effect::RequestCapability(wit_effects::RequestCapabilityEffect {
             req: req.0,
-            params: semio_framework_plugin_abi::wasip2::RequestCapabilityParams { id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional },
+            params: wit_effects::RequestCapabilityParams { id: capability.id.0, scope: capability.scope, reason: capability.reason, optional: capability.optional },
         }),
-        Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(semio_framework_plugin_abi::wasip2::ReleaseCapabilityEffect { id: id.0 }),
-        Effect::Subscribe { topic } => wit::Effect::Subscribe(semio_framework_plugin_abi::wasip2::SubscribeEffect { topic }),
-        Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(semio_framework_plugin_abi::wasip2::SubscribeEffect { topic }),
+        Effect::ReleaseCapability { id } => wit::Effect::ReleaseCapability(wit_effects::ReleaseCapabilityEffect { id: id.0 }),
+        Effect::Subscribe { topic } => wit::Effect::Subscribe(wit_effects::SubscribeEffect { topic }),
+        Effect::Unsubscribe { topic } => wit::Effect::Unsubscribe(wit_effects::SubscribeEffect { topic }),
         Effect::RequestServiceOperation { owner, service_id, action, payload } => {
-            wit::Effect::RequestServiceOperation(semio_framework_plugin_abi::wasip2::RequestServiceOperationEffect { owner, service_id, action, payload: store::pack_rt::encode_wire_value(&payload) })
+            wit::Effect::RequestServiceOperation(wit_effects::RequestServiceOperationEffect { owner, service_id, action, payload: store::pack_rt::encode_wire_value(&payload) })
         }
     })
 }
 
-fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> semio_framework_plugin_abi::wasip2::MessageEndpoint {
+fn kernel_endpoint_to_wit(endpoint: MessageEndpoint) -> wit_types::MessageEndpoint {
     match endpoint {
-        MessageEndpoint::Shell { instance } => semio_framework_plugin_abi::wasip2::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
-        MessageEndpoint::Backbone { uri } => semio_framework_plugin_abi::wasip2::MessageEndpoint::Backbone(uri),
-        MessageEndpoint::PluginInstance { id } => semio_framework_plugin_abi::wasip2::MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
-        MessageEndpoint::Extension { id } => semio_framework_plugin_abi::wasip2::MessageEndpoint::Extension(id),
-        MessageEndpoint::Topic { name } => semio_framework_plugin_abi::wasip2::MessageEndpoint::Topic(name),
+        MessageEndpoint::Shell { instance } => wit_types::MessageEndpoint::Shell(instance.0.parse().unwrap_or(0)),
+        MessageEndpoint::Backbone { uri } => wit_types::MessageEndpoint::Backbone(uri),
+        MessageEndpoint::PluginInstance { id } => wit_types::MessageEndpoint::PluginInstance(id.0.parse().unwrap_or(0)),
+        MessageEndpoint::Extension { id } => wit_types::MessageEndpoint::Extension(id),
+        MessageEndpoint::Topic { name } => wit_types::MessageEndpoint::Topic(name),
     }
 }
 
-fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> semio_framework_plugin_abi::wasip2::JobPlacement {
+fn kernel_placement_to_wit(placement: semio_framework::kernel::JobPlacement) -> wit_effects::JobPlacement {
     match placement {
-        semio_framework::kernel::JobPlacement::Inline => semio_framework_plugin_abi::wasip2::JobPlacement::Inline,
-        semio_framework::kernel::JobPlacement::Isolated => semio_framework_plugin_abi::wasip2::JobPlacement::Isolated,
-        semio_framework::kernel::JobPlacement::Exclusive => semio_framework_plugin_abi::wasip2::JobPlacement::Exclusive,
+        semio_framework::kernel::JobPlacement::Inline => wit_effects::JobPlacement::Inline,
+        semio_framework::kernel::JobPlacement::Isolated => wit_effects::JobPlacement::Isolated,
+        semio_framework::kernel::JobPlacement::Exclusive => wit_effects::JobPlacement::Exclusive,
     }
 }
 
-fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> semio_framework_plugin_abi::wasip2::RespondResult {
+fn kernel_outcome_to_wit_respond(result: RequestOutcome) -> wit_effects::RespondResult {
     match result {
-        RequestOutcome::Ok(bytes) => semio_framework_plugin_abi::wasip2::RespondResult::Ok(bytes),
-        RequestOutcome::Err(bytes) => semio_framework_plugin_abi::wasip2::RespondResult::Fault(bytes),
+        RequestOutcome::Ok(bytes) => wit_effects::RespondResult::Ok(bytes),
+        RequestOutcome::Err(bytes) => wit_effects::RespondResult::Fault(bytes),
     }
 }

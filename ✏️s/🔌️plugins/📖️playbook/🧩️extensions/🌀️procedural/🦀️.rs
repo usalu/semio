@@ -331,7 +331,7 @@ impl ArtifactApp for ModuleApp {
         registry.register(ModuleRetainedCommandJobFactory::new(&controller))
     }
 
-    async fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<Self>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
+    fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<Self>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_plugin::__value::ValueError::literal(semio_framework_plugin::__value::ValueRefusalKind::InvariantViolated, "original retained producer request is absent"))?;
         if !MODULE_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
             return Ok(false);
@@ -343,8 +343,8 @@ impl ArtifactApp for ModuleApp {
         semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, module_retained_command_id, MODULE_RETAINED_RAW_BYTES, MODULE_RETAINED_WORK_ITEMS, false, |request| ModuleGeometryCommandWork { tool_id, instance_owner: request.instance_operation_owner.clone(), consumed: false })
     }
 
-    fn reference_birth()->Option<fn()->ModuleRenderPayload>{Some(||{
-        default_payload()
+    fn reference_birth()->Option<fn()->Result<ModuleRenderPayload,semio_framework_plugin::Fault>>{Some(||{
+        Ok(default_payload())
     })}
 
     /// 🏷️ Maps each `Command` variant back to the action id it was declared under in

@@ -575,8 +575,8 @@ impl ArtifactEditor for ArchitectPlayApp {
         registry.register::<report_window::config::ArchitectReportWindowConfigOwner>()
     }
 
-    fn reference_birth()->Option<fn()->ProgramSnapshot>{Some(||{
-        sample_plugin()
+    fn reference_birth()->Option<fn()->Result<ProgramSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(sample_plugin())
     })}
 
     fn initial_config() -> ArchitectConfig {

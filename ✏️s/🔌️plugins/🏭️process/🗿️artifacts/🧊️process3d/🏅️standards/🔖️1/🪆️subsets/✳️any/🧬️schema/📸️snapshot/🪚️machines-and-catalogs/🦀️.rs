@@ -2,6 +2,7 @@
 
 use super::document_records::{ProcessMeasure, WorkingSolid};
 use protocol::{Identified, Patchable};
+use semio_framework_dispatch_macros::dyn_enum;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Workshop
@@ -357,11 +358,11 @@ impl MachineCatalog for ContributedMachineCatalog {
 #[derive(semio_framework_value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct ProcessMachinesTopicPayload {
-    app_id: String,
-    module_id: String,
-    pub(super) label: String,
-    icon_id: String,
-    machines_json: String,
+    pub app_id: String,
+    pub module_id: String,
+    pub label: String,
+    pub icon_id: String,
+    pub machines_json: String,
 }
 //#endregion 🔖️ProcessMachinesTopicPayload
 //#endregion 🔧️Behavior

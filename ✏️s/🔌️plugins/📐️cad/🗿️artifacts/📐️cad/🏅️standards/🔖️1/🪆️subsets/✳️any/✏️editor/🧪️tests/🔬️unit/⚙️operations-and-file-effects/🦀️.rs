@@ -26,7 +26,7 @@ async fn add_object_through_wrapper_grows_the_composed_pane() {
     let mut app = new_app().await;
     let before = app.snapshot().expect("snapshot");
     let objects_before = pane_objects(&app, CadPaneId::Shape).await;
-    app.0.dispatch_typed(CadCommand::AddObject(add_object::AddObject { typology: Some("building.building.column".into()) }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add object dispatch");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(add_object::AddObject { typology: Some("building.building.column".into()) }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("add object dispatch");
     settle(&mut app).await;
     assert_eq!(app.snapshot().expect("snapshot"), before, "addObject never moves the parent document");
     let objects = pane_objects(&app, CadPaneId::Shape).await;

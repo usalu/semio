@@ -111,8 +111,8 @@ impl ArtifactViewer for Block3dViewer {
     /// 🚀️ Boots on the `hexagonal-cut-concrete-forest-left` fixture rather than the empty document —
     /// a viewer has no `setActiveExample` action at all (its sole command is `Noop`), so an empty boot
     /// document made this surface permanently blank. See `dsl::block3d_boot_snapshot`.
-    fn reference_birth()->Option<fn()->Block3dSnapshot>{Some(||{
-        semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot()
+    fn reference_birth()->Option<fn()->Result<Block3dSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot())
     })}
 
     /// 👁️ Structurally read-only: the sole `Block3dViewCommand::Noop` variant never carries a config

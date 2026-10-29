@@ -25,7 +25,7 @@ mod surface_contract {
 }
 mod tool_contract {
  pub(crate) use semio_framework_plugin_decl_app::tool_contract::*;
- pub(crate) use semio_framework_plugin_decl_views::tool_contract::{ArtifactInstanceOperationOwner,ArtifactInstanceOperationOwnerHandle,EmptyArtifactInstanceOperationOwner};
+ pub(crate) use semio_framework_plugin_decl_tool_contract::{ArtifactInstanceOperationOwner,ArtifactInstanceOperationOwnerHandle,EmptyArtifactInstanceOperationOwner};
 }
 mod app_emission {
  pub(crate) use semio_framework_plugin_decl_emission::*;

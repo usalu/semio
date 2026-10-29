@@ -321,7 +321,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// keeps its existing full-mutation behavior untouched; `EditorApp<E>`/`ViewerApp<V>` override
     /// it from `E::ROLE`/`V::ROLE` (contract §2.1).
     const ROLE: AppRole = AppRole::Editor;
-    type Snapshot: PartialEq + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactPackMetadata + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
+    type Snapshot: ::semio_framework_os_kernel::StoreState + PartialEq + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactPack + pack::snapshot::ArtifactPackMetadata + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `+ 'static` added to the
     /// three mutation lanes below — every real impl was ALREADY effectively 'static (a plain
     /// owned enum/struct crossing the wasm component boundary via `OpBinary`; none of the ~30
@@ -333,7 +333,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🏷️ `SemanticMutation` (design §16.2): every document operation labels itself in every shell locale through its
     /// leaf (`MutationKind::label`), so a history row, the history-edit editor and a tool-transaction row are never the
     /// operation's text line — `#[derive(Mutations)]` is the one way an aggregate answers it.
-    type Mutation: Clone + ::protocol::ColdMutation<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type Mutation: ::semio_framework_os_kernel::StoreMutationFor<Self::Snapshot> + Clone + ::protocol::ColdMutation<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: Clone + ::protocol::ColdMutation<Self::Config> + ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + ::replication::OpBinaryReceiving + 'static;
     /// 📝️ Volatile draft snapshot — use {@link NoDraft} when the app has no draft lane.
@@ -379,9 +379,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🧭️ Resolves a host-owned control-plane action directly to one event-sourced
     /// configuration mutation. App interaction commands remain on the retained tool-operation
     /// path; hidden host catalogue publication does not impersonate an interactive reducer.
-    fn host_configuration_mutation(_action: &str, _args: Option<&DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok(None)
-    }
+    fn original_host_configuration(_action:&str)->Option<&'static semio_framework_plugin_decl_emission::OriginalHostConfigurationDeclaration<Self::ConfigMutation>>{None}
     /// ⌨️ This app's typing algebra: how the leaves `next` of one live typing delivery join the open run's net leaves
     /// `net` (design §13.2). The default is a single buffer — every delivery's leaves are the whole buffer, so the latest
     /// replaces the net; an app whose typing verb yields relative leaves (a text splice) composes them, and answers
@@ -444,8 +442,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
     /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
     /// that the shells drive must override this so chrome actions reach `handle`.
-    /// 🏭️ The declared native producer owns original action arguments, command birth and exact operation wire.
-    fn original_action_command_producer()->Option<&'static dyn crate::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{None}
+    /// 🏭️ The declared native producer owns original action arguments, command birth and exact operation wire; absent a hand-written one, the declared `command_from_action` bridge feeds the generic OpBinary producer.
+    fn original_action_command_producer()->Option<&'static dyn crate::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{crate::tool_contract::declared_action_command_bridge::<Self>()}
     async fn command_from_action(action: &str, _args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         Err(Fault::new(

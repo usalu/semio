@@ -59,8 +59,8 @@ impl ArtifactViewer for HtmlViewer {
     const DIALECT: Dialect = HTML_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_HTML_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        HtmlSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(HtmlSnapshot::default())
     })}
 
     fn handle(

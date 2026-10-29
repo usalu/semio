@@ -1,0 +1,39 @@
+{
+  "version": 1,
+  "operation": 927,
+  "generation": 37,
+  "work": {
+    "fuel": 4096,
+    "absoluteDeadlineUs": 10,
+    "clockBinding": 523
+  },
+  "initialClock": 1,
+  "expiredClock": 11,
+  "totalGrant": [
+    4096,
+    1048576,
+    1048576,
+    1048576,
+    128
+  ],
+  "callPolicy": [
+    16,
+    65536,
+    65536,
+    65536,
+    64
+  ],
+  "text": "original expired close authority",
+  "cases": [
+    {
+      "name": "expired",
+      "cancelled": false
+    },
+    {
+      "name": "expired-cancelled",
+      "cancelled": true
+    }
+  ],
+  "zeroFuelBlocked": true,
+  "unscopedBlocked": true
+}

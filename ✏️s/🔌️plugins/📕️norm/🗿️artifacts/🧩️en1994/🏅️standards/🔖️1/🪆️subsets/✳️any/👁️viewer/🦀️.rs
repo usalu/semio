@@ -63,8 +63,8 @@ impl ArtifactViewer for En1994Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
-    fn reference_birth()->Option<fn()->En1994Snapshot>{Some(||{
-        En1994Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<En1994Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(En1994Snapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `En1994ViewCommand::Noop` variant never carries a config

@@ -6,12 +6,15 @@ pub trait ErasedWindowMutationValue:Send+Sync{
  fn into_any(self:Box<Self>)->Box<dyn Any+Send>;
  fn retire_payload(self:Box<Self>)->Box<dyn RetirementCursor>;
  fn payload_birth_bytes(&self)->usize;
+ /// 🧬️ Copies the payload into a fresh original box that keeps the captured retirement issuer.
+ fn clone_boxed(&self)->Box<dyn ErasedWindowMutationValue>;
 }
-impl<T:Send+Sync+'static> ErasedWindowMutationValue for FactoryBoxedValue<T>{
+impl<T:Clone+Send+Sync+'static> ErasedWindowMutationValue for FactoryBoxedValue<T>{
  fn as_any(&self)->&dyn Any{self.original.as_ref()}
  fn into_any(self:Box<Self>)->Box<dyn Any+Send>{self}
  fn retire_payload(self:Box<Self>)->Box<dyn RetirementCursor>{self.retirement()}
  fn payload_birth_bytes(&self)->usize{boxed_owner_birth_bytes::<Self>()}
+ fn clone_boxed(&self)->Box<dyn ErasedWindowMutationValue>{Box::new(FactoryBoxedValue{original:Box::new(self.original.as_ref().clone()),factory:std::sync::Arc::clone(&self.factory)})}
 }
 impl RetireOwned for Box<dyn ErasedWindowMutationValue>{
  fn retirement(self)->Box<dyn RetirementCursor>{self.retire_payload()}

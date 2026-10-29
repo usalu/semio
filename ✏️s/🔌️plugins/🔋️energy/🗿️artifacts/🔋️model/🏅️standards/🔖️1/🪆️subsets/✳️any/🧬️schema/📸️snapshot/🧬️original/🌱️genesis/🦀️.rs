@@ -89,4 +89,3 @@ fn seal_demand<T:Send+Sync+'static>(text_bytes:usize)->RetirementDemand{Retireme
 fn funds(d:RetirementDemand,g:RetainedCloneGrant)->bool{g.maximum_items>0&&g.maximum_copy_bytes>=d.copy_bytes&&g.maximum_capacity_bytes>=d.capacity_bytes&&g.maximum_release_bytes>=d.release_bytes&&g.maximum_depth>=d.depth}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original Energy genesis phase or source changed")}
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_job::InteractiveJobCloseStep as Close;
 use super::tests::{atlas_fixture_authority, atlas_fixture_owner, atlas_fixture_page, prepared_process_guard};
 
 #[test]
@@ -18,7 +19,7 @@ fn prepared_original_abandoned_atlas_reports_full_physical_grants() {
         let original = PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire);
         assert!(!original.is_null());
         let grant = RetainedCloneGrant { maximum_copy_bytes: copy, maximum_items: 0, ..atlas_fixture_authority().retirement };
-        let (step, births, frees) = measured(|| PreparedAtlasPages::close_abandoned_step(grant));
+        let (step, births, frees) = measured(|| PreparedAtlasPages::close_abandoned_step(grant).unwrap());
         assert!(matches!(step, Close::Pending { progress } if progress == Default::default()));
         assert_eq!((births, frees), (0, 0));
         assert_eq!(PREPARED_ATLAS_ABANDONMENT_OWNER[slot].load(Ordering::Acquire), original);
@@ -26,7 +27,7 @@ fn prepared_original_abandoned_atlas_reports_full_physical_grants() {
         let mut complete = false;
         for _ in 0..law["maximumTurns"].as_u64().unwrap() {
             let grant = atlas_fixture_authority().retirement;
-            let (step, births, frees) = measured(|| PreparedAtlasPages::close_abandoned_step(grant));
+            let (step, births, frees) = measured(|| PreparedAtlasPages::close_abandoned_step(grant).unwrap());
             let progress = match step { Close::Pending { progress } | Close::Complete { progress } => progress, step => panic!("original abandoned atlas failed: {step:?}") };
             assert!(progress.fits(grant));
             assert_eq!((progress.retained_capacity_bytes, progress.released_bytes), (births, frees));

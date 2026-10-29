@@ -9,7 +9,7 @@ use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
 fn original_failure(detail:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,detail)}
 fn original_header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
 fn post_original<T>(cx:&mut StepContext<'_>,result:Result<(T,RetainedCloneProgress),ValueError>)->Result<T,OriginalTurnFailure>{let p=result.as_ref().map(|(_,p)|*p).unwrap_or_else(|e|e.retained_progress());if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)?;}else{cx.consume_retained(p)?;}cx.consume_fuel(p.copied_items as u64);Ok(result?.0)}
-impl<'ctx,A:ArtifactApp,M:SpaceMember+MemberFactory+'static,X:InstanceExtension> TypedCtx<'ctx,A,M,X>{
+impl<'ctx,A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+'static,X:InstanceExtension> TypedCtx<'ctx,A,M,X>{
     /// 🧳️ Native parsing keeps the original child vectors and hands the resulting typed owners to the installed group pipeline.
     pub(super) async fn publish_mounted_typed_child_operation_unit(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut StepContext<'_>)->Result<(),PluginLifecycleFailure>{
         if cx.should_yield(){return Ok(())}

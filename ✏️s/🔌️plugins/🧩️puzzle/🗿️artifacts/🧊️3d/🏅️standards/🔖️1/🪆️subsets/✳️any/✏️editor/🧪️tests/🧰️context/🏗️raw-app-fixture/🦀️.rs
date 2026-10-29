@@ -254,7 +254,7 @@ fn puzzle3d_action_registry() -> semio_framework_plugin::AppActionRegistry {
 pub async fn app() -> Puzzle3dApp {
     let scope = semio_framework_plugin::artifact_app_laws::OriginalFixtureScope::admit();
     let registry = puzzle3d_action_registry();
-    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), artifact_app_laws::fixture_mounted_policy(), &mut identity).await);
+    let mut app = semio_framework_plugin::with_authoring_identity!(|identity| VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), artifact_app_laws::fixture_mounted_policy(), &mut identity).await.expect("the reference snapshot births"));
     let instance_id = next_fixture_instance_id();
     app.bind_instance_id(instance_id).await;
     artifact_app_laws::settle_store_constructor(&mut app, artifact_app_laws::fixture_mounted_policy());
@@ -326,7 +326,7 @@ pub async fn host_turn(app: &mut Puzzle3dApp, maximum_items: usize, settled: &mu
     let (raw, cx) = app.parts();
     raw.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), cx).await.expect("advance one typed operation publication unit");
     let instance_id = app.instance_id;
-    if let Some(page) = app.take_typed_operation_result_page(instance_id) {
+    if let Some(page) = app.take_typed_operation_result_page(instance_id, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance).expect("take one typed operation result page").0 {
         assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "retained operation faulted: {}", String::from_utf8_lossy(page.bytes()));
         if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Download {
             settled.downloads.push(Puzzle3dDownload::from_page(page.token.operation, page.bytes()));

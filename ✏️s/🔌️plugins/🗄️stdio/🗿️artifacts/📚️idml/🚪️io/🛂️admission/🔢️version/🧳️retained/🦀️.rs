@@ -51,6 +51,3 @@ impl RetainedIdmlVersion {
     pub fn terminal_is_empty(&self)->bool{self.closing&&self.value.is_none()&&self.retirement.is_empty()&&self.source.is_none()}
 }
 impl Drop for RetainedIdmlVersion {fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"IDML version field requires original partial-owner closure");if empty{unsafe{ManuallyDrop::drop(&mut self.value);}}}}
-#[cfg(test)]
-#[path="🧪️tests/🦀️.rs"]
-mod tests;

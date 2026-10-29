@@ -48,7 +48,7 @@ async fn a_world_gesture_emits_one_stamped_edit_and_moves_the_viewers_cursor() {
     use semio_framework_plugin::{AppOperationContext, HistoryView};
     let snapshot = semio_s_artifact_process_process3d_model::snapshot::empty_process3d_snapshot();
     let history = HistoryView::empty();
-    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-world".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], authoring_seed: "world-seed".into() };
+    let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "process3d-world".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], retained: Default::default(), authoring_seed: "world-seed".into() };
     let doc = ArtifactView::with_operation(&snapshot, &history, operation);
     let config = Process3dConfig { resolved_up_to: Some(0), ..Process3dConfig::default() };
     let cfg = ConfigView { snapshot: &config, window: None };

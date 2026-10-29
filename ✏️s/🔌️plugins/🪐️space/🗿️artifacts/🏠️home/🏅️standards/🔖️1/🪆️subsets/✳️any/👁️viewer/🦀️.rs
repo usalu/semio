@@ -156,8 +156,8 @@ impl ArtifactViewer for HomeViewer {
     const DIALECT: Dialect = HOME_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = S_HOME_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->SHomeSnapshot>{Some(||{
-        SHomeSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SHomeSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SHomeSnapshot::default())
     })}
 
     /// 🪪️ Same app-schema descriptor as the editor (contract requires both surfaces sharing a dialect

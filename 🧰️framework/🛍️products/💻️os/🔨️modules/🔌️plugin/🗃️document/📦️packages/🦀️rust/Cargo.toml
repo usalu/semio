@@ -28,6 +28,7 @@ media-turn-testing = []
 [dependencies]
 semio-framework-plugin-operation = { path = "../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-media = { path = "../../../📜️declaration/🎞️media/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-app = { path = "../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-framework-plugin-child = { path = "../../../🪆️child/📦️packages/🦀️rust" }
 semio-framework-plugin-composition-emission = { path = "../../../🧩️composition/📦️packages/🦀️rust" }

@@ -36,6 +36,14 @@ pub(crate) fn cad_interaction_scope(verb: semio_framework_plugin::InteractionVer
     })
 }
 
+/// 📐️ Declares the owned CAD contribution text projection before payload production.
+static CAD_ORIGINAL_HOST_CONTRIBUTIONS: semio_framework_plugin::OriginalHostConfigurationDeclaration<CadConfigMutation> = semio_framework_plugin::OriginalHostConfigurationDeclaration {
+    maximum_input_bytes: usize::MAX,
+    maximum_output_bytes: usize::MAX,
+    projection: semio_framework_plugin::OriginalHostConfigurationProjection::RawText,
+    mutation: |json| CadConfigMutation::SetContributions(SetContributionsEdit { json }),
+};
+
 impl ArtifactEditor for CadPlayApp {
     fn owned_mutation_batch_birth_bytes()->Option<usize>{Some(store::MemberStoreOwnedBatch::scaffold_byte_demand::<CadMutation>())}
     fn admit_owned_mutation_batch(values:&mut Option<Vec<CadMutation>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(store::MemberStoreOwnedBatch,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{store::MemberStoreOwnedBatch::admit(values,grant)}
@@ -200,8 +208,8 @@ impl ArtifactEditor for CadPlayApp {
         Some(semio_s_artifact_cad_cad_config::schema::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->CadSnapshot>{Some(||{
-        forest_play_scene()
+    fn reference_birth()->Option<fn()->Result<CadSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(forest_play_scene())
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
@@ -276,9 +284,10 @@ impl ArtifactEditor for CadPlayApp {
         cad_command_from_action(action, args)
     }
 
-    fn host_configuration_mutation(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok((action == "setContributions").then(|| CadConfigMutation::SetContributions(SetContributionsEdit { json: args.and_then(|value| value.get("json")).and_then(semio_framework_value::DslValue::as_str).unwrap_or("[]").to_string() })))
+    fn original_host_configuration(action: &str) -> Option<&'static semio_framework_plugin::OriginalHostConfigurationDeclaration<Self::ConfigMutation>> {
+        (action == "setContributions").then_some(&CAD_ORIGINAL_HOST_CONTRIBUTIONS)
     }
+
 
     fn handle(
         command: &CadCommand,

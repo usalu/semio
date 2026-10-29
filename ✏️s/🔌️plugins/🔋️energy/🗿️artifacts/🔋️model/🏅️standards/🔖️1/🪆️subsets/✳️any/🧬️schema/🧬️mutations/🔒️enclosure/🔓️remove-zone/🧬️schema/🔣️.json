@@ -82,7 +82,7 @@
     "semantics": {
       "verb": "remove",
       "entity": "ThermalEnclosure",
-      "kind": "RemoveThermalEnclosureZone",
+      "kind": "remove-thermal-enclosure-zone",
       "record": "RemoveThermalEnclosureZone"
     },
     "diagnostics": {

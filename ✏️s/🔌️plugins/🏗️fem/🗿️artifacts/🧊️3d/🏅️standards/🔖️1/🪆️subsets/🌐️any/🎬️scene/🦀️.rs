@@ -49,7 +49,7 @@ pub fn fem3d_load_target(case_id: &str, load_id: &str) -> Result<String, protoco
 //#region 🔖️Geometry
 /// 📍️ A node's world position.
 pub fn fem3d_node_point(doc: &Fem3dSnapshot, id: &str) -> Option<[f64; 3]> {
-    doc.nodes.iter().find(|node| node.id == id).map(|node| [node.x, node.y, node.z])
+    doc.nodes.iter().find(|node| node.id.as_str() == id).map(|node| [node.x, node.y, node.z])
 }
 
 /// 🔩️ A member's two node ids.
@@ -215,14 +215,14 @@ fn dof_direction(dof: FemDof, value: f64) -> Option<[f64; 3]> {
 /// stretches along the member, `rotation` a quaternion aligning that axis to the member's direction
 /// (composed with a `Frame`'s own `roll` about its own axis; `Bar`s have no roll).
 pub fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Result<Vec<Value>, protocol::wire::ScopedIdentityError> {
-    let node_pos = |node: &semio_s_fem_node::volumetric::FemNodeValue| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
+    let node_pos = |node: &semio_s_fem_node::volumetric::FemNode| fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
     let mut instances: Vec<Value> = Vec::new();
     for node in &doc.nodes {
         instances.push(instance(&node.id, FEM3D_GRANULARITY_NODE, "box", node_pos(node), [0.0, 0.0, 0.0, 1.0], [NODE_SIZE_3D, NODE_SIZE_3D, NODE_SIZE_3D], &node.id)?);
     }
     for element in &doc.elements {
         let (start, end) = fem3d_element_endpoints(element);
-        let (Some(n1), Some(n2)) = (doc.nodes.iter().find(|n| n.id == start), doc.nodes.iter().find(|n| n.id == end)) else { continue };
+        let (Some(n1), Some(n2)) = (doc.nodes.iter().find(|n| n.id.as_str() == start), doc.nodes.iter().find(|n| n.id.as_str() == end)) else { continue };
         let p1 = node_pos(n1);
         let p2 = node_pos(n2);
         let d = [p2[0] - p1[0], p2[1] - p1[1], p2[2] - p1[2]];
@@ -244,7 +244,7 @@ pub fn fem3d_structural_instances(doc: &Fem3dSnapshot, displacements: Option<&Ha
 pub fn fem3d_support_instances(doc: &Fem3dSnapshot, displacements: Option<&HashMap<String, [f64; 6]>>, deform_scale: f64) -> Result<Vec<Value>, protocol::wire::ScopedIdentityError> {
     let mut instances = Vec::new();
     for support in &doc.supports {
-        let Some(node) = doc.nodes.iter().find(|node| node.id == support.node_id) else { continue };
+        let Some(node) = doc.nodes.iter().find(|node| node.id.as_str() == support.node_id.as_str()) else { continue };
         let apex = fem3d_deformed_position([node.x, node.y, node.z], &node.id, displacements, deform_scale);
         let base = [apex[0], apex[1], apex[2] - SUPPORT_SIZE_3D];
         instances.push(instance(&support.id, FEM3D_GRANULARITY_SUPPORT, "cone", base, quat_y_to([0.0, 0.0, 1.0]), [SUPPORT_SIZE_3D, SUPPORT_SIZE_3D, SUPPORT_SIZE_3D], &support.id)?);

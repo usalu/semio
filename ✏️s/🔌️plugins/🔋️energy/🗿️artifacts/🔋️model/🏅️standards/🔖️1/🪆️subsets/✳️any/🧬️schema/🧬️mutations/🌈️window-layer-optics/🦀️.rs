@@ -1,4 +1,4 @@
-//! 🌈️ Energy model mutation domain `window-layer-optics`: `change-glazing-material-solar-transmittance`, `change-glazing-material-visible-transmittance`, `change-glazing-material-infrared-emissivity`, `change-glazing-material-solar-reflectance-front`, `change-glazing-material-solar-reflectance-back`, `change-glazing-material-visible-reflectance-front`, `change-glazing-material-visible-reflectance-back`, `change-glazing-material-infrared-transmittance`.
+//! 🌈️ Energy model mutation domain `window-layer-optics`: `change-glazing-material-solar-transmittance`, `change-glazing-material-visible-transmittance`, `change-glazing-material-infrared-emissivity`, `change-glazing-material-solar-reflectance-front`, `change-glazing-material-solar-reflectance-back`, `change-glazing-material-infrared-transmittance`
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
@@ -51,9 +51,6 @@ pub mod change_glazing_material_infrared_emissivity {
     #[path = "../🥂️window-layer/🩻️change-glazing-infrared-emissivity/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
-pub use change_glazing_material_solar_transmittance::{change_glazing_material_solar_transmittance, ChangeGlazingMaterialSolarTransmittance};
-pub use change_glazing_material_visible_transmittance::{change_glazing_material_visible_transmittance, ChangeGlazingMaterialVisibleTransmittance};
-pub use change_glazing_material_infrared_emissivity::{change_glazing_material_infrared_emissivity, ChangeGlazingMaterialInfraredEmissivity};
 
 #[path = "."]
 pub mod change_glazing_material_solar_reflectance_front {
@@ -67,7 +64,6 @@ pub mod change_glazing_material_solar_reflectance_front {
     #[path = "../🥂️window-layer/🔅️solar-front/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
-pub use change_glazing_material_solar_reflectance_front::{change_glazing_material_solar_reflectance_front, ChangeGlazingMaterialSolarReflectanceFront};
 
 #[path = "."]
 pub mod change_glazing_material_solar_reflectance_back {
@@ -81,35 +77,6 @@ pub mod change_glazing_material_solar_reflectance_back {
     #[path = "../🥂️window-layer/🔆️solar-back/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
-pub use change_glazing_material_solar_reflectance_back::{change_glazing_material_solar_reflectance_back, ChangeGlazingMaterialSolarReflectanceBack};
-
-#[path = "."]
-pub mod change_glazing_material_visible_reflectance_front {
-    #[path = "../🥂️window-layer/🔎️visible-front/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "../🥂️window-layer/🔎️visible-front/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "../🥂️window-layer/🔎️visible-front/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "../🥂️window-layer/🔎️visible-front/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-pub use change_glazing_material_visible_reflectance_front::{change_glazing_material_visible_reflectance_front, ChangeGlazingMaterialVisibleReflectanceFront};
-
-#[path = "."]
-pub mod change_glazing_material_visible_reflectance_back {
-    #[path = "../🥂️window-layer/🪞️visible-back/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "../🥂️window-layer/🪞️visible-back/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "../🥂️window-layer/🪞️visible-back/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "../🥂️window-layer/🪞️visible-back/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-pub use change_glazing_material_visible_reflectance_back::{change_glazing_material_visible_reflectance_back, ChangeGlazingMaterialVisibleReflectanceBack};
 
 #[path = "."]
 pub mod change_glazing_material_infrared_transmittance {
@@ -123,4 +90,10 @@ pub mod change_glazing_material_infrared_transmittance {
     #[path = "../🥂️window-layer/🌡️infrared-transmittance/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
+
 pub use change_glazing_material_infrared_transmittance::{change_glazing_material_infrared_transmittance, ChangeGlazingMaterialInfraredTransmittance};
+pub use change_glazing_material_solar_transmittance::{change_glazing_material_solar_transmittance, ChangeGlazingMaterialSolarTransmittance};
+pub use change_glazing_material_visible_transmittance::{change_glazing_material_visible_transmittance, ChangeGlazingMaterialVisibleTransmittance};
+pub use change_glazing_material_infrared_emissivity::{change_glazing_material_infrared_emissivity, ChangeGlazingMaterialInfraredEmissivity};
+pub use change_glazing_material_solar_reflectance_front::{change_glazing_material_solar_reflectance_front, ChangeGlazingMaterialSolarReflectanceFront};
+pub use change_glazing_material_solar_reflectance_back::{change_glazing_material_solar_reflectance_back, ChangeGlazingMaterialSolarReflectanceBack};

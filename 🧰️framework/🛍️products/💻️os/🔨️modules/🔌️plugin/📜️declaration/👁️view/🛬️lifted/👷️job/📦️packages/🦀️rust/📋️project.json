@@ -1,0 +1,7 @@
+{
+  "name": "@semio-tech/plugin-decl-tool-contract-rs",
+  "tags": [
+    "scope:framework",
+    "language:rust"
+  ]
+}

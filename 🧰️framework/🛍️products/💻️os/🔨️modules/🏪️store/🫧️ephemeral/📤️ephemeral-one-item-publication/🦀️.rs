@@ -157,7 +157,7 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
     /// 🚫️ Borrows the one original refusal and its actual consumed physical currencies.
     pub fn preparation_refusal(&self) -> Option<&ValueError> { self.fault.as_ref() }
 
-    pub(super) fn advance_preparation(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemAdvance> {
+    pub fn advance_preparation(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemAdvance> {
         let result = self.preparation.as_mut().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"ephemeral publication lost its preparation owner")).and_then(|owner| {
             let grant=ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };
             let step=owner.advance(grant,receiving)?;

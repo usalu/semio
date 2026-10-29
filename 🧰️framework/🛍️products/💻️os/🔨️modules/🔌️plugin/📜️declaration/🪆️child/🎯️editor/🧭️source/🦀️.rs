@@ -13,6 +13,7 @@ impl ChildEditorStamp{pub fn command_identity(&self)->usize{self.command}pub fn 
 pub enum ChildEditorSourceStep{Pending,Ready(ChildEditorStamp)}
 #[derive(Clone,Copy,Default)]
 struct State{phase:u8,field:usize,offset:usize,command:usize,expected:usize,parent:usize,child:usize,capability:usize,bound:bool,progress:usize}
+#[derive(Clone,Copy)]
 pub struct ChildEditorSourceCursor{state:State,last:RetainedCloneProgress}
 fn refusal(code:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,code)}
 fn compare(a:&str,b:&str,offset:&mut usize)->Result<bool,ValueError>{if a.len()!=b.len(){return Err(refusal("child editor identity differs"));}let left=a[*offset..].chars().next();if left!=b[*offset..].chars().next(){return Err(refusal("child editor identity differs"));}if let Some(point)=left{*offset+=point.len_utf8();Ok(false)}else{*offset=0;Ok(true)}}

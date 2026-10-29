@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "plugin.typing.edit.settlement.v1",
+  "title": "Original Typing Edit Settlement",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "action",
+    "buffer",
+    "deliveries",
+    "lifecycle"
+  ],
+  "properties": {
+    "schema": {
+      "const": "plugin.typing.edit.settlement.v1"
+    },
+    "action": {
+      "type": "string",
+      "minLength": 1
+    },
+    "buffer": {
+      "type": "string",
+      "minLength": 1
+    },
+    "deliveries": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "lifecycle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "turnItems",
+        "underfundedUnchanged",
+        "sameSource",
+        "cancelKeepsPrevious",
+        "physicalClose"
+      ],
+      "properties": {
+        "turnItems": {
+          "const": 1
+        },
+        "underfundedUnchanged": {
+          "const": true
+        },
+        "sameSource": {
+          "const": true
+        },
+        "cancelKeepsPrevious": {
+          "const": true
+        },
+        "physicalClose": {
+          "const": true
+        }
+      }
+    }
+  }
+}

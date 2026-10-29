@@ -83,7 +83,7 @@
     "semantics": {
       "verb": "reorder",
       "entity": "construction-layer",
-      "kind": "reorder-layers",
+      "kind": "reorder-construction-layers",
       "record": "ReorderedConstructionLayers"
     },
     "diagnostics": {

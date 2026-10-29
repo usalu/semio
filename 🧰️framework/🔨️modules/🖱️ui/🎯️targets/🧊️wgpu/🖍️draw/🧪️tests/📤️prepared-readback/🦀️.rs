@@ -50,11 +50,8 @@ fn prepared_readback_normalizes_bounded_rows_without_padding_or_channel_loss() {
 #[test]
 fn prepared_readback_reads_the_production_target_and_never_publishes_cancelled_bytes() {
     let (device, queue) = semio_framework_async::block_on(async {
-        let instance = gpu_device::Instance::new(gpu_device::InstanceDescriptor { backends: gpu_device::Backends::PRIMARY, ..gpu_device::InstanceDescriptor::new_without_display_handle() });
-        let adapter = instance.request_adapter(&gpu_device::RequestAdapterOptions { power_preference: gpu_device::PowerPreference::HighPerformance, compatible_surface: None, force_fallback_adapter: false }).await.expect("readback law requires a GPU adapter");
-        adapter.request_device(&gpu_device::DeviceDescriptor {
-            label: Some("prepared_readback_law"), required_features: gpu_device::Features::empty(), required_limits: gpu_device::Limits::default(), memory_hints: Default::default(), trace: gpu_device::Trace::Off, experimental_features: Default::default(),
-        }).await.expect("readback law device")
+        let prepared = gpu_device::platform::prepare_headless(1, 1, 0).await.expect("readback law requires a GPU adapter");
+        (prepared.device, prepared.queue)
     });
     let validation = device.push_error_scope(gpu_device::ErrorFilter::Validation);
     let fixture = contract();
@@ -74,7 +71,7 @@ fn prepared_readback_reads_the_production_target_and_never_publishes_cancelled_b
                 color_attachments: &[Some(gpu_device::RenderPassColorAttachment { view: target.world_encoded_view(), resolve_target: None, ops: gpu_device::Operations { load: gpu_device::LoadOp::Clear(color), store: gpu_device::StoreOp::Store }, depth_slice: None })],
                 depth_stencil_attachment: None, timestamp_writes: None, occlusion_query_set: None, multiview_mask: None,
             }));
-            queue.submit(Some(encoder.finish()));
+            queue.submit(encoder.finish()).unwrap_or_else(|_| panic!("readback law submits one owned command buffer"));
             let mut readback = PreparedGpuReadback::begin(&device, &queue, &target, layout).unwrap();
             assert!(readback.take_rgba().is_none());
             let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);

@@ -308,8 +308,8 @@ impl ArtifactEditor for DeflateEditor {
         })
     }
 
-    fn reference_birth()->Option<fn()->DeflateSnapshot>{Some(||{
-        DeflateSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<DeflateSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(DeflateSnapshot::default())
     })}
 
     /// ✏️ Parses the whole `key=value` summary and, if every required field is present and valid,

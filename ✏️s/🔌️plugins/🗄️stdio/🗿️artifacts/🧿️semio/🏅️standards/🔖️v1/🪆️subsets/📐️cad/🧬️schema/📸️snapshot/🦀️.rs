@@ -17,7 +17,7 @@ pub const STDIO_SEMIOCAD_DOCUMENT_SCHEMA: &str = "stdio.semio.cad";
 /// `FromValue`, see `🌱️value/✨️derive`'s module docs) plus this file's own `added: Vec<T>` field
 /// needing `T: Default` wherever the missing-key fallback runs — bcf's local `NamedTripleDiff`
 /// copy carries the identical requirement (see that file's own doc comment).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslEnum)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum CadEntity {
@@ -45,7 +45,7 @@ impl Default for CadEntity {
 //#region 🔖️Layer
 /// 🗂️ Name-keyed (dxf `TABLES/LAYER`-style) — strong entity, own per-field diff. `Default` is the
 /// same spurious-bound workaround `CadEntity` documents above.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadLayer {
@@ -59,19 +59,20 @@ pub struct CadLayer {
 /// 🏷️ One placed entity — `handle` is the id key (dxf group code 5); `layer` names the owning
 /// `CadLayer` by reference. Referential invariants (dangling `layer`/`Insert.block_name`) are
 /// checked by the composer's `SemioCadValidator`, not enforced structurally here.
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadEntityRecord {
     pub handle: String,
     pub layer: String,
+    #[dsl(statements, block)]
     pub entity: CadEntity,
 }
 //#endregion 🔖️EntityRecord
 //#region 🔖️Block
 /// 📦️ Name-keyed (dxf `BLOCKS` section) — strong entity; `entities` is its own nested id-keyed
 /// collection (same shape as the top-level `entities`).
-#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct CadBlock {
@@ -82,7 +83,8 @@ pub struct CadBlock {
 }
 //#endregion 🔖️Block
 //#region 🔖️Snapshot
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.cad")]
 pub struct SemioCadSnapshot {

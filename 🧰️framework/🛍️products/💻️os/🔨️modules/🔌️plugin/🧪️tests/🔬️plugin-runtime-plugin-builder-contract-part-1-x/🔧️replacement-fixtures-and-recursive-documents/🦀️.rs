@@ -94,7 +94,7 @@ async fn drive_composed_replacement_to(
 }
 
 async fn live_composed_replacement_app() -> VcsArtifactApp<ComposedParentApp, TestMembers> {
-    let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
+    let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("the reference snapshot births");
     let dialect = test_child_dialect().await;
     let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), app.stores.store.local_actor_id().clone()).await.expect("live child");
     app.register_child("slot", "child-1", dialect, member, &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await.expect("live child publication");

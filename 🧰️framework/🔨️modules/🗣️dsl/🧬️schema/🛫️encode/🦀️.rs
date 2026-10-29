@@ -18,6 +18,7 @@ pub trait FieldProjectionSource{
     fn projection_key_view(&self,path:&[usize],index:usize)->Result<semio_framework_value_paged_text::paged_text::TextReadView<'_>,ValueError>{self.projection_key(path,index).map(semio_framework_value_paged_text::paged_text::TextReadView::from_str)}
 }
 impl<T:DslField> FieldProjectionSource for T{
+    fn projection_identity(&self)->usize{DslField::projection_identity(self)}
     fn projection_view(&self,path:&[usize])->Result<FieldProjectionView<'_>,ValueError>{DslField::projection_view(self,path)}
     fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{DslField::projection_key(self,path,index)}
 }
@@ -201,8 +202,9 @@ pub fn project_list<T:DslField,C:super::DslSequenceView<T>+?Sized>(values:&C,con
 /// 🗺️ Projects literal map keys and their typed values before materializing the physical map.
 pub fn project_map<T:DslField>(values:&std::collections::BTreeMap<String,T>,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{project_entries(values.len(),values.iter(),control)}
 
-/// ⛔️ Projects ordered literal entries of any map owner under the same exact workload and partial-field retirement.
+/// ⛔️ Projects ordered literal entries of any map owner under the same exact workload and partial-field retirement; an empty map owns nothing and completes without a checkpoint.
 pub fn project_entries<'a,T:DslField+'a>(length:usize,values:impl Iterator<Item=(&'a String,&'a T)>,control:&mut NativeEncodeControl<'_>)->Result<FieldValue,ValueError>{
+    if length==0{return Ok(FieldValue::Map(Vec::new()));}
     control.scoped_stage(|control|{control.begin_stage(length)?;let mut output=super::__rt::DecodedFieldOwner::new(control.allocate_vec(length)?,|items:Vec<(String,FieldValue)>|{for(_,value)in items{retire_field(value);}});for(key,value)in values{let key=control.copy_text(key)?;let value=control.scoped_stage(|control|{control.begin_stage(0)?;value.to_value_controlled(control)})?;output.as_mut().push((key,value));control.step()?;}Ok(FieldValue::Map(output.take()))})
 }
 

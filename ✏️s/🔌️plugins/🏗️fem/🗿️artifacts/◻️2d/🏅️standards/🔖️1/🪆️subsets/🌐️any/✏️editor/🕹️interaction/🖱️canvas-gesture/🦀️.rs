@@ -306,6 +306,7 @@ pub fn pointer_down(
     doc: &Fem2dSnapshot,
     camera: &Viewport2d,
     view: &ViewModel,
+    body: &str,
     x: f64,
     y: f64,
     width: f64,
@@ -348,7 +349,6 @@ pub fn pointer_move(doc: &Fem2dSnapshot, camera: &Viewport2d, view: &ViewModel, 
         true
     });
     if tracking {
-        let body = fem2d_addressed_body_key(view, "fem2d.canvas-pointer-move")?;
         return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
     }
     let targets: Vec<Fem2dPick> = fem2d_hit_test(doc, camera, x, y, width, height).map_err(|_| Fault::from("fem2d.interaction.identity"))?.into_iter().collect();
@@ -371,7 +371,6 @@ pub fn pointer_up(
 ) -> Result<Emit<Fem2dMutation, NoConfigMutation>, Fault> {
     let window_id = fem2d_addressed_window_id(view, "fem2d.canvas-pointer-up")?;
     let mut gesture = take_gesture(&window_id);
-    let body = fem2d_addressed_body_key(view, "fem2d.canvas-pointer-up")?;
     if cancelled || !gesture.tracking {
         return Ok(Emit { ui_scope: partial_window_refresh(body), ..Default::default() });
     }

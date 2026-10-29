@@ -1,5 +1,5 @@
 //! 🧾️ Whole dictionary commands prepare sparse rows and inverse fields from their original sources.
-#[path="🎚️decision.rs"]pub mod decision;
+pub use semio_s_artifact_layout_layout_mutations_decisions::data_decision as decision;
 #[path="↩️inverse.rs"]pub mod inverse;
-#[path="🗺️plan.rs"]pub mod plan;
+pub use semio_s_artifact_layout_layout_mutations_decisions::data_plan as plan;
 #[path="🔺️output.rs"]pub mod output;

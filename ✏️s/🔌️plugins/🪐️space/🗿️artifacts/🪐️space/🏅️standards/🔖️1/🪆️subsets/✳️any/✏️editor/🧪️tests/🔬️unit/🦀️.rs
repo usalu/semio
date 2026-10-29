@@ -115,7 +115,7 @@ impl std::ops::DerefMut for SpaceIndexApp {
                 },
             ),
         ];
-        app.0.dispatch_typed(SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("fold indexed artifact");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("fold indexed artifact");
         let files = app.config_pack().await.expect("indexed config pack");
         let config = store::os_store::text_format::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("indexed config projection").snapshot;
         assert_eq!(config.indexed_artifacts.len(), 1);
@@ -124,7 +124,7 @@ impl std::ops::DerefMut for SpaceIndexApp {
     
     #[allow(dead_code)]
     pub async fn dispatch(app: &mut SpaceIndexApp, command: SpaceIndexCommand) -> semio_framework_plugin::InvocationResult {
-        app.0.dispatch_typed(command, &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch")
     }
 }
 
@@ -242,7 +242,7 @@ async fn create_artifact_dialog_submission_preserves_the_exact_catalog_choice_in
     };
     assert_eq!(command.kind_choice, kind_choice);
     let mut app = context::new_app().await;
-    let result = app.0.dispatch_typed(SpaceIndexCommand::CreateArtifact(command), &semio_framework_plugin::artifact_app_laws::meta("dialog"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dialog submission");
+    let result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &SpaceIndexCommand::CreateArtifact(command), &semio_framework_plugin::artifact_app_laws::meta("dialog"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dialog submission");
     assert!(app.snapshot().expect("projection").artifacts.is_empty());
     let [Effect::ReplayShellCommand { action_id, args }] = result.requested_effects.as_slice() else {
         panic!("dialog submission must emit one ReplayShellCommand");

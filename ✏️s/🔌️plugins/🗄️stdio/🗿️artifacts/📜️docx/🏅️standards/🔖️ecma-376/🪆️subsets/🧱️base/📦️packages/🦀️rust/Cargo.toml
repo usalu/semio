@@ -36,6 +36,7 @@ serde_json = { workspace = true }
 semio-s-artifact-stdio-docx-base-model = { workspace = true }
 semio-s-artifact-stdio-docx-base-mutations = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }

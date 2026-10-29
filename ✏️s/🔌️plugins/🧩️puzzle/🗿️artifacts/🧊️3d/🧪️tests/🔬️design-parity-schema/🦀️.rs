@@ -1,5 +1,10 @@
 
-use crate::*;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dAttribute;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dAuthor;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogVortexKind;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dCatalogVortexTemplate;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dObjectAnchor;
+use semio_s_artifact_puzzle_3d_model::Puzzle3dRepresentation;
 use semio_s_artifact_puzzle_3d_model::Puzzle3dAttraction;
 use semio_s_artifact_puzzle_3d_model::Puzzle3dObject;
 use semio_s_artifact_puzzle_3d_model::Puzzle3dCompatSpecificity;

@@ -49,6 +49,7 @@ pack = { path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦
 #    file's own docstring for the full rationale.
 serde = { workspace = true }
 serde_json = { workspace = true }
+semio-framework-plugin-instance-construction = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🧱️construction/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

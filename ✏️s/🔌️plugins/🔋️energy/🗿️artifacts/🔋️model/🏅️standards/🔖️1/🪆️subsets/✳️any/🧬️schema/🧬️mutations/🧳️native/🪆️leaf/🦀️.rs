@@ -2,7 +2,7 @@
 use crate::{snapshot::original::EnergyModelSnapshot,diff::original::EnergyModelDiff,row::RowOutcome,scalar::{invalid,scalar,nested,child,add,tag,receipt}};
 use semio_framework_value::{RetirementDemand,ValueError,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{size_of,ManuallyDrop};
-use protocol::{Mutation,MutationMessage,MutationMessageLedgerRetirement,mutation::retained::{retained_mutation_demand_fits,RetainedMutationLeafPreparation,RetainedMutationCloseContext,RetainedMutationAdvance,RetainedMutationDecision,RetainedDiagnosticPreparation,RetainedDiagnosticSpec}};
+use protocol::{Mutation,MutationMessage,MutationMessageLedgerRetirement,retained_mutation_demand_fits,RetainedMutationLeafPreparation,RetainedMutationCloseContext,RetainedMutationAdvance,RetainedMutationDecision,RetainedDiagnosticPreparation,RetainedDiagnosticSpec};
 use semio_framework_value::factory::vector::FactoryVectorRetirement;
 /// 🧩️ A category lends its typed original field cursor to the shared semantic leaf lifecycle.
 pub trait RowFieldPreparation:Send+'static{
@@ -35,8 +35,8 @@ pub trait RowLeafSpec<L,M,const N:usize=1>:Send+Sync+'static{
  fn input(payload:RetainedCloneRef<'_,L>)->RetainedCloneRef<'_,Self::Input>;
  fn key(payload:RetainedCloneRef<'_,L>)->Option<RetainedCloneRef<'_,u32>>;
  fn inverse(payload:RetainedCloneRef<'_,L>,value:Self::Inverse)->M;
- fn diagnostic_targets(payload:RetainedCloneRef<'_,L>,outcome:RowOutcome)->Result<[protocol::mutation::retained::RetainedDiagnosticTarget<'_>;N],ValueError>;
- fn diagnostic_targets_from_core<'a>(payload:RetainedCloneRef<'a,L>,outcome:RowOutcome,_:&Self::Core)->Result<[protocol::mutation::retained::RetainedDiagnosticTarget<'a>;N],ValueError>{Self::diagnostic_targets(payload,outcome)}
+ fn diagnostic_targets(payload:RetainedCloneRef<'_,L>,outcome:RowOutcome)->Result<[protocol::RetainedDiagnosticTarget<'_>;N],ValueError>;
+ fn diagnostic_targets_from_core<'a>(payload:RetainedCloneRef<'a,L>,outcome:RowOutcome,_:&Self::Core)->Result<[protocol::RetainedDiagnosticTarget<'a>;N],ValueError>{Self::diagnostic_targets(payload,outcome)}
 }
 /// 🧳️ Diagnostics and inverse rows keep the exact original factory through every denied or cancelled turn.
 pub struct RowLeafPreparation<L:Send+Sync+'static,M:Mutation<EnergyModelSnapshot,Diff=EnergyModelDiff>+Send+'static,S:RowLeafSpec<L,M,N>,const N:usize=1>{

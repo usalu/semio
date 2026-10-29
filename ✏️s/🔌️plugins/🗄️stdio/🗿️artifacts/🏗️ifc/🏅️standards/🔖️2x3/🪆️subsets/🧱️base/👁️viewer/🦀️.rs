@@ -73,8 +73,8 @@ impl ArtifactViewer for Ifc2x3AnyViewer {
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_ANY_DOCUMENT_SCHEMA;
     fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(inspector::topology(doc.snapshot))}
 
-    fn reference_birth()->Option<fn()->Ifc2x3Snapshot>{Some(||{
-        Ifc2x3Snapshot::default()
+    fn reference_birth()->Option<fn()->Result<Ifc2x3Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(Ifc2x3Snapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

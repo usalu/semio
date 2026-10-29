@@ -68,8 +68,7 @@ pub const PUZZLE2D_RETAINED_TOOL_IDS: &[&str] = &[
 ];
 
 /// 🧭️ The two framework-injected host-configuration verbs. They are `InteractiveJobClassification::Migrated`
-/// in the manifest and [`Puzzle2dPlayApp::host_configuration_mutation`] resolves each to one Config
-/// mutation, so they need a generated tool id — without which `validate_tool_job_rows` refuses
+/// in the manifest and need a generated tool id — without which `validate_tool_job_rows` refuses
 /// [`Puzzle2dHostConfigurationProofs`]' generic bounded proofs and `dispatch_action` fails closed.
 /// They carry NO app-owned factory, so they stay out of [`PUZZLE2D_RETAINED_TOOL_IDS`], which is what
 /// keys [`Puzzle2dRetainedCommandJobFactory`] and what the retained-jobs snapshot pins.

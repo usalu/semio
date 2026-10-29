@@ -98,7 +98,7 @@ pub use convergence_early_exit_and_applied_mutation::{
 /// 📨️ Publishes the preflighted original diagnostic owner through the current Store component borrows.
 pub fn publish_prepared_diagnostics<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, diagnostics: &mut ArtifactStoreDiagnosticStage, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneProgress, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
+    P: semio_framework_os_spr::StoreState,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
         if diagnostics.row_count()==0{return Ok(Default::default());}
@@ -108,6 +108,3 @@ where
         store.replay.pending_report.install_prepared_messages(messages,worst);Ok(receipt)
     
 }
-#[path = "../../../../📥️ingress/📚️original/🦀️.rs"]
-mod original_ingress;
-use original_ingress::OriginalReplayEdits;

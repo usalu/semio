@@ -306,8 +306,8 @@ impl ArtifactEditor for SpaceIndexEditor {
         semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, SpaceIndexCommand::command_id, SPACE_INDEX_RETAINED_RAW_BYTES, SPACE_INDEX_RETAINED_WORK_ITEMS, false, |request| semio_framework_plugin::retained_command::BoundedArtifactCommandWork::new(tool_id, space_index_retained_reduce, space_index_retained_extent))
     }
 
-    fn reference_birth()->Option<fn()->SSpaceSnapshot>{Some(||{
-        SSpaceSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SSpaceSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SSpaceSnapshot::default())
     })}
 
     fn command_id(command: &SpaceIndexCommand) -> &'static str {

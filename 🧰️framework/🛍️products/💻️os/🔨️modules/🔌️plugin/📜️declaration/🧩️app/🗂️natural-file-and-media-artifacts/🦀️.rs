@@ -51,14 +51,14 @@ pub fn natural_file_input_media(codec: NaturalFileCodec, media_type: MediaType, 
 /// 🌱️ The load/genesis emission of one decoded whole document — what a natural-file import and the default `document:in`
 /// importer publish: `Effect::LoadDocument` carrying the document's pack over a fresh empty history, exactly like a catalogue
 /// example load. It is not a mutation and writes no history row; the runtime stamps the live store's identity on it.
-pub fn document_load_emit<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot, Mutation, ConfigMutation, DraftMutation>(snapshot: &S, schema: &str) -> Emit<Mutation, ConfigMutation, DraftMutation> {
+pub fn document_load_emit<S: ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState, Mutation, ConfigMutation, DraftMutation>(snapshot: &S, schema: &str) -> Emit<Mutation, ConfigMutation, DraftMutation> {
     let pack = snapshot.encode_pack();
     let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("", schema));
     Emit { effects: vec![Effect::LoadDocument { pack, spr }], ui_scope: UiDirtyScope::Full, ..Emit::default() }
 }
 
 /// 🎞️ Reference imports require an explicitly declared typed snapshot codec.
-pub fn document_reference_load_emit<S:store::os_store::serialization::ArtifactStoreSnapshot,Mutation,ConfigMutation,DraftMutation>(snapshot:&S,schema:&str)->Result<Emit<Mutation,ConfigMutation,DraftMutation>,MediaError>{
+pub fn document_reference_load_emit<S: store::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,Mutation,ConfigMutation,DraftMutation>(snapshot:&S,schema:&str)->Result<Emit<Mutation,ConfigMutation,DraftMutation>,MediaError>{
  let codec=S::reference_snapshot_codec().ok_or(MediaError::NotImplemented)?;
  let pack=(codec.encode)(snapshot).map_err(|error|MediaError::Payload("artifact:in".into(),error.to_string()))?;
  let spr=::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("",schema));

@@ -3,19 +3,25 @@
 use crate::standards::v1::subsets::any::schema::structure::FemCombination;
 use crate::standards::v1::subsets::any::schema::structure::FemElement;
 use crate::standards::v1::subsets::any::schema::structure::FemLoadCase;
-use semio_s_fem_node::planar::FemNodeValue;
 use crate::standards::v1::subsets::any::schema::structure::FemRegion;
 use crate::standards::v1::subsets::any::schema::structure::FemSection;
 use crate::standards::v1::subsets::any::schema::structure::FemSupport;
 use ::semio_framework_schema::ArtifactSchema;
-use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
 
 #[path="❄️reference/🦀️.rs"]mod reference;
 pub use reference::Fem2dSnapshotValue;
+#[path="native.rs"]mod native;
+pub use native::Fem2dReceiving;
+#[path="record.rs"]mod record;
+#[path="receive-record.rs"]mod receive_record;
+#[path="projection.rs"]mod projection;
+#[path="write-pack.rs"]mod write_pack;
+#[path="identity-index.rs"]mod identity_index;
+pub use identity_index::{FemIdentityIndex,FemIdentityKind,FemIdentitySource};
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem2d document snapshot (persistent fields of the artifact).
-#[derive(Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.fem.fem2d")]
@@ -44,6 +50,37 @@ pub struct Fem2dSnapshot {
 mod interaction_identity;
 
 impl Fem2dSnapshot {
+    /// 🛂️ Checks borrowed native record identities before any typed snapshot owner is constructed.
+    pub fn validate_interaction_record(record: &semio_framework_dsl_record::RecordValue, control: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), semio_framework_value::ValueError> {
+        interaction_identity::validate(record, control)
+    }
+
+    /// 🪪️ Admits bounded entity addresses and uniqueness inside each semantic owner namespace.
+    pub fn validate_interaction_identities(&self) -> Result<(), semio_framework_value::ValueError> {
+        let invalid = || semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "FEM2d identity is empty, repeated in its namespace, or exceeds shared scoped identity bounds");
+        let rows = self.nodes.iter().map(|row| ("node", row.id.as_str()))
+            .chain(self.elements.iter().map(|row| ("element", crate::standards::v1::subsets::any::schema::structure::element_id(row))))
+            .chain(self.regions.iter().map(|row| ("region", row.id.as_str())))
+            .chain(self.materials.iter().map(|row| ("material", row.id.as_str())))
+            .chain(self.sections.iter().map(|row| ("section", row.id.as_str())))
+            .chain(self.supports.iter().map(|row| ("support", row.id.as_str())))
+            .chain(self.load_cases.iter().map(|row| ("loadCase", row.id.as_str())))
+            .chain(self.combinations.iter().map(|row| ("combination", row.id.as_str())));
+        let mut seen = std::collections::HashSet::new();
+        for (kind, id) in rows {
+            protocol::wire::validate_scoped_identity_segments(&[kind, id]).map_err(|_| invalid())?;
+            if !seen.insert((kind, id)) { return Err(invalid()); }
+        }
+        let mut loads = std::collections::HashSet::new();
+        for case in &self.load_cases {
+            for load in &case.loads {
+                let id = crate::standards::v1::subsets::any::schema::structure::load_id(load);
+                protocol::wire::validate_scoped_identity_segments(&["load", &case.id, id]).map_err(|_| invalid())?;
+                if !loads.insert((case.id.as_str(), id)) { return Err(invalid()); }
+            }
+        }
+        Ok(())
+    }
 }
 //#region 🔖️HandcraftedArtifactCodecs
 

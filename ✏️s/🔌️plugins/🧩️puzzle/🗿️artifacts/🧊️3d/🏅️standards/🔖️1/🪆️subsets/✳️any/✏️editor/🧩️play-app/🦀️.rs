@@ -111,10 +111,6 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// 🧰️ `setActiveUtility` needs no variant of its own: puzzle3d's active utility IS host view state
     /// (`puzzle3d_scene_active_utility` reads `ViewModel.active_utility_by_window_id`), and the only
     /// app-owned state a utility switch invalidates is that window's engagement input.
-    fn host_configuration_mutation(_action: &str, _args: Option<&semio_framework_value::DslValue>) -> Result<Option<Self::ConfigMutation>, Fault> {
-        Ok(None)
-    }
-
     fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::ArtifactBoundedFirstStepProof> {
         let mut proofs = Puzzle3dRetainedCommandProofs::proofs();
         proofs.extend(Puzzle3dHostConfigurationProofs::proofs());
@@ -267,8 +263,8 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// throwaway `Puzzle3dPlayApp` dropped on return: every rendering app syncs its own session before its
     /// first body (`with_puzzle3d_app_for`), so that work reached no one — while every `codec` call of a hub
     /// creating or validating a document paid for it in the interpreter.
-    fn reference_birth()->Option<fn()->Puzzle3dPlaySnapshot>{Some(||{
-        Puzzle3dPlaySnapshot::new(puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored initial snapshot admits"))
+    fn reference_birth()->Option<fn()->Result<Puzzle3dPlaySnapshot,semio_framework_plugin::Fault>>{Some(||{
+        puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).map(Puzzle3dPlaySnapshot::new).map_err(|error|semio_framework_plugin::reference_birth_fault("authored initial snapshot admits",format_args!("{error:?}")))
     })}
 
     fn clipboard_media_type() -> Option<MediaType> {

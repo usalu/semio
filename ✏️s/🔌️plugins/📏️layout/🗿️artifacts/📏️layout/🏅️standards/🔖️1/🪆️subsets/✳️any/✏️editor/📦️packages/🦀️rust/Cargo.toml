@@ -16,7 +16,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
-testkit = []
+testkit = ["semio-framework-plugin/artifact-app-testing"]
 
 [dependencies]
 semio-s-artifact-draw-drawing-editor = { workspace = true }

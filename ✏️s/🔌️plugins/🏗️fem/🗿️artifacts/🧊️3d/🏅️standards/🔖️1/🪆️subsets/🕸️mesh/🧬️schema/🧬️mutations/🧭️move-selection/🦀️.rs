@@ -9,8 +9,8 @@ use protocol::SemanticDescriptor;
 use protocol::ColdMutationKind;
 use semio_framework_value_derive::FromValue;
 use semio_framework_value_derive::ToValue;
-use semio_s_artifact_fem_3d_mesh_topology::standards::v1::subsets::any::schema::mutations::replace_node::ReplaceNode;
-use semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::replace_solid::ReplaceSolid;
+use crate::standards::v1::subsets::any::schema::mutations::change_node::ChangeNode;
+use semio_s_artifact_fem_3d_mesh_solids::standards::v1::subsets::any::schema::mutations::change_solid::ChangeSolid;
 
 //#region 🔖️Mutation
 /// 🧭️ One gumball gesture over the selection's geometry, stated RELATIVELY so it replays on any base: every named
@@ -136,7 +136,7 @@ fn number(value: f64, german: bool) -> String {
 
 impl<Op> MutationKind<Fem3dSnapshot, Op> for MoveSelection
 where
-    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ReplaceNode> + From<ReplaceSolid>, {
+    Op: protocol::Mutation<Fem3dSnapshot, Diff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeNode> + From<ChangeSolid>, {
 
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "move", entity: "selection", kind: "move-selection", record: "MovedSelection" };
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -166,7 +166,7 @@ where
 }
 impl<Op> protocol::ColdMutationKind<Fem3dSnapshotValue, Op> for MoveSelection
 where
-    Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ReplaceNode> + From<ReplaceSolid>, {
+    Op: protocol::ColdMutation<Fem3dSnapshotValue, ReferenceDiff = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> + From<ChangeNode> + From<ChangeSolid>, {
 
 
     fn diff(&self, base: &Fem3dSnapshotValue) -> protocol::MutationOutcome<semio_s_artifact_fem_3d_model::standards::v1::subsets::any::schema::diff::Fem3dDiff> {

@@ -69,7 +69,15 @@ pub struct CurationCuratedPatchEntry {
 }
 
 protocol::list_delta! {
-    pub CurationCuratedDelta { removal: CurationCuratedRemoval, insertion: CurationCuratedInsertion, relocation: CurationCuratedRelocation, modification: CurationCuratedModification, row: CuratedItem, patch: CurationCuratedPatchEntry, key: object_id, values_only }
+    pub CurationCuratedDelta { removal: CurationCuratedRemoval, insertion: CurationCuratedInsertion, relocation: CurationCuratedRelocation, modification: CurationCuratedModification, row: CuratedItem, patch: CurationCuratedPatchEntry, list: Vec<CuratedItem>, key: String = by CurationCuratedKeys, values_only }
+}
+
+/// 🔑️ Keys the foreign `CuratedItem` rows of their list delta by `object_id`.
+pub(crate) struct CurationCuratedKeys;
+
+impl protocol::list_delta::KeyOf<CuratedItem> for CurationCuratedKeys {
+    type Key = String;
+    fn key_of(row: &CuratedItem) -> String { row.object_id.clone() }
 }
 //#endregion 🔖️DeltaHelpers
 

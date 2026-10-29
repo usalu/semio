@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 semio-framework-value-native-owned = { workspace = true }
 semio-framework-value-persistent = { workspace = true }
 semio-s-artifact-energy-model-native-mutations = { workspace = true }
+semio-s-artifact-energy-model-native-mutations-lifecycle = { workspace = true }
 semio-s-artifact-energy-model-native-derive = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
@@ -30,4 +31,5 @@ semio-framework-value-derive = { workspace = true }
 semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-diff-patch = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
+semio-s-artifact-energy-model-mut-year-schedule-holidays = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }

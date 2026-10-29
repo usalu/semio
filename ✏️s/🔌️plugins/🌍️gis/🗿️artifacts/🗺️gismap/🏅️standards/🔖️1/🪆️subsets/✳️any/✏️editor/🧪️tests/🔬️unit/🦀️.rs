@@ -106,7 +106,7 @@ pub mod context {
     pub async fn dispatch(app: &mut Gis2dTestApp, command: Gis2dCommand) -> Gis2dDispatchReceipt {
         let mut action_meta = meta("local");
         action_meta.view_state = Some(main_window_view());
-        app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch admission");
+        semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch admission");
         Gis2dDispatchReceipt(semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch publication"))
     }
 

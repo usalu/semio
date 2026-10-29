@@ -23,12 +23,12 @@ pub fn change_model_version<Op: From<ChangeModelVersion>>(new_version: String) -
 
 impl<M> crate::retained::IdentityPayload<M> for ChangeModelVersion where M:From<ChangeModelVersion> {
  const FIELD:crate::retained::IdentityField=crate::retained::IdentityField::Version;
- const INVALID:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"An energy model version must not be blank."};
- const UNCHANGED:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The energy model already has this version."};
+ const INVALID:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"An energy model version must not be blank."};
+ const UNCHANGED:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The energy model already has this version."};
  fn source(payload:semio_framework_value::RetainedCloneRef<'_,Self>)->semio_framework_value::RetainedCloneRef<'_,String>{payload.project(0,|p|&p.new_version)}
  fn inverse(value:String)->M{Self{new_version:value}.into()}
 }
-impl<M> protocol::mutation::retained::RetainedMutationLeaf<crate::snapshot::original::EnergyModelSnapshot,M> for ChangeModelVersion
+impl<M> protocol::RetainedMutationLeaf<crate::snapshot::original::EnergyModelSnapshot,M> for ChangeModelVersion
 where M:protocol::Mutation<crate::snapshot::original::EnergyModelSnapshot,Diff=crate::diff::original::EnergyModelDiff>+From<ChangeModelVersion>+Send+'static {
  type Preparation=crate::retained::IdentityLeafPreparation<Self,M>;
 }

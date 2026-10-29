@@ -184,15 +184,15 @@ pub fn axis_angle_from_up_to(normal: [f64; 3]) -> ([f64; 3], f64) {
 //#region 🔧️Behavior
 //#endregion 🔧️Behavior
 //#region 🔧️Behavior
-const PROCESS_CONTRIBUTION_MAX_BYTES: usize = 256 * 1024;
-const PROCESS_CONTRIBUTION_MAX_DEPTH: usize = 32;
-const PROCESS_CONTRIBUTION_MAX_ITEMS: usize = 4 * 1024;
+pub const PROCESS_CONTRIBUTION_MAX_BYTES: usize = 256 * 1024;
+pub const PROCESS_CONTRIBUTION_MAX_DEPTH: usize = 32;
+pub const PROCESS_CONTRIBUTION_MAX_ITEMS: usize = 4 * 1024;
 /// 📏️ Longest JSON string one contribution payload may carry. The REAL `machinesJson` of the four
 /// shipped `process-extension-*` bundles is 3 311 / 4 010 / 4 011 / 4 705 bytes (measured 2026-09-16,
 /// ticket 26/08/28/DEMONSTRATOR-END-TO-END-ALL-APPS), so the old 4 KiB bound silently refused the
 /// wood catalog — `contributed_machine_catalogs` returned nothing and the workshop showed built-ins
 /// only, whatever the host pushed.
-const PROCESS_CONTRIBUTION_MAX_STRING_BYTES: usize = 16 * 1024;
+pub const PROCESS_CONTRIBUTION_MAX_STRING_BYTES: usize = 16 * 1024;
 fn process_json_envelope_is_bounded(input: &str) -> bool {
     if input.len() > PROCESS_CONTRIBUTION_MAX_BYTES {
         return false;

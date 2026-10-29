@@ -1,6 +1,6 @@
 //! 📨️ Original command custody and a genuine read qualification authorize one exact registered child command.
 use super::ChildVectorReadStamp;
-use crate::child_view::editor::{registration::ChildEditorRegistration,read::ChildEditorRead,source::{ChildEditorCapability,ChildEditorRequest,ChildEditorSourceCursor,ChildEditorSourceStep,ChildEditorStamp}};
+use crate::child_view::child_editor::{registration::ChildEditorRegistration,read::ChildEditorRead,source::{ChildEditorCapability,ChildEditorRequest,ChildEditorSourceCursor,ChildEditorSourceStep,ChildEditorStamp}};
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,retained_clone_grant_admits},retirement::{RetireOwned,RetirementCursor,RetirementStep}};
 #[derive(Clone,Copy,PartialEq,Eq)]enum Phase{Parent,Command,Qualify,Closed}
 pub struct OriginalChildEditorCommandCursor{issued:Option<ChildEditorStamp>,command_identity:Option<(u64,usize,usize,usize)>,parent:Option<RetainedCloneBinding>,command:Option<RetainedCloneBinding>,read:Option<ChildVectorReadStamp>,capability:Option<&'static ChildEditorCapability>,cursor:ChildEditorSourceCursor,phase:Phase,closing:bool}

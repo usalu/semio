@@ -169,7 +169,7 @@ impl std::ops::DerefMut for Gis3dApp {
     pub async fn dispatch_at(app: &mut Gis3dApp, command: Gis3dCommand, view_state: ViewModel) -> TypedOperationFixtureReceipt {
         let mut action_meta = meta("local");
         action_meta.view_state = Some(view_state);
-        let admission = app.0.dispatch_typed(command, &action_meta, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let admission = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action_meta, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         assert!(admission.mutations.is_empty(), "retained Terrain commands publish only through acknowledged result pages");
         settle_registered_typed_operation(&mut app.0, action_meta.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle Terrain dispatch")
     }

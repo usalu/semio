@@ -7,7 +7,6 @@ use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::entities::{PUZZLE5D_I
 use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::modes::edit::windows::{board2d, world3d};
 use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::{create_puzzle5d_app, Puzzle5dPlayApp};
 use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::modes::edit;
-use semio_s_artifact_puzzle_5d_puzzle5d::editor::puzzle5d::interaction::{Puzzle5dCommand};
 
 /// ✏️ `Puzzle5dPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime
 /// `ArtifactApp` — `EditorApp<Puzzle5dPlayApp>` (SDK adapter, contract §2.1) is the real
@@ -125,6 +124,11 @@ fn action_meta(action: &str, args: Option<&Value>, window_id: Option<&str>) -> A
 /// 📄️ Drains what one settle turn can have left behind — presented pages, effects, events, and the
 /// completions that carry the HISTORY PATCH — plus the UI scope.
 ///
+/// 📤️ One fixed result page of the testkit's instance, borrowed under the mounted maintenance grant.
+fn take_page(app: &mut Puzzle5dTestApp) -> Result<Option<semio_framework_plugin::app::TypedOperationResultPage>, Fault> {
+    Ok(app.take_typed_operation_result_page(1, semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance)?.0)
+}
+
 /// 🐛️ Called inside the loop AND once more before it returns: an operation that RETIRED during the
 /// previous turn's `advance_typed_operation_publication` leaves its terminal completion queued while
 /// `has_pending_typed_operations` already reads false, so the exit branch handed back a result whose
@@ -134,7 +138,7 @@ fn action_meta(action: &str, args: Option<&Value>, window_id: Option<&str>) -> A
 /// operation has retired (`settle_registered_typed_operation`'s shape). Returning on it un-ACKed left the
 /// faulted operation awaiting its ACK for ever, so the NEXT dispatch never settled either.
 fn drain_settled(app: &mut Puzzle5dTestApp, result: &mut InvocationResult, fault: &mut Option<Fault>) -> Result<(), Fault> {
-    while let Some(page) = app.take_typed_operation_result_page(1) {
+    while let Some(page) = take_page(app)? {
         if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
             fault.get_or_insert_with(|| Fault::from(String::from_utf8_lossy(page.bytes()).into_owned()));
         }
@@ -208,14 +212,25 @@ pub fn dispatch(app: &mut Puzzle5dTestApp, action: &str, args: Option<&Value>, w
     ) {
         let dsl_args = args.map(semio_framework_pack_json::to_dsl_value);
         return semio_framework_plugin::with_authoring_identity!(|identity| {
-            let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, dsl_args.clone(), &action_meta, &mut identity, app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted))).map_err(fault_of);
+            let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, dsl_args.clone(), &action_meta, &mut identity, app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).and_then(|admitted| block_on(semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.0, admitted, app.1.cx()))).map_err(fault_of);
             settle(app, result, &mut identity)
         });
     }
     semio_framework_plugin::with_authoring_identity!(|identity| {
-        let result = block_on(app.0.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), &action_meta, &mut identity, app.1.cx()));
+        let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, action_args(args, window_id), &action_meta, &mut identity, app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).map_err(fault_of);
         settle(app, result, &mut identity)
     })
+}
+
+/// 🧾️ The addressed window rides in the action arguments, exactly as the shell sends it.
+fn action_args(args: Option<&Value>, window_id: Option<&str>) -> Option<semio_framework_value::DslValue> {
+    let mut value = args.cloned();
+    if let Some(window_id) = window_id {
+        if let Value::Object(object) = value.get_or_insert_with(|| Value::Object(Default::default())) {
+            object.insert("windowId", Value::String(window_id.into()));
+        }
+    }
+    value.as_ref().map(semio_framework_pack_json::to_dsl_value)
 }
 
 /// 📥️ [`dispatch`] through the SDK's own action dispatch (`handle_action`) instead of the typed channel — the lane a
@@ -240,7 +255,7 @@ pub fn dispatch_traced(app: &mut Puzzle5dTestApp, action: &str, args: Option<&Va
 }
 
 fn dispatch_traced_with(app: &mut Puzzle5dTestApp, action: &str, args: Option<&Value>, window_id: Option<&str>, action_meta: &ActionMeta, base: semio_framework_plugin::app::TypedOperationUnitCensus, started: std::time::Instant, identity: Identity<'_, '_>) -> Result<InvocationResult, Fault> {
-    let mut result = block_on(app.0.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), window_id.map(str::to_string)), action_meta, identity, app.1.cx()))?;
+    let mut result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, action_args(args, window_id), action_meta, identity, app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).map_err(fault_of)?;
     let mut fault = None;
     let mut lanes: std::collections::BTreeMap<String, u64> = std::collections::BTreeMap::new();
     let mut next_turn = 1_u64;
@@ -254,7 +269,7 @@ fn dispatch_traced_with(app: &mut Puzzle5dTestApp, action: &str, args: Option<&V
         }
         app.maintain(semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().maintenance.maximum_copy_bytes).map_err(|failure| Fault::from(format!("{failure:?}")))?;
         let unit = block_on(app.0.advance_typed_operation_publication(identity, app.1.cx())).map_err(|failure| Fault::from(format!("{failure:?}")));
-        while let Some(page) = app.take_typed_operation_result_page(1) {
+        while let Some(page) = take_page(app)? {
             *lanes.entry(format!("{:?}", page.lane)).or_default() += 1;
             if page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault {
                 eprintln!("{action} FAULT page operation={} turn={turn} ms={} census={} pages={lanes:?} fault={}", page.token.operation, started.elapsed().as_millis(), semio_framework_plugin::app::typed_operation_unit_census() - base, String::from_utf8_lossy(page.bytes()));
@@ -284,7 +299,7 @@ pub fn dispatch_armed(app: &mut Puzzle5dTestApp, action: &str, args: Option<&Val
     view.active_utility_by_window_id.insert(window_id.to_string(), utility_id.to_string());
     let action_meta = ActionMeta { view_state: Some(view), ..meta("local") };
     semio_framework_plugin::with_authoring_identity!(|identity| {
-        let result = ::semio_framework_async::poll::resolve_ready(app.0.dispatch_typed(Puzzle5dCommand::from_action(action, args.cloned(), Some(window_id.to_string())), &action_meta, &mut identity, app.1.cx()));
+        let result = block_on(semio_framework_plugin::artifact_app_laws::dispatch_fixture_action(&mut app.0, action, action_args(args, Some(window_id)), &action_meta, &mut identity, app.1.cx(), semio_framework_plugin::artifact_app_laws::fixture_mounted_policy().close)).map_err(fault_of);
         settle(app, result, &mut identity)
     })
 }

@@ -609,7 +609,7 @@ fn bounded_history_transition_decoding_obeys_the_neutral_law() {
         let bytes = std::sync::Arc::new(bytes);
         for grant in law["byteGrants"].as_array().unwrap() {
             let input = bytes.clone();
-            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_transition_controlled(&input, &control).await });
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_transition_controlled(input.as_slice(), &control).await });
             let mut actual = None;
             for _ in 0..100000 {
                 match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(),grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
@@ -645,7 +645,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
         let source = std::sync::Arc::new(bytes);
         for grant in law["byteGrants"].as_array().unwrap() {
             let input = source.clone();
-            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(input.as_slice(), &control).await });
             let mut outcome = None;
             for _ in 0..100000 {
                 match job.step(job.next_step_grant(1,grant.as_u64().unwrap() as usize).unwrap(),grant.as_u64().unwrap() as usize, &mut || false).unwrap() {
@@ -661,7 +661,7 @@ fn bounded_history_envelope_decoding_obeys_the_neutral_law() {
         }
         for stop in law["cancelAt"].as_array().unwrap() {
             let input = source.clone();
-            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(&input, &control).await });
+            let mut job = HistoryFoldJob::new(move |control| async move { decode_history_envelope_controlled(input.as_slice(), &control).await });
             for _ in 0..stop.as_u64().unwrap() { let _ = job.step(job.next_step_grant(1,1).unwrap(),1, &mut || false).unwrap(); }
             let completed = job.completed();
             job.request_cancel();

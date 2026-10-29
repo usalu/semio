@@ -9,3 +9,7 @@ pub use snapshot::*;
 #[path = "../🌿️vcs/🦀️.rs"]
 pub mod vcs;
 pub use vcs::*;
+
+#[cfg(test)]
+#[path = "../🧪️tests/🧬️dsl-native-snapshot/🦀️.rs"]
+mod dsl_native_snapshot_tests;

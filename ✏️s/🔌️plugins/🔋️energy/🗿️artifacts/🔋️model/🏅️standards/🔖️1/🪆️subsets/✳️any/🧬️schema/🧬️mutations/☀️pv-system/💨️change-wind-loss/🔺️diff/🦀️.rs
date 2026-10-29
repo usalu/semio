@@ -1,5 +1,6 @@
 //! 🔺️ Sparse authored PV thermal field diff.
-use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, ModelPatch, PvSystemAssignmentPatch, Rows};
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, ModelPatch, PvSystemAssignmentPatch};
+use crate::diff_patch::Rows;
 use crate::EnergyModelSnapshot;
 pub fn diff(payload:&super::ChangePvSystemFaimanHeatLossWind,base:&EnergyModelSnapshot)->protocol::MutationOutcome<EnergyModelDiff>{
     let Some(existing)=base.model.pv_systems.iter().find(|item|item.id==payload.id) else {return protocol::MutationOutcome::error("mutation.target-missing","PV system does not exist.",[payload.id.0.to_string()]);};

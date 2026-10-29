@@ -13,7 +13,7 @@ impl FieldProjectionSource for BoundSource<'_>{
 #[derive(Default)]
 pub struct DurableBoundPlanningV1{group:Option<String>,json:DurableCanonicalOutputV1,wire_json:DurableCanonicalOutputV1,edit:Option<Vec<u8>>,wire_edit:Option<Vec<u8>>,encoder:DurablePackOutputV1,pack:Option<Vec<u8>>,hash:semio_framework_hash::Sha256,offset:usize,digest:[u8;32],post_revision:[u8;32],phase:u8,closing:Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>}
 impl DurableBoundPlanningV1{
-    pub fn advance<P: Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ArtifactCanonicalJsonTree+ValueToValue+ValueFromValue>(&mut self,prepared:&mut ArtifactStoreOneItemPrepared<P,M>,wire:&DurableUnboundOneItemOutcomeV1,store:&StorePartsRef<'_,P,M>,group:&str,grant:RetainedCloneGrant,native:&mut NativeEncodeControl<'_>)->Result<(Option<DurableStoreBindingPlanV1>,RetainedCloneProgress),DurableOwnedGroupDecisionError>{
+    pub fn advance<P: Clone+ValueToValue+ValueFromValue,M:Clone+StoreMutation<P>+ArtifactCanonicalJsonTree+ValueToValue+ValueFromValue+semio_framework_os_spr::ColdMutation<P>+semio_framework_os_spr::OpBinary+semio_framework_os_spr::OpText>(&mut self,prepared:&mut ArtifactStoreOneItemPrepared<P,M>,wire:&DurableUnboundOneItemOutcomeV1,store:&StorePartsRef<'_,P,M>,group:&str,grant:RetainedCloneGrant,native:&mut NativeEncodeControl<'_>)->Result<(Option<DurableStoreBindingPlanV1>,RetainedCloneProgress),DurableOwnedGroupDecisionError>{
         let error=DurableOwnedGroupDecisionError::Retirement;
         let mut receipt=RetainedCloneProgress{copied_items:1,..Default::default()};
         match self.phase{

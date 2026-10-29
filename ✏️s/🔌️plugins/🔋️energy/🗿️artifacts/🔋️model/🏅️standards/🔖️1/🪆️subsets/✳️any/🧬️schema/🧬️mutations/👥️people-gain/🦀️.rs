@@ -1,4 +1,4 @@
-//! 👥️ Energy model mutation domain `people-gain`: `change-people-gain-schedule`, `change-people-gain-sensible-fraction`, `change-people-gain-activity-schedule`, `create-people-gain`, `change-people-gain-people-per-area`, `change-people-gain-latent-fraction`, `change-people-gain-radiant-fraction`, `change-people-gain-zone`, `delete-people-gain`.
+//! 👥️ Energy model mutation domain `people-gain`: `change-people-gain-schedule`, `change-people-gain-activity-schedule`, `create-people-gain`, `change-people-gain-people-per-area`, `change-people-gain-zone`, `delete-people-gain`
 
 #![allow(async_fn_in_trait)]
 #![allow(clippy::too_many_arguments)]
@@ -24,19 +24,6 @@ pub mod change_people_gain_schedule {
     #[path = "⏰️change-schedule/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⏰️change-schedule/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_people_gain_sensible_fraction {
-    #[path = "🌞️change-sensible-fraction/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "🌞️change-sensible-fraction/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "🌞️change-sensible-fraction/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "🌞️change-sensible-fraction/↩️inverse/🦀️.rs"]
     pub mod inverse;
 }
 
@@ -80,32 +67,6 @@ pub mod change_people_gain_people_per_area {
 }
 
 #[path = "."]
-pub mod change_people_gain_latent_fraction {
-    #[path = "💧️change-latent-fraction/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "💧️change-latent-fraction/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "💧️change-latent-fraction/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "💧️change-latent-fraction/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
-pub mod change_people_gain_radiant_fraction {
-    #[path = "📡️change-radiant-fraction/🦀️.rs"]
-    mod component;
-    pub use component::*;
-    #[path = "📡️change-radiant-fraction/🧊️reference/🦀️.rs"]
-    mod reference;
-    #[path = "📡️change-radiant-fraction/🔺️diff/🦀️.rs"]
-    pub mod diff;
-    #[path = "📡️change-radiant-fraction/↩️inverse/🦀️.rs"]
-    pub mod inverse;
-}
-
-#[path = "."]
 pub mod change_people_gain_zone {
     #[path = "🚶️change-zone/🦀️.rs"]
     mod component;
@@ -132,11 +93,8 @@ pub mod delete_people_gain {
 }
 
 pub use change_people_gain_schedule::{change_people_gain_schedule, ChangePeopleGainSchedule};
-pub use change_people_gain_sensible_fraction::{change_people_gain_sensible_fraction, ChangePeopleGainSensibleFraction};
 pub use change_people_gain_activity_schedule::{change_people_gain_activity_schedule, ChangePeopleGainActivitySchedule};
 pub use create_people_gain::{create_people_gain, CreatePeopleGain};
 pub use change_people_gain_people_per_area::{change_people_gain_people_per_area, ChangePeopleGainPeoplePerArea};
-pub use change_people_gain_latent_fraction::{change_people_gain_latent_fraction, ChangePeopleGainLatentFraction};
-pub use change_people_gain_radiant_fraction::{change_people_gain_radiant_fraction, ChangePeopleGainRadiantFraction};
 pub use change_people_gain_zone::{change_people_gain_zone, ChangePeopleGainZone};
 pub use delete_people_gain::{delete_people_gain, DeletePeopleGain};

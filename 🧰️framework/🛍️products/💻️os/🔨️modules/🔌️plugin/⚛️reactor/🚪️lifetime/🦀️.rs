@@ -9,6 +9,7 @@ pub struct NativeCloseKey {
     pub lifetime: ActorInstanceLifetime,
     pub allocation: usize,
 }
+semio_framework_value::artifact_retire_leaf!(NativeCloseKey);
 
 impl NativeCloseKey {
     pub fn capture<PA: semio_framework_plugin_reactor_app::PluginApp + 'static>(lifetime: ActorInstanceLifetime, lease: &crate::life_instance_registry::instance_lifetime::PluginInstanceCloseLease<PA>) -> Result<Self, &'static str> {

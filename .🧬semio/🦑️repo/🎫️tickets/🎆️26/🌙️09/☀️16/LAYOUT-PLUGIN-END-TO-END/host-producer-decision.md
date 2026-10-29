@@ -1,0 +1,7 @@
+# Host Producer Scope Decision
+
+A framework-only scan did not establish that host_configuration_mutation was unused. Root performed a registered read-only Git whole-tracked-repository search and found real Process3d, CAD and Sourcing concrete overrides plus direct setContributions behavior tests. Puzzle overrides intentionally return None and point at retained typed commands. The called admit_host_configuration_json has no definition in the inspected plugin source. Untracked implementations are not excluded by this tracked search.
+
+Do not delete a live host feature based on absence in the framework subtree. First inspect whether every real cold hook duplicates an existing genuine retained typed command with the same semantics. If so, retire the cold branch/default interface and manually move every affected concrete app and fixture to that actual typed path, without a compatibility wrapper. Otherwise author an explicit native producer classification and owned handoff under actual source authority. No cold callback may construct an accepted mutation before source admission.
+
+Source_lifetime owns the producer and host action route; mutations owns staged press settlement and typed mounted publication. They coordinate the shared owned settlement interface. Root made no production edit in this scope. No compile, runtime equivalence or complete untracked absence is claimed by this decision.

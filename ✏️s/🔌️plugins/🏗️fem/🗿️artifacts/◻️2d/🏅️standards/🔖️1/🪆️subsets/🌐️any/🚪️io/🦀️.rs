@@ -57,7 +57,8 @@ pub mod derived_composition {
                         AnalyzeSource::Binary(b) => AnalyzeSource::Binary(b),
                     };
                     let analysis = Fem2dAnalyzer::analyze(&[native]);
-                    if let Some(snapshot) = analysis.parts.snapshot {
+                    if let Some(value) = analysis.parts.snapshot {
+                        let snapshot = Fem2dSnapshot::from_reference(value).map_err(|error| ComposeError { message: error.to_string(), diagnostics: Vec::new() })?;
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
                     }
                 }
@@ -70,6 +71,8 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🚫️GeometryImport
+
+use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::structure::FEM_2D_SCHEMA;
 
 /// 🪪️ W2 packet P7 (26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET): the canonical `ArtifactEditor`/
 /// `ArtifactViewer::DIALECT` and composer dialect of this artifact — `artifact_kind` is the 3-part schema id
@@ -244,7 +247,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::bare_artifact_codec::<Fem2dSnapshot, Fem2dMutation>(FEM_2D_SCHEMA.to_string()),
+            codec: store::native_artifact_codec::<Fem2dSnapshot>(FEM_2D_SCHEMA.to_string()),
         },
         entries: entries(),
     }
@@ -258,14 +261,16 @@ mod tests;
 //#endregion 🧪️Tests
 
 pub mod derived_construction {
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::diff::Fem2dDiff;
     use semio_s_artifact_fem_2d_mutations::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
-    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
+    /// 🏗️ The builder accumulates the explicit authoring rows and receives them into persistent ownership once, when the snapshot is built.
     #[derive(Clone, Debug, Default)]
     pub struct Fem2dBuilderConstruction {
-        snapshot: Fem2dSnapshot,
+        rows: Fem2dSnapshotValue,
         diagnostics: Vec<semio_framework_diagnostic::Diagnostic>,
     }
 
@@ -274,36 +279,34 @@ pub mod derived_construction {
         type Mutation = Fem2dMutation;
         type Diff = Fem2dDiff;
         fn empty() -> Self {
-            Self { snapshot: Fem2dSnapshot::default(), diagnostics: Vec::new() }
+            Self::default()
         }
         fn from_snapshot(snapshot: Self::Snapshot) -> Self {
-            Self { snapshot, diagnostics: Vec::new() }
+            Self { rows: snapshot.to_reference(), diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
+            Ok(Self::from_snapshot(<Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
+            Ok(Self::from_snapshot(<Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let outcome = <Self::Mutation as protocol::ColdMutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
-            match protocol::apply_diff_cold(outcome.diff(), &self.snapshot) {
-                Ok(snapshot) => self.snapshot = snapshot,
+            let outcome = <Self::Mutation as protocol::ColdMutation<Fem2dSnapshotValue>>::diff(&mutation, &self.rows);
+            match protocol::apply_diff_cold(outcome.diff(), &self.rows) {
+                Ok(rows) => self.rows = rows,
                 Err(error) => self.diagnostics.push(semio_framework_diagnostic::Diagnostic::error("build.apply", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())),
             }
             (self, outcome)
         }
         fn absorb(mut self, diff: Self::Diff) -> protocol::MutationApplyResult<Self> {
-            let snapshot = protocol::apply_diff_cold(&diff, &self.snapshot)?;
-            self.snapshot = snapshot;
+            self.rows = protocol::apply_diff_cold(&diff, &self.rows)?;
             Ok(self)
         }
         fn build(self) -> Result<Self::Snapshot, Vec<semio_framework_diagnostic::Diagnostic>> {
-            if self.diagnostics.is_empty() {
-                Ok(self.snapshot)
-            } else {
-                Err(self.diagnostics)
+            if !self.diagnostics.is_empty() {
+                return Err(self.diagnostics);
             }
+            Fem2dSnapshot::from_reference(self.rows).map_err(|error| vec![semio_framework_diagnostic::Diagnostic::error("build.receive", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string())])
         }
     }
 }
@@ -311,11 +314,12 @@ pub use derived_construction::*;
 
 pub mod derived_analysis {
     use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshot;
+    use semio_s_artifact_fem_2d_model::standards::v1::subsets::any::schema::snapshot::Fem2dSnapshotValue;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
     pub struct Fem2dParts {
-        pub snapshot: Option<Fem2dSnapshot>,
+        pub snapshot: Option<Fem2dSnapshotValue>,
     }
 
     pub struct Fem2dAnalyzerAnalysis;
@@ -335,14 +339,14 @@ pub mod derived_analysis {
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => match <Fem2dSnapshot as pack::snapshot::ArtifactDsl>::parse_dsl(text) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Ok(snapshot) => parts.snapshot = Some(snapshot.to_reference()),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
                     AnalyzeSource::Binary(bytes) => match <Fem2dSnapshot as pack::snapshot::ArtifactPack>::decode_pack(bytes) {
-                        Ok(snapshot) => parts.snapshot = Some(snapshot),
+                        Ok(snapshot) => parts.snapshot = Some(snapshot.to_reference()),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.binary", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));

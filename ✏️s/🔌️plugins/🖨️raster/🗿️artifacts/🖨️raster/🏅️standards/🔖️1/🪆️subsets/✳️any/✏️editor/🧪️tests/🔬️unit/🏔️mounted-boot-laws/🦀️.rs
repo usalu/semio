@@ -54,7 +54,7 @@ pub mod mounted {
         let id = "raster-composite";
         let mut action = meta("local");
         action.view_state = Some(ViewModel { window_id: Some(id.into()), window_instances: vec![ViewWindowInstance { id: id.into(), window_kind_id: semio_s_artifact_raster_raster_editor::modes::edit::windows::composite::RASTER_PLAY_WINDOW_COMPOSITE.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) });
-        let mut result = app.0.dispatch_typed(command, &action, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
+        let mut result = semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &command, &action, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("dispatch");
         let settled = semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation(&mut app.0, RASTER_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("settle the typed operation");
         result.requested_effects.extend(settled.effects);
         result
@@ -350,49 +350,13 @@ fn structural_commands_refuse_protected_sources_and_destination_parents() {
 /// 📥️ LAW (Import Document hang, ticket 26/09/23 S20 14c): the demo document's op log — ONE edit whose ops plant the
 /// 25 KB `semio-emblem` asset and the carrier layers — comes back through the host document-archive door. Live,
 /// Import Document of that archive answered `1/1 running` forever while an empty raster imported in 1.2 s
-/// (`.tmp-ticket/wp-s20/generated/probe-raster-2.txt`). Two bounded halves pin where a stall lives: the raster store
-/// initializer alone (the edit replay), then the whole archive load.
+/// (`.tmp-ticket/wp-s20/generated/probe-raster-2.txt`). The bounded archive load pins where a stall lives: the framework-default store
+/// initializer replaying the edit, then the whole archive load.
 #[semio_framework_async_macros::async_test]
 async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
-    use semio_framework_job::InteractiveJob;
     let mut app = mounted::mounted_app();
     mounted::dispatch(&mut app, RasterCommand::SetActiveExample(semio_s_artifact_raster_raster_editor::commands::set_active_example::SetActiveExample { example_id: semio_s_artifact_raster_raster_examples::art_raster_demo::ID.into() })).await;
     let archive = PluginApp::document_archive(&mut app.0).await.expect("the demo document reads as one archive");
-    let envelope = store::os_store::text_format::parse_document_pack::<semio_s_artifact_raster_raster_model::snapshot::RasterSnapshot, semio_s_artifact_raster_raster_mutations::RasterMutation>(&archive.parent_pack, &archive.parent_spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.expect("the archive's pack/spr pair parses").into_envelope();
-    let edits = envelope.vcs.edits.len();
-    let operation = semio_framework_job::OperationId(4_401);
-    let generation = semio_framework_job::Generation(1);
-    let mut job = semio_s_artifact_raster_raster_host::raster_document_store_initialization_job(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
-    let cancel = semio_framework_job::root_cancel_token();
-    let mut preview_sequence = 0;
-    let mut steps = 0usize;
-    let wallet = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 24, maximum_capacity_bytes: 1 << 24, maximum_release_bytes: 1 << 24, maximum_depth: 64 };
-    let mut completed = None;
-    while steps < 400_000 {
-        let mut progress = semio_framework_value::retained_clone::RetainedCloneProgress::default();
-        let mut context = semio_framework_job::StepContext::new(operation, generation, semio_framework_job::StepBudget::new(4_096, u64::MAX, wallet), cancel.clone(), semio_framework_job::default_now_us, &mut preview_sequence, &mut progress);
-        let outcome = job.step(&mut context).expect("initializer turn");
-        steps += 1;
-        if let Some(outcome) = outcome {
-            if outcome.is_terminal() {
-                completed = Some(matches!(outcome, semio_framework_job::JobOutcomeBorrow::Complete { .. }));
-                break;
-            }
-        }
-    }
-    let completed = completed.unwrap_or_else(|| panic!("the raster store initializer replaying {edits} edit(s) of the demo archive reached no terminal in {steps} steps"));
-    assert!(completed, "the initializer completes the demo archive");
-    job.begin_close();
-    for _ in 0..400_000 {
-        if job.terminal_is_empty() {
-            break;
-        }
-        let demand = job.retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("the initializer quotes its close turn");
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
-        let _ = job.close_step(grant);
-    }
-    assert!(job.terminal_is_empty(), "the completed initializer closes to terminal-empty");
-    drop(job);
     PluginApp::begin_document_archive_load(&mut app.0, 91, archive).expect("archive admission");
     let started = std::time::Instant::now();
     let mut status = None;

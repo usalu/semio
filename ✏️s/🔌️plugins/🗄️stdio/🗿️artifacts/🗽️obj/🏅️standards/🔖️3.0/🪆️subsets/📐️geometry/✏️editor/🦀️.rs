@@ -220,8 +220,8 @@ impl ArtifactEditor for ObjAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); obj_any_editor_command_from_action(action, args) }
 
-    fn reference_birth()->Option<fn()->ObjSnapshot>{Some(||{
-        ObjSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<ObjSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(ObjSnapshot::default())
     })}
 
     fn handle(

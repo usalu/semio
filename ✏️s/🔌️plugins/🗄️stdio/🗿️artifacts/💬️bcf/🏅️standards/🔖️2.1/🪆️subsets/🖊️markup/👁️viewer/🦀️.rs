@@ -71,8 +71,8 @@ impl ArtifactViewer for BcfAnyViewer {
     const DIALECT: Dialect = BCF_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BCF_ANY_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->BcfSnapshot>{Some(||{
-        BcfSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<BcfSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(BcfSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

@@ -6,7 +6,7 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 #[derive(Clone,Copy)]
 struct PatchSource<'source>(kernel::codec::ByteSpan<'source>);
-impl JsonReadSource for PatchSource<'_>{fn byte_len(&self)->usize{self.0.len()}fn byte_at(&self,index:usize)->Option<u8>{self.0.get(index).copied()}}
+impl JsonReadSource for PatchSource<'_>{fn byte_len(&self)->usize{self.0.len()}fn byte_at(&self,index:usize)->Option<u8>{self.0.get(index)}}
 
 /// 🪟️ One caller retains the original operation borrow and every partially decoded owner across refusal.
 pub struct SnapshotPatchReadCursor<'source>{parser:JsonSourceCursor<PatchSource<'source>,DslValue>,candidate:Option<DslValue>,patch:Option<SnapshotPatch>,admitted:bool}

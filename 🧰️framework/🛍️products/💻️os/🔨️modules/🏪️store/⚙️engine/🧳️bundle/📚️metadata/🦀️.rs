@@ -5,7 +5,7 @@ use semio_framework_os_store_one_item_batch::lifted_member_group::BatchCommitMet
 pub enum BatchCommitMetadataStep{Blocked,Progress(RetainedCloneProgress),Ready}
 /// 🧮️ Clones only the selected original ledger/index entry into its admitted private destination.
 pub fn advance_batch_metadata<P,M>(store:&mut StoreParts<'_,P,M>,metadata:&mut BatchCommitMetadata,edit:&Edit<M>,digest:[u8;32],unit_flags:&mut Vec<(usize,bool)>,diagnostics:&mut semio_framework_os_store_one_item_publication::diagnostics::ArtifactStoreDiagnosticStage,grant:ArtifactStoreOneItemGrant)->Result<BatchCommitMetadataStep,String>
-where P:ToValue+Send+Sync+'static,M:ToValue+FromValue+Mutation<P>+OpBinary+OpText+Send+'static{
+where P: semio_framework_os_spr::StoreState,M: semio_framework_os_spr::StoreMutationFor<P>{
  if !grant.permits_one(){return Ok(BatchCommitMetadataStep::Blocked)}
  if metadata.edit_id_digest.is_none(){let id=&edit.id;let copy=id.len().checked_add(size_of::<Option<[u8;32]>>()).ok_or("commit metadata digest quote overflow")?;if grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(BatchCommitMetadataStep::Blocked)}metadata.edit_id_digest=Some(CursorRevisionAccumulator::hash_record(b"edit-id",&[id.as_bytes()]));return Ok(BatchCommitMetadataStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))}
 

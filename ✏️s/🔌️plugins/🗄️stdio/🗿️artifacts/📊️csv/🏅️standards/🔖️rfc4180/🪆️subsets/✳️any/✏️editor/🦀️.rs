@@ -582,8 +582,8 @@ impl ArtifactEditor for CsvEditor {
         csv_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->CsvSnapshot>{Some(||{
-        CsvSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<CsvSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(CsvSnapshot::default())
     })}
 
     /// ✏️ Maps the rendered grid's `row` back to `CsvSnapshot.records`' real index — `+1` when

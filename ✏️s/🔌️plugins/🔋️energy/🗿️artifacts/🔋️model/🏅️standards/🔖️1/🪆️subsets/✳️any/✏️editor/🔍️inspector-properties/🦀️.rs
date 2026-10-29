@@ -120,7 +120,7 @@ pub(super) fn set_surface_property(model: &crate::model::Model, surface: u32, pr
         }
         "class" => {
             let class = surface_class_from_id(value.trim()).ok_or_else(|| invalid_value(property, value))?;
-            step_if(target.class != class, || crate::surface_mutations::change_surface_class(id, class))
+            step_if(target.class != class, || crate::surface_properties_mutations::change_surface_class(id, class))
         }
         "boundary" | "interzonePartner" => {
             let boundary = boundary.expect("the boundary arm parsed its payload above");
@@ -128,7 +128,7 @@ pub(super) fn set_surface_property(model: &crate::model::Model, surface: u32, pr
         }
         "construction" => {
             let construction = construction.expect("the construction arm parsed its payload above");
-            step_if(target.construction_id != construction, || crate::surface_mutations::change_surface_construction(id, construction))
+            step_if(target.construction_id != construction, || crate::surface_properties_mutations::change_surface_construction(id, construction))
         }
         "sunExposed" => {
             let exposed = as_bool(property, value)?;
@@ -140,11 +140,11 @@ pub(super) fn set_surface_property(model: &crate::model::Model, surface: u32, pr
         }
         "multiplier" => {
             let multiplier = as_u32(property, value, |parsed| parsed >= 1)?;
-            step_if(target.multiplier != multiplier, || crate::surface_mutations::change_surface_multiplier(id, multiplier))
+            step_if(target.multiplier != multiplier, || crate::surface_properties_mutations::change_surface_multiplier(id, multiplier))
         }
         _ if property == "vertices" || property.starts_with("vertex:") => {
             let vertices = edited_vertices(&target.vertices_m, property, value)?;
-            step_if(target.vertices_m != vertices, || crate::surface_mutations::replace_surface_vertices(id, vertices))
+            step_if(target.vertices_m != vertices, || crate::surface_properties_mutations::replace_surface_vertices(id, vertices))
         }
         _ => return Err(unknown_property("surface", property)),
     })
@@ -194,15 +194,15 @@ pub(super) fn set_fenestration_property(model: &crate::model::Model, fenestratio
         }
         "areaM2" => {
             let parsed = as_f64(property, value, positive)?;
-            step_if(target.area_m2 != parsed, || crate::fenestration_mutations::change_fenestration_area(id, parsed))
+            step_if(target.area_m2 != parsed, || crate::fenestration_geometry_mutations::change_fenestration_area(id, parsed))
         }
         "heightM" => {
             let parsed = as_f64(property, value, positive)?;
-            step_if(target.height_m != parsed, || crate::fenestration_mutations::change_fenestration_height(id, parsed))
+            step_if(target.height_m != parsed, || crate::fenestration_geometry_mutations::change_fenestration_height(id, parsed))
         }
         "sillHeightM" => {
             let parsed = as_f64(property, value, non_negative)?;
-            step_if(target.sill_height_m != parsed, || crate::fenestration_mutations::change_fenestration_sill_height(id, parsed))
+            step_if(target.sill_height_m != parsed, || crate::fenestration_geometry_mutations::change_fenestration_sill_height(id, parsed))
         }
         "frameConductanceWK" => {
             let parsed = as_f64(property, value, non_negative)?;
@@ -237,7 +237,7 @@ pub(super) fn set_fenestration_property(model: &crate::model::Model, fenestratio
         }
         _ if property == "vertices" || property.starts_with("vertex:") => {
             let vertices = if property == "vertices" && value.trim().is_empty() { Vec::new() } else { edited_vertices(&target.vertices_m, property, value)? };
-            step_if(target.vertices_m != vertices, || crate::fenestration_mutations::replace_fenestration_vertices(id, vertices))
+            step_if(target.vertices_m != vertices, || crate::fenestration_geometry_mutations::replace_fenestration_vertices(id, vertices))
         }
         _ => return Err(unknown_property("fenestration", property)),
     })
@@ -272,11 +272,11 @@ pub(super) fn set_glazing_material_property(material: &crate::model::GlazingMate
         }
         "visibleReflectanceFront" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.visible_reflectance_front != parsed, || crate::window_layer_optics_mutations::change_glazing_material_visible_reflectance_front(id, parsed))
+            step_if(material.visible_reflectance_front != parsed, || crate::window_layer_optics_visible_mutations::change_glazing_material_visible_reflectance_front(id, parsed))
         }
         "visibleReflectanceBack" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.visible_reflectance_back != parsed, || crate::window_layer_optics_mutations::change_glazing_material_visible_reflectance_back(id, parsed))
+            step_if(material.visible_reflectance_back != parsed, || crate::window_layer_optics_visible_mutations::change_glazing_material_visible_reflectance_back(id, parsed))
         }
         "infraredTransmittance" => {
             let parsed = as_f64(property, value, fraction)?;
@@ -284,7 +284,7 @@ pub(super) fn set_glazing_material_property(material: &crate::model::GlazingMate
         }
         "visibleTransmittance" => {
             let parsed = as_f64(property, value, fraction)?;
-            step_if(material.visible_transmittance != parsed, || crate::window_layer_optics_mutations::change_glazing_material_visible_transmittance(id, parsed))
+            step_if(material.visible_transmittance != parsed, || crate::window_layer_optics_visible_mutations::change_glazing_material_visible_transmittance(id, parsed))
         }
         "infraredEmissivityFront" => {
             let front = as_f64(property, value, fraction)?;
@@ -548,9 +548,9 @@ pub(super) fn set_load_property(model: &crate::model::Model, load: u32, property
     if let Some(target) = model.people.iter().find(|row| row.id == id) {
         return match property {
             "peoplePerArea" => scalar_edit(property, value, target.people_per_area, false, |value| crate::people_gain_mutations::change_people_gain_people_per_area(id, value)),
-            "sensibleFraction" => scalar_edit(property, value, target.sensible_fraction, true, |value| crate::people_gain_mutations::change_people_gain_sensible_fraction(id, value)),
-            "latentFraction" => scalar_edit(property, value, target.latent_fraction, true, |value| crate::people_gain_mutations::change_people_gain_latent_fraction(id, value)),
-            "radiantFraction" => scalar_edit(property, value, target.radiant_fraction, true, |value| crate::people_gain_mutations::change_people_gain_radiant_fraction(id, value)),
+            "sensibleFraction" => scalar_edit(property, value, target.sensible_fraction, true, |value| crate::people_gain_fractions_mutations::change_people_gain_sensible_fraction(id, value)),
+            "latentFraction" => scalar_edit(property, value, target.latent_fraction, true, |value| crate::people_gain_fractions_mutations::change_people_gain_latent_fraction(id, value)),
+            "radiantFraction" => scalar_edit(property, value, target.radiant_fraction, true, |value| crate::people_gain_fractions_mutations::change_people_gain_radiant_fraction(id, value)),
             "zone" => { let zone = zone()?; Ok(step_if(target.zone_id != zone, || crate::people_gain_mutations::change_people_gain_zone(id, zone))) }
             "schedule" => { let schedule = schedule()?; Ok(step_if(target.schedule_id != schedule, || crate::people_gain_mutations::change_people_gain_schedule(id, schedule))) }
             "activitySchedule" => { let schedule = schedule()?; Ok(step_if(target.activity_schedule_id != schedule, || crate::people_gain_mutations::change_people_gain_activity_schedule(id, schedule))) }
@@ -559,10 +559,10 @@ pub(super) fn set_load_property(model: &crate::model::Model, load: u32, property
     }
     if let Some(target) = model.lighting.iter().find(|row| row.id == id) {
         return match property {
-            "wattsPerArea" => scalar_edit(property, value, target.watts_per_area, false, |value| crate::lighting_gain_mutations::change_lighting_gain_watts_per_area(id, value)),
-            "radiantFraction" => scalar_edit(property, value, target.radiant_fraction, true, |value| crate::lighting_gain_mutations::change_lighting_gain_radiant_fraction(id, value)),
-            "visibleFraction" => scalar_edit(property, value, target.visible_fraction, true, |value| crate::lighting_gain_mutations::change_lighting_gain_visible_fraction(id, value)),
-            "returnAirFraction" => scalar_edit(property, value, target.return_air_fraction, true, |value| crate::lighting_gain_mutations::change_lighting_gain_return_air_fraction(id, value)),
+            "wattsPerArea" => scalar_edit(property, value, target.watts_per_area, false, |value| crate::lighting_gain_emission_mutations::change_lighting_gain_watts_per_area(id, value)),
+            "radiantFraction" => scalar_edit(property, value, target.radiant_fraction, true, |value| crate::lighting_gain_emission_mutations::change_lighting_gain_radiant_fraction(id, value)),
+            "visibleFraction" => scalar_edit(property, value, target.visible_fraction, true, |value| crate::lighting_gain_emission_mutations::change_lighting_gain_visible_fraction(id, value)),
+            "returnAirFraction" => scalar_edit(property, value, target.return_air_fraction, true, |value| crate::lighting_gain_emission_mutations::change_lighting_gain_return_air_fraction(id, value)),
             "zone" => { let zone = zone()?; Ok(step_if(target.zone_id != zone, || crate::lighting_gain_mutations::change_lighting_gain_zone(id, zone))) }
             "schedule" => { let schedule = schedule()?; Ok(step_if(target.schedule_id != schedule, || crate::lighting_gain_mutations::change_lighting_gain_schedule(id, schedule))) }
             _ => Err(unknown_property("load", property)),
@@ -614,20 +614,20 @@ pub(super) fn set_hvac_property(model: &crate::model::Model, system: u32, proper
         }
         "maxHeatingSupplyAirTempC" => {
             let parsed = as_f64(property, value, |value| value > -273.15)?;
-            step_if(target.max_heating_supply_air_temp_c != parsed, || crate::ideal_loads_mutations::change_ideal_loads_system_max_heating_supply_air_temp(id, parsed))
+            step_if(target.max_heating_supply_air_temp_c != parsed, || crate::ideal_loads_limits_mutations::change_ideal_loads_system_max_heating_supply_air_temp(id, parsed))
         }
         "minCoolingSupplyAirTempC" => {
             let parsed = as_f64(property, value, |value| value > -273.15)?;
-            step_if(target.min_cooling_supply_air_temp_c != parsed, || crate::ideal_loads_mutations::change_ideal_loads_system_min_cooling_supply_air_temp(id, parsed))
+            step_if(target.min_cooling_supply_air_temp_c != parsed, || crate::ideal_loads_limits_mutations::change_ideal_loads_system_min_cooling_supply_air_temp(id, parsed))
         }
         "outdoorAirPerPersonM3S" => return scalar_edit(property, value, target.outdoor_air_per_person_m3_s, false, |value| crate::ideal_loads_mutations::change_ideal_loads_system_outdoor_air_per_person(id, value)),
         "outdoorAirPerAreaM3SM2" => return scalar_edit(property, value, target.outdoor_air_per_area_m3_s_m2, false, |value| crate::ideal_loads_mutations::change_ideal_loads_system_outdoor_air_per_area(id, value)),
         "maxHeatingCapacityW" | "maxCoolingCapacityW" => {
             let capacity = if value.trim().is_empty() { None } else { Some(as_f64(property, value, |value| value >= 0.0)?) };
             if property == "maxHeatingCapacityW" {
-                step_if(target.max_heating_capacity_w != capacity, || crate::ideal_loads_mutations::change_ideal_loads_system_max_heating_capacity(id, capacity.is_some(), capacity.unwrap_or(0.0)))
+                step_if(target.max_heating_capacity_w != capacity, || crate::ideal_loads_limits_mutations::change_ideal_loads_system_max_heating_capacity(id, capacity.is_some(), capacity.unwrap_or(0.0)))
             } else {
-                step_if(target.max_cooling_capacity_w != capacity, || crate::ideal_loads_mutations::change_ideal_loads_system_max_cooling_capacity(id, capacity.is_some(), capacity.unwrap_or(0.0)))
+                step_if(target.max_cooling_capacity_w != capacity, || crate::ideal_loads_limits_mutations::change_ideal_loads_system_max_cooling_capacity(id, capacity.is_some(), capacity.unwrap_or(0.0)))
             }
         }
         _ => return Err(unknown_property("ideal loads system", property)),

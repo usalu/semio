@@ -71,8 +71,8 @@ impl ArtifactViewer for SemioDrawingViewer {
     const DIALECT: Dialect = SEMIO_DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_DRAWING_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->SemioDrawingSnapshot>{Some(||{
-        SemioDrawingSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SemioDrawingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SemioDrawingSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.

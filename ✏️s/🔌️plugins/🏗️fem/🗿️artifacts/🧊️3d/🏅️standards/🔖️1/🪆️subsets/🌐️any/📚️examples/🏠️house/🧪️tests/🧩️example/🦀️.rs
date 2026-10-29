@@ -25,7 +25,7 @@ fn on_module(value: f64) -> bool {
 
 fn committed() -> Fem3dSnapshot {
     if std::env::var("SEMIO_FEM3D_WRITE_HOUSE_ASSET").as_deref() == Ok("1") {
-        std::fs::write(ASSET_PATH, print_dsl(&super::build())).expect("the house asset is writable");
+        std::fs::write(ASSET_PATH, print_dsl(&super::build().unwrap())).expect("the house asset is writable");
     }
     parse_dsl(&std::fs::read_to_string(ASSET_PATH).expect("the house asset is readable")).expect("house example dsl parses")
 }
@@ -33,7 +33,7 @@ fn committed() -> Fem3dSnapshot {
 #[test]
 fn primary_asset_is_the_generated_house() {
     let doc = committed();
-    assert_eq!(doc, super::build(), "the committed asset must be exactly print_dsl(&build()) — set SEMIO_FEM3D_WRITE_HOUSE_ASSET=1 to regenerate it");
+    assert_eq!(doc, super::build().unwrap(), "the committed asset must be exactly print_dsl(&build()) — set SEMIO_FEM3D_WRITE_HOUSE_ASSET=1 to regenerate it");
     let embedded = parse_dsl(super::PRIMARY_TEXT).expect("embedded house dsl parses");
     assert_eq!(embedded, doc, "the embedded PRIMARY_TEXT is the committed asset");
     let reparsed = parse_dsl(&print_dsl(&doc)).expect("printed dsl reparses");
@@ -42,7 +42,7 @@ fn primary_asset_is_the_generated_house() {
 
 #[test]
 fn every_solid_is_drawn_on_the_module_with_openings_and_a_gable() {
-    let doc = super::build();
+    let doc = super::build().unwrap();
     assert_eq!(doc.solids.len(), 8, "raft, two slabs, four walls, roof");
     assert!(doc.elements.is_empty() && doc.sections.is_empty(), "a masonry house is solids only");
     for solid in &doc.solids {
@@ -70,7 +70,7 @@ fn every_solid_is_drawn_on_the_module_with_openings_and_a_gable() {
 
 #[test]
 fn meshed_solids_share_their_interface_nodes_as_one_structure() {
-    let doc = super::build();
+    let doc = super::build().unwrap();
     let (nodes, meshes) = mesh_solids(&doc).expect("the house meshes");
     let ids_of = |solid_id: &str| -> HashSet<&str> { meshes.iter().find(|mesh| mesh.solid_id == solid_id).expect(solid_id).node_ids.iter().map(String::as_str).collect() };
     let shared = |a: &str, b: &str| ids_of(a).intersection(&ids_of(b)).count();
@@ -122,7 +122,7 @@ fn meshed_solids_share_their_interface_nodes_as_one_structure() {
 
 #[test]
 fn deformation_solves_balanced_and_sags_under_gravity() {
-    let doc = super::build();
+    let doc = super::build().unwrap();
     let results = fem3d_solve_all(&doc).expect("the house solves");
     for case_id in ["dead", "live", "snow", "uls", "sls"] {
         assert!(results.contains_key(case_id), "result for {case_id}");

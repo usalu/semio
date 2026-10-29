@@ -67,7 +67,7 @@ pub use semio_framework_os_flow_extensions::{
     build_manifest_json, cancel_all_evaluations, cancel_evaluation, cancel_inference_evaluation, command_json, EVALUATE_ENVELOPE_SCHEMA,
     evaluate_function_json, evaluate_invoke_json, evaluate_json, EVALUATE_STEP_BUDGET, evaluate_step_envelope_cold, EVALUATE_STEP_WALL_MICROS,
     EvaluateRequest, evaluation_dependency_identity, evaluation_progress, evaluation_retirement_demands, evaluation_retirement_pending, EvaluationExternalResult,
-    EvaluationFailure, EvaluationInputPreparation, EvaluationInvokeCursor, EvaluationReply, EvaluationRequestContextInput, ExtensionEvaluationResources,
+    EvaluationFailure, EvaluationInputPreparation, EvaluationInvokeCursor, EvaluationReply, EvaluationRequestContextInput, EvaluationWire, ExtensionEvaluationResources,
     flow_extension_topic_contribution, flow_inference_dependency_json, FlowExtensionCommand, FlowExtensionContributes, FlowExtensionManifest, FlowExtensionSetting,
     FlowExtensionWidget, integer_setting_default, retire_cancelled_evaluations_close_step,
 };

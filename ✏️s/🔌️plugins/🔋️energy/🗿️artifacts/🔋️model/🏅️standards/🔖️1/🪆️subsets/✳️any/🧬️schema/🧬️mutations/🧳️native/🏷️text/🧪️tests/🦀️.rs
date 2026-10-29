@@ -27,10 +27,10 @@ fn native_row_names_preserve_sparse_paths_original_inverse_and_every_cancelled_p
 struct NameOperation{id:u32,value:String}
 impl protocol::Mutation<EnergyModelSnapshot> for NameOperation{type Diff=EnergyModelDiff;const DESCRIPTORS:&'static[protocol::MutationLeafDescriptor]=&[];fn descriptor(&self)->&'static protocol::MutationLeafDescriptor{panic!("fixture exercises only retained semantic ports")}}
 impl super::TextLeafSpec<NameOperation,NameOperation> for ZoneName{
- const DUPLICATE:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.duplicate-id",message:"Another zone already has this name."};
- const INVALID:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"A zone volume must be positive and finite."};
- const MISSING:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Error,code:"mutation.target-missing",message:"The addressed zone does not exist."};
- const UNCHANGED:protocol::mutation::retained::RetainedDiagnosticSpec=protocol::mutation::retained::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The zone already has this volume."};
+ const DUPLICATE:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.duplicate-id",message:"Another zone already has this name."};
+ const INVALID:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Fatal,code:"mutation.invariant",message:"A zone volume must be positive and finite."};
+ const MISSING:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Error,code:"mutation.target-missing",message:"The addressed zone does not exist."};
+ const UNCHANGED:protocol::RetainedDiagnosticSpec=protocol::RetainedDiagnosticSpec{level:store::__diagnostic::Severity::Warning,code:"mutation.no-op",message:"The zone already has this volume."};
  fn input(payload:RetainedCloneRef<'_,NameOperation>)->RetainedCloneRef<'_,String>{payload.project(0,|p|&p.value)}
  fn key(payload:RetainedCloneRef<'_,NameOperation>)->RetainedCloneRef<'_,u32>{payload.project(1,|p|&p.id)}
  fn inverse(payload:RetainedCloneRef<'_,NameOperation>,value:String)->NameOperation{NameOperation{id:payload.get().id,value}}
@@ -38,7 +38,7 @@ impl super::TextLeafSpec<NameOperation,NameOperation> for ZoneName{
 #[test]
 fn shared_native_text_leaf_preserves_diagnostics_and_original_text_inverse_custody(){
  use super::TextLeafPreparation;
- use protocol::mutation::retained::{RetainedMutationLeafPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext};
+ use protocol::{RetainedMutationLeafPreparation,RetainedMutationAdvance,RetainedMutationDecision,RetainedMutationCloseContext};
  type Owner=TextLeafPreparation<NameOperation,NameOperation,ZoneName>;
  assert!(size_of::<Owner>()<=4096);
  let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();

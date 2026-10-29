@@ -303,8 +303,8 @@ impl ArtifactEditor for BmpEditor {
         bmp_editor_command_from_action(action, args)
     }
 
-    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
-        BmpSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<Self::Snapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(BmpSnapshot::default())
     })}
 
     fn handle(

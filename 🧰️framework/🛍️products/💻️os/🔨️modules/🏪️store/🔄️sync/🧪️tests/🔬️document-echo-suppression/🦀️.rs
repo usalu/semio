@@ -30,8 +30,8 @@ fn envelope(value: &serde_json::Value) -> MutationEnvelope {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: vec![1] },
-        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: vec![2] },
+        diff: semio_framework_os_spr::ArtifactDiff { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_os_spr::CausalPayload::try_from_slice(&[1]).unwrap() },
+        inverse: semio_framework_os_spr::InverseMutation { schema: semio_framework_os_spr::SchemaId("demo/v1".into()), payload: semio_framework_os_spr::CausalPayload::try_from_slice(&[2]).unwrap() },
         timestamp: semio_framework_os_spr::HybridLogicalTimestamp { actor: 1, physical_ms: 2, logical: 3 },
         transaction: None, verb: None, line: None,
     }

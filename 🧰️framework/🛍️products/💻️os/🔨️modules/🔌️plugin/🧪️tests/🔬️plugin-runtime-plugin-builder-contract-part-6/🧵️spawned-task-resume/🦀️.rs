@@ -40,8 +40,9 @@
     /// `plugin_runtime::plugin_resume_task`'s `TaskResumeInput::Command` arm, exercised
     /// directly rather than through `crate::reactor::drain_task_resumes` (wasm-only).
     ///
-    /// 🪜️ The follow-up re-enters the APPLYING lane (`PluginApp::resume_task_command` →
-    /// `dispatch_typed`), so like every migrated dispatch it ADMITS here and the document
+    /// 🪜️ The follow-up re-enters the APPLYING lane: `PluginApp::queue_task_resume_command` only
+    /// QUEUES it on the instance, which delivers it through its original typed source one funded
+    /// unit per publication turn, so like every migrated dispatch it ADMITS there and the document
     /// advances when its publication ladder walks. Settle it through the same runtime cell the
     /// host's continuation drives, then read what it actually did.
     ///
@@ -65,7 +66,7 @@
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         semio_framework_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, instance).await;
 
-        let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta, &mut identity).await.expect("dispatching SpawnCountTask must succeed");
+        let result = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut app, &TestCommand::SpawnCountTask, &spawn_meta, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect("dispatching SpawnCountTask must succeed");
         assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
         let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("the spawning operation's publication settles");
         assert_eq!(
@@ -98,19 +99,15 @@
         let runtime = semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         semio_framework_plugin_runtime_instances::inst_wire_frames::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
         semio_framework_plugin_runtime_instances::inst_wire_frames::test_admit_instance_actor(&runtime, resumed_instance, "local");
-        let output = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(command_bytes), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity()).await;
-        assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
-        let frame = protocol::decode_app_frame(&output.frames[0]).await.expect("must decode back to an AppFrame");
-        assert!(
-            matches!(frame, protocol::AppFrame::Emit { .. }),
-            "a resumed Command follow-up must frame as AppFrame::Emit — never a fault: {frame:?}"
-        );
+        let output = semio_framework_plugin_runtime_ops::ops_typed_operations::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, semio_framework_plugin_runtime_ops::ops_typed_operations::TaskResumeInput::Command(command_bytes), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(), cx).await;
+        assert!(output.frames.is_empty(), "queueing a resumed Command frames nothing: its receipt follows the instance's own delivery: {:?}", output.frames.len());
 
         let cell = semio_framework_plugin_runtime_ops::ops_wire_limits::runtime_instance_cell(&runtime, resumed_instance).expect("the resumed instance stays mounted");
         let mut active = cell.instance.try_lock().expect("no other owner holds the resumed instance");
         let receipt = artifact_app_laws::settle_registered_typed_operation(&mut active.app, resumed_instance, semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity(),cx).await.expect("the resumed follow-up publishes");
         assert!(receipt.lanes.contains(&TypedOperationResultLane::Artifact), "the follow-up must have published on the ARTIFACT lane — it applies, it does not preview: {:?}", receipt.lanes);
         assert_eq!(receipt.completions, 1, "the follow-up is exactly one terminated operation");
+        assert!(matches!(receipt.resume_outcomes.as_slice(), [Ok(_)]), "the delivered follow-up answers once with its mounted receipt: {:?}", receipt.resume_outcomes.len());
 
         let history = semio_framework_plugin_reactor_app::PluginApp::history_snapshot(&mut active.app).await.expect("history after the resumed follow-up");
         let row = history.upserts.iter().find(|entry| entry.action_id == "applyCountFromTask").unwrap_or_else(|| panic!("the follow-up dispatch is recorded under its own verb: {:?}", history.upserts.iter().map(|entry| entry.action_id.clone()).collect::<Vec<_>>()));
@@ -118,4 +115,104 @@
         assert!(row.op_lines.iter().any(|line| line.contains("42")), "the applied edit carries the value the injected completion delivered: {:?}", row.op_lines);
 
         }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
+}
+
+    /// 🔁️ Fixture setup shared by the task-resume delivery laws: the explicit mounted policy and the original identity authority.
+    fn resume_policy() -> semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1 {
+        semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy()
+    }
+
+    fn resume_meta(instance: u32) -> ActionMeta {
+        ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None }
+    }
+
+    fn resume_bytes(value: i32) -> Vec<u8> {
+        <TestCommand as ::protocol::OpBinary>::encode_op(&TestCommand::ApplyCountFromTask { value }).expect("the follow-up command encodes")
+    }
+
+    /// 🏃️ A queued follow-up is delivered by the instance across several funded publication units, never in the queueing call, and answers exactly once with its mounted receipt.
+    #[semio_framework_async_macros::async_test]
+    async fn a_queued_task_resume_is_delivered_across_funded_turns_and_answers_once() {
+        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mounted_policy = resume_policy();
+        let mut identity = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity();
+        let instance = 502;
+        let mut app = contract_app_raw(mounted_policy, &mut identity).await;
+        semio_framework_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, instance).await;
+
+        semio_framework_plugin_reactor_app::PluginApp::queue_task_resume_command(&mut app, resume_bytes(5), &resume_meta(instance)).expect("the follow-up queues");
+        assert!(semio_framework_plugin_reactor_app::PluginApp::has_runnable_typed_operations(&app), "a queued follow-up keeps the actor's turn armed");
+        assert_eq!(app.stores.test_snapshot().await.count, 0, "queueing applies nothing");
+
+        let mut units = 0;
+        let outcome = loop {
+            assert!(units < semio_framework_plugin_testing_caller::OriginalFixtureCaller::maximum_turns(), "the follow-up never settled");
+            semio_framework_plugin_reactor_app::PluginApp::advance_typed_operation_publication(&mut app, &mut identity, cx).await.expect("one funded publication unit");
+            units += 1;
+            if let Some(outcome) = semio_framework_plugin_reactor_app::PluginApp::take_task_resume_outcome(&mut app) { break outcome; }
+        };
+        assert!(units > 1, "the delivery spans several funded units, got {units}");
+        outcome.expect("the follow-up mounted");
+        assert!(semio_framework_plugin_reactor_app::PluginApp::take_task_resume_outcome(&mut app).is_none(), "the follow-up answers exactly once");
+
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance, mounted_policy, &mut identity, cx).await.expect("the mounted follow-up publishes");
+        assert!(receipt.lanes.contains(&TypedOperationResultLane::Artifact), "{:?}", receipt.lanes);
+        assert_eq!(app.stores.test_snapshot().await.count, 5, "the follow-up applied exactly once");
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy, cx).expect("original contract fixture paid terminal close");
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
+    }
+
+    /// 🛑️ A follow-up the app cannot deliver answers its task with a fault frame's fault instead of a lost result or a failed turn, and the lane keeps serving the follow-ups behind it.
+    #[semio_framework_async_macros::async_test]
+    async fn a_refused_task_resume_answers_with_a_fault_and_the_next_one_still_delivers() {
+        let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+        let mounted_policy = resume_policy();
+        let mut identity = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity();
+        let instance = 503;
+        let mut app = VcsArtifactApp::<TestApp<false, 1>>::new(TestApp::<false, 1>::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
+        semio_framework_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, instance).await;
+
+        for value in [1, 2] {
+            semio_framework_plugin_reactor_app::PluginApp::queue_task_resume_command(&mut app, resume_bytes(value), &resume_meta(instance)).expect("the follow-up queues");
+        }
+        let mut faults = Vec::new();
+        for _ in 0..semio_framework_plugin_testing_caller::OriginalFixtureCaller::maximum_turns() {
+            if !semio_framework_plugin_reactor_app::PluginApp::has_pending_typed_operations(&app) { break; }
+            semio_framework_plugin_reactor_app::PluginApp::advance_typed_operation_publication(&mut app, &mut identity, cx).await.expect("a refused delivery is an answer, not a failed turn");
+            if let Some(outcome) = semio_framework_plugin_reactor_app::PluginApp::take_task_resume_outcome(&mut app) { faults.push(outcome.expect_err("the registry-less app refuses every follow-up")); }
+        }
+        assert_eq!(faults.len(), 2, "every queued follow-up is answered, in order");
+        assert!(faults.iter().all(|fault| fault.code.0 == "interactive-job.task-resume-delivery"), "{:?}", faults.iter().map(|fault| fault.code.0.clone()).collect::<Vec<_>>());
+        assert!(!app.original_typed_command.pending(), "the failed delivery returned the typed source through paid closure");
+        assert_eq!(app.stores.test_snapshot().await.count, 0);
+        artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy, cx).expect("original contract fixture paid terminal close");
+        }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
+    }
+
+    /// 🪦️ Cancelling after 0..k funded units retires the queue: the typed source returns every owner through paid closure and nothing is applied or answered.
+    #[semio_framework_async_macros::async_test]
+    async fn a_cancelled_task_resume_queue_returns_every_owner_after_any_number_of_turns() {
+        for cut in 0..8 {
+            let mut original_caller=semio_framework_plugin_testing_caller::OriginalFixtureCaller::admit().expect("original builder fixture caller admission");let mut original_context=original_caller.context();let cx=&mut original_context;let result=async{
+            let mounted_policy = resume_policy();
+            let mut identity = semio_framework_plugin_testing_laws::artifact_app_laws::fixture_identity();
+            let instance = 504;
+            let mut app = contract_app_raw(mounted_policy, &mut identity).await;
+            semio_framework_plugin_reactor_app::PluginApp::bind_instance_id(&mut app, instance).await;
+            for value in [1, 2] {
+                semio_framework_plugin_reactor_app::PluginApp::queue_task_resume_command(&mut app, resume_bytes(value), &resume_meta(instance)).expect("the follow-up queues");
+            }
+            for _ in 0..cut {
+                semio_framework_plugin_reactor_app::PluginApp::advance_typed_operation_publication(&mut app, &mut identity, cx).await.expect("one funded publication unit");
+                drop(semio_framework_plugin_reactor_app::PluginApp::take_task_resume_outcome(&mut app));
+            }
+            cx.original_cancel_token().cancel_now();
+            for _ in 0..semio_framework_plugin_testing_caller::OriginalFixtureCaller::maximum_turns() {
+                if app.host_events.resumes.is_empty() && !app.original_typed_command.pending() { break; }
+                semio_framework_plugin_reactor_app::PluginApp::advance_typed_operation_publication(&mut app, &mut identity, cx).await.expect("a cancelled unit retires, it does not fail");
+            }
+            assert!(app.host_events.resumes.is_empty() && !app.original_typed_command.pending(), "cancel after {cut} units left the queue or the typed source owned");
+            assert!(semio_framework_plugin_reactor_app::PluginApp::take_task_resume_outcome(&mut app).is_none(), "cancel after {cut} units answered a cancelled follow-up");
+            }.await;let fuel=cx.fuel_remaining();drop(original_context);original_caller.retire(fuel).expect("original builder fixture paid terminal retirement");result
+        }
     }

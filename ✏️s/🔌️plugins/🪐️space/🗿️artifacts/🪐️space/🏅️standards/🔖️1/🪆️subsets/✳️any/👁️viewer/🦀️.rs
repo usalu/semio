@@ -50,8 +50,8 @@ impl ArtifactViewer for SpaceIndexViewer {
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
-    fn reference_birth()->Option<fn()->SSpaceSnapshot>{Some(||{
-        SSpaceSnapshot::default()
+    fn reference_birth()->Option<fn()->Result<SSpaceSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(SSpaceSnapshot::default())
     })}
 
     /// 👁️ Structurally read-only: the sole `SpaceIndexViewCommand::Noop` variant never carries a config

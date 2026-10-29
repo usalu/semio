@@ -54,13 +54,13 @@ impl DocumentCodecSpec {
     /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
     pub fn bare<Snapshot, Mutation>(schema: impl Into<String>, dialect: Dialect) -> Self
     where
-        Snapshot: PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-        Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static + store::ArtifactCanonicalJsonTree,
+        Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
+        Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_framework_os_kernel::StoreMutationFor<Snapshot>,
     {
         fn codec<Snapshot, Mutation>(schema: String) -> store::os_store::serialization::ArtifactCodec
         where
-            Snapshot: PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static + store::ArtifactCanonicalJsonTree,
+            Snapshot: PartialEq + semio_framework_value::retirement::RetireOwned + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + ::semio_framework_os_kernel::StoreState,
+            Mutation: PartialEq + semio_framework_value::retirement::RetireOwned + Sync + store::ArtifactCanonicalJsonTree + ::semio_framework_os_kernel::StoreMutationFor<Snapshot>,
         {
             store::native_artifact_codec::<Snapshot>(schema)
         }
@@ -81,7 +81,7 @@ impl DocumentCodecSpec {
             + ArtifactPack
             + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
             + 'static,
-        Mutation: ::protocol::Mutation<Snapshot>
+        Mutation: ::semio_framework_os_kernel::StoreMutationFor<Snapshot>
             + PartialEq
             + semio_framework_value::ToValue
             + semio_framework_value::FromValue
@@ -107,7 +107,7 @@ impl DocumentCodecSpec {
                 + ArtifactPack
                 + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
                 + 'static,
-            Mutation: ::protocol::Mutation<Snapshot>
+            Mutation: ::semio_framework_os_kernel::StoreMutationFor<Snapshot>
                 + PartialEq
                 + semio_framework_value::ToValue
                 + semio_framework_value::FromValue

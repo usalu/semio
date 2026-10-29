@@ -196,16 +196,16 @@
         for classification in [Unclassified, BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted] {
             let mut action_registry = contract_registry().await;
             action_registry.test_set_action_classification("badView", classification);
-            let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+            let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
             semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut action_app, mounted_policy);
             assert!(!action_app.test_registered_tool_keys().iter().any(|key| key.1 == "badView"));
-            let action_error = action_app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("non-migrated action must be rejected before its handler runs");
-            assert_eq!(action_error.code.0, "interactive-job.not-ui-safe");
+            let action_error = semio_framework_plugin_testing_laws::artifact_app_laws::dispatch_original_fixture_command(&mut action_app, &TestCommand::BadView, &meta(), semio_framework_plugin_testing_laws::artifact_app_laws::fixture_mounted_policy(), &mut identity, cx).await.expect_err("non-migrated action must be rejected before its handler runs");
+            assert_eq!(action_error.primary_fault().expect("a diagnostic fault").code.0, "interactive-job.not-ui-safe");
             assert_eq!(action_app.test_snapshot().await.count, 0);
 
             let mut command_registry = contract_registry().await;
             command_registry.test_set_app_command_classification("incrementViaCommand", classification);
-            let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+            let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await.expect("the reference snapshot births");
             semio_framework_plugin_testing_laws::artifact_app_laws::settle_store_constructor(&mut command_app, mounted_policy);
             assert!(!command_app.test_registered_tool_keys().iter().any(|key| key.1 == "incrementViaCommand"));
             let mut invocation =

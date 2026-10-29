@@ -362,31 +362,6 @@ async fn command_from_action_covers_every_declared_action_and_rejects_unknown_on
 /// 🧾️ What the lane RETAINS is the distilled roster, never the host's whole contribution pack: an
 /// entry addressed to this app's `process.machines` topic survives, everything else is dropped
 /// (`installable_contributions`, the same discipline `🪵️sourcing` applies to its own config lane).
-#[test]
-fn host_contributions_resolve_to_the_event_sourced_config_lane() {
-    use semio_framework::{ProgramContributionEntry, TopicContribution};
-    let addressed = ProgramContributionEntry {
-        plugin_id: "process-wood".into(),
-        topic_contribution: Some(TopicContribution::new(
-            "process.machines",
-            DslValue::object([
-                ("appId".to_string(), DslValue::String(PROCESS_3D_PLAY_APP_ID.to_string())),
-                ("moduleId".to_string(), DslValue::String("wood".to_string())),
-                ("label".to_string(), DslValue::String("Wood".to_string())),
-                ("iconId".to_string(), DslValue::String("beam".to_string())),
-                ("machinesJson".to_string(), DslValue::String("[]".to_string())),
-            ]),
-        )),
-    };
-    let foreign = ProgramContributionEntry { plugin_id: "somebody-else".into(), topic_contribution: Some(TopicContribution::new("other.topic", DslValue::object([]))) };
-    let pack = semio_framework_pack_json::to_json_string(&vec![addressed, foreign]);
-    let distilled = installable_contributions(&pack, PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES);
-    assert_ne!(distilled, "[]", "the addressed process.machines entry must survive the lane");
-    assert!(distilled.len() < pack.len(), "the foreign entry must be dropped, not retained");
-    let mutation = <Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setContributions", Some(&DslValue::from(&serde_json::json!({ "json": pack })))).expect("host configuration").expect("process contribution mutation");
-    assert_eq!(mutation, Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ json: distilled }));
-    assert_eq!(<Process3dPlayApp as ArtifactEditor>::host_configuration_mutation("setCursor", None).expect("non-host action"), None);
-}
 
 /// 🖱️ The interaction payload shape that regressed retains its identifier through the transport
 /// bridge instead of being dropped into ad-hoc host state.

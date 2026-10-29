@@ -1,22 +1,22 @@
 //! 🧪️ Guided payload construction borrows an existing arena and preserves inline exact keys.
 use semio_framework_ui_contract::{UiMapBuilder,UiListBuilder,UiText,UiValue,UiValueRetirement};
-use semio_framework_plugin_decl_views::staged_form::{StagedDslPayload,StagedPayloadCursor};
+use semio_framework_plugin_decl_staged_form::{StagedDslPayload,StagedPayloadCursor};
 use semio_framework_value::{DslValue,RetainedCloneGrant,RetainedCloneStep};
 #[test]
 fn native_staged_payload_map_limit_refuses_before_collection_birth(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/body-cases.json")).unwrap();
     let maximum=fixture["payloadMapMembers"].as_u64().unwrap()as usize;let refused=fixture["payloadMapRefusedMembers"].as_u64().unwrap()as usize;
-    assert_eq!(maximum,semio_framework_plugin_decl_views::staged_form::STAGED_PAYLOAD_MAP_MEMBERS);
+    assert_eq!(maximum,semio_framework_plugin_decl_staged_form::STAGED_PAYLOAD_MAP_MEMBERS);
     let source=DslValue::Object((0..refused).map(|index|(index.to_string(),DslValue::Null)).collect());let mut cursor=StagedPayloadCursor::default();let mut output=None;
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:0,maximum_release_bytes:32768,maximum_depth:64};
     let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.step(&StagedDslPayload{source:&source},&mut output,grant));
     assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(output.is_none());assert!(cursor.terminal_is_empty());
 }
 fn close(value:UiValue){let mut value=UiValueRetirement::new(value);for _ in 0..16384{if value.terminal_is_empty(){break}value.close_step(1,32768).unwrap();}assert!(value.terminal_is_empty());}
-fn close_control(cursor:&mut semio_framework_plugin_decl_views::staged_form::StagedScalarCursor,grant:RetainedCloneGrant){for _ in 0..16384{let step=cursor.close(grant).unwrap();if matches!(step,RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());return}}panic!("scalar owner did not retire");}
+fn close_control(cursor:&mut semio_framework_plugin_decl_staged_form::StagedScalarCursor,grant:RetainedCloneGrant){for _ in 0..16384{let step=cursor.close(grant).unwrap();if matches!(step,RetainedCloneStep::Complete(_)){assert!(cursor.terminal_is_empty());return}}panic!("scalar owner did not retire");}
 #[test]
 fn native_body_split_caps_match_shared_schema_and_typed_page_classification(){
-    use semio_framework_plugin_decl_views::staged_form::*;
+    use semio_framework_plugin_decl_staged_form::*;
     use semio_framework::action_staging::*;
     let limits:StagedFormBodyLimits=serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/body-limits.json")).unwrap();assert_eq!(limits,STAGED_FORM_BODY_LIMITS);assert_eq!(limits.content+limits.pages,limits.controls);
     struct Source{status:StagedFormStatus,page:StagedFormPageBinding,content:usize,pages:usize,fake:bool}
@@ -26,7 +26,7 @@ fn native_body_split_caps_match_shared_schema_and_typed_page_classification(){
 }
 #[test]
 fn native_typed_staged_bindings_match_closed_neutral_wire_without_intermediate_clones(){
-    use semio_framework_plugin_decl_views::staged_form::*;
+    use semio_framework_plugin_decl_staged_form::*;
     use semio_framework::action_staging::{StagedFormBinding,StagedFormPageBinding};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/binding-cases.json")).unwrap();
     let pages:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/page-cases.json")).unwrap();
@@ -40,7 +40,7 @@ fn native_typed_staged_bindings_match_closed_neutral_wire_without_intermediate_c
 }
 #[test]
 fn native_typed_choice_key_capacity_is_resource_refusal_with_retained_partial_owner(){
-    use semio_framework_plugin_decl_views::staged_form::*;
+    use semio_framework_plugin_decl_staged_form::*;
     use semio_framework::action_staging::StagedFormBinding;
     let cases:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/body-cases.json")).unwrap();assert_eq!(cases["oversizedChoiceKey"]["length"],"uiTextCapacity+1");let refusal=cases["oversizedChoiceKey"]["refusal"].as_str().unwrap();
     let token=serde_json::json!({"action":"applyIfcTemplate","generation":"1","revision":"r1","window":"w1"});let key="k".repeat(UiText::default().capacity()+1);
@@ -52,7 +52,7 @@ fn native_typed_choice_key_capacity_is_resource_refusal_with_retained_partial_ow
 }
 #[test]
 fn native_staged_body_actual_original_receiving_keeps_resident_source_and_paid_cancelled_trees(){
-    use semio_framework_plugin_decl_views::staged_form::*;
+    use semio_framework_plugin_decl_staged_form::*;
     use semio_framework_ui_contract::{Component,ContainerRole,OriginalBuiltTreeRetirement};
     use semio_framework::action_staging::{StagedFormStatus,StagedFormToken};
     struct Source{status:StagedFormStatus,binding:semio_framework::action_staging::StagedFormBinding}
@@ -84,7 +84,7 @@ fn native_staged_body_actual_original_receiving_keeps_resident_source_and_paid_c
 }
 #[test]
 fn native_staged_status_payload_carries_only_exact_bounded_source_metadata(){
-    use semio_framework_plugin_decl_views::staged_form::*;
+    use semio_framework_plugin_decl_staged_form::*;
     use semio_framework::action_staging::{StagedFormStatus,StagedFormToken};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/body-cases.json")).unwrap();
     let mut warm=UiMapBuilder::try_new().unwrap();warm.try_insert("warm".into(),UiValue::Null).unwrap();close(UiValue::Map(warm.finish()));
@@ -97,7 +97,7 @@ fn native_staged_status_payload_carries_only_exact_bounded_source_metadata(){
 }
 #[test]
 fn native_staged_scalar_controls_keep_exact_resident_bindings_and_cancelled_prefixes(){
-    use semio_framework_plugin_decl_views::staged_form::*;
+    use semio_framework_plugin_decl_staged_form::*;
     use semio_framework_ui_contract::{Component,Trigger,OriginalBuiltTreeRetirement};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/body-cases.json")).unwrap();
     let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:512};

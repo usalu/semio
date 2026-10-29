@@ -273,13 +273,13 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
       return sections;
     };
     const read = (async () => ({ windows: await project(request.windows), panels: await project(request.panels), ...(await projectSections()) }))();
-    const reads = uiReadsByInstance.get(instanceId) ?? new Set<Promise<unknown>>();
-    reads.add(read); uiReadsByInstance.set(instanceId, reads);
+    const inflight = uiReadsByInstance.get(instanceId) ?? new Set<Promise<unknown>>();
+    inflight.add(read); uiReadsByInstance.set(instanceId, inflight);
     try {
       const projected = await read;
       return { ...projected, requestedEffects: retainedUiRefreshEffects(instanceId, effects, (frames) => turnOutcomes.push({ instanceId, frames })) };
     } finally {
-      reads.delete(read);
+      inflight.delete(read);
     }
   };
   return { ownedUiRefreshResponse };

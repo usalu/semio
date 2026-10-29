@@ -7,7 +7,7 @@ use crate::snapshot::reference::EnergyModelSnapshot;
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
 pub fn inverse<Op>(payload: &super::DeleteFenestration, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
 where
-    Op: From<super::DeleteFenestration> + From<crate::CreateFenestration> + From<crate::ReplaceFenestrationVertices>,
+    Op: From<super::DeleteFenestration> + From<crate::CreateFenestration> + From<crate::fenestration_geometry_mutations::ReplaceFenestrationVertices>,
 {
     Ok((|| {
     let Some((index, existing)) = base.model.fenestrations.iter().enumerate().find(|(_, item)| item.id == payload.id) else {
@@ -15,7 +15,7 @@ where
     };
     let mut steps = Vec::new();
     if !existing.vertices_m.is_empty() {
-        steps.push(vocabulary::replace_fenestration_vertices(existing.id, existing.vertices_m.clone()));
+        steps.push(crate::fenestration_geometry_mutations::replace_fenestration_vertices(existing.id, existing.vertices_m.clone()));
     }
     steps.push(vocabulary::create_fenestration(
         existing.id,

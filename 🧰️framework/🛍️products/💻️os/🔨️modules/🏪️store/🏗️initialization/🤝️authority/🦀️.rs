@@ -14,8 +14,8 @@ use semio_framework_value::{RetirementDemand, ValueError};
 /// only when its document initialization is more than a ledger replay.
 pub trait ArtifactStoreInitializationAuthority<P, M>: Send
 where
-    P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P> + semio_framework_os_spr::ColdMutation<P>,
+    P: semio_framework_os_spr::StoreState,
+    M: semio_framework_os_spr::StoreMutationFor<P>,
 {
     /// ▶️ One bounded initializer turn under the job's retained wallet; `Ok(None)` means the turn could not afford an outcome.
     fn step<'a>(&'a mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<semio_framework_job::JobOutcomeBorrow<'a>>, semio_framework_job::OriginalTurnFailure>;

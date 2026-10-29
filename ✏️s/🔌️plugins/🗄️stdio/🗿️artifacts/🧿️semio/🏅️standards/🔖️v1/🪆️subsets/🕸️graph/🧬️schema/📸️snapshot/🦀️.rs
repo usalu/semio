@@ -38,7 +38,7 @@ pub const STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA: &str = "s.stdio.semio.graph";
 /// 🪪 Stable identity for a graph node — a NAMED single-field struct, never a bare tuple newtype
 /// (`dsl` has no blanket `DslField` impl for tuples of any arity — see `🔢️value`'s `ValueId` for
 /// the precedent this follows).
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GraphNodeId {
@@ -54,7 +54,7 @@ impl GraphNodeId {
 
 //#region 🔖️EdgeId
 /// 🪪 Stable identity for a graph edge — same named-single-field convention as [`GraphNodeId`].
-#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct GraphEdgeId {
@@ -70,7 +70,7 @@ impl GraphEdgeId {
 
 //#region 🔖️PortKind
 /// 🔌️ The direction a node port carries data in.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslScalar)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub enum SemioGraphPortKind {
@@ -85,7 +85,7 @@ pub enum SemioGraphPortKind {
 /// 🔌️ One named port on a node. Intrinsically ordered, anonymous, nested inside its owning node's
 /// `ports` — the same shape `🔤️text`'s marks-inside-run pattern uses one level up
 /// (`➕add-node-port`/`🔚remove-node-port`).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct SemioGraphPort {
@@ -99,7 +99,7 @@ pub struct SemioGraphPort {
 //#region 🔖️Node
 /// 🔵 One id-keyed graph node, carrying its own ordered `ports` and `properties` (the latter REUSES
 /// `🔢️value`'s `SemioValueEntry`, never a redefined parallel key/value type).
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct SemioGraphNode {
     pub id: GraphNodeId,
@@ -123,7 +123,7 @@ pub struct SemioGraphNode {
 /// ➡️ One id-keyed graph edge. `source`/`target` are ordinary data fields on this entity, not an
 /// attach/detach relationship — see this file's module doc comment for the `create`/`delete` (not
 /// `connect`/`disconnect`) ruling.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, Default, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[value(rename_all = "camelCase")]
 pub struct SemioGraphEdge {
     pub id: GraphEdgeId,
@@ -145,7 +145,8 @@ pub struct SemioGraphEdge {
 /// 🕸️ `nodes`/`edges` are both id-keyed sets with no user-meaningful display order, so there is no
 /// `reorder-nodes`/`reorder-edges` mutation (`SEMANTIC-MUTATIONS-OVERHAUL`'s
 /// `📓️derivation-rules.md` rule 2: "drop reorder for id-keyed sets with no display order").
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
+#[dsl(layout = "lines")]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.semio.graph")]
 pub struct SemioGraphSnapshot {

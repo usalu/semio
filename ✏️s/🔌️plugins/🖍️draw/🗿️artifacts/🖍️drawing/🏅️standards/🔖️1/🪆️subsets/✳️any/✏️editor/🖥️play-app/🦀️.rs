@@ -91,15 +91,6 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_s_artifact_draw_drawing_host_arena::drawing_envelope_decode_owner_bundle())
     }
 
-    fn build_document_store_initialization_job(
-        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
-        operation: semio_framework_job::OperationId,
-        generation: semio_framework_job::Generation,
-        actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
-        Ok(semio_s_artifact_draw_drawing_host::owned::drawing_document_store_initialization_job(envelope, operation, generation, actor))
-    }
-
     fn build_document_store_disposer() -> Option<Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
@@ -185,8 +176,8 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_s_artifact_draw_drawing_editor_interaction::config::app_schema_descriptor())
     }
 
-    fn reference_birth()->Option<fn()->DrawingSnapshot>{Some(||{
-        semio_s_artifact_draw_drawing_model::default_drawing_document("empty", None)
+    fn reference_birth()->Option<fn()->Result<DrawingSnapshot,semio_framework_plugin::Fault>>{Some(||{
+        Ok(semio_s_artifact_draw_drawing_model::default_drawing_document("empty", None))
     })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {

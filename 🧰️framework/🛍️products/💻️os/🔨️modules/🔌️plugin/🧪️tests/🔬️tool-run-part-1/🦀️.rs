@@ -24,7 +24,7 @@ use semio_framework_plugin_decl_views::tool_run_contract::ToolRunRetargetableJob
 use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_plugin_abi::{ArtifactAnalysis, ArtifactAnalyzer, ArtifactBuilder, ArtifactChildren, ArtifactComposer, ArtifactComposition, ArtifactDecomposer, ArtifactDeserializer, ArtifactSerializer, DerivedArtifactSpec};
 use semio_framework_plugin_decl_surface::{ArtifactEditor, ArtifactViewer};
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwner;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwner;
 use semio_framework_plugin_decl_app::tool_contract::ArtifactReservedJob;
 use store::ArtifactStoreInitializationAuthority;
 use semio_framework_plugin_decl_emission::{AsyncTaskRun, AsyncTaskSource, ToolCommandCatalog};

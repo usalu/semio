@@ -9,52 +9,57 @@ use pack::snapshot::ArtifactPack;
 use store::{ArtifactStore, MemberFactory, Mutation, SpaceMember};
 use store::ReferenceSpaceMember as _;
 use semio_framework_value::DslValue;
-use semio_framework::{Fault, FaultFrom};
+use semio_framework::{ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactVersion, Effect, Fault, FaultFrom, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult, KernelMutation, MutationId, SchemaId, UndoGroup, UndoPolicy};
+use semio_framework::kernel::UiDirtyScope;
+use semio_framework_plugin_decl_emission::ActionMeta;
 use std::future::Future;
 use crate::stores_components::{InstanceStores, LocalInteraction};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
-#[cfg(test)]
-use store::ArtifactStore;
-
 impl<A: ArtifactApp> InstanceStores<A> {
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub async fn test_snapshot(&self) -> A::Snapshot {
         self.store.snapshot().expect("materialize snapshot")
     }
 
     /// 🧪️ The document store itself — needed to assert on checkpoint metadata
     /// (`composition_pins`), which no snapshot-level accessor exposes.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub async fn test_store(&self) -> &ArtifactStore<A::Snapshot, A::Mutation> {
         &self.store
     }
 
     /// ⚔️ Test-only mutable store access for conflict lifecycle fixtures.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub async fn test_store_mut(&mut self) -> &mut ArtifactStore<A::Snapshot, A::Mutation> {
         &mut self.store
     }
 
     /// 🧪️ The config-store twin of `test_snapshot`.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub async fn test_config(&self) -> A::Config {
         self.config_store.snapshot().expect("materialize config snapshot")
     }
 
 
+    /// 🧪️ The settled result of a just-dispatched edit rebuilt from the store's last edit: one `KernelMutation` per forward operation new in this dispatch (`tail_offset`), each with its inverse.
+    #[cfg(any(test, feature = "artifact-app-testing"))]
+    pub async fn test_result_from_last_edit(&self, verb: &str, meta: &ActionMeta, tail_offset: (usize, usize)) -> InvocationResult {
+        self.result_from_last_edit(verb, meta, Vec::new(), Vec::new(), UiDirtyScope::default(), tail_offset).await
+    }
+
     /// 🧪️ `(forwards, inverse)` lengths of the store's last edit — the `before` half of
     /// `dispatch_emit`'s own `tail_offset`, so a settling fixture can report only the operations ONE
     /// dispatch added to a coalesced edit.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn test_edit_tail_lengths(&self) -> (usize, usize) {
         self.store.edit_mutations().map_or((0, 0), |(forwards, inverse, _)| (forwards.len(), inverse.len()))
     }
 
     /// 🧪️ The store's last edit id, or `None` on a store that has never committed one —
     /// `dispatch_emit`'s `amended_same_edit` identity test, for a settling fixture.
-    #[cfg(test)]
+    #[cfg(any(test, feature = "artifact-app-testing"))]
     pub fn test_last_edit_id(&self) -> Option<String> {
         self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone())
     }
@@ -183,10 +188,10 @@ impl<A: ArtifactApp> InstanceStores<A> {
                     document,
                     base_version,
                     invocation_id: invocation_id.clone(),
-                    diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: ::protocol::OpBinary::encode_op(forward).unwrap_or_default() },
+                    diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation")), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&::protocol::OpBinary::encode_op(forward).unwrap_or_default()).unwrap_or_default() },
                     inverse: InverseMutation {
                         target_mutation: mutation_id,
-                        inverse_diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation.inverse")), payload: inverse_payload.clone() },
+                        inverse_diff: ArtifactDiff { schema: SchemaId(format!("{schema}.operation.inverse")), payload: semio_framework_value::paged::PagedBytes::try_from_slice(&inverse_payload).unwrap_or_default() },
                         base_version,
                         dependencies: Vec::new(),
                         undo_policy,

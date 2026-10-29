@@ -105,7 +105,7 @@ pub fn energy_target_id(id: crate::model::EntityId) -> String {
 pub fn energy_entity_kind(snapshot: &EnergyModelSnapshot, id: &str) -> Option<&'static str> {
     let Ok(raw) = id.parse::<u32>() else { return None };
     let id = crate::model::EntityId(raw);
-    let model = &snapshot.model;
+    let model = snapshot.model.read();
     if model.surfaces.iter().any(|item| item.id == id) {
         return Some(ENERGY_GRANULARITY_SURFACE);
     }

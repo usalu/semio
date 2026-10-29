@@ -16,12 +16,13 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 
 [dev-dependencies]
-semio-framework-pack = { workspace = true }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

@@ -6,9 +6,9 @@
 //! PRODUCER's constants equal to the same fixture, so a bound edited in one hop alone fails closed
 //! instead of turning a correct producer into a runtime fault on the wire.
 
-use semio_framework_plugin_decl_views::media_contract::ArtifactOutputChunks;
-use semio_framework_plugin_decl_views::media_contract::ARTIFACT_OUTPUT_CHUNK_BYTES;
-use semio_framework_plugin_decl_views::media_contract::ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES;
+use semio_framework_plugin_decl_media::ArtifactOutputChunks;
+use semio_framework_plugin_decl_media::ARTIFACT_OUTPUT_CHUNK_BYTES;
+use semio_framework_plugin_decl_media::ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES;
 
 const CONTRACT_FIXTURE: &str = include_str!("../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧪️tests/🧫️fixtures/🔣️.json");
 
@@ -82,8 +82,8 @@ fn segmented_output_original_full_grant_physical_retirement() {
         }
         chunks.seal().unwrap();
         let alias = chunks.clone();
-        let download = semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput::new("original.semio", "text/plain", None, chunks).unwrap();
-        assert!(<semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput as RetireOwned>::controlled_retirement_supported());
+        let download = semio_framework_plugin_decl_media::ArtifactDownloadOutput::new("original.semio", "text/plain", None, chunks).unwrap();
+        assert!(<semio_framework_plugin_decl_media::ArtifactDownloadOutput as RetireOwned>::controlled_retirement_supported());
         let mut owner = match ControlledRetirement::new(download) { Ok(owner) => owner, Err((error, _)) => panic!("original download owner refused: {error}") };
         let birth = owner.next_capacity_byte_demand(copy).unwrap();
         assert_ne!(birth, 0);

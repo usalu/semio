@@ -107,6 +107,20 @@ impl ArtifactEditor for Ownerownerrs {
   if (toolJobProofCatalogFailures(new Map(Object.entries(extraProof)), [], new Map(), toolJobProofs(new Map(Object.entries(extraProof)))).length === 0) throw new Error("[verify interactivity tool-jobs] self-test extra-proof was falsely accepted.");
 }
 
+/** 🎫️ Current compiler-owned action, host, producer and wire admission reject missing qualification. */
+export function originalInputAdmissionChecks() {
+  const originalQualifiedSource=toolJobPluginInstanceSource(WORKSPACE_ROOT);
+  if(!toolJobQualifiedProofBeforeDecode(originalQualifiedSource)) throw new Error("[verify interactivity tool-jobs] current original input ownership was falsely rejected.");
+  for(const [owner,before,after] of [
+    ["async fn drive_original_host_configuration(",".admit_host(",".unchecked_host("],
+    ["pub fn produce_action(","factory.admit(","factory.unchecked("],
+    ["pub fn admit_wire(","OriginalToolQualification::admit(","OriginalToolQualification::unchecked("],
+  ] as const){
+    const candidate=toolJobSourceMutation(originalQualifiedSource,owner,before,after);
+    if(candidate===originalQualifiedSource||toolJobQualifiedProofBeforeDecode(candidate)) throw new Error(`[verify interactivity tool-jobs] original admission omission ${before} was falsely accepted.`);
+  }
+}
+
 /** 🚦 Checks reserved route bypass, decode before lookup, contract mismatch, cancellation ownership, qualified proof order, alias fallback, reserved terminals and bounded full operation preparation. */
 export function admissionOrderAndBoundedPreparationChecks() {
   const reservedBypass = 'async fn dispatch_action() { interactive-job.unknown-key; return self.dispatch_framework_reserved_action(action, args, meta).await; } async fn dispatch_framework_reserved_action() { self.store.dispatch(command); }';
@@ -121,15 +135,7 @@ export function admissionOrderAndBoundedPreparationChecks() {
   if (toolJobRuntimeProofQualified(unqualifiedRuntime)) throw new Error("[verify interactivity tool-jobs] self-test runtime-owner-proof-drop was falsely accepted.");
   const proofAfterDecode = "async fn admit_command_json() { bounded_json_items(); qualified_tool_proof(); } async fn handle_intent_frame() { serde_json::to_value(); qualified_tool_proof(); }";
   if (toolJobQualifiedProofBeforeDecode(proofAfterDecode)) throw new Error("[verify interactivity tool-jobs] self-test qualified-proof-after-decode was falsely accepted.");
-  const delegatedQualifiedProof =
-    'async fn admit_command_json_with_proof(proof: QualifiedToolProof) { let key = proof.key(); begin_exact_wire(); serde_json::to_writer(); proof.admits::<A>(&admission); } async fn admit_command_json() { let proof = self.qualified_tool_proof(verb)?; admit_command_json_with_proof(proof, verb, args); } async fn admit_host_configuration_json() { let proof = self.qualified_host_configuration_tool_proof(verb)?; admit_command_json_with_proof(proof, verb, args); } async fn handle_intent_frame() { qualified_tool_proof(verb); FaultCode::new("interactive-job.intent-raw-owner-required"); }';
-  if (!toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof)) throw new Error("[verify interactivity tool-jobs] self-test delegated-qualified-proof route was falsely rejected.");
-  if (toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof.replace("let proof = self.qualified_tool_proof(verb)?; admit_command_json_with_proof(proof, verb, args);", "admit_command_json_with_proof(proof, verb, args); let proof = self.qualified_tool_proof(verb)?;")))
-    throw new Error("[verify interactivity tool-jobs] self-test delegated app proof after helper was falsely accepted.");
-  if (toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof.replace("let proof = self.qualified_host_configuration_tool_proof(verb)?; admit_command_json_with_proof(proof, verb, args);", "admit_command_json_with_proof(proof, verb, args); let proof = self.qualified_host_configuration_tool_proof(verb)?;")))
-    throw new Error("[verify interactivity tool-jobs] self-test delegated host proof after helper was falsely accepted.");
-  if (toolJobQualifiedProofBeforeDecode(delegatedQualifiedProof.replace("begin_exact_wire(); serde_json::to_writer();", "serde_json::to_writer(); begin_exact_wire();")))
-    throw new Error("[verify interactivity tool-jobs] self-test delegated helper decode before wire admission was falsely accepted.");
+  originalInputAdmissionChecks();
   const copiedOwnerStrings = 'struct QualifiedBoundedFirstStepProof; fn bounded_first_step_proof(controller_id: &str, factory: &str, tool_id: &str, artifact_schema: &str) { proof.owner_file != ""; } tool_job_registration(A::APP_ID, A::DOCUMENT_SCHEMA);';
   if (toolJobRuntimeProofQualified(copiedOwnerStrings)) throw new Error("[verify interactivity tool-jobs] self-test copied-owner-without-compiler-witness was falsely accepted.");
   const controllerScopedOperation = 'let app_id = app.instance_id().await.to_string(); format!("{}/{verb}/{}", self.tool_job_controller_id, base_revision.0); app_instance_id: meta.instance_id;';
@@ -158,7 +164,7 @@ export function admissionOrderAndBoundedPreparationChecks() {
   const dispatch = "async fn dispatch_typed_command_inner(";
   if (!toolJobFullOperationBounded(instance)) throw new Error("[verify interactivity tool-jobs] self-test exact production typed-command full operation was falsely rejected.");
   const hostiles: [string, string][] = [
-    ["typed-preparation-and-commit-outside-job", mutateIn(dispatch, "self.media.require_complete_tool_operation_pipeline(&admission)?;", "self.as_render().refresh_cache().await?; self.media.require_complete_tool_operation_pipeline(&admission)?;")],
+    ["typed-preparation-and-commit-outside-job", mutateIn(dispatch, "self.media.require_complete_tool_operation_pipeline(admission)?;", "self.as_render().refresh_cache().await?; self.media.require_complete_tool_operation_pipeline(admission)?;")],
     ["fake-full-operation-cancellation-cursor", mutateIn(job, "if cx.is_cancelled() {", "if cx.cancelled_flag() {")],
     ["full-operation-without-stage-watchdog", mutateIn(job, "cx.should_yield() || cx.fuel_remaining() == 0", "cx.fuel_remaining() == 0")],
     ["monolithic-huge-output-and-child-validation", mutateIn(job, 'cx.set_stage("typed-command-prepare");', 'cx.set_stage("typed-command-prepare"); let _ = serde_json::to_vec(&emit.effects);')],

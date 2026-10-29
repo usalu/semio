@@ -381,8 +381,8 @@ fn diff_json_contract_matches_third_party_oracle() {
 fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
     assert_eq!(
         std::any::type_name::<<crate::io::binary::snapshot::FlowSnapshotPackProducer as crate::os_store::document_store_owners::MemberStoreProducer<FlowHostSnapshot,FlowMutation>>::SnapshotOpen>(),
-        std::any::type_name::<crate::os_store::ProducedMemberSnapshotOpen<FlowHostSnapshot,crate::io::binary::snapshot::FlowSnapshotPackProducer>>(),
-        "a flow member must open through ProducedMemberSnapshotOpen"
+        std::any::type_name::<crate::os_store::OriginalRecordMemberSnapshotOpen<FlowHostSnapshot>>(),
+        "a flow member must open through OriginalRecordMemberSnapshotOpen"
     );
     let snapshot = base();
     let encoded = pack::snapshot::ArtifactPack::encode_pack(&snapshot);

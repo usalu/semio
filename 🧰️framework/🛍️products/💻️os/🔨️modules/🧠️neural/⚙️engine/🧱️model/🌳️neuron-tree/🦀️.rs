@@ -8,7 +8,7 @@ use super::*;
 /// 🌳️ Directed acyclic graph of neurons and synapses. `serde` is TEST-ONLY — see `Dictionary`'s
 /// docstring; mutually recursive with `Neuron` via `Neuron.tree: Option<Box<Tree>>`, so both moved
 /// off serde together.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 pub struct Tree {
@@ -17,12 +17,14 @@ pub struct Tree {
 }
 
 /// 🔵️ Neuron instance bound to a kind. `serde` is TEST-ONLY — see `Tree`'s docstring above.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
+#[value(receive_recursive)]
 #[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
 pub struct Neuron {
     pub id: String,
     pub kind: String,
+    #[value(default)]
     #[cfg_attr(any(test, feature = "testkit"), serde(default))]
     pub params: Dictionary,
     #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none"))]
@@ -61,7 +63,7 @@ fn default_to_port() -> String {
 }
 
 /// 🔗️ Directed connection between two port endpoints.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive, semio_framework_dsl_record_derive::DslRecord)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), derive(Serialize, Deserialize))]
@@ -70,8 +72,10 @@ pub struct Synapse {
     pub id: String,
     pub from: String,
     pub to: String,
+    #[value(default)]
     #[cfg_attr(any(test, feature = "testkit"), serde(default = "default_from_port"))]
     pub from_port: String,
+    #[value(default)]
     #[cfg_attr(any(test, feature = "testkit"), serde(default = "default_to_port"))]
     pub to_port: String,
 }

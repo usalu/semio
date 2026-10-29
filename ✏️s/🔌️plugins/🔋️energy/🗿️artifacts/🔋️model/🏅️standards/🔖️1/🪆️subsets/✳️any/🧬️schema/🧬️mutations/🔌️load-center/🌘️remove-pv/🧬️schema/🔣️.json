@@ -80,7 +80,7 @@
     "semantics": {
       "verb": "remove",
       "entity": "ElectricalLoadCenter",
-      "kind": "RemoveElectricalLoadCenterPv",
+      "kind": "remove-electrical-load-center-pv",
       "record": "RemoveElectricalLoadCenterPv"
     },
     "diagnostics": {

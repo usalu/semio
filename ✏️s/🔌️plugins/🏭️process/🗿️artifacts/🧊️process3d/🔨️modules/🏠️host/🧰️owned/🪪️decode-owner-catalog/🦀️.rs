@@ -92,3 +92,13 @@ impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority 
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Process3dEnvelopeOwnedFieldCatalog;
+
+/// 🏭️ Original owned-value issuer for Process3d snapshots.
+fn process3d_snapshot_value_factory() -> std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Process3dSnapshot>> {
+    std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Process3dSnapshot>::default())
+}
+
+/// 🏭️ Original owned-value issuer for Process3d mutations.
+fn process3d_mutation_value_factory() -> std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<Process3dMutation>> {
+    std::sync::Arc::new(semio_framework_value::OwnedValueRetirementFactory::<Process3dMutation>::default())
+}

@@ -204,7 +204,7 @@ fn a_move_interaction_commits_a_relative_drag() {
 /// 🧱️ Adds one box to the mounted app's shape pane and answers its id.
 async fn place_box(app: &mut CadFixtureApp) -> String {
     use semio_s_artifact_cad_cad_commands::object::add_object::AddObject;
-    app.0.dispatch_typed(CadCommand::AddObject(AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject is admitted");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::AddObject(AddObject { typology: Some("spatial.shape.primitive.box".into()) }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("addObject is admitted");
     settle(app).await;
     pane_objects(app, CadPaneId::Shape).await.last().expect("the box is placed").id.clone()
 }
@@ -225,7 +225,7 @@ async fn a_mounted_translate_is_one_history_row_keyed_by_its_transaction() {
     let placed = place_box(&mut app).await;
     let origin_before = placed_origin(&app, &placed).await;
     let rows_before = member_rows(&mut app).await.len();
-    app.0.dispatch_typed(CadCommand::TranslateSelection(TranslateSelection { object_ids: vec![placed.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the translate is admitted");
+    semio_framework_plugin::artifact_app_laws::dispatch_original_fixture_command(&mut app.0, &CadCommand::TranslateSelection(TranslateSelection { object_ids: vec![placed.clone()], dx: 1.0, dy: 0.0, dz: 0.0 }), &meta("local"), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity(), app.1.cx()).await.expect("the translate is admitted");
     settle(&mut app).await;
     let rows = member_rows(&mut app).await;
     assert_eq!(rows.len(), rows_before + 1, "one gesture, one row: {rows:?}");

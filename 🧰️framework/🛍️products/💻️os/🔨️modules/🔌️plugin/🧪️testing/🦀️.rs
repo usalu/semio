@@ -159,7 +159,7 @@ use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_surface::ViewerApp;
 #[cfg(any(test, feature = "artifact-app-testing"))]
-use semio_framework_plugin_decl_views::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use semio_framework_plugin_decl_tool_contract::ArtifactInstanceOperationOwnerHandle;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_decl_app::tool_contract::ArtifactToolFactoryRegistry;
 #[cfg(any(test, feature = "artifact-app-testing"))]

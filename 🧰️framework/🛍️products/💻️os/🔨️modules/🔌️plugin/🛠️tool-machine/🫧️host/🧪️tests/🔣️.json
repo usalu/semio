@@ -1,0 +1,182 @@
+{
+  "schema": "semio.framework.plugin.original-scrub-host.v1",
+  "cases": [
+    {
+      "name": "retire-absent-window",
+      "open": {
+        "w1": "g1",
+        "w2": "g2"
+      },
+      "roster": [
+        "w1"
+      ],
+      "tag": null,
+      "expected": {
+        "open": [
+          "w1"
+        ],
+        "closed": {},
+        "settled": false,
+        "tagRetained": false
+      }
+    },
+    {
+      "name": "abort-actual-gesture",
+      "open": {
+        "w1": "g1",
+        "w2": "g2"
+      },
+      "roster": [
+        "w1",
+        "w2"
+      ],
+      "tag": {
+        "window": "w1",
+        "gesture": "g1",
+        "abort": true
+      },
+      "expected": {
+        "open": [
+          "w2"
+        ],
+        "closed": {
+          "w1": "g1"
+        },
+        "settled": true,
+        "tagRetained": false
+      }
+    },
+    {
+      "name": "abort-foreign-gesture-keeps-live-state",
+      "open": {
+        "w1": "g1"
+      },
+      "roster": [
+        "w1"
+      ],
+      "tag": {
+        "window": "w1",
+        "gesture": "other",
+        "abort": true
+      },
+      "expected": {
+        "open": [
+          "w1"
+        ],
+        "closed": {
+          "w1": "other"
+        },
+        "settled": true,
+        "tagRetained": false
+      }
+    },
+    {
+      "name": "ordinary-tag-reaches-command",
+      "open": {
+        "w1": "g1"
+      },
+      "roster": [
+        "w1"
+      ],
+      "tag": {
+        "window": "w1",
+        "gesture": "next",
+        "abort": false
+      },
+      "expected": {
+        "open": [
+          "w1"
+        ],
+        "closed": {},
+        "settled": false,
+        "tagRetained": true
+      }
+    },
+    {
+      "name": "absent-roster-does-not-retire",
+      "open": {
+        "w1": "g1",
+        "w2": "g2"
+      },
+      "roster": [],
+      "tag": null,
+      "expected": {
+        "open": [
+          "w1",
+          "w2"
+        ],
+        "closed": {},
+        "settled": false,
+        "tagRetained": false
+      }
+    },
+    {
+      "name": "long-window-compares-bounded-spans",
+      "open": {
+        "window-xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy": "g1",
+        "retired": "g2"
+      },
+      "roster": [
+        "window-xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy"
+      ],
+      "tag": null,
+      "expected": {
+        "open": [
+          "window-xyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxyxy"
+        ],
+        "closed": {},
+        "settled": false,
+        "tagRetained": false
+      }
+    },
+    {
+      "name": "frozen-press-aborts-before-refusal",
+      "open": {
+        "w1": "g1"
+      },
+      "roster": [
+        "w1"
+      ],
+      "frozen": true,
+      "tag": {
+        "window": "w1",
+        "gesture": "g1",
+        "abort": false
+      },
+      "expected": {
+        "open": [],
+        "closed": {
+          "w1": "g1"
+        },
+        "settled": true,
+        "tagRetained": false
+      }
+    }
+  ],
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    4,
+    8
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "registry": {
+    "limit": 64,
+    "takeOperation": 5,
+    "expected": {
+      "admitted": 64,
+      "fullPreservesOriginal": true,
+      "firstRetained": true,
+      "taken": 5,
+      "secondTake": false,
+      "remaining": 63,
+      "pendingOwned": true
+    }
+  }
+}

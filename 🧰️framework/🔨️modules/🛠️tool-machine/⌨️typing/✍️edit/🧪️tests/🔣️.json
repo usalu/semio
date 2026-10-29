@@ -1,0 +1,367 @@
+{
+  "contract": "semio.original-typing-edit.v1",
+  "states": [
+    "root",
+    "typing"
+  ],
+  "cases": [
+    {
+      "name": "first-utf8-buffer",
+      "before": null,
+      "input": {
+        "tool": "app#type",
+        "buffer": "日本語",
+        "leaves": [
+          "a",
+          "b"
+        ],
+        "now": 100
+      },
+      "fold": "split",
+      "expected": {
+        "steps": [
+          "open"
+        ],
+        "committed": [],
+        "open": {
+          "tool": "app#type",
+          "buffer": "日本語",
+          "leaves": [
+            "a",
+            "b"
+          ],
+          "deadline": 850,
+          "reuseTransaction": false
+        }
+      }
+    },
+    {
+      "name": "split-commits-before-open",
+      "before": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "old"
+        ],
+        "deadline": 900
+      },
+      "input": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "new"
+        ],
+        "now": 200
+      },
+      "fold": "split",
+      "expected": {
+        "steps": [
+          "committed",
+          "open"
+        ],
+        "committed": [
+          "old"
+        ],
+        "open": {
+          "tool": "app#type",
+          "buffer": "x",
+          "leaves": [
+            "new"
+          ],
+          "deadline": 950,
+          "reuseTransaction": false
+        }
+      }
+    },
+    {
+      "name": "replace-preserves-transaction",
+      "before": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "old0",
+          "old1"
+        ],
+        "deadline": 900
+      },
+      "input": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "new"
+        ],
+        "now": 200
+      },
+      "fold": "replace",
+      "expected": {
+        "steps": [
+          "open"
+        ],
+        "committed": [],
+        "open": {
+          "tool": "app#type",
+          "buffer": "x",
+          "leaves": [
+            "new"
+          ],
+          "deadline": 950,
+          "reuseTransaction": true
+        }
+      }
+    },
+    {
+      "name": "empty-net-retains-empty-transaction",
+      "before": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "old"
+        ],
+        "deadline": 900
+      },
+      "input": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [],
+        "now": 200
+      },
+      "fold": "replace",
+      "expected": {
+        "steps": [
+          "open"
+        ],
+        "committed": [],
+        "open": {
+          "tool": "app#type",
+          "buffer": "x",
+          "leaves": [],
+          "deadline": 950,
+          "reuseTransaction": true
+        }
+      }
+    },
+    {
+      "name": "empty-first-edit-is-idle",
+      "before": null,
+      "input": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [],
+        "now": 200
+      },
+      "fold": "split",
+      "expected": {
+        "steps": [
+          "idle"
+        ],
+        "committed": [],
+        "open": null
+      }
+    },
+    {
+      "name": "lapse-commits-before-replacement",
+      "before": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "old"
+        ],
+        "deadline": 900
+      },
+      "input": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "new"
+        ],
+        "now": 900
+      },
+      "fold": "replace",
+      "expected": {
+        "steps": [
+          "committed",
+          "open"
+        ],
+        "committed": [
+          "old"
+        ],
+        "open": {
+          "tool": "app#type",
+          "buffer": "x",
+          "leaves": [
+            "new"
+          ],
+          "deadline": 1650,
+          "reuseTransaction": false
+        }
+      }
+    },
+    {
+      "name": "buffer-jump-commits-before-edit",
+      "before": {
+        "tool": "app#type",
+        "buffer": "first",
+        "leaves": [
+          "old"
+        ],
+        "deadline": 900
+      },
+      "input": {
+        "tool": "app#type",
+        "buffer": "second",
+        "leaves": [
+          "new"
+        ],
+        "now": 200
+      },
+      "fold": "replace",
+      "expected": {
+        "steps": [
+          "committed",
+          "open"
+        ],
+        "committed": [
+          "old"
+        ],
+        "open": {
+          "tool": "app#type",
+          "buffer": "second",
+          "leaves": [
+            "new"
+          ],
+          "deadline": 950,
+          "reuseTransaction": false
+        }
+      }
+    },
+    {
+      "name": "tool-jump-commits-original-author",
+      "before": {
+        "tool": "first#type",
+        "buffer": "x",
+        "leaves": [
+          "old"
+        ],
+        "deadline": 900
+      },
+      "input": {
+        "tool": "second#type",
+        "buffer": "x",
+        "leaves": [
+          "new"
+        ],
+        "now": 200
+      },
+      "fold": "replace",
+      "expected": {
+        "steps": [
+          "committed",
+          "open"
+        ],
+        "committed": [
+          "old"
+        ],
+        "open": {
+          "tool": "second#type",
+          "buffer": "x",
+          "leaves": [
+            "new"
+          ],
+          "deadline": 950,
+          "reuseTransaction": false
+        }
+      }
+    },
+    {
+      "name": "empty-original-commit-has-no-leaves",
+      "before": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [],
+        "deadline": 900
+      },
+      "input": {
+        "tool": "app#type",
+        "buffer": "y",
+        "leaves": [
+          "new"
+        ],
+        "now": 200
+      },
+      "fold": "split",
+      "expected": {
+        "steps": [
+          "empty",
+          "open"
+        ],
+        "committed": [],
+        "open": {
+          "tool": "app#type",
+          "buffer": "y",
+          "leaves": [
+            "new"
+          ],
+          "deadline": 950,
+          "reuseTransaction": false
+        }
+      }
+    },
+    {
+      "name": "owned-net-preserves-original-run",
+      "before": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "old"
+        ],
+        "deadline": 900
+      },
+      "input": {
+        "tool": "app#type",
+        "buffer": "x",
+        "leaves": [
+          "incoming"
+        ],
+        "now": 200
+      },
+      "fold": "net",
+      "net": [
+        "combined"
+      ],
+      "expected": {
+        "steps": [
+          "open"
+        ],
+        "committed": [],
+        "open": {
+          "tool": "app#type",
+          "buffer": "x",
+          "leaves": [
+            "combined"
+          ],
+          "deadline": 950,
+          "reuseTransaction": true
+        }
+      }
+    }
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    2,
+    3,
+    7,
+    31
+  ],
+  "foreignCallerRefused": true,
+  "foreignDecoderRefused": true,
+  "sameMutationBacking": true,
+  "originalOldRowUntilPublication": true
+}

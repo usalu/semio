@@ -102,7 +102,7 @@
     "semantics": {
       "verb": "change",
       "entity": "weekly-schedule",
-      "kind": "schedule",
+      "kind": "change-weekly-schedule-day",
       "record": "ChangeWeeklyScheduleDay"
     },
     "diagnostics": {

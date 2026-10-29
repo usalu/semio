@@ -1,7 +1,7 @@
 //! 🔲️ Adjacency events retain two original surface references and splice only the actual ranked pair collection.
 use crate::{snapshot::{original::EnergyModelSnapshot,state::{StateAdjacencyPair,ModelGeometryState}},diff::original::EnergyModelDiff,row::{RowBranchPath,RowBranchPreparation,RowOutcome},reference::{ReferenceLookup,ReferenceCollection},leaf::RowFieldPreparation,scalar::{CursorClose,cursor_demand,close_cursor,birth,invalid,scalar,nested,child,add,tag,receipt}};
 use semio_framework_value::{RetirementDemand,ValueError,retirement::RetireOwned,shared_issuance::{SealedShared,SharedIssuer},retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneSource,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
-use protocol::mutation::retained::retained_mutation_demand_fits;
+use protocol::retained_mutation_demand_fits;
 use std::mem::{size_of,ManuallyDrop};
 /// 🔲️ The authored pair event lends both actual identifier sources and its original optional insertion rank.
 pub trait AdjacencyPath:RowBranchPath<Row=StateAdjacencyPair,Branch=ModelGeometryState>{type Payload:Send+Sync+'static;const INSERT:bool;fn surface(p:RetainedCloneRef<'_,Self::Payload>,index:usize)->RetainedCloneRef<'_,u32>;fn index(p:&Self::Payload)->Option<usize>;fn row(p:RetainedCloneRef<'_,Self::Payload>)->StateAdjacencyPair;}

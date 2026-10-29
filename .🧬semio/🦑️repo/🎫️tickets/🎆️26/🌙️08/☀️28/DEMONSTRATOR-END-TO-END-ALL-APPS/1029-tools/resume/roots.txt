@@ -1,0 +1,8 @@
+semio-framework-plugin-instance-history
+semio-framework-plugin-instance-dispatch
+semio-framework-plugin-instance-commands
+semio-framework-plugin-instance-app
+semio-framework-plugin-runtime-ops
+semio-framework-plugin-reactor-app
+semio-framework-plugin-reactor-turn
+semio-framework-plugin-command

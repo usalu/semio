@@ -24,6 +24,7 @@ name = "semio_framework_os_store_testing_prelude"
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-store-engine-checkpoint-graph = { path = "../../../../⚙️engine/🌳️checkpoint-graph/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
