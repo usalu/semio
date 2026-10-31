@@ -1,0 +1,443 @@
+{
+  "title": "Original Kitchen and Pantry Physical Construction",
+  "floor": 3.17,
+  "uncertainty_m": 0.15,
+  "bowls": [
+    {
+      "tag": "SINK-KITCHEN-1",
+      "tap": "TAP-KITCHEN",
+      "counter": "FIX-KITCHEN-SINK-COUNTER",
+      "registered_center": [
+        1.5088235294117638,
+        0.34191176470588236
+      ],
+      "center": [
+        1.5088235294117638,
+        0.46
+      ],
+      "cavity": [
+        1.5088235294117638,
+        0.46,
+        0.8
+      ],
+      "drain": [
+        1.5088235294117638,
+        0.46,
+        0.68
+      ],
+      "discharge": [
+        1.5088235294117638,
+        0.4385,
+        1.02
+      ],
+      "discharge_probe": [
+        1.5088235294117638,
+        0.4385,
+        0.84
+      ],
+      "mount": [
+        1.5288235294117638,
+        0.2785,
+        0.9
+      ],
+      "airway": [
+        [
+          1.5088235294117638,
+          0.2785,
+          0.98
+        ],
+        [
+          1.5088235294117638,
+          0.3585,
+          1.1
+        ],
+        [
+          1.5088235294117638,
+          0.4385,
+          1.04
+        ]
+      ]
+    },
+    {
+      "tag": "SINK-KITCHEN-2",
+      "tap": "TAP-KITCHEN-2",
+      "counter": "FIX-KITCHEN-SINK-COUNTER",
+      "registered_center": [
+        0.8382352941176485,
+        0.34191176470588236
+      ],
+      "center": [
+        0.8382352941176485,
+        0.46
+      ],
+      "cavity": [
+        0.8382352941176485,
+        0.46,
+        0.8
+      ],
+      "drain": [
+        0.8382352941176485,
+        0.46,
+        0.68
+      ],
+      "discharge": [
+        0.8382352941176485,
+        0.4385,
+        1.02
+      ],
+      "discharge_probe": [
+        0.8382352941176485,
+        0.4385,
+        0.84
+      ],
+      "mount": [
+        0.8582352941176485,
+        0.2785,
+        0.9
+      ],
+      "airway": [
+        [
+          0.8382352941176485,
+          0.2785,
+          0.98
+        ],
+        [
+          0.8382352941176485,
+          0.3585,
+          1.1
+        ],
+        [
+          0.8382352941176485,
+          0.4385,
+          1.04
+        ]
+      ]
+    },
+    {
+      "tag": "SINK-PANTRY",
+      "tap": "TAP-PANTRY",
+      "counter": "FIX-PANTRY-SINK-COUNTER",
+      "registered_center": [
+        3.6602941176470587,
+        0.34191176470588236
+      ],
+      "center": [
+        3.6602941176470587,
+        0.46
+      ],
+      "cavity": [
+        3.6602941176470587,
+        0.46,
+        0.8
+      ],
+      "drain": [
+        3.6602941176470587,
+        0.46,
+        0.68
+      ],
+      "discharge": [
+        3.6602941176470587,
+        0.4385,
+        1.02
+      ],
+      "discharge_probe": [
+        3.6602941176470587,
+        0.4385,
+        0.84
+      ],
+      "mount": [
+        3.6802941176470587,
+        0.2785,
+        0.9
+      ],
+      "airway": [
+        [
+          3.6602941176470587,
+          0.2785,
+          0.98
+        ],
+        [
+          3.6602941176470587,
+          0.3585,
+          1.1
+        ],
+        [
+          3.6602941176470587,
+          0.4385,
+          1.04
+        ]
+      ]
+    }
+  ],
+  "table": {
+    "tag": "FIX-KITCHEN",
+    "bounds": [
+      0.5588235294117645,
+      1.8088235294117647,
+      1.8161764705882355,
+      2.675
+    ],
+    "legs": 4,
+    "empty": [
+      1.18,
+      2.24,
+      0.4
+    ]
+  },
+  "doors": [
+    {
+      "tag": "D-KITCHEN",
+      "host": "W-PANTRY-SOUTH",
+      "angle": -90,
+      "hinge": "low_x_low_y"
+    },
+    {
+      "tag": "D-PANTRY",
+      "host": "W-PANTRY-WEST",
+      "angle": 90,
+      "hinge": "low_x_low_y"
+    }
+  ],
+  "body_diameter": 0.6,
+  "body_height": 2.1,
+  "routes": [
+    {
+      "id": "public_to_pantry",
+      "points": [
+        [
+          4.2,
+          6.7
+        ],
+        [
+          4.2,
+          5.5
+        ],
+        [
+          4.2,
+          1.1
+        ]
+      ]
+    },
+    {
+      "id": "pantry_to_main_bowls",
+      "points": [
+        [
+          4.2,
+          1.1
+        ],
+        [
+          2.4,
+          1.1
+        ],
+        [
+          0.8382352941176485,
+          1.1
+        ]
+      ]
+    },
+    {
+      "id": "pantry_basin",
+      "points": [
+        [
+          4.2,
+          1.1
+        ],
+        [
+          3.6602941176470587,
+          1.1
+        ]
+      ]
+    },
+    {
+      "id": "table_workside",
+      "points": [
+        [
+          2.4,
+          1.1
+        ],
+        [
+          2.4,
+          2.25
+        ]
+      ]
+    },
+    {
+      "id": "appliance_aisle_and_patio_approach",
+      "diameter": 0.8,
+      "points": [
+        [
+          2.4,
+          2.25
+        ],
+        [
+          2.4,
+          5.4
+        ],
+        [
+          1.27,
+          5.4
+        ]
+      ]
+    }
+  ],
+  "patio_glazing": [
+    {
+      "tag": "WIN-KITCHEN-PATIO-LOW-X",
+      "opening": "OP-KITCHEN-PATIO-LOW-X",
+      "host": "W-PANTRY",
+      "interval": [
+        0.17,
+        0.79
+      ]
+    },
+    {
+      "tag": "WIN-KITCHEN-PATIO-HIGH-X",
+      "opening": "OP-KITCHEN-PATIO-HIGH-X",
+      "host": "W-PANTRY",
+      "interval": [
+        1.75,
+        2.955
+      ]
+    }
+  ],
+  "patio_door": {
+    "tag": "D-KITCHEN-PATIO",
+    "opening": "OP-D-KITCHEN-PATIO",
+    "interval": [
+      0.83,
+      1.71
+    ],
+    "type": "TY-KITCHEN-PATIO-GLAZED"
+  },
+  "spaces": {
+    "SP-KITCHEN": [
+      [
+        0.08,
+        0.155
+      ],
+      [
+        2.96,
+        0.155
+      ],
+      [
+        2.96,
+        5.931
+      ],
+      [
+        0.08,
+        5.931
+      ]
+    ],
+    "SP-PANTRY": [
+      [
+        3.04,
+        0.155
+      ],
+      [
+        4.725,
+        0.155
+      ],
+      [
+        4.725,
+        5.931
+      ],
+      [
+        3.04,
+        5.931
+      ]
+    ],
+    "SP-KITCHEN-TERRACE": [
+      [
+        0.3,
+        6.081
+      ],
+      [
+        2.96,
+        6.081
+      ],
+      [
+        2.96,
+        8.9
+      ],
+      [
+        0.3,
+        8.9
+      ]
+    ]
+  },
+  "tap_cross_arms": 4,
+  "divider_junction": [
+    {
+      "tag": "W-PANTRY-FRONT-1",
+      "z0": 3.17,
+      "z1": 3.86,
+      "face_y": 0.155,
+      "axis_x": 3,
+      "width": 0.08,
+      "main_y": 0.3
+    },
+    {
+      "tag": "W-PANTRY-FRONT-2",
+      "z0": 3.86,
+      "z1": 3.92,
+      "face_y": 0.18,
+      "axis_x": 3,
+      "width": 0.08,
+      "main_y": 0.3
+    },
+    {
+      "tag": "W-PANTRY-FRONT-3",
+      "z0": 3.92,
+      "z1": 4.1,
+      "face_y": 0.075,
+      "axis_x": 3,
+      "width": 0.08,
+      "main_y": 0.3
+    },
+    {
+      "tag": "W-PANTRY-FRONT-4",
+      "z0": 4.1,
+      "z1": 4.15,
+      "face_y": 0.05,
+      "axis_x": 3,
+      "width": 0.08,
+      "main_y": 0.3
+    },
+    {
+      "tag": "W-PANTRY-FRONT-5",
+      "z0": 4.15,
+      "z1": 5.12,
+      "face_y": 0.038,
+      "axis_x": 3,
+      "width": 0.08,
+      "main_y": 0.3
+    },
+    {
+      "tag": "W-PANTRY-FRONT-6",
+      "z0": 5.12,
+      "z1": 5.17,
+      "face_y": 0.05,
+      "axis_x": 3,
+      "width": 0.08,
+      "main_y": 0.3
+    },
+    {
+      "tag": "W-PANTRY-FRONT-7",
+      "z0": 5.17,
+      "z1": 5.21,
+      "face_y": 0.075,
+      "axis_x": 3,
+      "width": 0.08,
+      "main_y": 0.3
+    },
+    {
+      "tag": "W-PANTRY-FRONT-8",
+      "z0": 5.21,
+      "z1": 6.34,
+      "face_y": 0.245,
+      "axis_x": 3,
+      "width": 0.08,
+      "main_y": 0.3
+    }
+  ]
+}

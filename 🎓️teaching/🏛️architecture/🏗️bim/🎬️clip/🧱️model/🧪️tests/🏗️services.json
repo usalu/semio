@@ -112,7 +112,7 @@
     "passage": "OP-COAL-CELLAR",
     "assembly": "CELLAR-COAL-CHUTE",
     "cover": "COVER-COAL",
-    "floor_inner": -2.42,
+    "floor_inner": -2.4,
     "floor_outer": -0.5
   },
   "new_tags": [
@@ -127,3 +127,4 @@
     "HOIST-JIB"
   ]
 }
+ 

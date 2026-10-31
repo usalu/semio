@@ -1,0 +1,191 @@
+{
+  "source": "SAB2024 pp187–191; author plan46; cited original execution letters/invoices",
+  "facts": [
+    {
+      "tags": [
+        "FIN-SALON",
+        "FIN-KITCHEN"
+      ],
+      "material": "ochre gres",
+      "tile_m": [
+        0.15,
+        0.15
+      ],
+      "laying_degrees": 0,
+      "evidence": "SAB190–191: salon/cuisine jaune, orthogonal living zones"
+    },
+    {
+      "tags": [
+        "FIN-FIRST-HALL"
+      ],
+      "material": "creamy white gres",
+      "tile_m": [
+        0.15,
+        0.15
+      ],
+      "laying_degrees": 45,
+      "evidence": "SAB191: distributors blanc, diagonal circulation"
+    },
+    {
+      "tags": [
+        "FIN-SHARED-BATH",
+        "FIN-GUEST-TILE",
+        "FIN-WC-FIRST-WEST",
+        "FIN-WC-FIRST-EAST"
+      ],
+      "material": "ochre gres",
+      "tile_m": [
+        0.15,
+        0.15
+      ],
+      "laying_degrees": 0,
+      "evidence": "SAB191: aseos jaune; author46 orthogonal hatch. Per-small-room colouring inferred from general bathroom programme, not individually labelled original every cubicle."
+    },
+    {
+      "tags": [
+        "FIN-PARENT-BATH"
+      ],
+      "material": "white gres",
+      "tile_m": [
+        0.15,
+        0.15
+      ],
+      "laying_degrees": 0,
+      "evidence": "SAB191: changed jaune toblanc after20Jan1930letterFLC H1(12)0842 and22FebcertH1(13)108."
+    },
+    {
+      "tags": [
+        "FIN-SON",
+        "FIN-PARENTS",
+        "FIN-BOUDOIR",
+        "FIN-GUEST-PARQUET"
+      ],
+      "material": "oak parquet",
+      "evidence": "SAB187–189 finalbedrooms oak, upperownersbedrooms Versailles8×24cm; author46 parquet hatch inallfour listedregions.",
+      "panel_total_m": 0.028,
+      "wood_piece_m": [
+        0.08,
+        0.24
+      ],
+      "support": "bituminous sheet without battens for upper floor",
+      "unknown": "Exact pine/oak split of28mm system, parquet tile origin, and whether every guest/boudoir panel uses identical Versailles pattern are not individually proven."
+    }
+  ],
+  "datum_check": {
+    "source": "SAB99, original structural sections Cormier305/306/309/311/313/314",
+    "structural_top_interior": 3.14,
+    "structural_top_terraces": 3.08,
+    "finished_first": 3.17,
+    "existing_20cm_regions": [
+      {
+        "tag": "R-PRIMARY-SL-1-78",
+        "thickness": 0.2,
+        "top_offset": -0.06,
+        "outline": [
+          [
+            8.128,
+            18.181973
+          ],
+          [
+            9.39,
+            18.181973
+          ],
+          [
+            9.39,
+            20.25
+          ],
+          [
+            8.128,
+            20.25
+          ]
+        ]
+      },
+      {
+        "tag": "R-PRIMARY-SL-1-79",
+        "thickness": 0.2,
+        "top_offset": -0.06,
+        "outline": [
+          [
+            9.39,
+            18.181973
+          ],
+          [
+            9.61,
+            18.181973
+          ],
+          [
+            9.61,
+            20.25
+          ],
+          [
+            9.39,
+            20.25
+          ]
+        ]
+      },
+      {
+        "tag": "R-PRIMARY-SL-1-80",
+        "thickness": 0.2,
+        "top_offset": -0.06,
+        "outline": [
+          [
+            9.61,
+            18.181973
+          ],
+          [
+            14.16,
+            18.181973
+          ],
+          [
+            14.16,
+            20.25
+          ],
+          [
+            9.61,
+            20.25
+          ]
+        ]
+      },
+      {
+        "tag": "R-PRIMARY-SL-1-81",
+        "thickness": 0.2,
+        "top_offset": -0.06,
+        "outline": [
+          [
+            14.16,
+            18.181973
+          ],
+          [
+            14.25,
+            18.181973
+          ],
+          [
+            14.25,
+            20.25
+          ],
+          [
+            14.16,
+            20.25
+          ]
+        ]
+      }
+    ],
+    "warning": "Do not raiseR78–81; actual specificsection supportscurrent3.11cap. Levelingcompositionabove remainsinferred.17cm regionextent underupdatedboudoir remains separate programme/primaryplanapplicability question, not provedfailure.",
+    "status": "Resolved: existing3.11structuralcap supportedby specificAnnex6leader; earlier discrepancycandidatewithdrawn",
+    "specific_exception": {
+      "source": "CSIC2022Annex6 retainedregister-r9-section23.png",
+      "crop_pixels": {
+        "left": 1300,
+        "top": 2250,
+        "width": 550,
+        "height": 190
+      },
+      "structural_top": 3.11,
+      "structural_underside": 2.91,
+      "thickness": 0.2,
+      "finished_line": 3.17,
+      "interpretation": "3.11leader ends on structuralcompressiontop, with separate3.17finished dash above. Specificsectionexception overridesSAB99generalinteriors3.14summary."
+    }
+  },
+  "acceptance": "Resolve known material identity in source/native material associations. Keep unmeasured layer split, grout, colourRGB and exact joint origin inferred. Reconcile structural regional extent/datum with original primary sections instead of silently treating physical infill as historical proof."
+}

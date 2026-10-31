@@ -1,0 +1,125 @@
+{
+  "title": "Original Lighting Presence and Anchoring Cases R92",
+  "source_sha256": "528b3ffeab26e4c038b9eb603e7ae1e9bc52c66a1f068b3e799de8fcd66ccc8f",
+  "primary_book": "https://uvadoc.uva.es/handle/10324/68427",
+  "transfer": "https://es.scribd.com/document/1072987232/9788413202839",
+  "inspected_images": [
+    {
+      "printed_page": 244,
+      "file": "🗑️generated/book-figures-244-r92.jpg"
+    },
+    {
+      "printed_page": 245,
+      "file": "🗑️generated/book-figures-245-r92.jpg"
+    },
+    {
+      "printed_page": 246,
+      "file": "🗑️generated/book-figures-246-r92.jpg"
+    },
+    {
+      "printed_page": 247,
+      "file": "🗑️generated/book-figures-247-r92.jpg"
+    }
+  ],
+  "date_target": "Completed original state late1930–1931; salonpendant absentAugust/presentNovember1930",
+  "existing_light_products": 0,
+  "cases": [
+    {
+      "id": "LIGHT-HALL-ZEISS-1",
+      "presence": "OriginalNov1930photo244",
+      "anchor_candidate": "column9 at(8.128,6.006)",
+      "host_status": "Photo+halltable topology candidate; exact columnID inferred",
+      "form": "Upward reflector bowl on short column bracket, white/light enamel not dark modernreplacement",
+      "size": "unmeasured; authoredconstruction dimensionsmustremaininferred"
+    },
+    {
+      "id": "LIGHT-HALL-ZEISS-2",
+      "presence": "OriginalNov1930photo244",
+      "anchor_candidate": "column8 at(10.898,6.006)",
+      "host_status": "Photo+halltable topology candidate; exact columnID inferred",
+      "form": "Upward reflector bowl on short column bracket",
+      "size": "unmeasured"
+    },
+    {
+      "id": "LIGHT-HALL-BASIN-19",
+      "presence": "OriginalNov1930photo244 lower; text242 explicitlycolumn19",
+      "anchor": "actualcolumn19axis8.128,12.572, facingadjacentbasin",
+      "host_status": "Sourceattestedcolumn19",
+      "form": "White enamel sheetmetal walllight on column; do not confusewithZeissuplights",
+      "current_basin_conflict": "Currentbasin nearY11.2 doesnotmatchadjacency; sourceplan45ellipticalbasincenter≈X8.13/Y13.15±.12m",
+      "size": "unmeasured"
+    },
+    {
+      "id": "LIGHT-HALL-CEILING",
+      "presence": "OriginalNov1930photo245 lower/FLC L2(17)061",
+      "anchor": "GroundsoffitbehindST-GF, inhall",
+      "form": "Albalite ceilingfixture with steppedstem andbroadflatshade, notbarebulb",
+      "size": "unmeasured"
+    },
+    {
+      "id": "LIGHT-FIRST-HALL-CEILING",
+      "presence": "OriginalNov1930photo245 upper/FLC L2(17)059",
+      "anchor": "Firsthallceilingabove externalterraceaccessdoor",
+      "form": "Albalite ceilingfixture, notsourceproofthatsecondbudgetedonewasinstalled",
+      "size": "unmeasured"
+    },
+    {
+      "id": "LIGHT-SALON-LINEAR",
+      "presence": "OriginalNov1930photo247 central/FLC L2(17)098",
+      "anchor": "Suspended alonglongcentralaxisofSP-SALON; hostroughcentroid(11.75,3.1), directionX",
+      "form": "Long chromed inverted-V trough, concealed lamps, slenderceilinghangers",
+      "size": "Sourcephotomorphology; exactlength/droppositionnotcalibrated. Centerlinehostanchoring isreconstructioninference.",
+      "excluded": "No genericmodernrectangularLEDbar; noAugust1930claim"
+    },
+    {
+      "id": "LIGHT-KITCHEN-1",
+      "presence": "Author246 originalGravotkitchenphotos; p229/236 originalphoto176",
+      "anchor": "Kitchenwallaboveoriginalsink",
+      "form": "Walllight",
+      "size": "unmeasured; confirmphotoregionbeforefinalshape"
+    },
+    {
+      "id": "LIGHT-KITCHEN-2",
+      "presence": "Author246 says twoactualfixtures visible, consistenttwopowerpoints",
+      "anchor": "Secondkitchenwalllight",
+      "form": "Walllight",
+      "size": "unmeasured; exactXYunregistered"
+    },
+    {
+      "id": "LIGHT-EXTERIOR-SPOTS",
+      "count": 4,
+      "presence": "Author242 +originalphotos244/FLC L2(17)022/185/186",
+      "anchors": [
+        "Falsepiloti/risers6and11",
+        "Rearporchsoffit"
+      ],
+      "form": "Albalite spots with nickelclamps, someaimupandsomedown",
+      "size": "unmeasured; exactindividualXY/elevationandorientationsmustbe registeredbeforeauthoring"
+    }
+  ],
+  "not_original_accepted": [
+    {
+      "family": "Privatebedroom1mglasscylinderlights",
+      "status": "Original19459detail246existsbutroomexecutionunconfirmed; do notaddasprovedcompletedstate"
+    },
+    {
+      "family": "Timolerporcelainswitches",
+      "status": "Budget/source specification242; individualexecutedpositionsunconfirmed"
+    },
+    {
+      "family": "Parentsbasinwalllights",
+      "status": "Twofixturesvisible1952Korab, moderncolumnfixture islater; notunqualified1930presence"
+    },
+    {
+      "family": "Servicebedroomopal25cmglobes",
+      "status": "Budgeted242, executionunconfirmed"
+    }
+  ],
+  "acceptance": [
+    "Schema-first explicitfixturepresence/status/hostconstruction quantities",
+    "Physicalfixturebodies differfromsceneillumination; material+nativeexchange+containment",
+    "Validateallsourceattestedhostsagainstactualgeometryandreflectororientations",
+    "Sourceindependentvolume/clash/attachmenttests forauthoredinferredbodies",
+    "Preservephoto-dateandunmeasuredsize/placement uncertainty; no inventedcircuits"
+  ]
+}

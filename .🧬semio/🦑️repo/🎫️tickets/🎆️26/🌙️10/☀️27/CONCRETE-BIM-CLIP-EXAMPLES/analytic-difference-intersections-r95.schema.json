@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "left",
+          "right"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "left": {
+            "type": "object"
+          },
+          "right": {
+            "type": "object"
+          },
+          "owner_guid_source": {
+            "type": "string"
+          },
+          "owner_guid_actual": {
+            "type": "string"
+          },
+          "expected_zero": {
+            "const": true
+          },
+          "expected_volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "positive_range": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "absolute_tolerance": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "expected_zero"
+            ]
+          },
+          {
+            "required": [
+              "expected_volume"
+            ]
+          },
+          {
+            "required": [
+              "positive_range"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}

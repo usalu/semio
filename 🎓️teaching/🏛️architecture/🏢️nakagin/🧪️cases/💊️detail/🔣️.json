@@ -1,0 +1,211 @@
+{
+  "source": "domus",
+  "nominal_dimensions": [
+    2.5,
+    4,
+    2.5
+  ],
+  "cavities": [
+    {
+      "key": "tub-bowl",
+      "void": [
+        -0.61,
+        0.57,
+        0.64
+      ],
+      "wall": [
+        -1.067,
+        0.57,
+        0.64
+      ],
+      "below": [
+        -0.61,
+        0.57,
+        0.305
+      ],
+      "bounds": [
+        -1.08,
+        -0.14,
+        0.27,
+        0.88,
+        0.29,
+        0.8
+      ]
+    },
+    {
+      "key": "washbasin",
+      "void": [
+        -0.24,
+        0.99,
+        0.92
+      ],
+      "wall": [
+        -0.405,
+        0.99,
+        0.92
+      ],
+      "below": [
+        -0.24,
+        0.99,
+        0.805
+      ],
+      "bounds": [
+        -0.42,
+        -0.06,
+        0.81,
+        1.17,
+        0.79,
+        0.98
+      ]
+    },
+    {
+      "key": "toilet-pan",
+      "void": [
+        -0.89,
+        1.51,
+        0.59
+      ],
+      "wall": [
+        -1.055,
+        1.51,
+        0.59
+      ],
+      "below": [
+        -0.89,
+        1.51,
+        0.375
+      ],
+      "bounds": null
+    }
+  ],
+  "minimum_roles": {
+    "tap": 6,
+    "shower": 2,
+    "drain": 3,
+    "plumbing": 3,
+    "television_control": 2,
+    "audio_control": 8,
+    "speaker_grille": 20,
+    "telephone": 4,
+    "door_hinge": 3,
+    "door_lock": 2,
+    "cladding_joint": 4
+  },
+  "invariants": {
+    "study_separate": true,
+    "segments": 32,
+    "closed_solids": true
+  },
+  "layout": "Backslash",
+  "apertures": [
+    {
+      "key": "toilet-seat",
+      "point": [
+        -0.89,
+        1.51,
+        0.675
+      ]
+    },
+    {
+      "key": "tub-bowl",
+      "point": [
+        -0.61,
+        0.575,
+        0.9
+      ]
+    },
+    {
+      "key": "washbasin",
+      "point": [
+        -0.24,
+        0.99,
+        1.1
+      ]
+    }
+  ],
+  "invalid_details": [
+    {
+      "key": "segments",
+      "value": 192
+    },
+    {
+      "key": "tub_wall",
+      "value": 0.16
+    },
+    {
+      "key": "basin_wall",
+      "value": 0.08
+    },
+    {
+      "key": "toilet_wall",
+      "value": 0.1
+    },
+    {
+      "key": "pipe_radius",
+      "value": 0.04
+    },
+    {
+      "key": "shower_radius",
+      "value": 0.2
+    },
+    {
+      "key": "grille_pitch",
+      "value": 0.04
+    },
+    {
+      "key": "seam_width",
+      "value": 0.016
+    },
+    {
+      "key": "door_hinge_radius",
+      "value": 0.03
+    }
+  ],
+  "physical_body_profile": {
+    "width": 2.6,
+    "length": 4.2,
+    "height": 2.5,
+    "radius": 0.25,
+    "tolerance": 1e-8,
+    "raster": 512,
+    "empty_corner_pixels": [
+      [
+        -1.28,
+        0.02
+      ],
+      [
+        1.28,
+        0.02
+      ],
+      [
+        -1.28,
+        2.48
+      ],
+      [
+        1.28,
+        2.48
+      ]
+    ],
+    "occupied_edge_pixels": [
+      [
+        -1.295,
+        1.25
+      ],
+      [
+        1.295,
+        1.25
+      ],
+      [
+        0,
+        0.005
+      ],
+      [
+        0,
+        2.495
+      ]
+    ],
+    "back": -0.1,
+    "front": 4.1,
+    "rear_material_z": 2.2
+  }
+}

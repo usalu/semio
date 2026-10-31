@@ -1,0 +1,91 @@
+{
+  "status": "Proposed Inferred Relations; Awaiting Parent Stringer Coordination",
+  "basis": "Guard axes8.128/9.5/10.898 and60mm guards; RM2B inner120mm upstand. Clear/plate widths derived, not original measured widths. Existing XYwalklines and sourced Zwalklines remain.",
+  "flights": [
+    {
+      "tag": "RF-1A",
+      "path_x": 10.2,
+      "clear_x": [
+        9.53,
+        10.868
+      ],
+      "clear_width": 1.338,
+      "structural_plate_x": [
+        9.47,
+        10.838
+      ],
+      "separate_outer_stringer_x": [
+        10.838,
+        10.958
+      ],
+      "stringer_nominal": [
+        0.12,
+        0.26
+      ],
+      "note": "Exactlyone attested RF1A outerstringer; full26cm stringer owns its whole strip. Plate terminates at its innerface to avoid6cm uppersection duplication."
+    },
+    {
+      "tag": "RF-1B",
+      "path_x": 8.8,
+      "clear_x": [
+        8.158,
+        9.47
+      ],
+      "clear_width": 1.312,
+      "structural_plate_x": [
+        8.098,
+        9.53
+      ]
+    },
+    {
+      "tag": "RF-2A",
+      "path_x": 10.2,
+      "clear_x": [
+        9.53,
+        10.868
+      ],
+      "clear_width": 1.338,
+      "structural_plate_x": [
+        9.47,
+        10.928
+      ]
+    },
+    {
+      "tag": "RF-2B",
+      "path_x": 8.8,
+      "clear_x": [
+        8.158,
+        9.44
+      ],
+      "clear_width": 1.282,
+      "structural_plate_x": [
+        8.098,
+        9.56
+      ],
+      "note": "120mm innerupstand retained; no invented950mm innerBguard."
+    }
+  ],
+  "mids": {
+    "structural_x": [
+      8.098,
+      10.928
+    ],
+    "walking_x": [
+      8.158,
+      10.868
+    ],
+    "structural_high_y": 18.109,
+    "walking_high_y": 18.049,
+    "back_guard_axis_y": 18.079,
+    "note": "OuterRC/fullwalking midfootprints inferred from60mm back/sideguard faces; frontstation16.889 retained."
+  },
+  "sections": {
+    "ramp_rc_depth": 0.06,
+    "interior_finish_total": 0.008,
+    "interior_split": "Pending exact source register; resilient/rubber/linoleum identity qualified",
+    "exterior_finish_normal": 0.06,
+    "exterior_paver_normal": 0.04,
+    "exterior_sand_normal": 0.02,
+    "guard_bases": "Guard/upstand bases follow structural plate/stringer tops, not finishedsurface, so no8mm/60mm unsupported slot. Tops retain attested height above finishedwalkline."
+  }
+}

@@ -1,0 +1,810 @@
+{
+  "schema_version": 1,
+  "scope": "First-floor authored IfcCovering.FLOORING deadweight policy; no production edits",
+  "source_sha256": "a3cedfeff10a6fbfd49522d7fddfebaecc280df8b09c33dd57aa1cd4415d0dc9",
+  "units": {
+    "volume": "m³",
+    "unit_weight": "kN/m³",
+    "weight": "kN",
+    "area_load": "kN/m²"
+  },
+  "definition": {
+    "per_part": "polygon_area_excluding_holes * (z1-z0) * material.density.value",
+    "per_product": "sum physical part weights, preserving each material; do not multiply layered footprint areas twice",
+    "spatial": "For any load cell or slab region, sum intersection_area(cell, each physical part footprint) * part_thickness * material_unit_weight",
+    "mean": "Total clipped physical weight / actual structural load area; this scalar preserves total weight but does not preserve local column reactions"
+  },
+  "expected": {
+    "coverings": 17,
+    "volume_m3": 18.423106209773742,
+    "weight_kN": 320.3063762396145,
+    "union_covered_area_m2": 382.7784139230123,
+    "sum_individual_footprint_area_m2": 382.7784139230129,
+    "mean_on_covered_union_kN_m2": 0.836793206170809,
+    "analytical_structural_union_area_m2": 384.03940642461794,
+    "weight_inside_structural_projection_kN": 320.3063762396144,
+    "weight_outside_structural_projection_kN": 1.1368683772161603e-13,
+    "covered_area_outside_structural_projection_m2": 0,
+    "structural_area_without_physical_floor_m2": 1.260992501571778,
+    "mean_over_analytical_structural_area_kN_m2": 0.8340455976162604,
+    "uniform_policy_weight_kN": 576.0591096369269,
+    "policy_minus_physical_inside_kN": 255.7527333973125
+  },
+  "per_covering": [
+    {
+      "tag": "FIN-GUEST-PARQUET",
+      "guid": "0NXzime8vNbfVoFaBqhdIZ",
+      "parts": 32,
+      "footprint_area_m2": 15.900519999996622,
+      "volume_m3": 0.47701559999989857,
+      "weight_kN": 3.4504128399992657,
+      "mean_on_own_footprint_kN_m2": 0.21699999999999992,
+      "materials": [
+        {
+          "material": "MAT-PARQUET",
+          "density": {
+            "value": 7,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.44521455999990533,
+          "weight_kN": 3.116501919999337
+        },
+        {
+          "material": "MAT-BITUMEN",
+          "density": {
+            "value": 10.5,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.03180103999999321,
+          "weight_kN": 0.3339109199999287
+        }
+      ]
+    },
+    {
+      "tag": "FIN-GUEST-TILE",
+      "guid": "1A083U_q5VJu9PPdXk_diq",
+      "parts": 4,
+      "footprint_area_m2": 1.2594799999997504,
+      "volume_m3": 0.03778439999999251,
+      "weight_kN": 0.7179035999998576,
+      "mean_on_own_footprint_kN_m2": 0.57,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.018892199999996254,
+          "weight_kN": 0.30227519999994007
+        },
+        {
+          "material": "MAT-GRES-OCHRE",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.018892199999996254,
+          "weight_kN": 0.4156283999999176
+        }
+      ]
+    },
+    {
+      "tag": "FIN-TERRACE-PAVING",
+      "guid": "3Uvb9NBdbGw9pwymL1gWDT",
+      "parts": 528,
+      "footprint_area_m2": 93.7324000502502,
+      "volume_m3": 8.18282700452251,
+      "weight_kN": 159.9494255884404,
+      "mean_on_own_footprint_kN_m2": 1.7064475624510953,
+      "materials": [
+        {
+          "material": "MAT-PAVING",
+          "density": {
+            "value": 24,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 3.5805700020100035,
+          "weight_kN": 85.93368004824028
+        },
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 4.538984752512507,
+          "weight_kN": 72.6237560402001
+        },
+        {
+          "material": "MAT-PAVING-UNRESOLVED",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material weight, not original measured bulk density"
+          },
+          "volume_m3": 0.06327224999999982,
+          "weight_kN": 1.3919894999999955
+        }
+      ]
+    },
+    {
+      "tag": "FIN-TERRACE-GRASS",
+      "guid": "38LP_bL_1L_vfaxax6Wf5u",
+      "parts": 558,
+      "footprint_area_m2": 6.535775000000039,
+      "volume_m3": 0.5660347499999977,
+      "weight_kN": 9.132407624999972,
+      "mean_on_own_footprint_kN_m2": 1.3972952901530298,
+      "materials": [
+        {
+          "material": "MAT-TURF",
+          "density": {
+            "value": 12,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.09803662499999956,
+          "weight_kN": 1.176439499999996
+        },
+        {
+          "material": "MAT-PLANTING-SUBSTRATE",
+          "density": {
+            "value": 17,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material weight, not original measured bulk density"
+          },
+          "volume_m3": 0.4679981249999981,
+          "weight_kN": 7.955968124999977
+        }
+      ]
+    },
+    {
+      "tag": "FIN-KITCHEN-PATIO",
+      "guid": "2upS7MSLzIA9MPTwRhc6vG",
+      "parts": 134,
+      "footprint_area_m2": 7.491620023360737,
+      "volume_m3": 0.22474860070082214,
+      "weight_kN": 4.270223413315621,
+      "mean_on_own_footprint_kN_m2": 0.5700000000000002,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.11237430035041107,
+          "weight_kN": 1.7979888056065771
+        },
+        {
+          "material": "MAT-PAVING-UNRESOLVED",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material weight, not original measured bulk density"
+          },
+          "volume_m3": 0.11237430035041107,
+          "weight_kN": 2.472234607709044
+        }
+      ]
+    },
+    {
+      "tag": "FIN-SALON",
+      "guid": "3cTzs34lLJIP_PRuGD2Yhy",
+      "parts": 668,
+      "footprint_area_m2": 78.09406963664618,
+      "volume_m3": 2.342822089099386,
+      "weight_kN": 44.513619692888334,
+      "mean_on_own_footprint_kN_m2": 0.5700000000000002,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 1.171411044549693,
+          "weight_kN": 18.74257671279509
+        },
+        {
+          "material": "MAT-GRES-OCHRE",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 1.171411044549693,
+          "weight_kN": 25.771042980093245
+        }
+      ]
+    },
+    {
+      "tag": "FIN-KITCHEN",
+      "guid": "2NtphSLqfJ7PO8iKAmA4wI",
+      "parts": 2,
+      "footprint_area_m2": 14.978460000000002,
+      "volume_m3": 0.4493538,
+      "weight_kN": 8.537722200000001,
+      "mean_on_own_footprint_kN_m2": 0.57,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.2246769,
+          "weight_kN": 3.5948304
+        },
+        {
+          "material": "MAT-GRES-OCHRE",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.2246769,
+          "weight_kN": 4.9428918
+        }
+      ]
+    },
+    {
+      "tag": "FIN-PANTRY",
+      "guid": "3Q7NcHn9TRxOxx5UPqq9aN",
+      "parts": 112,
+      "footprint_area_m2": 9.450231061450364,
+      "volume_m3": 0.28350693184351083,
+      "weight_kN": 5.386631705026706,
+      "mean_on_own_footprint_kN_m2": 0.5699999999999998,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.14175346592175542,
+          "weight_kN": 2.2680554547480867
+        },
+        {
+          "material": "MAT-GRES-UNRESOLVED",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal ceramic bulk density; original weight unmeasured"
+          },
+          "volume_m3": 0.14175346592175542,
+          "weight_kN": 3.118576250278619
+        }
+      ]
+    },
+    {
+      "tag": "FIN-SON",
+      "guid": "12YHXgvDvVoP4jf254f9xx",
+      "parts": 104,
+      "footprint_area_m2": 19.524250177047136,
+      "volume_m3": 0.5857275053114139,
+      "weight_kN": 4.236762288419228,
+      "mean_on_own_footprint_kN_m2": 0.21699999999999994,
+      "materials": [
+        {
+          "material": "MAT-PARQUET",
+          "density": {
+            "value": 7,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.5466790049573197,
+          "weight_kN": 3.8267530347012384
+        },
+        {
+          "material": "MAT-BITUMEN",
+          "density": {
+            "value": 10.5,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.03904850035409423,
+          "weight_kN": 0.41000925371798946
+        }
+      ]
+    },
+    {
+      "tag": "FIN-SHARED-BATH",
+      "guid": "2Y7etQ4znICOMFlAjiqh0o",
+      "parts": 4,
+      "footprint_area_m2": 5.795749822952866,
+      "volume_m3": 0.17387249468858598,
+      "weight_kN": 3.3035773990831334,
+      "mean_on_own_footprint_kN_m2": 0.57,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.08693624734429299,
+          "weight_kN": 1.3909799575086879
+        },
+        {
+          "material": "MAT-GRES-OCHRE",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.08693624734429299,
+          "weight_kN": 1.9125974415744458
+        }
+      ]
+    },
+    {
+      "tag": "FIN-PARENTS",
+      "guid": "1EeAgquHnK$fIgTN6G68GI",
+      "parts": 632,
+      "footprint_area_m2": 24.461601822923505,
+      "volume_m3": 0.9050975767258521,
+      "weight_kN": 8.048159948184752,
+      "mean_on_own_footprint_kN_m2": 0.3290119758487216,
+      "materials": [
+        {
+          "material": "MAT-PARQUET",
+          "density": {
+            "value": 7,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.6849248510418581,
+          "weight_kN": 4.794473957293007
+        },
+        {
+          "material": "MAT-BITUMEN",
+          "density": {
+            "value": 10.5,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.04892320364584698,
+          "weight_kN": 0.5136936382813934
+        },
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.17124952203814703,
+          "weight_kN": 2.7399923526103525
+        }
+      ]
+    },
+    {
+      "tag": "FIN-PARENT-BATH",
+      "guid": "2r77eHaIjGMQ1vMr06yFJJ",
+      "parts": 198,
+      "footprint_area_m2": 15.984283664861616,
+      "volume_m3": 0.4795285099458485,
+      "weight_kN": 9.11104168897112,
+      "mean_on_own_footprint_kN_m2": 0.57,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.23976425497292425,
+          "weight_kN": 3.836228079566788
+        },
+        {
+          "material": "MAT-GRES-WHITE",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.23976425497292425,
+          "weight_kN": 5.274813609404333
+        }
+      ]
+    },
+    {
+      "tag": "FIN-BOUDOIR",
+      "guid": "2raIf12ljHixRucboBuxtW",
+      "parts": 28,
+      "footprint_area_m2": 19.19568,
+      "volume_m3": 1.31961940488,
+      "weight_kN": 16.06544663808,
+      "mean_on_own_footprint_kN_m2": 0.8369303217223876,
+      "materials": [
+        {
+          "material": "MAT-PARQUET",
+          "density": {
+            "value": 7,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.5374790400000001,
+          "weight_kN": 3.7623532800000006
+        },
+        {
+          "material": "MAT-BITUMEN",
+          "density": {
+            "value": 10.5,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.038391359999999965,
+          "weight_kN": 0.40310927999999974
+        },
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.74374900488,
+          "weight_kN": 11.89998407808
+        }
+      ]
+    },
+    {
+      "tag": "FIN-FIRST-HALL",
+      "guid": "3xFNAMCsnOoBZhVK97mq4R",
+      "parts": 1100,
+      "footprint_area_m2": 32.454235459294075,
+      "volume_m3": 0.9736270637788217,
+      "weight_kN": 18.4989142117976,
+      "mean_on_own_footprint_kN_m2": 0.5699999999999993,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.48681353188941084,
+          "weight_kN": 7.7890165102305735
+        },
+        {
+          "material": "MAT-GRES-WHITE",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.48681353188941084,
+          "weight_kN": 10.709897701567028
+        }
+      ]
+    },
+    {
+      "tag": "FIN-WC-FIRST-WEST",
+      "guid": "1urLVyxi5OYuNueyrX2FRZ",
+      "parts": 16,
+      "footprint_area_m2": 1.0335033149477841,
+      "volume_m3": 0.03100509944843352,
+      "weight_kN": 0.589096889520237,
+      "mean_on_own_footprint_kN_m2": 0.5700000000000001,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.01550254972421676,
+          "weight_kN": 0.24804079558746817
+        },
+        {
+          "material": "MAT-GRES-OCHRE",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.01550254972421676,
+          "weight_kN": 0.3410560939327688
+        }
+      ]
+    },
+    {
+      "tag": "FIN-WC-FIRST-EAST",
+      "guid": "19baPpNuLHqBRal3S2Yilw",
+      "parts": 20,
+      "footprint_area_m2": 1.1090405424208372,
+      "volume_m3": 0.03327121627262511,
+      "weight_kN": 0.6321531091798771,
+      "mean_on_own_footprint_kN_m2": 0.57,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.016635608136312555,
+          "weight_kN": 0.2661697301810009
+        },
+        {
+          "material": "MAT-GRES-OCHRE",
+          "density": {
+            "value": 22,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Nominal material density, not measured original bulk weight"
+          },
+          "volume_m3": 0.016635608136312555,
+          "weight_kN": 0.36598337899887623
+        }
+      ]
+    },
+    {
+      "tag": "FIN-FIRST-THRESHOLDS",
+      "guid": "1Ero3LzqLGSgx9DTIxNqga",
+      "parts": 334,
+      "footprint_area_m2": 35.77751334686118,
+      "volume_m3": 1.357264162556044,
+      "weight_kN": 23.86287740170838,
+      "mean_on_own_footprint_kN_m2": 0.6669797638074786,
+      "materials": [
+        {
+          "material": "MAT-MORTAR-PUTTY",
+          "density": {
+            "value": 16,
+            "unit": "kN/m³",
+            "basis": "assumed"
+          },
+          "volume_m3": 0.8206014623531248,
+          "weight_kN": 13.129623397649997
+        },
+        {
+          "material": "MAT-FLOOR-FINISH",
+          "density": {
+            "value": 20,
+            "unit": "kN/m³",
+            "basis": "assumed",
+            "source": "Unmeasured material bulk reference; not historical specification"
+          },
+          "volume_m3": 0.5366627002029192,
+          "weight_kN": 10.733254004058383
+        }
+      ]
+    }
+  ],
+  "proposal": {
+    "schema_first": true,
+    "derived_component": "Replace the floor portion of the current generic finishes entry with spatially integrated authored first-floor FLOORING weight.",
+    "residual_component": "If nonfloor finishes, partitions, fixed furnishings or unknown assemblies need an allowance, add an explicitly named, independently justified residual component. Do not retain the full1.5floor allowance and silently add physical floors.",
+    "density_policy": "Material density fields are nominal unitweights in kN/m³, already gravitational weights; no9.81 multiplication. All retained materialweights assumed, not measured1930bulk mass.",
+    "uncovered_policy": "Report structural area not covered by floor products separately; do not fill undercolumns/walls without identifying physical ownership.",
+    "links": "Update slab-load storedanalytical links and bilingual assumptiontext after newpolicy calculation; not by manually forcing savedold total.",
+    "status": "Research alternative only; superseded for current scope by current_acceptance_decision"
+  },
+  "acceptance": [
+    {
+      "id": "independent_part_weight",
+      "method": "Firstpartyshoelace vsShapelypolygonarea×height×unitweight; exact per-material sums within floating tolerance."
+    },
+    {
+      "id": "regional_conservation",
+      "method": "Sum physical clipped regionalweights equals authored floorweight inside SL1; no extra global1.5 doublecount."
+    },
+    {
+      "id": "spatial_not_mean_only",
+      "method": "Nonuniform parquet/tile/paver fields produce local reactions from actual overlap, not merely globalmean replacement."
+    },
+    {
+      "id": "scope_breadth",
+      "method": "Floorcoveringsonly; wall/plaster/partitions/skirting/builtins/services/stairs and imposedloads are distinct and not certified by this fixture."
+    }
+  ],
+  "current_acceptance_decision": {
+    "owner": "root",
+    "decision": "Preserve intentional uniform1.5kN/m² assumed teaching allowance. Clarify bilingually that physical floorcoverings are represented within this nominal allowance and are not additionally summed.",
+    "status": "The numerical difference is not classified as a model error. No current doublecount exists. No additional mass term is requested.",
+    "future_alternative": "Spatial floor-derived mode is only an optional future analytical policy requiring separate schema/acceptance; it is not part of the current requested change.",
+    "source_assumption_published": "556/a3cedfef finish-load-ownership"
+  },
+  "reservation_classification": {
+    "column_overlaps": [
+      {
+        "tag": "1-FIRST",
+        "gap_overlap_area_m2": 0.04839999999999979,
+        "column_projected_area_m2": 0.04839999999999979
+      },
+      {
+        "tag": "2-FIRST",
+        "gap_overlap_area_m2": 0.0776204337703168,
+        "column_projected_area_m2": 0.07762043377033376
+      },
+      {
+        "tag": "3-FIRST",
+        "gap_overlap_area_m2": 0.0379861374568671,
+        "column_projected_area_m2": 0.0379861374568671
+      },
+      {
+        "tag": "4-FIRST",
+        "gap_overlap_area_m2": 0.07762043377031672,
+        "column_projected_area_m2": 0.07762043377033373
+      },
+      {
+        "tag": "5-FIRST",
+        "gap_overlap_area_m2": 0.04840000000000004,
+        "column_projected_area_m2": 0.04840000000000004
+      },
+      {
+        "tag": "6-FIRST",
+        "gap_overlap_area_m2": 0.04839999999999989,
+        "column_projected_area_m2": 0.04839999999999989
+      },
+      {
+        "tag": "7-FIRST",
+        "gap_overlap_area_m2": 0.03798613745686711,
+        "column_projected_area_m2": 0.03798613745686711
+      },
+      {
+        "tag": "10-FIRST",
+        "gap_overlap_area_m2": 0.048400000000000276,
+        "column_projected_area_m2": 0.04840000000000028
+      },
+      {
+        "tag": "11-FIRST",
+        "gap_overlap_area_m2": 0.048400000000000144,
+        "column_projected_area_m2": 0.048400000000000144
+      },
+      {
+        "tag": "14-FIRST",
+        "gap_overlap_area_m2": 0.02848960309265034,
+        "column_projected_area_m2": 0.037986137456867096
+      },
+      {
+        "tag": "15-FIRST",
+        "gap_overlap_area_m2": 0.03798613745686709,
+        "column_projected_area_m2": 0.03798613745686709
+      },
+      {
+        "tag": "16-FIRST",
+        "gap_overlap_area_m2": 0.04158299999999961,
+        "column_projected_area_m2": 0.041582999999999634
+      },
+      {
+        "tag": "17-FIRST",
+        "gap_overlap_area_m2": 0.04839999999999975,
+        "column_projected_area_m2": 0.04839999999999975
+      },
+      {
+        "tag": "18-FIRST",
+        "gap_overlap_area_m2": 0.02419999999999975,
+        "column_projected_area_m2": 0.0483999999999995
+      },
+      {
+        "tag": "19-FIRST",
+        "gap_overlap_area_m2": 0.01899306872843356,
+        "column_projected_area_m2": 0.037986137456867096
+      },
+      {
+        "tag": "20-FIRST",
+        "gap_overlap_area_m2": 0.03798613745686709,
+        "column_projected_area_m2": 0.03798613745686709
+      },
+      {
+        "tag": "22-FIRST",
+        "gap_overlap_area_m2": 0.04158299999999961,
+        "column_projected_area_m2": 0.041582999999999634
+      },
+      {
+        "tag": "23-FIRST",
+        "gap_overlap_area_m2": 0.04839999999999975,
+        "column_projected_area_m2": 0.04839999999999975
+      },
+      {
+        "tag": "24-FIRST",
+        "gap_overlap_area_m2": 0.0483999999999995,
+        "column_projected_area_m2": 0.0483999999999995
+      },
+      {
+        "tag": "25-FIRST",
+        "gap_overlap_area_m2": 0.02419999999999975,
+        "column_projected_area_m2": 0.0483999999999995
+      },
+      {
+        "tag": "26-FIRST",
+        "gap_overlap_area_m2": 0.017599999999999925,
+        "column_projected_area_m2": 0.03519999999999985
+      },
+      {
+        "tag": "27-FIRST",
+        "gap_overlap_area_m2": 0.037986137456867124,
+        "column_projected_area_m2": 0.037986137456867124
+      },
+      {
+        "tag": "28-FIRST",
+        "gap_overlap_area_m2": 0.01759999999999992,
+        "column_projected_area_m2": 0.03519999999999985
+      },
+      {
+        "tag": "29-FIRST",
+        "gap_overlap_area_m2": 0.0483999999999995,
+        "column_projected_area_m2": 0.0483999999999995
+      },
+      {
+        "tag": "30-FIRST",
+        "gap_overlap_area_m2": 0.0483999999999995,
+        "column_projected_area_m2": 0.0483999999999995
+      },
+      {
+        "tag": "31-FIRST",
+        "gap_overlap_area_m2": 0.03798613745686714,
+        "column_projected_area_m2": 0.037986137456867144
+      },
+      {
+        "tag": "32-FIRST",
+        "gap_overlap_area_m2": 0.037986137456867124,
+        "column_projected_area_m2": 0.037986137456867124
+      },
+      {
+        "tag": "33-FIRST",
+        "gap_overlap_area_m2": 0.04839999999999975,
+        "column_projected_area_m2": 0.04839999999999975
+      },
+      {
+        "tag": "34",
+        "gap_overlap_area_m2": 0.03960000000000005,
+        "column_projected_area_m2": 0.03960000000000005
+      },
+      {
+        "tag": "35",
+        "gap_overlap_area_m2": 0.019799999999999866,
+        "column_projected_area_m2": 0.03959999999999973
+      },
+      {
+        "tag": "36",
+        "gap_overlap_area_m2": 0.02419999999999975,
+        "column_projected_area_m2": 0.0483999999999995
+      },
+      {
+        "tag": "STAIR-RETURN-L",
+        "gap_overlap_area_m2": 0.009599999984219927,
+        "column_projected_area_m2": 0.022800000000000042
+      }
+    ],
+    "column_owned_gap_area_m2": 1.2609925015440038,
+    "remaining_area_m2": 2.7774608401359778e-11,
+    "remaining_components": []
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "kind": "whole-expanded-owned-solids-r92-v2",
+  "source": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "producers": {
+    "model.py": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+  },
+  "cases": [
+    {
+      "id": "current",
+      "changes": {},
+      "accepted": true
+    },
+    {
+      "id": "old_namespace_capture",
+      "changes": {
+        "capture_kind": "whole-owned-solids-r92"
+      },
+      "accepted": false
+    },
+    {
+      "id": "moving_source",
+      "changes": {
+        "source_after": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+      },
+      "accepted": false
+    },
+    {
+      "id": "changed_producer",
+      "changes": {
+        "producers_after": {
+          "model.py": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "loaded_code_changed",
+      "changes": {
+        "loaded_producer_changes": {
+          "model.py": [
+            "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          ]
+        }
+      },
+      "accepted": false
+    },
+    {
+      "id": "missing_provenance",
+      "changes": {
+        "producers_before": null
+      },
+      "accepted": false
+    },
+    {
+      "id": "unstable_flag",
+      "changes": {
+        "capture_stable": false
+      },
+      "accepted": false
+    }
+  ]
+}

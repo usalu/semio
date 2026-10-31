@@ -1,0 +1,76 @@
+{
+  "source": "SAB2024-p66 andp99",
+  "evidence": {
+    "structural": {
+      "thickness_m": 0.08,
+      "material": "unreinforced lime and gravel",
+      "top_z": -2.42
+    },
+    "wearing": {
+      "thickness_m": 0.02,
+      "material": "cement and sand trowelled mortar",
+      "top_z": -2.4
+    },
+    "basis": "Author explicitly states simple unreinforced8cm slab plus2cm finish; citing Cormier basement construction records; exact mixstrength not supplied.",
+    "datum_visual": {
+      "source": "CSIC2022Annex6/register-r9-section23.png",
+      "crop_pixels": {
+        "left": 1400,
+        "top": 1570,
+        "width": 900,
+        "height": 140
+      },
+      "retained_crop": "🗑️generated/cellar-datum-leader-r92.png",
+      "reading": "−2.42leader meets actual slabtop; −2.40separatefinishedreference dash above. Confirms2cmwearing interval."
+    }
+  },
+  "current": {
+    "tag": "SL-CELLAR",
+    "storey": "cellar",
+    "storey_z": -2.42,
+    "regions": [
+      {
+        "tag": "R-SL-CELLAR",
+        "thickness_m": 0.08,
+        "material": "MAT-RC",
+        "top_offset_m": 0
+      },
+      {
+        "tag": "R-SL-CELLAR-HOIST",
+        "thickness_m": 0.08,
+        "material": "MAT-RC",
+        "top_offset_m": 0
+      }
+    ],
+    "cellar_coverings": []
+  },
+  "required": {
+    "retain_identity": "SL-CELLAR",
+    "retain_structural_thickness_m": 0.08,
+    "correct_material": "Unreinforced lime/gravel concrete (notMAT-RC)",
+    "add_finished_floor": {
+      "native_class": "IfcCovering",
+      "predefined": "FLOORING",
+      "z": [
+        -2.42,
+        -2.4
+      ],
+      "material": "cement/sand mortar",
+      "basis": "sourced"
+    },
+    "geometric_scope": "Follow actual occupied cellarfloor net regions/voids and existing hoist-extension qualification; do not cap original voids or overwrite foundation material."
+  },
+  "acceptance": [
+    "Actual8cm structuralvolume preserved",
+    "No reinforcement claim onplainlime/gravel",
+    "Real2cmwearingpositivevolume andtop−2.40",
+    "Positive support against actualslabtop−2.42",
+    "No duplicatefloorvolume atinternalregionedges",
+    "NativeENDEexact9attrFLOORING/material/spatial/XYZ/closedness/volume"
+  ],
+  "limits": [
+    "Precise lime/gravel proportions and reinforcementabsence engineeringcapacity notinferred beyondsourcewording",
+    "Hoistfloor extensionremainsseparatelyinferred",
+    "Plantobjects at−2.42may beembedded20mm bywearing; checksourceequipmentfeet/contact, do notinvent hiddenboilerfoundation"
+  ]
+}

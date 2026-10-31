@@ -64,6 +64,7 @@
     "🧰️framework/🔨️modules/🖼️canvas/🎨️react-renderer/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust",
+    "🧰️framework/🔨️modules/🗃️cache",
     "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🟦️typescript",
     "🧰️framework/🔨️modules/🗜️deflate/📦️packages/🦀️rust",
     "🧰️framework/🔨️modules/🗣️dsl/📦️packages/🟦️typescript",

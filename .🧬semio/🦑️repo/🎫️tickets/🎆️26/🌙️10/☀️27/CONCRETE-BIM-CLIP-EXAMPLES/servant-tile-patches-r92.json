@@ -1,0 +1,59 @@
+{
+  "registration": "author45 X19-(u-6)*4.75/170,Y1.25+(v-48)*4.75/170",
+  "patches": [
+    {
+      "id": "servant1_niche_ochre",
+      "basin": "FIX-SERVANT-BASIN-1",
+      "pixels": {
+        "u": [
+          545,
+          573
+        ],
+        "v": [
+          536,
+          566
+        ]
+      },
+      "world_bounds": {
+        "x": [
+          3.1573529411764714,
+          3.939705882352941
+        ],
+        "y": [
+          14.885294117647058,
+          15.723529411764705
+        ]
+      },
+      "coordinate_uncertainty_m": 0.15,
+      "source": "SAB2024 author45 square hatch; ochre identitySAB191",
+      "acceptance": "Clip patch to current genuine room/inner-wall/threshold bounds and exclude actual cupboard footprints; preserve basin standing side, do not tile over cabinetinteriors."
+    },
+    {
+      "id": "servant2_niche_ochre",
+      "basin": "FIX-SERVANT-BASIN-2",
+      "pixels": {
+        "u": [
+          517,
+          544
+        ],
+        "v": [
+          566,
+          595
+        ]
+      },
+      "world_bounds": {
+        "x": [
+          3.9676470588235286,
+          4.722058823529412
+        ],
+        "y": [
+          15.723529411764705,
+          16.533823529411762
+        ]
+      },
+      "coordinate_uncertainty_m": 0.15,
+      "source": "SAB2024 author45 square hatch; ochre identitySAB191",
+      "acceptance": "Clip patch to current genuine room/inner-wall/threshold bounds and exclude actual cupboard footprints; preserve basin standing side, do not tile over cabinetinteriors."
+    }
+  ]
+}

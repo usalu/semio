@@ -1,0 +1,3 @@
+/** 🛝 Retrieve only the exact publicly listed retained book image URL. */
+import{writeFile}from'node:fs/promises';import{dirname,join}from'node:path';import{fileURLToPath}from'node:url';
+const ticket=dirname(fileURLToPath(import.meta.url)),url='http://html.scribd.com/7dllg042tci600ml/images/191-d6c2be7d76.jpg',response=await fetch(url);if(!response.ok)throw new Error(String(response.status));const bytes=new Uint8Array(await response.arrayBuffer());await writeFile(join(ticket,'🗑️generated/book-figures-191-r92.jpg'),bytes);console.log(JSON.stringify({url,status:response.status,bytes:bytes.length,type:response.headers.get('content-type')}));

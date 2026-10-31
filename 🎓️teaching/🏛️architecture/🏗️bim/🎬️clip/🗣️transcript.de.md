@@ -33,7 +33,7 @@ Information dient einer Frage: Erreicht ein angenommenes Auto den Eingang ohne K
 
 Der Abstand gilt von Achse zu Achse; das Auto braucht den freien Raum zwischen den Stützen.
 
-Die lichte Weite berücksichtigt die tatsächlichen Stützenkonturen im Achsabstand. Bei Kreisprofilen ergibt sich der bekannte Durchmesserabzug.
+Die lichte Weite folgt den tatsächlichen Stützenkonturen. Bei Kreisen wird der Durchmesser vom Achsabstand abgezogen.
 
 Bei Geradeausfahrt müssen Auto und ein Sicherheitsabstand je Seite in die verfügbare Breite passen.
 
@@ -43,11 +43,11 @@ Wie sicher ist die Antwort? Die Skala zeigt die Schwelle dieses ausdrücklichen 
 
 Eine dickere Kreisstütze oder ein breiteres Auto verschiebt die Schwelle; die ganze Route braucht weiterhin ihre eigene geometrische Prüfung.
 
-Die angenommene Anfahrt ist ein Lehrszenario. Historische Beschreibungen nennen Platz für drei Autos; drei Fahrzeuge in voller Größe bleiben geometrisch ungeprüft.
+Die Anfahrt ist ein Lehrszenario. Quellen nennen Platz für drei Autos; drei heutige Autos bleiben geometrisch ungeprüft.
 
-Die bewegte Rechteckhülle wird gegen tatsächliche Bauteile in Fahrzeughöhe geprüft, einschließlich Haustechnik und Hebeausleger; der kleinste Abstand entscheidet.
+Die bewegte Fahrzeughülle prüft alle Bauteile in Fahrzeughöhe, auch Haustechnik und Hebeausleger; der kleinste Abstand zählt.
 
-Die transluzente Eingangsumfassung und geschlossenen Holztürblätter folgen dem quellenbezogenen Plan. Die angenommene Anfahrt ist eine eigene Lehrroute.
+Eingangsumfassung und geschlossene Holztürblätter folgen dem quellenbezogenen Plan; die angenommene Anfahrt ist eine Lehrroute.
 
 Eine Stütze trägt weitere Eigenschaften: Material, ob sie Lasten trägt und ob sie außen liegt.
 
@@ -145,15 +145,15 @@ Video: `bim_models`
 
 Verschiedene Fachrichtungen ordnen die benötigte Information zum rekonstruierten ursprünglichen Haus von 1930–1931.
 
-Das Architekturmodell enthält Räume, Eingangskonstruktion, Dachtreppenhaus, dessen Vordach und das offene Metallgeländer an der Rampe.
+Das Architekturmodell zeigt Räume, Eingang, Dachtreppenhaus und Vordach sowie das offene Metallgeländer der Rampe.
 
 Auch Räume sind Objekte: die modellierten Räume mit ihrer Fläche gehören zu ihrem Geschoss.
 
 Der Fassadenaufbau unterscheidet Außenputz, zwei Ziegelschalen, einen Lufthohlraum und Innenputz.
 
-Das Tragwerksmodell enthält Pilotis, Decken, Rampe, Treppen sowie Zusatzstürze, hohle U-Träger und Konsolen; mehrere Glieder teilt es mit der Architektur.
+Pilotis, Decken, Rampe, Treppen, Zusatzstürze, hohle U-Träger und Konsolen bilden das Tragwerk; manche teilt es mit der Architektur.
 
-Ursprüngliche Haustechnik umfasst Fallrohre in Stützen 2 und 4, Heizungs- und Wasserstränge, Abwasserstrang und Rauchzug. Detailhüllen und unvollständige Leitungswege behalten ihre Unsicherheiten.
+Originale Stützenfallrohre 2/4, Heiz- und Wasserstränge, Abwasser und Rauchzug behalten unsichere Hüllen und lückenhafte Wege.
 
 Drei Modelle teilen ein Schema. Die Zahlen zählen IFC-Objekte; eine Treppenbaugruppe kann viele physische Teile enthalten.
 
@@ -197,11 +197,13 @@ Rundreise: IFC zum Dreiecksnetz und zurück. Die Form kommt zurück, Klasse, Glo
 
 Für die statische Prüfung der Geschossdecke wählen wir ein Analyseschema und idealisieren sie als Mittelfläche.
 
-Die Decke wird zu zugeschnittenen Schalenelementen; gewählte Deckenstützen werden zu Stäben. Jedes Analyseobjekt verweist auf seine Quell-GlobalId.
+Die Decke wird zu zugeschnittenen Schalen, gewählte Deckenstützen zu Stäben; jedes Analyseobjekt behält seine Quell-GlobalId.
 
-Die native Decke behält Rampen-, Treppen- und Haustechniköffnungen. Kellerluken haben getrennte Deckel; die Geschossfläche schließt tatsächliche Aussparungen aus.
+Decken behalten Rampen-, Treppen- und Haustechniköffnungen; Kellerluken eigene Deckel. Aussparungen zählen nicht zur Fläche.
 
 Die Analyse braucht Annahmen: Eigengewicht aus der Dicke, Ausbaulasten, Nutzlast und die Auflagerbedingungen.
+
+Der Lehransatz enthält Bodenbeläge; ihre Masse wird nicht doppelt addiert. Er ist keine vollständige Bilanz nichttragender Masse.
 
 Die Last ist ein Stapel: Eigengewicht der Decke, Ausbaulasten und Nutzlast ergeben eine Flächenlast.
 
@@ -229,9 +231,9 @@ Der Datensatz der Platte hält Klasse, Eigenschaften, Urheber und Revision; kein
 
 Berichte sagen, dass jeden Herbst Wasser durchs Flachdach kam; unser Lehrszenario beginnt bei diesem Leck.
 
-Die Quelle unterscheidet ursprünglichen rekonstruierten Zustand und spätere Schadensbelege. Der gezeigte Wasserweg ist schematisch, ohne erfundene Membranschicht.
+Rekonstruierter Urzustand und spätere Schadensbelege bleiben getrennt. Der Wasserweg ist schematisch; keine Membran wird erfunden.
 
-In einem ausdrücklichen Reparaturszenario erhöht ein Entwurfsereignis die Bezugsreserve des Belags von 0,09 auf 0,14 m; die Platte behält ihre GlobalId.
+Im Reparaturszenario erhöht ein Entwurfsereignis die Belagsreserve von 0,09 auf 0,14 m; die GlobalId bleibt gleich.
 
 Dicke und Revision ändern sich; GlobalId, Klasse und Platz in der Villa bleiben, wie sie waren.
 

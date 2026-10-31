@@ -1,0 +1,7 @@
+# Original Paint and Render: Remaining R92 Completeness
+
+SAB184–186 records original executed finish identities which are more specific than the current generic render/plaster material census. The25mm first-floor facade render thickness is already present in LS-FACADE-29/26, but its Jurasite final coat over base mortar remains unnamed. Cimentol was used on terrace exteriors, peripheral ground walls/pilotis and roofelements; interiors changed from glue to oilpaint. These are material-identity recovery opportunities, not reasons to invent an extra unmeasured layer thickness.
+
+The Célio records discussed onp184 attest salonblue3.04×10.42m and pink2.34×6m quantities. Author interpretation mapsblue to the interior corner andpink to the southwest ribbonwall’s solidcomponents. Exact current-host mapping needs plan/photo confirmation; grossinvoicequantities must not be forced onto a whole wall or across glass. A2×.86m earthumber quantity probablycorresponds to a door, which is notsecurelyidentified. Garage door green is attested. Exact RGB remains unmeasured.
+
+Portablepaint-evidence-r92.json separates securematerial/colour facts, candidatehost identities andunknowns. Current source has generic MAT-RENDER/PLASTER withoutblue/pink/greenpaint identity, so the model should not be described as complete originalpolychromy. Reconstructed visualizationRGB is distinct from sourceattested colourfamilies. Unlocated wallpaper invoice andprobablegraypilotis are notauthority to paint arbitrarysurfaces. No productionedits.

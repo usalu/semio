@@ -1,0 +1,506 @@
+{
+  "type": "array",
+  "minItems": 11,
+  "maxItems": 11,
+  "items": {
+    "oneOf": [
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "shared"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 59
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🚶️circulation"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 18
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "📦️casing"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 22
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "💊️detail"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 9
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🪟️window"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 2
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🧭️poses"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 2
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "📍️survey"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 6
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🪟️unit"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 8
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🔧️mounts"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 4
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "💡️light"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 2
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      },
+      {
+        "type": "object",
+        "required": [
+          "domain",
+          "tests",
+          "failures",
+          "errors",
+          "success"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🧱️panel"
+          },
+          "tests": {
+            "type": "integer",
+            "const": 3
+          },
+          "failures": {
+            "type": "integer",
+            "const": 0
+          },
+          "errors": {
+            "type": "integer",
+            "const": 0
+          },
+          "success": {
+            "const": true
+          }
+        }
+      }
+    ]
+  },
+  "allOf": [
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "shared"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🚶️circulation"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "📦️casing"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "💊️detail"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🪟️window"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🧭️poses"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "📍️survey"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🪟️unit"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🔧️mounts"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "💡️light"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    },
+    {
+      "contains": {
+        "type": "object",
+        "required": [
+          "domain"
+        ],
+        "properties": {
+          "domain": {
+            "const": "🧱️panel"
+          }
+        }
+      },
+      "minContains": 1,
+      "maxContains": 1
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "workload": {
+    "iterations": 1000000,
+    "moduli": [
+      103,
+      109
+    ],
+    "denominators": [
+      107,
+      113
+    ],
+    "expected_final_fraction": "29678832/124331753"
+  },
+  "safe_observation": {
+    "strategy": "Python thread frame references and traceback formatting",
+    "required_frames": [
+      "loop",
+      "inner"
+    ],
+    "preserve_fatal_handler": true,
+    "preserve_cooperative_limits": true
+  },
+  "observed_current_environment": {
+    "python": "CPython3.12.11 Windows x64",
+    "scheduled_native_dump_repetitions": 3,
+    "scheduled_native_dump_raw_statuses": [
+      5,
+      5,
+      5
+    ],
+    "without_scheduled_dump_raw_status": 0,
+    "safe_python_frame_snapshot_raw_status": 0
+  },
+  "independent_validation": {
+    "implementation": "JavaScript BigInt rational arithmetic",
+    "fraction": "29678832/124331753",
+    "safe_stack_contains_required_frames": true
+  }
+}

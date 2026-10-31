@@ -1,0 +1,82 @@
+[
+  [
+    "📊️information",
+    "The swept rectangle is checked against actual height-overlapping building parts, including services and the hoist jib; the smallest clearance governs.",
+    "At car height, the swept envelope checks all actual parts, including services and hoist jib; the smallest gap governs."
+  ],
+  [
+    "📊️information",
+    "Die bewegte Rechteckhülle wird gegen tatsächliche Bauteile in Fahrzeughöhe geprüft, einschließlich Haustechnik und Hebeausleger; der kleinste Abstand entscheidet.",
+    "Die bewegte Fahrzeughülle prüft alle Bauteile in Fahrzeughöhe, auch Haustechnik und Hebeausleger; der kleinste Abstand zählt."
+  ],
+  [
+    "📊️information",
+    "The translucent entrance surround and opaque timber door leaves follow the source-informed plan. The assumed arrival is a separate teaching route.",
+    "The source-informed entrance has translucent surrounds and opaque timber leaves. The assumed arrival is a separate teaching route."
+  ],
+  [
+    "📊️information",
+    "Die transluzente Eingangsumfassung und geschlossenen Holztürblätter folgen dem quellenbezogenen Plan. Die angenommene Anfahrt ist eine eigene Lehrroute.",
+    "Eingangsumfassung und geschlossene Holztürblätter folgen dem quellenbezogenen Plan; die angenommene Anfahrt ist eine Lehrroute."
+  ],
+  [
+    "📊️information",
+    "Die lichte Weite berücksichtigt die tatsächlichen Stützenkonturen im Achsabstand. Bei Kreisprofilen ergibt sich der bekannte Durchmesserabzug.",
+    "Die lichte Weite folgt den tatsächlichen Stützenkonturen. Bei Kreisen wird der Durchmesser vom Achsabstand abgezogen."
+  ],
+  [
+    "📊️information",
+    "Die angenommene Anfahrt ist ein Lehrszenario. Historische Beschreibungen nennen Platz für drei Autos; drei Fahrzeuge in voller Größe bleiben geometrisch ungeprüft.",
+    "Die Anfahrt ist ein Lehrszenario. Quellen nennen Platz für drei Autos; drei heutige Autos bleiben geometrisch ungeprüft."
+  ],
+  [
+    "🧩️models",
+    "The structure model holds pilotis, slabs, ramp, stairs and auxiliary lintels, hollow U supports and shelves; several members are shared with architecture.",
+    "Pilotis, slabs, ramp, stairs, auxiliary lintels, hollow U supports and shelves form the structure; architecture shares several members."
+  ],
+  [
+    "🧩️models",
+    "Das Tragwerksmodell enthält Pilotis, Decken, Rampe, Treppen sowie Zusatzstürze, hohle U-Träger und Konsolen; mehrere Glieder teilt es mit der Architektur.",
+    "Pilotis, Decken, Rampe, Treppen, Zusatzstürze, hohle U-Träger und Konsolen bilden das Tragwerk; manche teilt es mit der Architektur."
+  ],
+  [
+    "🧩️models",
+    "Das Architekturmodell enthält Räume, Eingangskonstruktion, Dachtreppenhaus, dessen Vordach und das offene Metallgeländer an der Rampe.",
+    "Das Architekturmodell zeigt Räume, Eingang, Dachtreppenhaus und Vordach sowie das offene Metallgeländer der Rampe."
+  ],
+  [
+    "🧩️models",
+    "Original services include drains inside supports 2 and 4, heating and water risers, soil stack and flue. Detailed envelopes and incomplete routes retain their uncertainties.",
+    "Original drains in supports 2 and 4, heating and water risers, soil stack and flue retain uncertain envelopes and incomplete routes."
+  ],
+  [
+    "🧩️models",
+    "Ursprüngliche Haustechnik umfasst Fallrohre in Stützen 2 und 4, Heizungs- und Wasserstränge, Abwasserstrang und Rauchzug. Detailhüllen und unvollständige Leitungswege behalten ihre Unsicherheiten.",
+    "Originale Stützenfallrohre 2/4, Heiz- und Wasserstränge, Abwasser und Rauchzug behalten unsichere Hüllen und lückenhafte Wege."
+  ],
+  [
+    "🔌️exchange",
+    "Die Decke wird zu zugeschnittenen Schalenelementen; gewählte Deckenstützen werden zu Stäben. Jedes Analyseobjekt verweist auf seine Quell-GlobalId.",
+    "Die Decke wird zu zugeschnittenen Schalen, gewählte Deckenstützen zu Stäben; jedes Analyseobjekt behält seine Quell-GlobalId."
+  ],
+  [
+    "🔌️exchange",
+    "Die native Decke behält Rampen-, Treppen- und Haustechniköffnungen. Kellerluken haben getrennte Deckel; die Geschossfläche schließt tatsächliche Aussparungen aus.",
+    "Decken behalten Rampen-, Treppen- und Haustechniköffnungen; Kellerluken eigene Deckel. Aussparungen zählen nicht zur Fläche."
+  ],
+  [
+    "🔗️consistency",
+    "The source distinguishes the original reconstructed state from later damage evidence. The illustrated water path is schematic, without an invented membrane layer.",
+    "The reconstructed original state differs from later damage evidence. This water path is schematic; no membrane layer is invented."
+  ],
+  [
+    "🔗️consistency",
+    "Die Quelle unterscheidet ursprünglichen rekonstruierten Zustand und spätere Schadensbelege. Der gezeigte Wasserweg ist schematisch, ohne erfundene Membranschicht.",
+    "Rekonstruierter Urzustand und spätere Schadensbelege bleiben getrennt. Der Wasserweg ist schematisch; keine Membran wird erfunden."
+  ],
+  [
+    "🔗️consistency",
+    "In einem ausdrücklichen Reparaturszenario erhöht ein Entwurfsereignis die Bezugsreserve des Belags von 0,09 auf 0,14 m; die Platte behält ihre GlobalId.",
+    "Im Reparaturszenario erhöht ein Entwurfsereignis die Belagsreserve von 0,09 auf 0,14 m; die GlobalId bleibt gleich."
+  ]
+]

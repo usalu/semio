@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "workers", "gallery"],
+  "properties": {
+    "version": {"const": 1},
+    "workers": {
+      "type": "array", "minItems": 9, "maxItems": 9, "uniqueItems": true,
+      "items": {
+        "type": "object", "additionalProperties": false,
+        "required": ["name", "script", "arguments", "outputs"],
+        "properties": {
+          "name": {"enum": ["details", "direction0", "direction1", "direction2", "direction3", "sections", "families", "windows", "roofs"]},
+          "script": {"enum": ["visual-smoke.py", "visual-audit-gallery.py", "capture-capsule-families.py", "capture-window-states.py", "capture-roof-frame.py"]},
+          "arguments": {"oneOf": [{"const": []}, {"const": ["--sections-only"]}, {"type": "array", "prefixItems": [{"const": "--direction-index"}, {"enum": ["0", "1", "2", "3"]}], "minItems": 2, "maxItems": 2}]},
+          "outputs": {"type": "array", "minItems": 1, "maxItems": 2, "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z0-9-]+\\.png$"}}
+        }
+      }
+    },
+    "gallery": {
+      "type": "object", "additionalProperties": false,
+      "required": ["output", "panels", "boundaries"],
+      "properties": {
+        "output": {"const": "nakagin-four-exterior-directions.png"},
+        "panels": {"const": ["exterior-direction-0.png", "exterior-direction-1.png", "exterior-direction-2.png", "exterior-direction-3.png"]},
+        "boundaries": {"const": [0, 495, 960, 1425, 1920]}
+      }
+    }
+  }
+}

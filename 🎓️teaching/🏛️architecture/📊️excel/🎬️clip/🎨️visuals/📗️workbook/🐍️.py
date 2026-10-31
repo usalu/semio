@@ -313,8 +313,8 @@ def as_view(workbook, language: str, values: dict | None = None):
 class Glide(_engine.Animation):
     """🛝 Morph parts of a window in place. It never adds anything to the scene (the parts keep their place in the window's drawing order, so the tint stays under the text and the frames above), it does not suspend the window's live parts, and the whole window counts as moving so Cairo draws it in one pass."""
 
-    def __init__(self, window, anchor, pairs, **kwargs):
-        self.window = window
+    def __init__(self, window, anchor, pairs=(), retexts=(), **kwargs):
+        self.window, self.retexts = window, list(retexts)
         self.parts = [_engine.Transform(part, target) for part, target in pairs]
         super().__init__(anchor, introducer=True, **kwargs)
 
@@ -337,10 +337,20 @@ class Glide(_engine.Animation):
     def interpolate_mobject(self, alpha):
         for part in self.parts:
             part.interpolate(alpha)
+        for holder, old, new, glow in self.retexts:
+            if old is not None:
+                old.set_opacity(max(0.0, 1.0 - 2.0 * alpha))
+            if new is not None:
+                new.set_opacity(max(0.0, 2.0 * alpha - 1.0))
+            glow.set_fill(GREEN, 0.3 * math.sin(math.pi * alpha))
 
     def finish(self):
         for part in self.parts:
             part.finish()
+        for holder, old, new, glow in self.retexts:
+            if new is not None:
+                new.set_opacity(1.0)
+            holder.remove(*[item for item in (old, glow) if item is not None])
         super().finish()
 
     def clean_up_from_scene(self, scene):
@@ -718,28 +728,24 @@ class Window(_engine.VGroup):
         return Glide(self, self.tint, [(self.tint, tint), (self.active, active)], **kwargs)
 
     def recalculate(self, workbook, values: dict | None = None, **kwargs):
-        """♻️ Show a new workbook state: every cell whose text changed morphs into its new text (cells filled by ``bind`` stay live); returns one animation."""
+        """♻️ Show a new workbook state: every cell whose text changed is retyped in place (the old text fades out, the new text fades in at the same position, the cell flashes green once); glyphs never leave their cell. Cells filled by ``bind`` stay live; returns one ``Glide``."""
         self.view = as_view(workbook, self.language, values)
-        pairs = []
+        retexts = []
         for a1, holder in self.cells.items():
             content = self.text_of(a1)
             text = content[0] if content else None
             if holder.bound or text == holder.string:
                 continue
             old, new = holder.text, self._cell_label(a1, *content) if content else None
-            if old is not None and new is not None:
-                pairs.append((old, new))
-            elif new is not None:
-                stub = new.copy().set_opacity(0)
-                holder.add(stub)
-                pairs.append((stub, new))
-                holder.text = stub
-            else:
-                pairs.append((old, old.copy().set_opacity(0)))
-                holder.text = None
-            holder.string = text
+            glow = _box(*self.rect(a1), GREEN, None, 0, 0.0)
+            holder.add(glow)
+            if new is not None:
+                new.set_opacity(0)
+                holder.add(new)
+            retexts.append((holder, old, new, glow))
+            holder.text, holder.string = new, text
         self.state["rev"] += 1
-        return Glide(self, self.gridlines, pairs, **kwargs)
+        return Glide(self, self.gridlines, retexts=retexts, **kwargs)
 
     def edit(self, formula: str | None) -> "Window":
         """✍️ Enter or leave edit mode with a canonical formula; colour frames and coloured tokens follow."""

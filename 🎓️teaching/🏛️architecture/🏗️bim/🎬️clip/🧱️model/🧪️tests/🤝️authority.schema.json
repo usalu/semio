@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases",
+    "source",
+    "reserve_cases",
+    "slab_boundary_cases",
+    "window_cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "window_cases": {
+      "type":"array","minItems":6,
+      "items": {
+        "type":"object","required":["id","primary","windows","bodies"],"additionalProperties":false,
+        "properties": {
+          "id":{"type":"string"},
+          "primary":{"type":"array","items":{"enum":["a","b"]}},
+          "windows":{"type":"array","items":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"number"}}},
+          "bodies":{"type":"object","additionalProperties":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"number"}}},
+          "host_intervals":{"type":"array","items":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"number"}}},
+          "classes":{"type":"object","additionalProperties":{"enum":["IfcCovering","IfcChimney"]}},
+          "declarations":{"type":"object","additionalProperties":{"type":"array","items":{"enum":["a","b"]}}},
+          "expected_volume":{"type":"number","minimum":0},
+          "error":{"enum":["gap","overlap"]}
+        },
+        "oneOf":[{"required":["expected_volume"]},{"required":["error"]}]
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "owner_class",
+          "declared",
+          "owner_x"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "owner_class": {
+            "type": "string"
+          },
+          "declared": {
+            "type": "boolean"
+          },
+          "inherit": {
+            "type": "boolean"
+          },
+          "owner_x": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "expected_removed": {
+            "type": "number",
+            "minimum": 0
+          },
+          "error": {
+            "type": "boolean"
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "expected_removed"
+            ]
+          },
+          {
+            "required": [
+              "error"
+            ]
+          }
+        ]
+      }
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "walls",
+        "fillings",
+        "coverings"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "walls": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "fillings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "coverings": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "reserve_cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "mode",
+          "offset",
+          "depth"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "partition",
+              "gap",
+              "overlap",
+              "inclined"
+            ]
+          },
+          "offset": {
+            "type": "number",
+            "minimum": 0
+          },
+          "depth": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "progress_phases": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {"type": "string"}
+          },
+          "cancelled_before_work": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "slab_boundary_cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "outline",
+          "holes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outline": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "holes": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "retained_width": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    }
+  }
+}

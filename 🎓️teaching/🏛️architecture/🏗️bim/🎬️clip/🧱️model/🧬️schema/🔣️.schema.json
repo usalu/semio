@@ -392,7 +392,8 @@
               "IfcRelVoidsElement",
               "IfcRelFillsElement",
               "IfcRelAssociatesMaterial",
-              "IfcRelConnectsElements"
+              "IfcRelConnectsElements",
+              "IfcRelConnectsPathElements"
             ]
           },
           "relating": {
@@ -409,20 +410,104 @@
             "$ref": "#/$defs/localized"
           },
           "connection": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "clearance_rule",
+                  "basis",
+                  "source"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "hosted_conduit"
+                  },
+                  "clearance_rule": {
+                    "$ref": "#/$defs/tag"
+                  },
+                  "basis": {
+                    "enum": [
+                      "sourced",
+                      "inferred",
+                      "assumed"
+                    ]
+                  },
+                  "source": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "junction",
+                  "bounds",
+                  "relating_priorities",
+                  "related_priorities",
+                  "basis",
+                  "source"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "material_junction"
+                  },
+                  "junction": {
+                    "$ref": "#/$defs/tag"
+                  },
+                  "bounds": {
+                    "$ref": "#/$defs/wall_junction_bounds"
+                  },
+                  "relating_priorities": {
+                    "$ref": "#/$defs/wall_junction_priorities"
+                  },
+                  "related_priorities": {
+                    "$ref": "#/$defs/wall_junction_priorities"
+                  },
+                  "basis": {
+                    "enum": [
+                      "sourced",
+                      "inferred",
+                      "assumed"
+                    ]
+                  },
+                  "source": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            ]
+          },
+          "path_connection": {
             "type": "object",
             "additionalProperties": false,
             "required": [
-              "kind",
-              "clearance_rule",
+              "junction",
+              "bounds",
+              "relating_priorities",
+              "related_priorities",
               "basis",
-              "source"
+              "source",
+              "relating_connection_type",
+              "related_connection_type"
             ],
             "properties": {
-              "kind": {
-                "const": "hosted_conduit"
-              },
-              "clearance_rule": {
+              "junction": {
                 "$ref": "#/$defs/tag"
+              },
+              "bounds": {
+                "$ref": "#/$defs/wall_junction_bounds"
+              },
+              "relating_priorities": {
+                "$ref": "#/$defs/wall_junction_priorities"
+              },
+              "related_priorities": {
+                "$ref": "#/$defs/wall_junction_priorities"
               },
               "basis": {
                 "enum": [
@@ -434,6 +519,34 @@
               "source": {
                 "type": "string",
                 "minLength": 1
+              },
+              "relating_connection_type": {
+                "enum": [
+                  "ATSTART",
+                  "ATEND",
+                  "ATPATH"
+                ]
+              },
+              "related_connection_type": {
+                "enum": [
+                  "ATSTART",
+                  "ATEND",
+                  "ATPATH"
+                ]
+              }
+            },
+            "not": {
+              "required": [
+                "relating_connection_type",
+                "related_connection_type"
+              ],
+              "properties": {
+                "relating_connection_type": {
+                  "const": "ATPATH"
+                },
+                "related_connection_type": {
+                  "const": "ATPATH"
+                }
               }
             }
           }
@@ -474,6 +587,50 @@
               "properties": {
                 "class": {
                   "const": "IfcRelConnectsElements"
+                },
+                "related": {
+                  "maxItems": 1
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "class": {
+                  "const": "IfcRelConnectsPathElements"
+                }
+              },
+              "required": [
+                "class"
+              ]
+            },
+            "then": {
+              "required": [
+                "path_connection"
+              ],
+              "properties": {
+                "related": {
+                  "maxItems": 1
+                }
+              },
+              "not": {
+                "required": [
+                  "connection"
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "required": [
+                "path_connection"
+              ]
+            },
+            "then": {
+              "properties": {
+                "class": {
+                  "const": "IfcRelConnectsPathElements"
                 },
                 "related": {
                   "maxItems": 1
@@ -1047,6 +1204,9 @@
           "$ref": "#/$defs/localized"
         }
       }
+    },
+    "service_topology": {
+      "$ref": "#/$defs/source_service_topology"
     }
   },
   "$defs": {
@@ -1117,7 +1277,9 @@
         "IfcFooting",
         "IfcBeam",
         "IfcCovering",
-        "IfcChimney"
+        "IfcChimney",
+        "IfcSanitaryTerminal",
+        "IfcLightFixture"
       ]
     },
     "loss_selector_class": {
@@ -1160,7 +1322,31 @@
           "type": "string",
           "minLength": 1
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "sourced"
+              }
+            },
+            "required": [
+              "basis"
+            ]
+          },
+          "then": {
+            "required": [
+              "source"
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/evidence_source"
+              }
+            }
+          }
+        }
+      ]
     },
     "positive": {
       "type": "object",
@@ -1329,7 +1515,31 @@
           "type": "string",
           "minLength": 1
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "basis": {
+                "const": "sourced"
+              }
+            },
+            "required": [
+              "basis"
+            ]
+          },
+          "then": {
+            "required": [
+              "source"
+            ],
+            "properties": {
+              "source": {
+                "$ref": "#/$defs/evidence_source"
+              }
+            }
+          }
+        }
+      ]
     },
     "psets": {
       "type": "object",
@@ -1349,6 +1559,20 @@
         },
         "sill": {
           "$ref": "#/$defs/nonnegative"
+        },
+        "reference_surface_elevation": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/quantity"
+            },
+            {
+              "properties": {
+                "unit": {
+                  "const": "m"
+                }
+              }
+            }
+          ]
         }
       },
       "additionalProperties": {
@@ -1508,7 +1732,9 @@
             "required": [
               "outline",
               "portion",
-              "thickness"
+              "owner",
+              "tag",
+              "ownership"
             ],
             "properties": {
               "outline": {
@@ -1527,8 +1753,53 @@
               },
               "tag": {
                 "$ref": "#/$defs/tag"
+              },
+              "ownership": {
+                "enum": [
+                  "ramp_component",
+                  "floor_slab"
+                ]
+              },
+              "walking_outline": {
+                "$ref": "#/$defs/outline"
               }
-            }
+            },
+            "allOf": [
+              {
+                "if": {
+                  "properties": {
+                    "ownership": {
+                      "const": "ramp_component"
+                    }
+                  },
+                  "required": [
+                    "ownership"
+                  ]
+                },
+                "then": {
+                  "required": [
+                    "thickness",
+                    "walking_outline"
+                  ]
+                },
+                "else": {
+                  "not": {
+                    "anyOf": [
+                      {
+                        "required": [
+                          "thickness"
+                        ]
+                      },
+                      {
+                        "required": [
+                          "walking_outline"
+                        ]
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
           }
         },
         "points": {
@@ -1910,8 +2181,506 @@
           "items": {
             "$ref": "#/$defs/finish_void"
           }
+        },
+        "panel_stations": {
+          "$ref": "#/$defs/panel_stations"
+        },
+        "panel_operations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "fixed",
+              "swing",
+              "sliding",
+              "unknown"
+            ]
+          }
+        },
+        "panel_glazing_stations": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/panel_stations"
+          }
+        },
+        "end_plane": {
+          "$ref": "#/$defs/clip_plane",
+          "description": "World upper end plane of the final uniform column section; normal must intersect its vertical extrusion and preserve a positive profile."
+        },
+        "mounting": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "host",
+            "kind",
+            "point",
+            "normal",
+            "basis",
+            "source"
+          ],
+          "properties": {
+            "host": {
+              "$ref": "#/$defs/tag"
+            },
+            "kind": {
+              "enum": [
+                "column",
+                "wall",
+                "soffit"
+              ]
+            },
+            "point": {
+              "$ref": "#/$defs/point3"
+            },
+            "normal": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            },
+            "basis": {
+              "$ref": "#/$defs/basis"
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "surface_regions": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/wall_surface_region"
+          }
+        },
+        "finish_thickness": {
+          "$ref": "#/$defs/positive"
+        },
+        "finish_direction": {
+          "enum": [
+            "vertical",
+            "normal"
+          ]
+        },
+        "normal_offset": {
+          "$ref": "#/$defs/quantity"
+        },
+        "frame_head_extension": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "structural_offsets": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/quantity"
+          }
+        },
+        "walking_offsets": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/quantity"
+          }
+        },
+        "nosing_parts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/solid_part"
+          }
+        },
+        "flight_joint_owners": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/tag"
+          }
+        },
+        "interface_owners": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/tag"
+          }
+        },
+        "interface_construction": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "ramp",
+                "core_width",
+                "core_height",
+                "cap_height",
+                "cap_overhang",
+                "bands",
+                "landing_returns"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "ramp_guard_bands"
+                },
+                "ramp": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "core_width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "core_height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "cap_height": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "cap_overhang": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "bands": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "flight",
+                      "axis_x"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "flight": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "axis_x": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                },
+                "landing_returns": {
+                  "type": "boolean"
+                },
+                "arrival_upstand": {
+                  "type": "object",
+                  "required": [
+                    "flight",
+                    "axis_x",
+                    "width",
+                    "height"
+                  ],
+                  "additionalProperties": false,
+                  "properties": {
+                    "flight": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "axis_x": {
+                      "type": "number"
+                    },
+                    "width": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "height": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "type": "object",
+              "required": [
+                "kind",
+                "flight",
+                "width",
+                "depth",
+                "side"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "kind": {
+                  "const": "ramp_stringer"
+                },
+                "flight": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "depth": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "side": {
+                  "enum": [
+                    "left",
+                    "right"
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "tube_construction": {
+          "type": "object",
+          "required": [
+            "kind",
+            "diameter",
+            "wall_thickness",
+            "segments",
+            "routes",
+            "registration_max_shift"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "hollow_miter_network"
+            },
+            "diameter": {
+              "$ref": "#/$defs/positive"
+            },
+            "wall_thickness": {
+              "$ref": "#/$defs/positive"
+            },
+            "segments": {
+              "type": "integer",
+              "minimum": 8,
+              "maximum": 192,
+              "multipleOf": 4
+            },
+            "registration_max_shift": {
+              "type": "number",
+              "minimum": 0
+            },
+            "routes": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "id",
+                  "role",
+                  "points"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "role": {
+                    "type": "string"
+                  },
+                  "points": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "$ref": "#/$defs/point3"
+                    }
+                  },
+                  "bearing": {
+                    "type": "object",
+                    "required": [
+                      "owner",
+                      "role"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "owner": {
+                        "$ref": "#/$defs/tag"
+                      },
+                      "role": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    }
+                  },
+                  "end_anchor": {
+                    "type": "object",
+                    "required": [
+                      "route",
+                      "axis"
+                    ],
+                    "additionalProperties": false,
+                    "properties": {
+                      "route": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "axis": {
+                        "enum": [
+                          "X",
+                          "Y",
+                          "Z"
+                        ]
+                      }
+                    }
+                  },
+                  "terminal_inset": {
+                    "$ref": "#/$defs/positive"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "ramp_finish": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "ramp",
+            "layers",
+            "interface_owners",
+            "wall_owners"
+          ],
+          "properties": {
+            "ramp": {
+              "$ref": "#/$defs/tag"
+            },
+            "layers": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "role",
+                  "material",
+                  "depth"
+                ],
+                "properties": {
+                  "role": {
+                    "enum": [
+                      "wearing",
+                      "bedding"
+                    ]
+                  },
+                  "material": {
+                    "$ref": "#/$defs/tag"
+                  },
+                  "depth": {
+                    "allOf": [
+                      {
+                        "$ref": "#/$defs/positive"
+                      },
+                      {
+                        "properties": {
+                          "unit": {
+                            "const": "m"
+                          }
+                        }
+                      }
+                    ]
+                  }
+                }
+              },
+              "maxItems": 2,
+              "prefixItems": [
+                {
+                  "properties": {
+                    "role": {
+                      "const": "wearing"
+                    }
+                  }
+                },
+                {
+                  "properties": {
+                    "role": {
+                      "const": "bedding"
+                    }
+                  }
+                }
+              ]
+            },
+            "interface_owners": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/tag"
+              }
+            },
+            "wall_owners": {
+              "type": "array",
+              "uniqueItems": true,
+              "items": {
+                "$ref": "#/$defs/tag"
+              }
+            }
+          }
+        },
+        "layer_binding": {
+          "$ref": "#/$defs/flooring_layer_binding"
+        },
+        "structural_joints": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/structural_joint"
+          }
         }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "required": [
+              "panel_operations"
+            ]
+          },
+          "then": {
+            "required": [
+              "panel_stations"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "panel_glazing_stations"
+            ]
+          },
+          "then": {
+            "required": [
+              "panel_stations"
+            ]
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "layer_binding"
+            ]
+          },
+          "then": {
+            "required": [
+              "parts",
+              "base_level",
+              "kind"
+            ],
+            "properties": {
+              "kind": {
+                "const": "flooring"
+              }
+            }
+          }
+        }
+      ]
     },
     "element": {
       "type": "object",
@@ -1958,7 +2727,8 @@
             "rainwater",
             "water_supply",
             "sanitary",
-            "flue"
+            "flue",
+            "lighting"
           ]
         },
         "geometry": {
@@ -2152,7 +2922,9 @@
               "geometry": {
                 "type": "object",
                 "required": [
-                  "thickness"
+                  "thickness",
+                  "finish_thickness",
+                  "finish_direction"
                 ],
                 "properties": {
                   "thickness": {
@@ -2365,25 +3137,122 @@
               "historical_evidence",
               "material"
             ],
-            "properties": {
-              "geometry": {
-                "required": [
-                  "points",
-                  "tube"
-                ],
+            "oneOf": [
+              {
                 "properties": {
-                  "points": {
-                    "minItems": 2,
-                    "maxItems": 2
+                  "geometry": {
+                    "required": [
+                      "points",
+                      "tube"
+                    ],
+                    "properties": {
+                      "points": {
+                        "minItems": 2,
+                        "maxItems": 2
+                      }
+                    },
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "parts"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "size"
+                          ]
+                        }
+                      ]
+                    }
+                  },
+                  "attributes": {
+                    "required": [
+                      "diameter"
+                    ]
                   }
                 }
               },
-              "attributes": {
+              {
+                "properties": {
+                  "geometry": {
+                    "required": [
+                      "kind",
+                      "parts",
+                      "base_level"
+                    ],
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "points"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "tube"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "size"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                }
+              },
+              {
+                "properties": {
+                  "class": {
+                    "const": "IfcCovering"
+                  },
+                  "predefined_type": {
+                    "const": "FLOORING"
+                  },
+                  "geometry": {
+                    "required": [
+                      "kind",
+                      "ramp_finish",
+                      "base_level"
+                    ],
+                    "properties": {
+                      "kind": {
+                        "const": "ramp_finish"
+                      }
+                    },
+                    "not": {
+                      "anyOf": [
+                        {
+                          "required": [
+                            "parts"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "points"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "tube"
+                          ]
+                        },
+                        {
+                          "required": [
+                            "size"
+                          ]
+                        }
+                      ]
+                    }
+                  }
+                },
                 "required": [
-                  "diameter"
+                  "predefined_type"
                 ]
               }
-            }
+            ]
           }
         },
         {
@@ -2518,6 +3387,379 @@
             "required": [
               "predefined_type"
             ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "class": {
+                "const": "IfcSanitaryTerminal"
+              }
+            },
+            "required": [
+              "class"
+            ]
+          },
+          "then": {
+            "required": [
+              "historical_evidence",
+              "material"
+            ],
+            "properties": {
+              "geometry": {
+                "required": [
+                  "kind",
+                  "parts",
+                  "base_level"
+                ],
+                "properties": {
+                  "parts": {
+                    "minItems": 1
+                  }
+                },
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "points"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "tube"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "size"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "geometry": {
+                "required": [
+                  "end_plane"
+                ]
+              }
+            },
+            "required": [
+              "geometry"
+            ]
+          },
+          "then": {
+            "properties": {
+              "class": {
+                "const": "IfcColumn"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "class": {
+                "const": "IfcLightFixture"
+              }
+            },
+            "required": [
+              "class"
+            ]
+          },
+          "then": {
+            "required": [
+              "material",
+              "historical_evidence",
+              "system"
+            ],
+            "properties": {
+              "system": {
+                "const": "lighting"
+              },
+              "geometry": {
+                "required": [
+                  "parts",
+                  "base_level",
+                  "kind",
+                  "mounting"
+                ],
+                "not": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "points"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "tube"
+                      ]
+                    },
+                    {
+                      "required": [
+                        "size"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "class": {
+                "const": "IfcCovering"
+              },
+              "predefined_type": {
+                "const": "FLOORING"
+              }
+            },
+            "required": [
+              "class",
+              "predefined_type"
+            ]
+          },
+          "then": {
+            "properties": {
+              "geometry": {
+                "oneOf": [
+                  {
+                    "properties": {
+                      "kind": {
+                        "const": "flooring"
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "parts",
+                      "base_level"
+                    ],
+                    "not": {
+                      "required": [
+                        "ramp_finish"
+                      ]
+                    }
+                  },
+                  {
+                    "properties": {
+                      "kind": {
+                        "const": "ramp_finish"
+                      },
+                      "base_level": {
+                        "const": 0
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "ramp_finish",
+                      "base_level"
+                    ],
+                    "not": {
+                      "required": [
+                        "parts"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "metadata": {
+                "properties": {
+                  "domains": {
+                    "contains": {
+                      "const": "architecture"
+                    },
+                    "not": {
+                      "contains": {
+                        "const": "services"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "not": {
+              "required": [
+                "system"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "allOf": [
+              {
+                "properties": {
+                  "class": {
+                    "const": "IfcCovering"
+                  },
+                  "metadata": {
+                    "properties": {
+                      "domains": {
+                        "contains": {
+                          "const": "architecture"
+                        }
+                      }
+                    },
+                    "required": [
+                      "domains"
+                    ]
+                  }
+                },
+                "required": [
+                  "class",
+                  "metadata"
+                ]
+              },
+              {
+                "not": {
+                  "properties": {
+                    "metadata": {
+                      "properties": {
+                        "domains": {
+                          "contains": {
+                            "const": "services"
+                          }
+                        }
+                      },
+                      "required": [
+                        "domains"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "metadata"
+                  ]
+                }
+              },
+              {
+                "not": {
+                  "required": [
+                    "system"
+                  ]
+                }
+              }
+            ]
+          },
+          "then": {
+            "properties": {
+              "geometry": {
+                "oneOf": [
+                  {
+                    "required": [
+                      "parts"
+                    ],
+                    "not": {
+                      "required": [
+                        "ramp_finish"
+                      ]
+                    }
+                  },
+                  {
+                    "required": [
+                      "ramp_finish"
+                    ],
+                    "not": {
+                      "required": [
+                        "parts"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "geometry": {
+                "required": [
+                  "surface_regions"
+                ]
+              }
+            },
+            "required": [
+              "geometry"
+            ]
+          },
+          "then": {
+            "properties": {
+              "class": {
+                "const": "IfcWall"
+              },
+              "geometry": {
+                "required": [
+                  "path"
+                ],
+                "properties": {
+                  "path": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "$ref": "#/$defs/point2"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "class": {
+                "const": "IfcRampFlight"
+              }
+            },
+            "required": [
+              "class"
+            ]
+          },
+          "then": {
+            "properties": {
+              "geometry": {
+                "required": [
+                  "structural_offsets",
+                  "walking_offsets"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "geometry": {
+                "required": [
+                  "structural_joints"
+                ]
+              }
+            },
+            "required": [
+              "geometry"
+            ]
+          },
+          "then": {
+            "properties": {
+              "class": {
+                "enum": [
+                  "IfcBeam",
+                  "IfcFooting",
+                  "IfcBuildingElementProxy",
+                  "IfcStair",
+                  "IfcRailing"
+                ]
+              }
+            }
           }
         }
       ]
@@ -2787,6 +4029,9 @@
                   "minLength": 1
                 }
               }
+            },
+            "surface_finish": {
+              "$ref": "#/$defs/surface_finish"
             }
           }
         },
@@ -3551,6 +4796,37 @@
         },
         "panel_layout": {
           "$ref": "#/$defs/panel_layout"
+        },
+        "glazing_bar_width": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/positive"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "m"
+                }
+              }
+            }
+          ]
+        },
+        "member_sections": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "perimeter",
+            "interior"
+          ],
+          "properties": {
+            "perimeter": {
+              "$ref": "#/$defs/member_section"
+            },
+            "interior": {
+              "$ref": "#/$defs/member_section"
+            }
+          }
         }
       },
       "allOf": [
@@ -4118,8 +5394,454 @@
         },
         "outline": {
           "$ref": "#/$defs/outline"
+        },
+        "joint_owners": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/tag"
+          }
         }
       }
+    },
+    "panel_stations": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/nonnegative"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "unit": {
+                "const": "1"
+              },
+              "value": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        ]
+      }
+    },
+    "member_section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shape",
+        "thickness"
+      ],
+      "properties": {
+        "shape": {
+          "enum": [
+            "angle",
+            "tee"
+          ]
+        },
+        "thickness": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/positive"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "unit": {
+                  "const": "m"
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "source_service_topology": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "nodes",
+        "edges",
+        "unknowns"
+      ],
+      "properties": {
+        "kind": {
+          "const": "source_evidence_graph"
+        },
+        "unknowns": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "system",
+              "kind",
+              "products",
+              "source"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "system": {
+                "enum": [
+                  "heating",
+                  "rainwater",
+                  "soil"
+                ]
+              },
+              "kind": {
+                "enum": [
+                  "physical",
+                  "boundary",
+                  "outlet"
+                ]
+              },
+              "products": {
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "from",
+              "to",
+              "system",
+              "basis",
+              "source",
+              "metric_status"
+            ],
+            "properties": {
+              "from": {
+                "type": "string",
+                "minLength": 1
+              },
+              "to": {
+                "type": "string",
+                "minLength": 1
+              },
+              "system": {
+                "enum": [
+                  "heating",
+                  "rainwater",
+                  "soil"
+                ]
+              },
+              "basis": {
+                "$ref": "#/$defs/basis"
+              },
+              "source": {
+                "type": "string",
+                "minLength": 1
+              },
+              "metric_status": {
+                "enum": [
+                  "unknown",
+                  "inferred",
+                  "sourced"
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "surface_finish": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "binder",
+        "colour_family",
+        "substrate",
+        "quantity_scope",
+        "film_thickness",
+        "basis",
+        "source"
+      ],
+      "properties": {
+        "binder": {
+          "enum": [
+            "oil_paint",
+            "cimentol",
+            "jurasite_render",
+            "unmeasured_paint"
+          ]
+        },
+        "colour_family": {
+          "enum": [
+            "blue",
+            "pink",
+            "green",
+            "dark_green",
+            "gray",
+            "unspecified",
+            "black"
+          ]
+        },
+        "substrate": {
+          "$ref": "#/$defs/tag"
+        },
+        "quantity_scope": {
+          "const": "existing_substrate_envelope"
+        },
+        "film_thickness": {
+          "const": "unmeasured"
+        },
+        "basis": {
+          "$ref": "#/$defs/basis"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        },
+        "display_rgb": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "value",
+            "basis",
+            "source"
+          ],
+          "properties": {
+            "value": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            },
+            "basis": {
+              "const": "inferred"
+            },
+            "source": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "wall_surface_region": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag",
+        "layer",
+        "face",
+        "substrate",
+        "material",
+        "start",
+        "end",
+        "from",
+        "to",
+        "basis",
+        "source"
+      ],
+      "properties": {
+        "tag": {
+          "$ref": "#/$defs/tag"
+        },
+        "layer": {
+          "type": "string",
+          "minLength": 1
+        },
+        "face": {
+          "enum": [
+            "positive",
+            "negative"
+          ]
+        },
+        "substrate": {
+          "$ref": "#/$defs/tag"
+        },
+        "material": {
+          "$ref": "#/$defs/tag"
+        },
+        "start": {
+          "$ref": "#/$defs/quantity"
+        },
+        "end": {
+          "$ref": "#/$defs/quantity"
+        },
+        "from": {
+          "$ref": "#/$defs/wall_station"
+        },
+        "to": {
+          "$ref": "#/$defs/wall_station"
+        },
+        "basis": {
+          "$ref": "#/$defs/basis"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "evidence_source": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?:https://[^\\s]+|(?:VS-\\d+(?:\\.\\d+)*|(?:CSIC2022|SAB2024|Savoye-as-[Bb]uilt|SavoyeAsBuilt2024|FLC)(?:[-A-Za-z0-9.]+)?|CMN2021|Author46|ArchitectureVivante1931(?:[-A-Za-z0-9.]+)?|teaching-services-original)(?:[; /][^\\r\\n]+)?)$(?![\\s\\S])"
+    },
+    "flooring_layer_binding": {
+      "description": "Declared source parts retain the original Reference. Occupied material follows the bound host finish reserves, actual declared structural owners, explicit wearing depths and materials.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "material",
+        "layer",
+        "reference_thickness",
+        "support_material",
+        "support_role"
+      ],
+      "properties": {
+        "material": {
+          "$ref": "#/$defs/tag"
+        },
+        "layer": {
+          "$ref": "#/$defs/tag"
+        },
+        "reference_thickness": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/positive"
+            },
+            {
+              "properties": {
+                "unit": {
+                  "const": "m"
+                }
+              }
+            }
+          ]
+        },
+        "support_material": {
+          "$ref": "#/$defs/tag"
+        },
+        "support_role": {
+          "enum": [
+            "weathering_reserve",
+            "bedding"
+          ]
+        },
+        "wearing_bands": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "maximum_reference_capacity",
+              "depth",
+              "material"
+            ],
+            "properties": {
+              "maximum_reference_capacity": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/positive"
+                  },
+                  {
+                    "properties": {
+                      "unit": {
+                        "const": "m"
+                      }
+                    }
+                  }
+                ]
+              },
+              "depth": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/positive"
+                  },
+                  {
+                    "properties": {
+                      "unit": {
+                        "const": "m"
+                      }
+                    }
+                  }
+                ]
+              },
+              "material": {
+                "$ref": "#/$defs/tag"
+              }
+            }
+          },
+          "description": "Explicit source-qualified wearing choices for constrained reference structural-cap bands; edited support thickness never silently redefines these material/depth choices."
+        }
+      },
+      "description": "Original explicit flooring parts are the reference material allocation. A shared editable layer rebuilds its actual host reserves while preserving wearing material/depth overrides and fixed structural joint ownership."
+    },
+    "structural_joint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "owner",
+        "relationship"
+      ],
+      "properties": {
+        "owner": {
+          "$ref": "#/$defs/tag"
+        },
+        "relationship": {
+          "const": "monolithic_same_material"
+        }
+      },
+      "description": "A directed construction relationship assigns actual common material to this independently owned structural product. Different-material intersections remain physically present and are reported, never silently clipped."
+    },
+    "wall_junction_priorities": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "description": "Complete layer-order priority vector for one declared participant; higher values own common occupied material."
+    },
+    "wall_junction_bounds": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      },
+      "description": "Finite xmin,ymin,xmax,ymax in model metres; limits authority to this declared physical junction."
     }
   }
 }

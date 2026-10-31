@@ -1,0 +1,9 @@
+# Six Existing Tap Assemblies: Mount and Discharge R92
+
+Actual current source d08d6aa8 was stable during direct geometry/GEOS capture. Hall, servant1 and servant2 stem footprints have zero real top-face contact with their host basins. Laundry1/2 each have.00175m² contact; chauffeur has.00044709m² partialcontact. Old hall and servant2 outlets lie outside actual host envelopes; servant1 outlet reaches its bowl but its floating stem crosses the old partition. Existing boxes are solid placeholders, not hollow faucet proof.
+
+Exact source axes, top planes, old stem/tip coordinates and contact metrics are retained in generated/six-tap-current-r92.json and six-tap-mounts-r92.json. Construction candidates use actual TOP profiles (wallbasin tops are.55×.46,.55×.40 and.55×.45m, not their smaller bottom rings). Servant1 requires the corrected original niche and basinmove first. Servant1 taps are on+Y back/spouttoward-Y; servant2 on-Y back/spouttoward+Y; chauffeur onhighX back/spouttowardlowX. Hall and parent pairedtaps are onlowX after sourceellipsecorrection.
+
+Laundry candidates are physically coherent with the existing transverse troughs only. Author45 indicates a low-X facade run alongY, so exact original trough/tap stations remain an unresolved source-layout issue; do not claim current coordinates are recovered originals. Two concretebacs are sourceattested byCMN. Kitchen assembly belongs to MEPowner and its corrected programme.
+
+All faucet dimensional details/heights/elbows/mechanisms and exact stations are construction inferences. Require a positive finite materialcontact patch at the baseannulus, actual outlet fallline into a hollowbowl, native openbores/positivewall/closedmeshes, and unchanged sourcepartition/door operation. No hidden supply routes claimed. No production edits.

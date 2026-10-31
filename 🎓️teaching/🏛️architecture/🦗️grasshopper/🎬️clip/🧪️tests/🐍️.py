@@ -1,6 +1,7 @@
 """🧪 Portable Grasshopper engine contracts with independent oracles (tree walk, NumPy, rhino3dm)."""
 
 import importlib.util
+import ast
 import itertools
 import json
 import math
@@ -406,6 +407,45 @@ class TestSynthetic(unittest.TestCase):
 
 
 class TestCanvases(unittest.TestCase):
+    def test_wrap_retains_each_actual_family_and_uses_real_parameter_trees(self):
+        source=ast.parse((CLIP/'💊️capsule/🐍️.py').read_text(encoding='utf-8'))
+        helper=next(node for node in source.body if isinstance(node,ast.FunctionDef) and node.name=='_wrap_sources')
+        scope={}
+        exec(compile(ast.Module(body=[helper],type_ignores=[]),'<wrap-sources>','exec'),scope)
+        nk=GH._nakagin()
+        slots=[s for s in nk.slots() if s.tower==1][:CASES['reference_controls']['wrap_count']]
+        data=scope['_wrap_sources'](slots,nk.capsule_types())
+        objects=[{'id':name,'component':component,'settings':{'data':data[name]}} for name,component in [('types','Brep Param'),('idx','Integer Param'),('tg','Plane Param')]]
+        objects.extend([{'id':'wr','component':'Boolean Toggle','settings':{'value':False}},{'id':'li','component':'List Item'}])
+        definition=GH.define({'objects':objects,'wires':['types.Brep>li.List','idx.Integer>li.Index','wr.Boolean>li.Wrap']})
+        for wrap in (False,True):
+            solution=GH.evaluate(definition,{'wr':wrap})
+            selected=solution.tree('li')
+            self.assertEqual(sum(item is not None for item in selected.items()),len(slots) if wrap else 4)
+            for i,slot in enumerate(slots):
+                picked=selected.branch((0,i)) if (0,i) in selected.paths() else ()
+                if i<4 or wrap:
+                    self.assertEqual(picked[0].tag['family'],slot.layout)
+                    self.assertEqual(picked[0].tag['type'],'ABCD'[i%4])
+                else:
+                    self.assertEqual(tuple(picked),(None,))
+
+    def test_reference_controls_measure_physical_source_casing(self):
+        source=ast.parse((CLIP/'💊️capsule/🐍️.py').read_text(encoding='utf-8'))
+        helper=next(node for node in source.body if isinstance(node,ast.FunctionDef) and node.name=='_reference_controls')
+        pairs={tuple(part.split('.')[0] for part in wire.split('>')) for wire in MODEL['canvases']['capsule']['wires']}
+        shown=[]
+        for call in ast.walk(source):
+            if isinstance(call,ast.Call) and isinstance(call.func,ast.Name) and call.func.id=='pulse' and isinstance(call.args[1],ast.List):
+                shown.extend(ast.literal_eval(row.elts[0]) for row in call.args[1].elts if isinstance(row,ast.Tuple))
+        self.assertTrue(set(shown).issubset(pairs))
+        self.assertTrue({tuple(edge) for edge in CASES['reference_controls']['physical_edges']}.issubset(shown))
+        scope={'_nk':GH._nakagin()}
+        exec(compile(ast.Module(body=[helper],type_ignores=[]),'<reference-controls>','exec'),scope)
+        for case in CASES['reference_controls']['cases']:
+            actual=scope['_reference_controls'](case['parameters'])
+            np.testing.assert_allclose([actual[k] for k in ('w','l','h')],case['physical'],atol=1e-12)
+
     def test_outputs(self):
         for case in CASES["canvases"]["outputs"]:
             with self.subTest(case["id"]):
@@ -485,7 +525,7 @@ class TestCanvases(unittest.TestCase):
         self.assertEqual(GH.canvas_keys(), ("anatomy", "capsule", "tower", "casting", "trees"))
         needs = {"anatomy": {"Number Slider", "Center Box", "Panel", "Series", "Param Viewer", "Number Param"},
                  "capsule": {"Center Box", "Fillet Edge", "Solid Difference", "Cylinder", "Circle", "Orient", "List Item", "Value List", "Merge", "Construct Point", "Rotate"},
-                 "tower": {"Series", "Graft Tree", "Flatten Tree", "Move", "Orient", "Rectangle", "Extrude", "Tree Statistics", "Center Box"},
+                 "tower": {"Series", "Graft Tree", "Construct Plane", "Move", "Orient", "Rectangle", "Extrude", "Tree Statistics", "Center Box"},
                  "casting": {"Floor", "Construct Plane", "Divide Domain", "Boolean Toggle", "Value List", "Orient"},
                  "trees": {"Path Mapper", "Flip Matrix", "Simplify Tree", "Graft Tree", "Flatten Tree", "Tree Statistics", "Param Viewer", "Custom Preview", "Tree Item"}}
         for key_, comps in needs.items():
@@ -532,14 +572,27 @@ class TestGeometry(unittest.TestCase):
         xz = GH.Plane.world_xz()
         self.assertEqual(xz.z.t, (0.0, -1.0, 0.0))
 
-    def test_capsule_chain_equals_direct_construction(self):
-        sol = GH.evaluate(GH.canvas("capsule"), pins("capsule"))
-        chain = sol.value("cut", "Result")
-        t = GH.capsule_type("A")
-        direct = GH.make_capsule(2.5, 4.0, 2.5, 0.25, 1.3, GH.capsule_type("A")["wall"])
-        self.assertEqual(chain.solid, direct.solid)
-        self.assertEqual(chain.xform, direct.xform)
-        self.assertAlmostEqual(t["window_u"], 0.0)
+    def test_physical_reference_canvas_matches_authored_geometry_and_glazing(self):
+        sol = GH.evaluate(GH.canvas("capsule"))
+        case = CASES["physical_slot_capsules"]
+        body = sol.value("box", "Box")
+        np.testing.assert_allclose([body.x.length, body.y.length, body.z.length], case["physical"])
+        np.testing.assert_allclose(body.plane.origin.t, [0, 2, 1.25])
+        circle = sol.value("cir", "Circle")
+        np.testing.assert_allclose(circle.plane.origin.t, case["reference_glazing_midplane"])
+        for reference in sol.items("types", "Brep"):
+            self.assertEqual(reference.tag["reference"], "physical_casing")
+            actual = GH._nakagin().capsule_assembly(GH._nakagin().capsule_type(reference.tag["type"]), "exterior", "Slash", interior="study")
+            self.assertEqual(len(reference.solid["parts"]), len(actual.parts))
+            for part, expected in zip(reference.solid["parts"], actual.parts):
+                np.testing.assert_allclose(part["vertices"], expected.solid.vertices)
+                mesh = rh.Mesh()
+                for vertex in part["vertices"]:
+                    mesh.Vertices.Add(*vertex)
+                for face in part["faces"]:
+                    for i in range(1, len(face) - 1):
+                        mesh.Faces.AddFace(face[0], face[i], face[i + 1])
+                self.assertTrue(mesh.IsClosed)
 
     def test_rounded_box_volume_against_a_numpy_voxel_count(self):
         w, l, h, r = 2.5, 4.0, 2.5, 0.25
@@ -569,7 +622,7 @@ class TestGeometry(unittest.TestCase):
         planes = [GH.plain(p) for p in sol.items("rot", "Geometry")]
         capsules = sol.items("ori", "Geometry")
         for plane, capsule in zip(planes, capsules):
-            local = GH.make_capsule_of(capsule.tag["type"]).root_box()
+            local = GH.make_reference_capsule(capsule.tag["type"], capsule.tag["family"], capsule.tag["interior"]).root_box()
             local_corners = corners(GH.plain(local))
             xform = rh.Transform.PlaneToPlane(rh.Plane.WorldXY(), rh_plane(plane))
             expected = []
@@ -611,7 +664,7 @@ class TestGeometry(unittest.TestCase):
 
     def test_podium_extrusion_volume(self):
         v = GH.evaluate(GH.canvas("tower"), pins("tower")).value("ext", "Extrusion").volume()
-        self.assertAlmostEqual(v, 31.4 * 20.7 * 5.5, places=9)
+        self.assertAlmostEqual(v, 31.4 * 20.7 * CASES["layout"]["base_elevation"], places=9)
 
 
 class TestNakagin(unittest.TestCase):
@@ -628,12 +681,12 @@ class TestNakagin(unittest.TestCase):
         raw = json.loads((CLIP.parents[1] / "🏢️nakagin/🔣️.json").read_text(encoding="utf-8"))
         expected = defaultdict(int)
         for ti, tower in enumerate(raw["towers"]):
-            special = {e["storey"]: e["facades"] for e in tower["exceptions"]}
-            for s in range(tower["capsule_storeys"]["value"]):
-                for f in special.get(s, tower["facades"]):
-                    expected[(0, ti, s, f)] = raw["items"]["per_facade"]["value"]
+            for s, floor in enumerate(tower["floors"]):
+                for group in floor["groups"]:
+                    expected[(0, ti, s, group["facade"])] = len(group["items"])
         self.assertEqual({p: len(v) for p, v in tree._b.items()}, dict(expected))
-        self.assertEqual((tree.path_count, tree.count), (70, 140))
+        self.assertEqual((tree.path_count, tree.count), (CASES["layout"]["branch_count"], CASES["layout"]["total"]))
+        self.assertEqual(sum(len(v) == 1 for v in tree.branches()), CASES["layout"]["singleton_branches"])
         by_path = nak.tree()
         for path, slots in by_path.items():
             for slot, brep in zip(slots, tree.branch(path)):
@@ -642,6 +695,22 @@ class TestNakagin(unittest.TestCase):
                 local = np.array(GH.plain(GH.make_capsule_of(slot.type).root_box().center))
                 world = np.array(slot.plane.origin) + local[0] * np.array(slot.plane.x) + local[1] * np.array(slot.plane.y) + local[2] * np.array(slot.plane.z)
                 self.assertTrue(np.allclose(GH.plain(brep.root_box().center), world, atol=1e-9))
+
+    def test_casting_reference_is_an_actual_west_window_and_canonical_frame(self):
+        case=CASES["casting_orientation_reference"]
+        tree=ast.parse((CLIP/"🫗️casting/🐍️.py").read_text(encoding="utf-8"))
+        selected=next(ast.literal_eval(node.value) for node in tree.body if isinstance(node,ast.Assign) and any(isinstance(target,ast.Name) and target.id=="SLOT" for target in node.targets))
+        self.assertEqual(selected,tuple(case["slot"]))
+        for obj in MODEL["canvases"]["casting"]["objects"]:
+            for datum in obj["settings"].get("data",[]):
+                if isinstance(datum,dict) and "slot" in datum:
+                    self.assertEqual(datum["slot"]["index"],case["slot"])
+        slot=next(slot for slot in GH._nakagin().slots() if (*slot.path,slot.item)==tuple(case["slot"]))
+        self.assertEqual(slot.layout,case["family"])
+        local=GH._nakagin().capsule_window(GH._nakagin().capsule_type(slot.type),slot.layout)
+        matrix=np.asarray([slot.plane.x,slot.plane.y,slot.plane.z])
+        np.testing.assert_allclose(np.asarray(local.normal)@matrix,case["window_normal"],atol=1e-8)
+        np.testing.assert_allclose(GH.slot_part(case["slot"],"origin").t,slot.plane.origin)
 
     def test_capsule_types_match_nakagin(self):
         nak = GH._nakagin()
@@ -654,9 +723,9 @@ class TestNakagin(unittest.TestCase):
         sol = GH.evaluate(GH.canvas("trees"))
         lengths = list(sol.items("pms", "Length"))
         self.assertEqual(sum(lengths), 140)
-        self.assertEqual(lengths[-1], 6)
+        self.assertEqual(lengths[-1], 8)
         self.assertEqual(lengths[-2], 8)
-        self.assertEqual(sol.value("pts", "Length"), 54)
+        self.assertEqual(sol.value("pts", "Length"), 76)
 
 
 class TestTowerSlots(unittest.TestCase):
@@ -670,11 +739,11 @@ class TestTowerSlots(unittest.TestCase):
         for key_ in ("A", "B"):
             sol, tree = self.canvas_slots(key_)
             self.assertEqual(sol.state("slots"), "ok")
-            self.assertEqual([sol.state(o) for o in ("cull", "yrot", "ori")], ["ok"] * 3)
+            self.assertEqual([sol.state(o) for o in ("cull", "slots", "ori")], ["ok"] * 3)
             mine += list(tree.items())
         theirs = nak.slots()
         self.assertEqual((len(mine), len(theirs)), (140, 140))
-        self.assertEqual(sum(len(GH.evaluate(GH.canvas("tower"), GH.tower_overrides(k)).items("slots", "Geometry")) for k in "AB"), 54 + 86)
+        self.assertEqual([len(GH.evaluate(GH.canvas("tower"), GH.tower_overrides(k)).items("slots", "Geometry")) for k in "AB"], [76, 64])
         for plane, slot in zip(mine, theirs):
             got = np.array([plane.origin.t, plane.x.t, plane.y.t, plane.z.t])
             want = np.array([slot.plane.origin, slot.plane.x, slot.plane.y, slot.plane.z])
@@ -692,14 +761,118 @@ class TestTowerSlots(unittest.TestCase):
             world = np.array(p.origin) + local[0] * np.array(p.x) + local[1] * np.array(p.y) + local[2] * np.array(p.z)
             self.assertTrue(np.allclose(GH.plain(cap.root_box().center), world, atol=1e-9))
 
-    def test_cull_index_removes_exactly_the_west_planes_of_the_top_storey(self):
-        sol, _ = self.canvas_slots("B")
-        before = sol.tree("mv", "Geometry")
-        after = sol.tree("cull", "List")
-        self.assertEqual([len(v) for v in before.branches()], [8] * 11)
-        self.assertEqual([len(v) for v in after.branches()], [8] * 10 + [6])
-        self.assertEqual(list(sol.tree("cullp", "Integer").branch((0, 10))), [6, 7])
-        self.assertEqual(sum(len(v) for v in GH.evaluate(GH.canvas("tower"), GH.tower_overrides("A")).tree("cullp", "Integer").branches()), 0)
+    def test_floor_schedule_matches_the_portable_contract(self):
+        for tower, expected in CASES["layout"]["floor_counts"].items():
+            sol, _ = self.canvas_slots(tower)
+            self.assertEqual(list(sol.items("stl")), expected)
+            self.assertEqual(sum(expected), CASES["layout"]["tower_counts"][tower])
+            self.assertEqual(sum(map(len, sol.tree("cull", "List").branches())), sum(expected))
+
+    def test_derived_core_height_and_podium_roof_datum(self):
+        raw = json.loads((CLIP.parents[1] / "🏢️nakagin/🔣️.json").read_text(encoding="utf-8"))
+        for tower in "AB":
+            sol, _ = self.canvas_slots(tower)
+            source = next(t for t in raw["towers"] if t["key"] == tower)
+            crown = max(item["center"][2]["value"] + raw["capsule"]["height"]["value"] for floor in source["floors"] for group in floor["groups"] for item in group["items"])
+            expected = crown + source["roof_clearance"]["value"]
+            self.assertAlmostEqual(sol.value("z0"), raw["podium"]["levels"][-1]["value"], places=9)
+            self.assertAlmostEqual(sol.value("tot"), expected, places=9)
+            self.assertAlmostEqual(sol.value("tot"), CASES["layout"]["core_heights"][tower], places=9)
+            self.assertAlmostEqual(sol.value("capital").center.z - sol.value("capital").z.length / 2, expected, places=9)
+            self.assertAlmostEqual(sol.value("core").z.length, expected, places=9)
+
+    def test_primary_phase_datums_and_per_tower_bindings(self):
+        raw = json.loads((CLIP.parents[1]/"🏢️nakagin/🔣️.json").read_text(encoding="utf-8"))
+        datums = CASES["layout"]["datums"]
+        self.assertEqual(raw["core"]["storey_height"]["value"],datums["pitch"])
+        self.assertEqual([q["value"] for q in raw["podium"]["levels"]],datums["podium_levels"])
+        for tower in "AB":
+            source = next(t for t in raw["towers"] if t["key"]==tower)
+            overrides = GH.tower_overrides(tower)
+            self.assertEqual(overrides["over.bind"],f"towers.{tower}.roof_clearance")
+            self.assertEqual(overrides["ch.bind"],f"towers.{tower}.capital_height")
+            sol,_ = self.canvas_slots(tower)
+            self.assertAlmostEqual(sol.value("ch"),datums["capital_heights"][tower])
+            self.assertAlmostEqual(sol.value("over"),CASES["layout"]["roof_clearances"][tower],places=9)
+            records = [(f["floor"],i["sublevel"],i["center"][2]["value"]) for f in source["floors"] for g in f["groups"] for i in g["items"]]
+            array = np.asarray(records)
+            expected = datums["podium_levels"][-1]+(array[:,0]-3+array[:,1]/3)*datums["pitch"]
+            np.testing.assert_allclose(array[:,2],expected,atol=1e-9,rtol=0)
+            np.testing.assert_allclose([i["center"][2]["value"] for g in source["floors"][0]["groups"] for i in g["items"]],datums["first_sparse_capsules"][tower],atol=1e-9)
+
+    def test_partial_core_height_uses_the_selected_floor_crown(self):
+        raw = json.loads((CLIP.parents[1] / "🏢️nakagin/🔣️.json").read_text(encoding="utf-8"))
+        for tower in "AB":
+            source = next(t for t in raw["towers"] if t["key"] == tower)
+            for count in (1, 2, len(source["floors"])):
+                sol = GH.evaluate(GH.canvas("tower"), {**GH.tower_overrides(tower), "n": count})
+                crown = max(item["center"][2]["value"] + raw["capsule"]["height"]["value"] for floor in source["floors"][:count] for group in floor["groups"] for item in group["items"])
+                self.assertAlmostEqual(sol.value("tot"), crown + source["roof_clearance"]["value"], places=9)
+
+    def test_door_port_mapping_matches_rhino(self):
+        for tower in "AB":
+            sol, frames = self.canvas_slots(tower)
+            sources = sol.items("sourcep")
+            targets = sol.items("cull")
+            for frame, source, target in zip(frames.items(), sources, targets):
+                transform = rh.Transform.PlaneToPlane(rh_plane(GH.plain(source)), rh_plane(GH.plain(target)))
+                expected = []
+                for point in ((0, 0, 0), (1, 0, 0), (0, 1, 0), (0, 0, 1)):
+                    vertex = rh.Point3d(*point)
+                    vertex.Transform(transform)
+                    expected.append([vertex.X, vertex.Y, vertex.Z])
+                actual = [frame.origin.t, tuple(a + b for a, b in zip(frame.origin.t, frame.x.t)), tuple(a + b for a, b in zip(frame.origin.t, frame.y.t)), tuple(a + b for a, b in zip(frame.origin.t, frame.z.t))]
+                self.assertTrue(np.allclose(actual, expected, atol=1e-6))
+
+    def test_authored_capsule_metadata_uses_physical_casing_and_actual_glazing(self):
+        raw=json.loads((CLIP.parents[1]/'🏢️nakagin/🔣️.json').read_text(encoding='utf-8'))
+        case=CASES['physical_slot_capsules']
+        seen=set()
+        for slot in GH._nakagin().slots():
+            if slot.layout in seen:
+                continue
+            seen.add(slot.layout)
+            brep=GH.make_slot_capsule(slot)
+            box=brep.root_box()
+            np.testing.assert_allclose([box.x.length,box.y.length,box.z.length],case['physical'],atol=1e-9,rtol=0)
+            family=next(f for f in raw['families'] if f['key']==slot.layout)
+            kind=next(t for t in raw['types'] if t['key']==slot.type)
+            right=family['window_wall']=='right'
+            casing=raw['capsule']['casing']
+            recess=casing['glazing_recess_side' if right else 'glazing_recess_front']['value']
+            expected=[case['physical'][0]/2-recess,raw['capsule']['length']['value']/2+family['window_longitudinal_offset']['value']+kind['window_u']['value'],kind['window_v']['value']] if right else [kind['window_u']['value'],case['bounds'][1][1]-recess,kind['window_v']['value']]
+            window=brep.window()
+            np.testing.assert_allclose(window.plane.origin.t,expected,atol=1e-9,rtol=0)
+            np.testing.assert_allclose(window.plane.z.t,[1,0,0] if right else [0,1,0],atol=1e-9,rtol=0)
+            glass=next(part for part in brep.parts() if part['role']=='glazing')
+            np.testing.assert_allclose(np.asarray(glass['vertices']).mean(axis=0),expected,atol=1e-8,rtol=0)
+            oracle=rh.Circle(rh.Point3d(*expected),kind['window_diameter']['value']/2)
+            self.assertAlmostEqual(window.radius,oracle.Radius,places=9)
+        self.assertEqual(seen,set(case['families']))
+
+    def test_authored_family_meshes_and_volume_match_independent_numpy(self):
+        seen = set()
+        for slot in GH._nakagin().slots():
+            if slot.layout in seen:
+                continue
+            seen.add(slot.layout)
+            brep = GH.make_slot_capsule(slot)
+            self.assertEqual(brep.tag["family"], slot.layout)
+            self.assertTrue({"door", "window_frame", "glazing"} <= {p["role"] for p in brep.parts()})
+            reference = 0
+            for part in brep.parts():
+                vertices = np.asarray(part["vertices"])
+                triangles = np.asarray([(face[0], face[i], face[i + 1]) for face in part["faces"] for i in range(1, len(face) - 1)])
+                a, b, c = (vertices[triangles[:, k]] for k in range(3))
+                reference += abs(np.einsum("ij,ij->i", a, np.cross(b, c)).sum() / 6)
+            self.assertAlmostEqual(brep.volume(), reference, places=8)
+            placed = GH.apply(GH.plane_to_plane(GH.Plane.world_xy(), GH._plane_of(slot.plane)), brep)
+            world_parts = GH._nakagin().slot_assembly(slot).parts
+            self.assertEqual(len(placed.parts()), len(world_parts))
+            for mine, theirs in zip(placed.parts(), world_parts):
+                self.assertEqual(mine["key"], theirs.key)
+                self.assertTrue(np.allclose(mine["vertices"], theirs.solid.vertices, atol=1e-9))
+        self.assertEqual(seen, set(CASES["layout"]["geometry_families"]))
 
     def test_views_show_the_cull_and_each_stage(self):
         views = GH.canvas("tower").views

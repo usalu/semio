@@ -142,6 +142,19 @@
       ]
     },
     {
+      "id": "javascript-input-identity",
+      "budgetMs": 15000,
+      "typecheck": "none",
+      "files": [
+        "🚀️bootstrap/📦️dependencies/💾️storage/🧪️tests/🆔️identity/🟦️.ts"
+      ],
+      "platforms": [
+        "darwin",
+        "linux",
+        "win32"
+      ]
+    },
+    {
       "id": "javascript-endpoint-fence",
       "budgetMs": 300000,
       "typecheck": "none",

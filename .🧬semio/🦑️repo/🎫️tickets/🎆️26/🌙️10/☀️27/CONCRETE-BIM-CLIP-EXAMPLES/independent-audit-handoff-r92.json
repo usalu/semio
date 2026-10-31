@@ -1,0 +1,81 @@
+{
+  "version": 1,
+  "role": "Read-only source/native/interference audit; no production edits",
+  "live_handles": [
+    {
+      "session_id": 93110,
+      "tool": "exec_command/write_stdin",
+      "state": "Capacity waiting, one exact public source-image fetch only",
+      "command": "repo tools exec node -- ticket/stair-nosing-original-r92.mjs",
+      "output": "🗑️generated/book-figures-191-r92.jpg",
+      "purpose": "Original19442 nosing/tread detail; image not yet downloaded or visually counted",
+      "url": "http://html.scribd.com/7dllg042tci600ml/images/191-d6c2be7d76.jpg"
+    }
+  ],
+  "source_handoff": {
+    "register": "source-coverage-register-r92.json",
+    "report": "source-coverage-register-r92.md",
+    "snapshot": "7bb88ea3b796bbbf824748ce2fd0e3978d46ecbf764826860c79c5f085efc145",
+    "topics": 40,
+    "physical_ids": 513,
+    "unmapped_ids": 0,
+    "mandatory_pending": [
+      "First inclined12×26 stringer",
+      "Continuous ramp guards and width reconciliation",
+      "Correct5mm gray resilient/3mm inferred mortar rampfinish",
+      "Exteriorramp35×35 battens/ceiling",
+      "LD40×25×4 nosings;52 supply count not a52position schedule",
+      "55mm centralblacktube; executedaxis/endpoints pending",
+      "15×90 skirting, prototype unpublished",
+      "Groundpilotisgravel bounded extent pending",
+      "Roofplanter original position mapping pending"
+    ]
+  },
+  "interference": {
+    "capture": "🗑️generated/whole-owned-capture-r92.json",
+    "capture_source": "d575c427b7e090bfe1d73c9da9e25e4b7a26e841a429364b7e427a7df3992d62",
+    "physical_ids": 512,
+    "parts": 33952,
+    "capture_seconds": 711.372,
+    "loaded_api": "57ba53f6fa939360ff97fb0f2d8bd9e4fe78b72a5bcd82498c674946e9201dcf",
+    "producer_file_changed": true,
+    "results": "🗑️generated/whole-interference-result-r92.json",
+    "positive_component_candidates": 3495,
+    "product_pairs": 118,
+    "unresolved_initial": 347,
+    "exact_inputs": [
+      "whole-interference-positive-cases-r92.json",
+      "guard-wall-owned-cases-r92.json",
+      "filling-structure-owned-cases-r92.json"
+    ],
+    "reports": [
+      "whole-interference-findings-r92.md",
+      "whole-owned-interference-execution-r92.md"
+    ],
+    "executable": "whole-owned-interference-r92.py",
+    "modes": [
+      "controls",
+      "capture",
+      "audit",
+      "all"
+    ],
+    "final_rerun": "Only after root source/producerfreeze and cache-speedproof; do not recapture stale snapshot"
+  },
+  "numerics": {
+    "bounded_followup": "🗑️generated/whole-interference-section-diagnostic-r92.json",
+    "meaning": "20event-boundary cases have nominalzero with conservative possibleV6.26e-21..2.39e-17m³, not source nonclosure;3lights robustpositive provednative and sincefixed",
+    "method": "Auditor now keeps unresolvedinterval AABB-area×height upperbounds, including unrepresentable midpoint intervals, not featuredeletion; allcontrolsGREEN",
+    "roof_gap": "roof-finish-gap-cases-r92.json:0.02552m² entirely actual10-FIRST occupiedcolumn at6.59, no floorplug",
+    "skirting": "skirting-shared-plane-review-r92.json: exactn·(B−A)=1.301689645e-15, use actualsharedhostcap plane, no facetfilter"
+  },
+  "native_lights": {
+    "before": "🗑️generated/light-post-native-before-r92.json",
+    "before_results": "🗑️generated/light-post-native-before-results-r92.json",
+    "repaired": "🗑️generated/light-post-native-r92.json",
+    "repaired_results": "🗑️generated/light-post-native-results-r92.json",
+    "selected_source": "a8dd349bc43977d4caaeb0b39ef6422646217f9e686020829969226e6cd992db",
+    "result": "8ENDE/656closed actualnativeparts,class/GUID/9attrs; formerpointEMPTYlamp/STILLPOST",
+    "report": "light-post-native-review-r92.md"
+  },
+  "next_native_scope": "After guard/stringer/sourcebatch stable:6rampproducts+2rampcovers, newguard/stringer/nosing/centraltube/soffit/groundgravel/roofplanters/skirting asactuallypublished; retain exactsource/producerhashes. No fullSDKduplicate until coordinatedfreeze."
+}

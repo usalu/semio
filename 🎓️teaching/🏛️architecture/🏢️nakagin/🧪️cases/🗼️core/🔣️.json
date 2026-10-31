@@ -1,0 +1,11 @@
+{
+  "source": "domus",
+  "basis": "inferred_from_primary_plan_and_section",
+  "handing": {"A": [[1, 0, 0], [0, 1, 0], [0, 0, 1]], "B": [[-1, 0, 0], [0, 1, 0], [0, 0, 1]], "test_bounds": [0.2, 1.1, -0.7, 0.9, 0, 2], "circle_center": [0.3, 0.4, 0.5], "circle_normal": [1, 0, 0], "bolt": [0.2, 0.7, 0.3]},
+  "profile": {"compound_width": 2.4, "compound_depth": 2.2, "chamfer": 0.24, "pier_leg": 1.15},
+  "cabin": {"width": 0.95, "depth": 1.1, "height": 2.05, "parked_level": 0},
+  "expected": {"corner_pier_count_per_core": 4, "service_compartment_count_per_core": 2, "office_threshold_count_per_core": 1},
+  "required_roles": ["core_corner_pier", "service_compartment", "lift_cabin_floor", "lift_cabin_wall", "lift_cabin_door", "lift_cabin_handrail", "lift_call_button", "office_threshold", "basement_partition"],
+  "logical_floor": {"pitch": 2.9, "sill": 8.32, "bases": [9.0866667, 10.0533333], "sublevels": [1, 2]},
+  "office_entry": {"clear_width_samples": [-0.5, -0.25, 0, 0.25, 0.5], "clear_height_samples": [0.1, 0.5, 1.2, 2.1], "jamb_samples": [-0.7, 0.7]}
+}

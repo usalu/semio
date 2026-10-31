@@ -1,0 +1,13 @@
+# Native Cairo Frame Profile R92
+
+A real unmodified information scene was instantiated through native Manim0.22.0. The owned diagnostic executes actual compile/begin/interpolate/finish/cleanup at midpoint and profiles the tenth play call once at480×270. Native screenshot frame.png was visually inspected: actual ground plan, full axon, axis-spacing diagram and complete English caption are present. This is a diagnostic mid-animation frame, not final publication or full-scene verification.
+
+The frame contains11top-level mobjects,48,828family entries and659,968points. cProfile records3,999,559function calls and5.851seconds to capture one frame. Cairo draws38,286vector objects. display_vectorized accounts for5.332seconds, set_cairo_context_path3.884seconds, and vectorized get_subpath_split_indices_from_points2.497seconds cumulative. Pixel filling/stroking is a small share; the main cost is per-object Python/vector path dispatch, not resolution or ffmpeg.
+
+The diagnostics retain exact profile/raw stats/frame/metrics under 🗑️generated/native-r92/profile. Input native-profile-r92.py reproduces the observation. No geometry detail, points, transparency or material representation was removed.
+
+A sustainable optimization must reduce per-frame object dispatch while preserving geometry and alpha compositing. Batching overlapping transparent filled paths may alter compositing and must not be assumed equivalent. Static view caches rendered at the target output resolution behind existing drawing interfaces, or batching independently proven disjoint same-style paths, are candidates requiring native pixel comparisons at animation interpolation states. The final authoring source is still undergoing root-owned facade details; no final-quality rendering is certified.
+
+## Exact Native Path Cache Candidate
+
+The largest measured subcost is repeated native vectorized subpath splitting. A private native camera adapter can cache a Cairo Path for exact point bytes plus the complete camera transformation/configuration and append it on repeated frames, while retaining the separate per-object fill/stroke order and alpha. That avoids treating overlapping translucent faces as one fill. A finite per-scene cache must cover the actual38,286paths (for example65,536entries) and be released after scene completion. Pixel equality must be checked for unchanged points, changing opacity/fill/stroke, point mutation, translations/scales and camera changes; elapsed capture time and cache hit/miss counts must demonstrate the actual improvement. This remains a candidate, not an implementation or verified performance claim.

@@ -1,0 +1,9 @@
+{
+  "same_content_builds": 1,
+  "retained_revisions": 2,
+  "mutation": "rejected",
+  "deepcopy": "owned mutable JSON",
+  "source_changes": "invalidate",
+  "producer_changes": "invalidate",
+  "membership": "source only"
+}

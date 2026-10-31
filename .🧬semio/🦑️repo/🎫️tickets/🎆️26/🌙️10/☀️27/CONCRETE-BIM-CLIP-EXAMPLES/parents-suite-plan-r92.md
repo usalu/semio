@@ -1,0 +1,9 @@
+# Parents Suite Implementation R92
+
+Read the original programme and critical cabinet identity correction. White strip remains a concrete cabinet; hollow tub and cantilever rest share the separate mosaic zone, with a distinct wet-access platform and preserved high-X passage. Public corridor extends onX3.6..4.5 toY18.5; opposed private portals atY17.88 are inferred body-coordinated stations. Fixed structure remains unchanged. Material skins remain physical; the sourced5cm mosaic module is typed separately from unmeasured grout/finish thickness.
+
+Parents acceptance fixture/schema authored first. Original native identity, corrected cabinet construction and doorway ownership are checked before production edits. Parent owns simultaneous shared bath north curve; source will be fresh-read after parent publication.
+
+First source publication504products preserved54-point shared-bath/son prefix. All first-floor room polygons and source/cabinet identity PASS. Independent hull-vs-occupied-union material check caught7e-6m³ overlap at end supports whose smooth top chords differed from the actual sampled RC sheet. Supports were split at the exact authored polyline stations; no producer tolerance or guard weakened. Cabinet height2m and all profile/cavity/RC dimensions remain explicitly inferred.
+
+Actual body-route RED exposed an old dressing cupboard box blocking the registered high-X passage. Identity audit corrected the first implementation: concrete cabinet now keeps the existing FIX-DRESSING-STORAGE identity/GUID, while FIX-PARENTS-STORAGE is restored at its original low bedroom-window footprint as a hollow sideboard. Both source-attested furnishings remain. Corrected cabinet source geometry is unchanged. Head drain moved to inferred low-Y candidateY14.80 following stronger original168 head-location evidence; actual head-end registration remains unknown.

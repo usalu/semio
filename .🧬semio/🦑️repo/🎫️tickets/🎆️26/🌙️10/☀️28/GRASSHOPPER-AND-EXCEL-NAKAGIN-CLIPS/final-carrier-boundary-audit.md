@@ -1,0 +1,7 @@
+# Final Carrier Query and Boundary Audit
+
+Read-only review of final-carrier-visibility.md and the three exact final JSON query artifacts. All three artifact SHA256 values match the report. Every query source_before map equals source_after; producer start_sources equals end_sources. The union contains116 unique input paths, no shared-key conflicts, and current byte hashes match every recorded query and producer input. Current renderer f2a439e76d38ffaf69f6793a6a7eb3380a612269bf299386ac209f9cd16c4f22 is explicitly bound. No query was rerun.
+
+Capsule256 pixel52,84 has Cairo63 in all stages and retained physical shell42/63 on either side of the shared edge; projected distances are0.0014365413187008892/0.0014365413187044584px. Its25 actual nearest samples split42:13 and63:12. Pixel78,90 has Cairo64 in all stages and retained shell63/64; both edge distances are0.0039859360374941534px and sample counts63:13,64:12. Every emitted point-painter sample is correct across full/stable/culled, with no unsupported source or inversion.
+
+Both centres remain explicit Cairo/point-geometry disagreements in all three stages. The report correctly does not classify them as coplanar depth ties or perfect centre attribution. Their unchanged adjacent opaque ownership supports no culling regression for these finite witnesses; it does not prove universal raster equivalence. No concrete attribution gap found.

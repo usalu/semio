@@ -1,0 +1,5 @@
+# Workbook Remodel Verification
+
+The capsule table now uses the canonical detailed layout and physical floors 3–13/3–11, rather than the previous inferred radial pair list. All bound scalar snapshots are refreshed from the shared source. Program counts are counted independently from the authored table rows. Portable energy expectations use a separate scalar heat-loss and monthly degree-day calculation, subsequently validated by the existing openpyxl/formulas oracles. Generic formula and localization cases are retained. Proposed room-program studies remain separate from structural capsule families.
+
+The program narration and workbook headers now identify A–D as proposed program assignments, while the physical reconstruction uses the six native geometric families. Canonical portholes remain 1.30m; the energy comparison no longer asserts a fictional larger Type C window. English and German transcripts match those changes. The authored table uses physical floor numbers in its teaching addresses, distinct from official apartment numbers.

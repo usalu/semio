@@ -77,5 +77,14 @@
     "shelf",
     "upstand",
     "screen"
-  ]
+  ],
+  "filling": {
+    "panel_stations": [
+      0,
+      1
+    ],
+    "panel_operations": [
+      "fixed"
+    ]
+  }
 }

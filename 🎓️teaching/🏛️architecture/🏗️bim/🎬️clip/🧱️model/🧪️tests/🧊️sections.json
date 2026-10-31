@@ -161,5 +161,22 @@
         1
       ]
     }
-  ]
+  ],
+  "representation_axes": [
+    {
+      "name": "Part-derived center",
+      "declared": null
+    },
+    {
+      "name": "Authored center",
+      "declared": [
+        7,
+        8
+      ]
+    }
+  ],
+  "covering_discriminator": {
+    "class": "IfcCovering",
+    "predefined_type": "FLOORING"
+  }
 }

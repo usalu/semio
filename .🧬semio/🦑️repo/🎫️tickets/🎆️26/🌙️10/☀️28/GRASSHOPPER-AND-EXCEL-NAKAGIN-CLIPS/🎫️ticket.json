@@ -3,9 +3,11 @@
   "emoji": "🦗️",
   "status": "closed",
   "description": "Create two new full video clip series on the Nakagin Capsule Tower: Grasshopper (parametric capsule, capsule types on planes, core and capital, lower building; anatomy; casting; data trees on {BUILDING;TOWER;STORY;FACADE} with two capsule items) and Excel (room program and energy calculation with one sheet per capsule type; anatomy of workbook, worksheet, cell, reference, formula). Opus 5.5 coordination, Sonnet 5.5 execution agents, Haiku 5.5 read-only audits.",
+  "summary": "One complete 480p15 preview of the whole architecture course: .🧬semio/🎓️teaching/⚡️cache/videos/en/speaker/preview/Architecture_course_speaker_en_480p15.mp4 (26 videos in manifest order, 3 h 42 min, one chapter per video, sidecar json with sources and sha256, missing: []). Built by render/course_preview.py from fresh per-video previews: energy via the energy script (energy-chain.sh), Grasshopper/Excel via render/preview.py with the preview-only painter patch and rerun_queue.py after en/de caption-overflow fixes, optimization via render/preview_any.py. BIM uses older deliveries scaled to 480p15 because a fresh render fails on the shared BIM model (finish reserve RES-FIN-ROOF-GRAVEL-SL-R-705 not fully occupied, _finish_reservations). All 18 en/de Grasshopper and Excel previews exist. Energy videos show German subtitles by design. Details in summary.md (Course Preview), previews-energy.md, previews-bim-optimization.md, fleet.md.",
   "goal": "updatedtutorials",
   "sessions": [
-    "0a2a834f-4899-4447-9012-59e0272e94be"
+    "0a2a834f-4899-4447-9012-59e0272e94be",
+    "623c0a56-2b14-4089-b358-44a0b57cd5a0"
   ],
   "interactions": [
     {
@@ -27,8 +29,35 @@
       "checkpoint": "2aaf5b279b8c0f6aa5a124e73439783b8e9f0bc8",
       "prompt": "Nine new videos (Grasshopper: anatomy, capsule, tower, casting, data trees; Excel: anatomy, references, room program, energy) on one schema-first Nakagin teaching model (🏢️nakagin: capsule 2.5×4.0×2.5 m, types A–D, 140 capsules = 70 branches × 2 on {BUILDING;TOWER;STORY;FACADE}), a stdlib Grasshopper engine (trees, casting with basis markers, canvases) and a stdlib Excel engine (references, formulas, structured tables, en/de localization, one sheet per capsule type), canvas and workbook toolkits, registration, READMEs and transcripts. Audits, verifications, quality-director reviews and final sweeps per video in both languages. Oracles: rhino3dm, openpyxl, formulas, NumPy, AJV; all 10 suites pass. 480p15 speaker previews rendered and delivered for en and de (see summary.md, render.md).",
       "llm": "opus-4-7"
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-29 13:38:00",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Remodel Nakagin Capsule Tower in architectural detail for all clips; actual model GPT 6.1 Sol High coordination, Medium execution and Low audit (old catalogue lacks this model).",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-29 14:00:00",
+      "author": "",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "",
+      "prompt": "The videos are still extremely unsophisticated: use morphs to explain ideas, always morphing between abstract and concrete (capsules turn into data tree items, elements morph into the abstract concept or data point).",
+      "llm": "opus-4-7"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-31 03:13:01",
+      "author": "ueli",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "summary": "One complete 480p15 preview of the whole architecture course: .🧬semio/🎓️teaching/⚡️cache/videos/en/speaker/preview/Architecture_course_speaker_en_480p15.mp4 (26 videos in manifest order, 3 h 42 min, one chapter per video, sidecar json with sources and sha256, missing: []). Built by render/course_preview.py from fresh per-video previews: energy via the energy script (energy-chain.sh), Grasshopper/Excel via render/preview.py with the preview-only painter patch and rerun_queue.py after en/de caption-overflow fixes, optimization via render/preview_any.py. BIM uses older deliveries scaled to 480p15 because a fresh render fails on the shared BIM model (finish reserve RES-FIN-ROOF-GRAVEL-SL-R-705 not fully occupied, _finish_reservations). All 18 en/de Grasshopper and Excel previews exist. Energy videos show German subtitles by design. Details in summary.md (Course Preview), previews-energy.md, previews-bim-optimization.md, fleet.md."
     }
-  ],
-  "summary": "Grasshopper (5) and Excel (4) Nakagin clip series built, audited, quality-reviewed, tested (all suites green) and delivered as en/de previews; details and open owner checks in summary.md.",
-  "note": "repo and semio MCP servers failed to connect (CONNECTION_CLOSED) on 2026-10-28; ticket bookkept manually following the MCP layout."
+  ]
 }

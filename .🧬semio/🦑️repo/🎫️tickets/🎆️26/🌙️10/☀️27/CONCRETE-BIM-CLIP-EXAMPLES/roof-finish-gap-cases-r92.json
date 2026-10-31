@@ -1,0 +1,103 @@
+{
+  "version": 1,
+  "source": "31e02b6b7795cbdebe10ccdcc8d0276fe043e9de23d6b1ec7cd8b21f3f33454c",
+  "source_after": "7bb88ea3b796bbbf824748ce2fd0e3978d46ecbf764826860c79c5f085efc145",
+  "producer": "b7ecccedc4d8f4fac5b6d3fe807de3e887aba6705155b20342a8897070190a68",
+  "height": 6.59,
+  "substantive": [
+    {
+      "area": 0.025520000000000195,
+      "bounds": [
+        4.64,
+        5.89,
+        4.86,
+        6.006
+      ],
+      "witness": [
+        4.75,
+        5.945,
+        6.59
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              4.86,
+              6.006
+            ],
+            [
+              4.86,
+              6
+            ],
+            [
+              4.86,
+              5.89
+            ],
+            [
+              4.648102127683,
+              5.89
+            ],
+            [
+              4.64,
+              5.89
+            ],
+            [
+              4.64,
+              6
+            ],
+            [
+              4.64,
+              6.006
+            ],
+            [
+              4.86,
+              6.006
+            ]
+          ]
+        ]
+      },
+      "column_footprint_hits": [
+        {
+          "column": "10",
+          "intersection_area": 0.025520000000000195,
+          "column_z": [
+            0,
+            2.91
+          ]
+        },
+        {
+          "column": "10-FIRST",
+          "intersection_area": 0.025520000000000195,
+          "column_z": [
+            3.14,
+            9.03
+          ]
+        }
+      ]
+    }
+  ],
+  "numerical_remainder_area": 2.7142901462182505e-11,
+  "expected_category": "ACTUAL_OCCUPIED_COLUMN_NOT_WALKABLE_FINISH_GAP",
+  "expected_owner": "10-FIRST",
+  "acceptance": "Prove entire residual lies inside actual column material at queriedZ; subtract actualoccupiedstructure from walkabledomain, no fillplug/nohardcodedtagwaiver",
+  "precision_diagnostics": [
+    {
+      "grid": 1e-9,
+      "missing_area": 0.025520001083191295
+    },
+    {
+      "grid": 1e-10,
+      "missing_area": 0.025520000061589082
+    },
+    {
+      "grid": 1e-11,
+      "missing_area": 0.025520000032249236
+    },
+    {
+      "grid": 1e-12,
+      "missing_area": 0.025520000028782245
+    }
+  ],
+  "localized_area": 0.025520000029278928
+}

@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "items": {
+        "type": "object",
+        "required": [
+          "id"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "base": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string"
+          },
+          "part_target": {
+            "type": "string"
+          },
+          "value": {},
+          "special": {
+            "enum": [
+              "nan",
+              "infinity"
+            ]
+          },
+          "stock_from_cutter": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

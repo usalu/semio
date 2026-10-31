@@ -1,0 +1,76 @@
+{
+  "version": 1,
+  "source": "IFC4.3 IfcCoveringTypeEnum and source metadata-domain/system ownership; neutral synthetic solids",
+  "part": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        0.015
+      ],
+      [
+        0,
+        0.015
+      ]
+    ],
+    "z0": 0,
+    "z1": 0.09,
+    "role": "owned_finish"
+  },
+  "cases": [
+    {
+      "tag": "TEST-COVER-FLOOR",
+      "predefined_type": "FLOORING",
+      "domains": [
+        "architecture"
+      ],
+      "system": null,
+      "architectural": true
+    },
+    {
+      "tag": "TEST-COVER-SKIRT",
+      "predefined_type": "SKIRTINGBOARD",
+      "domains": [
+        "architecture"
+      ],
+      "system": null,
+      "architectural": true
+    },
+    {
+      "tag": "TEST-COVER-PAINT",
+      "predefined_type": "CLADDING",
+      "domains": [
+        "architecture"
+      ],
+      "system": null,
+      "architectural": true
+    },
+    {
+      "tag": "TEST-COVER-CASING",
+      "predefined_type": "CLADDING",
+      "domains": [
+        "architecture",
+        "services"
+      ],
+      "system": "rainwater",
+      "architectural": false
+    },
+    {
+      "tag": "TEST-COVER-INSULATION",
+      "predefined_type": "INSULATION",
+      "domains": [
+        "services"
+      ],
+      "system": "rainwater",
+      "architectural": false
+    }
+  ],
+  "expected_volume": 0.0027
+}

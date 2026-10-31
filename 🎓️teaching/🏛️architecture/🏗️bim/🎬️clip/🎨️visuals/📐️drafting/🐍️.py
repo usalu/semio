@@ -11,6 +11,8 @@ _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️ener
 _art = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
 _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
 _engine = importlib.import_module("manim")
+_coverage = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🧩️surfaces.🎨️coverage")
+material_fill = _coverage.material_fill
 _measure = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.📏️geometry")
 def P(point) -> np.ndarray:
     """📌 Manim-ready point: the pure geometry 3-tuple as a float array, so drawing code can scale and offset it."""
@@ -251,10 +253,10 @@ class Drawing(_engine.VGroup):
 
     def part(self, tag: str, shape, anchor=None):
         """🏷️ Register an addressable sub-drawing."""
-        if tag in self.parts and self.parts[tag] is not shape:
+        if tag not in self.parts:
+            self.parts[tag] = _engine.VGroup(shape)
+        elif self.parts[tag] is not shape:
             self.parts[tag].add(shape)
-        else:
-            self.parts[tag] = shape if isinstance(shape, _engine.VGroup) else _engine.VGroup(shape)
         if anchor is not None:
             self.anchors[tag] = P(anchor)
         return self.parts[tag]
@@ -429,3 +431,4 @@ class Drafting:
             value = metres * index / steps
             shape.add(self.text(self.number(value, 0) + (NARROW + "m" if index == steps else ""), (c[0] + index * step, c[1] - 0.04), size=S_SMALL, color=color, anchor="u"))
         return shape
+                                                

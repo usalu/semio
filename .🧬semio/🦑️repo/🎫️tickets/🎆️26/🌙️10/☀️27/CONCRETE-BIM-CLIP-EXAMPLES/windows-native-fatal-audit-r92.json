@@ -1,0 +1,34 @@
+{
+  "folder": "🗑️generated/native-r92/p/20261030003938561",
+  "observed": {
+    "raw_status": 5,
+    "signal": null,
+    "duration_seconds": 240.735,
+    "exception": "Windows access violation",
+    "events": 199,
+    "kinds": [
+      "start",
+      "sample"
+    ],
+    "phases": [
+      "starting"
+    ],
+    "max_rss": 1002680320,
+    "max_private": 2028310528,
+    "last_elapsed": 239.64100000000326
+  },
+  "fatal_leaf": "manim/utils/color/core.py:_internal_from_rgb (line unknown in fatal dump)",
+  "timeout_leaf": "manim/mobject/mobject.py:_insert_submobjects (line unknown)",
+  "complete_fatal_caller": false,
+  "observer_abi": {
+    "win64_bytes": 80,
+    "fields": "2DWORD+9SIZE_T",
+    "known_mismatch": false
+  },
+  "current_disk_versions": {
+    "manim": "0.22.0",
+    "numpy": "2.5.4"
+  },
+  "identified_corrupting_write": null,
+  "experiments": false
+}

@@ -1,0 +1,138 @@
+\title{Parametric Design of a Modular Typology}
+\author{dMA and NGS}
+\date{}
+\SemioAssignmentSetup{course={Architecture \& Technology (A\&T)},number={Assignment 1},institution={Leibniz Universität Hannover (LUH)},institution-label={LUH},faculty={Faculty of Architecture and Landscape Sciences (Archland)},faculty-label={Archland},logo={logo-luh.png},cover-image={cover.jpg},cover-title={Typology},submission={4 December 2026, upload to Stud.IP by 10:00}}
+\SemioAssignmentCoverFact{Module}{Compulsory module}
+\SemioAssignmentCoverFact{Programme}{5th semester BSc Architecture}
+\SemioAssignmentCoverFact{Term}{Winter semester 2026/27}
+\SemioAssignmentCoverFact{Submission}{4 December 2026}
+\SemioAssignmentCoverPartner{dMA}{%
+  Institute of Art and Technology in Architecture (IKTA)\\Digital Methods in Architecture (dMA)\par%
+  \AddressPeople{Prof. Mirco Becker\\Research associate: Hendrik Wiese\\Tutors: Eva Maria Hellmann \& Philipp Gottfried}%
+}
+\SemioAssignmentCoverPartner{NGS}{%
+  Institute of Design and Construction (IEK)\\Sustainable Building Systems (NGS)\par%
+  \AddressPeople{Prof. Dr.-Ing. Philipp Geyer\\Research associate: Ueli Saluz\\Tutors: Timon Jörns \& Niloufar Ghandeharioun}%
+}
+\SemioHeaderSetup{left={Architecture and Technology},center={Assignment 1},right={Modular Typologies}}
+\footerlogos{logo-luh.png}
+\begin{document}
+\makeassignmentcover
+\section{Brief}
+In your group of four, develop a modular façade typology for a residential high-rise. It is based on a grid of 4.5\,m × 4.5\,m. The storey height is up to you, but within the group it must be the same for every base type.
+
+The high-rise is composed of eight module types (four corner modules, four middle modules) that can be combined freely within the grid. Each person models one corner module and one middle module parametrically in Grasshopper. From these models, variants are generated, evaluated for energy performance and compared with each other.
+
+Presentation and submission are on 4 December 2026, upload by 10:00. Use the layout template provided on Stud.IP for your presentation. The NGS part and the dMA part are supervised and graded separately.
+\begin{Table}[title=Workflow, break=false]
+\begin{SemioTable}{0.10,0.10,0.16,0.64}
+  \SemioTableHeaderRow{Part & Subject & Format & Content}
+  \SemioTableRow{A & dMA & group & Define the typology, develop and name eight module types, agree on shared system parameters.}
+  \SemioTableRow{B & dMA & individual & Model your own corner and middle module in Grasshopper, present the base type and its variants.}
+  \SemioTableRow{C & NGS & group & Draw the layer build-up of the façade and set a U-value for every surface type.}
+  \SemioTableRow{D & NGS & individual & Generate the simulation model, calculate U-values, heating demand and cooling load, estimate the summer airflow and present the variants.}
+\end{SemioTable}
+\end{Table}
+All results are then combined as an overview in one shared layout.
+\subsection{Definitions}
+\begin{Table}[title=Terms, break=false]
+\begin{SemioTable}{0.24,0.76}
+  \SemioTableHeaderRow{Term & Meaning}
+  \SemioTableRow{Typology & The overarching concept. The typology defines which rules, design decisions and parameters apply to the system as a whole.}
+  \SemioTableRow{Module type & A typology comprises different module types within one combinatorial logic. Module types differ in their position (corner module or middle module) and in type-specific attributes (e.g.~window or no window, balcony or no balcony). A corner module has two façade sides, a middle module has one.}
+  \SemioTableRow{Base type (variant~0) & The module type with the default parameter settings agreed in the group. As a base type, every module measures 4.5\,m × 4.5\,m and spans one storey; the storey height is up to you, but the same for all base types of the group.}
+  \SemioTableRow{Variant & The parametric model of each module type generates variants whose parameters change within a defined solution space (e.g.~module width, module depth, storey height, number of elements).}
+\end{SemioTable}
+\end{Table}
+\subsection{Part A – dMA (Group Work): Typology and Module Types}
+In this first step, you take the fundamental design decisions as a group.
+\begin{itemize}
+  \item Develop eight module types: four corner modules and four middle modules.
+  \item Define the shared system parameters and parameter spaces (e.g.~module width, module depth, storey height, number of grid fields) as well as the default settings of the base type.
+  \item Give every module type a unique name. This name is also used later in the file names of the individual submission.
+  \item Create an overview table that compares the attributes of the eight module types. You will find a presentation template in the layout template on Stud.IP. The axonometry of the base type from Part~B serves as the schematic.
+\end{itemize}
+The following table is for illustration only and is not a fixed requirement. Feel free to choose your own attributes and naming scheme.
+\begin{Table}[title=Example of the Overview Table, break=false]
+\begin{SemioTable}{0.31,0.23,0.23,0.23}
+  \SemioTableHeaderRow{Attribute & Module type 1 & Module type 2 & Module type 3}
+  \SemioTableRow{Name & \texttt{M-B-1-Q} & \texttt{M-W-2-H} & \texttt{E-B-2-QH}}
+  \SemioTableRow{Schematic & \AssignmentContrastImage[width=.86\linewidth]{schema-m-b-1-q.png} & \AssignmentContrastImage[width=.86\linewidth]{schema-m-w-2-h.png} & \AssignmentContrastImage[width=.86\linewidth]{schema-e-b-2-qh.png}}
+  \SemioTableRow{Position [middle | corner] & middle & middle & corner}
+  \SemioTableRow{Kind [wall | balcony] & balcony & wall & balcony}
+  \SemioTableRow{Number of window elements & 1 & 2 & 2}
+  \SemioTableRow{Window format [portrait | landscape] & landscape & portrait & landscape/portrait}
+  \SemioTableRow{… & … & … & …}
+\end{SemioTable}
+\end{Table}
+Naming scheme of the example: position – kind – number of window elements – window format, i.e.~\texttt{M}~=~middle (Mitte), \texttt{E}~=~corner (Ecke); \texttt{W}~=~wall (Wand), \texttt{B}~=~balcony (Balkon); \texttt{H}~=~portrait (hoch), \texttt{Q}~=~landscape (quer).
+\subsection{Part B – dMA (Individual Work): Parametric Model}
+Divide the eight module types within the group. Each person models one corner module and one middle module independently in Grasshopper, without additional plug-ins. The module types should differ in their execution but share a common design language. Coordinate closely within the group: the goal is one shared system that everyone can continue working on later.
+
+\paragraph{Before modelling}
+\begin{itemize}
+  \item Decide deliberately which dimensions you model as absolute values and which relative to the module size. This determines which elements change automatically with the module size and which remain static and have to be dimensioned individually.
+  \item Stick to the system parameters, parameter spaces and default settings agreed in Part~A.
+\end{itemize}
+\paragraph{Visualization model}
+For every variant, your parametric model outputs the visualization model: the detailed 3D geometry of the module. It is the basis for the axonometries. The simulation model for Part~D is later generated from the same parameters so that both models match for every variant.
+\paragraph{Drawings}
+Create the following graphics for the corner module and for the middle module and insert them into the layout template.
+\begin{itemize}
+  \item \textbf{Axonometry of the base type (variant~0):} one axonometry per module type with the default settings agreed in the group, so that the module types are comparable.
+  \item \textbf{Axonometries of variants 1–4:} four drawings per module type in which the parameters have been changed meaningfully within the defined solution space. Module width, module depth and storey height may deviate from the base type. All variants are shown from the same viewpoint so that they are comparable.
+\end{itemize}
+\textbf{Important:} Transfer the Grasshopper geometry you want to show to Rhino with Bake and create all model graphics based on the dMA Tripy display template.
+\subsection{Part C – NGS (Group Work): Layer Build-Up}
+Draw, dimension and label one shared layer build-up of your façade at a scale of 1:25 and insert it into the layout template.
+
+State which surface types the construction consists of and set a U-value for every surface type. Possible surface types are, for example:
+\begin{itemize}
+  \item opaque exterior wall
+  \item glazing
+  \item window frame
+  \item parapet or panel
+  \item junctions and penetrations, e.g.~balcony connection
+\end{itemize}
+\subsection{Part D – NGS (Individual Work): Energy Evaluation}
+Each person evaluates their own module types, i.e. the base type (variant~0) and variants 1–4 of the corner module and of the middle module. The evaluation is based on the surface types and U-values from Part~C and on the simulation model of each variant. The boundary conditions (e.g.~location, orientation, internal loads) are given in the calculation templates on Stud.IP.
+\paragraph{Simulation model}
+Extend your parametric model from Part~B with the simulation model: a simplified geometry of planar 2D surfaces, separated by the surface types from Part~C (e.g.~opaque exterior wall, glazing, window frame, shading elements such as balcony slabs). It is generated from the same parameters as the visualization model and is used to determine the surface fractions for the U-value calculation and for analyses, e.g.~of shading. Each surface gets the colour of its U-value from the fixed colour scale of the layout template as its material.
+\paragraph{Calculations}
+\begin{itemize}
+  \item \textbf{U-value:} For every variant, calculate the mean U-value of the inhomogeneous façade component.
+  \item \textbf{Heating demand and cooling load:} Calculate both for a room fronted by the respective variant as its façade. For the base type, the room measures 4.5\,m × 4.5\,m × storey height; for the variants, it matches the dimensions of the variant. The room behind a corner module has two exterior walls.
+  \item \textbf{Airflow:} For summer with full solar load, estimate how air flows through the façade and the room, e.g.~through the window openings and by thermal buoyancy. Show its direction and order of magnitude as arrows in the axonometries of the simulation model.
+\end{itemize}
+Export the completed calculation template as a CSV file for the individual submission.
+\paragraph{Drawings}
+For the corner module and the middle module, create the same axonometries as in Part~B, i.e.~the base type and variants 1–4 from the same viewpoint, but of the simulation model. The planar surfaces are coloured by their U-value, using the fixed colour scale of the layout template. Draw in the estimated airflow and insert the graphics into the layout template.
+\subsection{Grading (dMA Part)}
+We do not grade the design but the work on the parametric system. Fully implementing the content of the tutorial videos lays the foundation for the grade 2.7. For a better grade, we assess:
+\begin{itemize}
+  \item \textbf{Independence:} your own solutions beyond the tutorial videos
+  \item \textbf{Complexity:} scope and ambition of the parametric model
+  \item \textbf{System design:} structure, logic and traceability of the system
+  \item \textbf{Exploration:} breadth and significance of the variants explored
+\end{itemize}
+\subsection{Submission}
+Submission is on 4 December 2026 via Stud.IP. Please follow the file naming exactly.
+\paragraph{Group submission}
+Upload one PDF file: the completed layout template with the results of Parts~A to~D, named \texttt{GruppeXX\_Zwischenkolloquium.pdf}.
+\paragraph{Individual submission}
+Upload one ZIP file \texttt{Nachname\_Zwischenkolloquium.zip} with the following content, where \texttt{Nachname} is your surname:
+\begin{Table}[title=Content of the Individual Submission]
+\begin{SemioTable}{0.40,0.10,0.50}
+  \SemioTableHeaderRow{Content & Format & File name}
+  \SemioTableRow{Axonometries of the middle module, variants 0–4 (5 images) & PNG & \texttt{Nachname\_Mittelmodul\_Variante0.png} … \texttt{Nachname\_Mittelmodul\_Variante4.png}}
+  \SemioTableRow{Axonometries of the corner module, variants 0–4 (5 images) & PNG & \texttt{Nachname\_Eckmodul\_Variante0.png} … \texttt{Nachname\_Eckmodul\_Variante4.png}}
+  \SemioTableRow{Simulation model axonometries of the middle module with U-values and airflow, variants 0–4 (5 images) & PNG & \texttt{Nachname\_Mittelmodul\_Simulation\_Variante0.png} … \texttt{Nachname\_Mittelmodul\_Simulation\_Variante4.png}}
+  \SemioTableRow{Simulation model axonometries of the corner module with U-values and airflow, variants 0–4 (5 images) & PNG & \texttt{Nachname\_Eckmodul\_Simulation\_Variante0.png} … \texttt{Nachname\_Eckmodul\_Simulation\_Variante4.png}}
+  \SemioTableRow{Parametric model & GH & \texttt{Nachname\_ParamModell.gh}}
+  \SemioTableRow{Visualization model per module type (2 files) & GLB & \texttt{Nachname\_Modultypname\_Visualisierung.glb}}
+  \SemioTableRow{Simulation model per module type with the U-value colour as material (2 files) & GLB & \texttt{Nachname\_Modultypname\_Simulation.glb}}
+  \SemioTableRow{Energy evaluation and airflow of the variants (export of the calculation template) & CSV & \texttt{Nachname\_Performance.csv}}
+\end{SemioTable}
+\end{Table}
+“Modultypname” stands for the name you gave the module type in Part~A, e.g.~\texttt{Mueller\_M-B-1-Q\_Visualisierung.glb}.
+\end{document}

@@ -1,0 +1,99 @@
+{
+  "historical_state": "original-completed-1930-1931",
+  "class": "IfcSanitaryTerminal",
+  "predefined_type": "TOILETPAN",
+  "wall_thickness": 0.08,
+  "body_width": 0.6,
+  "body_height": 2.1,
+  "door_rough_width": 0.72,
+  "door_clear_width": 0.64,
+  "door_center_y": 11.2,
+  "floor": 3.17,
+  "tolerance": 1e-8,
+  "fixtures": [
+    {
+      "tag": "WC-FIRST-WEST",
+      "space": "SP-WC-FIRST-WEST",
+      "opening": "OP-D-WC-FIRST-WEST",
+      "door": "D-WC-FIRST-WEST",
+      "axis": [
+        4.910662,
+        10.589338
+      ],
+      "outline": [
+        [
+          4.414706,
+          10.219118
+        ],
+        [
+          5.364706,
+          10.219118
+        ],
+        [
+          5.364706,
+          11.616176
+        ],
+        [
+          4.414706,
+          11.616176
+        ]
+      ],
+      "route": [
+        [
+          4.910662,
+          11.2
+        ],
+        [
+          4.03,
+          11.2
+        ]
+      ],
+      "door_side": "west",
+      "door_center_y": 11.2,
+      "door_rough_width": 0.72,
+      "door_clear_width": 0.64
+    },
+    {
+      "tag": "WC-FIRST-EAST",
+      "space": "SP-WC-FIRST-EAST",
+      "opening": "OP-D-WC-FIRST-EAST",
+      "door": "D-WC-FIRST-EAST",
+      "axis": [
+        5.81875,
+        10.589338
+      ],
+      "outline": [
+        [
+          5.364706,
+          10.219118
+        ],
+        [
+          6.286765,
+          10.219118
+        ],
+        [
+          6.286765,
+          11.616176
+        ],
+        [
+          5.364706,
+          11.616176
+        ]
+      ],
+      "route": [
+        [
+          5.81875,
+          11.2
+        ],
+        [
+          6.8,
+          10.864540666432
+        ]
+      ],
+      "door_side": "east",
+      "door_center_y": 11.04,
+      "door_rough_width": 0.78,
+      "door_clear_width": 0.7
+    }
+  ]
+}

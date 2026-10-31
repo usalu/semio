@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "comparison",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "comparison": {
+      "type": "object",
+      "required": [
+        "relative",
+        "absolute"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "relative": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "absolute": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "mesh"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "mesh": {
+            "type": "object",
+            "required": [
+              "vertices",
+              "faces"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "vertices": {
+                "type": "array",
+                "minItems": 4,
+                "items": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "faces": {
+                "type": "array",
+                "minItems": 4,
+                "items": {
+                  "type": "array",
+                  "minItems": 3,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

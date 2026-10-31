@@ -1,0 +1,7 @@
+# Combined Physical Storey Atlas Review
+
+Actual public native geometry snapshot on ec165de1 completed cold226.281s with unchanged source and all model producers/schema. Occupied ring counts: cellar269,ground19,485,first17,368,roof7,601. Generated all4storey atlas and4stair crops were opened and visually inspected. Source has685products.
+
+The bounded exterior gravel and allgroundroom surfaces are included, garage remains distinct, original curved enclosure and hollow stairwell remain visible. Firstfloor wet rooms, WC cubicles, kitchen/pantry/salon, hanging garden and roof solarium/curved screens appear in the registered relative arrangements. The native central tube appears hollow at cellar/ground/first bands and does not appear at7.8m above its6.34m top. No extra geometry was manufactured for the picture.
+
+This is category-colored diagnostic occupied-band projection, not a source-color native clip frame; no depth occlusion is computed. Faint decomposition edges in diagnostics do not establish physical floor joints, gaps or interference. The production axon seam repair, actual hall reconstruction candidate and final native allviews/movies remain separately required. Subsequent source-only metadata changes preserve geometry; any future hall geometry publication requires a new final bound atlas. Inputs retained physical-atlas-r92.py/.mjs and render-atlas-r95.mjs; generated image paths are physical-atlas-r92.png and physical-stairs-r92.png.

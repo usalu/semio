@@ -108,3 +108,7 @@ For a model that adopts these datums, rebuild walls, apertures, columns, ramp en
 Annex1 is a narrow two-bay central enclosure; register it through the grid above, then align its actual stair and internal column14. The cellar's outside face is approximately original pixels388–660 in x and390–832 in y, excluding projections; these correspond to local x4.30–11.34 and y5.52–16.94. Trace masonry inner/outer faces, central partial divider and annex projections separately. The small side projections are not labelled hoist apertures and must not be named as such without architectural evidence.
 
 Full book university URL remains identified but unreachable from this audit's network. No alternate complete book was found in the author's public page links; the author PDF supplies structural rather than full furnishing plans. Exact facade build-ups, all oval contours, rectangular profile rotations, every support birth and the hoist location remain open. Explicit unknowns in the portable table are deliberate research constraints, not permission for arbitrary defaults.
+
+## R92 Specific3.11 Leader Clarification
+
+Direct high-resolution review of Annex6 (generated/sl1-311-structural-leader-r92.png, cropofregister-r9-section23.png) confirms3.11is a local20cm STRUCTURALtop, underside2.91, with a separate3.17finishedline above. The earlier R9 datumtable describing3.11onlyas a finish is overbroad. Preserve the localstructuralexception; do notgeneraliseSAB99interior3.14toeveryregion. R92first-floor-finish-evidence JSONrecords correctedreading.

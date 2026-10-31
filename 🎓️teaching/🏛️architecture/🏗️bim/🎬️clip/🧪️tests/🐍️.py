@@ -22,17 +22,13 @@ ROOT = next(parent for parent in CLIP.parents if (parent / "🧰️framework").i
 sys.path.insert(0, str(ROOT))
 ALPHABET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$"
 GLOBAL_ID = re.compile(r"^[0-3][0-9A-Za-z_$]{21}$")
-SOURCE_TOKEN = r"(?:VS-\d+(?:\.\d+)*|(?:CSIC2022|SAB2024|Savoye-as-[Bb]uilt|SavoyeAsBuilt2024|FLC)[-A-Za-z0-9.]+|teaching-services-original)"
-SOURCE_ID = re.compile(r"^(?:" + SOURCE_TOKEN + r"(?:;\s*" + SOURCE_TOKEN + r")*|https://[^\s]+)$")
+SOURCE_ID = re.compile(json.loads((CLIP / "🧱️model/🧬️schema/🔣️.schema.json").read_text(encoding="utf-8"))["$defs"]["evidence_source"]["pattern"])
 
 
 def model_api():
-    """🧱 Load the semantic model without importing drawing or speech engines."""
-    path = CLIP / "🧱️model/🐍️.py"
-    spec = importlib.util.spec_from_file_location("architecture_bim_model", path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    """🧱 Share the canonical semantic producer while each load_model call owns its source dictionary."""
+    return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
+
 
 
 def oracle_encode(number):
@@ -283,6 +279,7 @@ class ModelCase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        cls.addClassCleanup(cls._release_fixtures)
         cls.api = model_api()
         cls.model = cls.api.load_model()
         cls.snapshot = copy.deepcopy(cls.model)
@@ -291,8 +288,18 @@ class ModelCase(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if cls.model != cls.snapshot:
-            raise AssertionError("a model function mutated its input")
+        try:
+            if cls.model != cls.snapshot:
+                raise AssertionError("a model function mutated its input")
+        finally:
+            cls._release_fixtures()
+
+    @classmethod
+    def _release_fixtures(cls):
+        """🧹 Release only completed class-owned source, geometry and independent analysis fixtures."""
+        for name in ("api","model","snapshot","items","geometry","analysis","results","_sample_cache","_cell_cache"):
+            if name in vars(cls):
+                delattr(cls,name)
 
     def event(self, name, **overrides):
         spec = {**CASES["events"][name], **overrides}
@@ -622,7 +629,7 @@ class BimModelStructureContract(ModelCase):
         self.assertEqual(diameter["basis"], "sourced")
         self.assertTrue(0.2 <= diameter["value"] <= 0.6)
         levels = [storey["elevation"]["value"] for storey in self.model["storeys"]]
-        self.assertAlmostEqual(levels[0], -2.42)
+        self.assertAlmostEqual(levels[0], json.loads((CLIP / "🧱️model/🧪️tests/🕳️cellar.json").read_text(encoding="utf-8"))["expected"]["floor"])
         self.assertEqual(levels, sorted(levels))
         self.assertEqual(levels[1], 0)
         self.assertAlmostEqual(levels[2], 3.17)
@@ -1185,15 +1192,19 @@ class BimQuantityContract(ModelCase):
     def test_each_column_type_volume_matches_independent_profile_integrals(self):
         """🧮 Integrate actual profiles with independent GEOS section areas."""
         from shapely.geometry import Polygon
+        from scipy.spatial import ConvexHull
         for type_tag,tags in CASES["grid"]["type_occurrences"].items():
             expected=0.0
             for tag in tags:
                 pil=next(p for p in self.geometry["pilotis"] if p["tag"]==tag)
                 volume=0.0
                 for part in pil["parts"]:
-                    profile=part["profile"]
-                    area=profile_area(profile,part["outline"],part.get("holes",[]))
-                    volume+=area*(part["z1"]-part["z0"])
+                    if "mesh" in part:
+                        volume+=ConvexHull(self.api.part_vertices(part)).volume
+                    else:
+                        profile=part["profile"]
+                        area=profile_area(profile,part["outline"],part.get("holes",[]))
+                        volume+=area*(part["z1"]-part["z0"])
                 self.assertAlmostEqual(self.api.quantities(tag,self.model)["volume"],volume,delta=1e-4)
                 expected+=volume
             result=self.api.quantities(type_tag,self.model)
@@ -1396,13 +1407,20 @@ class BimRelationContract(ModelCase):
         storeys = parts("BUILDING")
         self.assertEqual(storeys, CASES["tags"]["storeys"])
 
-    def test_every_element_is_contained_in_exactly_its_storey(self):
+    def test_physical_products_are_contained_and_openings_inherit_their_host_context(self):
+        """🕳️ Preserve actual product storeys while native opening features inherit their host ownership."""
         for element in self.model["elements"]:
             with self.subTest(tag=element["tag"]):
-                contained = [r for r in self.api.relations_of(element["tag"], self.model) if r["class"] == "IfcRelContainedInSpatialStructure"]
-                self.assertEqual(len(contained), 1)
-                self.assertEqual(contained[0]["relating"]["tag"], element["storey"])
-                self.assertEqual(contained[0]["role"], "related")
+                contained = self.relations(element["tag"],"IfcRelContainedInSpatialStructure")
+                if element["class"]=="IfcOpeningElement":
+                    self.assertEqual(contained,[])
+                    voids = self.relations(element["tag"],"IfcRelVoidsElement")
+                    self.assertEqual(len(voids),1)
+                    self.assertEqual(len(self.relations(voids[0]["relating"]["tag"],"IfcRelContainedInSpatialStructure")),1)
+                else:
+                    self.assertEqual(len(contained),1)
+                    self.assertEqual(contained[0]["relating"]["tag"],element["storey"])
+                    self.assertEqual(contained[0]["role"],"related")
 
     def test_all_authored_pilotis_are_defined_by_the_piloti_type(self):
         link = self.relations(CASES["tags"]["piloti_type"], "IfcRelDefinesByType")
@@ -1423,7 +1441,7 @@ class BimRelationContract(ModelCase):
             fills = self.relations(opening, "IfcRelFillsElement")
             expected = [] if opening in CASES["tags"]["unfilled_openings"] else [(opening, fillings[opening])]
             self.assertEqual([(r["relating"]["tag"], r["related"][0]["tag"]) for r in fills], expected)
-            classes = {"IfcRelVoidsElement", "IfcRelContainedInSpatialStructure"}
+            classes = {"IfcRelVoidsElement"}
             if expected:
                 classes.add("IfcRelFillsElement")
             self.assertEqual({r["class"] for r in self.api.relations_of(opening, self.model)}, classes)
@@ -2392,10 +2410,10 @@ class BimConsistencyContract(ModelCase):
         updated = self.api.apply_event(self.event("paving"), self.model)
         new = updated["revision"]
         changed = {t for t,i in registry(updated).items() if i.get("metadata") != self.items[t].get("metadata")}
-        self.assertEqual(changed, {"SL-R"})
+        self.assertEqual(changed, set(CASES["events"]["paving_touches"]))
         for identifier in CASES["models"]["ids"]:
             before=self.api.partial_model(identifier,self.model)
-            expected=new if self.items["SL-R"]["guid"] in before["element_guids"] else before["revision"]
+            expected=new if any(self.items[tag]["guid"] in before["element_guids"] for tag in CASES["events"]["paving_touches"]) else before["revision"]
             self.assertEqual(self.api.partial_model(identifier, updated)["revision"], expected, identifier)
         sill = self.api.apply_event(self.event("sill"), self.model)
         changed = {t for t,i in registry(sill).items() if i.get("metadata") != self.items[t].get("metadata")}
@@ -2524,6 +2542,28 @@ class BimConsistencyContract(ModelCase):
 
 class BimClipContract(unittest.TestCase):
     """🎬 Verify six authored chapters and a complete bilingual narration path."""
+
+    def test_model_class_labels_keep_separate_native_text_columns(self):
+        """🔠 Validate actual bilingual native glyph bounds for the longest source IFC class names."""
+        import importlib,os,tempfile
+        from manim import tempconfig,ValueTracker
+        case=json.loads((CLIP/'🧪️tests/🧩️chapter-source/🔣️.json').read_text(encoding='utf-8'))['class_columns']
+        module=importlib.import_module('🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧩️models.🐍️')
+        output=Path(os.environ['SEMIO_TEACHING_OUTPUT_ROOT'])
+        output.mkdir(parents=True,exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=output) as directory,tempconfig({'media_dir':directory,'text_dir':str(Path(directory)/'t'),'dry_run':True}):
+            from unittest.mock import patch
+            for language in ('en','de'):
+                with patch.dict(os.environ,SEMIO_TEACHING_LANGUAGE=language,SEMIO_TEACHING_AUDIENCE='speaker'):
+                    scene=module.Beat4_PartialModels()
+                    module._visuals._fonts.apply_scene_style(scene)
+                    scene.info={'architecture':{'counts_by_class':{kind:1 for kind in case['classes']}}}
+                    for kind,meaning in scene._discipline_rows('architecture'):
+                        with self.subTest(language=language,ifc_class=kind):
+                            row=scene._class_row(ValueTracker(1),kind,meaning,0.,module.ARCH)
+                            self.assertLessEqual(row[1].get_right()[0]+case['minimum_gap'],row[2].get_left()[0])
+                            self.assertLessEqual(row.get_right()[0],scene.camera.frame_width/2)
+
 
     def test_each_chapter_has_unique_bilingual_narration_and_discoverable_scene(self):
         keys = set()
@@ -2873,25 +2913,180 @@ class BimBrowserMetadataContract(unittest.TestCase):
         runtime.run_command(["repo", "tools", "exec", "--light", "node", "--", str(CLIP / "🧪️tests/🟨️metadata.mjs")], cwd=ROOT)
 
 
-def load_tests(loader, tests, pattern):
-    """🧩 Include every co-located remodelling contract in the standard BIM test target."""
+COLOCATED_TEST_MODULES = (
+    "🧱️model.🔌️exchange.🧪️tests.🧿️axes",
+    "🧱️model.🔌️exchange.🧪️tests.➖️difference",
+    "🧱️model.🔌️exchange.🧪️tests.🛝️reference",
+    "🧱️model.🧊️profiles.🧪️tests.🐍️",
+    "🧱️model.🧪️tests.🔗️wall-junctions",
+
+    "🧱️model.🧪️tests.🔧️fixture-fits",
+    "🧱️model.🏗️structure.🔗️joints.🧪️tests.🐍️",
+    "🧱️model.🎨️finishes.🧱️layers.🧪️tests.🐍️",
+    "🧱️model.🧪️tests.📚️references",
+    "🧪️tests.🧹️fixtures.🐍️",
+    "🧱️model.🧪️tests.🧩️domains",
+    "🎨️visuals.📐️drafting.🧩️surfaces.🧪️tests.🐍️",
+    "🎨️visuals.📐️drafting.🧩️surfaces.🧪️coverage.🐍️",
+    "🎨️visuals.📐️drafting.🧩️regions.🧪️tests.🐍️",
+    "🧱️model.🧪️tests.🧱️interfaces",
+        "🧱️model.🧪️tests.🪈️tubes",
+        "🧱️model.🧪️tests.🧾️capture",
+    "🧱️model.🧪️tests.🏗️construction",
+    "🧱️model.🧪️tests.📏️path-stations",
+    "🧱️model.🧪️tests.⚡️geometry-cache",
+    "🎨️visuals.🎥️camera.🧪️tests.🐍️",
+    "🧱️model.🧮️analysis.🧪️tests.🐍️",
+    "🧱️model.🧪️tests.🚗️parking",
+    "🧪️tests.🧩️chapter-source.🐍️",
+    "🔌️exchange.🧪️tests.🐍️slab",
+    "🎨️visuals.🏛️savoye.🧊️axon.🧪️tests",
+    "🎨️visuals.🏛️savoye.🧊️axon.📏️geometry",
+    "🎨️visuals.🏛️savoye.🧱️core.🧪️surfaces",
+    "🎨️visuals.🧮️analysis.🧪️profiles.🐍️",
+    "🧱️model.🧪️tests.📍️placements",
+    "🧱️model.🧪️tests.⚡️slabs",
+    "🧱️model.🧪️tests.⚡️slab-members",
+    "🧱️model.🧪️tests.🧿️joints",
+    "🧱️model.🧪️tests.🧮️partitions",
+    "🧱️model.🧪️tests.⛏️coal",
+    "🧱️model.🧪️tests.⚡️partitions",
+    "🧱️model.🧪️tests.🏗️beams",
+    "🧱️model.🧪️tests.🏗️joints",
+    "🧱️model.🧪️tests.🏗️bearing",
+    "🧱️model.🧪️tests.🔺️frustums",
+    "🧱️model.🧪️tests.🪚️ownership",
+    "🧱️model.🧪️tests.🕳️openings",
+    "🧱️model.🧪️tests.🏗️services",
+    "🧱️model.🧪️tests.🚰️services",
+    "🧱️model.🧪️tests.🧊️sections",
+    "🧱️model.🧪️tests.☀️rooflights",
+    "🧱️model.🧪️tests.🌬️garden",
+    "🧱️model.🧪️tests.🛝️ramps",
+    "🧱️model.🧪️tests.🪟️curtains",
+    "🧱️model.🧮️analysis.🧪️tests.🕳️clashes",
+    "🧱️model.🧪️tests.🕳️profiles",
+    "🧱️model.🧮️analysis.🧪️tests.🕳️passages",
+    "🧱️model.🔌️exchange.🧪️tests.🪟️fillings",
+    "🧱️model.🔌️exchange.🧪️tests.🧵spans",
+    "🧱️model.🔌️exchange.🧪️tests.🪑furnishings",
+    "🧱️model.🔌️exchange.🧪️tests.🔢️reals",
+    "🧱️model.🔌️exchange.🧪️tests.🏗️coverage",
+    "🧱️model.🧮️analysis.🧪️tests.📏️rounding",
+    "🧱️model.🧮️analysis.🧪️tests.📏️subtraction",
+    "🧱️model.🧪️tests.🛝️guards",
+    "🧱️model.🧪️tests.🛝️stringer",
+    "🧱️model.🧪️tests.🔻️volume",
+    "🧱️model.🧪️tests.🏛️remodel",
+    "🧱️model.🧪️tests.🛁️details",
+    "🧱️model.🧪️tests.📐️representations",
+    "🧱️model.🧪️tests.🕳️cellar",
+    "🧱️model.🧪️tests.🏗️foundations",
+    "🧱️model.🧪️tests.🏛️architecture",
+    "🧱️model.🧪️tests.🏛️suite",
+    "🧱️model.🧪️tests.🪨️regions",
+    "🧱️model.🧪️tests.🧱️walls",
+    "🧱️model.🧪️tests.🪟️fillings",
+    "🧱️model.🧪️tests.🪚️joinery",
+    "🧱️model.🧪️tests.🚪️garage",
+    "🧱️model.🧪️tests.🚪️roof",
+    "🧱️model.🧪️tests.🏠ground",
+    "🧱️model.🧪️tests.🚬️chimneys",
+    "🧱️model.🧪️tests.🚬️prisms",
+    "🧱️model.🧪️tests.🪜️stair-parts",
+    "🧱️model.🧪️tests.🪜️stairs",
+    "🧱️model.🧪️tests.🕸️mesh-clipping",
+    "🧱️model.🧪️tests.🌀️wall-routing",
+    "🧱️model.🧪️tests.🏗️facade",
+    "🧱️model.🧪️tests.🚽️sanitary",
+    "🧱️model.🧪️tests.🪜️post",
+    "🧱️model.🧪️tests.🚿️ground",
+    "🧱️model.🧪️tests.💡️lights",
+    "🧱️model.🧪️tests.💡️clearance",
+    "🧱️model.🧪️tests.🛁️bathrooms",
+    "🧱️model.🧪️tests.🛁️parents",
+    "🧱️model.🧪️tests.🗄️storage",
+    "🧱️model.🧪️tests.🚰taps",
+    "🧱️model.🧪️tests.🚿️niches",
+    "🧱️model.🧪️tests.🔗️materials",
+    "🧱️model.🧪️tests.🚶️hall",
+    "🧱️model.🧪️tests.🧺️laundry",
+    "🧱️model.🧪️tests.🍳️kitchen",
+    "🧱️model.🧪️tests.⚙️apparatus",
+    "🧱️model.🧪️tests.♨️services",
+    "🧱️model.🧪️tests.🪵️floors",
+    "🧱️model.🧪️tests.🪵️coal-bay",
+    "🧱️model.🧪️tests.🪵️raised-beams",
+    "🧱️model.🧪️tests.🛝️arrivals",
+    "🧱️model.🧪️tests.🛝️interfaces",
+    "🧱️model.🧪️tests.🪟️offset",
+    "🧱️model.🧪️tests.🪟️salon",
+    "🧱️model.🧪️tests.🏠roof-floors",
+    "🧱️model.🧪️tests.🎨️coverings",
+    "🧱️model.🎨️finishes.🧪️tests.🐍️",
+    "🔗️consistency.🧪️tests.🔄️lifecycle.🐍️",
+    "🧩️models.🧪️tests.📏️footer.🐍️",
+    "🧪️tests.🎭️presentation.🐍️",
+    "🧱️model.🧪️tests.🌀️screens",
+    "🧱️model.🔌️exchange.🧪️tests.🐍️",
+    "🧱️model.🧮️analysis.🧪️tests.📏️physical",
+    "🧪️tests.🔎️discovery",
+    "🧱️model.🧪️tests.🪟️structure",
+    "🧱️model.🧪️tests.🚰️patio",
+    "🧱️model.🧪️tests.🔺️projections",
+    "🎨️visuals.🏛️savoye.🔩️detail.🧪️tests",
+    "🎨️visuals.📐️drafting.✂️fragments.🧪️tests.🐍️",
+    "🧱️model.🎨️finishes.🧪️tests.🤝️contact",
+    "🧱️model.🧪️tests.🏠️radiator",
+    "🧱️model.🧪️tests.🌿️gravel",
+    "🧱️model.🧪️tests.🛝️finish",
+    "🧱️model.🧪️tests.🛝️references",
+    "🧱️model.🧪️tests.🗺️conditioning",
+    "🧱️model.🧪️tests.🚪️threshold",
+    "🧱️model.🧪️tests.⚡️surface-producers",
+    "🧱️model.🧪️tests.🪵️skirting",
+    "🧱️model.🧪️tests.📦️disjoint",
+    "🧱️model.🧪️tests.🗂️revisions",
+    "🎨️visuals.📐️drafting.🧪️assembly.🐍️",
+    "🎨️visuals.🏛️savoye.🧊️axon.🧪️ground.🐍️",
+    "🎨️visuals.🏛️savoye.🧱️core.🧪️snapshot.🐍️",
+)
+
+ROOT_TEST_MODULES = ("🧱️model.🧪️tests.📏️columns","🧱️model.🧪️tests.🚘️profiles",)
+
+def _colocated_tests(loader, source, pattern):
+    """🔎 Collect native classes and standalone bodies once, honoring custom hooks."""
     import inspect
 
+    if callable(getattr(source, "load_tests", None)):
+        return loader.loadTestsFromModule(source, pattern=pattern)
+    suite = unittest.TestSuite()
+    seen = set()
+    for name, value in inspect.getmembers(source):
+        if id(value) in seen or getattr(value, "__module__", None) != source.__name__:
+            continue
+        if inspect.isclass(value) and issubclass(value, unittest.TestCase):
+            seen.add(id(value))
+            suite.addTests(loader.loadTestsFromTestCase(value))
+        elif name.startswith("test_") and inspect.isfunction(value):
+            seen.add(id(value))
+            suite.addTest(unittest.FunctionTestCase(value))
+    return suite
+
+
+def load_tests(loader, tests, pattern):
+    """🧩 Include each co-located class and function in the standard BIM target."""
     prefix = "🎓️teaching.🏛️architecture.🏗️bim.🎬️clip."
     suite = unittest.TestSuite(tests)
-    for module in ("🧱️model.🧮️analysis.🧪️tests.🐍️", "🧱️model.🧪️tests.🚗️parking", "🧪️tests.🧩️chapter-source.🐍️",
-                   "🔌️exchange.🧪️tests.🐍️slab", "🎨️visuals.🏛️savoye.🧊️axon.🧪️tests", "🎨️visuals.🏛️savoye.🧊️axon.📏️geometry",
-                   "🎨️visuals.🏛️savoye.🧱️core.🧪️surfaces", "🎨️visuals.🧮️analysis.🧪️profiles.🐍️", "🧱️model.🧪️tests.📍️placements", "🧱️model.🧪️tests.⚡️slabs", "🧱️model.🧪️tests.⚡️partitions", "🧱️model.🧪️tests.🏗️beams", "🧱️model.🧪️tests.🏗️joints", "🧱️model.🧪️tests.🏗️bearing", "🧱️model.🧪️tests.🔺️frustums", "🧱️model.🧪️tests.🪚️ownership", "🧱️model.🧪️tests.🕳️openings", "🧱️model.🧪️tests.🏗️services", "🧱️model.🧪️tests.🚰️services", "🧱️model.🧪️tests.🧊️sections", "🧱️model.🧪️tests.☀️rooflights", "🧱️model.🧪️tests.🌬️garden", "🧱️model.🧪️tests.🛝️ramps", "🧱️model.🧪️tests.🪟️curtains", "🧱️model.🧮️analysis.🧪️tests.🕳️clashes", "🧱️model.🧪️tests.🕳️profiles", "🧱️model.🧮️analysis.🧪️tests.🕳️passages", "🧱️model.🔌️exchange.🧪️tests.🪟️fillings", "🧱️model.🔌️exchange.🧪️tests.🧵spans", "🧱️model.🔌️exchange.🧪️tests.🪑furnishings"):
-        suite.addTests(loader.loadTestsFromName(prefix + module))
-    for module in ("🧱️model.🧪️tests.🏛️remodel", "🧱️model.🧪️tests.🛁️details", "🧱️model.🧪️tests.📐️representations",
-                   "🧱️model.🧪️tests.🕳️cellar", "🧱️model.🧪️tests.🏗️foundations", "🧱️model.🧪️tests.🏛️architecture", "🧱️model.🧪️tests.🏛️suite", "🧱️model.🧪️tests.🪨️regions",
-                   "🧱️model.🧪️tests.🧱️walls", "🧱️model.🧪️tests.🪟️fillings", "🧱️model.🧪️tests.🪚️joinery", "🧱️model.🧪️tests.🚪️garage", "🧱️model.🧪️tests.🚪️roof", "🧱️model.🧪️tests.🏠ground", "🧱️model.🧪️tests.🚬️chimneys", "🧱️model.🧪️tests.🚬️prisms", "🧱️model.🧪️tests.🪜️stair-parts", "🧱️model.🧪️tests.🪜️stairs", "🧱️model.🧪️tests.🕸️mesh-clipping", "🧱️model.🧪️tests.🌀️wall-routing", "🧱️model.🧪️tests.🏗️facade"):
+    for module in COLOCATED_TEST_MODULES:
         source = importlib.import_module(prefix + module)
-        suite.addTests(unittest.FunctionTestCase(fn) for name, fn in inspect.getmembers(source, inspect.isfunction) if name.startswith("test_"))
-    for module in ("🧱️model.🧪️tests.📏️columns", "🧱️model.🧪️tests.🚘️profiles"):
+        suite.addTests(_colocated_tests(loader, source, pattern))
+    for module in ROOT_TEST_MODULES:
         source = importlib.import_module(prefix + module)
-        suite.addTest(unittest.FunctionTestCase(lambda source=source: source.run(ROOT)))
-    suite.addTests(loader.discover(str(CLIP / "🎨️visuals/🏛️savoye/🧪️ortho-remodel"), pattern="test_*.py"))
+        suite.addTest(unittest.FunctionTestCase(lambda source=source: source.run(ROOT), description=prefix + module + ".run"))
+    for path in sorted((CLIP / "🎨️visuals/🏛️savoye/🧪️ortho-remodel").glob("test_*.py")):
+        source = importlib.import_module(prefix + "🎨️visuals.🏛️savoye.🧪️ortho-remodel." + path.stem)
+        suite.addTests(_colocated_tests(loader, source, pattern))
     return suite
 
 
@@ -2900,4 +3095,4 @@ if __name__ == "__main__":
                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
                                                                                                                                                                                                                                                                                                                                                                                                         
                                       
-    
+                                                                                                                                                          

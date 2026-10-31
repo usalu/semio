@@ -1,0 +1,7 @@
+# Exact Positive Convex Projection
+
+The existing plan/elevation silhouette helper discarded all orientation determinants≤1e−12. A language-neutral2nm triangle ofarea2e−18 was reduced to a two-point line in the focusedRED. The helper now uses a fast binary64 determinant with a certified error bound and exact Fraction replay only for ambiguous signs; no geometry tolerance, source-coordinate move, hull outside the existing convex-silhouette contract, or positive-turn deletion is introduced. Collinear redundant boundary points retain the existing minimal-hull semantics. The producer identity participates in the bounded whole-model memo key.
+
+Four portable cases cover2nm positive stock, shifted near-ULP coordinates, ordinary concave point-cloud projection, and products below binary64 area range. Native testGREEN1.247s. GEOS independently validates actual polygons at representable areas, and NumPy object-vectorized exact-rational shoelace validates area for every case. GEOS itself classifies the1e−170-edge fixture as a line after area-product underflow; that independent engine limitation is explicit in the fixture, while NumPy exact arithmetic proves the preserved positive area. No source geometry depends on that extreme test. Further native source projection controls pending.
+
+The fast predicate also requires at least one normal-range product; subnormal product cases replay exactly so an underflowed floating error bound cannot authorize an ambiguous sign. Native source/source-projection geometry is unchanged by this extreme-range guard.

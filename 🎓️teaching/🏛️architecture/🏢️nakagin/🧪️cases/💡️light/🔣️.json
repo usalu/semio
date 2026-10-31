@@ -1,0 +1,62 @@
+{
+  "source": "domus",
+  "basis": "assumed",
+  "prefix": "long-wall-luminaire-",
+  "vent_prefix": "vent-grille-",
+  "layouts": [
+    "Slash",
+    "Backslash",
+    "J",
+    "L",
+    "P",
+    "S"
+  ],
+  "tolerance": 1e-8,
+  "maximum_ceiling_gap": 0.025,
+  "links": [
+    [
+      "housing",
+      "media-wall"
+    ],
+    [
+      "top",
+      "housing"
+    ],
+    [
+      "bottom",
+      "housing"
+    ],
+    [
+      "end-a",
+      "housing"
+    ],
+    [
+      "end-b",
+      "housing"
+    ],
+    [
+      "diffuser",
+      "top"
+    ],
+    [
+      "diffuser",
+      "bottom"
+    ],
+    [
+      "diffuser",
+      "end-a"
+    ],
+    [
+      "diffuser",
+      "end-b"
+    ],
+    [
+      "tube",
+      "end-a"
+    ],
+    [
+      "tube",
+      "end-b"
+    ]
+  ]
+}

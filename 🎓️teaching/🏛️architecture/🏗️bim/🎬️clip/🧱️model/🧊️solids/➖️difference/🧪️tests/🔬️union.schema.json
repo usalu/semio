@@ -1,0 +1,9 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Independent Real Solid Union Contract",
+  "type":"object","required":["units","cases"],"additionalProperties":false,
+  "properties":{
+    "units":{"const":"m"},
+    "cases":{"type":"array","minItems":4,"items":{"type":"object","required":["id","operands"],"properties":{"id":{"type":"string","minLength":1},"operands":{"type":"array","minItems":2,"items":{"$ref":"#/$defs/operand"}},"expected_volume":{"type":"number","exclusiveMinimum":0},"expected_pi_coefficient":{"type":"number","exclusiveMinimum":0}},"oneOf":[{"required":["expected_volume"]},{"required":["expected_pi_coefficient"]}],"additionalProperties":false}}
+  }
+}

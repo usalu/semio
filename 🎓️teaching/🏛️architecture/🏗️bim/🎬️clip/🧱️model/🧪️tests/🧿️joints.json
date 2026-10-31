@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "radius": 0.11,
+      "maximum_outward": 0.00001,
+      "safety": 2e-9,
+      "minimum_sides": 256
+    },
+    {
+      "radius": 0.5,
+      "maximum_outward": 0.00001,
+      "safety": 2e-9,
+      "minimum_sides": 256
+    },
+    {
+      "radius": 2e-9,
+      "maximum_outward": 1e-10,
+      "safety": 1e-15,
+      "minimum_sides": 256
+    }
+  ],
+  "invalid": [
+    {
+      "radius": 0.11,
+      "maximum_outward": 0,
+      "safety": 0,
+      "minimum_sides": 256
+    },
+    {
+      "radius": 0.11,
+      "maximum_outward": 0.00001,
+      "safety": 0.00001,
+      "minimum_sides": 256
+    }
+  ],
+  "affine": {
+    "flight": "RF-2A",
+    "column": "PB",
+    "shared_x": "9.47",
+    "shared_y": "16.814",
+    "origin": "10.2",
+    "offset": "-0.73",
+    "thickness": "1e-30"
+  },
+  "embedded": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "hole": [
+      [
+        0.75,
+        0.75
+      ],
+      [
+        1.25,
+        0.75
+      ],
+      [
+        1.25,
+        1.25
+      ],
+      [
+        0.75,
+        1.25
+      ]
+    ],
+    "top": 1,
+    "depth": 0.2,
+    "volume": 0.75
+  },
+  "selective": {
+    "flight": "RF-1A",
+    "allowed_owners": [
+      "13",
+      "18",
+      "25",
+      "PA"
+    ],
+    "volume": 0.7089646074749076
+  }
+}

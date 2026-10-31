@@ -1,0 +1,219 @@
+{
+  "title": "Original Services Physical and Source Topology Acceptance",
+  "source_refs": [
+    "SAB2024-p116",
+    "SAB2024-p230-233",
+    "SAB2024-p236-238"
+  ],
+  "products": [
+    {
+      "tag": "RAIN-KITCHEN-PATIO-9",
+      "class": "IfcPipeSegment",
+      "system": "rainwater"
+    },
+    {
+      "tag": "RAIN-KITCHEN-PATIO-9-COVER",
+      "class": "IfcCovering",
+      "system": "rainwater"
+    },
+    {
+      "tag": "COLLECTOR-KITCHEN-PATIO-9",
+      "class": "IfcWasteTerminal",
+      "system": "rainwater"
+    },
+    {
+      "tag": "HEAT-RISER-VESTIBULE-5-SUPPLY",
+      "class": "IfcPipeSegment",
+      "system": "heating"
+    },
+    {
+      "tag": "HEAT-RISER-VESTIBULE-5-RETURN",
+      "class": "IfcPipeSegment",
+      "system": "heating"
+    },
+    {
+      "tag": "RAD-HALL-GARAGE",
+      "class": "IfcSpaceHeater",
+      "system": "heating",
+      "sections": 30,
+      "sections_basis": "sourced",
+      "feet": 3,
+      "feet_basis": "sourced"
+    },
+    {
+      "tag": "RAD-HALL-BEHIND-STAIR",
+      "class": "IfcSpaceHeater",
+      "system": "heating",
+      "sections": 12,
+      "sections_basis": "inferred",
+      "feet": 2,
+      "feet_basis": "inferred"
+    },
+    {
+      "tag": "RAD-KITCHEN-SINK",
+      "class": "IfcSpaceHeater",
+      "system": "heating",
+      "sections": 18,
+      "sections_basis": "inferred",
+      "feet": 2,
+      "feet_basis": "inferred"
+    },
+    {
+      "tag": "RAD-1",
+      "class": "IfcSpaceHeater",
+      "system": "heating",
+      "sections": 24,
+      "sections_basis": "inferred",
+      "feet": 2,
+      "feet_basis": "inferred"
+    },
+    {
+      "tag": "FIX-SERVANT-RADIATOR-1",
+      "class": "IfcSpaceHeater",
+      "system": "heating",
+      "sections": 12,
+      "sections_basis": "inferred",
+      "feet": 2,
+      "feet_basis": "inferred"
+    },
+    {
+      "tag": "FIX-SERVANT-RADIATOR-2",
+      "class": "IfcSpaceHeater",
+      "system": "heating",
+      "sections": 12,
+      "sections_basis": "inferred",
+      "feet": 2,
+      "feet_basis": "inferred"
+    }
+  ],
+  "paired_risers": [
+    [
+      "HEAT-RISER-6-PIPE",
+      "HEAT-RISER-6-RETURN"
+    ],
+    [
+      "HEAT-RISER-11-PIPE",
+      "HEAT-RISER-11-RETURN"
+    ],
+    [
+      "HEAT-RISER-VESTIBULE-5-SUPPLY",
+      "HEAT-RISER-VESTIBULE-5-RETURN"
+    ]
+  ],
+  "openings": [
+    {
+      "tag": "OP-RAIN-9-SL1",
+      "host": "SL-1"
+    },
+    {
+      "tag": "OP-HEAT-5-SL1",
+      "host": "SL-1"
+    }
+  ],
+  "reachability": [
+    {
+      "start": "BASEMENT-HEATING-DISTRIBUTION",
+      "includes": [
+        "HEAT-RISER-6",
+        "HEAT-RISER-11",
+        "HEAT-RISER-VESTIBULE-5"
+      ]
+    },
+    {
+      "start": "KITCHEN-PATIO-COLLECTOR",
+      "includes": [
+        "RAIN-KITCHEN-PATIO-9",
+        "GROUND-RAIN-CONTINUATION"
+      ]
+    },
+    {
+      "start": "WC-FIRST-EAST",
+      "includes": [
+        "SOIL-STAIR",
+        "BELOWFLOOR-SEWER"
+      ]
+    }
+  ],
+  "unresolved": [
+    "exact_concealed_routes",
+    "individual_radiator_riser_assignment",
+    "second_boiler_xy",
+    "precise_original_fixture_sizes"
+  ],
+  "excluded_original": [
+    "postwar_kitchen_gargoyles"
+  ],
+  "standing_diameter": 0.6,
+  "geometry_variants": [
+    {
+      "tag": "RAIN-KITCHEN-PATIO-9",
+      "valid": true
+    },
+    {
+      "tag": "RAIN-KITCHEN-PATIO-9-COVER",
+      "valid": true
+    },
+    {
+      "tag": "HEAT-RISER-VESTIBULE-5-SUPPLY",
+      "valid": true
+    },
+    {
+      "tag": "RAIN-KITCHEN-PATIO-9",
+      "add_geometry": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "valid": false
+    }
+  ],
+  "rain_airway": [
+    [
+      2.8,
+      8.6,
+      3
+    ],
+    [
+      2.8,
+      8.6,
+      2.81
+    ],
+    [
+      3.3501873542589005,
+      9.132592072412754,
+      2.81
+    ],
+    [
+      3.3501873542589005,
+      9.132592072412754,
+      1
+    ]
+  ],
+  "servant_radiators": [
+    {
+      "tag": "FIX-SERVANT-RADIATOR-1",
+      "axis": [
+        3.675,
+        13.205
+      ],
+      "floor": "FIN-SERVANTS-1"
+    },
+    {
+      "tag": "FIX-SERVANT-RADIATOR-2",
+      "axis": [
+        3.675,
+        17.35
+      ],
+      "floor": "FIN-SERVANTS-2"
+    }
+  ]
+}

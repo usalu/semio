@@ -1,0 +1,107 @@
+{
+  "source": "gluon",
+  "first": {
+    "A": [
+      [
+        0,
+        "J",
+        1
+      ],
+      [
+        3,
+        "Slash",
+        1
+      ]
+    ],
+    "B": [
+      [
+        1,
+        "J",
+        1
+      ],
+      [
+        1,
+        "Slash",
+        2
+      ]
+    ]
+  },
+  "regular_b": {
+    "floors": [
+      4,
+      6,
+      11
+    ],
+    "targets": [
+      [
+        0,
+        1,
+        1
+      ],
+      [
+        2,
+        1,
+        2
+      ],
+      [
+        1,
+        1,
+        1
+      ],
+      [
+        1,
+        0,
+        2
+      ]
+    ],
+    "roof_samples": [
+      [
+        4,
+        0.29775,
+        0.31675
+      ],
+      [
+        6,
+        0.41675,
+        0.43575
+      ],
+      [
+        11,
+        0.71425,
+        0.73325
+      ]
+    ],
+    "raw_pitch": 0.05965845,
+    "raw_tolerance": 0.0015,
+    "identity": "Authored facade/item identifies registered exterior footprint; scan roof data does not classify hidden door/fitting family."
+  },
+  "branches": 75,
+  "singletons": 10,
+  "total": 140,
+  "a_exceptional": {
+    "floors": [
+      4,
+      5,
+      13
+    ],
+    "present": [
+      1,
+      1
+    ],
+    "top_absent": [
+      2,
+      0
+    ],
+    "front_support_raw_area": [
+      0.00232,
+      0.00226,
+      0.00197
+    ],
+    "minimum_positive_area": 0.001,
+    "confidence": {
+      "4": "Seven distinct positive body/rim locations exhaust documented count7; S0 absence derived by exhaustion, metric registration approximate",
+      "5": "Seven distinct positive body/rim locations exhaust documented count7; S0 absence derived by exhaustion, metric registration approximate",
+      "13": "allseven other roof footprints observed; S0 omission strongly supported"
+    }
+  }
+}

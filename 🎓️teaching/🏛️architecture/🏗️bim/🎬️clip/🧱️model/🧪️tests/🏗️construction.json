@@ -1,0 +1,66 @@
+{
+  "soffits": [
+    "FIN-SOFFIT-RF-2A",
+    "FIN-SOFFIT-RF-2B"
+  ],
+  "stairs": [
+    "ST-CG",
+    "ST-GF",
+    "ST-FR"
+  ],
+  "mapped_nosings": 49,
+  "supplied_nosings": 52,
+  "unlocated_supplier_pieces": 3,
+  "tube": {
+    "tag": "TUBE-STAIR-CENTRAL",
+    "diameter_m": 0.055,
+    "axis": [
+      6.3,
+      9.18
+    ],
+    "registration_uncertainty_m": 0.15,
+    "wall_gauge_m": 0.002,
+    "wall_gauge_basis": "inferred",
+    "bottom_host": "FIN-CELLAR-CEMENT",
+    "bottom_m": -2.4
+  },
+  "roof_beds": {
+    "tags": [
+      "FIX-ROOF-BED-1",
+      "FIX-ROOF-BED-2"
+    ],
+    "rectangles": [
+      [
+        9.8,
+        2.35,
+        11.2,
+        3.1
+      ],
+      [
+        11.9,
+        2.35,
+        13.3,
+        3.1
+      ]
+    ],
+    "location_uncertainty_m": 0.5,
+    "total_count_unknown": true,
+    "source": "SAB2024-p192-p193/1930 Gravot FLC-L2(17)043"
+  },
+  "soffit_interfaces": [
+    {
+      "cover": "FIN-SOFFIT-RF-2A",
+      "wall": "W-TERRACE-RAMP",
+      "removed_volume": 0.0004661802445450336,
+      "retained_volume": 0.16038333387677584,
+      "parts": 26
+    },
+    {
+      "cover": "FIN-SOFFIT-RF-2B",
+      "wall": "W-PARENT-BATH",
+      "removed_volume": 0.0021106243123718282,
+      "retained_volume": 0.1591801779138886,
+      "parts": 23
+    }
+  ]
+}

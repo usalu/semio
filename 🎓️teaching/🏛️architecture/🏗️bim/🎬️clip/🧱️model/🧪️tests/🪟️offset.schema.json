@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "tag",
+    "offsets",
+    "head_extension",
+    "tolerance"
+  ],
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "tag": {
+      "type": "string"
+    },
+    "offsets": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "head_extension": {
+      "type": "number",
+      "minimum": 0
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

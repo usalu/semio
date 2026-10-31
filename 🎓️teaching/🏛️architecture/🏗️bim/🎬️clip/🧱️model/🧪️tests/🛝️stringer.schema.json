@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "tag",
+    "class",
+    "storey",
+    "material",
+    "section",
+    "alignment",
+    "supports"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "tag": {
+      "const": "BEAM-RAMP-FIRST-STRINGER"
+    },
+    "class": {
+      "const": "IfcBeam"
+    },
+    "storey": {
+      "const": "ground"
+    },
+    "material": {
+      "const": "MAT-RC"
+    },
+    "section": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "vertical_depth",
+        "basis",
+        "source"
+      ],
+      "properties": {
+        "width": {
+          "const": 0.12
+        },
+        "vertical_depth": {
+          "const": 0.26
+        },
+        "basis": {
+          "const": "sourced"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "alignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y0",
+        "y1",
+        "rc_top_start",
+        "rc_top_end",
+        "basis",
+        "source"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y0": {
+          "type": "number"
+        },
+        "y1": {
+          "type": "number"
+        },
+        "rc_top_start": {
+          "type": "number"
+        },
+        "rc_top_end": {
+          "type": "number"
+        },
+        "basis": {
+          "const": "inferred"
+        },
+        "source": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "supports": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "13"
+        },
+        {
+          "const": "18"
+        },
+        {
+          "const": "25"
+        }
+      ],
+      "minItems": 3,
+      "maxItems": 3
+    }
+  }
+}

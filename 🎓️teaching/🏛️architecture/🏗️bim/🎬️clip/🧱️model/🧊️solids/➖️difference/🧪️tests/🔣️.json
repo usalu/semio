@@ -1,0 +1,1015 @@
+{
+  "units": {
+    "length": "m",
+    "rotation": "degrees"
+  },
+  "authoritative_geometry": "part.csg",
+  "display_product": {
+    "purpose": "display_only",
+    "parts": "finite tessellation returned by display_parts; not stored as authoritative part geometry"
+  },
+  "cases": [
+    {
+      "id": "partial-beam-end-circle",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                0,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 0.5,
+                  "voids": []
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 4,
+        "owned_volume": 3.607300918301276,
+        "expression": "4 - pi/8"
+      }
+    },
+    {
+      "id": "between-inscribed-facets",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                0.999364640017618,
+                0.03271580991349396
+              ],
+              [
+                0.999364642017618,
+                0.03271580991349396
+              ],
+              [
+                0.999364642017618,
+                0.03271581191349396
+              ],
+              [
+                0.999364640017618,
+                0.03271581191349396
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 1,
+                  "voids": []
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "owned_volume": 0,
+        "disjoint_from_owner": true
+      }
+    },
+    {
+      "id": "positive-two-nanometre-exterior-strip",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                1.000000002,
+                0
+              ],
+              [
+                1.000000004,
+                0
+              ],
+              [
+                1.000000004,
+                2e-09
+              ],
+              [
+                1.000000002,
+                2e-09
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 1,
+                  "voids": []
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "owned_volume_positive": true,
+        "unchanged_stock": true
+      }
+    },
+    {
+      "id": "annular-owner-keeps-donor-bore-material",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                -2,
+                -2
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                -2,
+                2
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 1,
+                  "voids": [
+                    {
+                      "offset": [
+                        0,
+                        0
+                      ],
+                      "radius": 0.25
+                    }
+                  ]
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 16,
+        "owned_volume": 13.054756887259568,
+        "expression": "16 - pi*(1 - 0.25^2)"
+      }
+    },
+    {
+      "id": "reserved-bore-remains-air",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                -2,
+                -2
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                -2,
+                2
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 1,
+                  "voids": [
+                    {
+                      "offset": [
+                        0,
+                        0
+                      ],
+                      "radius": 0.25
+                    }
+                  ]
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            },
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 0.25,
+                  "voids": []
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "void_air"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 16,
+        "owned_volume": 12.858407346410207,
+        "expression": "16 - pi"
+      }
+    },
+    {
+      "id": "nested-finite-height-bearing",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "operator": "difference",
+            "stock": {
+              "kind": "prism",
+              "outline": [
+                [
+                  0,
+                  -1
+                ],
+                [
+                  2,
+                  -1
+                ],
+                [
+                  2,
+                  1
+                ],
+                [
+                  0,
+                  1
+                ]
+              ],
+              "holes": [],
+              "z0": 0,
+              "z1": 1
+            },
+            "cutters": [
+              {
+                "operand": {
+                  "kind": "profile_extrusion",
+                  "axis": [
+                    0,
+                    0
+                  ],
+                  "rotation": 0,
+                  "profile": {
+                    "shape": "circle",
+                    "radius": 0.5,
+                    "voids": []
+                  },
+                  "z0": 0,
+                  "z1": 1
+                },
+                "owner": "COLUMN",
+                "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+                "role": "material"
+              }
+            ]
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "prism",
+                "outline": [
+                  [
+                    1,
+                    -1
+                  ],
+                  [
+                    2,
+                    -1
+                  ],
+                  [
+                    2,
+                    1
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ],
+                "holes": [],
+                "z0": 0,
+                "z1": 0.25
+              },
+              "owner": "SLAB",
+              "owner_guid": "3HDWsZh3VjN08aIxuk_QDE",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 4,
+        "owned_volume": 3.107300918301276,
+        "expression": "3.5 - pi/8"
+      }
+    },
+    {
+      "id": "rotated-off-centre-annular-source",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                10,
+                -7
+              ],
+              [
+                15,
+                -7
+              ],
+              [
+                15,
+                -1
+              ],
+              [
+                10,
+                -1
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  12.375,
+                  -4.125
+                ],
+                "rotation": 37,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 0.6,
+                  "voids": [
+                    {
+                      "offset": [
+                        0.1,
+                        0.07
+                      ],
+                      "radius": 0.08
+                    }
+                  ]
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 30,
+        "owned_volume": 28.88913283769065,
+        "expression": "30 - pi*(0.6^2 - 0.08^2)"
+      }
+    },
+    {
+      "id": "rotated-eccentric-ellipse-owner",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                -2,
+                -2
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                -2,
+                2
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 37,
+                "profile": {
+                  "shape": "ellipse",
+                  "radii": [
+                    0.6,
+                    0.2
+                  ],
+                  "voids": [
+                    {
+                      "offset": [
+                        0.1,
+                        0.07
+                      ],
+                      "radius": 0.04
+                    }
+                  ]
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "ELLIPSE-COLUMN",
+              "owner_guid": "29UCfxrq0Ax2Gt5xxMk91v",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 16,
+        "owned_volume": 15.628035429814968,
+        "expression": "16 - pi*(0.6*0.2 - 0.04^2)"
+      }
+    },
+    {
+      "id": "inclined-stock-circle",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "polyhedron",
+            "vertices": [
+              [
+                0,
+                -1,
+                0
+              ],
+              [
+                2,
+                -1,
+                0
+              ],
+              [
+                2,
+                -1,
+                1
+              ],
+              [
+                0,
+                1,
+                0
+              ],
+              [
+                2,
+                1,
+                0
+              ],
+              [
+                2,
+                1,
+                1
+              ]
+            ],
+            "faces": [
+              [
+                0,
+                1,
+                2
+              ],
+              [
+                3,
+                5,
+                4
+              ],
+              [
+                0,
+                3,
+                4,
+                1
+              ],
+              [
+                1,
+                4,
+                5,
+                2
+              ],
+              [
+                0,
+                2,
+                5,
+                3
+              ]
+            ]
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 0.5,
+                  "voids": []
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 2,
+        "owned_volume": 1.9583333333333333,
+        "expression": "2 - (0.5^3)/3"
+      },
+      "cancel_after_progress": 1
+    },
+    {
+      "id": "nested-actual-csg-owner",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                0,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "operator": "difference",
+                "stock": {
+                  "kind": "prism",
+                  "outline": [
+                    [
+                      0,
+                      -1
+                    ],
+                    [
+                      1,
+                      -1
+                    ],
+                    [
+                      1,
+                      1
+                    ],
+                    [
+                      0,
+                      1
+                    ]
+                  ],
+                  "holes": [],
+                  "z0": 0,
+                  "z1": 1
+                },
+                "cutters": [
+                  {
+                    "operand": {
+                      "kind": "profile_extrusion",
+                      "axis": [
+                        0,
+                        0
+                      ],
+                      "rotation": 0,
+                      "profile": {
+                        "shape": "circle",
+                        "radius": 0.5,
+                        "voids": []
+                      },
+                      "z0": 0,
+                      "z1": 1
+                    },
+                    "owner": "COLUMN",
+                    "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+                    "role": "material"
+                  }
+                ]
+              },
+              "owner": "BEAM",
+              "owner_guid": "1PtfuE1UKS86I4iZKCFwTw",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 4,
+        "owned_volume": 2.392699081698724,
+        "expression": "2 + pi/8"
+      }
+    },
+    {
+      "id": "anonymous-construction-boundary",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                0,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "prism",
+                "outline": [
+                  [
+                    1,
+                    -1
+                  ],
+                  [
+                    2,
+                    -1
+                  ],
+                  [
+                    2,
+                    1
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ],
+                "holes": [],
+                "z0": 0,
+                "z1": 1
+              },
+              "role": "construction_boundary"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 4,
+        "owned_volume": 2
+      }
+    },
+    {
+      "id": "rotated-rectangle-original-frame",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                -2,
+                -2
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                -2,
+                2
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  -0.125,
+                  0.0625
+                ],
+                "rotation": 37,
+                "profile": {
+                  "shape": "rectangle",
+                  "width": 0.8,
+                  "depth": 0.3,
+                  "voids": [
+                    {
+                      "offset": [
+                        0.1,
+                        0.02
+                      ],
+                      "radius": 0.04
+                    }
+                  ]
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "PROFILE-COLUMN",
+              "owner_guid": "0VktQ2Nm6dZU34FwX$xKob",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 16,
+        "owned_volume": 15.765026548245743
+      }
+    },
+    {
+      "id": "rotated-l-profile-original-frame",
+      "part": {
+        "material": "MAT-TEST",
+        "role": "structural_member",
+        "csg": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                -2,
+                -2
+              ],
+              [
+                2,
+                -2
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                -2,
+                2
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0.3,
+                  -0.4
+                ],
+                "rotation": 23,
+                "profile": {
+                  "shape": "polygon",
+                  "outline": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      0.6,
+                      0
+                    ],
+                    [
+                      0.6,
+                      0.2
+                    ],
+                    [
+                      0.2,
+                      0.2
+                    ],
+                    [
+                      0.2,
+                      0.6
+                    ],
+                    [
+                      0,
+                      0.6
+                    ]
+                  ],
+                  "voids": [
+                    {
+                      "offset": [
+                        0.1,
+                        0.1
+                      ],
+                      "radius": 0.03
+                    }
+                  ]
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "PROFILE-COLUMN",
+              "owner_guid": "0VktQ2Nm6dZU34FwX$xKob",
+              "role": "material"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "full_volume": 16,
+        "owned_volume": 15.80282743338823
+      }
+    }
+  ]
+}

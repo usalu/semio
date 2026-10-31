@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "part",
+    "cases",
+    "expected_volume"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "part": {
+      "type": "object",
+      "required": [
+        "outline",
+        "z0",
+        "z1",
+        "role"
+      ],
+      "properties": {
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "z0": {
+          "type": "number"
+        },
+        "z1": {
+          "type": "number"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "predefined_type",
+          "domains",
+          "system",
+          "architectural"
+        ],
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "predefined_type": {
+            "enum": [
+              "FLOORING",
+              "SKIRTINGBOARD",
+              "CLADDING",
+              "INSULATION"
+            ]
+          },
+          "domains": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "architecture",
+                "structure",
+                "services"
+              ]
+            }
+          },
+          "system": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "architectural": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "expected_volume": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

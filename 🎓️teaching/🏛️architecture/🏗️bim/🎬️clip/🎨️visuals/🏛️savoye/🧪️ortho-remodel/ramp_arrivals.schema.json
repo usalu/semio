@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "owner",
+          "level",
+          "band",
+          "z",
+          "role",
+          "visible"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "ramp_finish",
+              "flooring"
+            ]
+          },
+          "owner": {
+            "enum": [
+              "ground",
+              "first"
+            ]
+          },
+          "level": {
+            "enum": [
+              "ground",
+              "first",
+              "roof"
+            ]
+          },
+          "band": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "z": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "role": {
+            "enum": [
+              "wearing",
+              "bedding"
+            ]
+          },
+          "visible": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

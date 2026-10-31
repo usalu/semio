@@ -81,5 +81,65 @@
       "id": "garage-jib-cellar-connection",
       "requires_definitive_cellar_plan": true
     }
-  ]
+  ],
+  "guest_finish": {
+    "source": "SAB2024 original FLC19442/book25 and author46 recovered Y-run wardrobe and separate washing niche; bounded inferred zone, not measured tile outline",
+    "washing_bounds": [
+      2.54,
+      10.219,
+      3.46,
+      11.588
+    ],
+    "sleeping_probe": [
+      1.4,
+      12.8
+    ],
+    "washing_probe": [
+      3.25,
+      10.568382352941176
+    ],
+    "wardrobe": "FIX-GUEST-WARDROBE"
+  },
+  "pantry_access": {
+    "source": "SAB2024 author46 full-depth west cupboards and current inferred clear portal bands;800mm body with operable doors open",
+    "path": [
+      [
+        5.3,
+        7.25
+      ],
+      [
+        4.18,
+        7.25
+      ],
+      [
+        4.18,
+        1.1
+      ],
+      [
+        2.5,
+        1.1
+      ]
+    ],
+    "body_width": 0.8,
+    "doors": [
+      "D-KITCHEN",
+      "D-PANTRY"
+    ],
+    "rooms": [
+      "SP-FIRST-HALL",
+      "SP-PANTRY",
+      "SP-KITCHEN"
+    ]
+  },
+  "west_facade": {
+    "source": "Original ribbon glazing subdivided at native support axes; no glass in open patio frame",
+    "wall": "W-W",
+    "empty": "OP-KITCHEN-PATIO-FRAME",
+    "windows": [
+      "RW-W",
+      "RW-W-UPPER",
+      "RW-W-UPPER-2",
+      "RW-W-UPPER-3"
+    ]
+  }
 }

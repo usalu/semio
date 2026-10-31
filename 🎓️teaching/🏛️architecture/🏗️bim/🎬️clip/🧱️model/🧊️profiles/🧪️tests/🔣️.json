@@ -1,0 +1,104 @@
+{
+  "axis_field": "axis",
+  "cases": [
+    {
+      "id": "translated-circle",
+      "axis": [
+        123456.125,
+        -913.0625
+      ],
+      "profile": {
+        "shape": "circle",
+        "diameter": {
+          "value": 0.6,
+          "unit": "m",
+          "basis": "assumed"
+        }
+      },
+      "offset_centroid": false
+    },
+    {
+      "id": "translated-rotated-ellipse",
+      "axis": [
+        -471.0625,
+        72.3125
+      ],
+      "profile": {
+        "shape": "ellipse",
+        "width": {
+          "value": 0.8,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "depth": {
+          "value": 0.3,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "rotation": 37
+      },
+      "offset_centroid": false
+    },
+    {
+      "id": "rotated-off-center-bore",
+      "axis": [
+        123456.125,
+        -913.0625
+      ],
+      "profile": {
+        "shape": "circle",
+        "diameter": {
+          "value": 0.6,
+          "unit": "m",
+          "basis": "assumed"
+        },
+        "rotation": 37,
+        "voids": [
+          {
+            "offset": [
+              0.1,
+              0.07
+            ],
+            "diameter": {
+              "value": 0.16,
+              "unit": "m",
+              "basis": "assumed"
+            }
+          }
+        ]
+      },
+      "offset_centroid": true
+    }
+  ],
+  "car_case": {
+    "axis": [
+      1000.125,
+      -90.0625
+    ],
+    "radius": 0.3,
+    "outline": [
+      [
+        1000.425,
+        -90.0625
+      ],
+      [
+        1000.125,
+        -89.7625
+      ],
+      [
+        999.825,
+        -90.0625
+      ]
+    ],
+    "pose": [
+      1003.125,
+      -87.0625,
+      17
+    ],
+    "car": {
+      "length": 2,
+      "width": 2
+    },
+    "missing_axis": "reject"
+  }
+}

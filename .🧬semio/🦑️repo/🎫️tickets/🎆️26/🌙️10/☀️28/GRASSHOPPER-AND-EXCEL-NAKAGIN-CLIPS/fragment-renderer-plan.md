@@ -1,0 +1,13 @@
+# Actual-Plane Fragment Rendering
+
+Independent finite capital rays established a genuine crossing: a seam side face penetrates its backing-sheet plane, with signed depth across their positive overlap ranging from −2.322074 mm to +24.768792 mm. No single whole-face painter order can render that region correctly. The source solids retain their construction meaning; rendering partitions their actual material rather than changing dimensions or hiding roles.
+
+A new shared, standard-library-only geometry kernel lives under the existing BIM drafting vocabulary in ✂️fragments. Its schema-first Face records carry original source and polygon identities, actual vertices and an actual plane normal. Convex boundaries remain whole; concave material is ear-triangulated without joining disconnected regions or filling holes. Iterative source-plane BSP splitting and traversal produce correctly ordered convex fragments. No raster proxy, additional runtime package or semantic depth tier is introduced.
+
+The renderer treats proven mixed-sign projected overlaps as mutual dependencies, routing their cyclic components to the kernel. Each original Item.polygons loop remains a distinct boundary; concatenated vertex buffers are never treated as a polygon. Stable local geometry normals satisfy the strict 64-ULP plane contract; approximate bucket/shader normals remain separate styling metadata. Genuine fragment geometry is cached as immutable source/polygon/vertex recipes, then bound to current semantic objects and palette.
+
+Only real original boundary segments may be stroked. Triangulation diagonals and split edges receive no invented outlines. Consecutive compatible fragment runs can use compound paths without crossing intervening geometry or changing paint order; transparent source alpha remains intact. Original source rows and ordered fragment rows are exported separately for independent nearest-surface and point-painter comparison.
+
+The independent oracle continues to derive physical nearest surfaces from the original polygons. It evaluates actual paint fragments separately, avoiding one-rank-per-original-face assumptions. Current capital witnesses, capsule views at multiple resolutions, source-area/identity preservation, current-style cache tests, opaque-body sentinels and real Cairo checks precede final galleries and native replay.
+
+Kernel portable tests cover crossings, a three-face cycle, concavity, disconnected material, coplanar winding, arbitrary views, source area, Pillow masks, independent NumPy rays, cancellation and iterative depth. Final strict kernel verification and the independent source audit are recorded in fragment-ordering-kernel.md and fragment-kernel-audit.md. Renderer integration acceptance remains pending.

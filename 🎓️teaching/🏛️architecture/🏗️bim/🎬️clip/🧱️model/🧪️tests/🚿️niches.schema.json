@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "uncertainty_m",
+    "wall",
+    "path",
+    "basins",
+    "cabinets",
+    "rim",
+    "joint",
+    "diameter",
+    "wall_thickness",
+    "segments",
+    "tolerance"
+  ],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "uncertainty_m": {
+      "type": "number"
+    },
+    "wall": {
+      "type": "string"
+    },
+    "path": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/p2"
+      }
+    },
+    "basins": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "tap",
+          "space",
+          "axis",
+          "size",
+          "back",
+          "mounts"
+        ],
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "tap": {
+            "type": "string"
+          },
+          "space": {
+            "type": "string"
+          },
+          "axis": {
+            "$ref": "#/$defs/p2"
+          },
+          "size": {
+            "$ref": "#/$defs/p2"
+          },
+          "back": {
+            "$ref": "#/$defs/p2"
+          },
+          "mounts": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/$defs/p2"
+            }
+          }
+        }
+      }
+    },
+    "cabinets": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "space",
+          "bounds",
+          "height",
+          "void"
+        ],
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "space": {
+            "type": "string"
+          },
+          "bounds": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          },
+          "height": {
+            "type": "number"
+          },
+          "void": {
+            "$ref": "#/$defs/p3"
+          }
+        }
+      }
+    },
+    "rim": {
+      "type": "number"
+    },
+    "joint": {
+      "type": "number"
+    },
+    "diameter": {
+      "type": "number"
+    },
+    "wall_thickness": {
+      "type": "number"
+    },
+    "segments": {
+      "type": "integer"
+    },
+    "tolerance": {
+      "type": "number"
+    }
+  },
+  "$defs": {
+    "p2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "p3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

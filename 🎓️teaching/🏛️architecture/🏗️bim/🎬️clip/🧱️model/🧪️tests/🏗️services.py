@@ -63,7 +63,16 @@ class CellarServicesContract(unittest.TestCase):
         types={t["tag"] for t in self.model["types"]}
         for tag in self.case["new_tags"]:
             obj=self.elements[tag]
-            self.assertTrue(any(r["class"]=="IfcRelContainedInSpatialStructure" and r["relating"]==obj["storey"] and tag in r["related"] for r in self.model["relations"]))
+            contained=[r for r in self.model["relations"] if r["class"]=="IfcRelContainedInSpatialStructure" and tag in r["related"]]
+            if obj["class"]=="IfcOpeningElement":
+                self.assertEqual(contained,[])
+                hosts=[r["relating"] for r in self.model["relations"] if r["class"]=="IfcRelVoidsElement" and tag in r["related"]]
+                self.assertEqual(len(hosts),1)
+                host=self.elements[hosts[0]]
+                self.assertEqual(obj["storey"],host["storey"])
+                self.assertTrue(any(r["class"]=="IfcRelContainedInSpatialStructure" and r["relating"]==host["storey"] and host["tag"] in r["related"] for r in self.model["relations"]))
+            else:
+                self.assertEqual([r["relating"] for r in contained],[obj["storey"]])
             if obj["class"]!="IfcOpeningElement":
                 self.assertIn(obj["type"],types)
                 self.assertTrue(any(r["class"]=="IfcRelDefinesByType" and r["relating"]==obj["type"] and tag in r["related"] for r in self.model["relations"]))

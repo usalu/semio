@@ -1,0 +1,133 @@
+{
+  "source": "b54353ce1417fe19736eadebf1e88b59e99657c3c5852d3a0c8d158106793c13",
+  "cases": [
+    {
+      "opening": "OP-D-ENTRY",
+      "host": "CW-1",
+      "part": 48,
+      "geometry_id": 530,
+      "solid": "#530=IFCEXTRUDEDAREASOLID(#531,#532,#6828,0.035);",
+      "profile": "#531=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#534);",
+      "curve": "#534=IFCPOLYLINE((#535,#536,#537,#538,#535));",
+      "points": [
+        [
+          8.637092094,
+          4.582500163
+        ],
+        [
+          8.64,
+          4.582500162
+        ],
+        [
+          8.64,
+          4.5825064
+        ],
+        [
+          8.637092094,
+          4.582500164
+        ],
+        [
+          8.637092094,
+          4.582500163
+        ]
+      ],
+      "native_triangle_count": 10,
+      "exact_bit_invalid_edges": 4
+    },
+    {
+      "opening": "OP-D-ENTRY",
+      "host": "CW-1",
+      "part": 212,
+      "geometry_id": 1858,
+      "solid": "#1858=IFCEXTRUDEDAREASOLID(#1859,#1860,#6828,0.004);",
+      "profile": "#1859=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#1862);",
+      "curve": "#1862=IFCPOLYLINE((#1863,#1864,#1865,#1866,#1863));",
+      "points": [
+        [
+          3.276638726,
+          9.769617544
+        ],
+        [
+          3.178151148,
+          10.664212534
+        ],
+        [
+          3.178151141,
+          10.664212533
+        ],
+        [
+          3.276638664,
+          9.769617537
+        ],
+        [
+          3.276638726,
+          9.769617544
+        ]
+      ],
+      "native_triangle_count": 10,
+      "exact_bit_invalid_edges": 4
+    },
+    {
+      "opening": "OP-D-ENTRY",
+      "host": "CW-1",
+      "part": 213,
+      "geometry_id": 1867,
+      "solid": "#1867=IFCEXTRUDEDAREASOLID(#1868,#1869,#6828,0.004);",
+      "profile": "#1868=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#1871);",
+      "curve": "#1871=IFCPOLYLINE((#1872,#1873,#1874,#1872));",
+      "points": [
+        [
+          3.175415381,
+          10.689062395
+        ],
+        [
+          3.167394903,
+          10.761915036
+        ],
+        [
+          3.175415377,
+          10.689062394
+        ],
+        [
+          3.175415381,
+          10.689062395
+        ]
+      ],
+      "native_triangle_count": 6,
+      "exact_bit_invalid_edges": 4
+    },
+    {
+      "opening": "OP-D-SHARED-BATH-SON",
+      "host": "W-SHARED-BATH-N",
+      "part": 316,
+      "geometry_id": 2984,
+      "solid": "#2984=IFCEXTRUDEDAREASOLID(#2985,#2986,#3083,0.99);",
+      "profile": "#2985=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#2988);",
+      "curve": "#2988=IFCPOLYLINE((#2989,#2990,#2991,#2992,#2989));",
+      "points": [
+        [
+          2.640294118,
+          15.525882353
+        ],
+        [
+          2.68,
+          15.525882353
+        ],
+        [
+          2.68,
+          15.585882353
+        ],
+        [
+          2.700294118,
+          15.585882353
+        ],
+        [
+          2.640294118,
+          15.525882353
+        ]
+      ],
+      "native_triangle_count": 10,
+      "exact_bit_invalid_edges": 6
+    }
+  ]
+}

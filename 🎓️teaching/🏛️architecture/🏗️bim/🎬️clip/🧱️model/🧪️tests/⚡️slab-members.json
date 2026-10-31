@@ -1,0 +1,214 @@
+{
+  "title": "Private Slab Entry Reuse with Public Result Isolation",
+  "member": "NEUTRAL-CACHE-MEMBER",
+  "source_parts": [
+    {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "material": "MAT-RC"
+    }
+  ],
+  "cached_slab": {
+    "parts": [
+      {
+        "outline": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.2,
+        "member": "NEUTRAL-CACHE-MEMBER",
+        "material": "MAT-RC"
+      },
+      {
+        "outline": [
+          [
+            8,
+            0
+          ],
+          [
+            9,
+            0
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            8,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.2,
+        "member": "OTHER",
+        "material": "MAT-RC"
+      }
+    ],
+    "shared_parts": [
+      {
+        "outline": [
+          [
+            2,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.2,
+        "member": "NEUTRAL-CACHE-MEMBER",
+        "material": "MAT-RC"
+      }
+    ],
+    "full_parts": [
+      {
+        "outline": [
+          [
+            1,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.2,
+        "member": "NEUTRAL-CACHE-MEMBER",
+        "material": "MAT-RC"
+      },
+      {
+        "outline": [
+          [
+            2,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            2,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.2,
+        "member": "NEUTRAL-CACHE-MEMBER",
+        "material": "MAT-RC"
+      },
+      {
+        "outline": [
+          [
+            8,
+            0
+          ],
+          [
+            9,
+            0
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            8,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.2,
+        "member": "OTHER",
+        "material": "MAT-RC"
+      }
+    ],
+    "finish_parts": [
+      {
+        "outline": [
+          [
+            8,
+            0
+          ],
+          [
+            9,
+            0
+          ],
+          [
+            9,
+            1
+          ],
+          [
+            8,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.2,
+        "member": "OTHER",
+        "material": "MAT-RC",
+        "role": "unrelated_finish"
+      }
+    ],
+    "marker": "original"
+  },
+  "expected": {
+    "shared_count": 2,
+    "full_volume": 1.4,
+    "soffit": 0
+  }
+}

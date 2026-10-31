@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "title",
+    "width",
+    "overall_height",
+    "rough_height",
+    "glass_plane",
+    "rail_center_height",
+    "rail_height_uncertainty",
+    "canopy_thickness",
+    "canopy_projection",
+    "canopy_beam_face",
+    "canopy_frame_contact",
+    "column_probe",
+    "fixed_station",
+    "fold_profiles"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "width": {
+      "type": "number"
+    },
+    "overall_height": {
+      "type": "number"
+    },
+    "rough_height": {
+      "type": "number"
+    },
+    "glass_plane": {
+      "type": "number"
+    },
+    "rail_center_height": {
+      "type": "number"
+    },
+    "rail_height_uncertainty": {
+      "type": "number"
+    },
+    "canopy_thickness": {
+      "type": "number"
+    },
+    "canopy_projection": {
+      "type": "number"
+    },
+    "canopy_beam_face": {
+      "type": "number"
+    },
+    "canopy_frame_contact": {
+      "type": "number"
+    },
+    "column_probe": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "fixed_station": {
+      "type": "number"
+    },
+    "fold_profiles": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

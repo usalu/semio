@@ -1,0 +1,67 @@
+{
+  "cases": [
+    {
+      "id": "mixed",
+      "functions": [
+        "test_function"
+      ],
+      "classes": [
+        {
+          "name": "LocalContract",
+          "methods": [
+            "test_method"
+          ]
+        }
+      ],
+      "aliases": true,
+      "imports": true,
+      "expected": [
+        "case_mixed.LocalContract.test_method",
+        "case_mixed.test_function"
+      ],
+      "bodies": [
+        "method",
+        "function"
+      ]
+    },
+    {
+      "id": "function_only",
+      "functions": [
+        "test_alpha",
+        "test_beta"
+      ],
+      "classes": [],
+      "aliases": false,
+      "imports": false,
+      "expected": [
+        "case_function_only.test_alpha",
+        "case_function_only.test_beta"
+      ],
+      "bodies": [
+        "alpha",
+        "beta"
+      ]
+    },
+    {
+      "id": "custom_hook",
+      "functions": [
+        "test_hidden"
+      ],
+      "classes": [
+        {
+          "name": "HiddenContract",
+          "methods": [
+            "test_hidden_method"
+          ]
+        }
+      ],
+      "hook": true,
+      "expected": [
+        "case_custom_hook.test_authoritative"
+      ],
+      "bodies": [
+        "authoritative"
+      ]
+    }
+  ]
+}

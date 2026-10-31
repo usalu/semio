@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native Construction Exchange Acceptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "physical_classes",
+    "languages",
+    "attributes",
+    "tolerance",
+    "void_class",
+    "void_relationship",
+    "opening_witnesses",
+    "identity",
+    "void_spatial_containment"
+  ],
+  "properties": {
+    "physical_classes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "IfcFooting",
+          "IfcRailing"
+        ]
+      }
+    },
+    "languages": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "en",
+          "de"
+        ]
+      }
+    },
+    "attributes": {
+      "const": 9
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "void_class": {
+      "const": "IfcOpeningElement"
+    },
+    "void_relationship": {
+      "const": "IfcRelVoidsElement"
+    },
+    "opening_witnesses": {
+      "type": "array",
+      "minItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "seed",
+        "alphabet",
+        "groups",
+        "roots"
+      ],
+      "properties": {
+        "namespace": {
+          "const": "6ba7b811-9dad-11d1-80b4-00c04fd430c8"
+        },
+        "seed": {
+          "const": "semio:villa-savoye:"
+        },
+        "alphabet": {
+          "const": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$"
+        },
+        "groups": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 6,
+          "items": {
+            "enum": [
+              "types",
+              "materials",
+              "elements",
+              "spaces",
+              "storeys",
+              "relations"
+            ]
+          }
+        },
+        "roots": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 3,
+          "items": {
+            "enum": [
+              "project",
+              "site",
+              "building"
+            ]
+          }
+        }
+      }
+    },
+    "void_spatial_containment": {
+      "const": false
+    }
+  }
+}

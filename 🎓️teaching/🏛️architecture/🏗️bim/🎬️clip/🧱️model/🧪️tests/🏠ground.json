@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "source": "CMN2021 visitor plan, independently registered R32; source phase contemporary; coordinates inferred ±0.20 m",
+  "source": "Original FLC19441/book24 + Author45 completed ground programme and239–240 sanitary programme; R32 contemporary controls retained where unchanged; original registered niche controls in 🚿️niches.json; R95 current owned RF-1A body-band confirms rejected route0.3228m2 (prior0.30 predates complete ramp construction)",
   "target": "original-completed-1930-1931; contemporary diagram supports topology, not original exact dimensions",
   "walls": {
     "W-G-W": [
@@ -65,12 +65,12 @@
     ],
     "W-G-SERVICE": [
       [
-        7.05,
+        7.015,
         11.9
       ],
       [
-        7.05,
-        21.4
+        7.015,
+        18.2
       ]
     ],
     "W-G-ROOM-10": [
@@ -79,28 +79,44 @@
         11.9
       ],
       [
-        7.05,
+        7.015,
         11.9
       ]
     ],
     "W-G-ROOM-13": [
       [
-        3.15,
-        14
+        7.015,
+        16.08
       ],
       [
-        7.05,
-        14
+        4.75,
+        16.08
+      ],
+      [
+        4.75,
+        15.64
+      ],
+      [
+        3.95,
+        15.64
+      ],
+      [
+        3.95,
+        16.06
+      ],
+      [
+        3.15,
+        16.06
       ]
     ],
     "W-G-ROOM-16": [
       [
         3.15,
-        15.95
+        18.2
       ],
       [
-        7.05,
-        15.95
+        8.23,
+        18.2
       ]
     ],
     "W-G-CHAUFFEUR": [
@@ -146,36 +162,26 @@
     "W-CHAUFFEUR-BATH": [
       [
         14.1,
-        18.4
+        16.53767123287671
       ],
       [
         14.1,
         21.4
       ]
-    ],
-    "W-CHAUFFEUR-BATH-S": [
-      [
-        14.1,
-        18.4
-      ],
-      [
-        16,
-        18.4
-      ]
     ]
   },
   "openings": {
     "OP-D-SERVANT-1": [
-      0.55,
-      1.48
+      1.5,
+      2.43
     ],
     "OP-D-SERVANT-2": [
-      2.65,
-      3.58
+      4.2,
+      5.13
     ],
     "OP-D-LAUNDRY": [
-      6.6,
-      7.53
+      4.1,
+      5.03
     ],
     "OP-D-CHAUFFEUR": [
       0.38,
@@ -186,8 +192,8 @@
       2.43
     ],
     "OP-D-CHAUFFEUR-BATH": [
-      1,
-      1.93
+      1.2623287671232895,
+      2.192328767123289
     ],
     "OP-GARAGE": [
       0.1,
@@ -213,14 +219,11 @@
   "basin": {
     "tag": "FIX-HALL-BASIN",
     "centre": [
-      8.23,
-      11.1
+      8.128,
+      13.15
     ],
-    "source_pixel": [
-      447,
-      533
-    ],
-    "uncertainty_m": 0.2
+    "source": "Original FLC19441/book24 + Author45; fixed axis in elliptical-basins-r92 register",
+    "uncertainty_m": 0.12
   },
   "portal": {
     "host": "W-G-E",
@@ -233,278 +236,6 @@
     ]
   },
   "hoist": "OP-HOIST-HATCH",
-  "spaces": {
-    "SP-HALL": [
-      [
-        3.15,
-        10.76
-      ],
-      [
-        3.15,
-        11.9
-      ],
-      [
-        7.05,
-        11.9
-      ],
-      [
-        7.05,
-        20.1
-      ],
-      [
-        8.23,
-        20.1
-      ],
-      [
-        8.23,
-        18
-      ],
-      [
-        10.9,
-        18
-      ],
-      [
-        10.9,
-        8.2
-      ],
-      [
-        13.82,
-        6.17
-      ],
-      [
-        13.27,
-        5.95
-      ],
-      [
-        12.36,
-        5.34
-      ],
-      [
-        11.38,
-        4.89
-      ],
-      [
-        10.5,
-        4.6
-      ],
-      [
-        8.64,
-        4.6
-      ],
-      [
-        7.85,
-        4.87
-      ],
-      [
-        6.9,
-        5.3
-      ],
-      [
-        6.01,
-        5.89
-      ],
-      [
-        5.08,
-        6.65
-      ],
-      [
-        4.35,
-        7.47
-      ],
-      [
-        3.8,
-        8.32
-      ],
-      [
-        3.42,
-        9.16
-      ],
-      [
-        3.27,
-        9.67
-      ],
-      [
-        3.15,
-        10.76
-      ]
-    ],
-    "SP-GARAGE": [
-      [
-        10.9,
-        8.2
-      ],
-      [
-        13.82,
-        6.17
-      ],
-      [
-        14.39,
-        6.9
-      ],
-      [
-        15.13,
-        7.93
-      ],
-      [
-        15.65,
-        9.16
-      ],
-      [
-        15.98,
-        10.25
-      ],
-      [
-        16,
-        10.75
-      ],
-      [
-        16,
-        14.95
-      ],
-      [
-        12.35,
-        18
-      ],
-      [
-        10.9,
-        18
-      ]
-    ],
-    "SP-SERVANTS-1": [
-      [
-        3.15,
-        11.9
-      ],
-      [
-        7.05,
-        11.9
-      ],
-      [
-        7.05,
-        14
-      ],
-      [
-        3.15,
-        14
-      ]
-    ],
-    "SP-SERVANTS-2": [
-      [
-        3.15,
-        14
-      ],
-      [
-        7.05,
-        14
-      ],
-      [
-        7.05,
-        15.95
-      ],
-      [
-        3.15,
-        15.95
-      ]
-    ],
-    "SP-LAUNDRY": [
-      [
-        3.15,
-        15.95
-      ],
-      [
-        7.05,
-        15.95
-      ],
-      [
-        7.05,
-        21.4
-      ],
-      [
-        3.15,
-        21.4
-      ]
-    ],
-    "SP-BOILER": [
-      [
-        7.05,
-        20.1
-      ],
-      [
-        8.23,
-        20.1
-      ],
-      [
-        8.23,
-        21.4
-      ],
-      [
-        7.05,
-        21.4
-      ]
-    ],
-    "SP-CHAUFFEUR-BEDROOM": [
-      [
-        8.23,
-        18
-      ],
-      [
-        12.35,
-        18
-      ],
-      [
-        12.35,
-        21.4
-      ],
-      [
-        8.23,
-        21.4
-      ]
-    ],
-    "SP-CHAUFFEUR": [
-      [
-        12.35,
-        18
-      ],
-      [
-        16,
-        14.95
-      ],
-      [
-        16,
-        18.4
-      ],
-      [
-        14.1,
-        18.4
-      ],
-      [
-        14.1,
-        21.4
-      ],
-      [
-        12.35,
-        21.4
-      ]
-    ],
-    "SP-CHAUFFEUR-BATH": [
-      [
-        14.1,
-        18.4
-      ],
-      [
-        16,
-        18.4
-      ],
-      [
-        16,
-        21.4
-      ],
-      [
-        14.1,
-        21.4
-      ]
-    ]
-  },
   "envelope": [
     [
       3.15,
@@ -595,60 +326,6 @@
       21.4
     ]
   ],
-  "fixture_translations": {
-    "FIX-HALL-BASIN": [
-      1.63,
-      7.2
-    ],
-    "TAP-HALL": [
-      1.63,
-      7.2
-    ],
-    "FIX-SERVANT-BASIN-1": [
-      0.5,
-      0.6
-    ],
-    "TAP-SERVANT-1": [
-      0.5,
-      0.6
-    ],
-    "FIX-SERVANT-RADIATOR-1": [
-      0.5,
-      0.6
-    ],
-    "FIX-SERVANT-BASIN-2": [
-      0.5,
-      0.5
-    ],
-    "TAP-SERVANT-2": [
-      0.5,
-      0.5
-    ],
-    "FIX-SERVANT-RADIATOR-2": [
-      0.5,
-      0.1
-    ],
-    "FIX-LAUNDRY": [
-      0.5,
-      1.5
-    ],
-    "TAP-LAUNDRY-1": [
-      0.5,
-      1.5
-    ],
-    "TAP-LAUNDRY-2": [
-      0.5,
-      1.5
-    ],
-    "FIX-CHAUFFEUR-BASIN": [
-      0,
-      1
-    ],
-    "TAP-CHAUFFEUR": [
-      0,
-      1
-    ]
-  },
   "fixture_spaces": {
     "FIX-HALL-BASIN": "SP-HALL",
     "FIX-HALL-TABLE-1": "SP-HALL",
@@ -691,13 +368,119 @@
     "cellar_owner": "SL-GROUND-CELLAR",
     "thickness": 0.15,
     "material": "MAT-GROUND-CONCRETE",
-    "status": "Unmeasured at-grade ground plate teaching envelope; registered plan extent, thickness/material inferred. Existing cellar slab and its holes remain independently owned.",
+    "status": "Unmeasured150mm at-grade ground-bearing concrete envelope; registered room programme plus inferred continuous garage reveal threshold to actual exterior host face. Room-space envelope remains independent; cellar slab and openings retain separate ownership.",
     "preserve_openings": [
       "OP-HOIST-HATCH",
       "OP-COAL-HATCH"
     ],
     "density": 24,
-    "reinforced": false
+    "reinforced": false,
+    "outline": [
+      [
+        3.15,
+        10.76
+      ],
+      [
+        3.27,
+        9.67
+      ],
+      [
+        3.42,
+        9.16
+      ],
+      [
+        3.8,
+        8.32
+      ],
+      [
+        4.35,
+        7.47
+      ],
+      [
+        5.08,
+        6.65
+      ],
+      [
+        6.01,
+        5.89
+      ],
+      [
+        6.9,
+        5.3
+      ],
+      [
+        7.85,
+        4.87
+      ],
+      [
+        8.64,
+        4.6
+      ],
+      [
+        10.5,
+        4.6
+      ],
+      [
+        11.38,
+        4.89
+      ],
+      [
+        12.36,
+        5.34
+      ],
+      [
+        13.27,
+        5.95
+      ],
+      [
+        13.82,
+        6.17
+      ],
+      [
+        14.39,
+        6.9
+      ],
+      [
+        15.13,
+        7.93
+      ],
+      [
+        15.65,
+        9.16
+      ],
+      [
+        15.98,
+        10.25
+      ],
+      [
+        16,
+        10.75
+      ],
+      [
+        16,
+        10.85
+      ],
+      [
+        16.075,
+        10.85
+      ],
+      [
+        16.075,
+        14.8
+      ],
+      [
+        16,
+        14.8
+      ],
+      [
+        16,
+        21.4
+      ],
+      [
+        3.15,
+        21.4
+      ]
+    ]
   },
   "removed_unsupported_access": {
     "tags": [
@@ -716,46 +499,30 @@
       ]
     ],
     "body_width": 0.6,
-    "expected_overlap_area": 0.3
+    "expected_overlap_area": 0.3228
   },
   "northern_circulation": {
-    "path": [
-      [
-        8.7,
-        8.1
-      ],
-      [
-        8.7,
-        9.7
-      ],
-      [
-        7.8,
-        10.3
-      ],
-      [
-        7.3,
-        10.5
-      ],
-      [
-        7.3,
-        11.25
-      ],
-      [
-        7.48,
-        11.61
-      ],
-      [
-        7.6,
-        12.2
-      ],
-      [
-        7.6,
-        19.4
-      ]
-    ],
-    "body_width": 0.8,
-    "body_height": 2.1,
-    "space": "SP-HALL"
+    "fixture": "🚶️hall.json",
+    "critical_clearance": {
+      "wall_tag": "W-G-SERVICE",
+      "actual_east_finish_face_x": 7.055,
+      "basin_tag": "FIX-HALL-BASIN",
+      "actual_west_edge_x": 7.898,
+      "nominal_gap": 0.843,
+      "axis_y": 13.15,
+      "skirting_tag": "SKIRT-W-G-SERVICE-ground",
+      "actual_east_skirting_face_x": 7.0701,
+      "board_nominal_gap": 0.8279
+    },
+    "partition_reconstruction": {
+      "source": "SAB2024-p45 registered thin service partition; SAB2024-p96 thin inner-leaf family; exact ground build-up inferred",
+      "measurement_grade": "inferred",
+      "material": "LS-PARTITION-08",
+      "type": "TY-PARTITION-08",
+      "thickness": 0.08,
+      "axis_x": 7.015,
+      "retained_cabinet_face_x": 6.975
+    }
   },
   "hoist_approach": {
     "path": [
@@ -776,5 +543,80 @@
     "body_height": 2.1,
     "scope": "Architectural access without parked vehicles; parking occupancy assessed separately",
     "post": "HOIST-JIB"
-  }
+  },
+  "removed_walls": [
+    "W-CHAUFFEUR-BATH-S"
+  ],
+  "curve_cases": [
+    {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        {
+          "bezier": [
+            [
+              0,
+              0
+            ],
+            [
+              0,
+              1
+            ],
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              0
+            ]
+          ]
+        },
+        [
+          0,
+          0
+        ]
+      ],
+      "midpoint": [
+        0.5,
+        0.75
+      ]
+    }
+  ],
+  "expected_spaces": [
+    "SP-HALL",
+    "SP-GARAGE",
+    "SP-SERVANTS-1",
+    "SP-SERVANTS-2",
+    "SP-LAUNDRY",
+    "SP-CHAUFFEUR",
+    "SP-CHAUFFEUR-BEDROOM",
+    "SP-CHAUFFEUR-BATH",
+    "SP-WC-GROUND-SERVICE",
+    "SP-WC-CHAUFFEUR"
+  ],
+  "chauffeur_envelope": [
+    [
+      8.23,
+      18
+    ],
+    [
+      12.35,
+      18
+    ],
+    [
+      16,
+      14.95
+    ],
+    [
+      16,
+      21.4
+    ],
+    [
+      8.23,
+      21.4
+    ]
+  ]
 }

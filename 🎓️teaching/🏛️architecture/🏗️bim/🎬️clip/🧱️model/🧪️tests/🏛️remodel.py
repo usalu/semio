@@ -283,16 +283,16 @@ def test_planters_leave_two_real_garage_rooflights_clear():
 
 
 def test_chauffeur_programme_partitions_the_real_diagonal_studio():
-    """🛏️ Verify3 disjoint chauffeur functions and actual internal door approaches."""
+    """🛏️ Verify4 source-attested disjoint chauffeur functions and actual internal door approaches."""
     from shapely.geometry import LineString, Polygon
     from shapely.ops import unary_union
     geometry = model.building_geometry()
-    tags = ("SP-CHAUFFEUR", "SP-CHAUFFEUR-BEDROOM", "SP-CHAUFFEUR-BATH")
+    tags = ("SP-CHAUFFEUR", "SP-CHAUFFEUR-BEDROOM", "SP-CHAUFFEUR-BATH", "SP-WC-CHAUFFEUR")
     rooms = [Polygon(s["outline"]) for s in geometry["spaces"] if s["tag"] in tags]
     fixture=json.loads(Path(__file__).with_suffix('.json').read_text(encoding='utf8'))['chauffeur_registration']
     ground=json.loads(Path(__file__).with_name(fixture['ground_fixture']).read_text(encoding='utf8'))
-    envelope=unary_union([Polygon(ground['spaces'][tag]) for tag in tags])
-    assert len(rooms) == 3
+    envelope=Polygon(ground['chauffeur_envelope'])
+    assert len(rooms) == 4
     assert sum(room.area for room in rooms)-unary_union(rooms).area < fixture['area_tolerance']
     assert unary_union(rooms).symmetric_difference(envelope).area < fixture['area_tolerance']
     for path in fixture['door_approaches']:

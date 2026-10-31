@@ -12,6 +12,7 @@ exchange=importlib.import_module('🎓️teaching.🏛️architecture.🏗️bim
 def example():
     """🧩 Place an isolated material-part contract on an existing native stair identity."""
     case=json.loads(Path(__file__).with_suffix('.json').read_text(encoding='utf8'));source=deepcopy(api.load_model());stair=next(e for e in source['elements'] if e['tag']==case['stair'])
+    stair['geometry'].pop('nosing_parts',None)
     stair['geometry'].update(kind='curved_straight',step_count=1,step_parts=[case['step']],landing_parts=[case['landing']],structural_parts=[case['structure']])
     return case,source
 

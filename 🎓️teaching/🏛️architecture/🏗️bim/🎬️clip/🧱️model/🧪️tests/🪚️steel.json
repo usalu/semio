@@ -1,0 +1,25 @@
+{
+  "width": 0.035,
+  "depth": 0.035,
+  "thickness": 0.004,
+  "area": 0.000264,
+  "shapes": [
+    {
+      "shape": "angle",
+      "web_center": 0.002
+    },
+    {
+      "shape": "tee",
+      "web_center": 0.0175
+    }
+  ],
+  "source": "SAB2024-p214 T35x35x4 and L35x4; orientation/glass seating inferred",
+  "source_types": [
+    "TY-CURTAIN-METAL",
+    "TY-GROUND-STEEL"
+  ],
+  "source_occurrences": [
+    "CW-1",
+    "G-N-WIN"
+  ]
+}

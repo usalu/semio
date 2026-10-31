@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "id": "cancel_before_semantic_work",
+      "mode": "cancel_before",
+      "geometry": "inclined-stock-circle"
+    },
+    {
+      "id": "cancel_after_actual_height_progress",
+      "mode": "cancel_after_progress",
+      "geometry": "inclined-stock-circle"
+    },
+    {
+      "id": "reject_support_envelope_as_real_section",
+      "mode": "reject_section",
+      "geometry": "partial-beam-end-circle"
+    }
+  ]
+}

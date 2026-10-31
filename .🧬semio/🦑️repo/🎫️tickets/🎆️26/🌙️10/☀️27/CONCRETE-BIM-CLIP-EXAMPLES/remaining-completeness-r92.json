@@ -1,0 +1,131 @@
+{
+  "snapshot_sha256": "dab15496b7ed17877fb8a3c397d47834f650cbf6260b0d00174187f11ecf69b1",
+  "note": "Snapshot hash is serialization, not raw source file hash",
+  "source_products": 544,
+  "actionable_remaining": [
+    {
+      "tag": "FIX-SERVANT-RADIATOR-1",
+      "class": "IfcSpaceHeater",
+      "predefined": "RADIATOR",
+      "current": {
+        "kind": "radiator",
+        "parts": 1,
+        "outline": [
+          [
+            3.6,
+            12.95
+          ],
+          [
+            3.75,
+            12.95
+          ],
+          [
+            3.75,
+            13.35
+          ],
+          [
+            3.6,
+            13.35
+          ]
+        ],
+        "z": [
+          0.15,
+          0.7
+        ]
+      },
+      "evidence": {
+        "source": "CMN2021 §6",
+        "url": "https://www.villa-savoye.fr/content/download/9824393/file/document-visite-villa-savoye-FR-2021.pdf?inLanguage=fre-FR&version=3",
+        "attested": "One radiator in each service bedroom",
+        "unknown": [
+          "original section count",
+          "exact metric dimensions",
+          "valves",
+          "original support mechanism",
+          "concealed branch routes"
+        ]
+      },
+      "action": "Replace solid box with source-qualified inferred sectioned construction using existing radiator family, retain identity/registered placement unless actual support/collision requires bounded adjustment; provide real feet or wall-bracket support and no invented hidden branch.",
+      "acceptance": [
+        "real native section gaps and metal solids",
+        "source qualification retained for count and dimensions",
+        "actual floor or wall mounting contact",
+        "positive-body approach to room and basin",
+        "native ENDE class/material/volume/closure audit"
+      ],
+      "status": {
+        "value": "repaired",
+        "native_report": "servant-radiators-native-review-r92.md",
+        "source": "cb02a8ba",
+        "parts": 98,
+        "sections": 12,
+        "feet": 2,
+        "section_and_support_basis": "inferred"
+      }
+    },
+    {
+      "tag": "FIX-SERVANT-RADIATOR-2",
+      "class": "IfcSpaceHeater",
+      "predefined": "RADIATOR",
+      "current": {
+        "kind": "radiator",
+        "parts": 1,
+        "outline": [
+          [
+            3.6,
+            17.15
+          ],
+          [
+            3.75,
+            17.15
+          ],
+          [
+            3.75,
+            17.55
+          ],
+          [
+            3.6,
+            17.55
+          ]
+        ],
+        "z": [
+          0.15,
+          0.7
+        ]
+      },
+      "evidence": {
+        "source": "CMN2021 §6",
+        "url": "https://www.villa-savoye.fr/content/download/9824393/file/document-visite-villa-savoye-FR-2021.pdf?inLanguage=fre-FR&version=3",
+        "attested": "One radiator in each service bedroom",
+        "unknown": [
+          "original section count",
+          "exact metric dimensions",
+          "valves",
+          "original support mechanism",
+          "concealed branch routes"
+        ]
+      },
+      "action": "Replace solid box with source-qualified inferred sectioned construction using existing radiator family, retain identity/registered placement unless actual support/collision requires bounded adjustment; provide real feet or wall-bracket support and no invented hidden branch.",
+      "acceptance": [
+        "real native section gaps and metal solids",
+        "source qualification retained for count and dimensions",
+        "actual floor or wall mounting contact",
+        "positive-body approach to room and basin",
+        "native ENDE class/material/volume/closure audit"
+      ],
+      "status": {
+        "value": "repaired",
+        "native_report": "servant-radiators-native-review-r92.md",
+        "source": "cb02a8ba",
+        "parts": 98,
+        "sections": 12,
+        "feet": 2,
+        "section_and_support_basis": "inferred"
+      }
+    }
+  ],
+  "early_plant": {
+    "report": "two-boilers-evidence-r92.md",
+    "unresolved": "Two units attested by31May1932; second original1930–31 presence/date/XY/functions not secured. BL-1 alone is not exhaustive earlyplant evidence. No fabricated second location."
+  }
+}

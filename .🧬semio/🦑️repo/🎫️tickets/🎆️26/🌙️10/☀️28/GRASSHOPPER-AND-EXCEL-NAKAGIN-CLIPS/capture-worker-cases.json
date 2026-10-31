@@ -1,0 +1,7 @@
+{
+  "workers": 9,
+  "failure_worker": 2,
+  "drift_checkpoint": 3,
+  "invalid_records": ["wrong_target", "wrong_arguments", "wrong_baseline", "changed_source", "changed_runtime", "wrong_cache"],
+  "panel_colours": [[211, 43, 17], [19, 173, 61], [37, 71, 223], [199, 149, 29]]
+}

@@ -1,0 +1,157 @@
+{
+  "fixture": {
+    "tag": "NEUTRAL-FLOOR",
+    "class": "IfcCovering",
+    "predefined_type": "FLOORING",
+    "storey": "first",
+    "geometry": {
+      "kind": "flooring",
+      "base_level": "first",
+      "parts": [
+        {
+          "outline": [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "z0": -0.03,
+          "z1": -0.015,
+          "role": "bedding",
+          "material": "MAT-MORTAR-PUTTY"
+        },
+        {
+          "outline": [
+            [
+              0,
+              0
+            ],
+            [
+              2,
+              0
+            ],
+            [
+              2,
+              1
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "z0": -0.015,
+          "z1": 0,
+          "role": "wearing",
+          "material": "MAT-TILE"
+        }
+      ]
+    },
+    "metadata": {
+      "domains": [
+        "architecture"
+      ]
+    },
+    "material": "MAT-TILE"
+  },
+  "expected": {
+    "architecture_group": "details",
+    "volume": 0.06,
+    "wearing_area": 2
+  },
+  "ground": {
+    "required": [
+      "FIN-SERVANTS-1-WASH",
+      "FIN-SERVANTS-2-WASH",
+      "FIN-LAUNDRY",
+      "FIN-HALL",
+      "FIN-CHAUFFEUR",
+      "FIN-CHAUFFEUR-BATH",
+      "FIN-WC-GROUND-SERVICE",
+      "FIN-WC-CHAUFFEUR",
+      "FIN-SERVANTS-1",
+      "FIN-SERVANTS-2",
+      "FIN-CHAUFFEUR-BEDROOM"
+    ],
+    "oak_thickness": 0.025,
+    "oak_strip_width": 0.06,
+    "oak_batten_depth": 0.014,
+    "bitumen_depth": 0.001,
+    "ground_cap": -0.04,
+    "slab_thickness": {
+      "SL-GROUND": 0.15,
+      "SL-GROUND-CELLAR": 0.07
+    },
+    "tile_module": 0.15,
+    "hall_angle": 45,
+    "laundry_angle": 0,
+    "coal_bay_roles": [
+      "inferred_indoor_coal_bay_levelling",
+      "inferred_continuous_wall_underlay"
+    ]
+  },
+  "first_materials": {
+    "FIN-SALON": "MAT-GRES-OCHRE",
+    "FIN-KITCHEN": "MAT-GRES-OCHRE",
+    "FIN-FIRST-HALL": "MAT-GRES-WHITE",
+    "FIN-SHARED-BATH": "MAT-GRES-OCHRE",
+    "FIN-GUEST-TILE": "MAT-GRES-OCHRE",
+    "FIN-WC-FIRST-WEST": "MAT-GRES-OCHRE",
+    "FIN-WC-FIRST-EAST": "MAT-GRES-OCHRE",
+    "FIN-PARENT-BATH": "MAT-GRES-WHITE",
+    "FIN-SON": "MAT-PARQUET",
+    "FIN-PARENTS": "MAT-PARQUET",
+    "FIN-BOUDOIR": "MAT-PARQUET",
+    "FIN-GUEST-PARQUET": "MAT-PARQUET",
+    "FIN-PANTRY": "MAT-GRES-UNRESOLVED"
+  },
+  "remaining_storeys": {
+    "cellar_slab": "SL-CELLAR",
+    "cellar_top": -2.42,
+    "cellar_rooms": [
+      "SP-CELLAR-W",
+      "SP-CELLAR-E"
+    ],
+    "roof_slab": "SL-R",
+    "roof_room": "SP-SOLARIUM",
+    "roof_finished_top": 6.6,
+    "roof_mid": 6.59,
+    "roof_material": "MAT-ROOF-FINISH",
+    "cellar_finished_top": -2.4,
+    "cellar_floor": "FIN-CELLAR-CEMENT",
+    "cellar_structural_material": "MAT-LIME-CONCRETE",
+    "roof_slabs": [
+      "SL-R",
+      "SL-KIOSK"
+    ],
+    "roof_coverings": [
+      "FIN-ROOF-PAVING",
+      "FIN-ROOF-GRAVEL",
+      "FIN-ROOF-STAIR"
+    ]
+  },
+  "pavers": {
+    "main": "FIN-TERRACE-PAVING",
+    "family_thickness": 0.04,
+    "nominal_length": 0.73,
+    "nominal_row_widths": [
+      0.65,
+      0.7,
+      0.72
+    ],
+    "inferred_joint_width": 0.025,
+    "unresolved_small_patio": "FIN-KITCHEN-PATIO"
+  },
+  "service_stair_material": "MAT-GRES-BLACK"
+}

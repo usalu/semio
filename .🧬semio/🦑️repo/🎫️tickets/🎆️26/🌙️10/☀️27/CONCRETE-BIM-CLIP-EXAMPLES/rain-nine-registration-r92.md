@@ -1,0 +1,9 @@
+# Original Rainwater No9 Registration R92
+
+Retained inputs: structural-service-cases-r92.json service graph and rain-nine-candidate-r92.json. Primary author text236 establishes original kitchen-patio water collected through a downpipe outside the curved ground glazing, covered in sheet metal. Original photographs022 reproduced on238/244 were inspected. Later replacement by two gargoyles is explicitly a restoration change, so those gargoyles must not be added to the original target.
+
+Actual original FLC19573/19574 coloured sketches on238 and1965 TRACE D ORIGINE061 crop237 were recovered. They establish additional source graph routes, but the specific No9 callout and every metric bend cannot be isolated securely in this reproduction. Earlier design sketches are not automatically executed routes. No exact historical XY, diameter or below-ground outfall is claimed.
+
+The companion candidate binds an optional reconstruction to actual SP-KITCHEN-TERRACE, SL-R kitchen-patio void and CW-1 PATH-HALL near its(3.42,9.16) vertex. Local outward normal is computed from the actual adjacent path segments; a casing/tube axis can sit outside the glazing without moving it. This is explicitly a host-relative construction inference, not a recovered original station. All proposed pipe/skin/cover dimensions are inferred. The8cm drain dimension inside other pilotis does not source No9's diameter.
+
+This separation is deliberate: original presence/function/casing are secure, logical collector→downpipe→ground continuation is source-bound, while exact metric route remains unresolved. If root authors the qualified candidate, it needs actual native glass/steel/wall clearance, attachment and material ownership, a real pipe cavity, source-defined inlet/bore and independent quantities. Do not present this as perfect original MEP registration.

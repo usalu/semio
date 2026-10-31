@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import importlib
 
+import numpy as np
+
 _d = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _c = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.🐍️")
 _engine = importlib.import_module("manim")
@@ -151,38 +153,69 @@ class Detail:
         return drawing
 
     def wall_detail(self, point=(0, 0, 0), scale: float = 0.62, *, model=None, tag: str = "W-S", dims=True):
-        """🪟 Cut the source wall through its ribbon opening, retaining wall and window identities."""
+        """🪟 Section actual source wall and filling material through the selected opening."""
+        from copy import deepcopy
+
         if scale <= 0:
             raise ValueError("A wall detail requires positive scale")
         g = _c.geometry(model)
         wall = next(item for item in g["walls"] if item["tag"] == tag)
-        length = wall["length"]
         openings = wall["openings"]
-        selected = min(openings,key=lambda op:abs((op["start"]+op["end"])/2-length/2)) if openings else None
-        station = (selected["start"]+selected["end"])/2 if selected else length/2
-        thickness = wall["thickness"]
-        view = _d.View("section",point,scale,centre=(0.0,0.0,(wall["base"]+wall["top"])/2),axis="y")
+        selected = min(openings,key=lambda op:abs((op["start"]+op["end"])/2-wall["length"]/2)) if openings else None
+        station = (selected["start"]+selected["end"])/2 if selected else wall["length"]/2
+        path = wall.get("path",[wall.get("start"),wall.get("end")])
+        remaining = station
+        for first,last in zip(path,path[1:]):
+            delta = np.asarray(last,float)-first
+            length = float(np.linalg.norm(delta))
+            if remaining<=length:
+                direction = delta/length
+                origin = np.asarray(first,float)+remaining*direction
+                break
+            remaining-=length
+        else:
+            raise ValueError("Wall detail station lies outside its source path")
+        normal = np.array([-direction[1],direction[0]])
+        view = _d.View("section",point,scale,centre=(0.,0.,(wall["base"]+wall["top"])/2),axis="y")
         drawing = _d.Drawing(view)
-        y0,y1 = -thickness/2,thickness/2
+        def sections(part):
+            """✂️ Rotate actual occupied material into a local station/normal cut without flattening it."""
+            def xy(p):
+                """📍 Preserve source station and signed normal offset."""
+                offset=np.asarray(p[:2],float)-origin
+                return [float(offset@direction),float(offset@normal)]
+            local=deepcopy(part)
+            if "mesh" in part or "section" in part:
+                local={"mesh":{"vertices":[[*xy(v),v[2]] for v in _model.part_vertices(part)],"faces":_model.part_faces(part)},"z0":part["z0"],"z1":part["z1"]}
+            else:
+                local["outline"]=[xy(p) for p in part["outline"]]
+                if "holes" in part:local["holes"]=[[xy(p) for p in ring] for ring in part["holes"]]
+                if "top_outline" in part:local["top_outline"]=[xy(p) for p in part["top_outline"]]
+            return _model.part_sections(local,0.,0)
         group = _engine.VGroup()
-        for s,e,z0,z1 in _plan.wall_cells(wall):
-            if s <= station < e:
-                group.add(_d.polygon([view(0,y0,z0),view(0,y1,z0),view(0,y1,z1),view(0,y0,z1)],_d.ARCH,0.75,_d.ARCH,_d.W_CUT))
+        offsets=[]
+        for part in wall["parts"]:
+            for ring in sections(part):
+                offsets.extend(p[0] for p in ring)
+                group.add(_d.polygon([view(0,h,z) for h,z in ring],_d.ARCH,.75,_d.ARCH,_d.W_CUT))
         _part(drawing,tag,group)
+        fillings={item["tag"]:item for item in g.get("fillings",[])}
+        if g.get("curtain_wall"):fillings[g["curtain_wall"]["tag"]]=g["curtain_wall"]
         for opening in openings:
-            if not opening["start"] <= station <= opening["end"]:
-                continue
-            tag = opening.get("fill_tag") or opening.get("window_tag")
-            shape = _engine.VGroup()
-            if tag:
-                colour = _d.ARCH if opening.get("fill_class") == "IfcDoor" else _d.GLASS
-                shape.add(_d.polyline([view(0,0,opening["sill_z"]),view(0,0,opening["head_z"])],colour,_d.W_EDGE))
-                _part(drawing,tag,shape)
+            if not opening["start"]<=station<=opening["end"]:continue
+            fill_tag=opening.get("fill_tag") or opening.get("window_tag")
+            shape=_engine.VGroup()
+            if fill_tag:
+                for part in fillings[fill_tag]["parts"]:
+                    colour=_d.GLASS if part.get("role")=="glass" else _d.ARCH
+                    for ring in sections(part):shape.add(_d.polygon([view(0,h,z) for h,z in ring],colour,.75,colour,_d.W_EDGE))
+                _part(drawing,fill_tag,shape)
             drawing.part(opening["tag"],shape)
-        if dims:
-            drawing.add(self.dimension(view(0,y0,wall["base"]),view(0,y1,wall["base"]),self.quantity(thickness,"m"),offset=-0.3,color=_d.DATA))
+        if dims and offsets:
+            low,high=min(offsets),max(offsets)
+            drawing.add(self.dimension(view(0,low,wall["base"]),view(0,high,wall["base"]),self.quantity(high-low,"m"),offset=-.3,color=_d.DATA))
         return drawing
-     
+
     def solarium_detail(self, point=(0, 0, 0), scale: float = 1.5, *, model=None, tag: str | None = None, dims=True):
         """🌀 Cut the native landscape aperture, reinforced shelf/head and sloping wall crest."""
         if scale <= 0:

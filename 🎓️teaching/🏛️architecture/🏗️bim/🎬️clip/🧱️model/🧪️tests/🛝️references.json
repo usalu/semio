@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "flight": {
+    "path": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "portion": [
+      0,
+      1
+    ],
+    "thickness": 0.06,
+    "finish": 0.008,
+    "offsets": [
+      -0.5,
+      0.5
+    ],
+    "volume": 0.12
+  },
+  "landing": {
+    "outline": [
+      [
+        -0.5,
+        1
+      ],
+      [
+        0.5,
+        1
+      ],
+      [
+        0.5,
+        1.2
+      ],
+      [
+        -0.5,
+        1.2
+      ]
+    ],
+    "portion": 0.5,
+    "thickness": 0.06,
+    "volume": 0.012,
+    "top": 0.492
+  },
+  "positive_cut_width": 2e-9,
+  "actual_tags": [
+    "RF-1A",
+    "RF-1B",
+    "RF-2A",
+    "RF-2B",
+    "RM-1",
+    "RM-2"
+  ]
+}

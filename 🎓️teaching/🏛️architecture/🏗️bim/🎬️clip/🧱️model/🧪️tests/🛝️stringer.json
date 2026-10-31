@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "tag": "BEAM-RAMP-FIRST-STRINGER",
+  "class": "IfcBeam",
+  "storey": "ground",
+  "material": "MAT-RC",
+  "section": {
+    "width": 0.12,
+    "vertical_depth": 0.26,
+    "basis": "sourced",
+    "source": "SAB2024-p134; FLC-H1-13-306"
+  },
+  "alignment": {
+    "x": 10.898,
+    "y0": 8.23,
+    "y1": 16.889,
+    "rc_top_start": -0.008,
+    "rc_top_end": 1.577,
+    "basis": "inferred",
+    "source": "Registered supports13/18/25; source8mm finish; vertical-depth convention"
+  },
+  "supports": [
+    "13",
+    "18",
+    "25"
+  ]
+}

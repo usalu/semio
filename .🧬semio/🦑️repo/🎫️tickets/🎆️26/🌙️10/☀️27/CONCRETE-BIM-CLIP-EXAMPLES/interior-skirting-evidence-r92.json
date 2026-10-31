@@ -1,0 +1,57 @@
+{
+  "source": "SAB2024-p190; p106Fig5 and p183Fig4 original1930photo references",
+  "known": {
+    "material": "painted timber board",
+    "section_m": [
+      0.015,
+      0.09
+    ],
+    "upper_edge": "slightly rounded",
+    "colour_family": "gray in original photographs, exactRGBunmeasured",
+    "coverage": "interior room walls includingkitchen/baths, interiorpilotis and rampguards; continuesunderbuilt-incabinets leavingcementinside raised",
+    "source_records": "SAB190 text and original photographs; sourcep106 citesFLC L2(17)061; p183FLC L2(17)059"
+  },
+  "current": {
+    "native_skirting_coverings": [],
+    "material": "Genericpaintedwood exists but no explicit original9cm wall/pilotis skirting geometry found in material/product census"
+  },
+  "action": {
+    "represent_profile": "Nativepaintedtimber15×90mm with inferredsmallupperround radius",
+    "host_registration": "Actualinteriorwallfaces, pilotisfinishedcontours andrampguardbase; clipopenings/doorframes andbuilt-ins; excludeexteriorcementplinths.",
+    "ownership": "Resolvewhetherwoodreplaceslowplasterorprojectsfromit usingphoto/section; neverduplicateoccupiedplastervolume. Existingwallinterfaces canownlowface materialregion.",
+    "qualification": "Originalgrossprofile/materialattested; precise jointorigin/roundradius, protrusionvsflush and attachmentunmeasured."
+  },
+  "acceptance": [
+    "sourceboundinteriorhostcoverage",
+    "openings/doorleaf/bodyroutes preservedwithactualskirtingretained",
+    "nooverlapofwood/plaster/cabinetmaterial",
+    "actualfloorandwallcontact",
+    "nativeclass/material/spatial/closedness/volume"
+  ],
+  "route_limit": "Ifskirtingprojects15mm intohall, previous.77cylinderwitnessmustbererun; do notmovethebasingtoforceoldclearance. Flushreplacement maypreserveoccupiedenvelopebutisnotyetdocumented.",
+  "photo_review": {
+    "original183": {
+      "file": "🗑️generated/book-figures-183-r92.jpg",
+      "crop": {
+        "left": 0,
+        "top": 405,
+        "width": 423,
+        "height": 296
+      },
+      "identity": "FLC L2(17)059, November1930 Gravot, bookFig4",
+      "observation": "Darkcolumnbase ring visibly wider thanwhite shaft; wall/guard strips have atoplip/shadow, consistentwithprojectingboard.",
+      "limit": "Rasterdoesnotmeasureexactprojectionorproveeachwallinstallation."
+    },
+    "original190": {
+      "file": "🗑️generated/book-figures-190-r92.jpg",
+      "region": "toporiginalsalonphoto",
+      "observation": "Distinctgraybasestripunderbluecorner andsquarejamb."
+    },
+    "modern190": {
+      "region": "bottomcupboardphoto",
+      "observation": "Roundedproudboardandraisedcementinsidecupboardvisible.",
+      "limit": "Modernphotodoesnotindependentlyestablish1930projection."
+    },
+    "recommendation": "Explicitinferred15mmprojection ismoredefensiblethanflushreplacementchosenonlytopreserveclearance. Retainactualplasterownershipandrerunbodyroutes."
+  }
+}

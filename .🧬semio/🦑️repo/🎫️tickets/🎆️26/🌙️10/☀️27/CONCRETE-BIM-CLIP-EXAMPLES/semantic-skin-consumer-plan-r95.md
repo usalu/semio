@@ -1,0 +1,13 @@
+# Semantic CSG Skin Consumers R95
+
+Authoritative parts keep material, role, and their semantic CSG expression. Runtime renderer consumers must request the separate backend display product and require `purpose: display_only`. No display mesh is added beside CSG on the physical part, used for quantities, captured as physical material, or substituted into the independent audit.
+
+The existing common face entry is axon/primitives `_part_faces`. It feeds the six continuous same-product material-skin groups and the slab finish dispatcher. Display cells must inherit the original source material/role, appearance and surface finishes before reaching the exact coplanar/projection skin union. Grouping remains per product GUID and stage. Holes, source colours, actual distinct material boundaries and bounded four-view native coordinate caching remain intact. The display producer must enter renderer freshness tokens.
+
+Additional consumers need explicit integration: `_surface_stage`, `_surface_prims` and `_build` currently read native `z0`, outlines or footprints for stage/centre; `_slab_prims` reconstructs structural slabs as outline prisms; `_column_prims` and `_column_band` assume direct sections and heights. Those paths must consume the labelled display product for geometry and centres, while stage/order and source identity continue to refer to the original product. Native mesh slabs must use real faces rather than an outline extrusion. A single face-dispatch change alone cannot support CSG-only parts safely.
+
+The core interfaces supplied by Launcher are semantic `translate`, conservative original-stock `bounds`, `reference_material_parts`, and a separately labelled `display_parts`. Physical layer construction must use the first three interfaces. Its local/world conversion must recursively preserve semantic operands, including original axes, radii, genuine apertures and bore air. Upper-face wearing classification cannot replace semantic Reference geometry by a bounding box; current source cap primitives and inherited real air exclusions must remain explicit.
+
+Required controls include a nested difference with a genuine hole, multiple source materials and surface appearance, source immutability, producer invalidation, same-product seam removal across generated display cells, preserved selection/stage identity, and rejection of an unlabelled physical-looking display return. Independent GEOS checks the displayed footprint and native Cairo checks actual opaque/ghost pixels. Actual semantic products and native IFC Boolean output remain separate acceptance gates.
+
+This is the integration checkpoint. Runtime renderer CSG dispatch has not been applied yet; it follows the current full roof proof and the concrete backend display interface.

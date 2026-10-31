@@ -1,0 +1,3 @@
+# Native Opening Relation Narration Audit R92
+
+Audited all six owned clip sources after the source IFC containment correction. No owned narration or relationship diagram asserts direct spatial containment for an IfcOpeningElement. Information relations show the selected column support; objects spatial containment also shows its selected physical column. The objects composition diagram separately connects wall→opening through IfcRelVoidsElement and opening→window through IfcRelFillsElement. Representation diagrams use the same explicit host/void/fill chain. Decke/void captions describe retained aperture geometry and do not claim spatial containment. No narration/source edit is required for this correction.

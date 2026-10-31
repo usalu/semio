@@ -59,10 +59,15 @@ class BimPresentationContract(unittest.TestCase):
         """🎞️ Exercise real animation setup, interpolation, cleanup and Cairo in both languages."""
         from unittest.mock import patch
         import os
+        import time
 
         import numpy as np
         from manim import tempconfig
         from PIL import Image
+
+        def timing(phase, started, **values):
+            """⏱️ Flush actual native work durations without changing execution or assertions."""
+            print('[DEBUG] native-timing '+json.dumps({'phase':phase,'seconds':time.perf_counter()-started,**values}),flush=True)
 
         output = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"])
         output.mkdir(parents=True, exist_ok=True)
@@ -84,10 +89,15 @@ class BimPresentationContract(unittest.TestCase):
 
                     def play(scene, *animations, **kwargs):
                         """🎬 Run native lifecycle at three interpolation points without video output."""
+                        started = time.perf_counter()
                         compiled = scene.compile_animations(*animations, **kwargs)
+                        timing("animation-compile",started,count=len(compiled))
+                        started = time.perf_counter()
                         scene.add_mobjects_from_animations(compiled)
                         scene.animations = compiled
                         scene.begin_animations()
+                        timing("animation-begin",started,count=len(compiled))
+                        started = time.perf_counter()
                         for animation in compiled:
                             pending = [animation]
                             while pending:
@@ -99,10 +109,13 @@ class BimPresentationContract(unittest.TestCase):
                                 animation.update_mobjects(0.25)
                                 animation.interpolate(alpha)
                             scene.update_mobjects(0.25)
+                        timing("animation-interpolation",started,count=len(compiled))
+                        started = time.perf_counter()
                         for animation in compiled:
                             animation.finish()
                             animation.clean_up_from_scene(scene)
                         scene.update_mobjects(0)
+                        timing("animation-cleanup",started,count=len(compiled))
                         scene.renderer.time += max((animation.run_time for animation in compiled), default=0)
 
                     def wait(scene, duration=1, **kwargs):
@@ -117,14 +130,18 @@ class BimPresentationContract(unittest.TestCase):
                         caption = set(scene._caption.get_family())
                         body = [member for member in scene.mobjects if member not in caption]
                         self.assertTrue(any(len(member.points) for item in body for member in item.get_family()), key)
+                        started = time.perf_counter()
                         scene.camera.reset()
                         scene.camera.capture_mobjects(body)
+                        timing("cairo-body",started,key=key)
                         body_pixels = scene.camera.pixel_array
                         self.assertTrue(np.any(body_pixels != body_pixels[0, 0]), key)
                         for member in scene.get_mobject_family_members():
                             self.assertTrue(np.isfinite(member.points).all(), key)
+                        started = time.perf_counter()
                         scene.camera.reset()
                         scene.camera.capture_mobjects(scene.mobjects)
+                        timing("cairo-caption",started,key=key)
                         Image.fromarray(scene.camera.pixel_array).save(
                             output / (chapter["topic"] + "-" + language + "-" + key + ".png"))
                         return result
@@ -219,8 +236,8 @@ class BimPresentationContract(unittest.TestCase):
                     self.assertGreater(drawing.height, 0)
                     self.assertTrue(set(level["parts"]) <= set(drawing.parts))
                     np.testing.assert_allclose(drawing.at(*case["known_point"]), expected, atol=1e-8)
-                    if "C2" in level["parts"]:
-                        np.testing.assert_allclose(drawing.at("C2"), expected, atol=1e-8)
+                    if model.role("column_example") in level["parts"]:
+                        np.testing.assert_allclose(drawing.at(model.role("column_example")), expected, atol=1e-8)
                     for member in drawing.get_family():
                         self.assertTrue(np.isfinite(member.points).all())
                     scene.camera.reset()
@@ -271,7 +288,7 @@ class BimPresentationContract(unittest.TestCase):
                     if case["method"] == "analysis_view":
                         analysis = args[0]
                         anchors = set(drawing.parts) | set(drawing.anchors)
-                        self.assertTrue({"C2", analysis["shells"][0]["id"], analysis["supports"][0]["node"]} <= anchors)
+                        self.assertTrue({model.role("column_example",source), analysis["shells"][0]["id"], analysis["supports"][0]["node"]} <= anchors)
                     for member in drawing.get_family():
                         self.assertTrue(np.isfinite(member.points).all())
                     scene.camera.reset()
@@ -442,26 +459,37 @@ class BimPresentationContract(unittest.TestCase):
                 function(case["a"], case["b"], case["half_width"])
 
     def test_objects_displayed_arithmetic_holds_and_matches_the_model(self):
-        """🧮 Compare every product shown by the objects clip with independent math and the model's own volumes."""
+        """🧮 Verify selected circular products and the exact heterogeneous occurrence sum."""
+        import copy
         import math
+        import numpy as np
         from types import SimpleNamespace
 
         module = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧬️objects.🐍️")
         model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
         source = model.load_model()
-        kind = next(t for t in source["types"] if t["class"] == "IfcColumnType")
-        count = len(model.type_occurrences(kind["tag"], source))
+        case = CASES["column_arithmetic"]
+        kind = next(t for t in source["types"] if t["tag"]==model.role(case["role"],source))
+        selected = next(o for o in source["elements"] if o["tag"]==model.role("column_example",source))
+        occurrences = model.type_occurrences(kind["tag"],source)
         scene = module.Beat2_ObjectOrientation.__new__(module.Beat2_ObjectOrientation)
-        facts = SimpleNamespace(model=source, chains={}, count=count)
-        for diameter in (0.30, 0.32, 0.34, 0.36, 0.38, 0.40):
+        facts = SimpleNamespace(model=source,kind=kind,occ=occurrences,chains={},count=len(occurrences))
+        def elevation(value):
+            """📏 Resolve the declared physical selected-column height independently of rendered quantities."""
+            return value if isinstance(value,(int,float)) else next(s["elevation"]["value"] for s in source["storeys"] if s["id"]==value)
+        height=elevation(selected["geometry"]["top_level"])-elevation(selected["geometry"]["base_level"])
+        for diameter in case["diameters"]:
             with self.subTest(diameter=diameter):
-                chain = scene._chain(facts, diameter)
-                self.assertAlmostEqual(chain.area, round(math.pi * (diameter / 2) ** 2, 5), places=9)
-                self.assertAlmostEqual(chain.volume, round(chain.area * chain.height, 4), places=9)
-                self.assertAlmostEqual(chain.total, count * chain.volume, places=9)
-                exact = count * math.pi * (diameter / 2) ** 2 * chain.height
-                self.assertLess(abs(chain.total - exact) / exact, 1e-3)
-        self.assertAlmostEqual(scene._chain(facts, 0.30).total, model.quantities(kind["tag"], source)["volume"], delta=0.002)
+                chain = scene._chain(facts,diameter)
+                self.assertAlmostEqual(chain.height,height,places=12)
+                self.assertAlmostEqual(chain.area,round(math.pi*(diameter/2)**2,5),places=9)
+                self.assertAlmostEqual(chain.volume,round(chain.area*height,4),places=9)
+                twin=copy.deepcopy(source)
+                next(t for t in twin["types"] if t["tag"]==kind["tag"])["profile"]["diameter"]["value"]=diameter
+                values=np.asarray([model.quantities(tag,twin)["volume"] for tag in occurrences],dtype=float)
+                np.testing.assert_allclose(chain.volumes,values,rtol=0,atol=1e-12)
+                self.assertAlmostEqual(chain.total,float(np.sum(values)),places=10)
+                self.assertAlmostEqual(chain.total,model.quantities(kind["tag"],twin)["volume"],places=10)
 
 
 def load_tests(loader, tests, pattern):

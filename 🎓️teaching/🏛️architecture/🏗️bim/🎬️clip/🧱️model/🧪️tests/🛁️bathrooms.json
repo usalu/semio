@@ -1,0 +1,148 @@
+{
+  "source": "SAB2024-p25-p46-p239-p240; SAB2024 originalFLC19442/book25+author46 originalguestniche; CMN2021 guestzenithprogramme",
+  "uncertainty_m": 0.15,
+  "fixtures": [
+    {
+      "tag": "FIX-GUEST-BASIN",
+      "predefined": "WASHHANDBASIN",
+      "axis": [
+        3.25,
+        10.568382352941176
+      ],
+      "cavity_z": 0.8
+    },
+    {
+      "tag": "BIDET-GUEST",
+      "predefined": "BIDET",
+      "axis": [
+        3.129411764705882,
+        11.225
+      ],
+      "cavity_z": 0.3
+    },
+    {
+      "tag": "BIDET-SHARED",
+      "predefined": "BIDET",
+      "axis": [
+        2.975735,
+        14.430294
+      ],
+      "cavity_z": 0.3
+    },
+    {
+      "tag": "FIX-SHARED-BASIN",
+      "predefined": "WASHHANDBASIN",
+      "axis": [
+        0.796324,
+        14.410294
+      ],
+      "cavity_z": 0.77
+    },
+    {
+      "tag": "FIX-SHARED-BATH",
+      "predefined": "BATH",
+      "axis": [
+        1.732353,
+        15.681618
+      ],
+      "cavity_z": 0.3
+    }
+  ],
+  "tub_bounds": [
+    0.8661764705882362,
+    15.304411764705883,
+    2.598529411764705,
+    16.058823529411764
+  ],
+  "door_cases": [
+    {
+      "tag": "D-SHARED-BATH-GUEST",
+      "opening": "OP-D-SHARED-BATH-GUEST",
+      "route": [
+        [
+          1.8,
+          13.55
+        ],
+        [
+          1.8,
+          14.85
+        ]
+      ]
+    },
+    {
+      "tag": "D-SHARED-BATH-SON",
+      "opening": "OP-D-SHARED-BATH-SON",
+      "route": [
+        [
+          3.12,
+          16.25
+        ],
+        [
+          3.12,
+          15.05
+        ]
+      ]
+    }
+  ],
+  "body_width": 0.6,
+  "body_height": 2.1,
+  "floor": 3.17,
+  "tolerance": 1e-8,
+  "guest": {
+    "drain_probe": [
+      3.25,
+      10.568382352941176,
+      0.69
+    ],
+    "floor_probe": [
+      3.315,
+      10.568382352941176,
+      0.69
+    ],
+    "tap_bore": [
+      3.39,
+      10.468382352941177,
+      0.98
+    ],
+    "tap_metal": [
+      3.401,
+      10.468382352941177,
+      0.98
+    ],
+    "door": "D-GUEST",
+    "entry_route": [
+      [
+        4.05,
+        11.9
+      ],
+      [
+        1.45,
+        11.9
+      ]
+    ],
+    "entry_width": 0.8,
+    "niche_route": [
+      [
+        2.66,
+        11.9
+      ],
+      [
+        2.66,
+        10.568382352941176
+      ]
+    ],
+    "torso_width_x": 0.36,
+    "shoulders_y": 0.6,
+    "body_height": 2.1,
+    "wardrobe_bounds": [
+      2.012,
+      10.219,
+      2.45,
+      11.5,
+      0,
+      1.75
+    ],
+    "source": "Originalfixtureandcabinettraces±.15m; bodydimensionsandhingeatselectedsouthjambinferred; sidesteppingtorsoallowsoriginalnarrowaislewithoutfalse.6mdiscclearanceclaim"
+  }
+}
+      

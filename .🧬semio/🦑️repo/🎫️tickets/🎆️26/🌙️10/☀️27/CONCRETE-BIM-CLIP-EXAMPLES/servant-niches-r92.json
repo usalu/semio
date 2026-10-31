@@ -1,0 +1,224 @@
+{
+  "title": "Original Servant Wash-Niche Boundary Correction R92",
+  "sources": [
+    "Author groundplan45",
+    "Original FLC19441 groundplan24, paired stepped wash-niches and cupboards",
+    "Book240: small wall handbasins in both ground servant rooms"
+  ],
+  "registration": {
+    "u0": 6,
+    "v0": 48,
+    "pitch_px": 170,
+    "pitch_m": 4.75,
+    "uncertainty_m": 0.15
+  },
+  "current": {
+    "wall": "W-G-ROOM-13",
+    "path": [
+      [
+        3.15,
+        15.5
+      ],
+      [
+        3.95,
+        15.5
+      ],
+      [
+        3.95,
+        15.7
+      ],
+      [
+        4.6,
+        15.7
+      ],
+      [
+        4.6,
+        15.5
+      ],
+      [
+        7.05,
+        15.5
+      ]
+    ],
+    "warning": "Existing divider already has a smallstep, but its baseline15.5 and.20m excursion do not follow the original niche/cupboardbacks. Earlier basin1Y15.16/15.22 registration is withdrawn."
+  },
+  "source_boundary": {
+    "pixels": [
+      [
+        435,
+        579
+      ],
+      [
+        516,
+        579
+      ],
+      [
+        516,
+        563
+      ],
+      [
+        545,
+        563
+      ],
+      [
+        545,
+        578
+      ],
+      [
+        575,
+        578
+      ]
+    ],
+    "world": [
+      [
+        7.0132352941176475,
+        16.086764705882352
+      ],
+      [
+        4.75,
+        16.086764705882352
+      ],
+      [
+        4.75,
+        15.639705882352942
+      ],
+      [
+        3.939705882352941,
+        15.639705882352942
+      ],
+      [
+        3.939705882352941,
+        16.058823529411764
+      ],
+      [
+        3.101470588235294,
+        16.058823529411764
+      ]
+    ],
+    "interpretation": "Roomdivider follows backs of longupper-room cupboard, steps north around second-room basin niche, then returns south behind first-room basin/cabinet.",
+    "wall_vs_carcass": "Full-heightwall versus builtinback ownership not completely labelled; do not duplicate occupiedcarcass/wall. Thickness/height inferred."
+  },
+  "construction_candidate": {
+    "wall_path": [
+      [
+        7.05,
+        16.08
+      ],
+      [
+        4.75,
+        16.08
+      ],
+      [
+        4.75,
+        15.64
+      ],
+      [
+        3.95,
+        15.64
+      ],
+      [
+        3.95,
+        16.06
+      ],
+      [
+        3.15,
+        16.06
+      ]
+    ],
+    "thickness": 0.08,
+    "grade": "Rounded source-registration construction within±.15m, not measured original wallaxis"
+  },
+  "basins": [
+    {
+      "tag": "FIX-SERVANT-BASIN-1",
+      "pixel_center": [
+        558,
+        559.5
+      ],
+      "source_center": [
+        3.576470588235294,
+        15.541911764705882
+      ],
+      "source_overall_bbox": [
+        547,
+        553,
+        569,
+        566
+      ],
+      "tap_side": "south/+Y back edge; paired tapmarks",
+      "front": "north/-Y",
+      "long_axis": "X",
+      "construction_center": [
+        3.576470588235294,
+        15.54
+      ],
+      "height": 0.88,
+      "status": "Move existing basin south into true upper-room niche; old north centre no longer source-faithful."
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-2",
+      "pixel_center": [
+        528.5,
+        573
+      ],
+      "source_center": [
+        4.400735294117647,
+        15.919117647058824
+      ],
+      "source_overall_bbox": [
+        519,
+        566,
+        539,
+        580
+      ],
+      "tap_side": "north/-Y back edge; paired tapmarks",
+      "front": "south/+Y",
+      "long_axis": "X",
+      "construction_center": [
+        4.275,
+        15.95
+      ],
+      "height": 0.88,
+      "status": "Current centre within±.15m source trace; preserve if actual boundary/route works."
+    }
+  ],
+  "cupboards": [
+    {
+      "source_pixels": [
+        435,
+        554,
+        516,
+        578
+      ],
+      "world_bounds": [
+        4.75,
+        15.388235294117647,
+        7.0132352941176475,
+        16.058823529411764
+      ],
+      "role": "Long upper-room cupboard along divider, frontnorth/-Y"
+    },
+    {
+      "source_pixels": [
+        545,
+        566,
+        574,
+        578
+      ],
+      "world_bounds": [
+        3.129411764705882,
+        15.723529411764705,
+        3.939705882352941,
+        16.058823529411764
+      ],
+      "role": "Counter/cupboard beneath or behind first basin; preciseconstructionunresolved"
+    }
+  ],
+  "space_update": "Servant1 extends south behind cupboard and basin1 toY≈16.08, with reentrant secondbasin pocket; Servant2 begins south ofthat trace and retains its basin2northniche. Laundry mainboundary≈18.2 unchanged bythisregister.",
+  "acceptance": [
+    "No wall through either basin or tapstem/discharge path",
+    "Roompolygons split along physical source-divider with wallthicknessclearance; no overlap/gap maskedbylabels",
+    "Full nativebodyroutes including real operateddoors and cupboardbacks",
+    "Source2wallbasins/pairedtapgrammar preserved; all faucet heights/mechanisms/sizes inferred"
+  ]
+}

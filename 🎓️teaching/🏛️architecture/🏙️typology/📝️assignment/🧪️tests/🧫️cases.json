@@ -1,0 +1,71 @@
+{
+  "version": 1,
+  "languages": ["en", "de"],
+  "grid": { "widthMm": 4500, "depthMm": 4500 },
+  "group": { "members": 4, "perMember": { "corner": 1, "middle": 1 } },
+  "moduleTypes": { "corner": 4, "middle": 4 },
+  "facadeSides": { "corner": 2, "middle": 1 },
+  "variants": [0, 1, 2, 3, 4],
+  "parts": [
+    { "id": "A", "subject": "dMA", "format": "group" },
+    { "id": "B", "subject": "dMA", "format": "individual" },
+    { "id": "C", "subject": "NGS", "format": "group" },
+    { "id": "D", "subject": "NGS", "format": "individual" }
+  ],
+  "gradingCriteria": 4,
+  "scheme": {
+    "position": { "M": "middle", "E": "corner" },
+    "kind": { "W": "wall", "B": "balcony" },
+    "format": { "H": "portrait", "Q": "landscape" }
+  },
+  "example": [
+    { "name": "M-B-1-Q", "position": "middle", "kind": "balcony", "windows": 1, "formats": ["landscape"], "image": "schema-m-b-1-q.png" },
+    { "name": "M-W-2-H", "position": "middle", "kind": "wall", "windows": 2, "formats": ["portrait"], "image": "schema-m-w-2-h.png" },
+    { "name": "E-B-2-QH", "position": "corner", "kind": "balcony", "windows": 2, "formats": ["landscape", "portrait"], "image": "schema-e-b-2-qh.png" }
+  ],
+  "submission": {
+    "date": "2026-12-04",
+    "time": "10:00",
+    "group": "GruppeXX_Zwischenkolloquium.pdf",
+    "archive": "Nachname_Zwischenkolloquium.zip",
+    "imageModels": ["", "_Simulation"],
+    "rows": [
+      { "format": "PNG", "count": 5, "files": ["Nachname_Mittelmodul_Variante0.png", "Nachname_Mittelmodul_Variante4.png"] },
+      { "format": "PNG", "count": 5, "files": ["Nachname_Eckmodul_Variante0.png", "Nachname_Eckmodul_Variante4.png"] },
+      { "format": "PNG", "count": 5, "files": ["Nachname_Mittelmodul_Simulation_Variante0.png", "Nachname_Mittelmodul_Simulation_Variante4.png"] },
+      { "format": "PNG", "count": 5, "files": ["Nachname_Eckmodul_Simulation_Variante0.png", "Nachname_Eckmodul_Simulation_Variante4.png"] },
+      { "format": "GH", "count": 1, "files": ["Nachname_ParamModell.gh"] },
+      { "format": "GLB", "count": 2, "files": ["Nachname_Modultypname_Visualisierung.glb"] },
+      { "format": "GLB", "count": 2, "files": ["Nachname_Modultypname_Simulation.glb"] },
+      { "format": "CSV", "count": 1, "files": ["Nachname_Performance.csv"] }
+    ],
+    "example": "Mueller_M-B-1-Q_Visualisierung.glb"
+  },
+  "content": {
+    "en": {
+      "title": "Parametric Design of a Modular Typology",
+      "date": "4 December 2026",
+      "headings": ["Brief", "Definitions", "Part A – dMA (Group Work): Typology and Module Types", "Part B – dMA (Individual Work): Parametric Model", "Part C – NGS (Group Work): Layer Build-Up", "Part D – NGS (Individual Work): Energy Evaluation", "Grading (dMA Part)", "Submission"],
+      "tables": ["Workflow", "Terms", "Example of the Overview Table", "Content of the Individual Submission"]
+    },
+    "de": {
+      "title": "Parametrischer Entwurf einer modularen Typologie",
+      "date": "04.12.2026",
+      "headings": ["Aufgabenstellung", "Definitionen", "Teil A – dMA (Gruppenarbeit): Typologie und Modultypen", "Teil B – dMA (Einzelarbeit): Parametrisches Modell", "Teil C – NGS (Gruppenarbeit): Schichtaufbau", "Teil D – NGS (Einzelarbeit): Energetische Auswertung", "Bewertung (dMA-Teil)", "Abgabe"],
+      "tables": ["Arbeitsablauf", "Begriffe", "Beispiel für die Übersichtstabelle", "Inhalt der Einzelabgabe"]
+    }
+  },
+  "tableRows": [5, 5, 8, 9],
+  "footerLogos": ["logo-luh.png"],
+  "cover": { "image": "cover.jpg", "logo": "logo-luh.png", "facts": 4, "partners": ["dMA", "NGS"] },
+  "ownership": {
+    "sourceRoot": "🎓️teaching/🏛️architecture/🏙️typology/📝️assignment",
+    "files": ["en.tex", "en.content.tex", "de.tex", "de.content.tex", "cover.jpg", "logo-luh.png", "logo-luh-dark.png", "schema-m-b-1-q.png", "schema-m-w-2-h.png", "schema-e-b-2-qh.png"],
+    "assignment": "typology",
+    "topic": "parametric",
+    "documents": {
+      "en": { "namespace": "course", "id": "architecture-parametric-typology-en", "producer": "@teaching/architecture-course:build-typology-en", "file": "architecture-parametric-typology-en.pdf" },
+      "de": { "namespace": "course", "id": "architecture-parametric-typology-de", "producer": "@teaching/architecture-course:build-typology-de", "file": "architecture-parametric-typology-de.pdf" }
+    }
+  }
+}

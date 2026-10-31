@@ -47,6 +47,22 @@ def resolve_paths(core,model,curtain):
     return result
 
 
+def member_section(width,depth,spec,reverse=False):
+    """🔩 Partition an angle or tee into disjoint flange and web cells in visible/normal axes."""
+    thickness=spec["thickness"]["value"]
+    if spec["shape"] not in ("angle","tee") or thickness<=0 or thickness>=min(width,depth):
+        raise ValueError("Open steel sections require a contained positive web and flange")
+    start=(width-thickness)/2 if spec["shape"]=="tee" else width-thickness if reverse else 0.
+    return [(0.,width,-depth/2,-depth/2+thickness),(start,start+thickness,-depth/2+thickness,depth/2)]
+
+
+def _band_interval(core,path,start,end):
+    """🧵 Keep asymmetric normal offsets on the same native mitered path."""
+    negative=core._path_band(path,2.)[:len(path)]
+    edge=lambda value:[[p[k]-value*(n[k]-p[k]) for k in (0,1)] for p,n in zip(path,negative)]
+    return edge(start)+list(reversed(edge(end)))
+
+
 def physical_geometry(core,model,curtain):
     """🏗️ Build disjoint native metal members and planar panes, subtracting actual hosted apertures."""
     paths=resolve_paths(core,model,curtain)
@@ -64,6 +80,15 @@ def physical_geometry(core,model,curtain):
         raise ValueError("Curtain rails must be disjoint inside their host height")
     clear=[(b,c) for (a,b,k),(c,d,j) in zip(rails,rails[1:]) if c>b+1e-9]
     parts=[]
+    def frame(path,lo,hi,kind,metadata,vertical=False,reverse=False):
+        section=spec.get("member_sections",{}).get("interior" if kind in ("mullion","transom") else "perimeter")
+        if vertical and section:
+            span=sum(math.dist(a,b) for a,b in zip(path,path[1:]));center=point_at(path,span/2);chord=math.dist(path[0],path[-1]);direction=[(path[-1][k]-path[0][k])/chord for k in (0,1)]
+            path=[[center[k]+sign*span/2*direction[k] for k in (0,1)] for sign in (-1,1)]
+        cells=member_section(sum(math.dist(a,b) for a,b in zip(path,path[1:])) if vertical else hi-lo,depth,section,reverse) if section else [(0.,sum(math.dist(a,b) for a,b in zip(path,path[1:])) if vertical else hi-lo,-depth/2,depth/2)]
+        for index,(a,b,c,d) in enumerate(cells):
+            piece=path_slice(path,a,b) if vertical else path
+            parts.append({"outline":_band_interval(core,piece,c,d),"z0":lo if vertical else lo+a,"z1":hi if vertical else lo+b,"material":spec["frame_material"],"role":"frame","member_kind":kind,**metadata,**({"section_shape":section["shape"],"section_component":index} if section else {})})
     for record in paths:
         path=record["path"]
         lengths=[math.dist(a,b) for a,b in zip(path,path[1:])]
@@ -73,12 +98,11 @@ def physical_geometry(core,model,curtain):
         if min(lengths)<=width:
             raise ValueError("Curtain members consume an entire pane bay")
         for lo,hi,kind in rails:
-            parts.append({"outline":core._path_band(path,depth),"z0":lo,"z1":hi,"material":spec["frame_material"],"role":"frame","member_kind":kind,"curtain_path":record["tag"]})
+            frame(path,lo,hi,kind,{"curtain_path":record["tag"]},reverse=kind=="head")
         for i,s in enumerate(offsets):
             start,end=(0.,width) if i==0 else (s-width,s) if i==len(offsets)-1 else (s-width/2,s+width/2)
-            outline=core._path_band(path_slice(path,start,end),depth)
             for lo,hi in clear:
-                parts.append({"outline":outline,"z0":lo,"z1":hi,"material":spec["frame_material"],"role":"frame","member_kind":"jamb" if i in (0,len(offsets)-1) else "mullion","station":record["stations"][i]["tag"],"curtain_path":record["tag"]})
+                frame(path_slice(path,start,end),lo,hi,"jamb" if i in (0,len(offsets)-1) else "mullion",{"station":record["stations"][i]["tag"],"curtain_path":record["tag"]},vertical=True,reverse=i==len(offsets)-1)
         for i,(a,b,length) in enumerate(zip(path,path[1:],lengths)):
             left=width if i==0 else width/2
             right=width if i==len(lengths)-1 else width/2

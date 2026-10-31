@@ -396,12 +396,12 @@ class TextConstantTests(unittest.TestCase):
         en, de = xl.workbook(), xl.workbook(language="de")
         ven, vde = xl.evaluate(en), xl.evaluate(de)
         for target in ("A4", "A7", "B10", "E10", "A15", "M2", "M141", "N2"):
-            self.assertEqual(vde[("Program", target)] if target != "N2" else 0, ({"A4": "Typ A", "A7": "Typ D", "B10": "Typ A", "E10": "Typ D", "A15": "Typ C", "M2": "Typ A", "M141": vde[("Program", "M141")], "N2": 0})[target])
+            self.assertEqual(vde[("Program", target)] if target != "N2" else 0, ({"A4": "Typ A", "A7": "Typ D", "B10": "Typ A", "E10": "Typ D", "A15": "Typ C", "M2": CASES["workbook"]["display"]["Program!M2"]["de"], "M141": vde[("Program", "M141")], "N2": 0})[target])
         for sheet in en.sheets:
             for address, cell in sheet.cells.items():
                 if cell.formula and not isinstance(ven[(sheet.name, address)], str):
                     self.assertTrue(same(ven[(sheet.name, address)], vde[(sheet.name, address)]), (sheet.name, address))
-        self.assertTrue(vde[("Program", "H2")].startswith("A-01-"))
+        self.assertTrue(vde[("Program", "H2")].startswith("A-03-"))
         self.assertIn("O", {vde[("Program", f"K{row}")] for row in range(2, 142)})
         self.assertNotIn("E", {vde[("Program", f"K{row}")] for row in range(2, 142)})
         self.assertEqual([vde[("Program", f"A{row}")] for row in range(4, 8)], ["Typ A", "Typ B", "Typ C", "Typ D"])
@@ -413,8 +413,8 @@ class TextConstantTests(unittest.TestCase):
             wb = xl.workbook(language=language)
             values = xl.evaluate(wb)
             self.assertEqual(values[("Program", "A15")], name)
-            self.assertEqual(values[("Program", "C15")], 34.0)
-            self.assertEqual(values[("Program", "B6")], 34.0)
+            self.assertEqual(values[("Program", "C15")], float(CASES["workbook"]["values"]["Program!C15"]))
+            self.assertEqual(values[("Program", "B6")], float(CASES["workbook"]["values"]["Program!B6"]))
             self.assertEqual(values[("Program", "B8")], 140.0)
 
 
@@ -889,6 +889,26 @@ class NakaginCrossCheckTests(unittest.TestCase):
         rebound = xl.evaluate(xl.workbook(lambda path: self.nk.value(path).value))
         self.assertEqual(rebound, self.values)
 
+    def test_capsule_row_positions_follow_primary_phase_datums(self):
+        import numpy as np
+        raw = json.loads(NAKAGIN.with_name("🔣️.json").read_text(encoding="utf-8"))
+        expected = CASES["workbook"]["capsule_positions"]
+        slots = self.nk.slots()
+        self.assertEqual(len(expected),len(slots))
+        for row,(case,slot) in enumerate(zip(expected,slots),start=2):
+            self.assertEqual(self.values[("Program",f"H{row}")],case[0])
+            np.testing.assert_allclose(slot.plane.origin,case[1:],atol=1e-9,rtol=0)
+            tower = raw["towers"][slot.tower]
+            floor = tower["floors"][slot.storey]
+            group = next(g for g in floor["groups"] if g["facade"]==slot.facade)
+            source = next(i for i in group["items"] if i["item"]==slot.item)
+            radians = np.deg2rad(source["rotation"]["value"])
+            local_back = np.asarray([np.sin(radians),-np.cos(radians),0])*raw["capsule"]["length"]["value"]/2
+            center = np.asarray([q["value"] for q in source["center"]])
+            np.testing.assert_allclose(slot.plane.origin,center+local_back,atol=1e-9,rtol=0)
+            z = raw["podium"]["levels"][2]["value"]+(floor["floor"]-3+source["sublevel"]/3)*raw["core"]["storey_height"]["value"]
+            self.assertAlmostEqual(case[3],z,places=9)
+
     def test_capsule_list_is_the_slot_list(self):
         slots = self.nk.slots()
         self.assertEqual(len(slots), 140)
@@ -897,7 +917,7 @@ class NakaginCrossCheckTests(unittest.TestCase):
             row = index + 2
             tower = self.nk.towers()[slot.tower].key
             got = [self.values[("Program", f"{col}{row}")] for col in "HIJKLM"]
-            self.assertEqual(got, [f"{tower}-{slot.storey + 1:02d}-{letters[slot.facade]}-{slot.item + 1}", tower, slot.storey + 1, letters[slot.facade], slot.item + 1, f"Type {slot.type}"], row)
+            self.assertEqual(got, [f"{tower}-{slot.storey + 3:02d}-{letters[slot.facade]}-{slot.item + 1}", tower, slot.storey + 3, letters[slot.facade], slot.item + 1, f"Type {slot.type}"], row)
 
     def test_counts_and_areas(self):
         totals = self.nk.totals()

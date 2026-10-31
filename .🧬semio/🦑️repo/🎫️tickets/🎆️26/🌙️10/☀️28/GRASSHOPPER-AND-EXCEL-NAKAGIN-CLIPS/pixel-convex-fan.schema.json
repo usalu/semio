@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "tiny_triangle"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "vertices",
+          "convex",
+          "area"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "vertices": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/vector"
+            }
+          },
+          "convex": {
+            "type": "boolean"
+          },
+          "area": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    },
+    "tiny_triangle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertices",
+        "point",
+        "nearest"
+      ],
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/vector"
+          }
+        },
+        "point": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "nearest": {
+          "const": [
+            0
+          ]
+        }
+      }
+    }
+  },
+  "$defs": {
+    "vector": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

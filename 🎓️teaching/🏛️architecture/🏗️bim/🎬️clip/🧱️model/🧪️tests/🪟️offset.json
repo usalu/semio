@@ -1,0 +1,10 @@
+{
+  "title": "Occurrence Filling Normal Offset and Outer Head Envelope",
+  "tag": "GL-TERRACE",
+  "offsets": [
+    0.28825,
+    -0.02
+  ],
+  "head_extension": 0.03,
+  "tolerance": 1e-8
+}

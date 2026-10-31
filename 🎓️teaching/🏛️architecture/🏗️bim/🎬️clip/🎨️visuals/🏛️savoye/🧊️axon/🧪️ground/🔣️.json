@@ -1,0 +1,102 @@
+{
+  "context": {
+    "elevation": -0.15,
+    "box": {
+      "length": 6,
+      "width": 6
+    },
+    "source_tag": "TERRAIN",
+    "surveyed": false
+  },
+  "surfaces": [
+    {
+      "class": "IfcCovering",
+      "kind": "flooring",
+      "predefined_type": "FLOORING",
+      "storey": "ground",
+      "z0": -0.19,
+      "z1": -0.15,
+      "expected_stage": 0.5
+    },
+    {
+      "class": "IfcCovering",
+      "kind": "flooring",
+      "predefined_type": "FLOORING",
+      "storey": "ground",
+      "z0": -0.015,
+      "z1": 0,
+      "expected_stage": 0.5
+    },
+    {
+      "class": "IfcCovering",
+      "kind": "flooring",
+      "predefined_type": "FLOORING",
+      "storey": "cellar",
+      "z0": -2.42,
+      "z1": -2.4,
+      "expected_stage": -1.5
+    },
+    {
+      "class": "IfcCovering",
+      "kind": "flooring",
+      "predefined_type": "FLOORING",
+      "storey": "first",
+      "z0": 3.14,
+      "z1": 3.17,
+      "expected_stage": 2.5
+    },
+    {
+      "class": "IfcCovering",
+      "kind": "ramp_finish",
+      "predefined_type": "FLOORING",
+      "storey": "ground",
+      "z0": -0.008,
+      "z1": 1.5,
+      "expected_stage": 1
+    }
+  ],
+  "column": {
+    "z0": -2.5,
+    "z1": 3.14,
+    "expected_bands": [
+      [
+        -2.5,
+        -0.15
+      ],
+      [
+        -0.15,
+        3.14
+      ]
+    ],
+    "expected_stages": [
+      -1,
+      1
+    ]
+  },
+  "raster": {
+    "surface_outline": [
+      [
+        2,
+        2
+      ],
+      [
+        4,
+        2
+      ],
+      [
+        4,
+        4
+      ],
+      [
+        2,
+        4
+      ]
+    ],
+    "surface_color": "#ff0000",
+    "witness": [
+      3,
+      3,
+      -0.15
+    ]
+  }
+}

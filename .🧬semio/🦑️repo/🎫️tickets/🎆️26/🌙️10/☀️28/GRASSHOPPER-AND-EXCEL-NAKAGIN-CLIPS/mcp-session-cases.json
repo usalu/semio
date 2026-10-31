@@ -1,0 +1,17 @@
+{
+  "timeout_seconds": 45,
+  "deadlines": [
+    {"name":"matching","events":[[0.2,{"id":1,"result":{"ok":true}}]],"outcome":"result","elapsed":0.2},
+    {"name":"unmatched-notifications","events":[[35,{"method":"notifications/message"}],[35,{"id":999,"result":{}}],[0.2,{"id":1,"result":{"late":true}}]],"outcome":"timeout","elapsed":45}
+  ],
+  "attempts": [
+    {"name":"unknown-reply","failure":"TimeoutError","outcome":"unknown"},
+    {"name":"completed-reply","failure":null,"outcome":"completed"}
+  ],
+  "prohibited_tool": "goal_close",
+  "shutdown": [
+    {"name":"graceful","timeouts":0,"expected":["close","wait:3"]},
+    {"name":"terminate","timeouts":1,"expected":["close","wait:3","terminate","wait:5"]},
+    {"name":"kill-owned-child","timeouts":2,"expected":["close","wait:3","terminate","wait:5","kill","wait:5"]}
+  ]
+}

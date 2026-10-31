@@ -1,0 +1,174 @@
+{
+  "name": "Original Parents Suite Physical Programme",
+  "uncertainty_m": 0.15,
+  "cabinet": [
+    6.510294117647058,
+    14.130882352941176,
+    7.180882352941177,
+    16.78529411764706
+  ],
+  "mosaic_zone": [
+    4.526470588235295,
+    14.130882352941176,
+    6.510294117647058,
+    16.78529411764706
+  ],
+  "passage_x": [
+    7.180882352941177,
+    8.102941176470589
+  ],
+  "tile_module_m": 0.05,
+  "open_edge_y": 16.925,
+  "public_clear_width": 0.8,
+  "body_diameter": 0.6,
+  "body_height": 2.1,
+  "doors": [
+    {
+      "tag": "D-PARENTS",
+      "host": "W-PARENT-BATH-W",
+      "center_y": 17.88
+    },
+    {
+      "tag": "D-SON",
+      "host": "W-PRIVATE",
+      "center_y": 17.88
+    }
+  ],
+  "fixtures": [
+    {
+      "tag": "BIDET-PARENTS",
+      "class": "IfcSanitaryTerminal",
+      "predefined_type": "BIDET",
+      "center": [
+        4.945588235294117,
+        12.147058823529411
+      ]
+    },
+    {
+      "tag": "BASIN-PARENTS",
+      "class": "IfcSanitaryTerminal",
+      "predefined_type": "WASHHANDBASIN",
+      "center": [
+        4.945588235294117,
+        13.46029411764706
+      ]
+    },
+    {
+      "tag": "FIX-BATH",
+      "class": "IfcSanitaryTerminal",
+      "predefined_type": "BATH"
+    }
+  ],
+  "required_bodies": [
+    "FIX-CHAISE",
+    "FIX-DRESSING-STORAGE",
+    "FIX-PARENTS-WET-PLATFORM",
+    "FIX-PARENTS-STORAGE"
+  ],
+  "fixed_supports": [
+    "20-FIRST",
+    "27-FIRST",
+    "26-FIRST",
+    "19-FIRST"
+  ],
+  "public_route": [
+    [
+      4.05,
+      9.7
+    ],
+    [
+      4.05,
+      17.88
+    ]
+  ],
+  "private_route": [
+    [
+      4.05,
+      17.88
+    ],
+    [
+      5.15,
+      17.88
+    ],
+    [
+      7.64,
+      17.88
+    ],
+    [
+      7.64,
+      13.65
+    ],
+    [
+      5.75,
+      13.65
+    ],
+    [
+      5.75,
+      12.15
+    ]
+  ],
+  "son_route": [
+    [
+      4.05,
+      17.88
+    ],
+    [
+      3.1,
+      17.88
+    ]
+  ],
+  "bath_approach": [
+    [
+      5.15,
+      17.88
+    ],
+    [
+      5.85,
+      17.88
+    ],
+    [
+      5.85,
+      17.12
+    ],
+    [
+      5.2,
+      17.12
+    ]
+  ],
+  "chaise_approach": [
+    [
+      5.15,
+      17.88
+    ],
+    [
+      6.08,
+      17.88
+    ],
+    [
+      6.08,
+      17.16
+    ]
+  ],
+  "fixed_axes": {
+    "19-FIRST": [
+      8.128,
+      12.572
+    ],
+    "20-FIRST": [
+      4.737,
+      12.753
+    ],
+    "26-FIRST": [
+      8.128,
+      16.889
+    ],
+    "27-FIRST": [
+      4.737,
+      17.277
+    ]
+  },
+  "drain_xy": [
+    5.1,
+    14.8
+  ]
+}

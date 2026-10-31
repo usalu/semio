@@ -20,8 +20,13 @@ DEFAULT_DISCIPLINES = {"pilotis": ("structure",), "slabs": ("architecture", "str
                        "doors": ("architecture",), "openings": ("architecture",), "stairs": ("architecture", "structure"),
                        "details": ("architecture",), "furnishings": ("architecture",), "railings": ("architecture",), "beams": ("structure",), "foundations": ("structure",)}
 _geometry = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.📐️geometry")
+face_appearance = _geometry.face_appearance
+appearance_colour = _geometry.appearance_colour
 part_faces = _geometry.part_faces
 surface_role = _geometry.surface_role
+service_surface_role = _geometry.service_surface_role
+geometry_context = _geometry.geometry_context
+source_model = _geometry.source_model
 geometry = _geometry.geometry
 role = _geometry.role
 membership = _geometry.membership
@@ -30,8 +35,15 @@ wall_frame = _geometry.wall_frame
 
 def surface_color(data: dict, part: dict | None = None) -> str:
     """🖌️ Teaching palette for physical surfaces; discipline and selection styling remain configurable."""
-    return {"glass": _d.GLASS, "wood": "#A48869", "tile": _d.CONCRETE, "paving": _d.mix(_d.INK, _d.CONCRETE, 0.7),
+    if part and part.get("surface_appearance"):
+        return appearance_colour(face_appearance(part,[],"concrete"),_d.CONCRETE)
+    return {"glass": _d.GLASS, "wood": "#A48869", "tile": _d.CONCRETE, "resilient_gray": "#383B3D", "gravel": "#A6A09A", "sand": "#C2AD85", "gres_black": "#242526", "substrate": "#75634A", "gres_white": "#E9E1CB", "gres_ochre": "#B58B54", "bitumen": "#25282A", "cast_iron": "#303338", "painted_wood": "#E9E6DC", "mosaic_blue": "#376E9E", "mosaic_black": "#151A1E", "paving": _d.mix(_d.INK, _d.CONCRETE, 0.7),
             "garden": _d.GOOD, "metal": _d.MUTED, "concrete": _d.CONCRETE}[surface_role(data,part)]
+
+def service_surface_color(data: dict, part: dict) -> str:
+    """🔷 Share authored service finishes across plans, sections, elevations and axons."""
+    return _d.SERV if service_surface_role(data,part)=="service" else surface_color(data,part)
+
 
 
 def disciplines_of(guid: str, kind: str, model=None) -> tuple:

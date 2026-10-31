@@ -159,17 +159,17 @@
       [
         [
           13.5,
-          19.865
+          18.265
         ],
         [
           14.7,
-          19.865
+          18.265
         ]
       ]
     ],
     "body_half_width": 0.4,
     "area_tolerance": 1e-8,
-    "source": "Independent registered R33 ground fixture; approaches across current bedroom and bathroom door stations, dimensions inferred"
+    "source": "Original FLC19441/book24 and Author45 source programme; unchanged bedroom approach and relocated coherent bath portal atY18.265, exact jamb station inferred"
   },
   "entrance_registration": {
     "ground_fixture": "🏠ground.json",

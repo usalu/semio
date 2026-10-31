@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "scene": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🗼️tower/🐍️.py",
+  "programs": {
+    "old_key": "B",
+    "new_key": "C"
+  },
+  "interior": "study",
+  "new_program": {
+    "required_roles": [
+      "sofa"
+    ],
+    "forbidden_roles": [
+      "bed",
+      "mattress",
+      "pillow"
+    ],
+    "primary_sofas": 1,
+    "min_sofa_parts": 2
+  }
+}

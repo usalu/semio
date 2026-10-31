@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "languages",
+    "series"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "languages": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "series": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "grasshopper",
+        "excel"
+      ],
+      "properties": {
+        "grasshopper": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scenes",
+            "contracts"
+          ],
+          "properties": {
+            "scenes": {
+              "const": [
+                "Beat1_Anatomy",
+                "Beat2_Capsule",
+                "Beat3_Tower",
+                "Beat4_Casting",
+                "Beat5_DataTrees"
+              ]
+            },
+            "contracts": {
+              "const": 12
+            }
+          }
+        },
+        "excel": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "scenes",
+            "contracts"
+          ],
+          "properties": {
+            "scenes": {
+              "const": [
+                "Beat1_Anatomy",
+                "Beat2_References",
+                "Beat3_Program",
+                "Beat4_Energy"
+              ]
+            },
+            "contracts": {
+              "const": 19
+            }
+          }
+        }
+      }
+    }
+  }
+}

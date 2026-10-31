@@ -1,0 +1,9459 @@
+{
+  "status": "REAL_POSITIVE_MATERIAL_OVERLAP_REPAIR_REQUIRED",
+  "source": "77f8a94f0215bfe2414b3e5c2698c3b368db7b63170d275d56e43486ca0b4a7e",
+  "producer": "83a4dd3e6c502b803e82c0cfc5c7e7c44f03149a246d6581a99dfe9497db6cdb",
+  "scope": "Exact17horizontalfirstfloorcoverings and exclusive owned parts ofall sourceIfcBeams; sharedslab/columnreservations excluded",
+  "excluded": "Every shared_parts/slab/column reservation is excluded; only actual exclusive beam.parts are intersected with actual floor material.",
+  "totals": {
+    "source": "77f8a94f0215bfe2414b3e5c2698c3b368db7b63170d275d56e43486ca0b4a7e",
+    "producer": "83a4dd3e6c502b803e82c0cfc5c7e7c44f03149a246d6581a99dfe9497db6cdb",
+    "source_stable": true,
+    "producer_stable": true,
+    "scope": "Actualexclusivebeam-vsfloor material intersections; no sharedslabvolumes, no wholefixtureHull",
+    "positive_pair_records": 126,
+    "pair_sum_m3": 0.4303719089181796,
+    "unique_union_m3": 0.4303719089181796,
+    "by_floor_material": [
+      {
+        "floor": "FIN-BOUDOIR",
+        "material": "MAT-MORTAR-PUTTY",
+        "unique_volume_m3": 0.02130832710000001,
+        "witness": [
+          14.205,
+          17.481,
+          3.1100000000000003
+        ]
+      },
+      {
+        "floor": "FIN-FIRST-THRESHOLDS",
+        "material": "MAT-FLOOR-FINISH",
+        "unique_volume_m3": 0.10295762153110091,
+        "witness": [
+          19,
+          3.625,
+          3.1624999999999996
+        ]
+      },
+      {
+        "floor": "FIN-FIRST-THRESHOLDS",
+        "material": "MAT-MORTAR-PUTTY",
+        "unique_volume_m3": 0.25093147607655236,
+        "witness": [
+          19,
+          3.625,
+          3.1475
+        ]
+      },
+      {
+        "floor": "FIN-TERRACE-GRASS",
+        "material": "MAT-PLANTING-SUBSTRATE",
+        "unique_volume_m3": 0.001755000000000043,
+        "witness": [
+          14.295,
+          18.1939865,
+          3.1100000000000003
+        ]
+      },
+      {
+        "floor": "FIN-TERRACE-PAVING",
+        "material": "MAT-MORTAR-PUTTY",
+        "unique_volume_m3": 0.04422149999999973,
+        "witness": [
+          14.295,
+          18.566000000000003,
+          3.105
+        ]
+      },
+      {
+        "floor": "FIN-TERRACE-PAVING",
+        "material": "MAT-PAVING",
+        "unique_volume_m3": 0.008844300000000183,
+        "witness": [
+          14.295,
+          18.566000000000003,
+          3.135
+        ]
+      }
+    ],
+    "recovery_producer": "5e5cad1e85a3fddeabd8660a989aa59c9700b9f23f89635315c5016504ae4c8a",
+    "exact_prism_proof": "Everyretainedintersectionarea×heightmatchesactualcapturedGEOSvolume within1e-10, so reconstructingtheexteriorlosesnocavity.",
+    "raw_unquantized_global_union_m3": 0.43001822470765316,
+    "corrected_material_groups": [
+      {
+        "floor": "FIN-FIRST-THRESHOLDS",
+        "material": "MAT-MORTAR-PUTTY",
+        "volume_m3": 0.25110831818181545,
+        "witness": [
+          19,
+          3.625,
+          3.1475
+        ]
+      },
+      {
+        "floor": "FIN-FIRST-THRESHOLDS",
+        "material": "MAT-FLOOR-FINISH",
+        "volume_m3": 0.10313446363636408,
+        "witness": [
+          19,
+          3.625,
+          3.1624999999999996
+        ]
+      },
+      {
+        "floor": "FIN-TERRACE-PAVING",
+        "material": "MAT-PAVING",
+        "volume_m3": 0.008844300000000183,
+        "witness": [
+          14.295,
+          18.566000000000003,
+          3.135
+        ]
+      },
+      {
+        "floor": "FIN-TERRACE-PAVING",
+        "material": "MAT-MORTAR-PUTTY",
+        "volume_m3": 0.044221499999999726,
+        "witness": [
+          14.295,
+          18.566000000000003,
+          3.105
+        ]
+      },
+      {
+        "floor": "FIN-TERRACE-GRASS",
+        "material": "MAT-PLANTING-SUBSTRATE",
+        "volume_m3": 0.001755000000000043,
+        "witness": [
+          14.295,
+          18.1939865,
+          3.1100000000000003
+        ]
+      },
+      {
+        "floor": "FIN-BOUDOIR",
+        "material": "MAT-MORTAR-PUTTY",
+        "volume_m3": 0.021308327100000017,
+        "witness": [
+          14.205,
+          17.481,
+          3.1100000000000003
+        ]
+      }
+    ],
+    "correction": "RawGEOSglobalunionlostareadespitenopositivepairwiseoverlap. Pair-sum/per-floorpartbeamunion/1e-9..1e-12diagnosticprecisionunionsallagree. Earliercross-beamduplicationclassificationwithdrawn."
+  },
+  "affected_pairs": [
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "volume_m3": 0.013727999999999413
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "volume_m3": 0.01372799999999982
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "volume_m3": 0.18818031818181707
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "volume_m3": 0.04020646363636385
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "volume_m3": 0.04919999999999897
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "volume_m3": 0.04920000000000042
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "volume_m3": 0.002829600000000053
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "volume_m3": 0.014147999999999888
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "volume_m3": 0.0005400000000000457
+    },
+    {
+      "floor": "FIN-BOUDOIR",
+      "material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "volume_m3": 0.012230927100000026
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "volume_m3": 0.006014700000000131
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "volume_m3": 0.03007349999999985
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "volume_m3": 0.0012149999999999973
+    },
+    {
+      "floor": "FIN-BOUDOIR",
+      "material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "volume_m3": 0.006485399999999999
+    },
+    {
+      "floor": "FIN-BOUDOIR",
+      "material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-25-28",
+      "volume_m3": 0.0025919999999999897
+    }
+  ],
+  "positive_witnesses": [
+    {
+      "floor": "FIN-BOUDOIR",
+      "material": "MAT-MORTAR-PUTTY",
+      "unique_volume_m3": 0.02130832710000001,
+      "witness": [
+        14.205,
+        17.481,
+        3.1100000000000003
+      ]
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "material": "MAT-FLOOR-FINISH",
+      "unique_volume_m3": 0.10295762153110091,
+      "witness": [
+        19,
+        3.625,
+        3.1624999999999996
+      ]
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "material": "MAT-MORTAR-PUTTY",
+      "unique_volume_m3": 0.25093147607655236,
+      "witness": [
+        19,
+        3.625,
+        3.1475
+      ]
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "material": "MAT-PLANTING-SUBSTRATE",
+      "unique_volume_m3": 0.001755000000000043,
+      "witness": [
+        14.295,
+        18.1939865,
+        3.1100000000000003
+      ]
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "material": "MAT-MORTAR-PUTTY",
+      "unique_volume_m3": 0.04422149999999973,
+      "witness": [
+        14.295,
+        18.566000000000003,
+        3.105
+      ]
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "material": "MAT-PAVING",
+      "unique_volume_m3": 0.008844300000000183,
+      "witness": [
+        14.295,
+        18.566000000000003,
+        3.135
+      ]
+    }
+  ],
+  "west_beam_example": {
+    "floor": "FIN-FIRST-THRESHOLDS",
+    "floor_part": 124,
+    "floor_role": "bedding",
+    "floor_material": "MAT-MORTAR-PUTTY",
+    "beam": "BEAM-PRIMARY-F-5-33",
+    "beam_part": 0,
+    "beam_material": "MAT-RC",
+    "z": [
+      3.14,
+      3.155
+    ],
+    "volume_m3": 0.01087199999999977,
+    "quadrature_error": 0,
+    "witness": [
+      0,
+      17.875,
+      3.1475
+    ],
+    "intersection_outline": [
+      [
+        -0.08,
+        15.61
+      ],
+      [
+        -0.08,
+        20.14
+      ],
+      [
+        0.08,
+        20.14
+      ],
+      [
+        0.08,
+        15.61
+      ],
+      [
+        -0.08,
+        15.61
+      ]
+    ]
+  },
+  "acceptance": [
+    "Subtract actual exclusive occupied beam material from intersecting physicalfloorparts atcorrectZ, not everyboundingboxorwholeprojection",
+    "Retain intended structural/slab sharedownership andnativebeamgeometry unchanged",
+    "No positive floor-material/ownedbeam occupiedvolume afterrepair; oldwitnesses emptyinfinishandstilloccupiedinbeam",
+    "Recompute physicalfloorcoverage domain excluding raised nonwalkablebeamownership ratherthan fillingthecutback",
+    "Retain knowncounterfoot supportoutsidewestbeam andoriginalfloorpattern/materialuncertainty",
+    "Recompute nativefloorvolume/materialcontracts andnominalphysicalweighttable onfinalsource; preserve intentional1.5teachinganalysisallowance"
+  ],
+  "red_intersection_prisms": [
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 133,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "beam_part": 0,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.010871999999999535,
+      "quadrature_error": 0,
+      "witness": [
+        19,
+        3.625,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.92,
+          1.36
+        ],
+        [
+          18.92,
+          5.89
+        ],
+        [
+          19.08,
+          5.89
+        ],
+        [
+          19.08,
+          1.36
+        ],
+        [
+          18.92,
+          1.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.92,
+              1.36
+            ],
+            [
+              18.92,
+              5.89
+            ],
+            [
+              19.08,
+              5.89
+            ],
+            [
+              19.08,
+              1.36
+            ],
+            [
+              18.92,
+              1.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 308,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "beam_part": 0,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.010871999999999857,
+      "quadrature_error": 0,
+      "witness": [
+        19,
+        3.625,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.92,
+          1.36
+        ],
+        [
+          18.92,
+          5.89
+        ],
+        [
+          19.08,
+          5.89
+        ],
+        [
+          19.08,
+          1.36
+        ],
+        [
+          18.92,
+          1.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.92,
+              1.36
+            ],
+            [
+              18.92,
+              5.89
+            ],
+            [
+              19.08,
+              5.89
+            ],
+            [
+              19.08,
+              1.36
+            ],
+            [
+              18.92,
+              1.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 134,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0025759999999998926,
+      "quadrature_error": 0,
+      "witness": [
+        19,
+        0.6344444444444433,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.92,
+          0.12888888888888672
+        ],
+        [
+          18.92,
+          1.14
+        ],
+        [
+          19.08,
+          1.14
+        ],
+        [
+          19.08,
+          0.004444444444444747
+        ],
+        [
+          18.92,
+          0.12888888888888672
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.92,
+              0.12888888888888672
+            ],
+            [
+              18.92,
+              1.14
+            ],
+            [
+              19.08,
+              1.14
+            ],
+            [
+              19.08,
+              0.004444444444444747
+            ],
+            [
+              18.92,
+              0.12888888888888672
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 173,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0002799999999999858,
+      "quadrature_error": 0,
+      "witness": [
+        18.96,
+        0.06666666666666574,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.92,
+          -0.05
+        ],
+        [
+          18.92,
+          0.12888888888888672
+        ],
+        [
+          19.08,
+          0.004444444444444747
+        ],
+        [
+          19.08,
+          -0.05
+        ],
+        [
+          18.92,
+          -0.05
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.92,
+              -0.05
+            ],
+            [
+              18.92,
+              0.12888888888888672
+            ],
+            [
+              19.08,
+              0.004444444444444747
+            ],
+            [
+              19.08,
+              -0.05
+            ],
+            [
+              18.92,
+              -0.05
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 309,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0025759999999999685,
+      "quadrature_error": 0,
+      "witness": [
+        19,
+        0.6344444444444433,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.92,
+          0.12888888888888672
+        ],
+        [
+          18.92,
+          1.14
+        ],
+        [
+          19.08,
+          1.14
+        ],
+        [
+          19.08,
+          0.004444444444444747
+        ],
+        [
+          18.92,
+          0.12888888888888672
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.92,
+              0.12888888888888672
+            ],
+            [
+              18.92,
+              1.14
+            ],
+            [
+              19.08,
+              1.14
+            ],
+            [
+              19.08,
+              0.004444444444444747
+            ],
+            [
+              18.92,
+              0.12888888888888672
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 348,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-1-6",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0002799999999999941,
+      "quadrature_error": 0,
+      "witness": [
+        18.96,
+        0.06666666666666574,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.92,
+          -0.05
+        ],
+        [
+          18.92,
+          0.12888888888888672
+        ],
+        [
+          19.08,
+          0.004444444444444747
+        ],
+        [
+          19.08,
+          -0.05
+        ],
+        [
+          18.92,
+          -0.05
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.92,
+              -0.05
+            ],
+            [
+              18.92,
+              0.12888888888888672
+            ],
+            [
+              19.08,
+              0.004444444444444747
+            ],
+            [
+              19.08,
+              -0.05
+            ],
+            [
+              18.92,
+              -0.05
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 160,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 0,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.002909249999999935,
+      "quadrature_error": 0,
+      "witness": [
+        19,
+        20.8425,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          21.55
+        ],
+        [
+          19.09,
+          20.36
+        ],
+        [
+          18.91,
+          20.36
+        ],
+        [
+          18.91,
+          21.325
+        ],
+        [
+          19.09,
+          21.55
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              21.55
+            ],
+            [
+              19.09,
+              20.36
+            ],
+            [
+              18.91,
+              20.36
+            ],
+            [
+              18.91,
+              21.325
+            ],
+            [
+              19.09,
+              21.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 167,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 0,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.00030374999999999494,
+      "quadrature_error": 0,
+      "witness": [
+        18.955,
+        21.4375,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          21.55
+        ],
+        [
+          18.91,
+          21.325
+        ],
+        [
+          18.91,
+          21.55
+        ],
+        [
+          19.09,
+          21.55
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              21.55
+            ],
+            [
+              18.91,
+              21.325
+            ],
+            [
+              18.91,
+              21.55
+            ],
+            [
+              19.09,
+              21.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 335,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 0,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0029092500000000208,
+      "quadrature_error": 0,
+      "witness": [
+        19,
+        20.8425,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          21.55
+        ],
+        [
+          19.09,
+          20.36
+        ],
+        [
+          18.91,
+          20.36
+        ],
+        [
+          18.91,
+          21.325
+        ],
+        [
+          19.09,
+          21.55
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              21.55
+            ],
+            [
+              19.09,
+              20.36
+            ],
+            [
+              18.91,
+              20.36
+            ],
+            [
+              18.91,
+              21.325
+            ],
+            [
+              19.09,
+              21.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 342,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 0,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.00030375000000000394,
+      "quadrature_error": 0,
+      "witness": [
+        18.955,
+        21.4375,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          21.55
+        ],
+        [
+          18.91,
+          21.325
+        ],
+        [
+          18.91,
+          21.55
+        ],
+        [
+          19.09,
+          21.55
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              21.55
+            ],
+            [
+              18.91,
+              21.325
+            ],
+            [
+              18.91,
+              21.55
+            ],
+            [
+              19.09,
+              21.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 2,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.000035454545454539754,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        10.648590909090908,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.675
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          18.91,
+          10.622181818181815
+        ],
+        [
+          18.91,
+          10.675363636363636
+        ],
+        [
+          18.919999999999998,
+          10.675
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.675
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              18.91,
+              10.622181818181815
+            ],
+            [
+              18.91,
+              10.675363636363636
+            ],
+            [
+              18.919999999999998,
+              10.675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 4,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.000035454545454539754,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        15.398590909090908,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.425
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          18.91,
+          15.372181818181815
+        ],
+        [
+          18.91,
+          15.425363636363636
+        ],
+        [
+          18.919999999999998,
+          15.425
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.425
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              18.91,
+              15.372181818181815
+            ],
+            [
+              18.91,
+              15.425363636363636
+            ],
+            [
+              18.919999999999998,
+              15.425
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 5,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00002925000000000171,
+      "quadrature_error": 0,
+      "witness": [
+        19.01711956521739,
+        15.3925,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.014999999999997,
+          15.425
+        ],
+        [
+          19.029999999999998,
+          15.475
+        ],
+        [
+          19.014999999999997,
+          15.36
+        ],
+        [
+          19.014999999999997,
+          15.425
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.014999999999997,
+              15.425
+            ],
+            [
+              19.029999999999998,
+              15.475
+            ],
+            [
+              19.014999999999997,
+              15.36
+            ],
+            [
+              19.014999999999997,
+              15.425
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 19,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.005259184615384626,
+      "quadrature_error": 0,
+      "witness": [
+        18.955,
+        6.5969615384615405,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          6.198538461538461
+        ],
+        [
+          19.09,
+          6.11
+        ],
+        [
+          18.91,
+          6.11
+        ],
+        [
+          18.91,
+          6.995384615384619
+        ],
+        [
+          19.09,
+          6.198538461538461
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              6.198538461538461
+            ],
+            [
+              19.09,
+              6.11
+            ],
+            [
+              18.91,
+              6.11
+            ],
+            [
+              18.91,
+              6.995384615384619
+            ],
+            [
+              19.09,
+              6.198538461538461
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 32,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00004261168831167312,
+      "quadrature_error": 0,
+      "witness": [
+        18.9125,
+        10.545071428571438,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          18.91,
+          10.480142857142877
+        ],
+        [
+          18.91,
+          10.622181818181815
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              18.91,
+              10.480142857142877
+            ],
+            [
+              18.91,
+              10.622181818181815
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 33,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.000040468831168816674,
+      "quadrature_error": 0,
+      "witness": [
+        18.9125,
+        15.298642857142866,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          18.91,
+          15.237285714285733
+        ],
+        [
+          18.91,
+          15.372181818181815
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              18.91,
+              15.237285714285733
+            ],
+            [
+              18.91,
+              15.372181818181815
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 34,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.000040718181818174346,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        15.6075,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          18.91,
+          15.572272727272727
+        ],
+        [
+          18.91,
+          15.643
+        ],
+        [
+          18.919999999999998,
+          15.64
+        ],
+        [
+          18.919999999999998,
+          15.575
+        ],
+        [
+          18.91,
+          15.572272727272727
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.91,
+              15.572272727272727
+            ],
+            [
+              18.91,
+              15.643
+            ],
+            [
+              18.919999999999998,
+              15.64
+            ],
+            [
+              18.919999999999998,
+              15.575
+            ],
+            [
+              18.91,
+              15.572272727272727
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 36,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.004016353846153848,
+      "quadrature_error": 0,
+      "witness": [
+        18.955,
+        19.768115384615385,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          20.14
+        ],
+        [
+          19.09,
+          20.072384615384617
+        ],
+        [
+          18.91,
+          19.463846153846152
+        ],
+        [
+          18.91,
+          20.14
+        ],
+        [
+          19.09,
+          20.14
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              20.14
+            ],
+            [
+              19.09,
+              20.072384615384617
+            ],
+            [
+              18.91,
+              19.463846153846152
+            ],
+            [
+              18.91,
+              20.14
+            ],
+            [
+              19.09,
+              20.14
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 38,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.0021442500000000836,
+      "quadrature_error": 0,
+      "witness": [
+        19.026249999999997,
+        13.182500000000001,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.029999999999998,
+          10.775
+        ],
+        [
+          19.014999999999997,
+          10.825
+        ],
+        [
+          19.014999999999997,
+          10.89
+        ],
+        [
+          19.029999999999998,
+          15.475
+        ],
+        [
+          19.029999999999998,
+          10.775
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.029999999999998,
+              10.775
+            ],
+            [
+              19.014999999999997,
+              10.825
+            ],
+            [
+              19.014999999999997,
+              10.89
+            ],
+            [
+              19.029999999999998,
+              15.475
+            ],
+            [
+              19.029999999999998,
+              10.775
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 39,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.0020050000000001018,
+      "quadrature_error": 0,
+      "witness": [
+        19.054684198860308,
+        16.763750000000037,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.014999999999997,
+          15.64
+        ],
+        [
+          19.09,
+          18.201111111111178
+        ],
+        [
+          19.09,
+          17.88750000000007
+        ],
+        [
+          19.029999999999998,
+          15.525
+        ],
+        [
+          19.014999999999997,
+          15.575
+        ],
+        [
+          19.014999999999997,
+          15.64
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.014999999999997,
+              15.64
+            ],
+            [
+              19.09,
+              18.201111111111178
+            ],
+            [
+              19.09,
+              17.88750000000007
+            ],
+            [
+              19.029999999999998,
+              15.525
+            ],
+            [
+              19.014999999999997,
+              15.575
+            ],
+            [
+              19.014999999999997,
+              15.64
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 40,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.002002900000000105,
+      "quadrature_error": 0,
+      "witness": [
+        19.054684578623828,
+        9.487749999999965,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.014999999999997,
+          10.675
+        ],
+        [
+          19.029999999999998,
+          10.725
+        ],
+        [
+          19.09,
+          8.36549999999993
+        ],
+        [
+          19.09,
+          8.052222222222154
+        ],
+        [
+          19.014999999999997,
+          10.61
+        ],
+        [
+          19.014999999999997,
+          10.675
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.014999999999997,
+              10.675
+            ],
+            [
+              19.029999999999998,
+              10.725
+            ],
+            [
+              19.09,
+              8.36549999999993
+            ],
+            [
+              19.09,
+              8.052222222222154
+            ],
+            [
+              19.014999999999997,
+              10.61
+            ],
+            [
+              19.014999999999997,
+              10.675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 42,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.000040289610389602625,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        10.8575,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.89
+        ],
+        [
+          18.919999999999998,
+          10.825
+        ],
+        [
+          18.91,
+          10.822272727272727
+        ],
+        [
+          18.91,
+          10.891571428571428
+        ],
+        [
+          18.919999999999998,
+          10.89
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.89
+            ],
+            [
+              18.919999999999998,
+              10.825
+            ],
+            [
+              18.91,
+              10.822272727272727
+            ],
+            [
+              18.91,
+              10.891571428571428
+            ],
+            [
+              18.919999999999998,
+              10.89
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 43,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.004170726623376502,
+      "quadrature_error": 0,
+      "witness": [
+        18.93383839243177,
+        14.630779220779232,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          19.014999999999997,
+          15.36
+        ],
+        [
+          18.91,
+          14.02427272727273
+        ],
+        [
+          18.91,
+          15.237285714285733
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              19.014999999999997,
+              15.36
+            ],
+            [
+              18.91,
+              14.02427272727273
+            ],
+            [
+              18.91,
+              15.237285714285733
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 45,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.025964487662337055,
+      "quadrature_error": 0,
+      "witness": [
+        18.965064758033677,
+        12.45792207792208,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.014999999999997,
+          15.36
+        ],
+        [
+          19.029999999999998,
+          15.475
+        ],
+        [
+          19.014999999999997,
+          10.89
+        ],
+        [
+          18.919999999999998,
+          10.89
+        ],
+        [
+          18.91,
+          10.891571428571428
+        ],
+        [
+          18.91,
+          14.02427272727273
+        ],
+        [
+          19.014999999999997,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.014999999999997,
+              15.36
+            ],
+            [
+              19.029999999999998,
+              15.475
+            ],
+            [
+              19.014999999999997,
+              10.89
+            ],
+            [
+              18.919999999999998,
+              10.89
+            ],
+            [
+              18.91,
+              10.891571428571428
+            ],
+            [
+              18.91,
+              14.02427272727273
+            ],
+            [
+              19.014999999999997,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 46,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.037546858241757824,
+      "quadrature_error": 0,
+      "witness": [
+        18.98220192844731,
+        9.266182539682514,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          19.014999999999997,
+          10.61
+        ],
+        [
+          19.09,
+          8.052222222222154
+        ],
+        [
+          19.09,
+          6.198538461538461
+        ],
+        [
+          18.91,
+          6.995384615384619
+        ],
+        [
+          18.91,
+          10.480142857142877
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              19.014999999999997,
+              10.61
+            ],
+            [
+              19.09,
+              8.052222222222154
+            ],
+            [
+              19.09,
+              6.198538461538461
+            ],
+            [
+              18.91,
+              6.995384615384619
+            ],
+            [
+              18.91,
+              10.480142857142877
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 47,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.025779600000001252,
+      "quadrature_error": 0,
+      "witness": [
+        19.06,
+        13.125,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.029999999999998,
+          10.775
+        ],
+        [
+          19.029999999999998,
+          15.475
+        ],
+        [
+          19.029999999999998,
+          15.525
+        ],
+        [
+          19.09,
+          17.88750000000007
+        ],
+        [
+          19.09,
+          8.36549999999993
+        ],
+        [
+          19.029999999999998,
+          10.725
+        ],
+        [
+          19.029999999999998,
+          10.775
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.029999999999998,
+              10.775
+            ],
+            [
+              19.029999999999998,
+              15.475
+            ],
+            [
+              19.029999999999998,
+              15.525
+            ],
+            [
+              19.09,
+              17.88750000000007
+            ],
+            [
+              19.09,
+              8.36549999999993
+            ],
+            [
+              19.029999999999998,
+              10.725
+            ],
+            [
+              19.029999999999998,
+              10.775
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 48,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.038820246153845744,
+      "quadrature_error": 0,
+      "witness": [
+        18.981271963123646,
+        16.922055555555588,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          20.072384615384617
+        ],
+        [
+          19.09,
+          18.201111111111178
+        ],
+        [
+          19.014999999999997,
+          15.64
+        ],
+        [
+          18.919999999999998,
+          15.64
+        ],
+        [
+          18.91,
+          15.643
+        ],
+        [
+          18.91,
+          19.463846153846152
+        ],
+        [
+          19.09,
+          20.072384615384617
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              20.072384615384617
+            ],
+            [
+              19.09,
+              18.201111111111178
+            ],
+            [
+              19.014999999999997,
+              15.64
+            ],
+            [
+              18.919999999999998,
+              15.64
+            ],
+            [
+              18.91,
+              15.643
+            ],
+            [
+              18.91,
+              19.463846153846152
+            ],
+            [
+              19.09,
+              20.072384615384617
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 2,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.000008863636363634742,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        10.648590909090908,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.675
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          18.91,
+          10.622181818181815
+        ],
+        [
+          18.91,
+          10.675363636363636
+        ],
+        [
+          18.919999999999998,
+          10.675
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.675
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              18.91,
+              10.622181818181815
+            ],
+            [
+              18.91,
+              10.675363636363636
+            ],
+            [
+              18.919999999999998,
+              10.675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 4,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.000008863636363634742,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        15.398590909090908,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.425
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          18.91,
+          15.372181818181815
+        ],
+        [
+          18.91,
+          15.425363636363636
+        ],
+        [
+          18.919999999999998,
+          15.425
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.425
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              18.91,
+              15.372181818181815
+            ],
+            [
+              18.91,
+              15.425363636363636
+            ],
+            [
+              18.919999999999998,
+              15.425
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 5,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.000007312499999993804,
+      "quadrature_error": 0,
+      "witness": [
+        19.017119565217392,
+        15.392500000000013,
+        3.1475
+      ],
+      "intersection_outline": null,
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  19.015,
+                  15.360000000000026
+                ],
+                [
+                  19.015,
+                  15.425
+                ],
+                [
+                  19.029999999999994,
+                  15.474999999999978
+                ],
+                [
+                  19.015,
+                  15.360000000000026
+                ]
+              ]
+            ]
+          },
+          {
+            "type": "Point",
+            "coordinates": [
+              19.014999999999997,
+              15.36
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 19,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0013147961538461275,
+      "quadrature_error": 0,
+      "witness": [
+        18.955,
+        6.5969615384615405,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          6.198538461538461
+        ],
+        [
+          19.09,
+          6.11
+        ],
+        [
+          18.91,
+          6.11
+        ],
+        [
+          18.91,
+          6.995384615384619
+        ],
+        [
+          19.09,
+          6.198538461538461
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              6.198538461538461
+            ],
+            [
+              19.09,
+              6.11
+            ],
+            [
+              18.91,
+              6.11
+            ],
+            [
+              18.91,
+              6.995384615384619
+            ],
+            [
+              19.09,
+              6.198538461538461
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 32,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.000010652922077918044,
+      "quadrature_error": 0,
+      "witness": [
+        18.9125,
+        10.545071428571438,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          18.91,
+          10.480142857142877
+        ],
+        [
+          18.91,
+          10.622181818181815
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              18.91,
+              10.480142857142877
+            ],
+            [
+              18.91,
+              10.622181818181815
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 33,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.000010117207792203945,
+      "quadrature_error": 0,
+      "witness": [
+        18.9125,
+        15.298642857142866,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          18.91,
+          15.237285714285733
+        ],
+        [
+          18.91,
+          15.372181818181815
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              18.91,
+              15.237285714285733
+            ],
+            [
+              18.91,
+              15.372181818181815
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 34,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.00001017954545452288,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        15.6075,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.91996470021929,
+          15.574990372787079
+        ],
+        [
+          18.91,
+          15.572272727273
+        ],
+        [
+          18.91,
+          15.643
+        ],
+        [
+          18.919999999999998,
+          15.64
+        ],
+        [
+          18.919999999999998,
+          15.575
+        ],
+        [
+          18.91996470021929,
+          15.574990372787079
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.91996470021929,
+              15.574990372787079
+            ],
+            [
+              18.91,
+              15.572272727273
+            ],
+            [
+              18.91,
+              15.643
+            ],
+            [
+              18.919999999999998,
+              15.64
+            ],
+            [
+              18.919999999999998,
+              15.575
+            ],
+            [
+              18.91996470021929,
+              15.574990372787079
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 36,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0010040884615384396,
+      "quadrature_error": 0,
+      "witness": [
+        18.955,
+        19.768115384615385,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          20.14
+        ],
+        [
+          19.09,
+          20.072384615384617
+        ],
+        [
+          18.91,
+          19.463846153846152
+        ],
+        [
+          18.91,
+          20.14
+        ],
+        [
+          19.09,
+          20.14
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              20.14
+            ],
+            [
+              19.09,
+              20.072384615384617
+            ],
+            [
+              18.91,
+              19.463846153846152
+            ],
+            [
+              18.91,
+              20.14
+            ],
+            [
+              19.09,
+              20.14
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 38,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0005360625000000014,
+      "quadrature_error": 0,
+      "witness": [
+        19.026249999999997,
+        13.182499999999994,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.029999999999998,
+          10.775000000000013
+        ],
+        [
+          19.015,
+          10.825
+        ],
+        [
+          19.015,
+          10.89
+        ],
+        [
+          19.014999999999997,
+          10.89
+        ],
+        [
+          19.029999999999998,
+          15.474999999999987
+        ],
+        [
+          19.029999999999998,
+          10.775000000000013
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.029999999999998,
+              10.775000000000013
+            ],
+            [
+              19.015,
+              10.825
+            ],
+            [
+              19.015,
+              10.89
+            ],
+            [
+              19.014999999999997,
+              10.89
+            ],
+            [
+              19.029999999999998,
+              15.474999999999987
+            ],
+            [
+              19.029999999999998,
+              10.775000000000013
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 39,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0005012500000000036,
+      "quadrature_error": 0,
+      "witness": [
+        19.054684198860308,
+        16.763750000000037,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          18.201111111111178
+        ],
+        [
+          19.09,
+          17.88750000000007
+        ],
+        [
+          19.029999999999998,
+          15.525000000000011
+        ],
+        [
+          19.015,
+          15.575
+        ],
+        [
+          19.015,
+          15.64
+        ],
+        [
+          19.014999999999997,
+          15.64
+        ],
+        [
+          19.09,
+          18.201111111111178
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              18.201111111111178
+            ],
+            [
+              19.09,
+              17.88750000000007
+            ],
+            [
+              19.029999999999998,
+              15.525000000000011
+            ],
+            [
+              19.015,
+              15.575
+            ],
+            [
+              19.015,
+              15.64
+            ],
+            [
+              19.014999999999997,
+              15.64
+            ],
+            [
+              19.09,
+              18.201111111111178
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 40,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0005007250000000044,
+      "quadrature_error": 0,
+      "witness": [
+        19.054684578623828,
+        9.487749999999965,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          8.36549999999993
+        ],
+        [
+          19.09,
+          8.052222222222154
+        ],
+        [
+          19.014999999999997,
+          10.61
+        ],
+        [
+          19.015,
+          10.61
+        ],
+        [
+          19.015,
+          10.675
+        ],
+        [
+          19.029999999999998,
+          10.724999999999989
+        ],
+        [
+          19.09,
+          8.36549999999993
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              8.36549999999993
+            ],
+            [
+              19.09,
+              8.052222222222154
+            ],
+            [
+              19.014999999999997,
+              10.61
+            ],
+            [
+              19.015,
+              10.61
+            ],
+            [
+              19.015,
+              10.675
+            ],
+            [
+              19.029999999999998,
+              10.724999999999989
+            ],
+            [
+              19.09,
+              8.36549999999993
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 42,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.000010072402597379951,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        10.8575,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.89
+        ],
+        [
+          18.919999999999998,
+          10.825
+        ],
+        [
+          18.91996470021929,
+          10.824990372787079
+        ],
+        [
+          18.91,
+          10.822272727273
+        ],
+        [
+          18.91,
+          10.891571428571428
+        ],
+        [
+          18.919999999999998,
+          10.89
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.89
+            ],
+            [
+              18.919999999999998,
+              10.825
+            ],
+            [
+              18.91996470021929,
+              10.824990372787079
+            ],
+            [
+              18.91,
+              10.822272727273
+            ],
+            [
+              18.91,
+              10.891571428571428
+            ],
+            [
+              18.919999999999998,
+              10.89
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 43,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0010426816558441023,
+      "quadrature_error": 0,
+      "witness": [
+        18.93383839243177,
+        14.630779220779232,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          18.92,
+          15.36
+        ],
+        [
+          19.014999999999997,
+          15.36
+        ],
+        [
+          18.91,
+          14.02427272727273
+        ],
+        [
+          18.91,
+          15.237285714285733
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              18.92,
+              15.36
+            ],
+            [
+              19.014999999999997,
+              15.36
+            ],
+            [
+              18.91,
+              14.02427272727273
+            ],
+            [
+              18.91,
+              15.237285714285733
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 45,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0064911219155841205,
+      "quadrature_error": 0,
+      "witness": [
+        18.965064758033677,
+        12.45792207792208,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.014999999999997,
+          15.36
+        ],
+        [
+          19.015,
+          15.36
+        ],
+        [
+          19.015,
+          15.360000000000026
+        ],
+        [
+          19.029999999999994,
+          15.474999999999978
+        ],
+        [
+          19.029999999999998,
+          15.474999999999987
+        ],
+        [
+          19.014999999999997,
+          10.89
+        ],
+        [
+          18.92,
+          10.89
+        ],
+        [
+          18.919999999999998,
+          10.89
+        ],
+        [
+          18.91,
+          10.891571428571428
+        ],
+        [
+          18.91,
+          14.02427272727273
+        ],
+        [
+          19.014999999999997,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.014999999999997,
+              15.36
+            ],
+            [
+              19.015,
+              15.36
+            ],
+            [
+              19.015,
+              15.360000000000026
+            ],
+            [
+              19.029999999999994,
+              15.474999999999978
+            ],
+            [
+              19.029999999999998,
+              15.474999999999987
+            ],
+            [
+              19.014999999999997,
+              10.89
+            ],
+            [
+              18.92,
+              10.89
+            ],
+            [
+              18.919999999999998,
+              10.89
+            ],
+            [
+              18.91,
+              10.891571428571428
+            ],
+            [
+              18.91,
+              14.02427272727273
+            ],
+            [
+              19.014999999999997,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 46,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.009386714560439248,
+      "quadrature_error": 0,
+      "witness": [
+        18.98220192844731,
+        9.266182539682514,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          18.92,
+          10.61
+        ],
+        [
+          19.014999999999997,
+          10.61
+        ],
+        [
+          19.09,
+          8.052222222222154
+        ],
+        [
+          19.09,
+          6.198538461538461
+        ],
+        [
+          18.91,
+          6.995384615384619
+        ],
+        [
+          18.91,
+          10.480142857142877
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              18.92,
+              10.61
+            ],
+            [
+              19.014999999999997,
+              10.61
+            ],
+            [
+              19.09,
+              8.052222222222154
+            ],
+            [
+              19.09,
+              6.198538461538461
+            ],
+            [
+              18.91,
+              6.995384615384619
+            ],
+            [
+              18.91,
+              10.480142857142877
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 47,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.006444900000000174,
+      "quadrature_error": 0,
+      "witness": [
+        19.06,
+        13.125,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.029999999999998,
+          15.474999999999987
+        ],
+        [
+          19.03,
+          15.475
+        ],
+        [
+          19.03,
+          15.525
+        ],
+        [
+          19.029999999999998,
+          15.525000000000011
+        ],
+        [
+          19.09,
+          17.88750000000007
+        ],
+        [
+          19.09,
+          8.36549999999993
+        ],
+        [
+          19.029999999999998,
+          10.724999999999989
+        ],
+        [
+          19.03,
+          10.725
+        ],
+        [
+          19.03,
+          10.775
+        ],
+        [
+          19.029999999999998,
+          10.775000000000013
+        ],
+        [
+          19.029999999999998,
+          15.474999999999987
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.029999999999998,
+              15.474999999999987
+            ],
+            [
+              19.03,
+              15.475
+            ],
+            [
+              19.03,
+              15.525
+            ],
+            [
+              19.029999999999998,
+              15.525000000000011
+            ],
+            [
+              19.09,
+              17.88750000000007
+            ],
+            [
+              19.09,
+              8.36549999999993
+            ],
+            [
+              19.029999999999998,
+              10.724999999999989
+            ],
+            [
+              19.03,
+              10.725
+            ],
+            [
+              19.03,
+              10.775
+            ],
+            [
+              19.029999999999998,
+              10.775000000000013
+            ],
+            [
+              19.029999999999998,
+              15.474999999999987
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 48,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.00970506153846122,
+      "quadrature_error": 0,
+      "witness": [
+        18.981271963123646,
+        16.922055555555588,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          20.072384615384617
+        ],
+        [
+          19.09,
+          18.201111111111178
+        ],
+        [
+          19.014999999999997,
+          15.64
+        ],
+        [
+          18.92,
+          15.64
+        ],
+        [
+          18.919999999999998,
+          15.64
+        ],
+        [
+          18.91,
+          15.643
+        ],
+        [
+          18.91,
+          19.463846153846152
+        ],
+        [
+          19.09,
+          20.072384615384617
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              20.072384615384617
+            ],
+            [
+              19.09,
+              18.201111111111178
+            ],
+            [
+              19.014999999999997,
+              15.64
+            ],
+            [
+              18.92,
+              15.64
+            ],
+            [
+              18.919999999999998,
+              15.64
+            ],
+            [
+              18.91,
+              15.643
+            ],
+            [
+              18.91,
+              19.463846153846152
+            ],
+            [
+              19.09,
+              20.072384615384617
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 177,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.000008863636363635005,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        10.648590909090908,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.675
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          18.91,
+          10.622181818181815
+        ],
+        [
+          18.91,
+          10.675363636363636
+        ],
+        [
+          18.919999999999998,
+          10.675
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.675
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              18.91,
+              10.622181818181815
+            ],
+            [
+              18.91,
+              10.675363636363636
+            ],
+            [
+              18.919999999999998,
+              10.675
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 179,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.000008863636363635005,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        15.398590909090908,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.425
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          18.91,
+          15.372181818181815
+        ],
+        [
+          18.91,
+          15.425363636363636
+        ],
+        [
+          18.919999999999998,
+          15.425
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.425
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              18.91,
+              15.372181818181815
+            ],
+            [
+              18.91,
+              15.425363636363636
+            ],
+            [
+              18.919999999999998,
+              15.425
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 180,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.00000731249999999402,
+      "quadrature_error": 0,
+      "witness": [
+        19.017119565217392,
+        15.392500000000013,
+        3.1624999999999996
+      ],
+      "intersection_outline": null,
+      "geometry": {
+        "type": "GeometryCollection",
+        "geometries": [
+          {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  19.015,
+                  15.360000000000026
+                ],
+                [
+                  19.015,
+                  15.425
+                ],
+                [
+                  19.029999999999994,
+                  15.474999999999978
+                ],
+                [
+                  19.015,
+                  15.360000000000026
+                ]
+              ]
+            ]
+          },
+          {
+            "type": "Point",
+            "coordinates": [
+              19.014999999999997,
+              15.36
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 194,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0013147961538461663,
+      "quadrature_error": 0,
+      "witness": [
+        18.955,
+        6.5969615384615405,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          6.198538461538461
+        ],
+        [
+          19.09,
+          6.11
+        ],
+        [
+          18.91,
+          6.11
+        ],
+        [
+          18.91,
+          6.995384615384619
+        ],
+        [
+          19.09,
+          6.198538461538461
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              6.198538461538461
+            ],
+            [
+              19.09,
+              6.11
+            ],
+            [
+              18.91,
+              6.11
+            ],
+            [
+              18.91,
+              6.995384615384619
+            ],
+            [
+              19.09,
+              6.198538461538461
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 207,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.000010652922077918359,
+      "quadrature_error": 0,
+      "witness": [
+        18.9125,
+        10.545071428571438,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          18.91,
+          10.480142857142877
+        ],
+        [
+          18.91,
+          10.622181818181815
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              18.91,
+              10.480142857142877
+            ],
+            [
+              18.91,
+              10.622181818181815
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 208,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.000010117207792204245,
+      "quadrature_error": 0,
+      "witness": [
+        18.9125,
+        15.298642857142866,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          18.91,
+          15.237285714285733
+        ],
+        [
+          18.91,
+          15.372181818181815
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              18.91,
+              15.237285714285733
+            ],
+            [
+              18.91,
+              15.372181818181815
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 209,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.000010179545454523181,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        15.6075,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.91996470021929,
+          15.574990372787079
+        ],
+        [
+          18.91,
+          15.572272727273
+        ],
+        [
+          18.91,
+          15.643
+        ],
+        [
+          18.919999999999998,
+          15.64
+        ],
+        [
+          18.919999999999998,
+          15.575
+        ],
+        [
+          18.91996470021929,
+          15.574990372787079
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.91996470021929,
+              15.574990372787079
+            ],
+            [
+              18.91,
+              15.572272727273
+            ],
+            [
+              18.91,
+              15.643
+            ],
+            [
+              18.919999999999998,
+              15.64
+            ],
+            [
+              18.919999999999998,
+              15.575
+            ],
+            [
+              18.91996470021929,
+              15.574990372787079
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 211,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0010040884615384693,
+      "quadrature_error": 0,
+      "witness": [
+        18.955,
+        19.768115384615385,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          20.14
+        ],
+        [
+          19.09,
+          20.072384615384617
+        ],
+        [
+          18.91,
+          19.463846153846152
+        ],
+        [
+          18.91,
+          20.14
+        ],
+        [
+          19.09,
+          20.14
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              20.14
+            ],
+            [
+              19.09,
+              20.072384615384617
+            ],
+            [
+              18.91,
+              19.463846153846152
+            ],
+            [
+              18.91,
+              20.14
+            ],
+            [
+              19.09,
+              20.14
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 213,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0005360625000000172,
+      "quadrature_error": 0,
+      "witness": [
+        19.026249999999997,
+        13.182499999999994,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.029999999999998,
+          10.775000000000013
+        ],
+        [
+          19.015,
+          10.825
+        ],
+        [
+          19.015,
+          10.89
+        ],
+        [
+          19.014999999999997,
+          10.89
+        ],
+        [
+          19.029999999999998,
+          15.474999999999987
+        ],
+        [
+          19.029999999999998,
+          10.775000000000013
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.029999999999998,
+              10.775000000000013
+            ],
+            [
+              19.015,
+              10.825
+            ],
+            [
+              19.015,
+              10.89
+            ],
+            [
+              19.014999999999997,
+              10.89
+            ],
+            [
+              19.029999999999998,
+              15.474999999999987
+            ],
+            [
+              19.029999999999998,
+              10.775000000000013
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 214,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0005012500000000185,
+      "quadrature_error": 0,
+      "witness": [
+        19.054684198860308,
+        16.763750000000037,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          18.201111111111178
+        ],
+        [
+          19.09,
+          17.88750000000007
+        ],
+        [
+          19.029999999999998,
+          15.525000000000011
+        ],
+        [
+          19.015,
+          15.575
+        ],
+        [
+          19.015,
+          15.64
+        ],
+        [
+          19.014999999999997,
+          15.64
+        ],
+        [
+          19.09,
+          18.201111111111178
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              18.201111111111178
+            ],
+            [
+              19.09,
+              17.88750000000007
+            ],
+            [
+              19.029999999999998,
+              15.525000000000011
+            ],
+            [
+              19.015,
+              15.575
+            ],
+            [
+              19.015,
+              15.64
+            ],
+            [
+              19.014999999999997,
+              15.64
+            ],
+            [
+              19.09,
+              18.201111111111178
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 215,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0005007250000000192,
+      "quadrature_error": 0,
+      "witness": [
+        19.054684578623828,
+        9.487749999999965,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          8.36549999999993
+        ],
+        [
+          19.09,
+          8.052222222222154
+        ],
+        [
+          19.014999999999997,
+          10.61
+        ],
+        [
+          19.015,
+          10.61
+        ],
+        [
+          19.015,
+          10.675
+        ],
+        [
+          19.029999999999998,
+          10.724999999999989
+        ],
+        [
+          19.09,
+          8.36549999999993
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              8.36549999999993
+            ],
+            [
+              19.09,
+              8.052222222222154
+            ],
+            [
+              19.014999999999997,
+              10.61
+            ],
+            [
+              19.015,
+              10.61
+            ],
+            [
+              19.015,
+              10.675
+            ],
+            [
+              19.029999999999998,
+              10.724999999999989
+            ],
+            [
+              19.09,
+              8.36549999999993
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 217,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.00001007240259738025,
+      "quadrature_error": 0,
+      "witness": [
+        18.915,
+        10.8575,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.89
+        ],
+        [
+          18.919999999999998,
+          10.825
+        ],
+        [
+          18.91996470021929,
+          10.824990372787079
+        ],
+        [
+          18.91,
+          10.822272727273
+        ],
+        [
+          18.91,
+          10.891571428571428
+        ],
+        [
+          18.919999999999998,
+          10.89
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.89
+            ],
+            [
+              18.919999999999998,
+              10.825
+            ],
+            [
+              18.91996470021929,
+              10.824990372787079
+            ],
+            [
+              18.91,
+              10.822272727273
+            ],
+            [
+              18.91,
+              10.891571428571428
+            ],
+            [
+              18.919999999999998,
+              10.89
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 218,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.0010426816558441333,
+      "quadrature_error": 0,
+      "witness": [
+        18.93383839243177,
+        14.630779220779232,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          15.36
+        ],
+        [
+          18.92,
+          15.36
+        ],
+        [
+          19.014999999999997,
+          15.36
+        ],
+        [
+          18.91,
+          14.02427272727273
+        ],
+        [
+          18.91,
+          15.237285714285733
+        ],
+        [
+          18.919999999999998,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              15.36
+            ],
+            [
+              18.92,
+              15.36
+            ],
+            [
+              19.014999999999997,
+              15.36
+            ],
+            [
+              18.91,
+              14.02427272727273
+            ],
+            [
+              18.91,
+              15.237285714285733
+            ],
+            [
+              18.919999999999998,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 220,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.006491121915584313,
+      "quadrature_error": 0,
+      "witness": [
+        18.965064758033677,
+        12.45792207792208,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.014999999999997,
+          15.36
+        ],
+        [
+          19.015,
+          15.36
+        ],
+        [
+          19.015,
+          15.360000000000026
+        ],
+        [
+          19.029999999999994,
+          15.474999999999978
+        ],
+        [
+          19.029999999999998,
+          15.474999999999987
+        ],
+        [
+          19.014999999999997,
+          10.89
+        ],
+        [
+          18.92,
+          10.89
+        ],
+        [
+          18.919999999999998,
+          10.89
+        ],
+        [
+          18.91,
+          10.891571428571428
+        ],
+        [
+          18.91,
+          14.02427272727273
+        ],
+        [
+          19.014999999999997,
+          15.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.014999999999997,
+              15.36
+            ],
+            [
+              19.015,
+              15.36
+            ],
+            [
+              19.015,
+              15.360000000000026
+            ],
+            [
+              19.029999999999994,
+              15.474999999999978
+            ],
+            [
+              19.029999999999998,
+              15.474999999999987
+            ],
+            [
+              19.014999999999997,
+              10.89
+            ],
+            [
+              18.92,
+              10.89
+            ],
+            [
+              18.919999999999998,
+              10.89
+            ],
+            [
+              18.91,
+              10.891571428571428
+            ],
+            [
+              18.91,
+              14.02427272727273
+            ],
+            [
+              19.014999999999997,
+              15.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 221,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.009386714560439526,
+      "quadrature_error": 0,
+      "witness": [
+        18.98220192844731,
+        9.266182539682514,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          18.919999999999998,
+          10.61
+        ],
+        [
+          18.92,
+          10.61
+        ],
+        [
+          19.014999999999997,
+          10.61
+        ],
+        [
+          19.09,
+          8.052222222222154
+        ],
+        [
+          19.09,
+          6.198538461538461
+        ],
+        [
+          18.91,
+          6.995384615384619
+        ],
+        [
+          18.91,
+          10.480142857142877
+        ],
+        [
+          18.919999999999998,
+          10.61
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              18.919999999999998,
+              10.61
+            ],
+            [
+              18.92,
+              10.61
+            ],
+            [
+              19.014999999999997,
+              10.61
+            ],
+            [
+              19.09,
+              8.052222222222154
+            ],
+            [
+              19.09,
+              6.198538461538461
+            ],
+            [
+              18.91,
+              6.995384615384619
+            ],
+            [
+              18.91,
+              10.480142857142877
+            ],
+            [
+              18.919999999999998,
+              10.61
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 222,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.006444900000000365,
+      "quadrature_error": 0,
+      "witness": [
+        19.06,
+        13.125,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.029999999999998,
+          15.474999999999987
+        ],
+        [
+          19.03,
+          15.475
+        ],
+        [
+          19.03,
+          15.525
+        ],
+        [
+          19.029999999999998,
+          15.525000000000011
+        ],
+        [
+          19.09,
+          17.88750000000007
+        ],
+        [
+          19.09,
+          8.36549999999993
+        ],
+        [
+          19.029999999999998,
+          10.724999999999989
+        ],
+        [
+          19.03,
+          10.725
+        ],
+        [
+          19.03,
+          10.775
+        ],
+        [
+          19.029999999999998,
+          10.775000000000013
+        ],
+        [
+          19.029999999999998,
+          15.474999999999987
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.029999999999998,
+              15.474999999999987
+            ],
+            [
+              19.03,
+              15.475
+            ],
+            [
+              19.03,
+              15.525
+            ],
+            [
+              19.029999999999998,
+              15.525000000000011
+            ],
+            [
+              19.09,
+              17.88750000000007
+            ],
+            [
+              19.09,
+              8.36549999999993
+            ],
+            [
+              19.029999999999998,
+              10.724999999999989
+            ],
+            [
+              19.03,
+              10.725
+            ],
+            [
+              19.03,
+              10.775
+            ],
+            [
+              19.029999999999998,
+              10.775000000000013
+            ],
+            [
+              19.029999999999998,
+              15.474999999999987
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 223,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-6-29",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.009705061538461507,
+      "quadrature_error": 0,
+      "witness": [
+        18.981271963123646,
+        16.922055555555588,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          19.09,
+          20.072384615384617
+        ],
+        [
+          19.09,
+          18.201111111111178
+        ],
+        [
+          19.014999999999997,
+          15.64
+        ],
+        [
+          18.92,
+          15.64
+        ],
+        [
+          18.919999999999998,
+          15.64
+        ],
+        [
+          18.91,
+          15.643
+        ],
+        [
+          18.91,
+          19.463846153846152
+        ],
+        [
+          19.09,
+          20.072384615384617
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              19.09,
+              20.072384615384617
+            ],
+            [
+              19.09,
+              18.201111111111178
+            ],
+            [
+              19.014999999999997,
+              15.64
+            ],
+            [
+              18.92,
+              15.64
+            ],
+            [
+              18.919999999999998,
+              15.64
+            ],
+            [
+              18.91,
+              15.643
+            ],
+            [
+              18.91,
+              19.463846153846152
+            ],
+            [
+              19.09,
+              20.072384615384617
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 124,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 0,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.01087199999999977,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        17.875,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          15.61
+        ],
+        [
+          -0.08,
+          20.14
+        ],
+        [
+          0.08,
+          20.14
+        ],
+        [
+          0.08,
+          15.61
+        ],
+        [
+          -0.08,
+          15.61
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              15.61
+            ],
+            [
+              -0.08,
+              20.14
+            ],
+            [
+              0.08,
+              20.14
+            ],
+            [
+              0.08,
+              15.61
+            ],
+            [
+              -0.08,
+              15.61
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 299,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 0,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.010872000000000093,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        17.875,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          15.61
+        ],
+        [
+          -0.08,
+          20.14
+        ],
+        [
+          0.08,
+          20.14
+        ],
+        [
+          0.08,
+          15.61
+        ],
+        [
+          -0.08,
+          15.61
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              15.61
+            ],
+            [
+              -0.08,
+              20.14
+            ],
+            [
+              0.08,
+              20.14
+            ],
+            [
+              0.08,
+              15.61
+            ],
+            [
+              -0.08,
+              15.61
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 174,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.010871999999999769,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        8.375,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          6.11
+        ],
+        [
+          -0.08,
+          10.64
+        ],
+        [
+          0.08,
+          10.64
+        ],
+        [
+          0.08,
+          6.11
+        ],
+        [
+          -0.08,
+          6.11
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              6.11
+            ],
+            [
+              -0.08,
+              10.64
+            ],
+            [
+              0.08,
+              10.64
+            ],
+            [
+              0.08,
+              6.11
+            ],
+            [
+              -0.08,
+              6.11
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 349,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.01087200000000009,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        8.375,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          6.11
+        ],
+        [
+          -0.08,
+          10.64
+        ],
+        [
+          0.08,
+          10.64
+        ],
+        [
+          0.08,
+          6.11
+        ],
+        [
+          -0.08,
+          6.11
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              6.11
+            ],
+            [
+              -0.08,
+              10.64
+            ],
+            [
+              0.08,
+              10.64
+            ],
+            [
+              0.08,
+              6.11
+            ],
+            [
+              -0.08,
+              6.11
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 145,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.01087199999999977,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        13.125,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          10.86
+        ],
+        [
+          -0.08,
+          15.39
+        ],
+        [
+          0.08,
+          15.39
+        ],
+        [
+          0.08,
+          10.86
+        ],
+        [
+          -0.08,
+          10.86
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              10.86
+            ],
+            [
+              -0.08,
+              15.39
+            ],
+            [
+              0.08,
+              15.39
+            ],
+            [
+              0.08,
+              10.86
+            ],
+            [
+              -0.08,
+              10.86
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 320,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.010872000000000093,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        13.125,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          10.86
+        ],
+        [
+          -0.08,
+          15.39
+        ],
+        [
+          0.08,
+          15.39
+        ],
+        [
+          0.08,
+          10.86
+        ],
+        [
+          -0.08,
+          10.86
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              10.86
+            ],
+            [
+              -0.08,
+              15.39
+            ],
+            [
+              0.08,
+              15.39
+            ],
+            [
+              0.08,
+              10.86
+            ],
+            [
+              -0.08,
+              10.86
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 123,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 3,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.010871999999999767,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        3.625,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          1.36
+        ],
+        [
+          -0.08,
+          5.89
+        ],
+        [
+          0.08,
+          5.89
+        ],
+        [
+          0.08,
+          1.36
+        ],
+        [
+          -0.08,
+          1.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              1.36
+            ],
+            [
+              -0.08,
+              5.89
+            ],
+            [
+              0.08,
+              5.89
+            ],
+            [
+              0.08,
+              1.36
+            ],
+            [
+              -0.08,
+              1.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 298,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 3,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.010872000000000088,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        3.625,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          1.36
+        ],
+        [
+          -0.08,
+          5.89
+        ],
+        [
+          0.08,
+          5.89
+        ],
+        [
+          0.08,
+          1.36
+        ],
+        [
+          -0.08,
+          1.36
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              1.36
+            ],
+            [
+              -0.08,
+              5.89
+            ],
+            [
+              0.08,
+              5.89
+            ],
+            [
+              0.08,
+              1.36
+            ],
+            [
+              -0.08,
+              1.36
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 157,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 4,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.0028559999999999424,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        20.955,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          0.08,
+          21.55
+        ],
+        [
+          0.08,
+          20.36
+        ],
+        [
+          -0.08,
+          20.36
+        ],
+        [
+          -0.08,
+          21.55
+        ],
+        [
+          0.08,
+          21.55
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              0.08,
+              21.55
+            ],
+            [
+              0.08,
+              20.36
+            ],
+            [
+              -0.08,
+              20.36
+            ],
+            [
+              -0.08,
+              21.55
+            ],
+            [
+              0.08,
+              21.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 332,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 4,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.002856000000000027,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        20.955,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          0.08,
+          21.55
+        ],
+        [
+          0.08,
+          20.36
+        ],
+        [
+          -0.08,
+          20.36
+        ],
+        [
+          -0.08,
+          21.55
+        ],
+        [
+          0.08,
+          21.55
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              0.08,
+              21.55
+            ],
+            [
+              0.08,
+              20.36
+            ],
+            [
+              -0.08,
+              20.36
+            ],
+            [
+              -0.08,
+              21.55
+            ],
+            [
+              0.08,
+              21.55
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 148,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.002679157894736785,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        0.6186842105263157,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          -0.05
+        ],
+        [
+          -0.08,
+          1.14
+        ],
+        [
+          0.08,
+          1.14
+        ],
+        [
+          0.08,
+          0.09736842105263153
+        ],
+        [
+          -0.08,
+          -0.05
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              -0.05
+            ],
+            [
+              -0.08,
+              1.14
+            ],
+            [
+              0.08,
+              1.14
+            ],
+            [
+              0.08,
+              0.09736842105263153
+            ],
+            [
+              -0.08,
+              -0.05
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 168,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.14,
+        3.155
+      ],
+      "volume_m3": 0.00017684210526315407,
+      "quadrature_error": 0,
+      "witness": [
+        0.04,
+        0.023684210526315773,
+        3.1475
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          -0.05
+        ],
+        [
+          0.08,
+          0.09736842105263155
+        ],
+        [
+          0.08,
+          -0.05
+        ],
+        [
+          -0.08,
+          -0.05
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              -0.05
+            ],
+            [
+              0.08,
+              0.09736842105263155
+            ],
+            [
+              0.08,
+              -0.05
+            ],
+            [
+              -0.08,
+              -0.05
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 323,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.002679157894736864,
+      "quadrature_error": 0,
+      "witness": [
+        0,
+        0.6186842105263157,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          -0.05
+        ],
+        [
+          -0.08,
+          1.14
+        ],
+        [
+          0.08,
+          1.14
+        ],
+        [
+          0.08,
+          0.09736842105263153
+        ],
+        [
+          -0.08,
+          -0.05
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              -0.05
+            ],
+            [
+              -0.08,
+              1.14
+            ],
+            [
+              0.08,
+              1.14
+            ],
+            [
+              0.08,
+              0.09736842105263153
+            ],
+            [
+              -0.08,
+              -0.05
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-FIRST-THRESHOLDS",
+      "floor_part": 343,
+      "floor_role": "wearing",
+      "floor_material": "MAT-FLOOR-FINISH",
+      "beam": "BEAM-PRIMARY-F-5-33",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.155,
+        3.17
+      ],
+      "volume_m3": 0.00017684210526315933,
+      "quadrature_error": 0,
+      "witness": [
+        0.04,
+        0.023684210526315773,
+        3.1624999999999996
+      ],
+      "intersection_outline": [
+        [
+          -0.08,
+          -0.05
+        ],
+        [
+          0.08,
+          0.09736842105263155
+        ],
+        [
+          0.08,
+          -0.05
+        ],
+        [
+          -0.08,
+          -0.05
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              -0.08,
+              -0.05
+            ],
+            [
+              0.08,
+              0.09736842105263155
+            ],
+            [
+              0.08,
+              -0.05
+            ],
+            [
+              -0.08,
+              -0.05
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 212,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0006480000000000129,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        18.566000000000003,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          18.206000000000003
+        ],
+        [
+          14.25,
+          18.926000000000002
+        ],
+        [
+          14.34,
+          18.926000000000002
+        ],
+        [
+          14.34,
+          18.206000000000003
+        ],
+        [
+          14.25,
+          18.206000000000003
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              18.206000000000003
+            ],
+            [
+              14.25,
+              18.926000000000002
+            ],
+            [
+              14.34,
+              18.926000000000002
+            ],
+            [
+              14.34,
+              18.206000000000003
+            ],
+            [
+              14.25,
+              18.206000000000003
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 213,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0032399999999999786,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        18.566000000000003,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          18.206000000000003
+        ],
+        [
+          14.25,
+          18.926000000000002
+        ],
+        [
+          14.34,
+          18.926000000000002
+        ],
+        [
+          14.34,
+          18.206000000000003
+        ],
+        [
+          14.25,
+          18.206000000000003
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              18.206000000000003
+            ],
+            [
+              14.25,
+              18.926000000000002
+            ],
+            [
+              14.34,
+              18.926000000000002
+            ],
+            [
+              14.34,
+              18.206000000000003
+            ],
+            [
+              14.25,
+              18.206000000000003
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 214,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0005850000000000113,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        19.276000000000003,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          18.951000000000004
+        ],
+        [
+          14.25,
+          19.601000000000003
+        ],
+        [
+          14.34,
+          19.601000000000003
+        ],
+        [
+          14.34,
+          18.951000000000004
+        ],
+        [
+          14.25,
+          18.951000000000004
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              18.951000000000004
+            ],
+            [
+              14.25,
+              19.601000000000003
+            ],
+            [
+              14.34,
+              19.601000000000003
+            ],
+            [
+              14.34,
+              18.951000000000004
+            ],
+            [
+              14.25,
+              18.951000000000004
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 215,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.002924999999999979,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        19.276000000000003,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          18.951000000000004
+        ],
+        [
+          14.25,
+          19.601000000000003
+        ],
+        [
+          14.34,
+          19.601000000000003
+        ],
+        [
+          14.34,
+          18.951000000000004
+        ],
+        [
+          14.25,
+          18.951000000000004
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              18.951000000000004
+            ],
+            [
+              14.25,
+              19.601000000000003
+            ],
+            [
+              14.34,
+              19.601000000000003
+            ],
+            [
+              14.34,
+              18.951000000000004
+            ],
+            [
+              14.25,
+              18.951000000000004
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 216,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0004626000000000062,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        19.883000000000003,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          19.626000000000005
+        ],
+        [
+          14.25,
+          20.14
+        ],
+        [
+          14.34,
+          20.14
+        ],
+        [
+          14.34,
+          19.626000000000005
+        ],
+        [
+          14.25,
+          19.626000000000005
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              19.626000000000005
+            ],
+            [
+              14.25,
+              20.14
+            ],
+            [
+              14.34,
+              20.14
+            ],
+            [
+              14.34,
+              19.626000000000005
+            ],
+            [
+              14.25,
+              19.626000000000005
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 217,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.002312999999999969,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        19.883000000000003,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          19.626000000000005
+        ],
+        [
+          14.25,
+          20.14
+        ],
+        [
+          14.34,
+          20.14
+        ],
+        [
+          14.34,
+          19.626000000000005
+        ],
+        [
+          14.25,
+          19.626000000000005
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              19.626000000000005
+            ],
+            [
+              14.25,
+              20.14
+            ],
+            [
+              14.34,
+              20.14
+            ],
+            [
+              14.34,
+              19.626000000000005
+            ],
+            [
+              14.25,
+              19.626000000000005
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 193,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.0001297458000000204,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        18.1939865,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          14.34,
+          18.206000000000003
+        ],
+        [
+          14.34,
+          18.181973
+        ],
+        [
+          14.25,
+          18.181973
+        ],
+        [
+          14.25,
+          18.206000000000003
+        ],
+        [
+          14.34,
+          18.206000000000003
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.34,
+              18.206000000000003
+            ],
+            [
+              14.34,
+              18.181973
+            ],
+            [
+              14.25,
+              18.181973
+            ],
+            [
+              14.25,
+              18.206000000000003
+            ],
+            [
+              14.34,
+              18.206000000000003
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 195,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000001144,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        18.938500000000005,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          18.926000000000002
+        ],
+        [
+          14.25,
+          18.951000000000004
+        ],
+        [
+          14.34,
+          18.951000000000004
+        ],
+        [
+          14.34,
+          18.926000000000002
+        ],
+        [
+          14.25,
+          18.926000000000002
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              18.926000000000002
+            ],
+            [
+              14.25,
+              18.951000000000004
+            ],
+            [
+              14.34,
+              18.951000000000004
+            ],
+            [
+              14.34,
+              18.926000000000002
+            ],
+            [
+              14.25,
+              18.926000000000002
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 197,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 1,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000001144,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        19.613500000000002,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          19.601000000000003
+        ],
+        [
+          14.25,
+          19.626000000000005
+        ],
+        [
+          14.34,
+          19.626000000000005
+        ],
+        [
+          14.34,
+          19.601000000000003
+        ],
+        [
+          14.25,
+          19.601000000000003
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              19.601000000000003
+            ],
+            [
+              14.25,
+              19.626000000000005
+            ],
+            [
+              14.34,
+              19.626000000000005
+            ],
+            [
+              14.34,
+              19.601000000000003
+            ],
+            [
+              14.25,
+              19.601000000000003
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 206,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0005040000000000096,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        17.176000000000002,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          16.896
+        ],
+        [
+          14.25,
+          17.456
+        ],
+        [
+          14.34,
+          17.456
+        ],
+        [
+          14.34,
+          16.896
+        ],
+        [
+          14.25,
+          16.896
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              16.896
+            ],
+            [
+              14.25,
+              17.456
+            ],
+            [
+              14.34,
+              17.456
+            ],
+            [
+              14.34,
+              16.896
+            ],
+            [
+              14.25,
+              16.896
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 207,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0025199999999999815,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        17.176000000000002,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          16.896
+        ],
+        [
+          14.25,
+          17.456
+        ],
+        [
+          14.34,
+          17.456
+        ],
+        [
+          14.34,
+          16.896
+        ],
+        [
+          14.25,
+          16.896
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              16.896
+            ],
+            [
+              14.25,
+              17.456
+            ],
+            [
+              14.34,
+              17.456
+            ],
+            [
+              14.34,
+              16.896
+            ],
+            [
+              14.25,
+              16.896
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 210,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0006300000000000129,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        17.831000000000003,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          17.481
+        ],
+        [
+          14.25,
+          18.181
+        ],
+        [
+          14.34,
+          18.181
+        ],
+        [
+          14.34,
+          17.481
+        ],
+        [
+          14.25,
+          17.481
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              17.481
+            ],
+            [
+              14.25,
+              18.181
+            ],
+            [
+              14.34,
+              18.181
+            ],
+            [
+              14.34,
+              17.481
+            ],
+            [
+              14.25,
+              17.481
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 211,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0031499999999999805,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        17.831000000000003,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          17.481
+        ],
+        [
+          14.25,
+          18.181
+        ],
+        [
+          14.34,
+          18.181
+        ],
+        [
+          14.34,
+          17.481
+        ],
+        [
+          14.25,
+          17.481
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              17.481
+            ],
+            [
+              14.25,
+              18.181
+            ],
+            [
+              14.34,
+              18.181
+            ],
+            [
+              14.34,
+              17.481
+            ],
+            [
+              14.25,
+              17.481
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 191,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000001144,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        17.4685,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          17.456
+        ],
+        [
+          14.25,
+          17.481
+        ],
+        [
+          14.34,
+          17.481
+        ],
+        [
+          14.34,
+          17.456
+        ],
+        [
+          14.25,
+          17.456
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              17.456
+            ],
+            [
+              14.25,
+              17.481
+            ],
+            [
+              14.34,
+              17.481
+            ],
+            [
+              14.34,
+              17.456
+            ],
+            [
+              14.25,
+              17.456
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 193,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.000005254199999991013,
+      "quadrature_error": 0,
+      "witness": [
+        14.295,
+        18.1814865,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          18.181
+        ],
+        [
+          14.25,
+          18.181973
+        ],
+        [
+          14.34,
+          18.181973
+        ],
+        [
+          14.34,
+          18.181
+        ],
+        [
+          14.25,
+          18.181
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              18.181
+            ],
+            [
+              14.25,
+              18.181973
+            ],
+            [
+              14.34,
+              18.181973
+            ],
+            [
+              14.34,
+              18.181
+            ],
+            [
+              14.25,
+              18.181
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-BOUDOIR",
+      "floor_part": 11,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 2,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.006944254199999987,
+      "quadrature_error": 0,
+      "witness": [
+        14.205,
+        17.481,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          18.061
+        ],
+        [
+          14.25,
+          16.901
+        ],
+        [
+          14.25,
+          16.896
+        ],
+        [
+          14.16,
+          16.896
+        ],
+        [
+          14.16,
+          18.181973
+        ],
+        [
+          14.25,
+          18.181973
+        ],
+        [
+          14.25,
+          18.101
+        ],
+        [
+          14.25,
+          18.061
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              18.061
+            ],
+            [
+              14.25,
+              16.901
+            ],
+            [
+              14.25,
+              16.896
+            ],
+            [
+              14.16,
+              16.896
+            ],
+            [
+              14.16,
+              18.181973
+            ],
+            [
+              14.25,
+              18.181973
+            ],
+            [
+              14.25,
+              18.101
+            ],
+            [
+              14.25,
+              18.061
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-BOUDOIR",
+      "floor_part": 17,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 3,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.11,
+        3.14
+      ],
+      "volume_m3": 0.0013385863636363744,
+      "quadrature_error": 0,
+      "witness": [
+        14.2275,
+        19.64422727272727,
+        3.125
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          20.14
+        ],
+        [
+          14.25,
+          19.301
+        ],
+        [
+          14.16,
+          19.987454545454547
+        ],
+        [
+          14.16,
+          20.14
+        ],
+        [
+          14.25,
+          20.14
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              20.14
+            ],
+            [
+              14.25,
+              19.301
+            ],
+            [
+              14.16,
+              19.987454545454547
+            ],
+            [
+              14.16,
+              20.14
+            ],
+            [
+              14.25,
+              20.14
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-BOUDOIR",
+      "floor_part": 23,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-24-30",
+      "beam_part": 3,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.11,
+        3.14
+      ],
+      "volume_m3": 0.003948086536363665,
+      "quadrature_error": 0,
+      "witness": [
+        14.205,
+        18.721486499999997,
+        3.125
+      ],
+      "intersection_outline": [
+        [
+          14.25,
+          19.301
+        ],
+        [
+          14.25,
+          19.261
+        ],
+        [
+          14.25,
+          18.181973
+        ],
+        [
+          14.16,
+          18.181973
+        ],
+        [
+          14.16,
+          19.987454545454547
+        ],
+        [
+          14.25,
+          19.301
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              14.25,
+              19.301
+            ],
+            [
+              14.25,
+              19.261
+            ],
+            [
+              14.25,
+              18.181973
+            ],
+            [
+              14.16,
+              18.181973
+            ],
+            [
+              14.16,
+              19.987454545454547
+            ],
+            [
+              14.25,
+              19.301
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 6,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0005814000000000116,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        8.553,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.988,
+          8.876
+        ],
+        [
+          10.988,
+          8.23
+        ],
+        [
+          10.898,
+          8.23
+        ],
+        [
+          10.898,
+          8.876
+        ],
+        [
+          10.988,
+          8.876
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.988,
+              8.876
+            ],
+            [
+              10.988,
+              8.23
+            ],
+            [
+              10.898,
+              8.23
+            ],
+            [
+              10.898,
+              8.876
+            ],
+            [
+              10.988,
+              8.876
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 7,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0029069999999999803,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        8.553,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.988,
+          8.876
+        ],
+        [
+          10.988,
+          8.23
+        ],
+        [
+          10.898,
+          8.23
+        ],
+        [
+          10.898,
+          8.876
+        ],
+        [
+          10.988,
+          8.876
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.988,
+              8.876
+            ],
+            [
+              10.988,
+              8.23
+            ],
+            [
+              10.898,
+              8.23
+            ],
+            [
+              10.898,
+              8.876
+            ],
+            [
+              10.988,
+              8.876
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 8,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0006300000000000129,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        9.251,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          8.901
+        ],
+        [
+          10.898,
+          9.600999999999999
+        ],
+        [
+          10.988,
+          9.600999999999999
+        ],
+        [
+          10.988,
+          8.901
+        ],
+        [
+          10.898,
+          8.901
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              8.901
+            ],
+            [
+              10.898,
+              9.600999999999999
+            ],
+            [
+              10.988,
+              9.600999999999999
+            ],
+            [
+              10.988,
+              8.901
+            ],
+            [
+              10.898,
+              8.901
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 9,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0031499999999999805,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        9.251,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          8.901
+        ],
+        [
+          10.898,
+          9.600999999999999
+        ],
+        [
+          10.988,
+          9.600999999999999
+        ],
+        [
+          10.988,
+          8.901
+        ],
+        [
+          10.898,
+          8.901
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              8.901
+            ],
+            [
+              10.898,
+              9.600999999999999
+            ],
+            [
+              10.988,
+              9.600999999999999
+            ],
+            [
+              10.988,
+              8.901
+            ],
+            [
+              10.898,
+              8.901
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 10,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0006480000000000146,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        9.986,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          9.626
+        ],
+        [
+          10.898,
+          10.346
+        ],
+        [
+          10.988,
+          10.346
+        ],
+        [
+          10.988,
+          9.626
+        ],
+        [
+          10.898,
+          9.626
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              9.626
+            ],
+            [
+              10.898,
+              10.346
+            ],
+            [
+              10.988,
+              10.346
+            ],
+            [
+              10.988,
+              9.626
+            ],
+            [
+              10.898,
+              9.626
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 11,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0032399999999999864,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        9.986,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          9.626
+        ],
+        [
+          10.898,
+          10.346
+        ],
+        [
+          10.988,
+          10.346
+        ],
+        [
+          10.988,
+          9.626
+        ],
+        [
+          10.898,
+          9.626
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              9.626
+            ],
+            [
+              10.898,
+              10.346
+            ],
+            [
+              10.988,
+              10.346
+            ],
+            [
+              10.988,
+              9.626
+            ],
+            [
+              10.898,
+              9.626
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 12,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0005850000000000129,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        10.695999999999998,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          10.370999999999999
+        ],
+        [
+          10.898,
+          11.020999999999999
+        ],
+        [
+          10.988,
+          11.020999999999999
+        ],
+        [
+          10.988,
+          10.370999999999999
+        ],
+        [
+          10.898,
+          10.370999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              10.370999999999999
+            ],
+            [
+              10.898,
+              11.020999999999999
+            ],
+            [
+              10.988,
+              11.020999999999999
+            ],
+            [
+              10.988,
+              10.370999999999999
+            ],
+            [
+              10.898,
+              10.370999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 13,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0029249999999999866,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        10.695999999999998,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          10.370999999999999
+        ],
+        [
+          10.898,
+          11.020999999999999
+        ],
+        [
+          10.988,
+          11.020999999999999
+        ],
+        [
+          10.988,
+          10.370999999999999
+        ],
+        [
+          10.898,
+          10.370999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              10.370999999999999
+            ],
+            [
+              10.898,
+              11.020999999999999
+            ],
+            [
+              10.988,
+              11.020999999999999
+            ],
+            [
+              10.988,
+              10.370999999999999
+            ],
+            [
+              10.898,
+              10.370999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 14,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0006300000000000129,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        11.395999999999999,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          11.046
+        ],
+        [
+          10.898,
+          11.745999999999999
+        ],
+        [
+          10.988,
+          11.745999999999999
+        ],
+        [
+          10.988,
+          11.046
+        ],
+        [
+          10.898,
+          11.046
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              11.046
+            ],
+            [
+              10.898,
+              11.745999999999999
+            ],
+            [
+              10.988,
+              11.745999999999999
+            ],
+            [
+              10.988,
+              11.046
+            ],
+            [
+              10.898,
+              11.046
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 15,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0031499999999999805,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        11.395999999999999,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          11.046
+        ],
+        [
+          10.898,
+          11.745999999999999
+        ],
+        [
+          10.988,
+          11.745999999999999
+        ],
+        [
+          10.988,
+          11.046
+        ],
+        [
+          10.898,
+          11.046
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              11.046
+            ],
+            [
+              10.898,
+              11.745999999999999
+            ],
+            [
+              10.988,
+              11.745999999999999
+            ],
+            [
+              10.988,
+              11.046
+            ],
+            [
+              10.898,
+              11.046
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 16,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0006219000000000141,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        12.116499999999998,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          11.770999999999999
+        ],
+        [
+          10.898,
+          12.462
+        ],
+        [
+          10.988,
+          12.462
+        ],
+        [
+          10.988,
+          11.770999999999999
+        ],
+        [
+          10.898,
+          11.770999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              11.770999999999999
+            ],
+            [
+              10.898,
+              12.462
+            ],
+            [
+              10.988,
+              12.462
+            ],
+            [
+              10.988,
+              11.770999999999999
+            ],
+            [
+              10.898,
+              11.770999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 17,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0031094999999999873,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        12.116499999999998,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          11.770999999999999
+        ],
+        [
+          10.898,
+          12.462
+        ],
+        [
+          10.988,
+          12.462
+        ],
+        [
+          10.988,
+          11.770999999999999
+        ],
+        [
+          10.898,
+          11.770999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              11.770999999999999
+            ],
+            [
+              10.898,
+              12.462
+            ],
+            [
+              10.988,
+              12.462
+            ],
+            [
+              10.988,
+              11.770999999999999
+            ],
+            [
+              10.898,
+              11.770999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 20,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0004356000000000094,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        12.924,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          12.681999999999999
+        ],
+        [
+          10.898,
+          13.165999999999999
+        ],
+        [
+          10.988,
+          13.165999999999999
+        ],
+        [
+          10.988,
+          12.681999999999999
+        ],
+        [
+          10.898,
+          12.681999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              12.681999999999999
+            ],
+            [
+              10.898,
+              13.165999999999999
+            ],
+            [
+              10.988,
+              13.165999999999999
+            ],
+            [
+              10.988,
+              12.681999999999999
+            ],
+            [
+              10.898,
+              12.681999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 21,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.002177999999999989,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        12.924,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          12.681999999999999
+        ],
+        [
+          10.898,
+          13.165999999999999
+        ],
+        [
+          10.988,
+          13.165999999999999
+        ],
+        [
+          10.988,
+          12.681999999999999
+        ],
+        [
+          10.898,
+          12.681999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              12.681999999999999
+            ],
+            [
+              10.898,
+              13.165999999999999
+            ],
+            [
+              10.988,
+              13.165999999999999
+            ],
+            [
+              10.988,
+              12.681999999999999
+            ],
+            [
+              10.898,
+              12.681999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 24,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0006300000000000129,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        13.540999999999999,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          13.190999999999999
+        ],
+        [
+          10.898,
+          13.890999999999998
+        ],
+        [
+          10.988,
+          13.890999999999998
+        ],
+        [
+          10.988,
+          13.190999999999999
+        ],
+        [
+          10.898,
+          13.190999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              13.190999999999999
+            ],
+            [
+              10.898,
+              13.890999999999998
+            ],
+            [
+              10.988,
+              13.890999999999998
+            ],
+            [
+              10.988,
+              13.190999999999999
+            ],
+            [
+              10.898,
+              13.190999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 25,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0031499999999999805,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        13.540999999999999,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          13.190999999999999
+        ],
+        [
+          10.898,
+          13.890999999999998
+        ],
+        [
+          10.988,
+          13.890999999999998
+        ],
+        [
+          10.988,
+          13.190999999999999
+        ],
+        [
+          10.898,
+          13.190999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              13.190999999999999
+            ],
+            [
+              10.898,
+              13.890999999999998
+            ],
+            [
+              10.988,
+              13.890999999999998
+            ],
+            [
+              10.988,
+              13.190999999999999
+            ],
+            [
+              10.898,
+              13.190999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 26,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0006480000000000146,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        14.276,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          13.915999999999999
+        ],
+        [
+          10.898,
+          14.636
+        ],
+        [
+          10.988,
+          14.636
+        ],
+        [
+          10.988,
+          13.915999999999999
+        ],
+        [
+          10.898,
+          13.915999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              13.915999999999999
+            ],
+            [
+              10.898,
+              14.636
+            ],
+            [
+              10.988,
+              14.636
+            ],
+            [
+              10.988,
+              13.915999999999999
+            ],
+            [
+              10.898,
+              13.915999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 27,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0032399999999999864,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        14.276,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          13.915999999999999
+        ],
+        [
+          10.898,
+          14.636
+        ],
+        [
+          10.988,
+          14.636
+        ],
+        [
+          10.988,
+          13.915999999999999
+        ],
+        [
+          10.898,
+          13.915999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              13.915999999999999
+            ],
+            [
+              10.898,
+              14.636
+            ],
+            [
+              10.988,
+              14.636
+            ],
+            [
+              10.988,
+              13.915999999999999
+            ],
+            [
+              10.898,
+              13.915999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 28,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.0005850000000000129,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        14.985999999999997,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          14.660999999999998
+        ],
+        [
+          10.898,
+          15.310999999999998
+        ],
+        [
+          10.988,
+          15.310999999999998
+        ],
+        [
+          10.988,
+          14.660999999999998
+        ],
+        [
+          10.898,
+          14.660999999999998
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              14.660999999999998
+            ],
+            [
+              10.898,
+              15.310999999999998
+            ],
+            [
+              10.988,
+              15.310999999999998
+            ],
+            [
+              10.988,
+              14.660999999999998
+            ],
+            [
+              10.898,
+              14.660999999999998
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 29,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.0029249999999999866,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        14.985999999999997,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          14.660999999999998
+        ],
+        [
+          10.898,
+          15.310999999999998
+        ],
+        [
+          10.988,
+          15.310999999999998
+        ],
+        [
+          10.988,
+          14.660999999999998
+        ],
+        [
+          10.898,
+          14.660999999999998
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              14.660999999999998
+            ],
+            [
+              10.898,
+              15.310999999999998
+            ],
+            [
+              10.988,
+              15.310999999999998
+            ],
+            [
+              10.988,
+              14.660999999999998
+            ],
+            [
+              10.898,
+              14.660999999999998
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 30,
+      "floor_role": "wearing",
+      "floor_material": "MAT-PAVING",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.13,
+        3.14
+      ],
+      "volume_m3": 0.000019800000000002243,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        15.347,
+        3.135
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          15.335999999999999
+        ],
+        [
+          10.898,
+          15.358
+        ],
+        [
+          10.988,
+          15.358
+        ],
+        [
+          10.988,
+          15.335999999999999
+        ],
+        [
+          10.898,
+          15.335999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              15.335999999999999
+            ],
+            [
+              10.898,
+              15.358
+            ],
+            [
+              10.988,
+              15.358
+            ],
+            [
+              10.988,
+              15.335999999999999
+            ],
+            [
+              10.898,
+              15.335999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-PAVING",
+      "floor_part": 31,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.13
+      ],
+      "volume_m3": 0.00009900000000000859,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        15.347,
+        3.105
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          15.335999999999999
+        ],
+        [
+          10.898,
+          15.358
+        ],
+        [
+          10.988,
+          15.358
+        ],
+        [
+          10.988,
+          15.335999999999999
+        ],
+        [
+          10.898,
+          15.335999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              15.335999999999999
+            ],
+            [
+              10.898,
+              15.358
+            ],
+            [
+              10.988,
+              15.358
+            ],
+            [
+              10.988,
+              15.335999999999999
+            ],
+            [
+              10.898,
+              15.335999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 7,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000000182,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        8.8885,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          8.876
+        ],
+        [
+          10.898,
+          8.901
+        ],
+        [
+          10.988,
+          8.901
+        ],
+        [
+          10.988,
+          8.876
+        ],
+        [
+          10.898,
+          8.876
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              8.876
+            ],
+            [
+              10.898,
+              8.901
+            ],
+            [
+              10.988,
+              8.901
+            ],
+            [
+              10.988,
+              8.876
+            ],
+            [
+              10.898,
+              8.876
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 9,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000000182,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        9.613499999999998,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          9.600999999999999
+        ],
+        [
+          10.898,
+          9.626
+        ],
+        [
+          10.988,
+          9.626
+        ],
+        [
+          10.988,
+          9.600999999999999
+        ],
+        [
+          10.898,
+          9.600999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              9.600999999999999
+            ],
+            [
+              10.898,
+              9.626
+            ],
+            [
+              10.988,
+              9.626
+            ],
+            [
+              10.988,
+              9.600999999999999
+            ],
+            [
+              10.898,
+              9.600999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 11,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013499999999999222,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        10.3585,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          10.346
+        ],
+        [
+          10.898,
+          10.370999999999999
+        ],
+        [
+          10.988,
+          10.370999999999999
+        ],
+        [
+          10.988,
+          10.346
+        ],
+        [
+          10.898,
+          10.346
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              10.346
+            ],
+            [
+              10.898,
+              10.370999999999999
+            ],
+            [
+              10.988,
+              10.370999999999999
+            ],
+            [
+              10.988,
+              10.346
+            ],
+            [
+              10.898,
+              10.346
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 13,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000000182,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        11.0335,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          11.020999999999999
+        ],
+        [
+          10.898,
+          11.046
+        ],
+        [
+          10.988,
+          11.046
+        ],
+        [
+          10.988,
+          11.020999999999999
+        ],
+        [
+          10.898,
+          11.020999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              11.020999999999999
+            ],
+            [
+              10.898,
+              11.046
+            ],
+            [
+              10.988,
+              11.046
+            ],
+            [
+              10.988,
+              11.020999999999999
+            ],
+            [
+              10.898,
+              11.020999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 15,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000000182,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        11.758499999999998,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          11.745999999999999
+        ],
+        [
+          10.898,
+          11.770999999999999
+        ],
+        [
+          10.988,
+          11.770999999999999
+        ],
+        [
+          10.988,
+          11.745999999999999
+        ],
+        [
+          10.898,
+          11.745999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              11.745999999999999
+            ],
+            [
+              10.898,
+              11.770999999999999
+            ],
+            [
+              10.988,
+              11.770999999999999
+            ],
+            [
+              10.988,
+              11.745999999999999
+            ],
+            [
+              10.898,
+              11.745999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 17,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000000182,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        13.1785,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          13.165999999999999
+        ],
+        [
+          10.898,
+          13.190999999999999
+        ],
+        [
+          10.988,
+          13.190999999999999
+        ],
+        [
+          10.988,
+          13.165999999999999
+        ],
+        [
+          10.898,
+          13.165999999999999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              13.165999999999999
+            ],
+            [
+              10.898,
+              13.190999999999999
+            ],
+            [
+              10.988,
+              13.190999999999999
+            ],
+            [
+              10.988,
+              13.165999999999999
+            ],
+            [
+              10.898,
+              13.165999999999999
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 19,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000000182,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        13.903499999999998,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          13.890999999999998
+        ],
+        [
+          10.898,
+          13.915999999999999
+        ],
+        [
+          10.988,
+          13.915999999999999
+        ],
+        [
+          10.988,
+          13.890999999999998
+        ],
+        [
+          10.898,
+          13.890999999999998
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              13.890999999999998
+            ],
+            [
+              10.898,
+              13.915999999999999
+            ],
+            [
+              10.988,
+              13.915999999999999
+            ],
+            [
+              10.988,
+              13.890999999999998
+            ],
+            [
+              10.898,
+              13.890999999999998
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 21,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013499999999999222,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        14.648499999999999,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          14.636
+        ],
+        [
+          10.898,
+          14.660999999999998
+        ],
+        [
+          10.988,
+          14.660999999999998
+        ],
+        [
+          10.988,
+          14.636
+        ],
+        [
+          10.898,
+          14.636
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              14.636
+            ],
+            [
+              10.898,
+              14.660999999999998
+            ],
+            [
+              10.988,
+              14.660999999999998
+            ],
+            [
+              10.988,
+              14.636
+            ],
+            [
+              10.898,
+              14.636
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-TERRACE-GRASS",
+      "floor_part": 23,
+      "floor_role": "planting_substrate",
+      "floor_material": "MAT-PLANTING-SUBSTRATE",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.00013500000000000182,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        15.3235,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          15.310999999999998
+        ],
+        [
+          10.898,
+          15.335999999999999
+        ],
+        [
+          10.988,
+          15.335999999999999
+        ],
+        [
+          10.988,
+          15.310999999999998
+        ],
+        [
+          10.898,
+          15.310999999999998
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              15.310999999999998
+            ],
+            [
+              10.898,
+              15.335999999999999
+            ],
+            [
+              10.988,
+              15.335999999999999
+            ],
+            [
+              10.988,
+              15.310999999999998
+            ],
+            [
+              10.898,
+              15.310999999999998
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-BOUDOIR",
+      "floor_part": 2,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-13-25",
+      "beam_part": 5,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.14
+      ],
+      "volume_m3": 0.006485399999999999,
+      "quadrature_error": 0,
+      "witness": [
+        10.943,
+        16.1785,
+        3.1100000000000003
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          16.779
+        ],
+        [
+          10.988,
+          16.779
+        ],
+        [
+          10.988,
+          15.578
+        ],
+        [
+          10.898,
+          15.578
+        ],
+        [
+          10.898,
+          16.779
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              16.779
+            ],
+            [
+              10.988,
+              16.779
+            ],
+            [
+              10.988,
+              15.578
+            ],
+            [
+              10.898,
+              15.578
+            ],
+            [
+              10.898,
+              16.779
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "floor": "FIN-BOUDOIR",
+      "floor_part": 5,
+      "floor_role": "bedding",
+      "floor_material": "MAT-MORTAR-PUTTY",
+      "beam": "BEAM-PRIMARY-F-25-28",
+      "beam_part": 3,
+      "beam_material": "MAT-RC",
+      "z": [
+        3.08,
+        3.11
+      ],
+      "volume_m3": 0.0025919999999999897,
+      "quadrature_error": 0,
+      "witness": [
+        10.937999999999999,
+        17.539,
+        3.0949999999999998
+      ],
+      "intersection_outline": [
+        [
+          10.898,
+          16.999
+        ],
+        [
+          10.898,
+          18.079
+        ],
+        [
+          10.978,
+          18.079
+        ],
+        [
+          10.978,
+          16.999
+        ],
+        [
+          10.898,
+          16.999
+        ]
+      ],
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              10.898,
+              16.999
+            ],
+            [
+              10.898,
+              18.079
+            ],
+            [
+              10.978,
+              18.079
+            ],
+            [
+              10.978,
+              16.999
+            ],
+            [
+              10.898,
+              16.999
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "title": "Rainwater No9 Bounded Construction Candidate R92",
+  "status": "INFERRED PHYSICAL CANDIDATE; original exact plan station remains unregistered",
+  "source_identity": [
+    "Book236 explicitlyoriginalkitchenpatio downpipe9 outsidecurvedglazing withsheetmetalcover",
+    "Original1930photograph022 shown238/244",
+    "Dubuisson061 groundplan237, calledNo9bytext; exactcalloutnotsecurelyisolated"
+  ],
+  "source_site_binding": {
+    "patio": "SP-KITCHEN-TERRACE",
+    "roof_void": "V-KITCHEN-PATIO inSL-R",
+    "ground_facade": "CW-1 PATH-HALL",
+    "candidate_near_path_vertex": [
+      3.42,
+      9.16
+    ],
+    "candidate_segment_neighbours": [
+      [
+        3.27,
+        9.67
+      ],
+      [
+        3.8,
+        8.32
+      ]
+    ],
+    "outward_normal": [
+      -0.9308352765479929,
+      -0.3654390344966194
+    ],
+    "candidate_casing_axis": [
+      3.3501873542589005,
+      9.132592072412754
+    ],
+    "height_interval_m": [
+      0,
+      3.17
+    ],
+    "warning": "This is host-relative construction inference, not a recovered original station. Attach actual casing to actualframe withconservedmaterialownership andtestclearance; nofacademove."
+  },
+  "inferred_dimensions": {
+    "pipe_outside_diameter_m": 0.08,
+    "pipe_wall_m": 0.004,
+    "cover_normal_depth_m": 0.1,
+    "cover_tangent_width_m": 0.16,
+    "cover_skin_m": 0.002,
+    "basis": "All unmeasured andexplicitlyinferred;8cmdiameteronotherpiloti cannotbe transferredassourcedNo9dimension"
+  },
+  "source_graph": [
+    [
+      "KITCHEN-PATIO-COLLECTOR",
+      "RAINWATER-9"
+    ],
+    [
+      "RAINWATER-9",
+      "GROUND-RAIN-COLLECTOR"
+    ]
+  ],
+  "unknown": [
+    "Exact inlet position andoriginalhorizontalapproach",
+    "Exact pipeandcoverdimensions",
+    "Below-groundrun/outlet",
+    "Preciseoriginalmemberstation correspondingphotograph022"
+  ],
+  "acceptance": [
+    "Treatunknownswithsourceprovenance, do notclaimmeasuredroute",
+    "Actualcurtainsteel/glassattachment andoutside-envelope test",
+    "No positive material overlap withglass/columns/walls; framejointownership explicit",
+    "Realpipe cavity andslab inlet/bore if authored; no opaque pipe-solid",
+    "Independentroutegraph+GEOS/SciPymaterialquantities",
+    "Do notaddlatergargoyles tooriginalstate"
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "axis_field",
+    "cases",
+    "car_case"
+  ],
+  "properties": {
+    "axis_field": {
+      "const": "axis"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "axis",
+          "profile",
+          "offset_centroid"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "axis": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "profile": {
+            "type": "object"
+          },
+          "offset_centroid": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "car_case": {
+      "type": "object",
+      "required": [
+        "axis",
+        "radius",
+        "outline",
+        "pose",
+        "car",
+        "missing_axis"
+      ],
+      "properties": {
+        "axis": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "outline": {
+          "type": "array",
+          "minItems": 3
+        },
+        "pose": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "car": {
+          "type": "object"
+        },
+        "missing_axis": {
+          "const": "reject"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

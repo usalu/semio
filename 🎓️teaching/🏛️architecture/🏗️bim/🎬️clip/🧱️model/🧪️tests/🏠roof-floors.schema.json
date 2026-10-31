@@ -1,0 +1,223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "finished",
+    "source_reserve_caps",
+    "floors",
+    "limits",
+    "adjacent_precision",
+    "structural_joint",
+    "raised_beams",
+    "weather_cap"
+  ],
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "finished": {
+      "type": "number"
+    },
+    "source_reserve_caps": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "floors": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "wearing_materials",
+          "minimum_area"
+        ],
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "wearing_materials": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minimum_area": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "limits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "adjacent_precision": {
+      "type": "object",
+      "required": [
+        "a",
+        "b",
+        "tolerance"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "a": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "b": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "structural_joint": {
+      "type": "object",
+      "required": [
+        "reserve",
+        "floor_part",
+        "beam_part",
+        "expected"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "reserve": {
+          "type": "object",
+          "required": [
+            "tag",
+            "owner",
+            "joint_owners",
+            "outline"
+          ]
+        },
+        "floor_part": {
+          "type": "object",
+          "required": [
+            "outline",
+            "z0",
+            "z1",
+            "material"
+          ]
+        },
+        "beam_part": {
+          "type": "object",
+          "required": [
+            "outline",
+            "z0",
+            "z1",
+            "material"
+          ]
+        },
+        "expected": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "raised_beams": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "weather_cap": {
+      "type": "object",
+      "required": [
+        "tag",
+        "parapet_prefix",
+        "authority_y",
+        "perimeter_y",
+        "top",
+        "positive",
+        "air",
+        "support_level",
+        "minimum_support_area"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "tag": {
+          "type": "string"
+        },
+        "parapet_prefix": {
+          "type": "string"
+        },
+        "authority_y": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "perimeter_y": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "top": {
+          "type": "number"
+        },
+        "positive": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "air": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "support_level": {
+          "type": "number"
+        },
+        "minimum_support_area": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

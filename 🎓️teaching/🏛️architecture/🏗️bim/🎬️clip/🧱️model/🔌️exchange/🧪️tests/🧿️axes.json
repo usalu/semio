@@ -1,0 +1,13 @@
+{
+  "languages": ["en", "de"],
+  "uneven_sample":{"axis":[100,0.5],"outline":[[101,0.5],[100,1.5],[99,0.5],[100,-0.5],[101,0.5]],"centroid":[99,99]},
+  "cases": [
+    {"id":"circle-translated","axis":[1234.56789012345,-987.65432198765],"profile":{"shape":"circle","diameter":{"value":0.37,"unit":"m","basis":"assumed"}}},
+    {"id":"ellipse-rotated","axis":[4.625,-7.3125],"profile":{"shape":"ellipse","rotation":27,"width":{"value":0.8,"unit":"m","basis":"assumed"},"depth":{"value":0.5,"unit":"m","basis":"assumed"}}},
+    {"id":"circle-concentric","axis":[12.3456789012345,98.7654321098765],"profile":{"shape":"circle","diameter":{"value":0.4,"unit":"m","basis":"assumed"},"voids":[{"offset":[0,0],"diameter":{"value":0.08,"unit":"m","basis":"assumed"}}]}},
+    {"id":"circle-offset","axis":[2.125,-3.5],"profile":{"shape":"circle","rotation":30,"diameter":{"value":0.8,"unit":"m","basis":"assumed"},"voids":[{"offset":[0.15,0.1],"diameter":{"value":0.12,"unit":"m","basis":"assumed"}}]}},
+    {"id":"ellipse-offset","axis":[-4.25,6.125],"profile":{"shape":"ellipse","rotation":90,"width":{"value":1.2,"unit":"m","basis":"assumed"},"depth":{"value":0.8,"unit":"m","basis":"assumed"},"voids":[{"offset":[0.2,-0.1],"diameter":{"value":0.1,"unit":"m","basis":"assumed"}}]}},
+    {"id":"polygon-offset","axis":[12.125,13.375],"profile":{"shape":"polygon","rotation":31,"outline":[[-0.5,-0.4],[0.6,-0.4],[0.5,0.4],[-0.5,0.4]],"voids":[{"offset":[0.1,0.05],"diameter":{"value":0.08,"unit":"m","basis":"assumed"}}]}},
+    {"id":"rectangle-offset","axis":[8.5,-2.25],"profile":{"shape":"rectangle","rotation":19,"width":{"value":1,"unit":"m","basis":"assumed"},"depth":{"value":0.6,"unit":"m","basis":"assumed"},"voids":[{"offset":[-0.2,0.1],"diameter":{"value":0.08,"unit":"m","basis":"assumed"}}]}}
+  ]
+}

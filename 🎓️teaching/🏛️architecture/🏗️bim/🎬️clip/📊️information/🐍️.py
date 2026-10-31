@@ -71,7 +71,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         ["diameter", "Spacing counts from axis to axis, but the car needs the free space between the piloti surfaces.",
          "Der Abstand gilt von Achse zu Achse; das Auto braucht den freien Raum zwischen den Stützen."],
         ["clear", "The clear width subtracts the actual support outlines from the axis spacing. Circular profiles give the familiar diameter subtraction.",
-         "Die lichte Weite berücksichtigt die tatsächlichen Stützenkonturen im Achsabstand. Bei Kreisprofilen ergibt sich der bekannte Durchmesserabzug."],
+         "Die lichte Weite folgt den tatsächlichen Stützenkonturen. Bei Kreisen wird der Durchmesser vom Achsabstand abgezogen."],
         ["fits", "Driving straight through, the car plus a safety margin on each side must fit into the available width.",
          "Bei Geradeausfahrt müssen Auto und ein Sicherheitsabstand je Seite in die verfügbare Breite passen."],
         ["reduced", "The first and the reduced grid are compared as explicit spacing scenarios.",
@@ -81,11 +81,11 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         ["sensitive", "A thicker circular support or a wider car shifts the threshold; the full route still needs its own physical check.",
          "Eine dickere Kreisstütze oder ein breiteres Auto verschiebt die Schwelle; die ganze Route braucht weiterhin ihre eigene geometrische Prüfung."],
         ["drive", "The assumed arrival is a teaching scenario. Historical descriptions state capacity for three cars; fitting three full-size cars remains unverified.",
-         "Die angenommene Anfahrt ist ein Lehrszenario. Historische Beschreibungen nennen Platz für drei Autos; drei Fahrzeuge in voller Größe bleiben geometrisch ungeprüft."],
-        ["pinch", "The swept rectangle is checked against actual height-overlapping building parts, including services and the hoist jib; the smallest clearance governs.",
-         "Die bewegte Rechteckhülle wird gegen tatsächliche Bauteile in Fahrzeughöhe geprüft, einschließlich Haustechnik und Hebeausleger; der kleinste Abstand entscheidet."],
-        ["wall", "The translucent entrance surround and opaque timber door leaves follow the source-informed plan. The assumed arrival is a separate teaching route.",
-         "Die transluzente Eingangsumfassung und geschlossenen Holztürblätter folgen dem quellenbezogenen Plan. Die angenommene Anfahrt ist eine eigene Lehrroute."],
+         "Die Anfahrt ist ein Lehrszenario. Quellen nennen Platz für drei Autos; drei heutige Autos bleiben geometrisch ungeprüft."],
+        ["pinch", "At car height, the swept envelope checks all actual parts, including services and hoist jib; the smallest gap governs.",
+         "Die bewegte Fahrzeughülle prüft alle Bauteile in Fahrzeughöhe, auch Haustechnik und Hebeausleger; der kleinste Abstand zählt."],
+        ["wall", "The source-informed entrance has translucent surrounds and opaque timber leaves. The assumed arrival is a separate teaching route.",
+         "Eingangsumfassung und geschlossene Holztürblätter folgen dem quellenbezogenen Plan; die angenommene Anfahrt ist eine Lehrroute."],
         ["properties", "A piloti carries more properties: its material, whether it bears load, and whether it is external.",
          "Eine Stütze trägt weitere Eigenschaften: Material, ob sie Lasten trägt und ob sie außen liegt."],
         ["relations", "Relationships complete the meaning: storey, type, the floor slab it carries and its grid position.",
@@ -189,7 +189,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         return mark
 
     def _plan_dim(self, text, a=None, b=None, color=DATA, offset=0.2, x_b=None):
-        """↔️ Dimension between two piloti axes along row E, drawn outside the north façade; ``x_b`` overrides the second end in metres."""
+        """↔️ Dimension between the actual piloti entry axes; ``x_b`` overrides the second end in metres."""
         a, b = a or self._entry[0], b or self._entry[1]
         (xa, ya), (xb, yb) = self._xy(a), self._xy(b)
         return self.dimension(self._at(xa, ya), self._at(xb if x_b is None else x_b, yb), text, offset=offset, color=color, size=LABEL)
@@ -673,7 +673,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             {"name": self.tr("Property", "Eigenschaft"), "value": info["label"], "vtone": INK},
             {"name": self.tr("Value", "Wert"), "value": self.number(info["value"])},
             {"name": self.tr("Unit", "Einheit"), "value": info["unit"]},
-            {"name": self.tr("Grid", "Raster"), "value": f"{self._lab(a)} – {self._lab(b)}"},
+            {"name": self.tr("Support register", "Stützenregister"), "value": f"{self._lab(a)} – {self._lab(b)}"},
             {"name": self.tr("Basis", "Herkunft"), "value": self._word(info["basis"]), "vtone": TONES[info["basis"]],
              "sub": self.tr("origin of the value: sourced or assumed", "Herkunft des Werts: belegt oder angenommen")}],
             (PX, 0.7), PW - 0.3, title=self.tr("TEACHING DATA MODEL · QUANTITY", "LEHRDATENMODELL · GRÖSSE"))
@@ -683,8 +683,8 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             _engine.AnimationGroup(*[_engine.FadeOut(part) for part in (chain, strips, totals, chain_table, *chain_table.rows, strip_link)]),
             _engine.AnimationGroup(_engine.FadeIn(table), _engine.FadeIn(unit_dim), *[_engine.FadeIn(r) for r in table.rows[:2]]),
             _engine.FadeIn(table.rows[2]),
-            _engine.AnimationGroup(_engine.FadeIn(table.rows[3]), _engine.Indicate(plan.parts["label_x:" + a[1:]], color=DATA), _engine.Indicate(plan.parts["label_x:" + b[1:]], color=DATA),
-                                   _engine.Indicate(plan.parts["label_y:" + a[0]], color=DATA)),
+            _engine.AnimationGroup(_engine.FadeIn(table.rows[3]),
+                                   *[_engine.Indicate(plan.parts[key], color=DATA) for key in dict.fromkeys(self._grid_keys(a) + self._grid_keys(b)) if key in plan.parts]),
             _engine.AnimationGroup(_engine.FadeIn(table.rows[4]), _engine.FadeIn(sourced)), _engine.FadeIn(meaning), lag_ratio=0.3), seconds=6.0)
         dim, dim_lines = unit_dim, _engine.VGroup(*unit_dim[:3])
 
@@ -834,6 +834,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         slab = next(s_ for s_ in g["slabs"] if s_["kind"] == "FLOOR")
         type_name = _model.element(_model.role("column_type_example"), m)["name"][lang]
         tone = {"storey": GOOD, "type": STRUCT, "slab": CONCRETE, "grid": DATA}
+        grid_keys = self._grid_keys(a)
         relations = self._rows([
             {"name": self.tr("Contained in", "Enthalten in"), "value": f"{storey} {ground_mark}", "dot": tone["storey"], "sub": rels["IfcRelContainedInSpatialStructure"]["class"]},
             {"name": self.tr("Defined by type", "Typ"), "value": type_name, "dot": tone["type"], "sub": rels["IfcRelDefinesByType"]["class"],
@@ -841,7 +842,8 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             {"name": self.tr("Connected to", "Verbunden mit"), "value": self.tr("First-floor slab", "Decke über dem Erdgeschoss"), "dot": tone["slab"],
              "sub": rels["IfcRelConnectsElements"]["class"], "basis": ("+" + self.quantity(slab["top"], "m") + " · " + self._word("assumed"), WARN)},
             {"name": self.tr("Support register", "Stützenregister"), "value": self._lab(a), "dot": tone["grid"],
-             "sub": self.tr("grid axes ", "Rasterachsen ") + a[0] + self.tr(" and ", " und ") + a[1:]}], (PX, 1.0), PW - 0.4)
+             "sub": self.tr("coincident grid axes: ", "gleiche Rasterachsen: ") + " / ".join(key.split(":", 1)[1] for key in grid_keys)
+                    if grid_keys else self.tr("no coincident grid axis", "keine gleiche Rasterachse")}], (PX, 1.0), PW - 0.4)
         legend_count = self._say(self.tr("* source-informed teaching reconstruction", "* quellenbezogene Lehrrekonstruktion"), (PX, -0.78), size=SMALL, color=MUTED)
         outline = [at(0, 0), at(ly, 0), at(ly, g["box"]["width"]), at(0, g["box"]["width"])]
         storey_ring = _draft.polyline(outline, tone["storey"], _draft.W_EDGE + 0.6, 1.0, closed=True)
@@ -850,12 +852,12 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         connector = _engine.VGroup(_draft.polygon([head_a + np.array([sx * 0.07, sy * 0.07, 0.0]) for sx, sy in ((-1, -1), (1, -1), (1, 1), (-1, 1))], tone["slab"], 1.0, INK, _draft.W_THIN))
         slab_rings = [[at(*p) for p in slab["outline"]]] + [[at(*p) for p in void] for void in slab["voids"]]
         slab_shape = _engine.VGroup(_draft.region(slab_rings, CONCRETE, 0.08), _draft.hatch(slab_rings, CONCRETE, 0.12, 45, _draft.W_HAIR, 0.4))
-        axes = (plan.parts["axis_x:" + a[1:]], plan.parts["axis_y:" + a[0]])
+        axes = tuple(plan.parts[key.replace("label_", "axis_", 1)] for key in grid_keys if key.replace("label_", "axis_", 1) in plan.parts)
         leaders = [
             self._route([relations.dots[0].get_center(), at(ly, 18.9)], tone["storey"]),
             self._route([relations.dots[1].get_center(), at(*self._xy(b)) + np.array([0.0, -0.1, 0.0])], tone["type"]),
             self._route([relations.dots[2].get_center(), head_a + np.array([0.07, -0.07, 0.0])], tone["slab"]),
-            self._route([relations.dots[3].get_center(), plan.parts["label_x:" + a[1:]].get_center() + np.array([0.0, 0.13, 0.0])], tone["grid"])]
+            self._route([relations.dots[3].get_center(), (plan.parts[grid_keys[0]].get_center() if grid_keys else head_a) + np.array([0.0, 0.13, 0.0])], tone["grid"])]
         self.step("relations", _engine.LaggedStart(
             _engine.AnimationGroup(*self._gone(column.static), _engine.FadeOut(scale_bar), *[_engine.FadeOut(part) for part in (column.hatch_shaft, column.hatch_section, column.arrows, column.exposure, props, caveat, marks, level_up, level_down, section_mark, section_label, *props.rows)]),
             _engine.AnimationGroup(_engine.FadeIn(relations), _engine.FadeIn(relations.rows[0]), _engine.FadeIn(storey_ring), _engine.FadeIn(leaders[0])),
@@ -864,7 +866,7 @@ class Beat1_DataToInformation(_visuals.ClipScene):
             _engine.AnimationGroup(_engine.FadeIn(relations.rows[3]), *[axis.animate.set_stroke(DATA, 2.4, 1.0) for axis in axes], _engine.FadeIn(leaders[3]),
                                    *[_engine.Indicate(plan.parts[key], color=DATA) for key in self._grid_keys(a) if key in plan.parts]), lag_ratio=0.3), seconds=8.0)
 
-        excerpt = self._pick(_model.step_excerpt(a, m, language="en"), "=IFCCOLUMN(", "'LoadBearing'", "'Pset_ColumnCommon'", "=IFCRELDEFINESBYPROPERTIES(")
+        excerpt = self._pick(_model.step_excerpt(a, m, language=lang), "=IFCCOLUMN(", "'LoadBearing'", "'Pset_ColumnCommon'", "=IFCRELDEFINESBYPROPERTIES(")
         panel = self.step_panel(excerpt, (3.75, 0.0), width=6.0)
         for run in panel.runs:
             if run.role in ("reference", "number", None):
@@ -901,4 +903,4 @@ class Beat1_DataToInformation(_visuals.ClipScene):
         self.step("same", _engine.LaggedStart(
             _engine.FadeIn(trunk), _engine.FadeIn(taps), _engine.FadeIn(marks_step), _engine.FadeIn(chip), _engine.FadeIn(same),
             _engine.Indicate(plan.parts[a], color=DATA), lag_ratio=0.3), seconds=6.0)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

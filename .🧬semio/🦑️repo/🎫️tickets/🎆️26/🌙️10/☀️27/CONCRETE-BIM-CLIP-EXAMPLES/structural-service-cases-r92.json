@@ -1,0 +1,796 @@
+{
+  "title": "Recovered Structural and Service Inputs R92",
+  "source_sha256": "528b3ffeab26e4c038b9eb603e7ae1e9bc52c66a1f068b3e799de8fcd66ccc8f",
+  "original_source_refs": {
+    "wc_plan": "FLC19442 printed25",
+    "stair_L": "FLC H1(13)314 printed145",
+    "heating": [
+      "FLC U1(14)063 printed230",
+      "064 printed231",
+      "065 printed232"
+    ],
+    "foundation": "FLC H1(13)302 printed71"
+  },
+  "supports": [
+    {
+      "column": "34",
+      "axis": [
+        9.5,
+        6.006
+      ],
+      "born_on": "BEAM-PRIMARY-F-8-9",
+      "neighbouring_transfer": "BEAM-PRIMARY-F-3-34",
+      "birth_structural_top_m": 3.14,
+      "status": "Current numeric base3.14 coherent with transfer/slabtop; new evidence supports support relation, not adding a ground pier"
+    },
+    {
+      "column": "35",
+      "axis": [
+        9.5,
+        8.23
+      ],
+      "born_on": "BEAM-PRIMARY-F-13-14",
+      "birth_structural_top_m": 3.14,
+      "status": "Current numeric base3.14 coherent; source plan registration supports transfer ownership, not ground extension"
+    },
+    {
+      "column": "36",
+      "axis": [
+        10.898,
+        15.468
+      ],
+      "born_on": "BEAM-PRIMARY-F-13-25",
+      "birth_structural_top_m": 3.14,
+      "status": "Original source76 documents waits during firstceiling construction; source136/105 confirms introduced ramp/boudoir support, currentbasecoherent"
+    },
+    {
+      "column": "PB",
+      "axis": [
+        9.5,
+        16.889
+      ],
+      "born_on": "original Poutre F at lower intermediate landing",
+      "birth_nominal_m": 1.585,
+      "status": "Text134 establishes member identity. Original305 top/embedded boundary and beamdepth not securely readable; existing numericbirth is nominal landingtop, not independently read joint level."
+    }
+  ],
+  "missing_stair_L": {
+    "source_dimensions_m": {
+      "outer": [
+        0.22,
+        0.22
+      ],
+      "leg": 0.06
+    },
+    "source_pages": [
+      145
+    ],
+    "outer_corner_candidate_m": [
+      6.407144829,
+      10.150220372
+    ],
+    "outline_candidate_m": [
+      [
+        6.187144829,
+        10.150220372
+      ],
+      [
+        6.407144829,
+        10.150220372
+      ],
+      [
+        6.407144829,
+        10.370220372
+      ],
+      [
+        6.347144829,
+        10.370220372
+      ],
+      [
+        6.347144829,
+        10.210220372
+      ],
+      [
+        6.187144829,
+        10.210220372
+      ]
+    ],
+    "orientation_basis": "Original314 plan atcurve/straightjunction adjacentWC; Xreversed/Ysame into currentcoordinateframe",
+    "xy_uncertainty_m": 0.15,
+    "birth_m": 3.14,
+    "top": "Constrain to actual ST-FR structural underside in candidate footprint; endpoint not directly read. Do not default extendtoroofoverhead.",
+    "missing_current": true,
+    "failed_acceptance": {
+      "scope": "Root native ST-FR waist-only10ray probe",
+      "result": "No intersection for first candidateY10.15022..10.37022",
+      "artifact": "🗑️generated/stair-L-contact-r92.json",
+      "preserved": true
+    },
+    "revised_registration": {
+      "basis": "OriginalLoutside treadedge canengageRCouterguard; source141stairwaist+guardsarecontinuousstructuralunit. CurrentRCcoreouterY10.14022versusrenderouter10.15022; useexplicitcore/finishinferencewithin±.15rasteruncertainty.",
+      "candidate_translation_m": [
+        0,
+        -0.06
+      ],
+      "outline_candidate_m": [
+        [
+          6.187144829,
+          10.090220372
+        ],
+        [
+          6.407144829,
+          10.090220372
+        ],
+        [
+          6.407144829,
+          10.310220372
+        ],
+        [
+          6.347144829,
+          10.310220372
+        ],
+        [
+          6.347144829,
+          10.150220372
+        ],
+        [
+          6.187144829,
+          10.150220372
+        ]
+      ],
+      "acceptance": "Independent actualGUARD-ST-FR RCcore/waist contact andownership; do not assume firstcandidatepass or historical6cm measuredplacement",
+      "analytic_targets": {
+        "profile_area_m2": 0.0228,
+        "mean_x": 6.330829039526315,
+        "mean_top_z": 5.4248362577789475,
+        "gross_rc_volume_m3": 0.05209426667736,
+        "bearing_projected_m2": 0.011,
+        "bearing_sloped_m2": 0.01383108488043871,
+        "top_plane": "z=5.366666667+0.762222224*(6.407144829-x)",
+        "basis": "Independent exact planar-moment integration of authored candidate; not historical measurement, before added ownership cuts"
+      }
+    },
+    "lower_bearing_acceptance": {
+      "source": "b06d7d9869ada7d058ce5039f568b52c6633650917bb9b92db334613c5872906",
+      "actual_native_region": "R-PRIMARY-SL-1-50",
+      "slab_z": [
+        2.91,
+        3.14
+      ],
+      "positive_face_area_m2": 0.009599999984128018,
+      "volume_overlap_m3": 0,
+      "finish_parts": 0,
+      "material_reserve_required": false,
+      "source_attribution": "Author145 identifies starter bars on originalfirst-ceilingconstruction photographFLC L2(17)200",
+      "artifact": "🗑️generated/stair-L-lower-audit-r92.json"
+    }
+  },
+  "wc_grid": {
+    "u0": 7,
+    "v0": 49,
+    "px_per_grid": 170,
+    "pitch_m": 4.75
+  },
+  "missing_wcs": [
+    {
+      "tag": "WC-FIRST-WEST",
+      "pixel_bounds": [
+        495,
+        370,
+        529,
+        420
+      ],
+      "fixture_center_px": [
+        511.25,
+        383.25
+      ],
+      "outline_m": [
+        [
+          4.414705882352941,
+          10.219117647058823
+        ],
+        [
+          5.364705882352942,
+          10.219117647058823
+        ],
+        [
+          5.364705882352942,
+          11.616176470588234
+        ],
+        [
+          4.414705882352941,
+          11.616176470588234
+        ]
+      ],
+      "fixture_center_m": [
+        4.910661764705882,
+        10.589338235294118
+      ],
+      "fixture_form": "WCpan with cistern backed to stair-side north wall; height and pan section inferred",
+      "portals": "Separate access required by original two-cubicle plan. Exact leaf/swing not securely readable; portal placement must be labelled inferred and preserve hall circulation.",
+      "source_pages": [
+        25,
+        46,
+        145
+      ],
+      "missing_current": true,
+      "xy_uncertainty_m": 0.1
+    },
+    {
+      "tag": "WC-FIRST-EAST",
+      "pixel_bounds": [
+        462,
+        370,
+        495,
+        420
+      ],
+      "fixture_center_px": [
+        478.75,
+        383.25
+      ],
+      "outline_m": [
+        [
+          5.364705882352942,
+          10.219117647058823
+        ],
+        [
+          6.286764705882353,
+          10.219117647058823
+        ],
+        [
+          6.286764705882353,
+          11.616176470588234
+        ],
+        [
+          5.364705882352942,
+          11.616176470588234
+        ]
+      ],
+      "fixture_center_m": [
+        5.81875,
+        10.589338235294118
+      ],
+      "fixture_form": "WCpan with cistern backed to stair-side north wall; height and pan section inferred",
+      "portals": "Separate access required by original two-cubicle plan. Exact leaf/swing not securely readable; portal placement must be labelled inferred and preserve hall circulation.",
+      "source_pages": [
+        25,
+        46,
+        145
+      ],
+      "missing_current": true,
+      "xy_uncertainty_m": 0.1
+    }
+  ],
+  "bearing_datum": {
+    "author_text_page69_m": -1.5,
+    "author_section49_m": -1.65,
+    "original_detail_page71": "Actual original302 pixel leader inspected; no secure absolute-ordinate transcription. Dimension/terrain interpretation remains unresolved.",
+    "ground_finished_m": 0,
+    "natural_terrain_m": -0.15,
+    "possible_explanation": "1.50m below natural ground would be−1.65 finished-grounddatum, but not proved by current pixels; do not relabel as fact.",
+    "action": "Retaincurrent−1.65 reconstructedsectiondatum with explicit originaldatum discrepancy until readable primaryleader; do not shift everyfootingbasedon prosealone"
+  },
+  "boilers": {
+    "report_date": "1932-05-31",
+    "count": 2,
+    "brand": "Ideal",
+    "capacities_calories": [
+      44800,
+      16800
+    ],
+    "combined": false,
+    "smoke_outlet_elbows": 4,
+    "source_page": 231,
+    "physical_positions": "Not independently legible in063; author44 basementplanhasnoequipment symbols. CurrentBL1XYinferred.",
+    "target1930_qualification": "Two in1932 is strong near-contemporary count evidence but not an unqualified observed1930plan; no newboiler position fabricated"
+  },
+  "service_graph": {
+    "schema": "source-graph-v1",
+    "basis": "Source-attested topology, not claimed metric pipe tracing",
+    "nodes": [
+      {
+        "id": "BASEMENT-HEATING-DISTRIBUTION",
+        "source_pages": [
+          230,
+          232
+        ],
+        "position": "cellar source graph; exact boiler anchors not resolved"
+      },
+      {
+        "id": "HEAT-RISER-6",
+        "source_pages": [
+          116,
+          230,
+          231,
+          232
+        ],
+        "existing": [
+          "HEAT-RISER-6-CASING",
+          "HEAT-RISER-6-INSULATION",
+          "HEAT-RISER-6-PIPE"
+        ],
+        "kind": "paired heating supply/return within sheath"
+      },
+      {
+        "id": "HEAT-RISER-11",
+        "source_pages": [
+          116,
+          230,
+          231,
+          232
+        ],
+        "existing": [
+          "HEAT-RISER-11-CASING",
+          "HEAT-RISER-11-INSULATION",
+          "HEAT-RISER-11-PIPE"
+        ],
+        "kind": "paired heating supply/return plus separate water supply in shared sheath"
+      },
+      {
+        "id": "HEAT-RISER-VESTIBULE-5",
+        "source_pages": [
+          230
+        ],
+        "kind": "source-attested visible riser along inner curved glazing, later removed",
+        "current_missing": true
+      },
+      {
+        "id": "RAD-HALL-GARAGE",
+        "source_pages": [
+          233
+        ],
+        "kind": "30 castiron sections and3feet; visible1930 adjacent garage door",
+        "current_missing": true
+      },
+      {
+        "id": "RAD-HALL-BEHIND-STAIR",
+        "source_pages": [
+          233
+        ],
+        "kind": "original1930 radiator moved from planned stair partition to opposite wall",
+        "current_missing": true
+      },
+      {
+        "id": "RAD-KITCHEN-SINK",
+        "source_pages": [
+          233
+        ],
+        "kind": "dark original radiator below sink counter; later disappeared",
+        "current_missing": true
+      },
+      {
+        "id": "RAD-SALON-SHELVES",
+        "source_pages": [
+          233
+        ],
+        "kind": "original radiators within fixed shelves; precise count depends registered photos",
+        "existing_unverified": [
+          "RAD-1"
+        ]
+      },
+      {
+        "id": "RAIN-KITCHEN-PATIO-9",
+        "source_pages": [
+          236,
+          237,
+          238
+        ],
+        "kind": "original outside curvedglazing downpipe covered in sheetmetal; not modern gargoyles",
+        "current_missing": true
+      },
+      {
+        "id": "WC-FIRST-EAST",
+        "source_pages": [
+          25,
+          46
+        ]
+      },
+      {
+        "id": "WC-FIRST-WEST",
+        "source_pages": [
+          25,
+          46
+        ]
+      },
+      {
+        "id": "SOIL-STAIR",
+        "source_pages": [
+          145,
+          235
+        ],
+        "existing": [
+          "SOIL-STAIR"
+        ]
+      },
+      {
+        "id": "BELOWFLOOR-SEWER",
+        "source_pages": [
+          235
+        ],
+        "kind": "Original branches and outfall topology need source-sheet registration"
+      }
+    ],
+    "edges": [
+      {
+        "from": "BASEMENT-HEATING-DISTRIBUTION",
+        "to": "HEAT-RISER-6",
+        "system": "heating",
+        "pair": [
+          "supply",
+          "return"
+        ],
+        "basis": "original system description116 and traced vertical network232",
+        "metric_route": "unknown; retain source-bound connectivity without fabricated exact run"
+      },
+      {
+        "from": "BASEMENT-HEATING-DISTRIBUTION",
+        "to": "HEAT-RISER-11",
+        "system": "heating",
+        "pair": [
+          "supply",
+          "return"
+        ],
+        "basis": "original system description116 and traced vertical network232",
+        "metric_route": "unknown"
+      },
+      {
+        "from": "BASEMENT-HEATING-DISTRIBUTION",
+        "to": "HEAT-RISER-VESTIBULE-5",
+        "system": "heating",
+        "pair": [
+          "supply",
+          "return"
+        ],
+        "basis": "author230 ties riser5 to original photo061",
+        "metric_route": "unknown"
+      },
+      {
+        "from": "WC-FIRST-EAST",
+        "to": "SOIL-STAIR",
+        "system": "soil",
+        "basis": "original two WCprogramme + original130mm stack documented145",
+        "metric_route": "branch connection inferred, original exact elbowsunknown"
+      },
+      {
+        "from": "WC-FIRST-WEST",
+        "to": "SOIL-STAIR",
+        "system": "soil",
+        "basis": "same",
+        "metric_route": "branch inferred"
+      },
+      {
+        "from": "SOIL-STAIR",
+        "to": "BELOWFLOOR-SEWER",
+        "system": "soil",
+        "basis": "required system continuation; original exact route not recovered",
+        "metric_route": "unknown"
+      },
+      {
+        "from": "KITCHEN-PATIO-COLLECTOR",
+        "to": "RAIN-KITCHEN-PATIO-9",
+        "system": "rainwater",
+        "basis": "author236 explicitly identifies function and replacement history",
+        "metric_route": "collector/branch route unregistered"
+      }
+    ],
+    "not_asserted": [
+      "No guessed association of individual radiators to riser6 versus11",
+      "No direction inferred from unlabeled single line; graph paired supply/return explicit as reconstruction policy",
+      "No whole-radiator count25 promoted from budget to executed1930",
+      "No boiler XY/count read from author44 where no boilers are drawn"
+    ]
+  },
+  "sanitary_inventory": {
+    "source_pages": [
+      24,
+      25,
+      45,
+      46,
+      239,
+      240
+    ],
+    "wc_count": 4,
+    "bidet_count": 3,
+    "note": "Count applies inspected whole-house ground/first plans. Do not call bidets WC. All fourWCs and threebidets missing in528b.",
+    "ground_grid": {
+      "u0": 6,
+      "v0": 48,
+      "px_per_grid": 170,
+      "pitch_m": 4.75
+    },
+    "fixtures": [
+      {
+        "candidate": "WC-GROUND-SERVICE",
+        "kind": "wc",
+        "page": 45,
+        "pixel_center": [
+          556,
+          448
+        ],
+        "centre_m": [
+          3.632352941176471,
+          12.426470588235293
+        ],
+        "existing_conflict": "FIX-SERVANT-BASIN-1 directly occupies sourceWC footprint; relocate basinandreshape firstservantspace",
+        "room_bbox_m": [
+          3.0735294117647065,
+          11.923529411764706,
+          4.722058823529412,
+          12.929411764705883
+        ]
+      },
+      {
+        "candidate": "WC-CHAUFFEUR",
+        "kind": "wc",
+        "page": 45,
+        "pixel_center": [
+          132,
+          617
+        ],
+        "centre_m": [
+          15.479411764705883,
+          17.148529411764706
+        ],
+        "existing_conflict": "Outside current SP-CHAUFFEUR-BATH southboundaryY18.4; must extend/remodel bathandcurvedWCniche belowdiagonalgaragewall"
+      },
+      {
+        "candidate": "BIDET-CHAUFFEUR",
+        "kind": "bidet",
+        "page": 45,
+        "pixel_center": [
+          133,
+          707
+        ],
+        "centre_m": [
+          15.451470588235294,
+          19.663235294117648
+        ]
+      },
+      {
+        "candidate": "BATH-CHAUFFEUR",
+        "kind": "freestanding bath on feet",
+        "page": 45,
+        "pixel_center": [
+          164,
+          697
+        ],
+        "centre_m": [
+          14.58529411764706,
+          19.383823529411764
+        ],
+        "candidate_outer_bounds_m": [
+          14.194117647058825,
+          18.601470588235294,
+          14.976470588235294,
+          20.305882352941175
+        ],
+        "existing_missing": true
+      },
+      {
+        "candidate": "BASIN-CHAUFFEUR",
+        "kind": "small wall basin",
+        "page": 45,
+        "pixel_center": [
+          126,
+          678
+        ],
+        "centre_m": [
+          15.647058823529411,
+          18.852941176470587
+        ],
+        "existing": "FIX-CHAUFFEUR-BASIN",
+        "existing_conflict": "CurrentbasinX14.9..15.65Y20.35..20.95 differssourceposition by~1.8m; retainexplicitinference ifnotremodelled"
+      },
+      {
+        "candidate": "BASIN-SERVANT-1",
+        "kind": "small wall basin in tiled niche",
+        "page": 45,
+        "pixel_center": [
+          558,
+          546
+        ],
+        "centre_m": [
+          3.576470588235294,
+          15.16470588235294
+        ],
+        "existing": "FIX-SERVANT-BASIN-1"
+      },
+      {
+        "candidate": "BASIN-SERVANT-2",
+        "kind": "small wall basin in tiled niche",
+        "page": 45,
+        "pixel_center": [
+          533,
+          574
+        ],
+        "centre_m": [
+          4.275,
+          15.947058823529412
+        ],
+        "existing": "FIX-SERVANT-BASIN-2"
+      },
+      {
+        "candidate": "BIDET-PARENTS",
+        "kind": "bidet",
+        "page": 46,
+        "pixel_center": [
+          510,
+          439
+        ],
+        "centre_m": [
+          4.945588235294117,
+          12.147058823529411
+        ],
+        "existing_missing": true
+      },
+      {
+        "candidate": "BASIN-PARENTS",
+        "kind": "elliptical pedestal basin",
+        "page": 46,
+        "pixel_center": [
+          510,
+          486
+        ],
+        "centre_m": [
+          4.945588235294117,
+          13.46029411764706
+        ],
+        "existing_missing": true
+      },
+      {
+        "candidate": "BIDET-SHARED",
+        "kind": "bidet",
+        "page": 46,
+        "pixel_center": [
+          580.5,
+          520
+        ],
+        "centre_m": [
+          2.975735294117648,
+          14.410294117647059
+        ],
+        "existing_missing": true
+      },
+      {
+        "candidate": "BASIN-SHARED",
+        "kind": "elliptical pedestal basin",
+        "page": 46,
+        "pixel_center": [
+          658.75,
+          520
+        ],
+        "centre_m": [
+          0.7893382352941174,
+          14.410294117647059
+        ],
+        "existing": "FIX-SHARED-BASIN",
+        "existing_conflict": "Currentrectangularbasin not sourceellipticalpedestal morphology"
+      },
+      {
+        "candidate": "BATH-SHARED",
+        "kind": "capsule bath in matching curved wall niche",
+        "page": 46,
+        "pixel_center": [
+          625,
+          566.5
+        ],
+        "centre_m": [
+          1.7323529411764689,
+          15.709558823529411
+        ],
+        "candidate_outer_bounds_m": [
+          0.9220588235294116,
+          15.276470588235295,
+          2.5705882352941174,
+          16.114705882352943
+        ],
+        "existing": "FIX-SHARED-BATH",
+        "existing_conflict": "Currentrectbath0.55..1.35/14.2..15.6 andstraightbathwall missoriginalconvexnicheintoadjacentsonroom"
+      },
+      {
+        "candidate": "BASIN-HALL",
+        "kind": "elliptical pedestal basin",
+        "page": 240,
+        "existing": "FIX-HALL-BASIN",
+        "existing_conflict": "Existing hollow rectangularbowl notoriginalellipticalpedestal shape"
+      }
+    ],
+    "programme_reconciliation": {
+      "servant1_outline_candidate": [
+        [
+          3.15,
+          12.95
+        ],
+        [
+          4.75,
+          12.95
+        ],
+        [
+          4.75,
+          11.9
+        ],
+        [
+          7.05,
+          11.9
+        ],
+        [
+          7.05,
+          15.5
+        ],
+        [
+          3.15,
+          15.5
+        ]
+      ],
+      "servant2_outline_candidate": [
+        [
+          3.15,
+          15.5
+        ],
+        [
+          7.05,
+          15.5
+        ],
+        [
+          7.05,
+          18.2
+        ],
+        [
+          3.15,
+          18.2
+        ]
+      ],
+      "laundry_outline_candidate": [
+        [
+          3.15,
+          18.2
+        ],
+        [
+          8.23,
+          18.2
+        ],
+        [
+          8.23,
+          21.4
+        ],
+        [
+          3.15,
+          21.4
+        ]
+      ],
+      "chauffeur_bath_outline_candidate": [
+        [
+          14.1,
+          16.54
+        ],
+        [
+          16,
+          14.95
+        ],
+        [
+          16,
+          21.4
+        ],
+        [
+          14.1,
+          21.4
+        ]
+      ],
+      "warning": "Rounded source-informed region candidates, not exact legal partition traces. Reconcile hallway,boilerlabel,garageownership anddooraccess beforeapplying; do notoverlaprooms or movefixedstructuralmembers."
+    },
+    "uncertainty": {
+      "xy_m": 0.12,
+      "fixture_heights": "inferred",
+      "cistern_flush_pipe_shape": "inferred; no exact fitting/flush mechanism sourced",
+      "doors": "Separate portal required; exact leaf/swing notsecurelyread. Authored door may preserve inferred current accessstrategy."
+    },
+    "acceptance": [
+      "Hollow WC/bidet/basin bodies anddistinctsourceidentities",
+      "Explicit tiling/pedestal where evidenced; no invented manufacturer-specific shape",
+      "Check all actualcolumns/walls/doors/standingroutes after roomreshaping",
+      "Clip SP-FIRST-HALL and all affected sourceprogramme rooms against newcubicles",
+      "Source-independent GEOSoccupiedvolumeandcavitytests",
+      "Drain branches sourceattestedtopology, dimensions/inletpositionsinferred"
+    ]
+  }
+}

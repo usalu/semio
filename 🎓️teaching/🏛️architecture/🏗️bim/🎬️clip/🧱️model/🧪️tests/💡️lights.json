@@ -1,0 +1,112 @@
+{
+  "class": "IfcLightFixture",
+  "system": "lighting",
+  "state": "original-completed-1930-1931",
+  "fixtures": [
+    {
+      "tag": "LIGHT-HALL-ZEISS-1",
+      "host": "9",
+      "kind": "column",
+      "predefined_type": "POINTSOURCE",
+      "witness": "Original November1930 photo244; Zeiss upward bowl",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-HALL-ZEISS-2",
+      "host": "8",
+      "kind": "column",
+      "predefined_type": "POINTSOURCE",
+      "witness": "Original November1930 photo244; Zeiss upward bowl",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-HALL-BASIN-19",
+      "host": "19",
+      "kind": "column",
+      "predefined_type": "POINTSOURCE",
+      "witness": "Original November1930 photo244 and text242 column19",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-HALL-CEILING",
+      "host": "SL-1",
+      "kind": "soffit",
+      "predefined_type": "POINTSOURCE",
+      "witness": "Original November1930 FLC L2(17)061, Albalite stepped ceiling body",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-FIRST-HALL-CEILING",
+      "host": "SL-R",
+      "kind": "soffit",
+      "predefined_type": "POINTSOURCE",
+      "witness": "Original November1930 FLC L2(17)059, Albalite ceiling body",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-SALON-LINEAR",
+      "host": "SL-R",
+      "kind": "soffit",
+      "predefined_type": "DIRECTIONSOURCE",
+      "witness": "Original November1930 FLC L2(17)098; absentAugust1930, invertedVchromed trough",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-KITCHEN-1",
+      "host": "W-W",
+      "kind": "wall",
+      "predefined_type": "POINTSOURCE",
+      "witness": "Original ArchitectureVivante1931 plate34 upright295/375 occluded fixture at sink-window side",
+      "basis": "inferred",
+      "room": "SP-KITCHEN"
+    },
+    {
+      "tag": "LIGHT-KITCHEN-2",
+      "host": "W-PANTRY-WEST",
+      "kind": "wall",
+      "predefined_type": "POINTSOURCE",
+      "witness": "Original ArchitectureVivante1931 plate34 upright656/375 clear short arm and shallow bell",
+      "basis": "inferred",
+      "room": "SP-KITCHEN"
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-11",
+      "host": "HEAT-RISER-11-CASING",
+      "kind": "column",
+      "predefined_type": "DIRECTIONSOURCE",
+      "witness": "Original photo244 visible lowXriser11 spotlight, text242; upward/outward morphology",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-6",
+      "host": "HEAT-RISER-6-CASING",
+      "kind": "column",
+      "predefined_type": "DIRECTIONSOURCE",
+      "witness": "Text242 opposite falsepiloti spot; exact location/direction inferred",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-REAR-W",
+      "host": "SL-1",
+      "kind": "soffit",
+      "predefined_type": "DIRECTIONSOURCE",
+      "witness": "Text242 rear porch spots; selected actual outer porch soffit region, exact historicXYunregistered",
+      "basis": "inferred"
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-REAR-E",
+      "host": "SL-1",
+      "kind": "soffit",
+      "predefined_type": "DIRECTIONSOURCE",
+      "witness": "Text242 rear porch spots; selected actual outer porch soffit region, exact historicXYunregistered",
+      "basis": "inferred"
+    }
+  ],
+  "unconfirmed_not_authored": [
+    "private-bedroom1mglasscylinders",
+    "second-budgeted-firsthallfixture",
+    "parents1952walllights",
+    "budgeted-servantopalglobes"
+  ],
+  "tolerance": 1e-7
+}

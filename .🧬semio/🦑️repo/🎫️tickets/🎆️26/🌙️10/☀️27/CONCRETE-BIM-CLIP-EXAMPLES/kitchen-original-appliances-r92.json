@@ -1,0 +1,236 @@
+{
+  "scope": "Positive original presence; metric station and equipment model remain unmeasured",
+  "snapshot": "556/1b9ccaeb",
+  "sources": [
+    {
+      "id": "ArchitectureVivante1931-plate34",
+      "path": "🗑️generated/vivante1931-plate34-r39.png",
+      "upright": "🗑️generated/kitchen-original-appliances-upright-r92.png",
+      "orientation": "rotate90clockwise",
+      "published": "summer1931",
+      "region_upright_normalized": {
+        "cylindrical_appliance": [
+          0.8,
+          0.53,
+          0.92,
+          0.74
+        ],
+        "foreground_plate_appliance": [
+          0.835,
+          0.655,
+          0.925,
+          0.78
+        ],
+        "stand": [
+          0.745,
+          0.69,
+          0.925,
+          0.87
+        ]
+      }
+    },
+    {
+      "id": "FLC-L2-17-176",
+      "reproduced": "SAB2024-p236fig10",
+      "date": "November1930",
+      "path": "🗑️generated/book-figures-236-r92.jpg",
+      "known": "Original kitchen photograph explicitly dated and attributed MariusGravot; same apparatus/stand visible in crop"
+    },
+    {
+      "id": "FLC-H1-12-104",
+      "reproduced": "SAB2024-p229note2",
+      "date": "1930-06-17",
+      "known": "Biquard&Wilder, representativeofTherma, informedMmeSavoye insufficient sockets for ordered appliances; original letter facsimile not inspected"
+    }
+  ],
+  "observations": [
+    {
+      "id": "KITCHEN-APPLIANCE-CYLINDER",
+      "known": "Large cylindrical metal-bodied appliance with stepped/lidded top, sidehandle and lowfrontcontrol, resting on distinct slendermetalstand besidewestwindow/worktable",
+      "unknown": [
+        "Exactfunction",
+        "Manufacturer/modelofthisindividualbody",
+        "Diameter/height",
+        "PreciseYstation",
+        "Electriccable/supplyroute"
+      ],
+      "representation": "Absent from current physical element roster; no IfcElectricAppliance or cooker/oven product found",
+      "candidate": {
+        "world_zone_x": [
+          0.2,
+          0.9
+        ],
+        "world_zone_y": [
+          2.8,
+          4.8
+        ],
+        "station_basis": "Inferred search envelope alonglowXwindowwall, beyondhigherYedgeofregisteredworktableY2.675; not recovered footprint or acceptance coordinates"
+      },
+      "acceptance": "Recover/register a bounded physical station from original photograph/plan before authoring. Do not callthisasecondwaterboiler or connect guessed hiddenpipes."
+    },
+    {
+      "id": "KITCHEN-APPLIANCE-PLATE",
+      "known": "A separate shallow darktop rectangular appliance with at leastone visible circularring appears inforegroundonstand; rightedge cropped",
+      "unknown": [
+        "Fullcountofrings",
+        "Completewidth/depth",
+        "Function/model",
+        "Exactrelationtobigcylinder"
+      ],
+      "representation": "Absent",
+      "acceptance": "Treatphotoobservablebodyseparatelyfromunseenrightcontinuation. No inferred extra burners."
+    },
+    {
+      "id": "KITCHEN-APPLIANCE-STAND",
+      "known": "Distinct slender metal supporttop/rails/legs below appliances; not the separate RC/tiled worktable",
+      "unknown": [
+        "Completefootprint",
+        "Fulllegcount",
+        "Sectiondimensions",
+        "Whetherportableorfixed"
+      ],
+      "representation": "Absent",
+      "acceptance": "Contact actualfloor; support actualappliancebottom; remainclearofwindowwall/visiblepipes. Fabrication/stationmustbeexplicitlyinferred."
+    },
+    {
+      "id": "KITCHEN-VISIBLE-WALL-PIPE-RUNS",
+      "known": "Original FLC176/1931plate34 photograph shows multiple parallel exposed horizontal pipes at low level alonglowXwindowwall, passing behind/belowtiledworktable and appliance stand. SAB236 explicitly discusses exposedwall-adjacent distribution.",
+      "count": {
+        "source_secure_minimum": 3,
+        "fourth_run": "Likelybutindividualdiameter/continuitynotreadablethroughallcrop"
+      },
+      "unknown": [
+        "Individualfunctions",
+        "Diameters",
+        "Hiddenconnections",
+        "Exactheightandendstations",
+        "Fullnumberbehindocclusions"
+      ],
+      "representation": "Current IfcPipeSegment roster contains verticalrisers/rainpipe and lowexternaloutlets, no first-floor kitchen horizontal wall-run products.",
+      "candidate": {
+        "route": "LowXwindowwall, YfromnearfrontsinktowardhigherYcookingstand; onlyvisibleportionmaybemodelled",
+        "metric_status": "Unmeasured; do not invent allbuildingnetwork orassignallrunsheating"
+      },
+      "acceptance": "Registerlocalpipeaxes/radii and visibleclip endpoints fromphoto withuncertainty; nativehollowbore, endcapsannular, supports/contactinferred, no collisionwithworktablelegs orappliancestand."
+    }
+  ],
+  "historical_boundary": "These are original photographed appliances, not modern restoration additions. Their detachability is distinct from evidenceofpresence. Do not assert a recovered appliance catalogue from the generalTherma letter.",
+  "construction_candidate": {
+    "status": "explicitly_inferred_photo_relative_reconstruction_not_measured",
+    "photo_anchor": "Low-X windowwall beyond the registered worktable high-Y edge2.675; cylinderfartherfromcamera/lowY, shallowringbodynearer/highY. Source is cropped, so no manufacturer/catalogue/full burner count is recovered.",
+    "station_uncertainty_m": 0.2,
+    "dimension_uncertainty_m": 0.1,
+    "stand": {
+      "tag": "FIX-KITCHEN-APPLIANCE-STAND",
+      "bounds_xy": [
+        0.16,
+        3.25,
+        0.78,
+        4.85
+      ],
+      "top_local_z": 0.72,
+      "nominal_top_thickness": 0.02,
+      "legs": {
+        "count": 4,
+        "nominal_section": 0.025,
+        "basis": "inferred; completelegcountnotvisible"
+      },
+      "material": "Unmeasured; nominal metalframe/top constructioncandidate only",
+      "support": "ActualfinishedfloorZ3.17, sourcecandidateassemblybase; no wallpenetration"
+    },
+    "cylinder": {
+      "tag": "APPLIANCE-KITCHEN-CYLINDER",
+      "class": "IfcElectricAppliance",
+      "predefined_type": "USERDEFINED",
+      "purpose": "unresolved",
+      "manufacturer": "unresolved",
+      "axis": [
+        0.44,
+        3.65
+      ],
+      "outer_diameter": 0.42,
+      "base_local_z": 0.72,
+      "total_height": 0.52,
+      "shell_nominal_thickness": 0.004,
+      "nominal_seam_levels_above_base": [
+        0.34,
+        0.48
+      ],
+      "lid_height": 0.04,
+      "control_and_handles": "Photoattestedgrossforms; exactdimensions/stations/orientationsinferred; nohiddenwireorpipe"
+    },
+    "shallow_body": {
+      "tag": "APPLIANCE-KITCHEN-RING-TOP",
+      "class": "IfcElectricAppliance",
+      "predefined_type": "USERDEFINED",
+      "purpose": "unresolved",
+      "axis": [
+        0.45,
+        4.35
+      ],
+      "size_xy": [
+        0.5,
+        0.55
+      ],
+      "base_local_z": 0.72,
+      "height": 0.08,
+      "shell_nominal_thickness": 0.003,
+      "visible_rings": {
+        "count": 1,
+        "nominal_diameter": 0.18,
+        "status": "onevisibleringonly; completeunseenrightcontinuationnotreconstructed"
+      }
+    },
+    "visible_pipe_bank": {
+      "count": 3,
+      "axis_x": 0.115,
+      "y_interval": [
+        1.7,
+        4.85
+      ],
+      "local_z": [
+        0.2,
+        0.27,
+        0.34
+      ],
+      "outer_diameter": 0.025,
+      "wall_thickness": 0.002,
+      "section_uncertainty_m": 0.01,
+      "functions": "Unassigned; no statementthatallareheatingorwater",
+      "visible_endpoints": "Inferredclipstationsonly, notsourceconnectionnodes",
+      "mount_faces": [
+        {
+          "pipe": 1,
+          "host": "BEAM-PRIMARY-F-5-33",
+          "occupied_face_x": 0.08,
+          "basis": "ActualRCfacebelowlocalZ.24"
+        },
+        {
+          "pipe": 2,
+          "host": "W-Wplaster",
+          "occupied_face_x": 0.07
+        },
+        {
+          "pipe": 3,
+          "host": "W-Wplaster",
+          "occupied_face_x": 0.07
+        }
+      ],
+      "brackets": "Inferredlocalmountsonactualoccupiedsurface; nohiddenanchorsorunseenbranches"
+    },
+    "acceptance": [
+      "Native hollow appliance bodies and pipe bores retain real cavities",
+      "Positive actual stand/appliance and floor/leg bearing",
+      "No occupied overlap with actual west wall/beam, worktable, sinks or operated portals",
+      "Preserve central kitchen aisle and patio route with actual leaf pose",
+      "No hidden networks, additional burners or unproven manufacturer/function"
+    ]
+  },
+  "energy_classification_review": {
+    "status": "INDIVIDUAL_ENERGY_SOURCE_UNSECURED",
+    "source_scope": "SAB236/FLC L2(17)176 original photo and SAB229 Therma/socket correspondence",
+    "known": "Two distinct photographed apparatus bodies and separate stand; general kitchen electrical context",
+    "unknown": "Individual energy source, purpose, manufacturer and model of either body; no independently secured individual cable/control identification",
+    "recommendation": "Preserve photographed geometry as purpose/energy-unresolved physical apparatus; do not infer IfcElectricAppliance from contextual correspondence alone"
+  }
+}

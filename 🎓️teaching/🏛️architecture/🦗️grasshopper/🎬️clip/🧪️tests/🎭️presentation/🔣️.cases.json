@@ -4,6 +4,7 @@
   "clauses": {"min": 14, "max": 24},
   "excluded": ["🎨️visuals", "🧪️tests", "🧪️cases", "🧱️model"],
   "chapters": [],
+  "sequence_dispatch": {"before": "prepare", "after": "complete", "seconds": 0.25, "expected": ["prepare", "FadeIn", "complete"]},
   "widgets": {
     "components": ["Center Box", "Series", "Graft Tree"],
     "wire_kinds": ["item", "list", "tree"],

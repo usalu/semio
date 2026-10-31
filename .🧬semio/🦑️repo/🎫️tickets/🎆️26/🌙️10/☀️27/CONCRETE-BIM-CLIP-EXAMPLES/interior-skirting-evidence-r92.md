@@ -1,0 +1,17 @@
+# Original Interior Timber Skirting: R92 Completeness
+
+SAB190 explicitly describes paintedtimber boards15×90mm with slightlyroundedupperedge, includingkitchen/bathrooms, interiorpilotis andrampguards. Originalphotosshowgraytone, while exactRGBisunknown. Skirtingcontinuesbeneathbuilt-incabinets, withinteriorcementfloorsraised. P106FLC L2(17)061 andp183FLC L2(17)059 supply originalphoto references. Currentproduct/materialcensusfindsnoexplicitnative skirtingproducts or original9cmwall/pilotisringgeometry. Plainplasterwallssucceedingnativeexportdoesnotrepresentthisattestedconstructiondetail.
+
+Portableinterior-skirting-evidence-r92.json recordsknownprofile, hostcoverage andunknowninstallation. Resolveflushreplacementversusproudboardfromsource; do not addwoodoveroccupiedplasterblindly. Clipactualdoors/frames/cabinets andexcludeexternalcementplinths. Exactroundradius, joints andhiddenfixings remaininferred. A15mmproudboardwouldchangehallclearance, so rerunrealbodyroutesinstead of movingthehallbasin. No productionedits.
+
+## Original photo review
+
+The original Gravot first-hall image onp183 (FLC L2(17)059, November1930) shows the dark columnbase ring wider than the white shaft and small top lips/shadows on wall/guard strips. The original salon image onp190 shows a distinct gray base strip. These support a projecting-board inference; the raster does not measure exact15mm projection everywhere. The modern cupboard photograph onp190 clearly shows rounded proud board and raised cement inside, but remains modern corroboration. Thus projecting15mm with explicit inference and fresh route tests is more defensible than selecting flush installation merely to preserve the old .77m witness. Source crop generated/skirting-original-hall-183-r92.png.
+
+## Ramp scope boundary
+
+SAB190 says the timber boards were also applied to pilotis and ramp parapets, but the sentence does not identify both ramp assemblies or explicitly describe exterior timber. Its context is interior timber detailing, including kitchens/baths, and the inspected original hall photographs show interior base strips. This supports interior guard-face use; mapping to RM-1 is a qualified reconstruction. It does not secure timber along the exposed RM-2 roof ramp. Do not extend boards to RM-2 merely because the sentence uses the generic singular ramp. Exterior mortar/Cimentol finishes remain distinct. No direct source has yet established exterior-ramp timber boards.
+
+Circumscribed128-facet post-board construction review: analytic-circle tangency avoids occupied overlap, but is not positive-area contact with a differently96-faceted shaft representation. Actual floor bearing can support the board; do not claim continuous shaft-face bearing from tangent lines. Maximum geometric radial excess is r(sec(π/128)−1):.03314mm forØ22cm,.04218mm forØ28cm and.04971mm forØ33cm. If all three source types are included,≤.05mm is the appropriate stated bound, rather than≤.04mm. This bound is an inferred construction approximation, not an original manufacturing tolerance.
+
+For unmeasured board joins, coordinated shared miter/joint planes are the primary coherent authoring choice. A declared1nm registration may be used only for new inferred timber joint parameters, matching9decimalSTEP; it is not a global source snap, runtime epsilon or positive-sliver filter. Preserve the independent2nm positive-stock regression. No original join detail or manufacturing tolerance is claimed.

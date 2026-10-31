@@ -1,0 +1,202 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "radiator",
+    "flight",
+    "floor",
+    "axis",
+    "original_axis",
+    "minimum_soffit_clearance",
+    "station_increment",
+    "part_count",
+    "foot_count",
+    "body_volume",
+    "comparison",
+    "previous"
+  ],
+  "properties": {
+    "radiator": {
+      "type": "string"
+    },
+    "flight": {
+      "type": "string"
+    },
+    "floor": {
+      "type": "string"
+    },
+    "axis": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "original_axis": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "minimum_soffit_clearance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "station_increment": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "body_volume": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "part_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "foot_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume",
+        "coordinate"
+      ],
+      "properties": {
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "coordinate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "previous": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "radiator",
+        "ramp",
+        "volume",
+        "witness"
+      ],
+      "properties": {
+        "radiator": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mesh",
+            "material"
+          ],
+          "properties": {
+            "mesh": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "vertices",
+                "faces"
+              ],
+              "properties": {
+                "vertices": {
+                  "type": "array",
+                  "minItems": 4,
+                  "items": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "faces": {
+                  "type": "array",
+                  "minItems": 4,
+                  "items": {
+                    "type": "array",
+                    "minItems": 3,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "material": {
+              "type": "string"
+            }
+          }
+        },
+        "ramp": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mesh",
+            "material"
+          ],
+          "properties": {
+            "mesh": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "vertices",
+                "faces"
+              ],
+              "properties": {
+                "vertices": {
+                  "type": "array",
+                  "minItems": 4,
+                  "items": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "faces": {
+                  "type": "array",
+                  "minItems": 4,
+                  "items": {
+                    "type": "array",
+                    "minItems": 3,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              }
+            },
+            "material": {
+              "type": "string"
+            }
+          }
+        },
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "witness": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

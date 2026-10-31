@@ -1,0 +1,10 @@
+    def coloured(self, color):
+        """🎨 The tower drawn in one flat tint, cached per colour; its capsules are the real morph sources."""
+        cache = self.__dict__.setdefault("_coloured", {})
+        if color not in cache:
+            cache[color] = self.tower_axon(at=TOWER_AT, scale=TOWER_SCALE, types=False, tint=lambda k, c=color: c)
+        return cache[color]
+
+    def silhouettes(self, keys, color=None):
+        """🔶 One real capsule drawing per key in the capsule's type colour (or the given colour), at its place on the tower, as morph source or target."""
+        return [self.coloured(color or self.tcol(self.ktype[k])).capsules[k].copy() for k in keys]

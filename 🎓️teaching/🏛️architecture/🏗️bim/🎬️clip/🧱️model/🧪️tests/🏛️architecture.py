@@ -38,21 +38,32 @@ def test_service_entrance_is_an_independent_free_portal():
 
 
 def test_guest_floor_finish_zones_follow_the_integrated_wardrobe():
-    """🪵 Verify the source parquet sleeping zone and tiled washing zone partition the true guest floor."""
-    from shapely.geometry import Polygon
+    """🪵 Verify actual wearing zones at the recovered Y-run cabinet and independent washing niche."""
+    from shapely.geometry import Polygon,Point,box
     from shapely.ops import unary_union
-    source = model.load_model()
-    guest = Polygon(next(s for s in source["spaces"] if s["tag"] == "SP-GUEST")["outline"])
-    parquet = next(e for e in source["elements"] if e["tag"] == "FIN-GUEST-PARQUET")
-    tile = next(e for e in source["elements"] if e["tag"] == "FIN-GUEST-TILE")
-    a = unary_union([Polygon(p["outline"]) for p in parquet["geometry"]["parts"]])
-    b = unary_union([Polygon(p["outline"]) for p in tile["geometry"]["parts"]])
-    assert a.intersection(b).area < 1e-8
-    assert a.union(b).symmetric_difference(guest).area < 1e-8
-    assert parquet["material"] == "MAT-PARQUET" and tile["material"] == "MAT-TILE"
-    wardrobe = next(e for e in source["elements"] if e["tag"] == "FIX-GUEST-WARDROBE")
-    north_edge = max(p[1] for part in wardrobe["geometry"]["parts"] for p in part["outline"])
-    assert math.isclose(a.bounds[1], north_edge)
+    source=model.load_model()
+    case=json.loads(Path(__file__).with_suffix('.json').read_text(encoding='utf8'))['guest_finish']
+    guest=Polygon(model._expand(source,model._find(source,'SP-GUEST')['outline']))
+    parquet=model._find(source,'FIN-GUEST-PARQUET');tile=model._find(source,'FIN-GUEST-TILE')
+    def wearing(obj):
+        """🧱 Inspect material-owned wearing cells independently from their bedding layers."""
+        return unary_union([Polygon(p['outline']) for p in obj['geometry']['parts'] if p['role']=='wearing'])
+    a,b=wearing(parquet),wearing(tile)
+    assert a.intersection(b).area<1e-8
+    cuts=[Polygon(model.part_footprint(p)) for obj in source['elements'] if obj['class']=='IfcColumn' for p in model.column_geometry(source,obj)['parts'] if p['z0']<3.17 and p['z1']>3.14]
+    slab=model._slab_geometry(source,model._find(source,'SL-1'))
+    support=unary_union([Polygon(r) for p in slab['full_parts'] for r in model.part_regions(p,p['z1'])])
+    expected=guest.intersection(support).difference(unary_union(cuts))
+    zone=box(*case['washing_bounds'])
+    assert b.intersection(guest).symmetric_difference(expected.intersection(zone)).area<1e-8
+    assert a.intersection(guest).symmetric_difference(expected.difference(zone)).area<1e-8
+    assert a.union(b).intersection(guest).symmetric_difference(expected).area<1e-8
+    assert a.covers(Point(case['sleeping_probe'])) and b.covers(Point(case['washing_probe']))
+    assert parquet['material']=='MAT-PARQUET' and tile['material']=='MAT-GRES-OCHRE'
+    wardrobe=model._find(source,case['wardrobe'])
+    cabinet=unary_union([Polygon(p['outline']) for p in wardrobe['geometry']['parts']])
+    assert b.intersection(cabinet).area<1e-8
+    assert b.bounds[0]>cabinet.bounds[2]
 
 
 def test_garden_paving_and_grass_exactly_cover_the_real_floor():
@@ -62,31 +73,33 @@ def test_garden_paving_and_grass_exactly_cover_the_real_floor():
     geometry = model.building_geometry()
     terrace = Polygon(next(s for s in geometry["spaces"] if s["tag"] == "SP-TERRACE")["outline"])
     slab = next(s for s in geometry["slabs"] if s["tag"] == "SL-1")
-    floor = terrace.difference(unary_union([Polygon(v) for v in slab["voids"]]))
+    support=unary_union([Polygon(p["outline"],p.get("holes",[])) for p in slab["full_parts"]])
+    columns=unary_union([Polygon(model.part_footprint(p)) for c in geometry["pilotis"] for p in c["parts"] if p["z0"]<3.17 and p["z1"]>3.14])
+    floor = terrace.intersection(support).difference(unary_union([Polygon(v) for v in slab["voids"]]+[columns]))
     paving = next(e for e in geometry["details"] if e["tag"] == "FIN-TERRACE-PAVING")
     grass = next(e for e in geometry["details"] if e["tag"] == "FIN-TERRACE-GRASS")
     a = unary_union([Polygon(p["outline"]) for p in paving["parts"]])
     b = unary_union([Polygon(p["outline"]) for p in grass["parts"]])
     assert a.intersection(b).area < 1e-8
-    assert a.union(b).symmetric_difference(floor).area < 1e-8
+    assert a.union(b).symmetric_difference(floor).area < 1e-8,(a.union(b).area,floor.area,a.union(b).difference(floor).area,floor.difference(a.union(b)).area)
     assert a.area > b.area > 0
     assert math.isclose(a.area+b.area,floor.area,abs_tol=1e-8)
 
 
-def test_finish_solids_are_nominal_slices_below_the_floor_datum():
-    """📏 Keep nominal finish representations clear of door thresholds and excluded from structural material."""
+def test_finish_solids_are_physical_architectural_layers_below_finished_datums():
+    """📏 Keep actual architectural wearing assemblies below finished datums and outside structural ownership."""
     source = model.load_model()
     levels = {s["id"]: s["elevation"]["value"] for s in source["storeys"]}
     structural = next(m for m in source["models"] if m["id"] == "structure")["element_tags"]
-    finishes = [e for e in source["elements"] if e["tag"].startswith("FIN-")]
+    finishes = [e for e in source["elements"] if e["class"]=="IfcCovering" and e.get("predefined_type")=="FLOORING"]
     assert len(finishes) >= 4
     for finish in finishes:
-        pset = finish["psets"]["Pset_TeachingRepresentation"]
-        assert pset["NominalSurfaceRepresentation"]["value"] is True
-        assert pset["IncludedInStructuralMaterial"]["value"] is False
         assert finish["tag"] not in structural
         assert finish["geometry"]["base_level"] == finish["storey"]
-        assert all(p["z0"] < p["z1"] == 0 for p in finish["geometry"]["parts"])
+        assert finish["class"]=="IfcCovering" and finish["predefined_type"]=="FLOORING"
+        assert finish["metadata"]["domains"]==["architecture"] and "system" not in finish
+        assert all(p["z0"]<p["z1"]<=0 for p in finish["geometry"]["parts"])
+        assert max(p["z1"] for p in finish["geometry"]["parts"] if p["role"]=="wearing")==0
 
 
 def test_kitchen_patio_is_a_real_open_air_room_and_roof_void():
@@ -98,7 +111,14 @@ def test_kitchen_patio_is_a_real_open_air_room_and_roof_void():
     roof = next(s for s in geometry["slabs"] if s["tag"] == "SL-R")
     void = roof["voids"][roof["void_tags"].index("V-KITCHEN-PATIO")]
     assert Polygon(void).equals(Polygon(patio["outline"]))
-    crossing = LineString([(2.15,5.6),(2.15,6.8)]).buffer(.4, cap_style=2)
+    source=model.load_model()
+    opening=model._find(source,model._find(source,"D-KITCHEN-PATIO")["geometry"]["opening"])
+    host=model._find(source,opening["geometry"]["wall"])
+    start,end=host["geometry"]["path"]
+    length=math.dist(start,end);station=sum(opening["attributes"][k]["value"] for k in ("start","end"))/2
+    center=[start[i]+station*(end[i]-start[i])/length for i in (0,1)]
+    normal=[-(end[1]-start[1])/length,(end[0]-start[0])/length]
+    crossing = LineString([[center[i]+d*normal[i] for i in (0,1)] for d in (-.6,.6)]).buffer(.4, cap_style=2)
     assert crossing.intersection(remodel._physical_wall_polygons(geometry, "first")).area < 1e-8
     assert any(o["fill_tag"] == "D-KITCHEN-PATIO" for w in geometry["walls"] for o in w["openings"])
 
@@ -107,18 +127,31 @@ def test_office_access_is_clear_between_hall_and_kitchen():
     """🍳 Verify a full-width route through the actual pantry/office doors and past fitted cupboards."""
     from shapely.geometry import LineString, Polygon
     geometry = model.building_geometry()
-    route = LineString([(5.3,7.25),(4.15,7.25),(4.15,5.5),(3.925,5.2),(3.925,4.1)]).buffer(.4, cap_style=2)
+    source=model.load_model()
+    case=json.loads(Path(__file__).with_suffix(".json").read_text(encoding="utf8"))["pantry_access"]
+    route = LineString(case["path"]).buffer(case["body_width"]/2, cap_style=2)
+    for tag in case["doors"]:
+        filling=model.filling_geometry(tag,source)
+        assert filling["clear_width"]>=case["body_width"]
+        assert all(route.intersection(Polygon(model.part_footprint(p))).area<1e-8 for p in filling["parts"] if p["role"]=="frame" and p["z0"]<5.27 and p["z1"]>3.22)
     assert route.intersection(remodel._physical_wall_polygons(geometry, "first")).area < 1e-8
     cupboard = next(e for e in geometry["furnishings"] if e["tag"] == "FIX-PANTRY-STORAGE")
     assert all(route.intersection(Polygon(p["outline"])).area < 1e-8 for p in cupboard["parts"])
     rooms = {s["tag"]: Polygon(s["outline"]) for s in geometry["spaces"]}
-    assert all(rooms["SP-PANTRY"].covers(Polygon(p["outline"])) for p in cupboard["parts"])
+    assert all(Polygon(p["outline"]).difference(rooms["SP-PANTRY"]).area<1e-8 for p in cupboard["parts"])
+    from shapely.ops import unary_union
+    portals=[Polygon(p["outline"]) for tag in case["doors"] for p in model.opening_geometry(model._find(source,tag)["geometry"]["opening"],source)["parts"]]
+    permitted=unary_union([rooms[tag] for tag in case["rooms"]]+portals)
+    assert route.difference(permitted).area<1e-8
 
 
 def test_kitchen_patio_has_empty_facade_frame_instead_of_false_glass():
-    """🪟 Distinguish the open-air patio view frame from neighbouring real ribbon glazing."""
-    geometry = model.building_geometry()
-    wall = next(w for w in geometry["walls"] if w["tag"] == "W-W")
-    frame = next(o for o in wall["openings"] if o["tag"] == "OP-KITCHEN-PATIO-FRAME")
-    assert frame["fill_class"] is None
-    assert len([o for o in wall["openings"] if o["fill_class"] == "IfcWindow"]) == 2
+    """🪟 Preserve the empty patio frame and every source-supported independent ribbon segment."""
+    source=model.load_model();geometry=model.building_geometry(source)
+    case=json.loads(Path(__file__).with_suffix('.json').read_text(encoding='utf8'))['west_facade']
+    wall=next(w for w in geometry['walls'] if w['tag']==case['wall'])
+    frame=next(o for o in wall['openings'] if o['tag']==case['empty'])
+    assert frame['fill_class'] is None and frame['fill_tag'] is None
+    assert {o['fill_tag'] for o in wall['openings'] if o['fill_class']=='IfcWindow'}==set(case['windows'])
+    assert not any(e['class'] in ('IfcWindow','IfcDoor') and e['geometry']['opening']==case['empty'] for e in source['elements'])
+ 

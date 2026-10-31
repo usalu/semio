@@ -57,11 +57,35 @@
     "UnpublishedBirthCase": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["name", "fault", "retained"],
+      "required": [
+        "name",
+        "fault",
+        "retained"
+      ],
       "properties": {
-        "name": {"type": "string", "minLength": 1, "maxLength": 64},
-        "fault": {"enum": ["none", "associated", "mount-payload", "foreign-entry", "collision", "changed-backing", "changed-parent", "writer", "child", "swap-pending", "swap-pending-attached"]},
-        "retained": {"type": "boolean"}
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "fault": {
+          "enum": [
+            "none",
+            "associated",
+            "mount-payload",
+            "foreign-entry",
+            "collision",
+            "changed-backing",
+            "changed-parent",
+            "writer",
+            "child",
+            "swap-pending",
+            "swap-pending-attached"
+          ]
+        },
+        "retained": {
+          "type": "boolean"
+        }
       }
     },
     "ImageReceipt": {
@@ -451,6 +475,21 @@
         "mode": 448,
         "fileMode": 384,
         "maximumEntries": 2
+      }
+    },
+    "IncompleteBirthRetention": {
+      "const": {
+        "version": 1,
+        "entries": [
+          "m"
+        ],
+        "backing": "absent",
+        "receipt": "absent",
+        "association": "inactive",
+        "root": "physical-same-device",
+        "payload": "opaque-preserve",
+        "effect": "atomic-same-parent-retention",
+        "authorityFromData": false
       }
     }
   }

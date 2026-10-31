@@ -1,0 +1,60 @@
+{
+  "type": "object",
+  "required": [
+    "plate_tag",
+    "slab",
+    "cover",
+    "plate_top",
+    "finished_top",
+    "cabinet",
+    "board_strip",
+    "floor_tags",
+    "minimum_supported_fraction",
+    "qualification"
+  ],
+  "properties": {
+    "plate_tag": {
+      "type": "string"
+    },
+    "slab": {
+      "type": "string"
+    },
+    "cover": {
+      "type": "string"
+    },
+    "plate_top": {
+      "const": -0.13
+    },
+    "finished_top": {
+      "const": 0
+    },
+    "cabinet": {
+      "type": "string"
+    },
+    "board_strip": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "floor_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "minimum_supported_fraction": {
+      "type": "number"
+    },
+    "qualification": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

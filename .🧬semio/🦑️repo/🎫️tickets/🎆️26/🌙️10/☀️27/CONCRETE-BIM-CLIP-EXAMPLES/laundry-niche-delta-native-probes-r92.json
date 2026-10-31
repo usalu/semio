@@ -1,0 +1,241 @@
+{
+  "probes": {
+    "FIX-SERVANT-STORAGE-1-LONG": [
+      {
+        "name": "hollow cupboard",
+        "xyz": [
+          5.4,
+          15.7,
+          0.4
+        ],
+        "occupied": false
+      }
+    ],
+    "FIX-SERVANT-BASIN-CABINET-1": [
+      {
+        "name": "hollow cupboard",
+        "xyz": [
+          3.55,
+          15.86,
+          0.25
+        ],
+        "occupied": false
+      }
+    ],
+    "FIX-CHAUFFEUR-BASIN": [
+      {
+        "name": "actual below-rim cavity",
+        "xyz": [
+          15.65,
+          18.852941176470587,
+          0.8
+        ],
+        "occupied": false
+      },
+      {
+        "name": "actual through-floor drain",
+        "xyz": [
+          15.65,
+          18.852941176470587,
+          0.7
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive ceramic floor",
+        "xyz": [
+          15.73,
+          18.85994117647059,
+          0.7
+        ],
+        "occupied": true
+      },
+      {
+        "name": "empty deck bore 0",
+        "xyz": [
+          15.868,
+          18.77294117647059,
+          0.94
+        ],
+        "occupied": false
+      },
+      {
+        "name": "empty deck bore 1",
+        "xyz": [
+          15.868,
+          18.932941176470585,
+          0.94
+        ],
+        "occupied": false
+      }
+    ],
+    "FIX-LAUNDRY": [
+      {
+        "name": "trough cavity 0",
+        "xyz": [
+          3.52,
+          18.866911764705883,
+          0.85
+        ],
+        "occupied": false
+      },
+      {
+        "name": "through floor drain 0",
+        "xyz": [
+          3.514411764705882,
+          18.866911764705883,
+          0.69
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive floor 0",
+        "xyz": [
+          3.59,
+          18.873911764705884,
+          0.69
+        ],
+        "occupied": true
+      },
+      {
+        "name": "empty deck bore 0",
+        "xyz": [
+          3.275,
+          18.866911764705883,
+          0.94
+        ],
+        "occupied": false
+      },
+      {
+        "name": "trough cavity 1",
+        "xyz": [
+          3.52,
+          19.816911764705885,
+          0.85
+        ],
+        "occupied": false
+      },
+      {
+        "name": "through floor drain 1",
+        "xyz": [
+          3.514411764705882,
+          19.816911764705882,
+          0.69
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive floor 1",
+        "xyz": [
+          3.59,
+          19.823911764705887,
+          0.69
+        ],
+        "occupied": true
+      },
+      {
+        "name": "empty deck bore 1",
+        "xyz": [
+          3.275,
+          19.816911764705882,
+          0.94
+        ],
+        "occupied": false
+      }
+    ],
+    "TAP-LAUNDRY-1": [
+      {
+        "name": "empty stem bore",
+        "xyz": [
+          3.275,
+          18.866911764705883,
+          1.02
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall",
+        "xyz": [
+          3.2862930487038486,
+          18.869083641998113,
+          1.02
+        ],
+        "occupied": true
+      },
+      {
+        "name": "empty horizontal spout",
+        "xyz": [
+          3.375,
+          18.866911764705883,
+          1.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "empty outlet bore",
+        "xyz": [
+          3.475,
+          18.866911764705883,
+          1.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive horizontal spout wall",
+        "xyz": [
+          3.375,
+          18.87820481340973,
+          1.1471718772922297
+        ],
+        "occupied": true
+      }
+    ],
+    "TAP-LAUNDRY-2": [
+      {
+        "name": "empty stem bore",
+        "xyz": [
+          3.275,
+          19.816911764705882,
+          1.02
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall",
+        "xyz": [
+          3.2862930487038486,
+          19.819083641998112,
+          1.02
+        ],
+        "occupied": true
+      },
+      {
+        "name": "empty horizontal spout",
+        "xyz": [
+          3.375,
+          19.816911764705885,
+          1.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "empty outlet bore",
+        "xyz": [
+          3.475,
+          19.816911764705882,
+          1.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive horizontal spout wall",
+        "xyz": [
+          3.375,
+          19.82820481340973,
+          1.1471718772922297
+        ],
+        "occupied": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+# Native Coal and Footing Ownership Proof
+
+Sparse capture completed6.765s on stable source d776a5d4b6c2. The original five authored footing stocks and seven hollow chute parts are unchanged; first-party owned footing body resolves eight occupied native items. Independent web-ifc proof passed4.807s:both products inEnglish/German,fourfragments/thirtyphysicalitems,and16 occupied controls. The former joint is empty footing and occupied chute; the central aircore is empty both; adjacent footing and deep remaining footing are occupied while chute is empty. Each native product also passes entity/GUID/name/type,9inheritedattributes,actualmaterialrelationownership,physicalitemcount,placedXYZand aggregatevolume againstindependentSciPy convex-cellvolume.
+
+Reports:generated/native-r92/coal-samples.json and coal-native.json. Sparse IFC excerpts emit the engine known empty-IFCPROJECT scaling diagnostic; all assertions pass. This proof is bound to captured source/API/codec and does not replace the final source-frozen fullcohort.

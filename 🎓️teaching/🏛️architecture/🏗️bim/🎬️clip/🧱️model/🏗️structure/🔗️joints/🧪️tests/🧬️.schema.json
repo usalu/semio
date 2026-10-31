@@ -1,0 +1,366 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "relationship",
+    "comparison",
+    "invalid",
+    "cross_material_behavior",
+    "section_control",
+    "column_controls",
+    "receiving_interface",
+    "native_stair_joint",
+    "ramp_representation",
+    "union_arrangement_control",
+    "slab_interface_control",
+    "ramp_reference_control"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "donor_class",
+          "donor",
+          "owner_class",
+          "owner",
+          "union_volume",
+          "common_volume"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "donor_class": {
+            "enum": [
+              "IfcBeam",
+              "IfcFooting",
+              "IfcBuildingElementProxy",
+              "IfcRailing"
+            ]
+          },
+          "owner_class": {
+            "enum": [
+              "IfcSlab",
+              "IfcBeam",
+              "IfcFooting",
+              "IfcBuildingElementProxy"
+            ]
+          },
+          "donor": {
+            "type": "object"
+          },
+          "owner": {
+            "type": "object"
+          },
+          "embedded": {
+            "type": "boolean"
+          },
+          "union_volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "common_volume": {
+            "type": "number",
+            "minimum": 0
+          },
+          "implicit_material": {
+            "type": "boolean"
+          },
+          "second_owner": {
+            "type": "object"
+          },
+          "second_owner_first_joint": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "relationship": {
+      "const": "monolithic_same_material"
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "volume",
+        "coordinate"
+      ],
+      "properties": {
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "coordinate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "invalid": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "string"
+      }
+    },
+    "cross_material_behavior": {
+      "const": "retain_and_report"
+    },
+    "section_control": {
+      "type": "object",
+      "required": [
+        "outline",
+        "z0",
+        "z1",
+        "height",
+        "positive"
+      ],
+      "properties": {
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "z0": {
+          "type": "number"
+        },
+        "z1": {
+          "type": "number"
+        },
+        "height": {
+          "type": "number"
+        },
+        "positive": {
+          "const": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "column_controls": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "donor",
+          "column"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "donor": {
+            "type": "object"
+          },
+          "column": {
+            "type": "object"
+          },
+          "additional_void": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "receiving_interface": {
+      "type": "object",
+      "required": [
+        "donor_outline",
+        "full_volume",
+        "owned_volume",
+        "shared_volume",
+        "owner_material"
+      ],
+      "properties": {
+        "donor_outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "full_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "owned_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "shared_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "owner_material": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "native_stair_joint": {
+      "type": "object",
+      "required": [
+        "structural",
+        "wearing",
+        "full_volume",
+        "owned_volume",
+        "structural_owned_volume"
+      ],
+      "properties": {
+        "structural": {
+          "type": "object"
+        },
+        "wearing": {
+          "type": "object"
+        },
+        "full_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "owned_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "structural_owned_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "ramp_representation": {
+      "type": "object",
+      "required": [
+        "full",
+        "owned",
+        "child",
+        "flight_volume",
+        "assembly_volume"
+      ],
+      "properties": {
+        "full": {
+          "type": "object"
+        },
+        "owned": {
+          "type": "object"
+        },
+        "child": {
+          "type": "object"
+        },
+        "flight_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "assembly_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "union_arrangement_control": {
+      "type": "object",
+      "required": [
+        "parts",
+        "union_volume"
+      ],
+      "properties": {
+        "parts": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object"
+          }
+        },
+        "union_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "slab_interface_control": {
+      "type": "object",
+      "required": [
+        "hole",
+        "independent_footing",
+        "occupied_volume"
+      ],
+      "properties": {
+        "hole": {
+          "type": "array",
+          "minItems": 3
+        },
+        "independent_footing": {
+          "type": "array",
+          "minItems": 3
+        },
+        "occupied_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "ramp_reference_control": {
+      "type": "object",
+      "required": [
+        "path",
+        "offsets",
+        "from_level",
+        "to_level",
+        "portion",
+        "finish",
+        "depth",
+        "volume"
+      ],
+      "properties": {
+        "path": {
+          "type": "array"
+        },
+        "offsets": {
+          "type": "array"
+        },
+        "from_level": {
+          "type": "number"
+        },
+        "to_level": {
+          "type": "number"
+        },
+        "portion": {
+          "type": "array"
+        },
+        "finish": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

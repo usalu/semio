@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "collector",
+    "opening",
+    "slab",
+    "covering",
+    "axis",
+    "installation_fit",
+    "comparison",
+    "previous",
+    "original_axis"
+  ],
+  "properties": {
+    "collector": {
+      "type": "string"
+    },
+    "opening": {
+      "type": "string"
+    },
+    "slab": {
+      "type": "string"
+    },
+    "covering": {
+      "type": "string"
+    },
+    "axis": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "installation_fit": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume",
+        "coordinate"
+      ],
+      "properties": {
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "coordinate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "previous": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sleeve",
+        "slab",
+        "volume",
+        "witness"
+      ],
+      "properties": {
+        "sleeve": {
+          "type": "object",
+          "required": [
+            "outline",
+            "z0",
+            "z1"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "outline": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "z0": {
+              "type": "number"
+            },
+            "z1": {
+              "type": "number"
+            }
+          }
+        },
+        "slab": {
+          "type": "object",
+          "required": [
+            "outline",
+            "z0",
+            "z1"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "outline": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            },
+            "z0": {
+              "type": "number"
+            },
+            "z1": {
+              "type": "number"
+            }
+          }
+        },
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "witness": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "original_axis": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

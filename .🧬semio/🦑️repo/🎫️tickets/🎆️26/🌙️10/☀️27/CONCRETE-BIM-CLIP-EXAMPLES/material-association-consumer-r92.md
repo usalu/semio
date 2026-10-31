@@ -1,0 +1,5 @@
+# Material Association Consumer Integration
+
+The fresh16-case carpentry suite passes15 physical/source cases, including new salon real track/sash/rail/chain/crank/canopy occupied-material disjointness. One existing global source assertion in 🪟️fillings.py:68 requires every IfcRelAssociatesMaterial target to equal the occurrence nominal material. Current explicit composites and typed fillings have multiple actual constituents, so the assertion reaches reconstructed counters/lights/parents/storage before any salon-specific failure.
+
+Exact examples: FIX-KITCHEN-SINK-COUNTER nominalMAT-TILE is related toMAT-RC andMAT-METAL (real constituent parts); WIN-KITCHEN-PATIO-LOW-X has no nominal material and is related toMAT-GLASS andMAT-WOOD (typed frame/panel ownership); FIX-CHAISE nominalMAT-RC also has authored MAT-MOSAIC-BLUE/BLACK parts. Some unrelated wall relations really are stale: W-G-ROOM-13/16 nominalLS-PARTITION-08 remain associated toLS-PARTITION-15. This needs source-semantic cleanup or a constituent-aware global contract, preserving native exported material sets. Do not simply suppress all source material-association checks.

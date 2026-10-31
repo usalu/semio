@@ -1,0 +1,132 @@
+{
+  "cases": [
+    {
+      "id": "interior-first-arrival",
+      "kind": "ramp_finish",
+      "owner": "ground",
+      "level": "first",
+      "band": [
+        3.17,
+        6.6
+      ],
+      "z": [
+        3.165,
+        3.17
+      ],
+      "role": "wearing",
+      "visible": true
+    },
+    {
+      "id": "exterior-roof-arrival",
+      "kind": "ramp_finish",
+      "owner": "first",
+      "level": "roof",
+      "band": [
+        6.6,
+        9.6
+      ],
+      "z": [
+        6.56,
+        6.6
+      ],
+      "role": "wearing",
+      "visible": true
+    },
+    {
+      "id": "low-flight-hidden-upstairs",
+      "kind": "ramp_finish",
+      "owner": "ground",
+      "level": "first",
+      "band": [
+        3.17,
+        6.6
+      ],
+      "z": [
+        0.7,
+        0.9
+      ],
+      "role": "wearing",
+      "visible": false
+    },
+    {
+      "id": "interior-on-ground",
+      "kind": "ramp_finish",
+      "owner": "ground",
+      "level": "ground",
+      "band": [
+        0,
+        3.17
+      ],
+      "z": [
+        0.7,
+        0.9
+      ],
+      "role": "wearing",
+      "visible": true
+    },
+    {
+      "id": "arriving-bedding-hidden",
+      "kind": "ramp_finish",
+      "owner": "ground",
+      "level": "first",
+      "band": [
+        3.17,
+        6.6
+      ],
+      "z": [
+        3.162,
+        3.17
+      ],
+      "role": "bedding",
+      "visible": false
+    },
+    {
+      "id": "ordinary-floor-hidden-upstairs",
+      "kind": "flooring",
+      "owner": "ground",
+      "level": "first",
+      "band": [
+        3.17,
+        6.6
+      ],
+      "z": [
+        -0.04,
+        0
+      ],
+      "role": "wearing",
+      "visible": false
+    },
+    {
+      "id": "current-exterior-gravel",
+      "kind": "flooring",
+      "owner": "ground",
+      "level": "ground",
+      "band": [
+        0,
+        3.17
+      ],
+      "z": [
+        -0.19,
+        -0.15
+      ],
+      "role": "wearing",
+      "visible": true
+    },
+    {
+      "id": "upper-flight-hidden-downstairs",
+      "kind": "ramp_finish",
+      "owner": "first",
+      "level": "ground",
+      "band": [
+        0,
+        3.17
+      ],
+      "z": [
+        4,
+        4.2
+      ],
+      "role": "wearing",
+      "visible": false
+    }
+  ]
+}

@@ -1,0 +1,347 @@
+{
+  "source": "domus",
+  "basis": "assumed",
+  "contact_tolerance": 0.000001,
+  "minimum_volume": 1e-12,
+  "layouts": [
+    "Slash",
+    "Backslash",
+    "J",
+    "L",
+    "P",
+    "S"
+  ],
+  "controls": [
+    {},
+    {
+      "width": 3.3,
+      "length": 5,
+      "height": 3.1,
+      "interior_width": 2.3,
+      "interior_length": 3.8,
+      "interior_height": 2.1
+    }
+  ],
+  "links": [
+    {
+      "mount": "fixture-mount-tv",
+      "contacts": [
+        "tv-screen",
+        "tv-bezel"
+      ]
+    },
+    {
+      "mount": "fixture-mount-audio",
+      "contacts": [
+        "audio-console",
+        "media-wall"
+      ]
+    },
+    {
+      "mount": "fixture-mount-speaker-0-driver",
+      "contacts": [
+        "speaker-cone-0",
+        "media-wall"
+      ]
+    },
+    {
+      "mount": "fixture-mount-speaker-0-grille",
+      "contacts": [
+        "speaker-cone-0",
+        "speaker-grille-0--5",
+        "speaker-grille-0--4",
+        "speaker-grille-0--3",
+        "speaker-grille-0--2",
+        "speaker-grille-0--1",
+        "speaker-grille-0-0",
+        "speaker-grille-0-1",
+        "speaker-grille-0-2",
+        "speaker-grille-0-3",
+        "speaker-grille-0-4",
+        "speaker-grille-0-5"
+      ]
+    },
+    {
+      "mount": "fixture-mount-shelf-0-0",
+      "contacts": [
+        "shelf-bottle-rail-0",
+        "media-shelf-0"
+      ]
+    },
+    {
+      "mount": "fixture-mount-shelf-0-1",
+      "contacts": [
+        "shelf-bottle-rail-0",
+        "media-shelf-0"
+      ]
+    },
+    {
+      "mount": "fixture-mount-speaker-1-driver",
+      "contacts": [
+        "speaker-cone-1",
+        "media-wall"
+      ]
+    },
+    {
+      "mount": "fixture-mount-speaker-1-grille",
+      "contacts": [
+        "speaker-cone-1",
+        "speaker-grille-1--5",
+        "speaker-grille-1--4",
+        "speaker-grille-1--3",
+        "speaker-grille-1--2",
+        "speaker-grille-1--1",
+        "speaker-grille-1-0",
+        "speaker-grille-1-1",
+        "speaker-grille-1-2",
+        "speaker-grille-1-3",
+        "speaker-grille-1-4",
+        "speaker-grille-1-5"
+      ]
+    },
+    {
+      "mount": "fixture-mount-shelf-1-0",
+      "contacts": [
+        "shelf-bottle-rail-1",
+        "media-shelf-1"
+      ]
+    },
+    {
+      "mount": "fixture-mount-shelf-1-1",
+      "contacts": [
+        "shelf-bottle-rail-1",
+        "media-shelf-1"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tub-0",
+      "contacts": [
+        "tub-bowl",
+        "wetroom-floor"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tub-1",
+      "contacts": [
+        "tub-bowl",
+        "wetroom-floor"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tub-2",
+      "contacts": [
+        "tub-bowl",
+        "wetroom-floor"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tub-3",
+      "contacts": [
+        "tub-bowl",
+        "wetroom-floor"
+      ]
+    },
+    {
+      "mount": "fixture-mount-basin-arm-0",
+      "contacts": [
+        "washbasin",
+        "fixture-mount-basin-wall-0"
+      ]
+    },
+    {
+      "mount": "fixture-mount-basin-wall-0",
+      "contacts": [
+        "wetroom-right"
+      ]
+    },
+    {
+      "mount": "fixture-mount-cistern-0",
+      "contacts": [
+        "toilet-cistern",
+        "wetroom-left"
+      ]
+    },
+    {
+      "mount": "fixture-mount-riser-0",
+      "contacts": [
+        "shower-riser",
+        "wetroom-back"
+      ]
+    },
+    {
+      "mount": "fixture-mount-wetroom-handle-0",
+      "contacts": [
+        "wetroom-handle",
+        "wetroom-curved-door"
+      ]
+    },
+    {
+      "mount": "fixture-mount-basin-arm-1",
+      "contacts": [
+        "washbasin",
+        "fixture-mount-basin-wall-1"
+      ]
+    },
+    {
+      "mount": "fixture-mount-basin-wall-1",
+      "contacts": [
+        "wetroom-right"
+      ]
+    },
+    {
+      "mount": "fixture-mount-cistern-1",
+      "contacts": [
+        "toilet-cistern",
+        "wetroom-left"
+      ]
+    },
+    {
+      "mount": "fixture-mount-riser-1",
+      "contacts": [
+        "shower-riser",
+        "wetroom-back"
+      ]
+    },
+    {
+      "mount": "fixture-mount-wetroom-handle-1",
+      "contacts": [
+        "wetroom-handle",
+        "wetroom-curved-door"
+      ]
+    },
+    {
+      "mount": "fixture-mount-seat-0",
+      "contacts": [
+        "toilet-seat",
+        "toilet-pan"
+      ]
+    },
+    {
+      "mount": "fixture-mount-seat-1",
+      "contacts": [
+        "toilet-seat",
+        "toilet-pan"
+      ]
+    },
+    {
+      "mount": "fixture-mount-seat-2",
+      "contacts": [
+        "toilet-seat",
+        "toilet-pan"
+      ]
+    },
+    {
+      "mount": "fixture-mount-seat-3",
+      "contacts": [
+        "toilet-seat",
+        "toilet-pan"
+      ]
+    },
+    {
+      "mount": "fixture-mount-flush",
+      "contacts": [
+        "toilet-flush",
+        "toilet-cistern"
+      ]
+    },
+    {
+      "mount": "fixture-mount-basin-outlet",
+      "contacts": [
+        "basin-trap",
+        "wetroom-back"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tub-outlet",
+      "contacts": [
+        "tub-waste",
+        "wetroom-back"
+      ]
+    },
+    {
+      "mount": "fixture-mount-hose-outlet",
+      "contacts": [
+        "shower-hose",
+        "wetroom-back"
+      ]
+    },
+    {
+      "mount": "fixture-mount-handset",
+      "contacts": [
+        "shower-handset-grip",
+        "wetroom-back"
+      ]
+    },
+    {
+      "mount": "fixture-mount-phone-head",
+      "contacts": [
+        "telephone-cord",
+        "telephone-earpiece-1"
+      ]
+    },
+    {
+      "mount": "fixture-mount-phone-base",
+      "contacts": [
+        "telephone-cord",
+        "telephone-base"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tap-basin-mixer",
+      "contacts": [
+        "tap-basin-spout",
+        "tap-basin-valve--1",
+        "tap-basin-valve-1",
+        "washbasin"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tap-tub-mixer",
+      "contacts": [
+        "tap-tub-spout",
+        "tap-tub-valve--1",
+        "tap-tub-valve-1"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tap-tub-leg-0",
+      "contacts": [
+        "fixture-mount-tap-tub-mixer",
+        "tub-bowl"
+      ]
+    },
+    {
+      "mount": "fixture-mount-tap-tub-leg-1",
+      "contacts": [
+        "fixture-mount-tap-tub-mixer",
+        "tub-bowl"
+      ]
+    }
+  ],
+  "corner_probes": [
+    {
+      "part": "wetroom-floor",
+      "point": [
+        -1.119,
+        0.5,
+        0.201
+      ]
+    },
+    {
+      "part": "bed-front-rail",
+      "point": [
+        -1.119,
+        2.82,
+        0.201
+      ]
+    },
+    {
+      "part": "media-wall",
+      "point": [
+        1.1099,
+        1.5,
+        0.2001
+      ]
+    }
+  ]
+}

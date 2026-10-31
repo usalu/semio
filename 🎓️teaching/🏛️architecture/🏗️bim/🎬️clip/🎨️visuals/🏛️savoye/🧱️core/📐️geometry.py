@@ -3,12 +3,21 @@
 from __future__ import annotations
 
 import importlib
+import copy
+import hashlib
+import json
+from pathlib import Path
 
 import numpy as np
 
 _model = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
+face_appearance = _model._surface_finishes().face_appearance
+appearance_colour = _model._surface_finishes().appearance_colour
 DISCIPLINES = ("architecture", "structure", "services")
-_cache: dict = {}
+_sources: dict = {}
+_snapshots: dict = {}
+_members: dict = {}
+_default_source = None
 
 
 def part_faces(part):
@@ -42,20 +51,91 @@ def part_faces(part):
 def surface_role(data: dict, part: dict | None = None) -> str:
     """🎨 Resolve authored material semantics consistently across drawing providers."""
     if part and part.get("material"):
-        return {"MAT-GLASS":"glass","MAT-METAL":"metal","MAT-WOOD":"wood","MAT-TILE":"tile"}.get(part["material"],"concrete")
+        return {"MAT-RAMP-RESILIENT":"resilient_gray","MAT-GRAVEL":"gravel","MAT-SAND":"sand","MAT-GRES-BLACK":"gres_black","MAT-PLANTING-SUBSTRATE":"substrate","MAT-PAVING-UNRESOLVED":"paving","MAT-GRES-UNRESOLVED":"tile","MAT-GRES-WHITE":"gres_white","MAT-GRES-OCHRE":"gres_ochre","MAT-BITUMEN":"bitumen","MAT-OAK":"wood","MAT-CAST-IRON":"cast_iron","MAT-PAINTED-WOOD":"painted_wood","MAT-PARQUET":"wood","MAT-PAVING":"paving","MAT-TURF":"garden","MAT-GLASS":"glass","MAT-METAL":"metal","MAT-WOOD":"wood","MAT-TILE":"tile","MAT-MOSAIC-BLUE":"mosaic_blue","MAT-MOSAIC-BLACK":"mosaic_black"}.get(part["material"],"concrete")
     return {"rooflight": "glass", "parquet": "wood", "tile": "tile", "bath": "tile", "chaise": "tile", "counter": "tile",
             "paving": "paving", "grass_joint": "garden", "tap": "metal", "helical_handrail": "metal", "pivoting-hoist-jib": "metal"}.get(data["kind"], "concrete")
 
 
+class _ReadOnlyDict(dict):
+    """🧊 Shared JSON mapping whose owned copies remain ordinary mutable JSON."""
+    def _deny(self,*args,**kwargs):
+        raise TypeError("Visual snapshots are read-only; deepcopy for owned edits")
+    __setitem__ = __delitem__ = clear = pop = popitem = setdefault = update = __ior__ = __setattr__ = _deny
+
+    def __deepcopy__(self,memo):
+        return {copy.deepcopy(k,memo):copy.deepcopy(v,memo) for k,v in self.items()}
+
+
+class _ReadOnlyList(list):
+    """🧊 Shared JSON sequence with explicit owned-copy semantics."""
+    def _deny(self,*args,**kwargs):
+        raise TypeError("Visual snapshots are read-only; deepcopy for owned edits")
+    __setitem__ = __delitem__ = append = clear = extend = insert = pop = remove = reverse = sort = __iadd__ = __imul__ = _deny
+
+    def __deepcopy__(self,memo):
+        return [copy.deepcopy(v,memo) for v in self]
+
+
+def _freeze(value):
+    """❄️ Freeze JSON containers while sharing immutable scalar values."""
+    if isinstance(value,dict):
+        return _ReadOnlyDict((k,_freeze(v)) for k,v in value.items())
+    if isinstance(value,list):
+        return _ReadOnlyList(_freeze(v) for v in value)
+    return value
+
+
+def _retain(cache,key,value):
+    """📦 Keep at most two source revisions per visual cache."""
+    cache[key] = value
+    while len(cache)>2:
+        cache.pop(next(iter(cache)))
+    return value
+
+
+def _source_revision():
+    """📄 Detect source publication without reparsing the model for each actor."""
+    stat = Path(_model.__file__).with_name("🔣️.json").stat()
+    return stat.st_mtime_ns,stat.st_size,_model._source
+
+
+def source_model(model=None):
+    """🗂️ Resolve a content-bound immutable source snapshot without constructing geometry."""
+    global _default_source
+    if isinstance(model,_ReadOnlyDict) and hasattr(model,"_source_digest"):
+        return model
+    if model is None:
+        revision = _source_revision()
+        if _default_source is not None and _default_source[0]==revision:
+            hit = _sources.get(_default_source[1])
+            if hit is not None:
+                return hit
+        model = json.loads(_model._source())
+    encoded = json.dumps(model,ensure_ascii=False,sort_keys=True,separators=(",",":"))
+    key = hashlib.sha256(encoded.encode("utf-8")).hexdigest()
+    source = _sources.get(key)
+    if source is None:
+        source = _freeze(model)
+        object.__setattr__(source,"_source_digest",key)
+        _retain(_sources,key,source)
+    if 'revision' in locals():
+        _default_source = revision,key
+    return source
+
+
+def geometry_context(model=None):
+    """🧭 Return one source snapshot and its matching immutable physical geometry."""
+    source = source_model(model)
+    key = source._source_digest,_model.building_geometry,tuple(_model._geometry_producers()),_freeze
+    result = _snapshots.get(key)
+    if result is None:
+        result = _retain(_snapshots,key,_freeze(_model.building_geometry(source)))
+    return source,result
+
+
 def geometry(model=None) -> dict:
-    """📐 ``building_geometry`` memoized per model object."""
-    key = id(model)
-    hit = _cache.get(key)
-    if hit is None or hit[0] is not model:
-        hit = _cache[key] = (model, _model.building_geometry(model) if model is not None else _model.building_geometry())
-        if len(_cache) > 16:
-            _cache.pop(next(iter(_cache)))
-    return hit[1]
+    """📐 Read physical geometry bound to source content and actual producer identities."""
+    return geometry_context(model)[1]
 
 
 def role(name: str, model=None) -> str:
@@ -64,20 +144,18 @@ def role(name: str, model=None) -> str:
 
 
 def membership(model=None) -> dict:
-    """🧩 GlobalId → set of partial models that contain it; empty when the model does not list element GlobalIds."""
-    key = ("members", id(model))
-    hit = _cache.get(key)
-    if hit is None or hit[0] is not model:
-        table: dict = {}
+    """🧩 Resolve read-only discipline membership from the same source snapshot."""
+    source = source_model(model)
+    key = source._source_digest,_model.partial_model
+    table = _members.get(key)
+    if table is None:
+        found = {}
         for name in DISCIPLINES:
-            try:
-                info = _model.partial_model(name, model) if model is not None else _model.partial_model(name)
-            except Exception:
-                continue
-            for guid in info.get("element_guids", ()):
-                table.setdefault(guid, set()).add(name)
-        hit = _cache[key] = (model, table)
-    return hit[1]
+            info = _model.partial_model(name,source)
+            for guid in info.get("element_guids",()):
+                found.setdefault(guid,set()).add(name)
+        table = _retain(_members,key,_ReadOnlyDict((k,frozenset(v)) for k,v in found.items()))
+    return table
 
 
 def wall_frame(wall: dict, g: dict):
@@ -87,3 +165,9 @@ def wall_frame(wall: dict, g: dict):
     along = (b - a) / length
     normal = np.array([-along[1], along[0]])
     return tuple(map(float, a - normal * wall["thickness"] / 2)), tuple(map(float, along)), tuple(map(float, normal)), length
+
+
+def service_surface_role(data: dict, part: dict) -> str:
+    """🛁 Keep explicitly authored decorative finishes on otherwise schematic service bodies."""
+    role = surface_role(data,part)
+    return role if role in ("resilient_gray","gravel","sand","mosaic_blue","mosaic_black","cast_iron","painted_wood","gres_white","gres_ochre","bitumen","gres_black","substrate") else "service"

@@ -72,7 +72,7 @@ def owned_parts(api,model: dict,obj: dict) -> list:
             elif item["class"]=="IfcColumn":
                 cutters+=api.column_geometry(model,item)["parts"]
             elif item["class"]=="IfcSlab":
-                cutters+=api._slab_geometry(model,item)["parts"]
+                cutters+=api._slab_geometry_entry(model,item)["parts"]
             elif item["class"]=="IfcBeam":
                 solid=api._solid_geometry(model,item)
                 cutters+=solid["parts"]+solid["shared_parts"]

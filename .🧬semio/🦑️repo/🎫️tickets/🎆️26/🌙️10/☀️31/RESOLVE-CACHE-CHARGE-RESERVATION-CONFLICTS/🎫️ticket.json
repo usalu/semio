@@ -1,0 +1,37 @@
+{
+  "title": "Resolve Cache Charge Reservation Conflicts",
+  "emoji": "🎟️",
+  "status": "closed",
+  "description": "Keep owner admission outside the receipt lease and flush the charge receipt directory through the portable native metadata sync.",
+  "summary": "Owner admission stays outside the receipt lease, and the charge receipt directory is flushed through the portable native metadata sync.",
+  "goal": "🎯runningrepo",
+  "sessions": [
+    "071d6cae-087c-4ad7-8fdb-45d52cad6b8a"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-31 18:13:05",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "ee829ef7c408f09aa346b20a090ff61bd16353a7",
+      "prompt": "Keep owner admission outside the receipt lease and flush the charge receipt directory through the portable native metadata sync.",
+      "llm": "grok-4"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-31 18:25:43",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "cursor-chat",
+      "checkpoint": "ee829ef7c408f09aa346b20a090ff61bd16353a7",
+      "summary": "Owner admission stays outside the receipt lease, and the charge receipt directory is flushed through the portable native metadata sync.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️31/RESOLVE-CACHE-CHARGE-RESERVATION-CONFLICTS/resolution.md"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "title": "Original Salon Outboard Bay and Executed Folded Canopy",
+  "width": 9.25,
+  "overall_height": 3.2,
+  "rough_height": 3.17,
+  "glass_plane": 6.3,
+  "rail_center_height": 0.83,
+  "rail_height_uncertainty": 0.1,
+  "canopy_thickness": 0.07,
+  "canopy_projection": 0.25,
+  "canopy_beam_face": 6.11,
+  "canopy_frame_contact": 6.37,
+  "column_probe": [
+    14.25,
+    6.01175,
+    4.5
+  ],
+  "fixed_station": 0.501,
+  "fold_profiles": [
+    [
+      [
+        6.11,
+        6.37
+      ],
+      [
+        6.3,
+        6.37
+      ],
+      [
+        6.3,
+        6.44
+      ],
+      [
+        6.11,
+        6.44
+      ]
+    ],
+    [
+      [
+        6.23,
+        6.44
+      ],
+      [
+        6.3,
+        6.44
+      ],
+      [
+        6.3,
+        6.6475
+      ],
+      [
+        6.23,
+        6.63
+      ]
+    ],
+    [
+      [
+        6.23,
+        6.63
+      ],
+      [
+        6.55,
+        6.71
+      ],
+      [
+        6.55,
+        6.782154348448309
+      ],
+      [
+        6.23,
+        6.702154348448309
+      ]
+    ]
+  ]
+}

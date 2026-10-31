@@ -1,0 +1,80 @@
+{
+  "version": 1,
+  "features": {
+    "soffit": {
+      "hosts": [
+        "RF-2A",
+        "RF-2B"
+      ],
+      "batten_section_m": [
+        0.035,
+        0.035
+      ],
+      "nominal_spacing_m": 0.5,
+      "board_thickness_m": 0.01,
+      "sources": [
+        "SAB2024-p138-p139",
+        "FLC-H1(12)128-5-item22",
+        "FLC-H1(13)309"
+      ],
+      "inferred": [
+        "batten spacing",
+        "board material and thickness",
+        "extent follows current flight underside"
+      ],
+      "excluded": [
+        "conjectural insulation"
+      ]
+    },
+    "nosings": {
+      "stairs": [
+        "ST-CG",
+        "ST-GF",
+        "ST-FR"
+      ],
+      "mapped": 49,
+      "supplied": 52,
+      "unlocated": 3,
+      "profile_m": [
+        0.04,
+        0.025,
+        0.004
+      ],
+      "front": "flush",
+      "author_width_m": 0.85,
+      "current_clear_width_m": 0.81,
+      "source": "SAB2024-p141-p191-p192/FLC-H1(12)097-1",
+      "inferred": [
+        "individual mapping to current reconstructed treads",
+        "current clear width and author nominal width reconciliation"
+      ]
+    },
+    "gravel": {
+      "tag": "FIN-PILOTIS-GRAVEL",
+      "source": "SAB2024-p192",
+      "boundary": "Under-building pilotis circumdrive; no estate extension",
+      "thickness_m": 0.04,
+      "inferred": [
+        "bounded pavement perimeter",
+        "40mm grading depth"
+      ]
+    },
+    "roof_beds": {
+      "source": "SAB2024-p192-p193/1930 Gravot FLC-L2(17)043",
+      "minimum_attested_changed_or_new": 2,
+      "total_unknown": true,
+      "exclude": "Unexecuted opposite-curve proposal and later gray-plan forms"
+    },
+    "central_tube": {
+      "diameter_m": 0.055,
+      "source": "SAB2024-p141-p145/FLC-H1(12)097-1",
+      "axis_unlocated": true,
+      "exclude": "Curve centre substituted as tube axis"
+    },
+    "wallpaper": {
+      "room": null,
+      "pattern": null,
+      "source": "SAB2024-p185/FLC-H1(12)078-2"
+    }
+  }
+}

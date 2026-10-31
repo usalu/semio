@@ -1,0 +1,58 @@
+{
+  "GUARD-RM-1": {
+    "kind": "ramp_guard_bands",
+    "ramp": "RM-1",
+    "core_width": 0.06,
+    "core_height": 0.85,
+    "cap_height": 0.1,
+    "cap_overhang": 0.02,
+    "bands": [
+      {
+        "flight": "RF-1A",
+        "axis_x": 10.898
+      },
+      {
+        "flight": "RF-1A",
+        "axis_x": 9.5
+      },
+      {
+        "flight": "RF-1B",
+        "axis_x": 8.128
+      },
+      {
+        "flight": "RF-1B",
+        "axis_x": 9.5
+      }
+    ],
+    "landing_returns": true
+  },
+  "GUARD-RM-2": {
+    "kind": "ramp_guard_bands",
+    "ramp": "RM-2",
+    "core_width": 0.06,
+    "core_height": 0.85,
+    "cap_height": 0.1,
+    "cap_overhang": 0.02,
+    "bands": [
+      {
+        "flight": "RF-2A",
+        "axis_x": 10.898
+      },
+      {
+        "flight": "RF-2A",
+        "axis_x": 9.5
+      },
+      {
+        "flight": "RF-2B",
+        "axis_x": 8.128
+      }
+    ],
+    "landing_returns": true,
+    "arrival_upstand": {
+      "flight": "RF-2B",
+      "axis_x": 9.5,
+      "width": 0.12,
+      "height": 0.28
+    }
+  }
+}

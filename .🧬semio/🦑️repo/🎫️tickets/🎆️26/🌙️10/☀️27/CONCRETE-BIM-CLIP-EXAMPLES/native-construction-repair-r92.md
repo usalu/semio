@@ -1,0 +1,11 @@
+# Native Construction Repair R92
+
+The read-only source-wide manifest proved the native exchange dispatcher omitted45footings and7railings, plus the separate opening domain. Added both occupied construction classes through the existing solid producer/STEP parts interface, retaining native class, GUID, tags, bilingual names, predefs, spatial ownership and every real source material.
+
+Three registered language-neutral/standard-native contracts passed8.494s after RED evidence. They iterate every source footing/railing, both languages, exact schema arity/body counts and independent GEOS nonconvex prism/SciPy convex mesh volumes. The material test specifically caught GUARD-RM-2 losing its reinforced-concrete parts; normalized owned-material roles now preserve its full constituent set.
+
+The volume comparison exposed a separate core geometry error: independently orienting each extrusion face away from the vertex mean flips concave recess faces. Nonmesh extrusions/compatible lofts now preserve topologically consistent cap/side winding and choose the overall sign using integrated signed volume. Explicit mesh face treatment remains unchanged. FT-BLINDING-27 conserves its actual nonconvex occupied footprint; no convex hull replacement.
+
+Opening protocol RED then found missing native subtraction support. Current implementation exports the opening Reference shape and original authored IfcRelVoidsElement with its already-cut native host, no direct spatial containment or occupied material on the void. The official IFC4.3 definition distinguishes Reference from subtractive Body when a host already contains its hole: [buildingSMART IFC4.3](https://standards.buildingsmart.org/IFC/DEV/IFC4_3/HTML/lexical/IfcOpeningElement.html). Actual four-domain regression and independent SDK verification remain pending.
+
+Final focused six-contract suite PASS104.486s on canonical504product source (latest native6acceptance; rawsourceb54353ce at start). All52source occupied products×EN/DE and all4openinghost domains tested. Independent SDK52products×2languages104snippets2358closedparts also PASS after mixed-material fix; final canonical GUID verification is separately registered. All59opening×ENDE118snippets capture completed stableb54353ce78.493s, specialized SDK verification pending.

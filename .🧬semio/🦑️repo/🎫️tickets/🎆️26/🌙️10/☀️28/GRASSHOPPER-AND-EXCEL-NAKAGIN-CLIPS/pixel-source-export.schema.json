@@ -1,0 +1,87 @@
+{
+  "type": "array",
+  "minItems": 1,
+  "items": {
+    "type": "object",
+    "required": [
+      "index",
+      "key",
+      "normal",
+      "world_vertices",
+      "pixel_polygons",
+      "removed",
+      "opacity"
+    ],
+    "properties": {
+      "index": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "key": {
+        "type": [
+          "string",
+          "null"
+        ]
+      },
+      "normal": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "number"
+        },
+        "description": "Raw producer Item normal metadata; physical facing is derived from canonical triangle winding."
+      },
+      "world_vertices": {
+        "type": "array",
+        "minItems": 3,
+        "items": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "pixel_polygons": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      },
+      "removed": {
+        "type": "boolean"
+      },
+      "opacity": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "raw_camera_facing": {
+        "type": "boolean",
+        "description": "Producer raw Item-normal facing diagnostic, never physical nearest truth."
+      },
+      "facet_camera_facing": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "boolean"
+          }
+        },
+        "description": "Producer canonical-facet diagnostics, independently rederived for physical nearest."
+      }
+    }
+  }
+}

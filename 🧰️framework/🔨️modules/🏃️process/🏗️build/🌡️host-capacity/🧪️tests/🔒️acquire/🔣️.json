@@ -1,0 +1,89 @@
+{
+  "cases": [
+    {
+      "id": "transient-sharing-denial",
+      "errors": [
+        "EPERM",
+        "EPERM"
+      ],
+      "replace": false,
+      "expect": {
+        "attempts": 3,
+        "sleeps": [
+          10,
+          40
+        ],
+        "acquired": true,
+        "error": null
+      }
+    },
+    {
+      "id": "transient-busy-directory",
+      "errors": [
+        "EBUSY"
+      ],
+      "replace": false,
+      "expect": {
+        "attempts": 2,
+        "sleeps": [
+          10
+        ],
+        "acquired": true,
+        "error": null
+      }
+    },
+    {
+      "id": "bounded-sharing-denial",
+      "errors": [
+        "EPERM",
+        "EPERM",
+        "EPERM",
+        "EPERM",
+        "EPERM",
+        "EPERM"
+      ],
+      "replace": false,
+      "expect": {
+        "attempts": 6,
+        "sleeps": [
+          10,
+          40,
+          160,
+          640,
+          2560
+        ],
+        "acquired": false,
+        "error": "busy"
+      }
+    },
+    {
+      "id": "permanent-access-denial",
+      "errors": [
+        "EACCES"
+      ],
+      "replace": false,
+      "expect": {
+        "attempts": 1,
+        "sleeps": [],
+        "acquired": false,
+        "error": "EACCES"
+      }
+    },
+    {
+      "id": "peer-takes-during-retry",
+      "errors": [
+        "EPERM",
+        "EEXIST"
+      ],
+      "replace": true,
+      "expect": {
+        "attempts": 2,
+        "sleeps": [
+          10
+        ],
+        "acquired": false,
+        "error": null
+      }
+    }
+  ]
+}

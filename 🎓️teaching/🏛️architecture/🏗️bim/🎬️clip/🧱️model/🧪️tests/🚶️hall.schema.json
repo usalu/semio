@@ -1,0 +1,150 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "domain",
+    "band",
+    "radial_margin",
+    "area_tolerance",
+    "operated",
+    "cases",
+    "rejected_diameter",
+    "connected_diameter",
+    "connectivity_end_y",
+    "interference_control"
+  ],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "domain": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "band": {
+      "$ref": "#/$defs/p2"
+    },
+    "radial_margin": {
+      "type": "number"
+    },
+    "area_tolerance": {
+      "type": "number"
+    },
+    "operated": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "angle_degrees",
+          "hinge",
+          "parts",
+          "inferred_operation",
+          "body_parts"
+        ],
+        "properties": {
+          "tag": {
+            "const": "D-LAUNDRY"
+          },
+          "angle_degrees": {
+            "const": -89
+          },
+          "hinge": {
+            "$ref": "#/$defs/p2"
+          },
+          "parts": {
+            "type": "integer"
+          },
+          "inferred_operation": {
+            "const": true
+          },
+          "body_parts": {
+            "const": 4
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "diameter",
+          "points"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "diameter": {
+            "const": 0.77
+          },
+          "points": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "$ref": "#/$defs/p2"
+            }
+          }
+        }
+      }
+    },
+    "rejected_diameter": {
+      "const": 0.85
+    },
+    "connected_diameter": {
+      "const": 0.8
+    },
+    "connectivity_end_y": {
+      "const": 19.4
+    },
+    "interference_control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "angle_degrees",
+        "host",
+        "expected_overlap_area",
+        "scope"
+      ],
+      "properties": {
+        "angle_degrees": {
+          "const": -90
+        },
+        "host": {
+          "const": "SKIRT-W-G-CHAUFFEUR-W-ground"
+        },
+        "expected_overlap_area": {
+          "const": 8.349e-05
+        },
+        "scope": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  },
+  "$defs": {
+    "p2": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

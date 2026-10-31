@@ -15,6 +15,7 @@ def fixture():
     cw=next(e for e in model["elements"] if e["tag"]=="CW-1")
     cw["geometry"]={"base_level":case["base"],"top_level":case["top"],"glazing_paths":[deepcopy(case["path"])]}
     kind=next(t for t in model["types"] if t["tag"]==cw["type"])
+    kind["filling"]["frame_depth"]={"value":case["expected"]["cut_depth"],"unit":"m","basis":"assumed"}
     kind["filling"].pop("panel_stations",None)
     kind["filling"]["transoms"]=deepcopy(case["transoms"])
     opening=next(e for e in model["elements"] if e["tag"]=="OP-D-ENTRY")
@@ -107,7 +108,7 @@ class NativeCurtainContract(unittest.TestCase):
         case,model,cw,opening=fixture()
         model["elements"]=[e for e in model["elements"] if e["tag"] in ("CW-1","OP-D-ENTRY","D-ENTRY")]
         tree=ast.parse(Path(api.__file__).read_text())
-        node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=="building_geometry")
+        node=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=="_building_geometry_uncached")
         returned=next(n.value for n in node.body if isinstance(n,ast.Return))
         expression=next(value for key,value in zip(returned.keys,returned.values) if isinstance(key,ast.Constant) and key.value=="fillings")
         curtain=api.filling_geometry("CW-1",model)

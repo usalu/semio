@@ -1,0 +1,137 @@
+{
+  "title": "Original Kitchen Work Construction Registration R92",
+  "sources": [
+    "book46 author reconstruction",
+    "FLC19442 original first plan book25",
+    "LArchitectureVivante1931 plate34 retained original photograph"
+  ],
+  "grid": {
+    "u0": 7,
+    "v0": 49,
+    "pitch_px": 170,
+    "pitch_m": 4.75,
+    "uncertainty_m": 0.15
+  },
+  "end_wall": {
+    "orientation": "lowY/front end window",
+    "counter_pixel_bounds": [
+      584,
+      6,
+      685,
+      28
+    ],
+    "counter_world_bounds": [
+      0.055882352941175384,
+      0.04852941176470593,
+      2.877941176470589,
+      0.663235294117647
+    ],
+    "warning": "Sourcewall registration reachesX≈.05; actual current wallinnerface mustboundphysicalcounter. Counterdepth/height inferred; do notground-fill."
+  },
+  "basins": [
+    {
+      "pixel_center": [
+        633,
+        16.5
+      ],
+      "center": [
+        1.5088235294117638,
+        0.34191176470588236
+      ],
+      "identity": "First hollow sink bowl symbol in end-window counter",
+      "shape_status": "rounded rectangular/inferred construction profile"
+    },
+    {
+      "pixel_center": [
+        657,
+        16.5
+      ],
+      "center": [
+        0.8382352941176485,
+        0.34191176470588236
+      ],
+      "identity": "Second separate hollow sink bowl symbol beside first",
+      "shape_status": "rounded rectangular/inferred construction profile"
+    }
+  ],
+  "drainboard": {
+    "pixel_bounds": [
+      584,
+      8,
+      615,
+      28
+    ],
+    "world_bounds": [
+      2.011764705882353,
+      0.10441176470588243,
+      2.877941176470589,
+      0.663235294117647
+    ],
+    "identity": "Hatched end-counter accessory/projection on high-X side of basin pair; drainboard/radiator projection not definitively labelled in retained raster",
+    "status": "do not infer a stove,drainboard or separate equipment identity solely from hatch"
+  },
+  "pantry_basin": {
+    "pixel_center": [
+      556,
+      16.5
+    ],
+    "center": [
+      3.6602941176470587,
+      0.34191176470588236
+    ],
+    "warning": "Separate pantry-side basin symbol, not one of main kitchen two. Roomprogramme/host must be checked before addition."
+  },
+  "worktable": {
+    "pixel_bounds": [
+      622,
+      69,
+      667,
+      100
+    ],
+    "world_bounds": [
+      0.5588235294117645,
+      1.8088235294117647,
+      1.8161764705882355,
+      2.675
+    ],
+    "identity": "Rectangular central tiled worktable",
+    "photo_morphology": "Thin slab with small rounded-looking edges,4slender individual legs, open air below; not solid cabinet",
+    "dimensions_status": "Footprint registered±.15m; slab/leg sections,height and tilepattern inferred. Original1930plan and1931photograph differ in viewpoint/furniture placement; no claimed measured final table dimensions."
+  },
+  "cabinet_run": {
+    "pixel_trace": [
+      568,
+      60,
+      580,
+      161
+    ],
+    "orientation": "highX side separating narrow pantry from kitchen",
+    "morphology": "Photo left side has open upper shelving and lower sliding/closed cupboard, separate from end sinkcounter",
+    "warning": "Do not misplace sink into this side run solely to preserve old L-model."
+  },
+  "radiator": {
+    "presence": "Original plate34 dark vertical ribbed radiator visible under end-window counter to high-X/leftside, partially door-occluded",
+    "candidate_region_world": {
+      "x": [
+        2.1,
+        2.9
+      ],
+      "y": [
+        0.25,
+        0.6
+      ]
+    },
+    "dimensions_status": "Photo-supported location band, exact width/sections/heights inferred; coordinate candidates not measuredhistorical"
+  },
+  "visible_pipes": {
+    "presence": "Several exposed low horizontal pipes along low-X/right windowwall under worktable, original plate34",
+    "candidate_host": "InteriorlowXwall; continuous visible run beside table",
+    "route_dimensions": "Inferred; retain uncertainty, no concealed branch claims"
+  },
+  "acceptance": [
+    "Source two main endcounter bowls distinct from pantry bowl",
+    "Thin leg-supported tiled worktable, openair below and no positiveoverlap with counter/radiator",
+    "Source-backed radiator presence at endwall; all metricsections inferred",
+    "Bodyroute from kitchen entry to worktable and sinks; actual openleaf, all walls/frames retained"
+  ]
+}

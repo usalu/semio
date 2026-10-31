@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "points",
+          "required"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/point"
+            }
+          },
+          "required": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/point"
+            }
+          },
+          "area": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "geos_kind": {
+            "enum": [
+              "Polygon",
+              "LineString"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

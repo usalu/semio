@@ -1,0 +1,6 @@
+🏛️architecture/🎯️optimization/🎬️clip/📉️extrema/🐍️.py Beat1_LocalGlobalExtrema Optimization_Extrema
+🏛️architecture/🎯️optimization/🎬️clip/🎲️sampling/🐍️.py Beat2_GridRandomSampling Optimization_Sampling
+🏛️architecture/🎯️optimization/🎬️clip/🧪️experiments/🐍️.py Beat3_FactorialExperiments Optimization_Experiments
+🏛️architecture/🎯️optimization/🎬️clip/⚖️index/🐍️.py Beat4_NormalizedIndex Optimization_Index
+🏛️architecture/🎯️optimization/🎬️clip/🏆️pareto/🐍️.py Beat5_ParetoFront Optimization_Pareto
+🏛️architecture/🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py Beat6_EvolutionarySearch Optimization_Algorithms

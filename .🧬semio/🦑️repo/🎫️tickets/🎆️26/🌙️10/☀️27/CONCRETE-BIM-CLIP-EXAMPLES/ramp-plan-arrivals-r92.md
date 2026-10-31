@@ -1,0 +1,7 @@
+# Ramp Arrival Plan Visibility
+
+The actual production plan helper restricts every FLOORING product to its owner storey. This omits upper arrival wearing of ground-owned interior ramps from the first-storey plan and first-owned exterior ramps from the roof plan. The explicitramp_finish domain permits a semantic fix using actual occupied world height; ordinary floor coverings remain on their owner storey and all bedding remains hidden. Eight neutral controls validate both arrivals, remote lower/upper air, bedding, ordinary adjacent-storey flooring and lowered exterior gravel.
+
+The actual helper regression was RED atinterior-first-arrival before the targeted visibility branch change. The source model, arrival geometry and layering are unchanged by this renderer repair. Whole production consumer scan found the plan helper as the only literal flooring-kind consumer requiring arrival selection; axon references only supply material palette samples. The new source-domain backend retains bothkind=ramp_finish andFLOORING classification.
+
+Both permanent arrival methods are GREEN on stable source8dfcfb1bba89 in1.578s, including the actual production solid drawing loop and all eight expected GEOS footprints/empty results. The three existing production visibility unittest methods also pass in2.932s with zero skips: cross-storey central material, ordinary floor ownership and actual inclined/concave structural projections remain correct.

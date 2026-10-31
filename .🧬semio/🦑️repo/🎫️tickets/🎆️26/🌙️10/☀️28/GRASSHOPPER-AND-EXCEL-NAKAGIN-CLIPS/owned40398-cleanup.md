@@ -1,0 +1,3 @@
+# Owned40398 Cleanup
+
+Initial missing-separator command launched bare interactive Python. Portable repo doctor process interface confirmed exact chain pwsh2380 -> repo49760 -> bun3540 -> Python15644, matching full initial command and227-second age at02:50:02Z. Only Python15644 was terminated through doctorPortsV1.command after revalidating the complete exact chain. Fresh process snapshot returned no remaining2380/49760/3540 chain or descendants. Session40398 is terminal exit1. No unowned process was signalled. Retained audit-owned40398.ts and stop-owned40398.ts are ticket input scripts; generated snapshot may be removed by root cleanup.

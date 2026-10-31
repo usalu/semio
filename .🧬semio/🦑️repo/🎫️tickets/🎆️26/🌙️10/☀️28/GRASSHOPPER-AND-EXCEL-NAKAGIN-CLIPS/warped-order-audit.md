@@ -1,0 +1,21 @@
+# Warped Raw Narrow-Order Counterexample
+
+Read-only numeric probe of the actual current renderer helpers, with no capture or model changes. Retained script audit-warped-order.py and generated/warped-order-counterexample.json. The first launch lacked the workspace import path and failed before the probe; a governed launch with the workspace inserted completed exit0.
+
+Use Q=(0,0,0),(2,0,0),(2,2,1),(0,2,0), normal normalized Newell=(-.2357022604,-.2357022604,.9428090416), camera toward+Z, XY projection. The canonical shorter diagonal1–3 gives triangles(0,1,3),(1,2,3). A flat patch XY[.4,.6]² atZ.1 lies above the actual first facetZ0 throughout its footprint. The raw plane throughQ0 predictsZ=.25X+.25Y=.20–.30 there, falsely above the patch. Actual _overlap_plane_order returns−1, a uniform reversed order. At the centre the wrong plane isZ.25 and actual canonical triangleZ0.
+
+Both broad support directions are inconclusive: the warped vertex span straddles the patch inZ, while the patch projections onto raw Qnormal lie inside Q's support interval. Thus the actual graph can reach this narrow comparison before creating an SCC; calling _polygon_facets only inside SCC handling is insufficient.
+
+Minimal conservative correction: detect a genuinely nonplanar source boundary before narrow uniform-plane ordering; positive projected overlap must create uncertainty/two-way dependencies, routing these original polygons into canonical-facet fragmentation. Alternatively compare every actual canonical facet overlap with its own geometric plane and require a uniform sign across all positive-area overlaps. An averaged Item plane must never certify warped material order. Shared canonical facets and unchanged source IDs/lighting/outer-edge strokes remain required. No kernel tolerance change or production write was made by this audit.
+
+## Saved Actual-Plane Correction
+
+Independently reread GH's subsequent correction. _item_plane derives a local actual plane and requires every Item vertex to share it at unchanged64ULP. Noncommon-plane positive overlaps return uncertainty2 before the equal-normal shortcut; the graph creates two-way dependencies. Projected material coverage uses canonical facets. A singleton warped Item also enters facet preparation, so isolated warped boundaries are not left with a fictitious plane. Broad support uses actual vertices; fragment visibility uses actual facet normals outside the styling callback, while original lighting and semantic registration remain intact.
+
+GH reports8 portable integration tests PASS0.746s including the false-uniform and isolated-warped red-to-green cases. This closes the proven source-contract defect at reviewed source/test scope. The retained numeric JSON/script records the historical rawplane-vs-facet counterexample; its geometric rawplane discrepancy remains mathematically true and must not be read as a current route failure. Current actual capital/capsule producers, conditioning failures and nearest-surface checks remain separate pending gates. No physical model or strict kernel tolerance changed.
+
+GH subsequently reports9 fragment tests PASS0.617s plus schema5invalids, including a projected self-crossing singleton whose raw normal is edge-on but whose canonical triangles have opposite facing signs; only the actual front-facing facet survives. Previous actual exports are explicitly superseded for final renderer provenance after these source changes. Fresh exports/profile await owner coordination; no final acceptance is inferred from the earlier exports.
+
+## Opaque Eligibility Source Review
+
+The subsequent saved culler admits noncommon-plane targets only if any canonical facet faces the camera. _material_facing derives each orientation from the original facet winding, not the averaged shader normal. Noncommon-plane Items are excluded from the blocker grid; they cannot hide another target using an edge-on/backward averaged plane. Remaining cover depth separation explicitly uses the validated actual common plane. No role-based exception is introduced. GH reports10fragment tests PASS0.887s and5invalidschema cases, including backwards-rawnormal warped material and folded singleton controls. This source review does not replace fresh actual-source output/ray acceptance.

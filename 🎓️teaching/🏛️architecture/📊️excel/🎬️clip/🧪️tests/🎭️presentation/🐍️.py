@@ -8,6 +8,7 @@ import os
 import sys
 import tempfile
 import unittest
+from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
@@ -24,7 +25,7 @@ def discover() -> list[dict]:
     """🔎 Every topic folder of the series that carries a scene class with a NARRATION list, found by reading the source."""
     found = []
     for folder in sorted(path for path in CLIP.iterdir() if path.is_dir() and path.name not in RESERVED and (path / "🐍️.py").is_file()):
-        tree = ast.parse((folder / "🐍️.py").read_text(encoding="utf-8"))
+        tree = ast.parse((folder / "🐍️.py").read_text(encoding="utf-8"), filename=str(folder / "🐍️.py"))
         for node in tree.body:
             if isinstance(node, ast.ClassDef) and any(isinstance(item, ast.Assign) and any(getattr(t, "id", "") == "NARRATION" for t in item.targets) for item in node.body):
                 found.append({"folder": folder.name, "scene": node.name, "script": folder / "🐍️.py", "module": f"{SERIES}.{folder.name}.🐍️"})
@@ -37,10 +38,10 @@ def scene_class(entry):
 
 
 def step_keys(script: Path) -> list[str]:
-    """🔑 Literal first arguments of every ``self.step(...)`` in a scene source."""
+    """🔑 Literal first arguments of both narration dispatch methods in a scene source."""
     keys = []
     for node in ast.walk(ast.parse(script.read_text(encoding="utf-8"))):
-        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr == "step" and node.args and isinstance(node.args[0], ast.Constant):
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) and node.func.attr in ("step", "_clause") and node.args and isinstance(node.args[0], ast.Constant):
             keys.append(node.args[0].value)
     return keys
 
@@ -58,6 +59,42 @@ def import_literals(script: Path) -> list[str]:
         elif isinstance(node, ast.ImportFrom) and node.module and not node.level:
             names.append(node.module)
     return names
+
+
+@contextmanager
+def native_runtime(play,wait):
+    """🔌 Replace the Manim runtime leaf while preserving every scene-specific play dispatcher."""
+    from manim import Scene
+    with patch.object(Scene,"play",play),patch.object(Scene,"wait",wait):
+        yield
+
+
+def narration_probe(base,seen,after):
+    """🧵 Observe the two real narration dispatch paths while keeping delegated calls within one clause."""
+    active = []
+    namespace = {}
+
+    def observe(method):
+        def invoke(scene,key,*args,**kwargs):
+            outer = not active or active[-1] != key
+            if outer:
+                seen.append(key)
+                active.append(key)
+            try:
+                result = getattr(super(probe,scene),method)(key,*args,**kwargs)
+            finally:
+                if outer:
+                    active.pop()
+            if outer:
+                after(scene,key)
+            return result
+        return invoke
+
+    for method in ("step","_clause"):
+        if callable(getattr(base,method,None)):
+            namespace[method] = observe(method)
+    probe = type("NativeExcelProbe",(base,),namespace)
+    return probe
 
 
 class FakeWorkbook:
@@ -117,6 +154,24 @@ class SceneContract(unittest.TestCase):
                 self.assertEqual(set(used) - set(keys), set(), "step keys without narration")
                 self.assertEqual(set(keys) - set(used), set(), "narration without step")
 
+    def test_program_hook_identifies_proposed_studies(self):
+        """🧭 Validate bilingual study narration with portable constants, NumPy and the actual transcript."""
+        import numpy as np
+        fixture = CASES["program_study_hook"]
+        entry = next(item for item in discover() if item["scene"] == fixture["scene"])
+        tree = ast.parse(entry["script"].read_text(encoding="utf-8"))
+        rows = next(ast.literal_eval(item.value) for node in tree.body if isinstance(node,ast.ClassDef) and node.name == fixture["scene"] for item in node.body if isinstance(item,ast.Assign) and any(getattr(target,"id","") == "NARRATION" for target in item.targets))
+        hook = next(row for row in rows if row[0] == fixture["key"])
+        localized = dict(zip(CASES["languages"],hook[1:]))
+        self.assertEqual(localized,fixture["localized"])
+        self.assertTrue(np.array_equal(np.array(list(localized.values())),np.array([fixture["schema"]["properties"][language]["const"] for language in CASES["languages"]])))
+        self.assertEqual(set(fixture["required_phrases"]),set(CASES["languages"]))
+        for language,text in localized.items():
+            self.assertGreaterEqual(len(fixture["required_phrases"][language]),3)
+            for phrase in fixture["required_phrases"][language]:
+                self.assertIn(phrase,text)
+            self.assertIn(text,(CLIP / f"🗣️transcript.{language}.md").read_text(encoding="utf-8"))
+
     def test_imports_resolve(self):
         """🔗 Every literal module a scene imports exists."""
         for entry in discover():
@@ -134,6 +189,48 @@ class SceneContract(unittest.TestCase):
             with self.subTest(scene=entry["scene"]):
                 actual = set(runtime.source_dependencies(entry["script"]))
                 self.assertEqual(sorted(str(p.relative_to(teaching)) for p in required - actual), [])
+
+    def test_native_leaf_preserves_custom_play(self):
+        """🪄 A real Manim Scene subclass expands its payload before the native test leaf receives it."""
+        from manim import Scene
+        forwarded,received = [],[]
+
+        class Custom(Scene):
+            def play(self,value):
+                forwarded.append(value)
+                return super().play({"expanded":value})
+
+        scene = Custom.__new__(Custom)
+        fixture = CASES["native_leaf"]
+        with native_runtime(lambda scene,payload:received.append(payload),lambda scene,*args,**kwargs:None):
+            scene.play(fixture["input"])
+        self.assertEqual(forwarded,[fixture["input"]])
+        self.assertEqual(received,[fixture["expanded"]])
+
+    def test_narration_observer_counts_both_paths_once(self):
+        """🪢 Observe direct steps, manual clauses and delegated clauses without masking repeated dispatches."""
+        observed, checked, delivered = [], [], []
+
+        class Flow:
+            def step(self,key,marker=None,**kwargs):
+                delivered.append((key,marker))
+                return key
+
+            def _clause(self,key,marker=None,delegates=False):
+                if delegates:
+                    return self.step(key,marker)
+                delivered.append((key,marker))
+                return key
+
+        probe = narration_probe(Flow,observed,lambda scene,key:checked.append(key))
+        scene = probe()
+        fixture = CASES["narration_observer"]
+        for event in fixture["events"]:
+            args = {k:v for k,v in event.items() if k != "method"}
+            self.assertEqual(getattr(scene,event["method"])(marker="payload",**args),event["key"])
+        self.assertEqual(observed,fixture["expected"])
+        self.assertEqual(checked,fixture["expected"])
+        self.assertEqual(delivered,[(key,"payload") for key in fixture["expected"]])
 
     def test_native_lifecycle(self):
         """🎞️ Exercise real animation setup, interpolation and Cairo in both languages for every scene."""
@@ -178,9 +275,7 @@ class SceneContract(unittest.TestCase):
                         scene.update_mobjects(0.25)
                         scene.renderer.time += duration
 
-                    def step(scene, key, *animations, **kwargs):
-                        seen.append(key)
-                        result = super(probe, scene).step(key, *animations, **kwargs)
+                    def check_clause(scene, key):
                         caption = set(scene._caption.get_family())
                         body = [member for member in scene.mobjects if member not in caption]
                         self.assertTrue(any(len(member.points) for item in body for member in item.get_family()), key)
@@ -189,11 +284,11 @@ class SceneContract(unittest.TestCase):
                         scene.camera.reset()
                         scene.camera.capture_mobjects(body)
                         self.assertTrue(np.any(scene.camera.pixel_array != scene.camera.pixel_array[0, 0]), key)
-                        return result
 
-                    probe = type("NativeExcelProbe", (base,), {"play": play, "wait": wait, "step": step})
-                    scene = probe()
-                    scene.construct()
+                    probe = narration_probe(base, seen, check_clause)
+                    with native_runtime(play,wait):
+                        scene = probe()
+                        scene.construct()
                     self.assertEqual(seen, [row[0] for row in base.NARRATION])
                     self.assertTrue(set(CASES["animations"]) <= played, played)
 
@@ -364,6 +459,42 @@ class WorkbookToolkit(unittest.TestCase):
                         self.assertGreaterEqual(member.get_left()[0], name.get_right()[0] + 0.2 - 1e-6, member)
                     if width >= 6.8:
                         self.assertGreaterEqual(len(others), 4)
+
+    @unittest.skipUnless(ENGINE, "XL engine not built yet")
+    def test_recalculate_retypes_cells_in_place(self):
+        """♻️ Mid-animation every glyph of a recalculated cell stays inside its own cell box, the old text is gone by half time and the new text arrives after, and the end state equals the engine's text."""
+        from manim import tempconfig
+
+        model = importlib.import_module(f"{SERIES}.🧱️model.🐍️")
+        book = model.workbook()
+        after = model.apply(book, [{"type": "set-cell", "sheet": "Type A", "cell": "B2", "value": 3.0}])
+        for language in CASES["languages"]:
+            with self.subTest(language=language), patch.dict(os.environ, {"SEMIO_TEACHING_LANGUAGE": language}), tempconfig({
+                    "pixel_width": 480, "pixel_height": 270, "frame_rate": 1, "renderer": "cairo", "dry_run": True, "disable_caching": True,
+                    "media_dir": tempfile.mkdtemp(prefix="excel-retype-")}):
+                scene = type("Probe", (self.visuals.ClipScene,), {})()
+                window = scene.xl_window(book, "Type A", cols="A:F", rows=(2, 9), selected="B2")
+                animation = window.recalculate(after)
+                self.assertGreaterEqual(len(animation.retexts), 3)
+                animation.begin()
+                values = model.evaluate(after)
+                for alpha in (0.25, 0.5, 0.75, 1.0):
+                    animation.interpolate(alpha)
+                    for holder, old, new, glow in animation.retexts:
+                        left, top, right, bottom = window.rect(next(a1 for a1, item in window.cells.items() if item is holder))
+                        for label in (old, new):
+                            for member in (label.get_family() if label is not None else ()):
+                                if len(member.points):
+                                    self.assertGreaterEqual(member.get_left()[0], left - 0.03)
+                                    self.assertLessEqual(member.get_right()[0], right + 0.03)
+                                    self.assertLessEqual(member.get_top()[1], top + 0.03)
+                                    self.assertGreaterEqual(member.get_bottom()[1], bottom - 0.03)
+                        if alpha == 0.5 and old is not None and new is not None:
+                            self.assertEqual(max(member.get_fill_opacity() for member in old.get_family() if len(member.points)), 0.0)
+                animation.finish()
+                for a1, holder in window.cells.items():
+                    self.assertEqual(holder.string or "", model.shown(after, values, "Type A", a1, language), a1)
+                    self.assertLessEqual(len(holder.submobjects), 2)
 
     def test_window_renders_in_both_languages(self):
         """🪟 A window builds, answers cell lookups, follows a selection, an edit and a tracker, and paints green Excel chrome on Cairo."""

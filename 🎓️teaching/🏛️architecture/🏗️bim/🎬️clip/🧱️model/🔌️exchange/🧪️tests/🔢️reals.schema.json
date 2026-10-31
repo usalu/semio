@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "source",
+    "cases",
+    "invalid",
+    "mesh"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 13,
+      "items": {
+        "type": "object",
+        "required": [
+          "value",
+          "expected_bits"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "value": {
+            "type": "number"
+          },
+          "expected_bits": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{16}$"
+          },
+          "minimal_token": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "NaN",
+          "Infinity",
+          "-Infinity"
+        ]
+      }
+    },
+    "mesh": {
+      "type": "object",
+      "required": [
+        "mesh",
+        "outline",
+        "z0",
+        "z1"
+      ]
+    }
+  }
+}

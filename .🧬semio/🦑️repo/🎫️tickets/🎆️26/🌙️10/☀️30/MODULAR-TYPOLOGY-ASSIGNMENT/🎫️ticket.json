@@ -1,0 +1,44 @@
+{
+  "title": "Modular Typology Assignment",
+  "emoji": "🏙️",
+  "status": "closed",
+  "summary": "New bilingual course assignment `typology` (Assignment 1: Parametric Design of a Modular Typology) in the Parametric topic, authored on the shared assignment Print class with three example axonometries, published through build-typology-en/de next to parametrization, with ajv/mathjs/d3-array oracle tests; repo launcher and course vitest blocked by unrelated drift, verified by local XeLaTeX probe and direct test runs (see report.md).",
+  "description": "Create a new bilingual (en, de) course assignment from temp/Aufgabenstellung_ Parametrischer Entwurf modularer Typologien.docx (parametric design of modular typologies, Architecture course) using the existing Print assignment class, styling and course PDF publication pipeline.",
+  "goal": "updatedtutorials",
+  "note": "repo and semio MCP servers failed to connect (CONNECTION_CLOSED); ticket bookkept manually as in earlier sessions.",
+  "sessions": [
+    "7cf1f045-d998-4c12-80ed-4e2420c0dcc8"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-30 08:00:00",
+      "author": "Ueli Saluz",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "prompt": "Create a new assignment for: \"C:\\git\\semio\\temp\\Aufgabenstellung_ Parametrischer Entwurf modularer Typologien.docx\" - typology in architecture course. Use the existing print infrastructure and styling.",
+      "llm": "opus-4-7"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-30 10:30:00",
+      "author": "Ueli Saluz",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "prompt": "Created: 🎓️teaching/🏛️architecture/🏙️typology/📝️assignment/{en.tex,de.tex,en.content.tex,de.content.tex,schema-m-b-1-q.png,schema-m-w-2-h.png,schema-e-b-2-qh.png,🧪️tests/🥒️.feature,🧪️tests/🟦️.ts,🧪️tests/🧫️cases.json,🧪️tests/🧬️cases.schema.json}. Updated: 🎓️teaching/🏛️architecture/📚️course/{🔣️.json,README.md,🏗️builder/📖️assignments/🟦️.ts,📦️packages/🟦️typescript/📜️script.ts,📦️packages/🟦️typescript/📋️project.json,🧪️tests/📖️assignment-pdfs/🟦️.ts,🧪️tests/📖️assignment-pdfs/🥒️.feature}. Ticket: report.md, compile.ts, review.py, prepare-schema-images.py, run-tests.ts, validate-course.ts.",
+      "llm": "opus-4-7"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-30 12:30:00",
+      "author": "Ueli Saluz",
+      "system": "windows",
+      "client": "claude-code",
+      "checkpoint": "1c319e981356a03fc93ebdc1bfa72380d9e41f95",
+      "prompt": "Rebuilt repo launcher and native repo; fixed Windows dependency lock (bigint input identities in 📦️dependencies/💾️storage/🟦️.ts, allocation-free stream hash and libuv-equal modes in 📁️filesystem/🧾️observation/📁️descriptor/🟦️.ts; test 💾️storage/🧪️tests/🆔️identity + suite javascript-input-identity); regenerated six bun.lock files. Added \\makeassignmentcover to semio-assignment.sty (print test + feature) and the cover to the typology assignment (cover.jpg, logo-luh.png, logo-luh-dark.png, both content files, builder sources, leaf tests). Official typology build still blocked by another session's workspace member churn; see report.md.",
+      "llm": "opus-4-7"
+    }
+  ]
+}

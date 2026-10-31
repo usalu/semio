@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "required": [
+    "capture_kind",
+    "source",
+    "source_after",
+    "producers_before",
+    "producers_after",
+    "loaded_producer_changes",
+    "untracked_loaded_producers",
+    "capture_stable"
+  ],
+  "properties": {
+    "capture_kind": {
+      "const": "whole-expanded-owned-solids-r92-v2"
+    },
+    "source": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "source_after": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "producers_before": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "producers_after": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "pattern": "^[a-f0-9]{64}$"
+      }
+    },
+    "loaded_producer_changes": {
+      "type": "object"
+    },
+    "untracked_loaded_producers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "capture_stable": {
+      "type": "boolean"
+    }
+  }
+}

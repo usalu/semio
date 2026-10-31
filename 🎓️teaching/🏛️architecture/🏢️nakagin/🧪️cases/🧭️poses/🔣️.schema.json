@@ -1,0 +1,79 @@
+{
+  "type": "object",
+  "required": [
+    "source",
+    "records"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "source": {
+      "const": "gluon"
+    },
+    "records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "tower",
+          "floor",
+          "center",
+          "family",
+          "yaw",
+          "phase",
+          "evidence"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "tower": {
+            "enum": [
+              "A",
+              "B"
+            ]
+          },
+          "floor": {
+            "type": "integer",
+            "minimum": 3,
+            "maximum": 13
+          },
+          "center": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "family": {
+            "enum": [
+              "Slash",
+              "Backslash",
+              "J",
+              "L",
+              "P",
+              "S"
+            ]
+          },
+          "yaw": {
+            "enum": [
+              -180,
+              -90,
+              0,
+              90,
+              180
+            ]
+          },
+          "phase": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 2
+          },
+          "evidence": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

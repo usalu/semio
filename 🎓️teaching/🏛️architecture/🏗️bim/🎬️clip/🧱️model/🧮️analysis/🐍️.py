@@ -40,23 +40,61 @@ def _area(polygon: list) -> float:
     return abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(polygon, polygon[1:] + polygon[:1]))) / 2
 
 
+def _orientation(a, b, c) -> int:
+    """📐 Resolve determinant signs with exact source-coordinate arithmetic when cancellation is possible."""
+    from fractions import Fraction
+    x,y = (b[0]-a[0])*(c[1]-a[1]),(b[1]-a[1])*(c[0]-a[0])
+    determinant = x-y
+    if abs(determinant) > 8*math.ulp(1.0)*(abs(x)+abs(y)):
+        return 1 if determinant>0 else -1
+    ax,ay,bx,by,cx,cy = (Fraction(v) for p in (a,b,c) for v in p)
+    determinant = (bx-ax)*(cy-ay)-(by-ay)*(cx-ax)
+    return (determinant>0)-(determinant<0)
+
+
+def _simple(ring: list) -> bool:
+    """🔍 Reject repeated vertices, backtracking and crossings without a geometric tolerance."""
+    if len(ring)<3 or len({tuple(p) for p in ring})!=len(ring):
+        return False
+    def between(p,a,b):
+        return all(min(a[k],b[k])<=p[k]<=max(a[k],b[k]) for k in (0,1))
+    edges = list(zip(ring,ring[1:]+ring[:1]))
+    for i,(a,b) in enumerate(edges):
+        c = ring[(i+2)%len(ring)]
+        if _orientation(a,b,c)==0 and not between(b,a,c):
+            return False
+        for j in range(i+2,len(edges)):
+            if i==0 and j==len(edges)-1:
+                continue
+            c,d = edges[j]
+            if any(max(a[k],b[k])<min(c[k],d[k]) or max(c[k],d[k])<min(a[k],b[k]) for k in (0,1)):
+                continue
+            u,v,w,x = _orientation(a,b,c),_orientation(a,b,d),_orientation(c,d,a),_orientation(c,d,b)
+            if (u*v<0 and w*x<0) or (u==0 and between(c,a,b)) or (v==0 and between(d,a,b)) or (w==0 and between(a,c,d)) or (x==0 and between(b,c,d)):
+                return False
+    return any(_orientation(ring[0],ring[i],ring[i+1]) for i in range(1,len(ring)-1))
+
+
 def _ccw(polygon: list) -> list:
-    """🧹 Remove exact zero-area ring excursions while preserving every real facet."""
+    """🧭 Normalize winding and exact collinearity without erasing finite authored facets."""
+    def flat(p, a, b):
+        """📐 Preserve every nonzero determinant, independently of polygon scale."""
+        return _side(p,a,b)==0
     ring = []
     for point in polygon:
         point = list(point)
         if ring and point == ring[-1]:
             continue
-        while len(ring)>1 and _side(point,ring[-2],ring[-1]) == 0:
+        while len(ring)>1 and flat(point,ring[-2],ring[-1]):
             ring.pop()
         if not ring or point != ring[-1]:
             ring.append(point)
     if len(ring)>1 and ring[0] == ring[-1]:
         ring.pop()
     while len(ring)>2:
-        if _side(ring[1],ring[-1],ring[0]) == 0:
+        if flat(ring[1],ring[-1],ring[0]):
             ring.pop(0)
-        elif _side(ring[0],ring[-2],ring[-1]) == 0:
+        elif flat(ring[0],ring[-2],ring[-1]):
             ring.pop()
         else:
             break
@@ -168,7 +206,7 @@ def _clip(subject: list, clip: list, digits: int | None = 9) -> list:
     return subject if digits is None else _ccw([[_round(x,digits),_round(y,digits)] for x,y in subject])
 
 
-def _subtract(piece: list, void: list, digits: int = 9, tolerance: float = EPS) -> list:
+def _subtract(piece: list, void: list, digits: int | None = 9, tolerance: float = EPS) -> list:
     if not piece:
         return []
     if not void:
@@ -696,3 +734,4 @@ def clash_check(model: dict | None = None, include_passed: bool = False, *, prog
                 out.append(nearest)
     out.sort(key=lambda row:(row["status"] != "violation",row["distance"],row["a_tag"],row["b_tag"]))
     return [{"id":f"clash-{i:02d}",**row} for i,row in enumerate(out,1)]
+                                                                                                                                                                                      

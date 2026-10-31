@@ -1,0 +1,48 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "languages",
+    "wall",
+    "filling",
+    "scale",
+    "expected"
+  ],
+  "properties": {
+    "languages": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "wall": {
+      "type": "object",
+      "required": [
+        "tag",
+        "parts",
+        "openings"
+      ]
+    },
+    "filling": {
+      "type": "object",
+      "required": [
+        "tag",
+        "parts"
+      ]
+    },
+    "scale": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "wall_width",
+        "wall_area",
+        "glass_width",
+        "glass_area"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

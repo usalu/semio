@@ -1,0 +1,11 @@
+# Garage Approach Reconstruction Review
+
+Reinspected retainedAnnex6 transverse section ground arrows at native resolution (generated/terrain-section-left-r94.png andterrain-section-right-r94.png). Local exterior−0.15m and coal cover−0.13m are distinct from the interior±0.00datum. The drawing does not register the east garage approach or prove a uniform original grade. The existing uniform−0.15m gravel extension is explicitly an inference.
+
+The independently checked current model has a15cm step immediately outside the repaired garage reveal: slab top0 atX16.05/Y12 and gravel−0.15 atX16.076/Y12. The vehicle shown in information clips is a2D symbol, so no floating3D vehicle is established and the present XY/height-envelope route must not be promoted to a grounded garage driving certificate.
+
+A source-honest functional reconstruction can explicitly fit a local gravel approach between the current inferred garageFFL0/reveal and the source-qualified exterior reference. Proposed controls: actual portal edgeX16.075/Y10.85–14.80; inferred1.8m transition length(0.15/1.8=1:12); flat central approach east of the portal; semicircular piecewise-planar end fans joining continuously to the surrounding−0.15m plane. The fans are clipped to the existing bounded gravel material domain, so no interior floor, new column reserve, estate terrain or freestanding ramp product is invented. A simple rectangular ramp with abrupt shoulder cliffs is rejected.
+
+The actual surface may differ historically. All run, fan, grading, depth and subgrade choices must remain explicitly inferred, with no claim of surveyed original slope or hardware. Preserve the existing exterior footprint and nominal40mm vertical material depth, actual thresholdFFL, source pillars, openings and product identity. No new metal track, drain, weather seal or below-ground system is established.
+
+No approach source geometry has been changed or authored yet. Before publication require a language-neutral height-field contract, old-flat-source RED, continuous shared-height boundaries, true convex closed positive native cells, independent GEOS footprint/volume conservation, exact actual portal continuity and bilingual native exchange proof. The existing renderer correction is separate and must display actual physical surfaces regardless of whether this inferred local grading is adopted.

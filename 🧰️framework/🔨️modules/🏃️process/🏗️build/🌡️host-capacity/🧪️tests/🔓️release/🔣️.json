@@ -1,0 +1,71 @@
+{
+  "cases": [
+    {
+      "id": "transient-sharing",
+      "errors": [
+        "EBUSY"
+      ],
+      "replace": false,
+      "expect": {
+        "attempts": 2,
+        "sleeps": [
+          10
+        ],
+        "exists": false,
+        "error": null
+      }
+    },
+    {
+      "id": "peer-takes-during-retry",
+      "errors": [
+        "EBUSY"
+      ],
+      "replace": true,
+      "expect": {
+        "attempts": 1,
+        "sleeps": [
+          10
+        ],
+        "exists": true,
+        "error": null
+      }
+    },
+    {
+      "id": "persistent-sharing",
+      "errors": [
+        "EBUSY",
+        "EBUSY",
+        "EBUSY",
+        "EBUSY",
+        "EBUSY",
+        "EBUSY"
+      ],
+      "replace": false,
+      "expect": {
+        "attempts": 6,
+        "sleeps": [
+          10,
+          40,
+          160,
+          640,
+          2560
+        ],
+        "exists": true,
+        "error": "EBUSY"
+      }
+    },
+    {
+      "id": "unrelated-permission",
+      "errors": [
+        "EACCES"
+      ],
+      "replace": false,
+      "expect": {
+        "attempts": 1,
+        "sleeps": [],
+        "exists": true,
+        "error": "EACCES"
+      }
+    }
+  ]
+}

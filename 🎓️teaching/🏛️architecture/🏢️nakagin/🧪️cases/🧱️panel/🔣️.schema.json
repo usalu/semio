@@ -1,0 +1,121 @@
+{
+  "type": "object",
+  "required": [
+    "families",
+    "details",
+    "radii",
+    "steel_skin",
+    "lining_thickness",
+    "aperture_radius",
+    "tolerance",
+    "corner_inset",
+    "ray_depth",
+    "reference_front_bounds",
+    "reference_side_bounds",
+    "witness",
+    "expected_witness_covered",
+    "edge_incidence",
+    "directed_balance",
+    "lining_material_role"
+  ],
+  "properties": {
+    "families": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "Slash",
+          "Backslash",
+          "J",
+          "L",
+          "P",
+          "S"
+        ]
+      }
+    },
+    "details": {
+      "type": "object",
+      "required": [
+        "full",
+        "exterior"
+      ],
+      "properties": {
+        "full": {
+          "const": 48
+        },
+        "exterior": {
+          "const": 16
+        }
+      },
+      "additionalProperties": false
+    },
+    "radii": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "number",
+        "minimum": 0
+      }
+    },
+    "steel_skin": {
+      "const": 0.0012
+    },
+    "lining_thickness": {
+      "const": 0.015
+    },
+    "aperture_radius": {
+      "const": 0.6512
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "corner_inset": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "ray_depth": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "reference_front_bounds": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "reference_side_bounds": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "witness": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "expected_witness_covered": {
+      "const": true
+    },
+    "edge_incidence": {
+      "const": 2
+    },
+    "directed_balance": {
+      "const": 0
+    },
+    "lining_material_role": {
+      "const": "lining"
+    }
+  },
+  "additionalProperties": false
+}

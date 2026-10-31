@@ -35,5 +35,61 @@
       "path": "..cache/output",
       "accepted": true
     }
-  ]
+  ],
+  "incompleteBirths": [
+    {
+      "name": "interrupted before backing",
+      "entries": [
+        "m"
+      ],
+      "attached": false,
+      "accepted": true
+    },
+    {
+      "name": "published receipt",
+      "entries": [
+        "m",
+        "image.json"
+      ],
+      "attached": false,
+      "accepted": false
+    },
+    {
+      "name": "backing exists",
+      "entries": [
+        "m",
+        "fixed.dir"
+      ],
+      "attached": false,
+      "accepted": false
+    },
+    {
+      "name": "unknown sibling",
+      "entries": [
+        "m",
+        "unknown"
+      ],
+      "attached": false,
+      "accepted": false
+    },
+    {
+      "name": "missing root",
+      "entries": [],
+      "attached": false,
+      "accepted": false
+    },
+    {
+      "name": "attached",
+      "entries": [
+        "m"
+      ],
+      "attached": true,
+      "accepted": false
+    }
+  ],
+  "receiptDirectorySync": {
+    "requiredCall": "syncNativeDirectoryMetadataV1",
+    "forbiddenCall": "fsyncSync"
+  }
 }
+                                                                                                                                                                                                                                      

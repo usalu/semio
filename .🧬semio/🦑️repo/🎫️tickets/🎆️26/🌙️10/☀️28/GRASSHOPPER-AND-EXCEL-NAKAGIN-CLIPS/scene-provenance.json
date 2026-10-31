@@ -1,0 +1,54 @@
+{
+  "version": 1,
+  "selected": "selected.py",
+  "shared": "shared.py",
+  "indirect": "indirect.py",
+  "unrelated": "unrelated.py",
+  "graph": [
+    [
+      "selected.py",
+      "shared.py"
+    ],
+    [
+      "shared.py",
+      "indirect.py"
+    ]
+  ],
+  "mutations": [
+    {
+      "file": "unrelated.py",
+      "accepted": true
+    },
+    {
+      "file": "selected.py",
+      "accepted": false
+    },
+    {
+      "file": "shared.py",
+      "accepted": false
+    },
+    {
+      "file": "indirect.py",
+      "accepted": false
+    }
+  ],
+  "render_settings": {
+    "pixel_width": 480,
+    "pixel_height": 270,
+    "frame_rate": 4,
+    "renderer": "cairo",
+    "dry_run": true,
+    "disable_caching": true
+  },
+  "external_config": {
+    "name": "user.cfg",
+    "before": "quality=high",
+    "after": "quality=low"
+  },
+  "registry_inputs": {
+    "manifest": "excel-registry-inputs.json",
+    "schema": "excel-registry-inputs.schema.json",
+    "series": "excel",
+    "count": 8
+  }
+}

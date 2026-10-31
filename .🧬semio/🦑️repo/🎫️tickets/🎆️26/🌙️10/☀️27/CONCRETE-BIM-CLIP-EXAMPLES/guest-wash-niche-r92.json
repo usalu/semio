@@ -1,0 +1,136 @@
+{
+  "title": "Guest Wash-Niche Original Fixtures R92",
+  "sources": {
+    "author_plan": "book46, original FLC19442 corroboration book25",
+    "text": "book240: other washrooms use small wall handbasins; original bidets disappeared by1965",
+    "official": "CMN2021 guest washroom/zenith presence"
+  },
+  "grid": {
+    "u0": 7,
+    "v0": 49,
+    "pixel_pitch": 170,
+    "metre_pitch": 4.75,
+    "uncertainty_m": 0.15
+  },
+  "room_assignment": "Guest bedroom private wash-niche beside W-PRIVATE high-X wall; not the separate shared bath to south",
+  "fixtures": [
+    {
+      "tag": "FIX-GUEST-BASIN",
+      "class": "IfcSanitaryTerminal",
+      "predefined": "WASHHANDBASIN",
+      "pixel_bounds": [
+        565,
+        374,
+        579,
+        391
+      ],
+      "pixel_center": [
+        572,
+        382.5
+      ],
+      "center": [
+        3.2132352941176467,
+        10.568382352941176
+      ],
+      "morphology": "Small wall-mounted rounded-rectangular basin; two tap-cross symbols at high-X back edge against wall",
+      "orientation": {
+        "back": "highX",
+        "front": "lowX",
+        "long_axis": "Y"
+      },
+      "evidence_status": "Two-plan symbol and generic wall-handbasin text support identity/morphology; detailed shell,tap mechanism,height and exact size inferred",
+      "current_conflict": "R77 square.5m basin center3.225,11.175 occupies lower fixture rather than upper basin",
+      "standing_candidate": [
+        2.75,
+        10.568382352941176
+      ]
+    },
+    {
+      "tag_candidate": "BIDET-GUEST",
+      "class_candidate": "IfcSanitaryTerminal",
+      "predefined_candidate": "BIDET",
+      "pixel_bounds": [
+        565,
+        399,
+        585,
+        413
+      ],
+      "pixel_center": [
+        575,
+        406
+      ],
+      "center": [
+        3.129411764705882,
+        11.225
+      ],
+      "orientation": {
+        "back": "highX",
+        "front": "lowX",
+        "long_axis": "X"
+      },
+      "morphology": "Oval/rounded pear-like floor sanitary symbol with back tap/drain markers, no WC cistern; matches original shared/parents bidet grammar rotated90degrees",
+      "evidence_status": "Presence of second fixture secure in author46+original25; BIDET classification strongly supported by morphology/context, no readable fixture label in retained raster",
+      "current_conflict": "No source guest bidet exists; lower-position old FIX-GUEST-BASIN must move before addition",
+      "standing_candidate": [
+        2.75,
+        11.225
+      ]
+    }
+  ],
+  "niche_candidate": {
+    "pixel_bounds": [
+      563,
+      370,
+      596,
+      419
+    ],
+    "world_bounds": [
+      2.5426470588235297,
+      10.219117647058823,
+      3.4647058823529413,
+      11.588235294117647
+    ],
+    "source_front_boundary": "plan trace nearX2.5–2.6; exact closure/door operation not recovered",
+    "current_host": "W-PRIVATE X3.6±.04 lining",
+    "current_guest_entry": "OP-D-GUEST on W-PRIVATE,Y11.46..12.39; preserve native door-frame clearance at niche south end"
+  },
+  "acceptance": [
+    "Move existing basin identity to upper symbol before adding lower fixture",
+    "Two hollow bodies with source-qualified orientation; all bowl/tap/drain dimensions explicitly inferred",
+    "Native0.6m standing/entry routes with full operated leaf, not mere bbox fit",
+    "Two fixtures remain in guest wash-niche; do not relabel shared bath or add unsupported guest WC"
+  ],
+  "known_unknowns": [
+    "Exact model/manufacturer not established for this individual fixture",
+    "Metric shell/tap dimensions and heights",
+    "Niche front shutter/door stations and swing"
+  ],
+  "wardrobe": {
+    "tag": "FIX-GUEST-WARDROBE",
+    "pixel_bounds": [
+      598,
+      370,
+      615,
+      419
+    ],
+    "world_bounds": [
+      2.011764705882353,
+      10.219117647058823,
+      2.4867647058823543,
+      11.588235294117647
+    ],
+    "orientation": "longaxisY; frontlowX into guest bedroom; backhighX towards wash niche",
+    "identity_status": "Original25 and author46 both show separate long rectangular built-in beside niche; dimensions ±0.15m inferred rasterregistration",
+    "current_conflict": "Old transverseX.55..2.65/Y10.55..11.05 bar crosses actual fixture standing positions and is not this footprint",
+    "construction_candidate": {
+      "bounds": [
+        1.98,
+        10.22,
+        2.45,
+        11.59
+      ],
+      "reason": "Cabinetdepth/position lie inside±0.15m source registration; preserves ~0.61m fromnichebackX2.45 tocoordinatedbasinfrontX3.06",
+      "warning": "Sourceclosures/dooroperation aroundcabinet ends not fully recovered; explicitbodyroute needed, do not hide a new solid wall."
+    }
+  }
+}

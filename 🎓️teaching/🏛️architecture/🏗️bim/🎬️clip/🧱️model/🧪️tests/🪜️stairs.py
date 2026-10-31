@@ -94,26 +94,24 @@ def test_cellar_first_tread_has_real_door_and_standing_approach():
     for category in ['walls','screens','pilotis','railings','fillings']:
         for item in g[category]:
             for p in item.get('parts',[]):
-                if p['z0']<-2.42+1.8 and p['z1']>-2.42+.7:
+                if p['z0']<model._z(source,'cellar')+1.8 and p['z1']>model._z(source,'cellar')+.7:
                     assert body.intersection(Polygon(model.part_footprint(p))).area<1e-8,item['tag']
     stair=next(e for e in g['stairs'] if e['tag']=='ST-CG');first=stair['steps'][0]
     assert Polygon(first['outline']).covers(Point(5.8,8.8).buffer(.04))
-    floor=next(e for e in g['slabs'] if e['tag']=='SL-CELLAR')
-    assert any(Polygon(p['outline']).covers(Point(5.38,8.8).buffer(.04)) for p in floor['parts'])
+    floor=model.solid_geometry('FIN-CELLAR-CEMENT',source)
+    assert any(abs(p['z1']-model._z(source,'cellar'))<1e-9 and Polygon(p['outline']).covers(Point(5.38,8.8).buffer(.04)) for p in floor['parts'])
 
 def test_original_roof_ramp_guard_is_open_tubular_construction():
-    """🛝 Compare native open metal railing and sourced upstand sections with the portable contract."""
-    from shapely.geometry import Polygon
+    """🛝 Compare native hollow metal routes and original upstand construction with the portable contract."""
     source=model.load_model();case=contract()['ramp_guard'];registry={e['tag']:e for e in source['elements']}
-    tube=registry[case['tag']];parts=model.solid_geometry(case['tag'],source)['parts']
+    tube=registry[case['tag']];parts=model.solid_geometry(case['tag'],source)['parts'];routes=tube['geometry']['tube_construction']['routes']
     assert tube['material']=='MAT-METAL'
-    assert sum(p.get('role')=='inclined_horizontal_rail_envelope' for p in parts)==case['rail_envelopes']
-    assert sum(p.get('role')=='inferred_rail_post_envelope' for p in parts)==case['inferred_posts']
-    assert all(p.get('material')=='MAT-METAL' for p in parts)
-    upstand=next(p for p in registry[case['host']]['geometry']['parts'] if p.get('role')=='upper_arrival_12x28_upstand')
+    assert sum(r['role']=='ramp_handrail'for r in routes)==case['rail_routes']
+    assert sum(r['role']=='ramp_guard_post'for r in routes)==case['inferred_posts']
+    assert all(p.get('material')=='MAT-METAL'for p in parts)
+    upstand=next(p for p in model._guard_reference_stocks(source,registry[case['host']])if p['role']=='original_arrival_upstand');vertices=upstand['mesh']['vertices']
     assert upstand['material']=='MAT-RC'
-    section=upstand['section'];profile=Polygon(section['profile'])
-    y0,y1=case['y_interval']
-    assert math.isclose(section['sweep'][1]-section['sweep'][0],case['upstand_width'],abs_tol=1e-10)
-    assert math.isclose(profile.area,(y1-y0)*case['upstand_height'],abs_tol=1e-9)
+    assert math.isclose(float(max(p[0]for p in vertices)-min(p[0]for p in vertices)),case['upstand_width'],abs_tol=1e-10)
+    assert math.isclose(float(vertices[4][2]-vertices[0][2]),case['upstand_height'],abs_tol=1e-10)
+    assert math.isclose(model._polyhedron_volume(upstand),case['upstand_width']*case['upstand_height']*(case['y_interval'][1]-case['y_interval'][0]),abs_tol=1e-9)
     assert tube['historical_evidence']['status']=='inferred_reconstruction'

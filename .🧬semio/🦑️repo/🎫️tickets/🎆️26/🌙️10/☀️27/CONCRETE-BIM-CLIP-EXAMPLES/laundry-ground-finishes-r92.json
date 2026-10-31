@@ -1,0 +1,207 @@
+{
+  "schema": "laundry_and_ground_finishes_r92",
+  "sources": {
+    "author45": {
+      "path": "🗑️generated/book-figures-45-r92.jpg",
+      "state": "Author2024 reconstruction labelled Savoye1930, not contemporary survey",
+      "size": [
+        693,
+        821
+      ],
+      "registration": {
+        "world_x": "19-(u-6)*4.75/170",
+        "world_y": "1.25+(v-48)*4.75/170",
+        "coordinate_uncertainty_m": 0.15
+      }
+    },
+    "original24": {
+      "path": "🗑️generated/book-figures-24-r92.jpg",
+      "identity": "FLC19441",
+      "date": "1929-04-19",
+      "state": "Design, explicitly earlier than completed target; rotate180degrees for comparison"
+    },
+    "cmn2021": {
+      "url": "https://www.villa-savoye.fr/content/download/9824393/file/document-visite-villa-savoye-FR-2021.pdf?inLanguage=fre-FR&version=3",
+      "section": 7,
+      "fact": "Two exposed formed-concrete laundry troughs; no metric station supplied."
+    }
+  },
+  "laundry": {
+    "count": 2,
+    "count_basis": "CMN2021 §7",
+    "completed_candidate_axis": "Y",
+    "back_side": "lowX toward service facade",
+    "working_side": "highX",
+    "known_unknown": "Author45 has two outlined bowl-like rectangles plus a flat upper panel; precise function of upper panel and original completed trough dimensions not labelled. Do not transfer1929 two equal X-run symbols as completed measurements.",
+    "symbols": [
+      {
+        "id": "author45-short-bowl",
+        "pixels": {
+          "u": [
+            551,
+            571
+          ],
+          "v": [
+            667,
+            690
+          ]
+        },
+        "world_bounds": {
+          "x": [
+            3.2132352941176467,
+            3.7720588235294112
+          ],
+          "y": [
+            18.54558823529412,
+            19.188235294117646
+          ]
+        },
+        "centre": [
+          3.492647058823529,
+          18.866911764705883
+        ],
+        "interpretation": "Short open-rim bowl candidate, author reconstruction",
+        "uncertainty_m": 0.15
+      },
+      {
+        "id": "author45-long-bowl",
+        "pixels": {
+          "u": [
+            551,
+            571
+          ],
+          "v": [
+            693,
+            732
+          ]
+        },
+        "world_bounds": {
+          "x": [
+            3.2132352941176467,
+            3.7720588235294112
+          ],
+          "y": [
+            19.272058823529413,
+            20.361764705882354
+          ]
+        },
+        "centre": [
+          3.492647058823529,
+          19.816911764705882
+        ],
+        "interpretation": "Long open-rim trough candidate, author reconstruction",
+        "uncertainty_m": 0.15
+      },
+      {
+        "id": "author45-upper-flat-panel",
+        "pixels": {
+          "u": [
+            551,
+            571
+          ],
+          "v": [
+            647,
+            666
+          ]
+        },
+        "world_bounds": {
+          "x": [
+            3.2132352941176467,
+            3.7720588235294112
+          ],
+          "y": [
+            17.986764705882354,
+            18.51764705882353
+          ]
+        },
+        "interpretation": "Unlabelled flat panel, not separately asserted third basin"
+      }
+    ],
+    "current_discrepancy": "Current two equal troughs atX4.15/5.55 andY21.05 have no matching station on author45.1929 design uses adjacent X-run bowls, but earlier date prevents completed-state certainty.",
+    "acceptance": "Source-qualified Y-run candidate may replace teaching placement only with inferred metric/state caveat, genuine hollow troughs, floor-bearing supports, actual facade/reveal contact and free standing approach; tap anchors must derive from resulting deck, not old−Y boxes.",
+    "actual_native_wall": {
+      "tag": "W-G-W",
+      "inner_finish_face_x": 3.225,
+      "probe_height": [
+        0.8,
+        0.9
+      ],
+      "probe_y": [
+        18.5,
+        20.5
+      ],
+      "resolved_parts": 6,
+      "source": "b13088148c21235ac59afa14a351d0c87e15a192d489034b1e3936a82f245b90",
+      "inferred_placement_adjustment_m": 0.0117647058823533
+    }
+  },
+  "ground_finishes": [
+    {
+      "room": "ground bedrooms chauffeur/service",
+      "material": "oak strips",
+      "actual_invoice": {
+        "date": "1930-04-30",
+        "archive": "FLC H1(13)122",
+        "strip_thickness_m": 0.025,
+        "strip_width_m": 0.06,
+        "support": "battens held with bitumen"
+      },
+      "earlier_offer_width_m": 0.05,
+      "source": "SAB189",
+      "orientation": "parallel to longer room side per June12 selection discussed by author",
+      "basis": "document attested through scholarly reproduction, not direct invoice facsimile"
+    },
+    {
+      "room": "lingerie laundry",
+      "material": "ochre gres",
+      "tile_m": [
+        0.15,
+        0.15
+      ],
+      "laying_degrees": 0,
+      "basis": "SAB191, final switch from battens to tile per FLC H1(13)108; SAB190 actual tile15cm",
+      "unsecured": [
+        "original grout width",
+        "exact tile origin",
+        "precise layer breakdown"
+      ]
+    },
+    {
+      "room": "ground washbasin niches",
+      "material": "ochre gres patches in surrounding wood floor",
+      "tile_m": [
+        0.15,
+        0.15
+      ],
+      "basis": "SAB191 text/photoFigure15; not shown in earlier plans",
+      "extent": "register directly from author45 niche hatch with ±.15m, no invented fullroom extent"
+    },
+    {
+      "room": "hall/circulation",
+      "material": "creamy white gres",
+      "tile_m": [
+        0.15,
+        0.15
+      ],
+      "laying_degrees": 45,
+      "source": "SAB190–191",
+      "basis": "author synthesis of execution plans and built checks"
+    },
+    {
+      "room": "service stair",
+      "material": "graphite black gres",
+      "tile_m": [
+        0.145,
+        0.145
+      ],
+      "source": "SAB190–191",
+      "basis": "actual built tile size14.5cm differs simple15cm plan module"
+    },
+    {
+      "room": "garage, cupboard interiors, cellar",
+      "material": "trowelled cement",
+      "source": "SAB187",
+      "basis": "material attestation; no new layer thickness inferred here"
+    }
+  ]
+}

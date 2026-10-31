@@ -30,9 +30,10 @@ def source_files() -> tuple[Path, ...]:
     root = Path(__file__).resolve().parents[1]
     nakagin = root.parents[1] / "🏢️nakagin"
     owned = (root / "🧱️model/🐍️.py", root / "🧱️model/🔣️.json", root / "🧱️model/🧬️schema/🔣️.schema.json",
-             nakagin / "🐍️.py", nakagin / "🔣️.json", nakagin / "🧬️schema/🔣️.schema.json", nakagin / "🎨️visuals/🐍️.py")
+             nakagin / "🐍️.py", nakagin / "🔣️.json", nakagin / "🧬️schema/🔣️.schema.json", nakagin / "🎨️visuals/🐍️.py",
+             root.parents[1] / "🔀️morph/🐍️.py", root.parents[1] / "🧲️fit/🐍️.py")
     widgets = sorted(Path(__file__).parent.rglob("🐍️.py"))
-    return (Path(__file__), *widgets, *(path for path in owned if path.exists()), *_theme.source_files())
+    return tuple(dict.fromkeys((Path(__file__), *widgets, *(path for path in owned if path.exists()), *_nakagin.source_files(), *_theme.source_files())))
 
 
 class ClipScene(_drafting.Drafting, _nakagin.NakaginDrawing, _canvas.Canvas, _engine.Scene):

@@ -1,0 +1,138 @@
+\title{Parametrischer Entwurf einer modularen Typologie}
+\author{dMA und NGS}
+\date{}
+\SemioAssignmentSetup{course={Architektur \& Technologie (A\&T)},number={Aufgabe 1},institution={Leibniz Universität Hannover (LUH)},institution-label={LUH},faculty={Fakultät für Architektur und Landschaft (Archland)},faculty-label={Archland},logo={logo-luh.png},cover-image={cover.jpg},cover-title={Typologie},submission={04.12.2026, Upload über Stud.IP bis 10 Uhr}}
+\SemioAssignmentCoverFact{Modul}{Pflichtmodul}
+\SemioAssignmentCoverFact{Studiengang}{5. Semester BSc Architektur}
+\SemioAssignmentCoverFact{Semester}{Wintersemester 2026/27}
+\SemioAssignmentCoverFact{Abgabe}{04.12.2026}
+\SemioAssignmentCoverPartner{dMA}{%
+  Institut für Kunst und Technologie in der Architektur (IKTA)\\Abteilung Digitale Methoden in der Architektur (dMA)\par%
+  \AddressPeople{Prof. Mirco Becker\\Wissenschaftlicher Mitarbeiter: Hendrik Wiese\\Tutor:innen: Eva Maria Hellmann \& Philipp Gottfried}%
+}
+\SemioAssignmentCoverPartner{NGS}{%
+  Institut für Entwerfen und Konstruieren (IEK)\\Abteilung Nachhaltige Gebäudesysteme (NGS)\par%
+  \AddressPeople{Prof. Dr.-Ing. Philipp Geyer\\Wissenschaftlicher Mitarbeiter: Ueli Saluz\\Tutor:innen: Timon Jörns \& Niloufar Ghandeharioun}%
+}
+\SemioHeaderSetup{left={Architektur und Technologie},center={Aufgabe 1},right={Modulare Typologien}}
+\footerlogos{logo-luh.png}
+\begin{document}
+\makeassignmentcover
+\section{Aufgabenstellung}
+Entwickelt in eurer Vierergruppe eine modulare Fassadentypologie für ein Wohnhochhaus. Grundlage ist ein Raster von 4,5\,m × 4,5\,m. Die Geschosshöhe ist frei wählbar, muss im Grundtyp aber innerhalb der Gruppe einheitlich sein.
+
+Das Hochhaus setzt sich aus acht Modultypen zusammen (vier Eckmodule, vier Mittelmodule), die innerhalb des Rasters flexibel kombiniert werden können. Jede Person modelliert ein Eck- und ein Mittelmodul parametrisch in Grasshopper. Auf dieser Grundlage werden Varianten erzeugt, energetisch ausgewertet und miteinander verglichen.
+
+Präsentation und Abgabe sind am 04.12.2026, Upload bis 10 Uhr. Nutzt für die Darstellung die auf Stud.IP bereitgestellte Layoutvorlage. Der NGS-Teil und der dMA-Teil werden separat betreut und bewertet.
+\begin{Table}[title=Arbeitsablauf, break=false]
+\begin{SemioTable}{0.10,0.10,0.16,0.64}
+  \SemioTableHeaderRow{Teil & Fach & Form & Inhalt}
+  \SemioTableRow{A & dMA & Gruppe & Typologie festlegen, acht Modultypen entwickeln und benennen, gemeinsame Systemparameter vereinbaren.}
+  \SemioTableRow{B & dMA & einzeln & Eigenes Eck- und Mittelmodul in Grasshopper modellieren, Grundtyp und Varianten darstellen.}
+  \SemioTableRow{C & NGS & Gruppe & Schichtaufbau der Fassade zeichnen und U-Werte je Flächentyp festlegen.}
+  \SemioTableRow{D & NGS & einzeln & Simulationsmodell erzeugen, U-Werte, Heizwärmebedarf und Kühllast berechnen, sommerliche Luftströmung abschätzen und die Varianten darstellen.}
+\end{SemioTable}
+\end{Table}
+Alle Ergebnisse fließen anschließend als Übersicht in ein gemeinsames Layout ein.
+\subsection{Definitionen}
+\begin{Table}[title=Begriffe, break=false]
+\begin{SemioTable}{0.24,0.76}
+  \SemioTableHeaderRow{Begriff & Bedeutung}
+  \SemioTableRow{Typologie & Das übergeordnete Konzept. Die Typologie legt fest, welche Regeln, gestalterischen Entscheidungen und Parameter für das Gesamtsystem gelten.}
+  \SemioTableRow{Modultyp & Eine Typologie umfasst verschiedene Modultypen innerhalb einer kombinatorischen Logik. Modultypen unterscheiden sich durch ihre Position (Eckmodul oder Mittelmodul) und durch typenabhängige Attribute (z.\,B. Fenster oder kein Fenster, Balkon oder kein Balkon). Ein Eckmodul hat zwei Fassadenseiten, ein Mittelmodul eine.}
+  \SemioTableRow{Grundtyp (Variante~0) & Der Modultyp mit den in der Gruppe vereinbarten Grundeinstellungen der Parameter. Im Grundtyp ist jedes Modul 4,5\,m × 4,5\,m groß und eingeschossig; die Geschosshöhe ist frei wählbar, aber für alle Grundtypen der Gruppe gleich.}
+  \SemioTableRow{Variante & Das parametrische Modell jedes Modultyps erzeugt Varianten, bei denen sich die Parameter innerhalb eines definierten Lösungsraums ändern (z.\,B. Modulbreite, Modultiefe, Geschosshöhe, Anzahl von Elementen).}
+\end{SemioTable}
+\end{Table}
+\subsection{Teil A – dMA (Gruppenarbeit): Typologie und Modultypen}
+In diesem ersten Schritt trefft ihr als Gruppe die grundlegenden Entwurfsentscheidungen.
+\begin{itemize}
+  \item Entwickelt acht Modultypen: vier Eckmodule und vier Mittelmodule.
+  \item Legt die gemeinsamen Systemparameter und Parameterräume fest (z.\,B. Modulbreite, Modultiefe, Geschosshöhe, Anzahl der Rasterfelder) sowie die Grundeinstellungen des Grundtyps.
+  \item Gebt jedem Modultyp einen eindeutigen Namen. Dieser Name wird später auch in den Dateinamen der Einzelabgabe verwendet.
+  \item Erstellt eine Übersichtstabelle, in der ihr die Attribute der acht Modultypen gegenüberstellt. Eine Darstellungsvorlage findet ihr in der Layoutvorlage auf Stud.IP. Als Schemadarstellung dient die Axonometrie des Grundtyps aus Teil~B.
+\end{itemize}
+Die folgende Tabelle dient nur zur Veranschaulichung und ist keine feste Vorgabe. Wählt gerne eigene Attribute und ein eigenes Namensschema.
+\begin{Table}[title=Beispiel für die Übersichtstabelle, break=false]
+\begin{SemioTable}{0.31,0.23,0.23,0.23}
+  \SemioTableHeaderRow{Attribut & Modultyp 1 & Modultyp 2 & Modultyp 3}
+  \SemioTableRow{Name & \texttt{M-B-1-Q} & \texttt{M-W-2-H} & \texttt{E-B-2-QH}}
+  \SemioTableRow{Schema & \AssignmentContrastImage[width=.86\linewidth]{schema-m-b-1-q.png} & \AssignmentContrastImage[width=.86\linewidth]{schema-m-w-2-h.png} & \AssignmentContrastImage[width=.86\linewidth]{schema-e-b-2-qh.png}}
+  \SemioTableRow{Position [Mitte | Ecke] & Mitte & Mitte & Ecke}
+  \SemioTableRow{Art [Wand | Balkon] & Balkon & Wand & Balkon}
+  \SemioTableRow{Anzahl Fensterelemente & 1 & 2 & 2}
+  \SemioTableRow{Fensterformat [hoch | quer] & quer & hoch & quer/hoch}
+  \SemioTableRow{… & … & … & …}
+\end{SemioTable}
+\end{Table}
+Namensschema im Beispiel: Position – Art – Anzahl Fensterelemente – Fensterformat, also \texttt{M}~=~Mitte, \texttt{E}~=~Ecke; \texttt{W}~=~Wand, \texttt{B}~=~Balkon; \texttt{H}~=~hoch, \texttt{Q}~=~quer.
+\subsection{Teil B – dMA (Einzelarbeit): Parametrisches Modell}
+Teilt die acht Modultypen innerhalb der Gruppe auf. Jede Person modelliert ein Eck- und ein Mittelmodul eigenständig in Grasshopper, ohne zusätzliche Plug-ins. Die Modultypen sollen sich in ihrer Ausführung unterscheiden, aber eine gemeinsame Entwurfssprache haben. Stimmt euch in der Gruppe eng ab: Ziel ist ein gemeinsames System, an dem später alle weiterarbeiten können.
+
+\paragraph{Vor dem Modellieren}
+\begin{itemize}
+  \item Entscheidet bewusst, welche Maße ihr absolut und welche relativ zur Modulgröße modelliert. Davon hängt ab, welche Elemente sich automatisch mit der Modulgröße verändern und welche statisch bleiben und einzeln dimensioniert werden müssen.
+  \item Haltet euch an die in Teil~A vereinbarten Systemparameter, Parameterräume und Grundeinstellungen.
+\end{itemize}
+\paragraph{Visualisierungsmodell}
+Euer parametrisches Modell gibt für jede Variante das Visualisierungsmodell aus: die detaillierte 3D-Geometrie des Moduls. Es dient als Grundlage für die Axonometrien. Das Simulationsmodell für Teil~D wird später aus denselben Parametern erzeugt, damit beide Modelle bei jeder Variante übereinstimmen.
+\paragraph{Darstellungen}
+Erstellt die folgenden Grafiken jeweils für das Eck- und das Mittelmodul und fügt sie in die Layoutvorlage ein.
+\begin{itemize}
+  \item \textbf{Axonometrie des Grundtyps (Variante~0):} eine Axonometrie je Modultyp mit den in der Gruppe vereinbarten Grundeinstellungen, damit die Modultypen vergleichbar sind.
+  \item \textbf{Axonometrien der Varianten 1–4:} vier Darstellungen je Modultyp, bei denen die Parameter innerhalb des festgelegten Lösungsraums sinnvoll verändert wurden. Modulbreite, Modultiefe und Geschosshöhe dürfen dabei vom Grundtyp abweichen. Alle Varianten werden aus derselben Perspektive dargestellt, damit sie vergleichbar sind.
+\end{itemize}
+\textbf{Wichtig:} Übertragt die Grasshopper-Geometrie, die ihr darstellen wollt, per Bake nach Rhino und erstellt alle Modellgrafiken auf Grundlage des dMA-Tripy-Display-Templates.
+\subsection{Teil C – NGS (Gruppenarbeit): Schichtaufbau}
+Zeichnet, bemaßt und beschriftet einen gemeinsamen Schichtaufbau eurer Fassade im Maßstab 1:25 und fügt ihn in die Layoutvorlage ein.
+
+Gebt an, aus welchen Flächentypen die Konstruktion besteht, und legt für jeden Flächentyp einen U-Wert fest. Mögliche Flächentypen sind z.\,B.:
+\begin{itemize}
+  \item opake Außenwand
+  \item Verglasung
+  \item Fensterrahmen
+  \item Brüstung oder Paneel
+  \item Anschlüsse und Durchdringungen, z.\,B. Balkonanschluss
+\end{itemize}
+\subsection{Teil D – NGS (Einzelarbeit): Energetische Auswertung}
+Jede Person wertet ihre eigenen Modultypen aus, also den Grundtyp (Variante~0) und die Varianten 1–4 des Eck- und des Mittelmoduls. Grundlage sind die Flächentypen und U-Werte aus Teil~C sowie das Simulationsmodell der jeweiligen Variante. Die Randbedingungen (z.\,B. Standort, Orientierung, innere Lasten) sind in den Berechnungsvorlagen auf Stud.IP vorgegeben.
+\paragraph{Simulationsmodell}
+Erweitert euer parametrisches Modell aus Teil~B um das Simulationsmodell: eine vereinfachte Geometrie aus ebenen 2D-Flächen, getrennt nach den Flächentypen aus Teil~C (z.\,B. opake Außenwand, Verglasung, Fensterrahmen, Verschattungselemente wie Balkonplatten). Es wird aus denselben Parametern wie das Visualisierungsmodell erzeugt und dient zur Ermittlung der Flächenanteile für die U-Wert-Berechnung und zur Analyse, z.\,B. der Verschattung. Jede Fläche erhält als Material die Farbe ihres U-Werts nach der festen Farbskala der Layoutvorlage.
+\paragraph{Berechnungen}
+\begin{itemize}
+  \item \textbf{U-Wert:} Berechnet für jede Variante den mittleren U-Wert des inhomogenen Fassadenbauteils.
+  \item \textbf{Heizwärmebedarf und Kühllast:} Berechnet beides für einen Raum, dem die jeweilige Variante als Fassade vorgesetzt ist. Im Grundtyp misst der Raum 4,5\,m × 4,5\,m × Geschosshöhe; bei den Varianten entspricht er den Abmessungen der Variante. Der Raum hinter einem Eckmodul hat zwei Außenwände.
+  \item \textbf{Luftströmung:} Schätzt für den Sommerfall bei voller Sonneneinstrahlung ab, wie die Luft durch die Fassade und den Raum strömt, z.\,B. durch die Fensteröffnungen und den thermischen Auftrieb. Stellt Richtung und Größenordnung als Pfeile in den Axonometrien des Simulationsmodells dar.
+\end{itemize}
+Exportiert die ausgefüllte Berechnungsvorlage als CSV-Datei für die Einzelabgabe.
+\paragraph{Darstellungen}
+Erstellt für das Eck- und das Mittelmodul dieselben Axonometrien wie in Teil~B, also Grundtyp und Varianten 1–4 aus derselben Perspektive, jedoch mit dem Simulationsmodell. Die ebenen Flächen sind nach ihrem U-Wert eingefärbt; es gilt die feste Farbskala der Layoutvorlage. Zeichnet die abgeschätzte Luftströmung ein und fügt die Grafiken in die Layoutvorlage ein.
+\subsection{Bewertung (dMA-Teil)}
+Bewertet wird nicht die Gestaltung, sondern die Arbeit am parametrischen System. Wer die Inhalte der Lehrvideos vollständig umsetzt, schafft die Grundlage für die Note 2,7. Für eine bessere Note bewerten wir:
+\begin{itemize}
+  \item \textbf{Eigenständigkeit:} eigene Lösungen über die Lehrvideos hinaus
+  \item \textbf{Komplexität:} Umfang und Anspruch des parametrischen Modells
+  \item \textbf{Systemdesign:} Aufbau, Logik und Nachvollziehbarkeit des Systems
+  \item \textbf{Exploration:} Breite und Aussagekraft der untersuchten Varianten
+\end{itemize}
+\subsection{Abgabe}
+Abgabe ist am 04.12.2026 über Stud.IP. Bitte haltet die Dateibenennung genau ein.
+\paragraph{Gruppenabgabe}
+Upload als PDF-Datei: die ausgefüllte Layoutvorlage mit den Ergebnissen aus Teil~A bis~D, benannt \texttt{GruppeXX\_Zwischenkolloquium.pdf}.
+\paragraph{Einzelabgabe}
+Upload als ZIP-Datei \texttt{Nachname\_Zwischenkolloquium.zip} mit folgendem Inhalt:
+\begin{Table}[title=Inhalt der Einzelabgabe]
+\begin{SemioTable}{0.40,0.10,0.50}
+  \SemioTableHeaderRow{Inhalt & Format & Dateiname}
+  \SemioTableRow{Axonometrien Mittelmodul, Variante 0–4 (5 Bilder) & PNG & \texttt{Nachname\_Mittelmodul\_Variante0.png} … \texttt{Nachname\_Mittelmodul\_Variante4.png}}
+  \SemioTableRow{Axonometrien Eckmodul, Variante 0–4 (5 Bilder) & PNG & \texttt{Nachname\_Eckmodul\_Variante0.png} … \texttt{Nachname\_Eckmodul\_Variante4.png}}
+  \SemioTableRow{Axonometrien Simulationsmodell Mittelmodul mit U-Werten und Luftströmung, Variante 0–4 (5 Bilder) & PNG & \texttt{Nachname\_Mittelmodul\_Simulation\_Variante0.png} … \texttt{Nachname\_Mittelmodul\_Simulation\_Variante4.png}}
+  \SemioTableRow{Axonometrien Simulationsmodell Eckmodul mit U-Werten und Luftströmung, Variante 0–4 (5 Bilder) & PNG & \texttt{Nachname\_Eckmodul\_Simulation\_Variante0.png} … \texttt{Nachname\_Eckmodul\_Simulation\_Variante4.png}}
+  \SemioTableRow{Parametrisches Modell & GH & \texttt{Nachname\_ParamModell.gh}}
+  \SemioTableRow{Visualisierungsmodell je Modultyp (2 Dateien) & GLB & \texttt{Nachname\_Modultypname\_Visualisierung.glb}}
+  \SemioTableRow{Simulationsmodell je Modultyp mit U-Wert-Farbe als Material (2 Dateien) & GLB & \texttt{Nachname\_Modultypname\_Simulation.glb}}
+  \SemioTableRow{Energetische Auswertung und Luftströmung der Varianten (Export der Berechnungsvorlage) & CSV & \texttt{Nachname\_Performance.csv}}
+\end{SemioTable}
+\end{Table}
+„Modultypname“ steht für den Namen, den ihr dem Modultyp in Teil~A gegeben habt, z.\,B. \texttt{Mueller\_M-B-1-Q\_Visualisierung.glb}.
+\end{document}

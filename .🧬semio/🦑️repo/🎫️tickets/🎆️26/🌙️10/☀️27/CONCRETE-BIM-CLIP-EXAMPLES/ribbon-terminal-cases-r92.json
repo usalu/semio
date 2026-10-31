@@ -1,0 +1,847 @@
+{
+  "title": "Source Registered Ribbon and Low Terminal Cases R92",
+  "source_sha256": "528b3ffeab26e4c038b9eb603e7ae1e9bc52c66a1f068b3e799de8fcd66ccc8f",
+  "basis": "read-only authored portable input; implementationownedbyroot",
+  "ribbons": [
+    {
+      "filling": "RW-S",
+      "opening": "OP-S",
+      "host": "W-S",
+      "source_page": 52,
+      "source_image": "🗑️generated/book-figures-52-white-r92.png",
+      "host_path": [
+        [
+          -0.15,
+          0.1
+        ],
+        [
+          19.15,
+          0.1
+        ]
+      ],
+      "current_opening_start_m": 1.2,
+      "current_opening_end_m": 17.8,
+      "world_axis": "x",
+      "world_interval_m": [
+        1.05,
+        17.650000000000002
+      ],
+      "registration": {
+        "pixel_u0": 47,
+        "world_u0_m": 0,
+        "world_per_pixel_m": 0.027777777777777776,
+        "axis_controls_pixel": [
+          47,
+          218,
+          389,
+          560,
+          731
+        ],
+        "orientation_evidence": "Front entry and salon/kitchen handedness; original plan46 kitchen atlowX corresponds leftfrontend"
+      },
+      "members": [
+        {
+          "pixel_u": 109.5,
+          "world_axis_m": 1.7361111111111112,
+          "opening_fraction": 0.04133199464524765
+        },
+        {
+          "pixel_u": 152.5,
+          "world_axis_m": 2.9305555555555554,
+          "opening_fraction": 0.11328647925033465
+        },
+        {
+          "pixel_u": 194.5,
+          "world_axis_m": 4.097222222222222,
+          "opening_fraction": 0.18356760374832665
+        },
+        {
+          "pixel_u": 219,
+          "world_axis_m": 4.777777777777778,
+          "opening_fraction": 0.22456492637215528
+        },
+        {
+          "pixel_u": 265.5,
+          "world_axis_m": 6.069444444444445,
+          "opening_fraction": 0.30237617135207495
+        },
+        {
+          "pixel_u": 310,
+          "world_axis_m": 7.305555555555555,
+          "opening_fraction": 0.3768406961178045
+        },
+        {
+          "pixel_u": 354.5,
+          "world_axis_m": 8.541666666666666,
+          "opening_fraction": 0.4513052208835341
+        },
+        {
+          "pixel_u": 398.5,
+          "world_axis_m": 9.76388888888889,
+          "opening_fraction": 0.5249330655957162
+        },
+        {
+          "pixel_u": 443,
+          "world_axis_m": 11,
+          "opening_fraction": 0.5993975903614457
+        },
+        {
+          "pixel_u": 487,
+          "world_axis_m": 12.222222222222221,
+          "opening_fraction": 0.6730254350736277
+        },
+        {
+          "pixel_u": 532,
+          "world_axis_m": 13.472222222222221,
+          "opening_fraction": 0.7483266398929048
+        },
+        {
+          "pixel_u": 576,
+          "world_axis_m": 14.694444444444445,
+          "opening_fraction": 0.8219544846050869
+        },
+        {
+          "pixel_u": 621,
+          "world_axis_m": 15.944444444444445,
+          "opening_fraction": 0.8972556894243641
+        },
+        {
+          "pixel_u": 665.5,
+          "world_axis_m": 17.180555555555557,
+          "opening_fraction": 0.9717202141900937
+        }
+      ],
+      "stations": [
+        0,
+        0.04133199,
+        0.11328648,
+        0.1835676,
+        0.22456493,
+        0.30237617,
+        0.3768407,
+        0.45130522,
+        0.52493307,
+        0.59939759,
+        0.67302544,
+        0.74832664,
+        0.82195448,
+        0.89725569,
+        0.97172021,
+        1
+      ],
+      "reference_glass_ranges": [
+        {
+          "pixels": [
+            54,
+            723
+          ],
+          "world_m": [
+            0.19444444444444445,
+            18.77777777777778
+          ],
+          "current_opening_fraction": [
+            -0.051539491298527446,
+            1.0679384203480589
+          ]
+        }
+      ],
+      "reference_opaque_jamb_ranges": [],
+      "role": "glazed ribbon with nonuniform source-derived members",
+      "uncertainty": {
+        "pixel_read_px": 2,
+        "world_m": 0.06,
+        "basis": "Modern scholarly1930reconstruction raster, not original shop measurement; station proportion inferred. Historical source-attested division count with trace uncertainty."
+      },
+      "acceptance": [
+        "Author occurrence-specificstations; retainindividualmemberattribution",
+        "Currentaperture limits are assumed and truncate sourcerasterglass; thiscase doesnotcertifycurrentjambcoordinates",
+        "Respect opaquejambintervals ratherthan fillingthemwithglass",
+        "Independent GEOSquantities and pairwisenonintersection; testregistration reversal"
+      ]
+    },
+    {
+      "filling": "RW-N",
+      "opening": "OP-N",
+      "host": "W-N",
+      "source_page": 50,
+      "source_image": "🗑️generated/book-figures-50-white-r92.png",
+      "host_path": [
+        [
+          -0.15,
+          21.4
+        ],
+        [
+          19.15,
+          21.4
+        ]
+      ],
+      "current_opening_start_m": 1.2,
+      "current_opening_end_m": 17.8,
+      "world_axis": "x",
+      "world_interval_m": [
+        1.05,
+        17.650000000000002
+      ],
+      "registration": {
+        "pixel_u0": 47,
+        "world_u0_m": 19,
+        "world_per_pixel_m": -0.027777777777777776,
+        "axis_controls_pixel": [
+          47,
+          218,
+          389,
+          560,
+          731
+        ],
+        "orientation_evidence": "Rear service-room topology; camera oppositefront reversesX"
+      },
+      "members": [
+        {
+          "pixel_u": 690,
+          "world_axis_m": 1.1388888888888893,
+          "opening_fraction": 0.0053547523427041705
+        },
+        {
+          "pixel_u": 645.5,
+          "world_axis_m": 2.375,
+          "opening_fraction": 0.07981927710843373
+        },
+        {
+          "pixel_u": 602,
+          "world_axis_m": 3.583333333333334,
+          "opening_fraction": 0.1526104417670683
+        },
+        {
+          "pixel_u": 561.5,
+          "world_axis_m": 4.708333333333334,
+          "opening_fraction": 0.2203815261044177
+        },
+        {
+          "pixel_u": 556,
+          "world_axis_m": 4.861111111111111,
+          "opening_fraction": 0.2295850066934404
+        },
+        {
+          "pixel_u": 512,
+          "world_axis_m": 6.083333333333334,
+          "opening_fraction": 0.3032128514056225
+        },
+        {
+          "pixel_u": 468,
+          "world_axis_m": 7.305555555555555,
+          "opening_fraction": 0.3768406961178045
+        },
+        {
+          "pixel_u": 424,
+          "world_axis_m": 8.527777777777779,
+          "opening_fraction": 0.4504685408299866
+        },
+        {
+          "pixel_u": 380,
+          "world_axis_m": 9.75,
+          "opening_fraction": 0.5240963855421686
+        },
+        {
+          "pixel_u": 335.5,
+          "world_axis_m": 10.98611111111111,
+          "opening_fraction": 0.5985609103078982
+        },
+        {
+          "pixel_u": 291,
+          "world_axis_m": 12.222222222222221,
+          "opening_fraction": 0.6730254350736277
+        },
+        {
+          "pixel_u": 247.5,
+          "world_axis_m": 13.430555555555555,
+          "opening_fraction": 0.7458165997322622
+        },
+        {
+          "pixel_u": 200,
+          "world_axis_m": 14.75,
+          "opening_fraction": 0.825301204819277
+        },
+        {
+          "pixel_u": 154.5,
+          "world_axis_m": 16.01388888888889,
+          "opening_fraction": 0.9014390896921016
+        },
+        {
+          "pixel_u": 110.5,
+          "world_axis_m": 17.23611111111111,
+          "opening_fraction": 0.9750669344042836
+        }
+      ],
+      "stations": [
+        0,
+        0.00535475,
+        0.07981928,
+        0.15261044,
+        0.22038153,
+        0.22958501,
+        0.30321285,
+        0.3768407,
+        0.45046854,
+        0.52409639,
+        0.59856091,
+        0.67302544,
+        0.7458166,
+        0.8253012,
+        0.90143909,
+        0.97506693,
+        1
+      ],
+      "reference_glass_ranges": [
+        {
+          "pixels": [
+            54,
+            213
+          ],
+          "world_m": [
+            14.38888888888889,
+            18.805555555555557
+          ],
+          "current_opening_fraction": [
+            0.8035475234270414,
+            1.069611780455154
+          ]
+        },
+        {
+          "pixels": [
+            224,
+            723
+          ],
+          "world_m": [
+            0.22222222222222143,
+            14.083333333333332
+          ],
+          "current_opening_fraction": [
+            -0.04986613119143244,
+            0.7851405622489958
+          ]
+        }
+      ],
+      "reference_opaque_jamb_ranges": [
+        {
+          "pixels": [
+            213,
+            224
+          ],
+          "world_m": [
+            14.083333333333332,
+            14.38888888888889
+          ],
+          "current_opening_fraction": [
+            0.7851405622489958,
+            0.8035475234270414
+          ]
+        }
+      ],
+      "role": "glazed ribbon with nonuniform source-derived members",
+      "uncertainty": {
+        "pixel_read_px": 2,
+        "world_m": 0.06,
+        "basis": "Modern scholarly1930reconstruction raster, not original shop measurement; station proportion inferred. Historical source-attested division count with trace uncertainty."
+      },
+      "acceptance": [
+        "Author occurrence-specificstations; retainindividualmemberattribution",
+        "Currentaperture limits are assumed and truncate sourcerasterglass; thiscase doesnotcertifycurrentjambcoordinates",
+        "Respect opaquejambintervals ratherthan fillingthemwithglass",
+        "Independent GEOSquantities and pairwisenonintersection; testregistration reversal"
+      ]
+    },
+    {
+      "filling": "RW-W",
+      "opening": "OP-W",
+      "host": "W-W",
+      "source_page": 48,
+      "source_image": "🗑️generated/book-figures-48-r92.jpg",
+      "host_path": [
+        [
+          0,
+          0.3
+        ],
+        [
+          0,
+          21.2
+        ]
+      ],
+      "current_opening_start_m": 1,
+      "current_opening_end_m": 5.8,
+      "world_axis": "y",
+      "world_interval_m": [
+        1.3,
+        6.1
+      ],
+      "registration": {
+        "pixel_u0": 51,
+        "world_u0_m": 20.25,
+        "world_per_pixel_m": -0.027777777777777776,
+        "axis_controls_pixel": [
+          51,
+          222,
+          393,
+          564,
+          735
+        ],
+        "orientation_evidence": "Kitchenpatio void correspondsY6.2..8.9 atimageu450..565; confirmsYdecreasesright"
+      },
+      "members": [
+        {
+          "pixel_u": 701.5,
+          "world_axis_m": 2.180555555555557,
+          "opening_fraction": 0.1834490740740744
+        },
+        {
+          "pixel_u": 654.5,
+          "world_axis_m": 3.4861111111111107,
+          "opening_fraction": 0.45543981481481477
+        },
+        {
+          "pixel_u": 609.5,
+          "world_axis_m": 4.736111111111111,
+          "opening_fraction": 0.7158564814814815
+        }
+      ],
+      "stations": [
+        0,
+        0.18344907,
+        0.45543981,
+        0.71585648,
+        1
+      ],
+      "reference_glass_ranges": [
+        {
+          "pixels": [
+            567,
+            731
+          ],
+          "world_m": [
+            1.3611111111111107,
+            5.916666666666666
+          ],
+          "current_opening_fraction": [
+            0.01273148148148139,
+            0.9618055555555555
+          ]
+        }
+      ],
+      "reference_opaque_jamb_ranges": [],
+      "role": "glazed ribbon with nonuniform source-derived members",
+      "uncertainty": {
+        "pixel_read_px": 2,
+        "world_m": 0.06,
+        "basis": "Modern scholarly1930reconstruction raster, not original shop measurement; station proportion inferred. Historical source-attested division count with trace uncertainty."
+      },
+      "acceptance": [
+        "Author occurrence-specificstations; retainindividualmemberattribution",
+        "Currentaperture limits are assumed and truncate sourcerasterglass; thiscase doesnotcertifycurrentjambcoordinates",
+        "Respect opaquejambintervals ratherthan fillingthemwithglass",
+        "Independent GEOSquantities and pairwisenonintersection; testregistration reversal"
+      ]
+    },
+    {
+      "filling": "RW-W-UPPER",
+      "opening": "OP-W-UPPER",
+      "host": "W-W",
+      "source_page": 48,
+      "source_image": "🗑️generated/book-figures-48-r92.jpg",
+      "host_path": [
+        [
+          0,
+          0.3
+        ],
+        [
+          0,
+          21.2
+        ]
+      ],
+      "current_opening_start_m": 8.7,
+      "current_opening_end_m": 19.5,
+      "world_axis": "y",
+      "world_interval_m": [
+        9,
+        19.8
+      ],
+      "registration": {
+        "pixel_u0": 51,
+        "world_u0_m": 20.25,
+        "world_per_pixel_m": -0.027777777777777776,
+        "axis_controls_pixel": [
+          51,
+          222,
+          393,
+          564,
+          735
+        ],
+        "orientation_evidence": "Kitchenpatio void correspondsY6.2..8.9 atimageu450..565; confirmsYdecreasesright"
+      },
+      "members": [
+        {
+          "pixel_u": 361,
+          "world_axis_m": 11.63888888888889,
+          "opening_fraction": 0.24434156378600824
+        },
+        {
+          "pixel_u": 318,
+          "world_axis_m": 12.833333333333332,
+          "opening_fraction": 0.3549382716049381
+        },
+        {
+          "pixel_u": 275,
+          "world_axis_m": 14.027777777777779,
+          "opening_fraction": 0.46553497942386834
+        },
+        {
+          "pixel_u": 250,
+          "world_axis_m": 14.722222222222221,
+          "opening_fraction": 0.529835390946502
+        },
+        {
+          "pixel_u": 171,
+          "world_axis_m": 16.916666666666668,
+          "opening_fraction": 0.7330246913580247
+        },
+        {
+          "pixel_u": 125.5,
+          "world_axis_m": 18.180555555555557,
+          "opening_fraction": 0.8500514403292182
+        },
+        {
+          "pixel_u": 80.5,
+          "world_axis_m": 19.430555555555557,
+          "opening_fraction": 0.9657921810699589
+        }
+      ],
+      "stations": [
+        0,
+        0.24434156,
+        0.35493827,
+        0.46553498,
+        0.52983539,
+        0.73302469,
+        0.85005144,
+        0.96579218,
+        1
+      ],
+      "reference_glass_ranges": [
+        {
+          "pixels": [
+            55,
+            216
+          ],
+          "world_m": [
+            15.666666666666668,
+            20.13888888888889
+          ],
+          "current_opening_fraction": [
+            0.617283950617284,
+            1.0313786008230452
+          ]
+        },
+        {
+          "pixels": [
+            228,
+            386
+          ],
+          "world_m": [
+            10.944444444444445,
+            15.333333333333332
+          ],
+          "current_opening_fraction": [
+            0.1800411522633745,
+            0.5864197530864196
+          ]
+        },
+        {
+          "pixels": [
+            397,
+            454
+          ],
+          "world_m": [
+            9.055555555555555,
+            10.63888888888889
+          ],
+          "current_opening_fraction": [
+            0.005144032921810681,
+            0.15174897119341565
+          ]
+        }
+      ],
+      "reference_opaque_jamb_ranges": [
+        {
+          "pixels": [
+            216,
+            228
+          ],
+          "world_m": [
+            15.333333333333332,
+            15.666666666666668
+          ],
+          "current_opening_fraction": [
+            0.5864197530864196,
+            0.617283950617284
+          ]
+        },
+        {
+          "pixels": [
+            386,
+            397
+          ],
+          "world_m": [
+            10.63888888888889,
+            10.944444444444445
+          ],
+          "current_opening_fraction": [
+            0.15174897119341565,
+            0.1800411522633745
+          ]
+        }
+      ],
+      "role": "glazed ribbon with nonuniform source-derived members",
+      "uncertainty": {
+        "pixel_read_px": 2,
+        "world_m": 0.06,
+        "basis": "Modern scholarly1930reconstruction raster, not original shop measurement; station proportion inferred. Historical source-attested division count with trace uncertainty."
+      },
+      "acceptance": [
+        "Author occurrence-specificstations; retainindividualmemberattribution",
+        "Currentaperture limits are assumed and truncate sourcerasterglass; thiscase doesnotcertifycurrentjambcoordinates",
+        "Respect opaquejambintervals ratherthan fillingthemwithglass",
+        "Independent GEOSquantities and pairwisenonintersection; testregistration reversal"
+      ]
+    },
+    {
+      "filling": "RW-E",
+      "opening": "OP-E",
+      "host": "W-E",
+      "source_page": 53,
+      "source_image": "🗑️generated/book-figures-53-white-r92.png",
+      "host_path": [
+        [
+          19,
+          0.3
+        ],
+        [
+          19,
+          6.081
+        ]
+      ],
+      "current_opening_start_m": 1,
+      "current_opening_end_m": 5.631,
+      "world_axis": "y",
+      "world_interval_m": [
+        1.3,
+        5.931
+      ],
+      "registration": {
+        "pixel_u0": 53,
+        "world_u0_m": 1.25,
+        "world_per_pixel_m": 0.027777777777777776,
+        "axis_controls_pixel": [
+          53,
+          224,
+          395,
+          566,
+          737
+        ],
+        "orientation_evidence": "Opengarden/ramp betweenfrontsalon and rearkiosk; confirmsYincreasesright"
+      },
+      "members": [
+        {
+          "pixel_u": 71.5,
+          "world_axis_m": 1.7638888888888888,
+          "opening_fraction": 0.10017034957652532
+        },
+        {
+          "pixel_u": 115.5,
+          "world_axis_m": 2.986111111111111,
+          "opening_fraction": 0.36409222870030467
+        },
+        {
+          "pixel_u": 158.5,
+          "world_axis_m": 4.180555555555555,
+          "opening_fraction": 0.6220158832985436
+        },
+        {
+          "pixel_u": 203.5,
+          "world_axis_m": 5.430555555555555,
+          "opening_fraction": 0.8919359869478634
+        }
+      ],
+      "stations": [
+        0,
+        0.10017035,
+        0.36409223,
+        0.62201588,
+        0.89193599,
+        1
+      ],
+      "reference_glass_ranges": [
+        {
+          "pixels": [
+            58,
+            217
+          ],
+          "world_m": [
+            1.3888888888888888,
+            5.805555555555555
+          ],
+          "current_opening_fraction": [
+            0.019194318481729387,
+            0.9729120180426594
+          ]
+        }
+      ],
+      "reference_opaque_jamb_ranges": [],
+      "role": "glazed ribbon with nonuniform source-derived members",
+      "uncertainty": {
+        "pixel_read_px": 2,
+        "world_m": 0.06,
+        "basis": "Modern scholarly1930reconstruction raster, not original shop measurement; station proportion inferred. Historical source-attested division count with trace uncertainty."
+      },
+      "acceptance": [
+        "Author occurrence-specificstations; retainindividualmemberattribution",
+        "Currentaperture limits are assumed and truncate sourcerasterglass; thiscase doesnotcertifycurrentjambcoordinates",
+        "Respect opaquejambintervals ratherthan fillingthemwithglass",
+        "Independent GEOSquantities and pairwisenonintersection; testregistration reversal"
+      ]
+    },
+    {
+      "filling": "RW-KIOSK-E",
+      "opening": "OP-KIOSK-E",
+      "host": "W-KIOSK-E",
+      "source_page": 53,
+      "source_image": "🗑️generated/book-figures-53-white-r92.png",
+      "host_path": [
+        [
+          19,
+          15.5
+        ],
+        [
+          19,
+          21.2
+        ]
+      ],
+      "current_opening_start_m": 0.2,
+      "current_opening_end_m": 5.4,
+      "world_axis": "y",
+      "world_interval_m": [
+        15.7,
+        20.9
+      ],
+      "registration": {
+        "pixel_u0": 53,
+        "world_u0_m": 1.25,
+        "world_per_pixel_m": 0.027777777777777776,
+        "axis_controls_pixel": [
+          53,
+          224,
+          395,
+          566,
+          737
+        ],
+        "orientation_evidence": "Opengarden/ramp betweenfrontsalon and rearkiosk; confirmsYincreasesright"
+      },
+      "members": [],
+      "stations": [
+        0,
+        1
+      ],
+      "reference_glass_ranges": [],
+      "reference_opaque_jamb_ranges": [],
+      "role": "open unglazed framed aperture",
+      "uncertainty": {
+        "pixel_read_px": 2,
+        "world_m": 0.06,
+        "basis": "Modern scholarly1930reconstruction raster, not original shop measurement; station proportion inferred. Historical source-attested division count with trace uncertainty."
+      },
+      "acceptance": [
+        "Remove glass filling; retain actual source-attested frame/wall aperture",
+        "Do not inventpane schedule in emptykioskband"
+      ]
+    }
+  ],
+  "low_terminals": {
+    "source_page": 47,
+    "image": "🗑️generated/book-figures-47-r92.jpg",
+    "image_size": [
+      694,
+      821
+    ],
+    "grid": {
+      "u": [
+        7,
+        177,
+        347,
+        517,
+        687
+      ],
+      "v": [
+        48,
+        218,
+        388,
+        558,
+        728
+      ],
+      "pitch_m": 4.75,
+      "formula_x": "19-(u-7)*4.75/170",
+      "formula_y": "1.25+(v-48)*4.75/170"
+    },
+    "candidates": [
+      {
+        "id": "CHIMNEY-BOUDOIR-LOW",
+        "function": "Boudoir stove",
+        "center_px": [
+          260.5,
+          675.5
+        ],
+        "center_m": [
+          11.916911764705883,
+          18.783088235294116
+        ],
+        "programme_check": "Inside current SP-BOUDOIR",
+        "outside_square_m": 0.36,
+        "circular_clear_bore_m": 0.17
+      },
+      {
+        "id": "CHIMNEY-LINGERIE-LOW",
+        "function": "Laundry/linen room flue",
+        "center_px": [
+          544.5,
+          714.5
+        ],
+        "center_m": [
+          3.9816176470588243,
+          19.872794117647057
+        ],
+        "programme_check": "Inside current SP-LAUNDRY",
+        "outside_square_m": 0.36,
+        "circular_clear_bore_m": 0.17
+      }
+    ],
+    "uncertainty": {
+      "xy_m": 0.08,
+      "outside_m": 0.04,
+      "bore_m": 0.04
+    },
+    "height": {
+      "measured": false,
+      "source_text": "Author printed234–235: low terminals barely exceed roof parapet",
+      "inferred_teaching_top_m": 6.9,
+      "uncertainty_m": 0.15,
+      "warning": "No original calibratedleader; use source explicit inference, no exact cap/hiddenflue claim"
+    },
+    "evidence": [
+      "Modern author roofplan square-outside/circular-inside symbols",
+      "Author234–235 identifies two low square chimneys and functions; photoL2(17)048/205 references",
+      "Both registered axes fall in corresponding currentprogramme footprints"
+    ],
+    "acceptance": [
+      "Represent roof-only hollow squareterminal, circularbore interpreted fromplan morphology; preserve dimensionaluncertainty",
+      "Create real roofbore and materialownership withoutcuttingbeyondinferredfootprint",
+      "Independentprogramme/roof-bearing/voidquantityoracle",
+      "Do not claim recoveredoriginalbelowroof route or cap"
+    ]
+  }
+}

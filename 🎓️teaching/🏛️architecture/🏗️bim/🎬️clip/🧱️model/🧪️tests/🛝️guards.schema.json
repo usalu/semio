@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "comparison",
+    "cases",
+    "continuity",
+    "rc_core",
+    "masonry_controls"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "volume_tolerance",
+        "point_margin"
+      ],
+      "properties": {
+        "volume_tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "point_margin": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 94,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "guard",
+          "wall",
+          "previous_guard",
+          "wall_part",
+          "witness",
+          "previous_volume"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "guard": {
+            "enum": [
+              "GUARD-RM-1",
+              "GUARD-RM-2"
+            ]
+          },
+          "wall": {
+            "enum": [
+              "W-G-GARAGE",
+              "W-PARENT-BATH"
+            ]
+          },
+          "previous_guard": {
+            "$ref": "#/$defs/prism"
+          },
+          "wall_part": {
+            "$ref": "#/$defs/prism"
+          },
+          "witness": {
+            "$ref": "#/$defs/point"
+          },
+          "previous_volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "continuity": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "guard",
+          "below",
+          "above"
+        ],
+        "properties": {
+          "guard": {
+            "enum": [
+              "GUARD-RM-1",
+              "GUARD-RM-2"
+            ]
+          },
+          "below": {
+            "$ref": "#/$defs/point"
+          },
+          "above": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    },
+    "rc_core": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "guard",
+          "wall",
+          "point"
+        ],
+        "properties": {
+          "guard": {
+            "enum": [
+              "GUARD-RM-1",
+              "GUARD-RM-2"
+            ]
+          },
+          "wall": {
+            "enum": [
+              "W-G-GARAGE",
+              "W-PARENT-BATH"
+            ]
+          },
+          "point": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    },
+    "masonry_controls": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "wall",
+          "point"
+        ],
+        "properties": {
+          "wall": {
+            "enum": [
+              "W-G-GARAGE",
+              "W-PARENT-BATH"
+            ]
+          },
+          "point": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "prism": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outline",
+        "z0",
+        "z1"
+      ],
+      "properties": {
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "z0": {
+          "type": "number"
+        },
+        "z1": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

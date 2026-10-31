@@ -1,0 +1,181 @@
+{
+  "type": "object",
+  "required": [
+    "reference_points",
+    "reference_interior",
+    "families",
+    "controls",
+    "tolerance",
+    "helper_names",
+    "scene_users",
+    "nominal_energy_dimensions"
+  ],
+  "properties": {
+    "reference_points": {
+      "type": "object",
+      "required": [
+        "top",
+        "bottom",
+        "left",
+        "right",
+        "front",
+        "air",
+        "window",
+        "back"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "top": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "bottom": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "left": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "right": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "front": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "air": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "window": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "back": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "reference_interior": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "number"
+      }
+    },
+    "families": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "Slash",
+          "Backslash",
+          "J",
+          "L",
+          "P",
+          "S"
+        ]
+      }
+    },
+    "controls": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "parameters",
+          "casing",
+          "interior"
+        ],
+        "properties": {
+          "parameters": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
+          "casing": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": {
+              "type": "number"
+            }
+          },
+          "interior": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "helper_names": {
+      "const": [
+        "_physical_anchors",
+        "_usable_volume_faces"
+      ]
+    },
+    "scene_users": {
+      "const": [
+        "_arrow",
+        "_face_flyers",
+        "_volume_box"
+      ]
+    },
+    "nominal_energy_dimensions": {
+      "const": [
+        2.5,
+        4,
+        2.5
+      ]
+    }
+  },
+  "additionalProperties": false
+}

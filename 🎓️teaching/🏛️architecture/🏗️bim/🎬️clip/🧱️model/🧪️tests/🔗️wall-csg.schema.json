@@ -1,0 +1,13 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Bounded Analytic Wall Ownership Contract",
+  "type":"object",
+  "required":["bounds","stock","bore","expected_removed_rectangle_volume"],
+  "properties":{
+    "bounds":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"number"}},
+    "stock":{"$ref":"#/$defs/prism"},
+    "bore":{"$ref":"#/$defs/profile_extrusion"},
+    "expected_removed_rectangle_volume":{"type":"number","exclusiveMinimum":0}
+  },
+  "additionalProperties":false
+}

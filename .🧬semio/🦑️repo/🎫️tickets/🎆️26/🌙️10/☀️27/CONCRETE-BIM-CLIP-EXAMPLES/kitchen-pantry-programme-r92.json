@@ -1,0 +1,237 @@
+{
+  "title": "Kitchen Pantry Original Programme Boundary R92",
+  "sources": [
+    "Author firstplan46, grid4.75m",
+    "Original FLC19442 firstplan25, kitchen/office labelled topology",
+    "Original1931 plate34 open door beside end counter"
+  ],
+  "uncertainty_m": 0.15,
+  "outer_host": {
+    "source_pixel_x": 517,
+    "source_world_x": 4.75,
+    "current": "W-KITCHEN X4.8 is within.05m; retain structural host",
+    "source_extent_y": [
+      0,
+      6.006
+    ],
+    "south_of_y6": "No continuouswall atX4.75 belowv219; diagonalhallfloor continues acrossline to freepostu517/v300. Retainpost; currentwallto8.23 isoldinferredseal."
+  },
+  "pantry_gross": {
+    "pixel_bounds": [
+      518,
+      6,
+      580,
+      218
+    ],
+    "world_bounds": [
+      2.98970588235294,
+      0.04852941176470593,
+      4.722058823529412,
+      5.972058823529411
+    ],
+    "candidate_outline": [
+      [
+        3.04,
+        0.3
+      ],
+      [
+        4.725,
+        0.3
+      ],
+      [
+        4.725,
+        5.931
+      ],
+      [
+        3.04,
+        5.931
+      ]
+    ],
+    "meaning": "Narrow full-depth office/pantry runs tofront endwindow and ownbasin; source does not start atY4.7"
+  },
+  "kitchen_gross": {
+    "pixel_bounds": [
+      580,
+      6,
+      689,
+      218
+    ],
+    "world_bounds": [
+      -0.055882352941175384,
+      0.04852941176470593,
+      2.98970588235294,
+      5.972058823529411
+    ],
+    "candidate_outline": [
+      [
+        0.3,
+        0.3
+      ],
+      [
+        2.94,
+        0.3
+      ],
+      [
+        2.94,
+        5.931
+      ],
+      [
+        0.3,
+        5.931
+      ]
+    ]
+  },
+  "divider": {
+    "source_pixel_x": 580,
+    "source_world_x": 2.98970588235294,
+    "source_runs": "Main line from rear/frontcounter to southwall with cupboard projections on pantry side; exactwall-vs-cabinet ownership/height qualified.",
+    "candidate_axis_x": 3,
+    "cabinet_pixel_bounds": [
+      560,
+      60,
+      580,
+      162
+    ],
+    "cabinet_world_bounds": [
+      2.98970588235294,
+      1.5573529411764706,
+      3.548529411764706,
+      4.4073529411764705
+    ],
+    "south_projection": {
+      "pixel_bounds": [
+        553,
+        162,
+        580,
+        218
+      ],
+      "world_bounds": [
+        2.98970588235294,
+        4.4073529411764705,
+        3.7441176470588236,
+        5.972058823529411
+      ],
+      "status": "Stepped/U-shaped cabinet or divider return visible; do not fill all as room wall without body/door check"
+    },
+    "pantry_cupboard_traces": [
+      {
+        "pixel_bounds": [
+          519,
+          60,
+          530,
+          162
+        ],
+        "world_bounds": [
+          4.386764705882353,
+          1.5573529411764706,
+          4.694117647058823,
+          4.4073529411764705
+        ],
+        "role": "High-X outerwall cupboard/shelf run"
+      },
+      {
+        "pixel_bounds": [
+          560,
+          60,
+          580,
+          162
+        ],
+        "world_bounds": [
+          2.98970588235294,
+          1.5573529411764706,
+          3.548529411764706,
+          4.4073529411764705
+        ],
+        "role": "Kitchen-facing divider cupboard run"
+      }
+    ]
+  },
+  "hall_extension": {
+    "pixel_bounds": [
+      517,
+      220,
+      580,
+      325
+    ],
+    "world_bounds": [
+      2.98970588235294,
+      6.027941176470589,
+      4.75,
+      8.961764705882352
+    ],
+    "assignment": "Firsthall/public tiled circulation beside kitchen terrace; current pantry southernarmY6.2..8.9 should be reassigned tohall after sourcecoherentboundary update"
+  },
+  "portals": [
+    {
+      "function": "hall to pantry",
+      "source_region_pixels": {
+        "x": [
+          521,
+          551
+        ],
+        "y": 218
+      },
+      "source_region_world": {
+        "x": [
+          3.8000000000000007,
+          4.6382352941176475
+        ],
+        "y": 5.972058823529411
+      },
+      "candidate": {
+        "center": [
+          4.2,
+          6.006
+        ],
+        "rough_width": 0.9,
+        "clear_width": 0.82
+      },
+      "confidence": "Thin panel/boundary trace supports rough region; exact station,frame,operation inferred"
+    },
+    {
+      "function": "pantry to kitchen",
+      "source_region_pixels": {
+        "x": 580,
+        "y": [
+          28,
+          60
+        ]
+      },
+      "source_region_world": {
+        "x": 2.98970588235294,
+        "y": [
+          0.663235294117647,
+          1.5573529411764706
+        ]
+      },
+      "candidate": {
+        "center": [
+          3,
+          1.1
+        ],
+        "rough_width": 0.88,
+        "clear_width": 0.8
+      },
+      "confidence": "Between endcounter and tall cabinet; aligns originalphoto openleaf near endwindow. Exact hinge/swing inferred"
+    },
+    {
+      "function": "kitchen to terrace",
+      "source_region": "South kitchen windowline y≈218; precise doorstation unresolved in this register",
+      "candidate_host_y": 6.006,
+      "confidence": "Retain existingsourceattestedfunction; operation/metricstation coordinatedinferred"
+    }
+  ],
+  "retire_or_reconcile": [
+    "Old W-PANTRY-SOUTH Y4.7 crosswall cuts full-depth pantry and shouldfollow south sourceboundary≈6.006",
+    "Old SP-PANTRY Y4.7..8.9 is wrongprogramme distribution",
+    "Old W-PANTRY-WEST onlyY4.7..6.2 does notdivide full-depth original kitchen/office",
+    "FIX-PANTRY-STORAGE must retain hollowconstruction/identity but move outof newlypublicsouthernarm; source cupboardruns flank pantryaisle"
+  ],
+  "acceptance": [
+    "No roompolygonoverlap; explicit floorprogramme coverage for hall,kitchen,pantry,terrace",
+    "Actual operatedleaf/standing routes to allthreeendwindowbasins and leggedworktable",
+    "Preserve fixed posts and W-KITCHEN outerhost",
+    "Update authored IfcRelVoidsElement relation for any rehosteddoor opening",
+    "All bounds/cabinet profiles/portaloperation inferences remain explicit"
+  ]
+}

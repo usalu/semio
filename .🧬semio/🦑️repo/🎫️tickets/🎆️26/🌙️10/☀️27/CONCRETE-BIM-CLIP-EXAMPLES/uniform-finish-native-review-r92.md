@@ -1,0 +1,9 @@
+# Uniform Material Finishes: Independent Native IFC R92
+
+PASS for four frozen samples: actual source garage sliding door in English/German and neutral rounded15×90mm skirting stock in English/German. Native class/GUID/name/predefined type, body count, occupied volume, XYZ, material association/properties, spatial containment and actual whole-item RGB all agree. This validates the uniform-treatment protocol and neutral stock, not yet a complete source skirting installation.
+
+Each garage fragment has native IfcDoor’s13inherited attributes and two closed physical items, both rendered green(.28,.42,.31). Expected source volume.4023075m³ and boundsX16.025..16.06/Y10.85..14.8/Z0..2.91 agree with independent native geometry. Each stock fragment has native IfcCovering’s9attributes with SKIRTINGBOARD, one closed rounded-profile extrusion, gray(.47,.48,.49), volume.002698242890m³ and boundsX0..2/Y0.. .015/Z0.. .09. Rounding remains an inferred fabrication choice, not a measured original radius.
+
+Every IfcStyledItem targets its exact whole physical item. This is appropriate for uniformly treated stock/panel material, unlike painting an entire wall substrate where only one face is treated. Native IfcMaterialProperties retain existing_substrate_envelope quantity scope; paintfilm thickness, coating mass and original RGB remain unmeasured. DisplayRGBBasis is inferred with explicit illustrative-only source text. There is no invented separate paint film volume.
+
+The source-owner’s original input/producer hashes are retained in generated native-r92/uniform-finish-samples.json and the independent result. Actual engine is authenticated web-ifc0.0.78. Selected fragments issue their expected empty-project scaling-context warning; no full-project certificate is claimed. Input uniform-finish-native-r92.mjs. No production edits.

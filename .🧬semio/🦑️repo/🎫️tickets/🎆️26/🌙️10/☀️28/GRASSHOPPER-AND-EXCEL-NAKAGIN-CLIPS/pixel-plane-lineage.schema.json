@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "parent",
+    "fragment",
+    "expected_triangles",
+    "ulp_multiplier"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "parent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "polygon",
+        "vertices",
+        "normal"
+      ],
+      "properties": {
+        "source": {
+          "type": "integer"
+        },
+        "polygon": {
+          "type": "integer"
+        },
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "normal": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "fragment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertices",
+        "normal"
+      ],
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "normal": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "expected_triangles": {
+      "const": 1
+    },
+    "ulp_multiplier": {
+      "const": 64
+    }
+  }
+}

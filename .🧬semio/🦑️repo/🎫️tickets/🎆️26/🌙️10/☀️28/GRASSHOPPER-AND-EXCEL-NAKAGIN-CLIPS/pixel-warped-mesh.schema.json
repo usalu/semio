@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "roundoff_ulps",
+    "tie_diagonal",
+    "cases",
+    "facing_cases"
+  ],
+  "properties": {
+    "roundoff_ulps": {
+      "const": 64
+    },
+    "tie_diagonal": {
+      "const": [
+        0,
+        2
+      ]
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "vertices",
+          "warped",
+          "triangles"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "vertices": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "warped": {
+            "type": "boolean"
+          },
+          "triangles": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 3
+              }
+            }
+          }
+        }
+      }
+    },
+    "facing_cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "items",
+          "point",
+          "nearest"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 2
+          },
+          "point": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "nearest": {
+            "const": [
+              0
+            ]
+          }
+        }
+      }
+    }
+  }
+}

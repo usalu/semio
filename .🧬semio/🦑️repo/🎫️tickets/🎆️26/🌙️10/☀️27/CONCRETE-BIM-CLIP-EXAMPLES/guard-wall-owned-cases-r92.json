@@ -1,0 +1,6591 @@
+{
+  "version": 1,
+  "source": "d575c427b7e090bfe1d73c9da9e25e4b7a26e841a429364b7e427a7df3992d62",
+  "producer_at_import": "57ba53f6fa939360ff97fb0f2d8bd9e4fe78b72a5bcd82498c674946e9201dcf",
+  "producer_file_after": "2275e68e77194b3df85731d92e25a4c86f831a266349f0c6fc571f1c32f4a566",
+  "provenance": "Captured actual api.building_geometry exclusive .parts, not raw envelopes or shared references; source input stable, loaded API code retained from import despite later file edit",
+  "cases": [
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 48,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.006778931249999877,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        10.062078125,
+        0.716953125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            9.8535625
+          ],
+          [
+            10.927999999999999,
+            9.8535625
+          ],
+          [
+            10.927999999999999,
+            10.12415625
+          ],
+          [
+            10.868,
+            10.12415625
+          ]
+        ],
+        "z0": 0.261953125,
+        "z1": 1.171953125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 49,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.0012415625000000228,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        10.062078125,
+        1.221953125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            9.8535625
+          ],
+          [
+            10.948,
+            9.8535625
+          ],
+          [
+            10.948,
+            10.12415625
+          ],
+          [
+            10.847999999999999,
+            10.12415625
+          ]
+        ],
+        "z0": 1.171953125,
+        "z1": 1.271953125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 56,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999671,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        10.259453125,
+        0.766484375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            10.12415625
+          ],
+          [
+            10.927999999999999,
+            10.12415625
+          ],
+          [
+            10.927999999999999,
+            10.39475
+          ],
+          [
+            10.868,
+            10.39475
+          ]
+        ],
+        "z0": 0.311484375,
+        "z1": 1.221484375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 57,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        10.259453125,
+        1.271484375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            10.12415625
+          ],
+          [
+            10.948,
+            10.12415625
+          ],
+          [
+            10.948,
+            10.39475
+          ],
+          [
+            10.847999999999999,
+            10.39475
+          ]
+        ],
+        "z0": 1.221484375,
+        "z1": 1.321484375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 64,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999671,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        10.530046875,
+        0.816015625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            10.39475
+          ],
+          [
+            10.927999999999999,
+            10.39475
+          ],
+          [
+            10.927999999999999,
+            10.66534375
+          ],
+          [
+            10.868,
+            10.66534375
+          ]
+        ],
+        "z0": 0.361015625,
+        "z1": 1.271015625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 65,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        10.530046875,
+        1.321015625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            10.39475
+          ],
+          [
+            10.948,
+            10.39475
+          ],
+          [
+            10.948,
+            10.66534375
+          ],
+          [
+            10.847999999999999,
+            10.66534375
+          ]
+        ],
+        "z0": 1.271015625,
+        "z1": 1.371015625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 72,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999673,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        10.800640625,
+        0.8655468749999999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            10.66534375
+          ],
+          [
+            10.927999999999999,
+            10.66534375
+          ],
+          [
+            10.927999999999999,
+            10.9359375
+          ],
+          [
+            10.868,
+            10.9359375
+          ]
+        ],
+        "z0": 0.410546875,
+        "z1": 1.320546875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 73,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        10.800640625,
+        1.370546875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            10.66534375
+          ],
+          [
+            10.948,
+            10.66534375
+          ],
+          [
+            10.948,
+            10.9359375
+          ],
+          [
+            10.847999999999999,
+            10.9359375
+          ]
+        ],
+        "z0": 1.320546875,
+        "z1": 1.420546875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 80,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.01477441874999977,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        11.071234375,
+        0.915078125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            10.9359375
+          ],
+          [
+            10.927999999999999,
+            10.9359375
+          ],
+          [
+            10.927999999999999,
+            11.206531250000001
+          ],
+          [
+            10.868,
+            11.206531250000001
+          ]
+        ],
+        "z0": 0.460078125,
+        "z1": 1.370078125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 81,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.0027059375000000503,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        11.071234375,
+        1.4200781249999999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            10.9359375
+          ],
+          [
+            10.948,
+            10.9359375
+          ],
+          [
+            10.948,
+            11.206531250000001
+          ],
+          [
+            10.847999999999999,
+            11.206531250000001
+          ]
+        ],
+        "z0": 1.370078125,
+        "z1": 1.470078125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 88,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999673,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        11.341828125000001,
+        0.964609375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            11.206531250000001
+          ],
+          [
+            10.927999999999999,
+            11.206531250000001
+          ],
+          [
+            10.927999999999999,
+            11.477125000000001
+          ],
+          [
+            10.868,
+            11.477125000000001
+          ]
+        ],
+        "z0": 0.509609375,
+        "z1": 1.419609375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 89,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000032,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        11.341828125000001,
+        1.469609375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            11.206531250000001
+          ],
+          [
+            10.948,
+            11.206531250000001
+          ],
+          [
+            10.948,
+            11.477125000000001
+          ],
+          [
+            10.847999999999999,
+            11.477125000000001
+          ]
+        ],
+        "z0": 1.419609375,
+        "z1": 1.519609375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 96,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999674,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        11.612421875,
+        1.014140625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            11.477125000000001
+          ],
+          [
+            10.927999999999999,
+            11.477125000000001
+          ],
+          [
+            10.927999999999999,
+            11.74771875
+          ],
+          [
+            10.868,
+            11.74771875
+          ]
+        ],
+        "z0": 0.559140625,
+        "z1": 1.469140625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 97,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000032,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        11.612421875,
+        1.519140625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            11.477125000000001
+          ],
+          [
+            10.948,
+            11.477125000000001
+          ],
+          [
+            10.948,
+            11.74771875
+          ],
+          [
+            10.847999999999999,
+            11.74771875
+          ]
+        ],
+        "z0": 1.469140625,
+        "z1": 1.569140625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 104,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999671,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        11.883015625,
+        1.0636718749999998
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            11.74771875
+          ],
+          [
+            10.927999999999999,
+            11.74771875
+          ],
+          [
+            10.927999999999999,
+            12.0183125
+          ],
+          [
+            10.868,
+            12.0183125
+          ]
+        ],
+        "z0": 0.608671875,
+        "z1": 1.518671875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 105,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        11.883015625,
+        1.568671875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            11.74771875
+          ],
+          [
+            10.948,
+            11.74771875
+          ],
+          [
+            10.948,
+            12.0183125
+          ],
+          [
+            10.847999999999999,
+            12.0183125
+          ]
+        ],
+        "z0": 1.518671875,
+        "z1": 1.618671875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 112,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999671,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        12.153609375,
+        1.113203125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            12.0183125
+          ],
+          [
+            10.927999999999999,
+            12.0183125
+          ],
+          [
+            10.927999999999999,
+            12.28890625
+          ],
+          [
+            10.868,
+            12.28890625
+          ]
+        ],
+        "z0": 0.658203125,
+        "z1": 1.568203125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 113,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        12.153609375,
+        1.618203125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            12.0183125
+          ],
+          [
+            10.948,
+            12.0183125
+          ],
+          [
+            10.948,
+            12.28890625
+          ],
+          [
+            10.847999999999999,
+            12.28890625
+          ]
+        ],
+        "z0": 1.568203125,
+        "z1": 1.668203125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 120,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.009450918749999775,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        12.375453125,
+        1.1627343749999999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            12.28890625
+          ],
+          [
+            10.927999999999999,
+            12.28890625
+          ],
+          [
+            10.927999999999999,
+            12.5595
+          ],
+          [
+            10.868,
+            12.5595
+          ]
+        ],
+        "z0": 0.707734375,
+        "z1": 1.617734375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 121,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 4,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.0017309375000000222,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        12.375453125,
+        1.667734375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            12.28890625
+          ],
+          [
+            10.948,
+            12.28890625
+          ],
+          [
+            10.948,
+            12.5595
+          ],
+          [
+            10.847999999999999,
+            12.5595
+          ]
+        ],
+        "z0": 1.617734375,
+        "z1": 1.717734375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            10
+          ],
+          [
+            10.96,
+            12.462
+          ],
+          [
+            10.84,
+            12.462
+          ],
+          [
+            10.84,
+            10
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 128,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.008085918749999785,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        12.756046875,
+        1.2122656250000001
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            12.5595
+          ],
+          [
+            10.927999999999999,
+            12.5595
+          ],
+          [
+            10.927999999999999,
+            12.83009375
+          ],
+          [
+            10.868,
+            12.83009375
+          ]
+        ],
+        "z0": 0.757265625,
+        "z1": 1.667265625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 129,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.0014809375000000148,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        12.756046875,
+        1.717265625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            12.5595
+          ],
+          [
+            10.948,
+            12.5595
+          ],
+          [
+            10.948,
+            12.83009375
+          ],
+          [
+            10.847999999999999,
+            12.83009375
+          ]
+        ],
+        "z0": 1.667265625,
+        "z1": 1.767265625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 136,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999673,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        12.965390625,
+        1.261796875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            12.83009375
+          ],
+          [
+            10.927999999999999,
+            12.83009375
+          ],
+          [
+            10.927999999999999,
+            13.1006875
+          ],
+          [
+            10.868,
+            13.1006875
+          ]
+        ],
+        "z0": 0.806796875,
+        "z1": 1.716796875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 137,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        12.965390625,
+        1.766796875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            12.83009375
+          ],
+          [
+            10.948,
+            12.83009375
+          ],
+          [
+            10.948,
+            13.1006875
+          ],
+          [
+            10.847999999999999,
+            13.1006875
+          ]
+        ],
+        "z0": 1.716796875,
+        "z1": 1.816796875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 144,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999673,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        13.235984375,
+        1.311328125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            13.1006875
+          ],
+          [
+            10.927999999999999,
+            13.1006875
+          ],
+          [
+            10.927999999999999,
+            13.37128125
+          ],
+          [
+            10.868,
+            13.37128125
+          ]
+        ],
+        "z0": 0.856328125,
+        "z1": 1.766328125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 145,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000032,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        13.235984375,
+        1.816328125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            13.1006875
+          ],
+          [
+            10.948,
+            13.1006875
+          ],
+          [
+            10.948,
+            13.37128125
+          ],
+          [
+            10.847999999999999,
+            13.37128125
+          ]
+        ],
+        "z0": 1.766328125,
+        "z1": 1.866328125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 152,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999673,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        13.506578124999999,
+        1.360859375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            13.37128125
+          ],
+          [
+            10.927999999999999,
+            13.37128125
+          ],
+          [
+            10.927999999999999,
+            13.641874999999999
+          ],
+          [
+            10.868,
+            13.641874999999999
+          ]
+        ],
+        "z0": 0.905859375,
+        "z1": 1.815859375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 153,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000032,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        13.506578124999999,
+        1.8658593749999999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            13.37128125
+          ],
+          [
+            10.948,
+            13.37128125
+          ],
+          [
+            10.948,
+            13.641874999999999
+          ],
+          [
+            10.847999999999999,
+            13.641874999999999
+          ]
+        ],
+        "z0": 1.815859375,
+        "z1": 1.915859375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 160,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999673,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        13.777171874999999,
+        1.410390625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            13.641874999999999
+          ],
+          [
+            10.927999999999999,
+            13.641874999999999
+          ],
+          [
+            10.927999999999999,
+            13.912468749999999
+          ],
+          [
+            10.868,
+            13.912468749999999
+          ]
+        ],
+        "z0": 0.955390625,
+        "z1": 1.865390625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 161,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000032,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        13.777171874999999,
+        1.9153906250000001
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            13.641874999999999
+          ],
+          [
+            10.948,
+            13.641874999999999
+          ],
+          [
+            10.948,
+            13.912468749999999
+          ],
+          [
+            10.847999999999999,
+            13.912468749999999
+          ]
+        ],
+        "z0": 1.865390625,
+        "z1": 1.965390625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 168,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999772,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        14.047765625,
+        1.459921875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            13.912468749999999
+          ],
+          [
+            10.927999999999999,
+            13.912468749999999
+          ],
+          [
+            10.927999999999999,
+            14.1830625
+          ],
+          [
+            10.868,
+            14.1830625
+          ]
+        ],
+        "z0": 1.004921875,
+        "z1": 1.914921875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 169,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.0027059375000000564,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        14.047765625,
+        1.9649218750000002
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            13.912468749999999
+          ],
+          [
+            10.948,
+            13.912468749999999
+          ],
+          [
+            10.948,
+            14.1830625
+          ],
+          [
+            10.847999999999999,
+            14.1830625
+          ]
+        ],
+        "z0": 1.914921875,
+        "z1": 2.014921875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 176,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999671,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        14.318359375,
+        1.5094531249999998
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            14.1830625
+          ],
+          [
+            10.927999999999999,
+            14.1830625
+          ],
+          [
+            10.927999999999999,
+            14.45365625
+          ],
+          [
+            10.868,
+            14.45365625
+          ]
+        ],
+        "z0": 1.054453125,
+        "z1": 1.964453125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 177,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        14.318359375,
+        2.014453125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            14.1830625
+          ],
+          [
+            10.948,
+            14.1830625
+          ],
+          [
+            10.948,
+            14.45365625
+          ],
+          [
+            10.847999999999999,
+            14.45365625
+          ]
+        ],
+        "z0": 1.964453125,
+        "z1": 2.064453125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 184,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999674,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        14.588953125,
+        1.558984375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            14.45365625
+          ],
+          [
+            10.927999999999999,
+            14.45365625
+          ],
+          [
+            10.927999999999999,
+            14.72425
+          ],
+          [
+            10.868,
+            14.72425
+          ]
+        ],
+        "z0": 1.103984375,
+        "z1": 2.013984375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 185,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000026,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        14.588953125,
+        2.063984375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            14.45365625
+          ],
+          [
+            10.948,
+            14.45365625
+          ],
+          [
+            10.948,
+            14.72425
+          ],
+          [
+            10.847999999999999,
+            14.72425
+          ]
+        ],
+        "z0": 2.013984375,
+        "z1": 2.113984375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 192,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999671,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        14.859546875,
+        1.608515625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            14.72425
+          ],
+          [
+            10.927999999999999,
+            14.72425
+          ],
+          [
+            10.927999999999999,
+            14.99484375
+          ],
+          [
+            10.868,
+            14.99484375
+          ]
+        ],
+        "z0": 1.153515625,
+        "z1": 2.063515625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 193,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        14.859546875,
+        2.113515625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            14.72425
+          ],
+          [
+            10.948,
+            14.72425
+          ],
+          [
+            10.948,
+            14.99484375
+          ],
+          [
+            10.847999999999999,
+            14.99484375
+          ]
+        ],
+        "z0": 2.063515625,
+        "z1": 2.163515625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 200,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999674,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        15.130140625,
+        1.6580468750000001
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            14.99484375
+          ],
+          [
+            10.927999999999999,
+            14.99484375
+          ],
+          [
+            10.927999999999999,
+            15.265437499999999
+          ],
+          [
+            10.868,
+            15.265437499999999
+          ]
+        ],
+        "z0": 1.203046875,
+        "z1": 2.113046875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 201,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000026,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        15.130140625,
+        2.163046875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            14.99484375
+          ],
+          [
+            10.948,
+            14.99484375
+          ],
+          [
+            10.948,
+            15.265437499999999
+          ],
+          [
+            10.847999999999999,
+            15.265437499999999
+          ]
+        ],
+        "z0": 2.113046875,
+        "z1": 2.213046875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 208,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999768,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        15.400734374999999,
+        1.707578125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            15.265437499999999
+          ],
+          [
+            10.927999999999999,
+            15.265437499999999
+          ],
+          [
+            10.927999999999999,
+            15.53603125
+          ],
+          [
+            10.868,
+            15.53603125
+          ]
+        ],
+        "z0": 1.252578125,
+        "z1": 2.162578125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 209,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.0027059375000000564,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        15.400734374999999,
+        2.2125781250000003
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            15.265437499999999
+          ],
+          [
+            10.948,
+            15.265437499999999
+          ],
+          [
+            10.948,
+            15.53603125
+          ],
+          [
+            10.847999999999999,
+            15.53603125
+          ]
+        ],
+        "z0": 2.162578125,
+        "z1": 2.262578125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 216,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999671,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        15.671328125,
+        1.7571093749999998
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            15.53603125
+          ],
+          [
+            10.927999999999999,
+            15.53603125
+          ],
+          [
+            10.927999999999999,
+            15.806625
+          ],
+          [
+            10.868,
+            15.806625
+          ]
+        ],
+        "z0": 1.302109375,
+        "z1": 2.212109375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 217,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        15.671328125,
+        2.2621093749999996
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            15.53603125
+          ],
+          [
+            10.948,
+            15.53603125
+          ],
+          [
+            10.948,
+            15.806625
+          ],
+          [
+            10.847999999999999,
+            15.806625
+          ]
+        ],
+        "z0": 2.212109375,
+        "z1": 2.312109375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 224,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999674,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        15.941921875,
+        1.806640625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            15.806625
+          ],
+          [
+            10.927999999999999,
+            15.806625
+          ],
+          [
+            10.927999999999999,
+            16.07721875
+          ],
+          [
+            10.868,
+            16.07721875
+          ]
+        ],
+        "z0": 1.351640625,
+        "z1": 2.261640625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 225,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        15.941921875,
+        2.311640625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            15.806625
+          ],
+          [
+            10.948,
+            15.806625
+          ],
+          [
+            10.948,
+            16.07721875
+          ],
+          [
+            10.847999999999999,
+            16.07721875
+          ]
+        ],
+        "z0": 2.261640625,
+        "z1": 2.361640625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 232,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999671,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        16.212515625,
+        1.8561718749999998
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            16.07721875
+          ],
+          [
+            10.927999999999999,
+            16.07721875
+          ],
+          [
+            10.927999999999999,
+            16.3478125
+          ],
+          [
+            10.868,
+            16.3478125
+          ]
+        ],
+        "z0": 1.401171875,
+        "z1": 2.311171875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 233,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        16.212515625,
+        2.361171875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            16.07721875
+          ],
+          [
+            10.948,
+            16.07721875
+          ],
+          [
+            10.948,
+            16.3478125
+          ],
+          [
+            10.847999999999999,
+            16.3478125
+          ]
+        ],
+        "z0": 2.311171875,
+        "z1": 2.411171875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 240,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.014774418749999674,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        16.483109374999998,
+        1.905703125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            16.3478125
+          ],
+          [
+            10.927999999999999,
+            16.3478125
+          ],
+          [
+            10.927999999999999,
+            16.61840625
+          ],
+          [
+            10.868,
+            16.61840625
+          ]
+        ],
+        "z0": 1.450703125,
+        "z1": 2.360703125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 241,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.002705937500000038,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        16.483109374999998,
+        2.4107031250000004
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            16.3478125
+          ],
+          [
+            10.948,
+            16.3478125
+          ],
+          [
+            10.948,
+            16.61840625
+          ],
+          [
+            10.847999999999999,
+            16.61840625
+          ]
+        ],
+        "z0": 2.360703125,
+        "z1": 2.460703125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 248,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.00876841874999983,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        16.698703125,
+        1.9552343749999999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.868,
+            16.61840625
+          ],
+          [
+            10.927999999999999,
+            16.61840625
+          ],
+          [
+            10.927999999999999,
+            16.889
+          ],
+          [
+            10.868,
+            16.889
+          ]
+        ],
+        "z0": 1.500234375,
+        "z1": 2.410234375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-1",
+        "index": 249,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "W-G-GARAGE",
+        "index": 3,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "ground"
+      },
+      "volume": 0.0016059375000000275,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.898,
+        16.698703125,
+        2.4602343749999998
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.847999999999999,
+            16.61840625
+          ],
+          [
+            10.948,
+            16.61840625
+          ],
+          [
+            10.948,
+            16.889
+          ],
+          [
+            10.847999999999999,
+            16.889
+          ]
+        ],
+        "z0": 2.410234375,
+        "z1": 2.510234375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.96,
+            12.682
+          ],
+          [
+            10.96,
+            16.779
+          ],
+          [
+            10.84,
+            16.779
+          ],
+          [
+            10.84,
+            12.682
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.71
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 104,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0013991685796298902,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        13.056961397058998,
+        5.8310546875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            12.83009375
+          ],
+          [
+            8.158,
+            12.83009375
+          ],
+          [
+            8.158,
+            13.1006875
+          ],
+          [
+            8.098,
+            13.1006875
+          ]
+        ],
+        "z0": 5.602109375,
+        "z1": 6.512109375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 104,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00040043545204932114,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        13.056961397058998,
+        5.8310546875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            12.83009375
+          ],
+          [
+            8.158,
+            12.83009375
+          ],
+          [
+            8.158,
+            13.1006875
+          ],
+          [
+            8.098,
+            13.1006875
+          ]
+        ],
+        "z0": 5.602109375,
+        "z1": 6.512109375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 110,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.004836015188624833,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        13.235984375,
+        5.8042578124999995
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            13.1006875
+          ],
+          [
+            8.158,
+            13.1006875
+          ],
+          [
+            8.158,
+            13.37128125
+          ],
+          [
+            8.098,
+            13.37128125
+          ]
+        ],
+        "z0": 5.548515625,
+        "z1": 6.458515625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 110,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0013840447508381131,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        13.235984375,
+        5.8042578124999995
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            13.1006875
+          ],
+          [
+            8.158,
+            13.1006875
+          ],
+          [
+            8.158,
+            13.37128125
+          ],
+          [
+            8.098,
+            13.37128125
+          ]
+        ],
+        "z0": 5.548515625,
+        "z1": 6.458515625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 116,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0053427368045400065,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        13.506578124999999,
+        5.7774609375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            13.37128125
+          ],
+          [
+            8.158,
+            13.37128125
+          ],
+          [
+            8.158,
+            13.641874999999999
+          ],
+          [
+            8.098,
+            13.641874999999999
+          ]
+        ],
+        "z0": 5.494921875,
+        "z1": 6.404921875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 116,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0015290660887142316,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        13.506578124999999,
+        5.7774609375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            13.37128125
+          ],
+          [
+            8.158,
+            13.37128125
+          ],
+          [
+            8.158,
+            13.641874999999999
+          ],
+          [
+            8.098,
+            13.641874999999999
+          ]
+        ],
+        "z0": 5.494921875,
+        "z1": 6.404921875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 122,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.005849458420455181,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        13.777171874999999,
+        5.7506640625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            13.641874999999999
+          ],
+          [
+            8.158,
+            13.641874999999999
+          ],
+          [
+            8.158,
+            13.912468749999999
+          ],
+          [
+            8.098,
+            13.912468749999999
+          ]
+        ],
+        "z0": 5.441328125,
+        "z1": 6.351328125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 122,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0016740874265903504,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        13.777171874999999,
+        5.7506640625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            13.641874999999999
+          ],
+          [
+            8.158,
+            13.641874999999999
+          ],
+          [
+            8.158,
+            13.912468749999999
+          ],
+          [
+            8.098,
+            13.912468749999999
+          ]
+        ],
+        "z0": 5.441328125,
+        "z1": 6.351328125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 128,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0063561800363703975,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        14.047765625,
+        5.7238671875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            13.912468749999999
+          ],
+          [
+            8.158,
+            13.912468749999999
+          ],
+          [
+            8.158,
+            14.1830625
+          ],
+          [
+            8.098,
+            14.1830625
+          ]
+        ],
+        "z0": 5.387734375,
+        "z1": 6.297734375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 128,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.001819108764466481,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        14.047765625,
+        5.7238671875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            13.912468749999999
+          ],
+          [
+            8.158,
+            13.912468749999999
+          ],
+          [
+            8.158,
+            14.1830625
+          ],
+          [
+            8.098,
+            14.1830625
+          ]
+        ],
+        "z0": 5.387734375,
+        "z1": 6.297734375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 134,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00686290165228553,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        14.318359375,
+        5.697070312499999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            14.1830625
+          ],
+          [
+            8.158,
+            14.1830625
+          ],
+          [
+            8.158,
+            14.45365625
+          ],
+          [
+            8.098,
+            14.45365625
+          ]
+        ],
+        "z0": 5.334140625,
+        "z1": 6.244140625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 134,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0019641301023425877,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        14.318359375,
+        5.697070312499999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            14.1830625
+          ],
+          [
+            8.158,
+            14.1830625
+          ],
+          [
+            8.158,
+            14.45365625
+          ],
+          [
+            8.098,
+            14.45365625
+          ]
+        ],
+        "z0": 5.334140625,
+        "z1": 6.244140625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 140,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0073696232682007035,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        14.588953125,
+        5.6702734375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            14.45365625
+          ],
+          [
+            8.158,
+            14.45365625
+          ],
+          [
+            8.158,
+            14.72425
+          ],
+          [
+            8.098,
+            14.72425
+          ]
+        ],
+        "z0": 5.280546875,
+        "z1": 6.190546875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 140,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.002109151440218706,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        14.588953125,
+        5.6702734375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            14.45365625
+          ],
+          [
+            8.158,
+            14.45365625
+          ],
+          [
+            8.158,
+            14.72425
+          ],
+          [
+            8.098,
+            14.72425
+          ]
+        ],
+        "z0": 5.280546875,
+        "z1": 6.190546875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 146,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.007876344884115878,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        14.859546875,
+        5.6434765625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            14.72425
+          ],
+          [
+            8.158,
+            14.72425
+          ],
+          [
+            8.158,
+            14.99484375
+          ],
+          [
+            8.098,
+            14.99484375
+          ]
+        ],
+        "z0": 5.226953125,
+        "z1": 6.136953125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 146,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.002254172778094825,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        14.859546875,
+        5.6434765625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            14.72425
+          ],
+          [
+            8.158,
+            14.72425
+          ],
+          [
+            8.158,
+            14.99484375
+          ],
+          [
+            8.098,
+            14.99484375
+          ]
+        ],
+        "z0": 5.226953125,
+        "z1": 6.136953125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 152,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.008383066500031044,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        15.130140625,
+        5.6166796875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            14.99484375
+          ],
+          [
+            8.158,
+            14.99484375
+          ],
+          [
+            8.158,
+            15.265437499999999
+          ],
+          [
+            8.098,
+            15.265437499999999
+          ]
+        ],
+        "z0": 5.173359375,
+        "z1": 6.083359375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 152,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.002399194115970941,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        15.130140625,
+        5.6166796875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            14.99484375
+          ],
+          [
+            8.158,
+            14.99484375
+          ],
+          [
+            8.158,
+            15.265437499999999
+          ],
+          [
+            8.098,
+            15.265437499999999
+          ]
+        ],
+        "z0": 5.173359375,
+        "z1": 6.083359375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 158,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.008603926213090338,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        15.400734374999999,
+        5.5747656249999995
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            15.265437499999999
+          ],
+          [
+            8.158,
+            15.265437499999999
+          ],
+          [
+            8.158,
+            15.53603125
+          ],
+          [
+            8.098,
+            15.53603125
+          ]
+        ],
+        "z0": 5.119765625,
+        "z1": 6.029765625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 158,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.002462403124753697,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        15.400734374999999,
+        5.5747656249999995
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            15.265437499999999
+          ],
+          [
+            8.158,
+            15.265437499999999
+          ],
+          [
+            8.158,
+            15.53603125
+          ],
+          [
+            8.098,
+            15.53603125
+          ]
+        ],
+        "z0": 5.119765625,
+        "z1": 6.029765625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 159,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0004494865610590753,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.105470588235,
+        15.400734374999999,
+        6.044882812499999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            15.265437499999999
+          ],
+          [
+            8.178,
+            15.265437499999999
+          ],
+          [
+            8.178,
+            15.53603125
+          ],
+          [
+            8.078,
+            15.53603125
+          ]
+        ],
+        "z0": 6.029765625,
+        "z1": 6.129765625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 159,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00008181232909337935,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        15.400734374999999,
+        6.044882812499999
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            15.265437499999999
+          ],
+          [
+            8.178,
+            15.265437499999999
+          ],
+          [
+            8.178,
+            15.53603125
+          ],
+          [
+            8.078,
+            15.53603125
+          ]
+        ],
+        "z0": 6.029765625,
+        "z1": 6.129765625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 164,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00860392621309029,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        15.671328125,
+        5.521171875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            15.53603125
+          ],
+          [
+            8.158,
+            15.53603125
+          ],
+          [
+            8.158,
+            15.806625
+          ],
+          [
+            8.098,
+            15.806625
+          ]
+        ],
+        "z0": 5.066171875,
+        "z1": 5.976171875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 164,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0024624031247536832,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        15.671328125,
+        5.521171875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            15.53603125
+          ],
+          [
+            8.158,
+            15.53603125
+          ],
+          [
+            8.158,
+            15.806625
+          ],
+          [
+            8.098,
+            15.806625
+          ]
+        ],
+        "z0": 5.066171875,
+        "z1": 5.976171875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 165,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0012462508527555033,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.105470588235,
+        15.671328125,
+        6.0180859375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            15.53603125
+          ],
+          [
+            8.178,
+            15.53603125
+          ],
+          [
+            8.178,
+            15.806625
+          ],
+          [
+            8.078,
+            15.806625
+          ]
+        ],
+        "z0": 5.976171875,
+        "z1": 6.076171875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 165,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00022683366696949506,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        15.671328125,
+        6.0180859375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            15.53603125
+          ],
+          [
+            8.178,
+            15.53603125
+          ],
+          [
+            8.178,
+            15.806625
+          ],
+          [
+            8.078,
+            15.806625
+          ]
+        ],
+        "z0": 5.976171875,
+        "z1": 6.076171875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 170,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00860392621309029,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        15.941921875,
+        5.467578125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            15.806625
+          ],
+          [
+            8.158,
+            15.806625
+          ],
+          [
+            8.158,
+            16.07721875
+          ],
+          [
+            8.098,
+            16.07721875
+          ]
+        ],
+        "z0": 5.012578125,
+        "z1": 5.922578125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 170,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0024624031247536832,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        15.941921875,
+        5.467578125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            15.806625
+          ],
+          [
+            8.158,
+            15.806625
+          ],
+          [
+            8.158,
+            16.07721875
+          ],
+          [
+            8.098,
+            16.07721875
+          ]
+        ],
+        "z0": 5.012578125,
+        "z1": 5.922578125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 171,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0014866738970429195,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.105470588235,
+        15.941921875,
+        5.972578125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            15.806625
+          ],
+          [
+            8.178,
+            15.806625
+          ],
+          [
+            8.178,
+            16.07721875
+          ],
+          [
+            8.078,
+            16.07721875
+          ]
+        ],
+        "z0": 5.922578125,
+        "z1": 6.022578125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 171,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0002705937499729312,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        15.941921875,
+        5.972578125
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            15.806625
+          ],
+          [
+            8.178,
+            15.806625
+          ],
+          [
+            8.178,
+            16.07721875
+          ],
+          [
+            8.078,
+            16.07721875
+          ]
+        ],
+        "z0": 5.922578125,
+        "z1": 6.022578125
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 176,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00860392621309029,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        16.212515625,
+        5.413984375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            16.07721875
+          ],
+          [
+            8.158,
+            16.07721875
+          ],
+          [
+            8.158,
+            16.3478125
+          ],
+          [
+            8.098,
+            16.3478125
+          ]
+        ],
+        "z0": 4.958984375,
+        "z1": 5.868984375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 176,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0024624031247536832,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        16.212515625,
+        5.413984375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            16.07721875
+          ],
+          [
+            8.158,
+            16.07721875
+          ],
+          [
+            8.158,
+            16.3478125
+          ],
+          [
+            8.098,
+            16.3478125
+          ]
+        ],
+        "z0": 4.958984375,
+        "z1": 5.868984375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 177,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0014866738970429195,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.105470588235,
+        16.212515625,
+        5.918984375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            16.07721875
+          ],
+          [
+            8.178,
+            16.07721875
+          ],
+          [
+            8.178,
+            16.3478125
+          ],
+          [
+            8.078,
+            16.3478125
+          ]
+        ],
+        "z0": 5.868984375,
+        "z1": 5.968984375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 177,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0002705937499729312,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        16.212515625,
+        5.918984375
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            16.07721875
+          ],
+          [
+            8.178,
+            16.07721875
+          ],
+          [
+            8.178,
+            16.3478125
+          ],
+          [
+            8.078,
+            16.3478125
+          ]
+        ],
+        "z0": 5.868984375,
+        "z1": 5.968984375
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 182,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00860392621309029,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        16.483109374999998,
+        5.360390625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            16.3478125
+          ],
+          [
+            8.158,
+            16.3478125
+          ],
+          [
+            8.158,
+            16.61840625
+          ],
+          [
+            8.098,
+            16.61840625
+          ]
+        ],
+        "z0": 4.905390625,
+        "z1": 5.815390625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 182,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0024624031247536832,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        16.483109374999998,
+        5.360390625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            16.3478125
+          ],
+          [
+            8.158,
+            16.3478125
+          ],
+          [
+            8.158,
+            16.61840625
+          ],
+          [
+            8.098,
+            16.61840625
+          ]
+        ],
+        "z0": 4.905390625,
+        "z1": 5.815390625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 183,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0014866738970429195,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.105470588235,
+        16.483109374999998,
+        5.865390625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            16.3478125
+          ],
+          [
+            8.178,
+            16.3478125
+          ],
+          [
+            8.178,
+            16.61840625
+          ],
+          [
+            8.078,
+            16.61840625
+          ]
+        ],
+        "z0": 5.815390625,
+        "z1": 5.915390625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 183,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0002705937499729312,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        16.483109374999998,
+        5.865390625
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            16.3478125
+          ],
+          [
+            8.178,
+            16.3478125
+          ],
+          [
+            8.178,
+            16.61840625
+          ],
+          [
+            8.078,
+            16.61840625
+          ]
+        ],
+        "z0": 5.815390625,
+        "z1": 5.915390625
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 188,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.005106314448443368,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.115470588235,
+        16.698703125,
+        5.306796875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            16.61840625
+          ],
+          [
+            8.158,
+            16.61840625
+          ],
+          [
+            8.158,
+            16.889
+          ],
+          [
+            8.098,
+            16.889
+          ]
+        ],
+        "z0": 4.851796875,
+        "z1": 5.761796875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 188,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0014614031248538187,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        16.698703125,
+        5.306796875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.098,
+            16.61840625
+          ],
+          [
+            8.158,
+            16.61840625
+          ],
+          [
+            8.158,
+            16.889
+          ],
+          [
+            8.098,
+            16.889
+          ]
+        ],
+        "z0": 4.851796875,
+        "z1": 5.761796875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 189,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 1,
+        "material": "MAT-BRICK",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.0008823209558729168,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.105470588235,
+        16.698703125,
+        5.811796875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            16.61840625
+          ],
+          [
+            8.178,
+            16.61840625
+          ],
+          [
+            8.178,
+            16.889
+          ],
+          [
+            8.078,
+            16.889
+          ]
+        ],
+        "z0": 5.761796875,
+        "z1": 5.861796875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.13294117647,
+            13.013235294118
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.072941176471,
+            16.779
+          ],
+          [
+            8.072941176471,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    },
+    {
+      "source": {
+        "tag": "GUARD-RM-2",
+        "index": 189,
+        "material": "MAT-RENDERED",
+        "role": "",
+        "class": "IfcRailing",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "W-PARENT-BATH",
+        "index": 2,
+        "material": "MAT-PLASTER",
+        "role": "",
+        "class": "IfcWall",
+        "storey": "first"
+      },
+      "volume": 0.00016059374998393552,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        8.1379411764695,
+        16.698703125,
+        5.811796875
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.078,
+            16.61840625
+          ],
+          [
+            8.178,
+            16.61840625
+          ],
+          [
+            8.178,
+            16.889
+          ],
+          [
+            8.078,
+            16.889
+          ]
+        ],
+        "z0": 5.761796875,
+        "z1": 5.861796875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            8.142941176469,
+            13.013235294118
+          ],
+          [
+            8.142941176469,
+            16.779
+          ],
+          [
+            8.13294117647,
+            16.779
+          ],
+          [
+            8.13294117647,
+            13.013235294118
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 6.06
+      }
+    }
+  ],
+  "neutral_controls": "whole-model-interference-plan-r92.json#/controls",
+  "comparison": "Per-pair GEOS polygon intersection times strict actual Z; additive group sums are not asserted unique union"
+}

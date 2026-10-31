@@ -120,3 +120,15 @@ test("blank table names preserve an explicit active matrix context", () => {
   expect(latex.split("\\bool_if:NT \\l_semio_assignment_matrix_active_bool").length - 1).toBe(2);
   expect(latex).not.toContain("\\tl_if_empty:NF \\l_semio_assignment_matrix_title_tl");
 });
+
+test("assignment cover arranges localized windows and keeps its settings local", () => {
+  const latex = readFileSync(new URL("../../🖋️latex/semio-assignment.sty", import.meta.url), "utf8");
+  const cover = latex.slice(latex.indexOf("\\NewDocumentCommand \\makeassignmentcover"));
+  for (const command of ["\\SemioAssignmentCoverFact { m m }", "\\SemioAssignmentCoverPartner { m +m }", "\\NewDocumentCommand \\makeassignmentcover { }"]) expect(latex).toContain(command);
+  for (const key of ["number", "faculty", "logo", "cover-image", "cover-title", "institution-label", "faculty-label"]) expect(latex).toContain(key + " .tl_set:N");
+  for (const label of ["{ course } { Course }", "{ title } { Title }", "{ faculty } { Faculty }", "{ course } { Lehrveranstaltung }", "{ title } { Titel }", "{ faculty } { Fakultät }"]) expect(latex).toContain(label);
+  expect(cover.indexOf("\\group_begin:")).toBeGreaterThan(0);
+  expect(cover.indexOf("\\group_begin:")).toBeLessThan(cover.indexOf("\\setlength { \\parskip } { 0pt }"));
+  expect(cover.indexOf("\\end{WindowArrangement}")).toBeLessThan(cover.indexOf("\\group_end:"));
+  expect(cover.indexOf("\\group_end:")).toBeLessThan(cover.indexOf("\\semio_cover_geometry_restore:"));
+});

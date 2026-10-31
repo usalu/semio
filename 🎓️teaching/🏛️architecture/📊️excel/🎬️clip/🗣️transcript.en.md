@@ -13,7 +13,7 @@ Complete transcripts of the four Excel videos. All values come from one rounded 
 
 Video: `excel_anatomy`
 
-The Nakagin tower in our teaching model: capsules in four types. How much floor does one give, and what if its width changes?
+We apply four proposed A–D studies to the reconstructed Nakagin. Workbook dimensions are nominal study inputs; the detailed reference casing is 2.6 by 4.2 metres. How much usable floor does one give?
 
 A workbook is the whole file: Nakagin.xlsx holds the calculation of the entire building.
 
@@ -21,7 +21,7 @@ Worksheets are the tabs inside it: Program, one sheet per capsule type, Climate 
 
 A worksheet is a grid: columns have letters, rows have numbers. Type A describes one capsule.
 
-A cell is named by column and row. B2 is the width of the capsule, shown with its unit.
+A cell is named by column and row. B2 is the nominal study width, shown with its unit.
 
 A range joins cells: B2:B4 holds width, length and height.
 
@@ -63,7 +63,7 @@ Remember the terms: workbook, worksheet, cell, reference, formula, function, Nam
 
 Video: `excel_references`
 
-In this teaching model of the Nakagin tower, the width of every type A capsule sits in one cell. What follows when it changes?
+The nominal width of proposed program A sits in one cell. The detailed casing drawing remains a physical reference; what follows when the study input changes?
 
 A reference is an address, not a number. D3 points to B2 and B3, so a wider capsule gives a larger roof area.
 
@@ -115,7 +115,7 @@ Recap: relative moves, absolute stays, mixed locks one direction, sheet and 3D r
 
 Video: `excel_program`
 
-In our teaching model the Nakagin Capsule Tower carries 140 capsules of four types. How many of each, and how much floor do they offer?
+Four proposed room programs, A to D, fill the 140 reconstructed capsules. How many of each, and how much floor?
 
 A room program lists, per room, the fittings, the areas and the users. Here it is reduced to one capsule.
 
@@ -169,11 +169,11 @@ Video: `excel_energy`
 
 How much heat does one Nakagin capsule need in a Tokyo winter? We calculate it in Excel, sheet by sheet.
 
-Every capsule type has its own worksheet. Type A holds the dimensions, surfaces and results of this simplified teaching model.
+Each proposed A–D program has a worksheet. Its dimensions and thermal boundaries are nominal teaching-study inputs.
 
-Three constants describe the shell: width, length and height. On the capsule they are the three dimension lines.
+The nominal energy study is 2.5 by 4 metres. Reference dimension lines measure the actual 2.6 by 4.2 metre casing; those two dimensional bases remain separate.
 
-Each surface area is a formula from these dimensions. The front wall is width times height minus the round window.
+Study areas use nominal dimensions: the front wall is width times height minus the round window. The reference drawing identifies the corresponding physical elements.
 
 The back wall is bolted to the core, so only part of its heat escapes: its U·A is multiplied by the attached factor b.
 
@@ -201,7 +201,7 @@ Yearly demand: loss per kelvin times degree days times 24 hours, divided by 1000
 
 The Energy sheet multiplies each type's demand by its capsule count from the Program sheet and adds up the whole building.
 
-A, B and D share one shell, and fittings do not change the heat loss. Only C, with its larger window, needs more.
+The four program studies use the same nominal shell and porthole. With the same envelope and ventilation inputs, their heat loss is equal.
 
 Why so much for so little floor? Five faces and a window wrap a small room. Heated neighbours above and below would cut the demand.
 

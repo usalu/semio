@@ -1,0 +1,212 @@
+{
+  "historical_state": "original-completed-1930-1931",
+  "source": "SAB2024-p24-p45-p239-p240; original room topology and fixture identities; coordinates +/-0.12m, construction dimensions inferred",
+  "body_diameter": 0.6,
+  "body_height": 2.1,
+  "fixtures": [
+    {
+      "tag": "WC-GROUND-SERVICE",
+      "predefined_type": "TOILETPAN",
+      "center": [
+        3.632352941176471,
+        12.426470588235293
+      ],
+      "space": "SP-WC-GROUND-SERVICE",
+      "opening": "OP-D-WC-GROUND-SERVICE",
+      "route": [
+        [
+          4.32,
+          13.6
+        ],
+        [
+          4.32,
+          12.426470588235293
+        ]
+      ]
+    },
+    {
+      "tag": "WC-CHAUFFEUR",
+      "predefined_type": "TOILETPAN",
+      "center": [
+        15.479411764705883,
+        17.148529411764706
+      ],
+      "space": "SP-WC-CHAUFFEUR",
+      "opening": "OP-D-WC-CHAUFFEUR",
+      "route": [
+        [
+          13.7,
+          18.2
+        ],
+        [
+          15.5,
+          18.2
+        ],
+        [
+          15.5,
+          17.8
+        ]
+      ]
+    },
+    {
+      "tag": "BIDET-CHAUFFEUR",
+      "predefined_type": "BIDET",
+      "center": [
+        15.451470588235294,
+        19.663235294117648
+      ],
+      "space": "SP-CHAUFFEUR-BATH"
+    },
+    {
+      "tag": "BATH-CHAUFFEUR",
+      "predefined_type": "BATH",
+      "center": [
+        14.58529411764706,
+        19.383823529411764
+      ],
+      "space": "SP-CHAUFFEUR-BATH",
+      "outer_bounds": [
+        14.194117647058825,
+        18.601470588235294,
+        14.976470588235294,
+        20.305882352941175
+      ],
+      "feet": 4
+    },
+    {
+      "tag": "FIX-CHAUFFEUR-BASIN",
+      "predefined_type": "WASHHANDBASIN",
+      "center": [
+        15.647058823529411,
+        18.852941176470587
+      ],
+      "space": "SP-CHAUFFEUR-BATH"
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-1",
+      "predefined_type": "WASHHANDBASIN",
+      "center": [
+        3.576470588235294,
+        15.541911764705882
+      ],
+      "space": "SP-SERVANTS-1"
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-2",
+      "predefined_type": "WASHHANDBASIN",
+      "center": [
+        4.275,
+        15.947058823529412
+      ],
+      "space": "SP-SERVANTS-2"
+    },
+    {
+      "tag": "FIX-HALL-BASIN",
+      "predefined_type": "WASHHANDBASIN",
+      "center": [
+        8.128,
+        13.15
+      ],
+      "space": "SP-HALL"
+    }
+  ],
+  "space_tags": [
+    "SP-HALL",
+    "SP-SERVANTS-1",
+    "SP-SERVANTS-2",
+    "SP-LAUNDRY",
+    "SP-CHAUFFEUR",
+    "SP-CHAUFFEUR-BATH",
+    "SP-WC-GROUND-SERVICE",
+    "SP-WC-CHAUFFEUR"
+  ],
+  "removed_spaces": [
+    "SP-BOILER"
+  ],
+  "partitions": {
+    "laundry_front_y": 18.2,
+    "laundry_max_x": 8.23,
+    "servants_divider": [
+      [
+        7.05,
+        16.08
+      ],
+      [
+        4.75,
+        16.08
+      ],
+      [
+        4.75,
+        15.64
+      ],
+      [
+        3.95,
+        15.64
+      ],
+      [
+        3.95,
+        16.06
+      ],
+      [
+        3.15,
+        16.06
+      ]
+    ]
+  },
+  "garage_outline": [
+    [
+      10.9,
+      8.2
+    ],
+    [
+      13.82,
+      6.17
+    ],
+    [
+      14.39,
+      6.9
+    ],
+    [
+      15.13,
+      7.93
+    ],
+    [
+      15.65,
+      9.16
+    ],
+    [
+      15.98,
+      10.25
+    ],
+    [
+      16,
+      10.75
+    ],
+    [
+      16,
+      14.95
+    ],
+    [
+      12.35,
+      18
+    ],
+    [
+      10.9,
+      18
+    ]
+  ],
+  "uncertainty_m": 0.12,
+  "clearance_controls": [
+    {
+      "fixture": "BATH-CHAUFFEUR",
+      "column": "30",
+      "point": [
+        14.334651696849836,
+        20.197938098493385,
+        0.55
+      ],
+      "fixture_occupied": false,
+      "column_occupied": true
+    }
+  ]
+}

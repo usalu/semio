@@ -60,3 +60,10 @@ Feature: Reusable assignment document
     Then its left name chip is absent while its automatic right number uses the connected outline
     And blank titles do not disable table chrome or its counter
     And its type icons and parameter values remain in the matrix cells
+
+  Scenario: An assignment cover arranges its metadata in titled windows
+    Given an assignment with course, number, title, cover image, facts, partners, logo and faculty
+    When the author places the cover with makeassignmentcover
+    Then one page shows course and number, the title, the cover image, a row of facts, the partner addresses and the institution logo beside the faculty
+    And every built-in window title is localized in English and German
+    And paragraph spacing set for the cover does not leak into the following pages

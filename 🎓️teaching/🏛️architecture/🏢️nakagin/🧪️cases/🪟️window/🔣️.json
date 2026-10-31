@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "families": [
+    "Slash",
+    "Backslash",
+    "J",
+    "L",
+    "P",
+    "S"
+  ],
+  "type": "A",
+  "offset_overrides": [
+    0.31,
+    1.07
+  ],
+  "prototype": {
+    "width": 2.8,
+    "length": 4.3,
+    "height": 2.7,
+    "window_u": 0.11,
+    "window_v": 1.28,
+    "window_diameter": 1.2
+  },
+  "tolerance": 1e-8,
+  "reference": "glazing_midplane"
+}

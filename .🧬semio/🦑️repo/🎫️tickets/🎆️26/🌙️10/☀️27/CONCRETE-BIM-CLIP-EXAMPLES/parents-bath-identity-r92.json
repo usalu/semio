@@ -1,0 +1,116 @@
+{
+  "title": "Parents Bath Identity and Original Detail Registration R92",
+  "source": {
+    "original": "FLC H1(12)077 Cormier8January1930 reproduced book167",
+    "completed_plan": "book46",
+    "construction_changes": "book168 documents20January back inclination change and31August formwork correction"
+  },
+  "original_plan_pixels": {
+    "canvas": [
+      476,
+      746
+    ],
+    "region": [
+      35,
+      250,
+      205,
+      360
+    ],
+    "meuble": [
+      77,
+      279,
+      111,
+      291
+    ],
+    "baignoire": [
+      79,
+      306,
+      110,
+      319
+    ],
+    "legible_dimension": {
+      "value_m": 1.8,
+      "position": "beneath Baignoire in lower-left original plan",
+      "status": "January1930 design dimension; completed size not independently measured"
+    }
+  },
+  "registration": {
+    "original_right_stair_jog": "top/north of author46 bath",
+    "original_upper_meuble": "left/high-X white strip of author46",
+    "original_lower_baignoire": "right/low-X part of mosaic zone46",
+    "confidence": "topological, not an exact affine survey"
+  },
+  "cabinet": {
+    "candidate_pixels46": [
+      430,
+      510,
+      454,
+      605
+    ],
+    "world_bounds_candidate": [
+      6.510294117647058,
+      14.130882352941176,
+      7.180882352941177,
+      16.78529411764706
+    ],
+    "identity": "concrete cabinet, not tub",
+    "evidence": "continuous white face and handle-like dash; original plan Meuble and executed cabinet source168",
+    "footprint_status": "raster inferred ±0.15m; height unknown"
+  },
+  "bathtub": {
+    "id": "FIX-BATH",
+    "axis": "Y inferred from original plan rotation",
+    "location": "low-X/right portion of mosaic region46, adjacent corridor-side edge",
+    "exact_cavity_bounds": null,
+    "warning": "Do not use cabinet bounds or fill entire mosaic zone as one solid tub/chaise"
+  },
+  "chaise": {
+    "id": "FIX-CHAISE",
+    "location": "adjacent to tub within mosaic region",
+    "axis": "Y probable: original Coupe C-D profile direction is parallel to Meuble/Baignoire long axes; registering those axes to author46 makes them Y. Final profile stations remain unreadable.",
+    "construction": {
+      "hollow_service_plinth": true,
+      "recessed_lower_kickface": true,
+      "cantilever_RC_sheet": true,
+      "metal_tile_edge": true,
+      "tile_module_m": 0.05
+    },
+    "dimensions": {
+      "RC_thickness": null,
+      "cantilever_depth": null,
+      "final_wave_stations": null
+    },
+    "warning": "January1930 section precedes documented back-inclination changes; flat access platform must remain distinct"
+  },
+  "acceptance": [
+    "Identify actual tub cavity and rest-surface boundary from direct photograph or higher-resolution original before exact production geometry",
+    "Preserve cabinet as separate concrete built-in and retain passage circulation",
+    "Use hollow/service plinth and cantilever construction; no invented solid fill or borrowed stair6cm thickness"
+  ],
+  "sources": [
+    "https://uvadoc.uva.es/handle/10324/68427",
+    "https://www.villa-savoye.fr/content/download/9824393/file/document-visite-villa-savoye-FR-2021.pdf?inLanguage=fre-FR&version=3"
+  ],
+  "circulation": {
+    "cabinet_passage": {
+      "pixel_strip": [
+        397,
+        510,
+        430,
+        605
+      ],
+      "world_x": [
+        7.180882352941177,
+        8.102941176470589
+      ],
+      "role": "passage between cabinet and ramp-side boundary; do not fill with tub or solid plinth"
+    },
+    "caution": "Do not confuse this high-X passage with public low-X corridor near4.4. Both floor relationships require actual room routes."
+  },
+  "original_section_CD": {
+    "overall_span_m": 3.65,
+    "span_role": "room/section overall, not chaise length",
+    "morphology": "stepped slab/basin-like section, raised right ledge and void below",
+    "final_wave_profile": "not shown/readable here; final changes documented168"
+  }
+}

@@ -72,9 +72,8 @@
   },
   "expected": {
     "storey": "cellar",
-    "floor": -2.42,
+    "floor": -2.4,
     "footing_bottom": -2.72,
-    "wall_height": 2.4,
     "slab_thickness": 0.07,
     "rib_width": 0.16,
     "rib_depth": 0.27,
@@ -88,6 +87,8 @@
     "stair_centre": [
       6.407144828882639,
       9.180220372262651
-    ]
+    ],
+    "structural_floor": -2.42,
+    "finish_thickness": 0.02
   }
 }

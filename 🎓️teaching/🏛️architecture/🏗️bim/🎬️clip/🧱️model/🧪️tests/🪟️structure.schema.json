@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "source",
+    "pairs",
+    "neutral",
+    "expected_overlap",
+    "spatial",
+    "jamb"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "pairs": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "required": [
+          "filling",
+          "structure"
+        ]
+      }
+    },
+    "neutral": {
+      "type": "object",
+      "required": [
+        "part",
+        "cutter",
+        "intersection_volume"
+      ]
+    },
+    "expected_overlap": {
+      "const": 0
+    },
+    "spatial": {
+      "type": "object",
+      "required": [
+        "part",
+        "vertices",
+        "faces",
+        "expected_volume",
+        "translated_volume"
+      ]
+    },
+    "jamb": {
+      "type": "object",
+      "required": [
+        "filling",
+        "column",
+        "frame_width",
+        "frame_depth",
+        "expected_contact_area"
+      ]
+    }
+  }
+}

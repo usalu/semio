@@ -1,0 +1,22 @@
+/** 🖼️ Validate bounded fresh-worker inputs with the independent AJV implementation. */
+const fs=require('node:fs');
+const path=require('node:path');
+const assert=require('node:assert/strict');
+const Ajv=require('ajv/dist/2020').default;
+const read=name=>JSON.parse(fs.readFileSync(path.join(__dirname,name),'utf8'));
+const plan=read('capture-workers.json');
+const validate=new Ajv({strict:true}).compile(read('capture-workers.schema.json'));
+assert.equal(validate(plan),true,JSON.stringify(validate.errors));
+const invalid=Array.from({length:6},()=>structuredClone(plan));
+invalid[0].workers.pop();
+invalid[1].workers[0].script='../outside.py';
+invalid[2].workers[1].arguments[1]='4';
+invalid[3].workers[1]=structuredClone(invalid[3].workers[0]);
+invalid[4].workers[0].outputs=[];
+invalid[5].gallery.boundaries[4]=1919;
+for(const value of invalid) assert.equal(validate(value),false);
+assert.equal(new Set(plan.workers.map(worker=>worker.name)).size,9);
+const expected=['nakagin-detail-gallery.png','nakagin-orthographic-gallery.png','nakagin-four-exterior-directions.png','nakagin-representative-sections.png','nakagin-six-families-closed.png','nakagin-six-families-cutaway.png','nakagin-window-mechanism-states.png','roof-frame-occlusion.png'];
+const final=[plan.gallery.output,...plan.workers.flatMap(worker=>worker.outputs).filter(name=>!plan.gallery.panels.includes(name))];
+assert.deepEqual(final.sort(),expected.sort());
+console.log('[DEBUG] Nine bounded capture workers accepted; six malformed plans rejected; exact eight final outputs covered.');

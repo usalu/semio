@@ -1,0 +1,33 @@
+{
+  "canopy": {
+    "tag": "SALON-CANOPY",
+    "thickness": 0.07,
+    "projection": 0.25,
+    "basis": "sourced",
+    "source": "SAB2024-p216-executed-canopy"
+  },
+  "handrail": {
+    "tag": "SALON-HANDRAIL",
+    "width": 0.06,
+    "height": 0.06,
+    "wall": 0.002,
+    "basis": "inferred",
+    "source": "SAB2024-p218-chain-inside-rectangular-main-courante; dimensions/location fitted to current teaching host, no legible shop dimensions"
+  },
+  "chain": {
+    "tag": "SALON-CHAIN-DRIVE",
+    "strand_width": 0.004,
+    "strand_separation": 0.03,
+    "basis": "inferred",
+    "source": "SAB2024-p216-218-chain-driven-sliding-assembly; continuous strand envelope, original link pitch unknown"
+  },
+  "crank": {
+    "tag": "SALON-CRANK",
+    "shaft_radius": 0.004,
+    "arm": 0.08,
+    "handle_radius": 0.01,
+    "basis": "inferred",
+    "source": "SAB2024-p218-end-crank-topology; mechanical dimensions unresolved"
+  },
+  "excluded": "proposed exterior roller-blind drum was not executed"
+}

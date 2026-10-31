@@ -1,14 +1,320 @@
 {
   "cases": [
-    {"kind": "rooflight", "role": "glass"},
-    {"kind": "parquet", "role": "wood"},
-    {"kind": "tile", "role": "tile"},
-    {"kind": "paving", "role": "paving"},
-    {"kind": "grass_joint", "role": "garden"},
-    {"kind": "tap", "role": "metal"},
-    {"kind": "helical_handrail", "role": "metal"},
-    {"kind": "basin", "role": "concrete"},
-    {"kind": "footing", "role": "concrete"},
-    {"kind": "helical_guard", "role": "concrete"}
-  ]
+    {
+      "kind": "rooflight",
+      "role": "glass"
+    },
+    {
+      "kind": "parquet",
+      "role": "wood"
+    },
+    {
+      "kind": "tile",
+      "role": "tile"
+    },
+    {
+      "kind": "paving",
+      "role": "paving"
+    },
+    {
+      "kind": "grass_joint",
+      "role": "garden"
+    },
+    {
+      "kind": "tap",
+      "role": "metal"
+    },
+    {
+      "kind": "helical_handrail",
+      "role": "metal"
+    },
+    {
+      "kind": "basin",
+      "role": "concrete"
+    },
+    {
+      "kind": "footing",
+      "role": "concrete"
+    },
+    {
+      "kind": "helical_guard",
+      "role": "concrete"
+    },
+    {
+      "kind": "tile",
+      "part": {
+        "material": "MAT-MOSAIC-BLUE"
+      },
+      "role": "mosaic_blue"
+    },
+    {
+      "kind": "tile",
+      "part": {
+        "material": "MAT-MOSAIC-BLACK"
+      },
+      "role": "mosaic_black"
+    },
+    {
+      "kind": "radiator",
+      "part": {
+        "material": "MAT-CAST-IRON"
+      },
+      "role": "cast_iron"
+    },
+    {
+      "kind": "radiator",
+      "part": {
+        "material": "MAT-PAINTED-WOOD"
+      },
+      "role": "painted_wood"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-PARQUET"
+      },
+      "role": "wood"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-PAVING"
+      },
+      "role": "paving"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-TURF"
+      },
+      "role": "garden"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-GRES-WHITE"
+      },
+      "role": "gres_white"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-GRES-OCHRE"
+      },
+      "role": "gres_ochre"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-BITUMEN"
+      },
+      "role": "bitumen"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-OAK"
+      },
+      "role": "wood"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-GRES-UNRESOLVED"
+      },
+      "role": "tile"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-GRES-BLACK"
+      },
+      "role": "gres_black"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-PLANTING-SUBSTRATE"
+      },
+      "role": "substrate"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-PAVING-UNRESOLVED"
+      },
+      "role": "paving"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-GRAVEL"
+      },
+      "role": "gravel"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-SAND"
+      },
+      "role": "sand"
+    },
+    {
+      "kind": "flooring",
+      "part": {
+        "material": "MAT-RAMP-RESILIENT"
+      },
+      "role": "resilient_gray"
+    }
+  ],
+  "mosaics": [
+    {
+      "material": "MAT-MOSAIC-BLUE",
+      "role": "mosaic_blue",
+      "color": "#376E9E",
+      "rgb": [
+        55,
+        110,
+        158
+      ]
+    },
+    {
+      "material": "MAT-MOSAIC-BLACK",
+      "role": "mosaic_black",
+      "color": "#151A1E",
+      "rgb": [
+        21,
+        26,
+        30
+      ]
+    },
+    {
+      "material": "MAT-CAST-IRON",
+      "role": "cast_iron",
+      "color": "#303338",
+      "rgb": [
+        48,
+        51,
+        56
+      ]
+    },
+    {
+      "material": "MAT-PAINTED-WOOD",
+      "role": "painted_wood",
+      "color": "#E9E6DC",
+      "rgb": [
+        233,
+        230,
+        220
+      ]
+    },
+    {
+      "material": "MAT-GRES-WHITE",
+      "role": "gres_white",
+      "color": "#E9E1CB",
+      "rgb": [
+        233,
+        225,
+        203
+      ]
+    },
+    {
+      "material": "MAT-GRES-OCHRE",
+      "role": "gres_ochre",
+      "color": "#B58B54",
+      "rgb": [
+        181,
+        139,
+        84
+      ]
+    },
+    {
+      "material": "MAT-BITUMEN",
+      "role": "bitumen",
+      "color": "#25282A",
+      "rgb": [
+        37,
+        40,
+        42
+      ]
+    },
+    {
+      "material": "MAT-GRES-BLACK",
+      "role": "gres_black",
+      "color": "#242526",
+      "rgb": [
+        36,
+        37,
+        38
+      ]
+    },
+    {
+      "material": "MAT-PLANTING-SUBSTRATE",
+      "role": "substrate",
+      "color": "#75634A",
+      "rgb": [
+        117,
+        99,
+        74
+      ]
+    },
+    {
+      "material": "MAT-GRAVEL",
+      "role": "gravel",
+      "color": "#A6A09A",
+      "rgb": [
+        166,
+        160,
+        154
+      ]
+    },
+    {
+      "material": "MAT-SAND",
+      "role": "sand",
+      "color": "#C2AD85",
+      "rgb": [
+        194,
+        173,
+        133
+      ]
+    },
+    {
+      "material": "MAT-RAMP-RESILIENT",
+      "role": "resilient_gray",
+      "color": "#383B3D",
+      "rgb": [
+        56,
+        59,
+        61
+      ]
+    }
+  ],
+  "floor_plan": {
+    "kind": "flooring",
+    "class": "IfcCovering",
+    "predefined_type": "FLOORING",
+    "storey": "first",
+    "rank": 1,
+    "parts": [
+      {
+        "role": "wearing",
+        "z0": 3.155,
+        "z1": 3.17,
+        "visible": true
+      },
+      {
+        "role": "bedding",
+        "z0": 3.14,
+        "z1": 3.155,
+        "visible": false
+      },
+      {
+        "role": "bonding",
+        "z0": 3.14,
+        "z1": 3.142,
+        "visible": false
+      }
+    ],
+    "internal_strokes": 0
+  }
 }

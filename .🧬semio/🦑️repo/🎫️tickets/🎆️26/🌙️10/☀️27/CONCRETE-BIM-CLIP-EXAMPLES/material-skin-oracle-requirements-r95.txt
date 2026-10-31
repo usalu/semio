@@ -1,0 +1,6 @@
+rene==0.3.0
+rithm==14.9.1
+dendroid==2.1.0
+prioq==0.7.0
+reprit==0.9.0
+typing_extensions==4.15.0

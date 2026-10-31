@@ -1,0 +1,6 @@
+🏛️architecture/🏗️bim/🎬️clip/📊️information/🐍️.py Beat1_DataToInformation BIM_information
+🏛️architecture/🏗️bim/🎬️clip/🧬️objects/🐍️.py Beat2_ObjectOrientation BIM_objects
+🏛️architecture/🏗️bim/🎬️clip/👁️representations/🐍️.py Beat3_SameObject BIM_representations
+🏛️architecture/🏗️bim/🎬️clip/🧩️models/🐍️.py Beat4_PartialModels BIM_models
+🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py Beat5_Interfaces BIM_exchange
+🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py Beat6_Consistency BIM_consistency

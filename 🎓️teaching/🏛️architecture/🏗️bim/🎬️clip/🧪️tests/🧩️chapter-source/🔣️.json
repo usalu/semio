@@ -33,10 +33,22 @@
           ],
           "forbidden_text": [
             "derived from the turning circle",
-            "aus dem Wendekreis abgeleitet"
+            "aus dem Wendekreis abgeleitet",
+            "plan.parts[\"label_x:\" + a[1:]]",
+            "plan.parts[\"label_x:\" + b[1:]]",
+            "plan.parts[\"label_y:\" + a[0]]",
+            "a[1:]",
+            "b[1:]",
+            "a[0]",
+            "{\"name\": self.tr(\"Grid\", \"Raster\"), \"value\": f\"{self._lab(a)} – {self._lab(b)}\"}"
           ],
           "required_calls": [
             "_grid_keys"
+          ],
+          "required_text": [
+            "self._grid_keys(a)",
+            "self._grid_keys(b)",
+            "language=lang"
           ]
         },
         {
@@ -390,7 +402,75 @@
       "19",
       "SL-1"
     ],
-    "shared": "HOIST-JIB"
+    "shared": "HOIST-JIB",
+    "sanitary": {
+      "class": "IfcSanitaryTerminal",
+      "en": "service products",
+      "de": "Haustechnikprodukte"
+    },
+    "lights": {
+      "class": "IfcLightFixture",
+      "en": "service products",
+      "de": "Haustechnikprodukte"
+    },
+    "coverings": [
+      {
+        "tag": "NEUTRAL-ARCH-FLOOR",
+        "class": "IfcCovering",
+        "predefined_type": "FLOORING",
+        "model": "architecture",
+        "row": {
+          "en": "architectural finishes",
+          "de": "architektonische Bekleidungen"
+        }
+      },
+      {
+        "tag": "NEUTRAL-SERVICE-CASING",
+        "class": "IfcCovering",
+        "predefined_type": "CLADDING",
+        "model": "services",
+        "row": {
+          "en": "service products",
+          "de": "Haustechnikprodukte"
+        }
+      },
+      {
+        "tag": "NEUTRAL-ARCH-SKIRT",
+        "class": "IfcCovering",
+        "predefined_type": "SKIRTINGBOARD",
+        "model": "architecture",
+        "row": {
+          "en": "architectural finishes",
+          "de": "architektonische Bekleidungen"
+        }
+      },
+      {
+        "tag": "NEUTRAL-ARCH-PAINT",
+        "class": "IfcCovering",
+        "predefined_type": "CLADDING",
+        "model": "architecture",
+        "row": {
+          "en": "architectural finishes",
+          "de": "architektonische Bekleidungen"
+        }
+      }
+    ],
+    "native_probes": [
+      {
+        "tag": "NEUTRAL-UNIDENTIFIED-APPARATUS",
+        "class": "IfcBuildingElementProxy",
+        "predefined_type": "USERDEFINED",
+        "model": "services",
+        "meaning": {
+          "en": "assemblies and unknown apparatus",
+          "de": "Baugruppen und unbek. Apparate"
+        },
+        "row": {
+          "en": "assemblies and unknown apparatus",
+          "de": "Baugruppen und unbekannte Apparate"
+        }
+      }
+    ]
   },
   "datum_labels": [
     {
@@ -987,6 +1067,83 @@
         "test_mixed_filling_rejects_uncovered_or_overlapping_layout_cells",
         "test_corner_aperture_keeps_finite_station_end_planes"
       ]
+    },
+    {
+      "module": "🎨️visuals.🎥️camera.🧪️tests.🐍️",
+      "kind": "class",
+      "tests": [
+        "test_cache_is_bounded_and_releases_collected_shapes",
+        "test_cache_keys_include_native_path_semantics_and_baseline_edge_cases",
+        "test_exact_pixels_for_geometry_style_and_camera_mutations"
+      ]
+    },
+    {
+      "module": "🧱️model.🧪️tests.⚡️geometry-cache",
+      "kind": "class",
+      "tests": [
+        "test_building_seeds_public_service_and_solid_queries",
+        "test_complete_model_keys_and_input_output_mutation_are_isolated",
+        "test_two_model_eviction_cancellation_and_producer_identity",
+        "test_quantity_slots_track_full_inputs_volume_producers_and_output_ownership"
+      ]
+    },
+    {
+      "module": "🎨️visuals.🏛️savoye.🧱️core.🧪️surfaces",
+      "kind": "class",
+      "tests": [
+        "test_portable_material_dispatch",
+        "test_authored_finish_palette_is_shared_by_plan_section_and_axon",
+        "test_service_parts_preserve_authored_finish_palette",
+        "test_actual_plan_floor_visibility_order_and_no_internal_ink",
+        "test_actual_face_appearance_only_colours_source_bound_surface"
+      ]
+    },
+    {
+      "module": "🧱️model.🧪️tests.📏️path-stations",
+      "kind": "class",
+      "tests": [
+        "test_near_corner_stations_keep_valid_disjoint_full_material",
+        "test_layers_and_authoritative_aperture_preserve_independent_area",
+        "test_authored_shared_wall_prisms_survive_native_decimal_profile_precision"
+      ]
+    },
+    {
+      "module": "🧱️model.🧪️tests.🎨️coverings",
+      "kind": "function",
+      "tests": [
+        "test_architectural_covering_dispatch_uses_source_domains_and_native_material"
+      ]
+    },
+    {
+      "module": "🧱️model.🎨️finishes.🧪️tests.🐍️",
+      "kind": "function",
+      "tests": [
+        "test_wall_surface_regions_preserve_material_volume_aperture_and_exact_face_area",
+        "test_wall_surface_regions_reject_ambiguous_or_incompatible_identity",
+        "test_native_wall_face_treatments_keep_closed_bodies_materials_and_qualified_styles",
+        "test_rounded_skirting_stock_preserves_section_and_closed_native_material",
+        "test_original_paint_faces_keep_source_registration_and_occupied_substrate",
+        "test_skirting_ownership_cuts_keep_closed_positive_stock_and_independent_volume",
+        "test_original_surface_treatments_keep_unmeasured_mass_and_source_scopes",
+        "test_uniform_material_appearance_keeps_native_whole_item_styles_and_panel_geometry",
+        "test_skirting_source_joint_is_upright_and_keeps_positive_nanometre_stock",
+        "test_shared_skirting_mitre_planes_match_independent_convex_and_concave_offsets",
+        "test_native_polyhedron_retains_positive_interface_facets_without_area_cutoff",
+        "test_nearly_coincident_stock_support_planes_replay_to_closed_material",
+        "test_exact_stock_continuation_preserves_owned_rational_operands_and_json_publication",
+        "test_stock_planes_and_overlength_retain_original_source_coordinate_relations",
+        "test_inferred_back_fitting_clearance_preserves_full_timber_section_and_floor_bearing",
+        "test_authored_interface_fitting_planes_keep_exact_complements_and_independent_volume"
+      ]
+    },
+    {
+      "module": "🧱️model.🔌️exchange.🧪️tests.🔢️reals",
+      "kind": "function",
+      "tests": [
+        "test_native_real_codec_preserves_binary64_and_independent_numpy_parse",
+        "test_native_real_codec_rejects_nonfinite_values",
+        "test_oblique_closed_native_faces_keep_exact_coordinate_planes_after_codec"
+      ]
     }
   ],
   "native_class_matrix": {
@@ -996,7 +1153,10 @@
         "IfcChimney": 2,
         "IfcRailing": 1,
         "IfcStair": 1,
-        "IfcDoor": 1
+        "IfcDoor": 1,
+        "IfcSanitaryTerminal": 2,
+        "IfcLightFixture": 2,
+        "IfcCovering": 2
       },
       "structure": {
         "IfcColumn": 2,
@@ -1007,12 +1167,26 @@
       "services": {
         "IfcChimney": 1,
         "IfcCovering": 4,
-        "IfcPipeSegment": 7
+        "IfcPipeSegment": 7,
+        "IfcSanitaryTerminal": 3,
+        "IfcLightFixture": 3
       }
     },
     "chimney": {
       "en": "chimney assemblies",
       "de": "Schornsteinbaugruppen"
+    },
+    "sanitary": {
+      "en": "sanitary fixtures",
+      "de": "Sanitärobjekte"
+    },
+    "lights": {
+      "en": "light fixtures",
+      "de": "Leuchten"
+    },
+    "coverings": {
+      "en": "finishes, cladding and insulation",
+      "de": "Beläge, Bekleidungen und Dämmung"
     }
   },
   "part_only_service": {
@@ -1064,5 +1238,241 @@
       }
     ],
     "height": 9.49
+  },
+  "information_grid_projection": {
+    "grid": {
+      "x": [
+        0,
+        4,
+        8
+      ],
+      "y": [
+        0,
+        5
+      ],
+      "labels_x": [
+        "1",
+        "2",
+        "3"
+      ],
+      "labels_y": [
+        "A",
+        "B"
+      ]
+    },
+    "supports": [
+      {
+        "tag": "2",
+        "point": [
+          4,
+          5
+        ],
+        "expected": [
+          "label_x:2",
+          "label_y:B"
+        ]
+      },
+      {
+        "tag": "C2",
+        "point": [
+          8,
+          0
+        ],
+        "expected": [
+          "label_x:3",
+          "label_y:A"
+        ]
+      },
+      {
+        "tag": "A1",
+        "point": [
+          2,
+          2
+        ],
+        "expected": []
+      }
+    ]
+  },
+  "model_loader": {
+    "module": "🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️",
+    "neutral_input": {
+      "probe": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ]
+      ]
+    },
+    "neutral_output": {
+      "parts": [
+        {
+          "outline": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ]
+        }
+      ]
+    }
+  },
+  "class_pages": {
+    "page_size": 6,
+    "y0": 1.3,
+    "pitch": 0.28,
+    "bottom": -0.3,
+    "row_height": 0.2,
+    "cases": [
+      {
+        "count": 23,
+        "pages": [
+          [
+            1,
+            6
+          ],
+          [
+            7,
+            12
+          ],
+          [
+            13,
+            18
+          ],
+          [
+            19,
+            23
+          ]
+        ]
+      },
+      {
+        "count": 10,
+        "pages": [
+          [
+            1,
+            6
+          ],
+          [
+            7,
+            10
+          ]
+        ]
+      },
+      {
+        "count": 13,
+        "pages": [
+          [
+            1,
+            6
+          ],
+          [
+            7,
+            12
+          ],
+          [
+            13,
+            13
+          ]
+        ]
+      }
+    ],
+    "clear_after": [
+      "structure",
+      "services"
+    ]
+  },
+  "matrix_pages": {
+    "page_size": 12,
+    "top": 0.6,
+    "pitch": 0.232,
+    "cell_height": 0.2,
+    "bottom": -2.06,
+    "cases": [
+      {
+        "count": 23,
+        "sizes": [
+          12,
+          11
+        ]
+      },
+      {
+        "count": 10,
+        "sizes": [
+          10
+        ]
+      },
+      {
+        "count": 13,
+        "sizes": [
+          12,
+          1
+        ]
+      }
+    ]
+  },
+  "class_highlights": {
+    "source": {
+      "elements": [
+        {
+          "tag": "WALL",
+          "class": "IfcWall"
+        },
+        {
+          "tag": "COLUMN",
+          "class": "IfcColumn"
+        }
+      ],
+      "spaces": [
+        {
+          "tag": "ROOM",
+          "class": "IfcSpace"
+        }
+      ]
+    },
+    "order": [
+      "ROOM",
+      "COLUMN",
+      "WALL"
+    ],
+    "expected": {
+      "IfcColumn": [
+        "COLUMN"
+      ],
+      "IfcWall": [
+        "WALL"
+      ],
+      "IfcSpace": [
+        "ROOM"
+      ]
+    }
+  },
+  "class_columns": {
+    "minimum_gap": 0.1,
+    "classes": [
+      "IfcBuildingElementProxy",
+      "IfcFurnishingElement",
+      "IfcSanitaryTerminal"
+    ]
+  },
+  "finish_ownership": {
+    "chapter": "🔌️exchange",
+    "clause": "finish-ownership",
+    "source_assumption": "finish-load-ownership",
+    "seconds": 10.5,
+    "en": "Teaching allowance includes floor coverings; their mass is not added twice. It is not a full inventory of nonstructural mass.",
+    "de": "Der Lehransatz enthält Bodenbeläge; ihre Masse wird nicht doppelt addiert. Er ist keine vollständige Bilanz nichttragender Masse.",
+    "note_en": "Teaching allowance includes floor coverings.\nTheir mass is not added twice.\nThis is not a full nonstructural mass inventory.",
+    "note_de": "Der Lehransatz enthält die Bodenbeläge.\nIhre Masse wird nicht doppelt addiert.\nKeine vollständige Bilanz nichttragender Masse."
   }
 }

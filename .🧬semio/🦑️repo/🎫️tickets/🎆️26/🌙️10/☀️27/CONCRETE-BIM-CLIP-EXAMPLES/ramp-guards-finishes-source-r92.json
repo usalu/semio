@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "sources": {
+    "official_book": "https://uvadoc.uva.es/handle/10324/68427",
+    "pages": [
+      134,
+      136,
+      138,
+      139
+    ],
+    "retained_text": "🗑️generated/book-page-{page}-r92.jsonp",
+    "images": {
+      "original_lower_ramp": "🗑️generated/ramp-r31-img_p14_1.png",
+      "original_lower_guard": "🗑️generated/book-figures-134-r92.jpg",
+      "original_upper_ramp": "🗑️generated/book-figures-135-r92.jpg",
+      "channel_and_ruin_photos": "🗑️generated/book-figures-136-r92.jpg",
+      "original_arrival_stringer": "🗑️generated/book-figures-137-r92.jpg"
+    }
+  },
+  "guards": {
+    "sourced": {
+      "central_screen_thickness_m": 0.06,
+      "terrace_facing_parapet_thickness_m": 0.06,
+      "form": "Continuous inclined reinforced bands; central scissor screen formed by their superposition",
+      "original_references": [
+        "FLC H1(13)305",
+        "FLC H1(13)306",
+        "FLC H1(13)309",
+        "FLC H1(13)311"
+      ],
+      "primary_drawing_review": "134 lower garde-corps reinforcement lines follow continuous inclined boundaries, not midpoint-height stairsteps"
+    },
+    "inferred": {
+      "guard_height_above_walkline_m": 0.85,
+      "cap_from_above_walkline_m": 0.85,
+      "cap_to_above_walkline_m": 0.95,
+      "cap_profile_dimensions": "Existing nominal construction only, not independently measured original detail"
+    },
+    "uncertain": {
+      "horizontal_word": "Does not alone secure a world-horizontal longitudinal cap; transverse horizontal cap/profile remains a possible reading",
+      "midlanding_return_stations": "Must follow registered actual landing edges and real adjacent protection; original pixels do not supply a new metric station",
+      "cap_fluting": "Executed grooved covering is described, exact profile and dimensions unresolved"
+    },
+    "acceptance": [
+      "Preserve continuous original inclined-band topology",
+      "Union only physically superposed central bands; no filling vertical air gap merely from overall bounds",
+      "Keep landing side edges protected by actual guard or occupied adjacent wall; do not invent infill across flight-to-flight air gaps",
+      "Resolve occupied guard/host duplicates using real ownership"
+    ]
+  },
+  "channel": {
+    "location": "Facade-side ramp stringer (condensation/drainage joint)",
+    "reference": "FLC H1(13)271-5 item21; detailG FLC19541; CoupeLL H1(13)309",
+    "not_a_cap_detail": true,
+    "dimensions": "Unreadable/unsecured; must not transplant L drainage section to handrail top"
+  },
+  "interior_finish": {
+    "reference": "SAB139; original H1(12)128-5 item23",
+    "author_material": "Glued linoleum on floated mortar",
+    "primary_material_wording": "Rubber carpet",
+    "total_executed_thickness_m": 0.008,
+    "basis": "Author approximately8mm; original text corroborates cement screed and rubber-floor context without precise layer split",
+    "unknown": [
+      "Exact wearing-versus-mortar split",
+      "Rubber-versus-linoleum identification",
+      "Thickness direction",
+      "Manufacturer and original RGB"
+    ],
+    "correction": "Current inferred15mm tile+15mm bed is not source-consistent; retain FFL while making assembly source-qualified",
+    "wearing_specification_m": 0.005,
+    "wearing_specification_evidence": "SAB188 Electro-Cable5mm estimate7Feb1929 accepted5Mar; billed only ramp21Mar1930; H1(13)013/031-2,H1(12)092",
+    "colour_family": "Graphite gray, SAB187; exact RGB unknown",
+    "mortar_split_candidate_m": 0.003,
+    "mortar_split_basis": "Inferred difference from approximate8mm total, not separately measured layer"
+  },
+  "exterior_finish": {
+    "paver_thickness_m": 0.04,
+    "paver_nominal_side_m": 0.58,
+    "sand_bed_m": 0.02,
+    "basis": "SAB139 applies terrace construction criterion; precise joints/direction qualified separately"
+  },
+  "exterior_soffit": {
+    "presence": "False ceiling beneath terrace-to-solarium ramp positively included in original correspondence",
+    "reference": "H1(12)128-5 item22; H1(13)309 timber block casting legend; SAB138–139",
+    "batten_section_m": [
+      0.035,
+      0.035
+    ],
+    "batten_basis": "Author reads35×35mm from original detail",
+    "unknown": [
+      "Batten spacing and individual block stations",
+      "Board material/thickness",
+      "Insulation existence/material/thickness"
+    ],
+    "current_roster_gap": "No separate ceiling/battens identified; upper FIN-RAMP-EXTERIOR does not represent soffit ceiling",
+    "acceptance": "Represent attested assembly with explicitly inferred unresolved construction choices; do not claim measured hidden insulation"
+  }
+}

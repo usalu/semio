@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "provenance",
+    "touching",
+    "positive_cut"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "provenance": {
+      "type": "string"
+    },
+    "touching": {
+      "type": "object",
+      "required": [
+        "stock",
+        "cutter",
+        "expected_parts"
+      ],
+      "properties": {
+        "stock": {
+          "$ref": "#/$defs/part"
+        },
+        "cutter": {
+          "$ref": "#/$defs/part"
+        },
+        "expected_parts": {
+          "const": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "positive_cut": {
+      "type": "object",
+      "required": [
+        "stock_bounds",
+        "cutter_bounds",
+        "remaining_volume"
+      ],
+      "properties": {
+        "stock_bounds": {
+          "$ref": "#/$defs/bounds"
+        },
+        "cutter_bounds": {
+          "$ref": "#/$defs/bounds"
+        },
+        "remaining_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "bounds": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "number"
+      }
+    },
+    "part": {
+      "type": "object",
+      "required": [
+        "mesh"
+      ],
+      "properties": {
+        "mesh": {
+          "type": "object",
+          "required": [
+            "vertices",
+            "faces"
+          ],
+          "properties": {
+            "vertices": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "object",
+                      "required": [
+                        "$rational"
+                      ],
+                      "additionalProperties": false,
+                      "properties": {
+                        "$rational": {
+                          "type": "array",
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "prefixItems": [
+                            {
+                              "type": "string",
+                              "pattern": "^-?[0-9]+$"
+                            },
+                            {
+                              "type": "string",
+                              "pattern": "^[1-9][0-9]*$"
+                            }
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "faces": {
+              "type": "array",
+              "minItems": 4,
+              "items": {
+                "type": "array",
+                "minItems": 3,
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}
+                                    

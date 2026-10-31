@@ -1,0 +1,169 @@
+{
+  "schema": 1,
+  "plan": {
+    "owner": "ground",
+    "bounds": [
+      -2.4,
+      6.34
+    ],
+    "cases": [
+      {
+        "level": "cellar",
+        "band": [
+          -2.4,
+          0
+        ],
+        "cut": -1.2,
+        "visible": true
+      },
+      {
+        "level": "first",
+        "band": [
+          3.17,
+          6.34
+        ],
+        "cut": 4.37,
+        "visible": true
+      },
+      {
+        "level": "roof",
+        "band": [
+          7,
+          9
+        ],
+        "cut": 7.54,
+        "visible": false
+      }
+    ],
+    "flooring_other_storey": false
+  },
+  "elevation": {
+    "part": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 2,
+      "mesh": {
+        "vertices": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            1
+          ],
+          [
+            2,
+            1,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            2,
+            0,
+            2
+          ],
+          [
+            2,
+            1,
+            2
+          ],
+          [
+            0,
+            1,
+            1
+          ]
+        ],
+        "faces": [
+          [
+            0,
+            3,
+            2,
+            1
+          ],
+          [
+            4,
+            5,
+            6,
+            7
+          ],
+          [
+            0,
+            1,
+            5,
+            4
+          ],
+          [
+            1,
+            2,
+            6,
+            5
+          ],
+          [
+            2,
+            3,
+            7,
+            6
+          ],
+          [
+            3,
+            0,
+            4,
+            7
+          ]
+        ]
+      }
+    },
+    "expected_xz": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        2
+      ],
+      [
+        0,
+        1
+      ]
+    ]
+  },
+  "source": {
+    "tube": "TUBE-STAIR-CENTRAL",
+    "stringer": "BEAM-RAMP-FIRST-STRINGER",
+    "column": "STAIR-RETURN-L"
+  }
+}   

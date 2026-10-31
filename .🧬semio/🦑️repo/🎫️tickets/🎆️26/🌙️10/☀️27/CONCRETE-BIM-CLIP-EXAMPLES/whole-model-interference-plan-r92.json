@@ -1,0 +1,333 @@
+{
+  "version": 1,
+  "status": "PLAN_ONLY_DO_NOT_RUN_UNTIL_ROOT_SOURCE_FREEZE",
+  "scope": {
+    "goal": "Independent interference of every currentlyauthored fixedfixture and materialfinish with actualstructure/hostenvelopes acrossallstoreys",
+    "source_completeness": "Separate primary-evidence audit; this cannot detect an unlocated/unmodelled second1932boiler or concealedunrecordedroutes",
+    "storeys": "Enumerate all authored storeys; no fixed count or silent domain default",
+    "products": "Enumerate all actual modelphysicalproducts viafirstparty nativebody registry, not justmaster53fixturelist",
+    "geometry": "Actualexclusive .parts only; never full_parts/shared_parts/child_parts asduplicate material"
+  },
+  "capture": {
+    "freeze": [
+      "ExactsourceSHA256",
+      "Everyloadedproducer/modulehash affecting geometry/materials/ownership",
+      "Schema/testpolicyhashes",
+      "SourceGUID/type/material/spatial/declaredownership roster"
+    ],
+    "per_part": [
+      "SourceGUID/tag/class/storey",
+      "Exactnativebodypartindex androle",
+      "Resolvedmaterialtag andownership",
+      "Primitivekind and polygonholes/profile/loft/mesh geometry",
+      "Actualvertices andclosedfacegraph",
+      "Zrange and3D/XY bounds",
+      "Namedsharedreferences excludedfrombody"
+    ],
+    "deduplication": "Deduplicate repeatedcollectionviews ONLY by sameentityGUID+nativepartindex; nevermergecoincidentgeometryfromdifferentproducts",
+    "native_basis": "Match actual BODIES dispatch and .parts occurrence; class defaults must not substitute envelopes or miss newly added appliances/skirting/roofcovers"
+  },
+  "classification": {
+    "structural_targets": [
+      "Actualcolumns/beams/slabs/footings exclusiveparts",
+      "StructuralRCparts of stairs/ramps/retainingwalls",
+      "Actualwall/screen occupiedhostparts, includingmasonry/plaster",
+      "Otherstructure-domain parts anddeclaredsupporthosts"
+    ],
+    "fixture_sources": [
+      "IfcFurnishingElement fixedbuiltins",
+      "IfcSanitaryTerminal includingallnewrooms",
+      "IfcElectricAppliance/IfcBoiler/IfcSpaceHeater",
+      "IfcLightFixture/chimney/fixedserviceassemblies",
+      "IfcPipeSegment/IfcWasteTerminal andnativehollowproxycomponents",
+      "Physicalwindow/door/curtainfillingcomponents withdeclaredpose"
+    ],
+    "finish_sources": [
+      "AllIfcCovering physicalmaterial: FLOORING/ROOFING/CLADDING/SKIRTINGBOARD",
+      "Finish-role parts inside stairs/ramps/facades/othermixedproducts",
+      "Appearance-only treatment is an existing substrate/face identity, not a second coincident film solid"
+    ],
+    "excluded_nonmaterial": [
+      "IfcSpace/zone/annotation/type/material definitions",
+      "IfcOpeningElement onlywhenverifiedsemanticReference subtraction withactualhostrelation",
+      "Explicitsharedassemblyreferences; their realownercapturedonce"
+    ],
+    "intra_product": "Do not blanketignoreallself-ownedparts: separatelyvalidatecross-materialstructural/finishcomponents where relevant; sharedfacesareallowedzero-volumecontacts"
+  },
+  "ownership_rules": {
+    "authoritative": "Only nativeexclusive .parts become occupiedinterferencebodies",
+    "shared": "Every shared_parts reference mustresolveownerGUID anddeclaredscope; do not count its referencedvolumeagain",
+    "exemptions": "No global ignores forfixture integrates tags orwholepairs. Any declaredintegration must map to actualdisjointmaterialownership; a positivematerialduplicate cannotbeacceptedbyrenamingitshared.",
+    "contact": "Positiveboundarybearing/contact withzerooccupiedvolumeisvalid; do notrequirepositivevolumeasproofsupport",
+    "pose": "Runstatic authoredscene first, thenexplicitoperatedleaf/bodywitnessstates. Do not blanketexclude doorleavesor move fixtures to clear them."
+  },
+  "pipeline": [
+    {
+      "stage": "coverage_roster",
+      "action": "Enumerate everyphysicalsourceproduct/part and reportunsupported/unresolveddomains beforegeometrywork"
+    },
+    {
+      "stage": "owned_geometry",
+      "action": "Capture canonicalownedparts once per frozen model and producer; reuse foratlas/audit without repeatedwholequeries"
+    },
+    {
+      "stage": "negative_filters",
+      "action": "3DAABB thenXYspatialindex andstrictZinterval reject onlyprovablydisjointpairs; boxes neverprovepositivecollision"
+    },
+    {
+      "stage": "independent_refinement",
+      "action": "Nonconvexprisms: Shapely/GEOS polygon/hole intersections×trueheight. Compatiblelofts/convexpolyhedra: independentactualsection clipping withvertex/edgeevents or verifiedconvexhalfspaces. Arbitraryclosedmesh: independent plane-edgegraph/polygonization andnestedholeparity, not globalConvexHull."
+    },
+    {
+      "stage": "numeric_crosschecks",
+      "action": "Validateprismarea/volumeconservation, pairwisevsunionconsistency, independenterrorbounds andprecision-sensitivity diagnostics. Libraryunionprecisionfailuremustnotbeinterpretedasactualmassduplication."
+    },
+    {
+      "stage": "positive_review",
+      "action": "Retain sourceGUID/part/materialpair, strict3Dwitness, heightinterval, actualpositivevolume/errorbound, source/producerhashes and source-qualifiedrepairproposal. Use sparse nativeSDKsharedpoint confirmation when needed."
+    },
+    {
+      "stage": "coverage_certificate",
+      "action": "Emitperstorey/domainpair counts: roster, negative, refined, boundarycontact, positive, uncertain, unsupported, cancelled. NoPASSwithunfinished/unsupportedpositivecandidates."
+    }
+  ],
+  "geometry_controls": {
+    "convex_hull": "Permitted ONLY as independentper-component method after that actualclosedcomponent is verifiedconvex; neverforwholehollowfixture/concaveprofile orpolygonwithholes",
+    "holes": "Preserveallvoids,multipleloops,referencehostcuts andcavityairways through every stage",
+    "numeric": "No globalfeaturesnapping, sliverdropping orfixed-volumeepsilon as a substitute for proof. Reportvalueswitherrorbounds; near-boundaryuncertainty requiresrefinement, notsilentPASS.",
+    "appearance": "Physicalclosure peractualBRep/extrudedbodyitem, notarbitraryappearancechunks. FaceRGBimporterlimitationmustnotchangegeometry.",
+    "sdk_limitations": [
+      "web-ifc0.0.78 appliesReferenceopeningboolean incorrectlyincombinedhost; useisolatednativehostproof andcorrectnormativeprotocol",
+      "Sixsourcevalidcurtainmicroslivers belowSDKtessellationresolution retainexplicitlimitation",
+      "web-ifc0.0.78 GetFlatMesh ignoresselected-faceRGB butparsesvalidstyles; wholematerialRGB works"
+    ]
+  },
+  "performance": {
+    "reuse": "Onecanonicalcapture and source-awareimmutablecache per freeze; independentpartvertices/hulledges/sections cached bygeometry and requestedZ",
+    "local_resolution": "Exactrawheight/bounds negativefilters may avoid unrelatedcoldfacade/roofdatumdependencies; forcompletecapture rootmustcollectallgeometryonce ratherthan repeatforpairs",
+    "progress": "Perstage/partpair counts and cancellation; partialoutputs sayINCOMPLETE, neverPASS",
+    "commands": "Allcommands throughrepo tools exec; allscripts/portableinputs underexistingticket; generatedcaptures/logsunder🗑️generated"
+  },
+  "controls": [
+    {
+      "id": "real_bath_column_red",
+      "input": "chauffeur-bath-door-cases-r92.json#/red_control",
+      "expected_red_volume_m3": 0.00021762299050879686,
+      "expected_repaired_volume": 0,
+      "proof": "Actualnativeoldsharedpointinsideboth; shifted55partsconservevolumeandemptybathpoint"
+    },
+    {
+      "id": "real_finish_beam_red",
+      "input": "floor-beam-owned-cases-r92.json#/red_intersection_prisms",
+      "expected_red_volume_m3": 0.4303719089181796,
+      "expected_repaired_volume": 0,
+      "proof": "126disjointprismcontrols;4affectedcovers/6beamrecheckzerooncb9b138f; rawGEOSunionprecisiondefect documented"
+    },
+    {
+      "id": "nonconvex_false_hull",
+      "a": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1.5,
+            2
+          ],
+          [
+            1.5,
+            0.5
+          ],
+          [
+            0.5,
+            0.5
+          ],
+          [
+            0.5,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": 0,
+        "z1": 1
+      },
+      "b": {
+        "outline": [
+          [
+            0.8,
+            1
+          ],
+          [
+            1.2,
+            1
+          ],
+          [
+            1.2,
+            1.4
+          ],
+          [
+            0.8,
+            1.4
+          ]
+        ],
+        "z0": 0,
+        "z1": 1
+      },
+      "expected_volume": 0
+    },
+    {
+      "id": "hole_not_filled",
+      "a": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "holes": [
+          [
+            [
+              1,
+              1
+            ],
+            [
+              1,
+              2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              1
+            ]
+          ]
+        ],
+        "z0": 0,
+        "z1": 1
+      },
+      "b": {
+        "outline": [
+          [
+            1.2,
+            1.2
+          ],
+          [
+            1.8,
+            1.2
+          ],
+          [
+            1.8,
+            1.8
+          ],
+          [
+            1.2,
+            1.8
+          ]
+        ],
+        "z0": 0,
+        "z1": 1
+      },
+      "expected_volume": 0
+    },
+    {
+      "id": "true_small_positive",
+      "a": {
+        "box": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "b": {
+        "box": [
+          [
+            0.999,
+            0,
+            0
+          ],
+          [
+            1.1,
+            1,
+            1
+          ]
+        ]
+      },
+      "expected_volume": 0.001
+    },
+    {
+      "id": "bearing_not_collision",
+      "a": {
+        "box": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            1
+          ]
+        ]
+      },
+      "b": {
+        "box": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            1,
+            1.1
+          ]
+        ]
+      },
+      "expected_volume": 0,
+      "expected_boundary_area": 1
+    }
+  ],
+  "acceptance": {
+    "claim": "No unapproved positive occupiedinterference in checked authoredscene, with completeexplicitcoverage andqualifiedlimitations",
+    "not_claim": "Perfecthistoricalreconstruction, structuraldesigncompliance, allhiddenservices, measuredoriginaldensities/RGB ornativeSDKsupportbeyondobservedproof",
+    "languages": [
+      "en",
+      "de"
+    ],
+    "full_run": "Rootmustscheduleonlyafterfloor/board/salon/appliance/sourcegraphfreeze; thisinputauthorizesnoprematureheavyjob"
+  }
+}

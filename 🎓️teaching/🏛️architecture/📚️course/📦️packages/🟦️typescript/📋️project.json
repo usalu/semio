@@ -75,7 +75,8 @@
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🏗️builder/🌐️vite/**/*",
-      "{workspaceRoot}/🎓️teaching/🏛️architecture/📐️parametric/📝️assignment/**/*"
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📐️parametric/📝️assignment/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🏙️typology/📝️assignment/**/*"
     ],
     "tailwindScan": [
       "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/**/*",
@@ -138,6 +139,7 @@
     ],
     "assignment": [
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📐️parametric/📝️assignment/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/🏙️typology/📝️assignment/**/*",
       "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🏗️builder/📖️assignments/**/*",
       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*",
       "!{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/dist/**/*",
@@ -230,7 +232,9 @@
         "@semio-tech/ui-styling-tokens:generate",
         "@teaching/proctor:build",
         "@teaching/architecture-course:build-parametrization-en",
-        "@teaching/architecture-course:build-parametrization-de"
+        "@teaching/architecture-course:build-parametrization-de",
+        "@teaching/architecture-course:build-typology-en",
+        "@teaching/architecture-course:build-typology-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -278,7 +282,9 @@
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate",
         "@teaching/architecture-course:build-parametrization-en",
-        "@teaching/architecture-course:build-parametrization-de"
+        "@teaching/architecture-course:build-parametrization-de",
+        "@teaching/architecture-course:build-typology-en",
+        "@teaching/architecture-course:build-typology-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -300,7 +306,9 @@
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate",
         "@teaching/architecture-course:build-parametrization-en",
-        "@teaching/architecture-course:build-parametrization-de"
+        "@teaching/architecture-course:build-parametrization-de",
+        "@teaching/architecture-course:build-typology-en",
+        "@teaching/architecture-course:build-typology-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -1010,6 +1018,56 @@
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts build-parametrization-de",
+        "forwardAllArgs": false
+      }
+    },
+    "build-typology-en": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [
+        "@semio-tech/print:fonts",
+        "@semio-tech/print:deps-tectonic",
+        "@semio-tech/print:deps-tex",
+        "@semio-tech/print:generate"
+      ],
+      "inputs": [
+        "default",
+        "assignment",
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/course/architecture-parametric-typology-en"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts build-typology-en",
+        "forwardAllArgs": false
+      }
+    },
+    "build-typology-de": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [
+        "@semio-tech/print:fonts",
+        "@semio-tech/print:deps-tectonic",
+        "@semio-tech/print:deps-tex",
+        "@semio-tech/print:generate"
+      ],
+      "inputs": [
+        "default",
+        "assignment",
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/course/architecture-parametric-typology-de"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts build-typology-de",
         "forwardAllArgs": false
       }
     },

@@ -1,0 +1,7 @@
+# Fixture Interference Confirmation and Repair Scope
+
+A second independent conditioned SciPy halfspace check confirmed seven further large cell intersections from the diagnostic capture. Actual boundary volume and every supporting face were checked before any convex-hull use. All seven matched the earlier independent GEOS/event-section volumes. Receipt: `🗑️generated/whole-diagnostic-r95/fixture-overlap-confirmation-r95.json`.
+
+Root owns three source corrections: the visible patio pipe still ends at obsoleteY8.70 while collector and bore are correctlyY8.60; the inferred basin-column19 lamp mount at2.35m enters the actual guard and ramp; the three tap flanges enter the raised ceramic rim. All affected dimensions/metric positions are explicitly inferred. The proposed pipe retains80mm diameter,4mm gauge and the same lower endpoint; only its upper spine and connected miter change. The lamp is tested as a rigidly lowered2.00m inferred mount, preserving its host/XY/normal and all99parts. The taps are tested1.5mm rearward, preserving complete geometry, deck bearing height and existing clear counter bores. These are unpublished candidates pending exact geometry, independent support/airway/quantity, current-source and EN/DE SDK checks.
+
+The canopy/cap RC common region is assigned to the structural ownership lane. Small cabinet/curtain-wall findings remain retained for exact predicate review. No historical hardware, pipe reducer, seal or hidden routing is invented.

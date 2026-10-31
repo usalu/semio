@@ -1,0 +1,7 @@
+# Native cellar stair datum advice R92
+
+Read-only inspection found the retained pure authoring constructor in stair-roof-r36-author.mjs: exported buildStairDelta(m), plus exported clipAtFloor(part). Module contains only function declarations/exports and imports, with no top-level writes. Native API _stair_geometry only places authored local parts using from_level/to_level; it does not regenerate risers or waist.
+
+The constructor entry for ST-CG is [tag,n,c,going,base,top] = [ST-CG,3,7,0.23,-2.42,0]. Its formula keeps finish=0.03 and waist=0.06 explicit. For each of13 steps, topStep=(i+1)*rise, finish z0=topStep-0.03 and z1=topStep; structural top=topStep-0.03 and sloping lower vertices=(i+fraction)*rise-0.03-0.06. Regenerate with base=-2.40 and top=0, retaining all XY rings/quads and constants, rather than scaling existing vertices. Clip regenerated structural meshes at local0 with the same retained clipAtFloor, matching the current source lower-floor clipping. Apply only the new ST-CG step_parts/structural_parts after an explicit XY/topology comparison; do not apply the historical whole-model delta or overwrite current evidence/guards/upper stairs.
+
+Expected new rise=2.40/13, first top=0.184615384615..., last top=2.40, each finish thickness0.03 and waist offset0.06 before lower-floor clipping. Independent GEOS/SciPy material/closed-mesh checks should cover rebuilt parts and first/last finished-world heights. Source owner retains all writes.

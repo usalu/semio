@@ -1,0 +1,44 @@
+{
+  "probes": {
+    "30": [
+      {
+        "name": "sameoriginalwitness stilloccupiedcolumn",
+        "xyz": [
+          14.334651696849836,
+          20.197938098493385,
+          0.55
+        ],
+        "occupied": true
+      }
+    ],
+    "BATH-CHAUFFEUR": [
+      {
+        "name": "oldcollisionwitness nowemptybath",
+        "xyz": [
+          14.334651696849836,
+          20.197938098493385,
+          0.55
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positivebathfloor",
+        "xyz": [
+          14.637309911931336,
+          19.40166067630396,
+          0.136
+        ],
+        "occupied": true
+      },
+      {
+        "name": "hollowbathcavity",
+        "xyz": [
+          14.637309911931336,
+          19.40166067630396,
+          0.35
+        ],
+        "occupied": false
+      }
+    ]
+  }
+}

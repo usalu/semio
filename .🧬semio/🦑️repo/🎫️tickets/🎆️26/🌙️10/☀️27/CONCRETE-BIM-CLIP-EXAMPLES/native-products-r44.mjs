@@ -2,6 +2,12 @@
 import {createRequire} from 'node:module';
 import {join} from 'node:path';
 import {setupNativeIfcEngine} from './native-ifc-setup-r18.mjs';
+/** 🧭 Select the actual native Body while keeping separately declared Reference geometry reviewable. */
+export function selectBody(api,model,element){
+ const product=api.GetLine(model,element),shape=api.GetLine(model,product.Representation.value),body=shape.Representations.filter(ref=>api.GetLine(model,ref.value).RepresentationIdentifier?.value==='Body');
+ if(body.length!==1)throw Error('A physical product requires exactly one native Body representation');
+ if(shape.Representations.length!==1){shape.Representations=body;api.WriteLine(model,shape);}
+}
 export async function verifyProducts(ticket,samples){
  const config=await setupNativeIfcEngine(join(ticket,'🗑️generated','joint-ifc-r30'));
  const library=createRequire(import.meta.url)(config.modulePath),api=new library.IfcAPI();await api.Init(name=>join(config.wasmDirectory,name));
@@ -20,6 +26,7 @@ export async function verifyProducts(ticket,samples){
  }
  if(product.type!==library[s.entity]||product.GlobalId?.value!==s.guid||product.Name?.value!==s.name||predefined!==s.predefined)throw Error(s.tag+': native product identity '+JSON.stringify({entity:product.type,guid:product.GlobalId?.value,name:product.Name?.value,predefined,expected:s.predefined}));
  if(get('representation').RepresentationType.value!==s.representation_type)throw Error(s.tag+': native body representation');
+ if(s.entity!=='IFCOPENINGELEMENT')selectBody(api,id,Number(s.ids.element.slice(1)));
  const mesh=api.GetFlatMesh(id,Number(s.ids.element.slice(1))),minimum=[Infinity,Infinity,Infinity],maximum=[-Infinity,-Infinity,-Infinity];let volume=0,triangles=0;
  for(let i=0;i<mesh.geometries.size();i++){
  const part=mesh.geometries.get(i),geometry=api.GetGeometry(id,part.geometryExpressID),m=part.flatTransformation;

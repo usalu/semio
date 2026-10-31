@@ -1,0 +1,30 @@
+{
+  "source": "domus",
+  "pitch": 2.8,
+  "office_band": 3.72,
+  "basement_depth": 5,
+  "a_core_top": 42.14,
+  "a_head": 11.36,
+  "a_top": 53.5,
+  "clearance_basis": "derived",
+  "phase_count": 3,
+  "tolerance": 0.0001,
+  "native_roof_ratios": [
+    0.5217391304347826,
+    0.08695652173913043,
+    0.5217391304347826,
+    1
+  ],
+  "podium_roof": 7.72,
+  "b_core_top": 36.62,
+  "b_head": 10.83,
+  "scan": {
+    "A_height": 53.5,
+    "A_apex_raw": 1.1445266008,
+    "A_ground_raw": 0.001773,
+    "B_height": 47.3333,
+    "A_phase1_roof_raw": 0.23875,
+    "podium_roof_raw": 0.1665,
+    "metric_tolerance": 0.15
+  }
+}

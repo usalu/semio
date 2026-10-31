@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "domains": [
+    "architecture",
+    "structure",
+    "services"
+  ],
+  "cases": [
+    {
+      "tag": "FIX-LAUNDRY",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "W-WC-FIRST-N",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "W-WC-FIRST-S",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "W-WC-FIRST-W",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "W-WC-FIRST-E",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "W-WC-FIRST-C",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "OP-D-WC-FIRST-WEST",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "D-WC-FIRST-WEST",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "OP-D-WC-FIRST-EAST",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "D-WC-FIRST-EAST",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "FIX-DRESSING-STORAGE",
+      "domains": [
+        "architecture"
+      ]
+    },
+    {
+      "tag": "FIX-PARENTS-STORAGE",
+      "domains": [
+        "architecture"
+      ]
+    },
+    {
+      "tag": "HEAT-RISER-6-RETURN",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "HEAT-RISER-11-RETURN",
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    {
+      "tag": "FIN-SOFFIT-RF-2A",
+      "domains": [
+        "architecture"
+      ]
+    },
+    {
+      "tag": "FIN-SOFFIT-RF-2B",
+      "domains": [
+        "architecture"
+      ]
+    },
+    {
+      "tag": "FIN-PILOTIS-GRAVEL",
+      "domains": [
+        "architecture"
+      ]
+    },
+    {
+      "tag": "TUBE-STAIR-CENTRAL",
+      "domains": [
+        "architecture"
+      ]
+    },
+    {
+      "tag": "FIX-ROOF-BED-1",
+      "domains": [
+        "architecture"
+      ]
+    },
+    {
+      "tag": "FIX-ROOF-BED-2",
+      "domains": [
+        "architecture"
+      ]
+    }
+  ]
+}

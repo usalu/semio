@@ -1,0 +1,250 @@
+{
+  "source": "SAB192–194; author47; 1930GravotphotoFig19/FLC L2(17)043",
+  "registration": "Author47 x=19-(u-7)*4.75/170; y=1.25+(v-48)*4.75/170, approximate ±.15m",
+  "zones": [
+    {
+      "id": "right_solarium_floating_paving",
+      "outline_candidate": [
+        [
+          1.675682720942835,
+          6.073863353502692
+        ],
+        [
+          1.6058076817438276,
+          5.984310324923995
+        ],
+        [
+          1.5397728907911288,
+          5.892634311101473
+        ],
+        [
+          1.477670495189022,
+          5.798910461955261
+        ],
+        [
+          1.4195926420417917,
+          5.7032139274054945
+        ],
+        [
+          1.3656314784537213,
+          5.605619857372308
+        ],
+        [
+          1.3158791515290957,
+          5.506203401775839
+        ],
+        [
+          1.2704278083721976,
+          5.40503971053622
+        ],
+        [
+          1.2293695960873117,
+          5.302203933573589
+        ],
+        [
+          1.1927966617787213,
+          5.19777122080808
+        ],
+        [
+          1.160801152550711,
+          5.0918167221598285
+        ],
+        [
+          1.133475215507564,
+          4.984415587548971
+        ],
+        [
+          1.1109109977535647,
+          4.875642966895642
+        ],
+        [
+          1.0932006463929973,
+          4.765574010119977
+        ],
+        [
+          1.0804363085301452,
+          4.654283867142112
+        ],
+        [
+          1.0727101312692922,
+          4.541847687882182
+        ],
+        [
+          1.0701142617147226,
+          4.428340622260322
+        ],
+        [
+          1.0890304596658769,
+          4.1229336169838495
+        ],
+        [
+          1.1445512110300322,
+          3.8263478032702714
+        ],
+        [
+          1.2348347520732275,
+          3.540084770461293
+        ],
+        [
+          1.3580393190615012,
+          3.265646107898621
+        ],
+        [
+          1.5123231482608925,
+          3.0045334049239605
+        ],
+        [
+          1.6958444759374394,
+          2.758248250879017
+        ],
+        [
+          1.9067615383571812,
+          2.528292235105497
+        ],
+        [
+          2.1432325717861564,
+          2.316166946945106
+        ],
+        [
+          2.4034158124904037,
+          2.1233739757395487
+        ],
+        [
+          2.685469496735962,
+          1.951414910830532
+        ],
+        [
+          2.9875518607888703,
+          1.801791341559761
+        ],
+        [
+          3.3078211409151663,
+          1.6760048572689414
+        ],
+        [
+          3.644435573380889,
+          1.5755570472997795
+        ],
+        [
+          3.9955533944520782,
+          1.5019495009939807
+        ],
+        [
+          4.359332840394772,
+          1.4566838076932502
+        ],
+        [
+          4.7339321474750085,
+          1.4412615567392946
+        ],
+        [
+          4.923644142289746,
+          1.4450396406929358
+        ],
+        [
+          5.112778509092718,
+          1.456268369541002
+        ],
+        [
+          5.300833034382061,
+          1.4747894587642083
+        ],
+        [
+          5.487305504655911,
+          1.5004446238432694
+        ],
+        [
+          5.671693706412403,
+          1.5330755802589004
+        ],
+        [
+          5.853495426149672,
+          1.5725240434918155
+        ],
+        [
+          6.032208450365854,
+          1.6186317290227297
+        ],
+        [
+          6.207330565559084,
+          1.671240352332358
+        ],
+        [
+          6.378359558227498,
+          1.7301916289014145
+        ],
+        [
+          6.54479321486923,
+          1.7953272742106148
+        ],
+        [
+          6.706129321982418,
+          1.8664890037406732
+        ],
+        [
+          6.8618656660651975,
+          1.9435185329723046
+        ],
+        [
+          7.0115000336157,
+          2.0262575773862235
+        ],
+        [
+          7.154530211132064,
+          2.1145478524631454
+        ],
+        [
+          7.290453985112426,
+          2.208231073683784
+        ],
+        [
+          7.418769142054918,
+          2.307148956528855
+        ],
+        [
+          7.418769142054918,
+          8.23
+        ],
+        [
+          4.75,
+          8.23
+        ],
+        [
+          4.75,
+          6.073863353502692
+        ]
+      ],
+      "source_basis": "Source squarehatch follows rightcurvedscreen and extends south to service-stair end; currentSC1 registeredcurve usedasreference boundary, notexactnewmeasurement.",
+      "material": "concrete floating pavers",
+      "paver_thickness_m": 0.04,
+      "paver_thickness_basis": "SAB192 approximately4cm",
+      "pattern": "orthogonal",
+      "plan_dimensions": "SAB194 ~.73m long/.65–.72wide variations, notoneexactuniformfactorymodule",
+      "subtract": "Actual SC1 occupiedwall, planters, roofopenings, stair void/indoorlanding, chimney/pipe/rooflightcurbs. Use actual netroofsupport.",
+      "uncertainty_m": 0.15
+    },
+    {
+      "id": "arrival_leftscreen",
+      "material": "gravel",
+      "source_basis": "SAB192 specifiesarrivalroofandleftscreen; source1930photoFig19 corroboratesdot-plan hatch.",
+      "outline_candidate_rule": "Actual supported roofwalkingplane inleftscreen/ramp-arrival zone, excludingrightsolariumpaving, indoorstairlanding, ramp, planters/curbs andallvoids.",
+      "thickness_m": null,
+      "uncertainty": "Presence/zone sourceattested; exactdepth/base membrane/slope decomposition unmeasured. Do notlabelall9cmreserveasgravel."
+    },
+    {
+      "id": "exterior_ramp",
+      "material": "concrete floating pavers",
+      "tile_m": [
+        0.58,
+        0.58
+      ],
+      "thickness_m": 0.04,
+      "sand_bed_m": 0.02,
+      "pattern_degrees": 45,
+      "source": "SAB139/192/194",
+      "uncertainty": "Actualpavertopjoints/origin differfrommodernstate; no new universalpitchclaim."
+    }
+  ],
+  "existing_gap": "MAT-ROOF-FINISH reserve modelsoccupiedweatheringvolume butnot sourceattestedgravel/paveridentity/zoning. Existing firstterrace4cmpaverfacts likewise supersede15mmnominalwearingwhere4cmfitsrealreserve.",
+  "acceptance": "Retainrealfloor/slabdatums; nofalsepluggingroofvoids; nativeexactmaterial/class/volume/closedness; inferunknownlayerdepthsexplicitly andchecksource-specificsmallpatio datum beforeforcing4cm."
+}

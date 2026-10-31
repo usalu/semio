@@ -1,0 +1,69 @@
+{
+  "snapshot_at": "2026-10-30T04:44:10.403Z",
+  "root_pid": 46996,
+  "targets": [
+    {
+      "pid": 23860,
+      "parent": 53132,
+      "ageSeconds": 1870,
+      "rssMegabytes": 15866,
+      "cpuPercent": 0,
+      "command": "\"C:\\Users\\Ueli\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\python.exe\" -B C:\\git\\semio\\.??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\verify.py .??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\replay-native-pairs.py --label ns-excel-Beat1_Anatomy --series excel --worker-scene Beat1_Anatomy",
+      "parentMissing": false
+    },
+    {
+      "pid": 46996,
+      "parent": 15456,
+      "ageSeconds": 2069,
+      "rssMegabytes": 117,
+      "cpuPercent": 0,
+      "command": "\"C:\\Users\\Ueli\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\python.exe\" -B .??semio/???repo/???tickets/???26/???10/??28/GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS/verify.py .??semio/???repo/???tickets/???26/???10/??28/GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS/replay-native-pairs.py --label native-batch-excel --series excel",
+      "parentMissing": false
+    },
+    {
+      "pid": 52532,
+      "parent": 26200,
+      "ageSeconds": 1870,
+      "rssMegabytes": 57,
+      "cpuPercent": 0,
+      "command": "C:\\Users\\Ueli\\AppData\\Local\\semio\\runtimes\\bun\\78c221c2376f79731ccf4e4af0b3bb46d81fefa3296c5abee09ad8a1b21e68c6\\bun.exe C:\\git\\semio\\???framework\\???products\\???repo\\???modules\\???library\\???build\\???door\\???script.ts repo tools exec uv -- run --python C:\\git\\semio\\.??semio\\???teaching\\??cache\\python\\Scripts\\python.exe --no-project python -B C:\\git\\semio\\.??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\verify.py .??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\replay-native-pairs.py --label ns-excel-Beat1_Anatomy --series excel --worker-scene Beat1_Anatomy",
+      "parentMissing": false
+    },
+    {
+      "pid": 55172,
+      "parent": 28416,
+      "ageSeconds": 1870,
+      "rssMegabytes": 24,
+      "cpuPercent": 0,
+      "command": "\"C:\\Users\\Ueli\\scoop\\apps\\uv\\current\\uv.exe\"  run --python C:\\git\\semio\\.??semio\\???teaching\\??cache\\python\\Scripts\\python.exe --no-project python -B C:\\git\\semio\\.??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\verify.py .??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\replay-native-pairs.py --label ns-excel-Beat1_Anatomy --series excel --worker-scene Beat1_Anatomy",
+      "parentMissing": false
+    },
+    {
+      "pid": 26200,
+      "parent": 46996,
+      "ageSeconds": 1870,
+      "rssMegabytes": 8,
+      "cpuPercent": 0,
+      "command": "repo tools exec uv -- run --python C:\\git\\semio\\.??semio\\???teaching\\??cache\\python\\Scripts\\python.exe --no-project python -B C:\\git\\semio\\.??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\verify.py .??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\replay-native-pairs.py --label ns-excel-Beat1_Anatomy --series excel --worker-scene Beat1_Anatomy",
+      "parentMissing": false
+    },
+    {
+      "pid": 28416,
+      "parent": 52532,
+      "ageSeconds": 1870,
+      "rssMegabytes": 6,
+      "cpuPercent": 0,
+      "command": "C:\\Users\\Ueli\\scoop\\shims\\uv.exe run --python C:\\git\\semio\\.??semio\\???teaching\\??cache\\python\\Scripts\\python.exe --no-project python -B C:\\git\\semio\\.??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\verify.py .??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\replay-native-pairs.py --label ns-excel-Beat1_Anatomy --series excel --worker-scene Beat1_Anatomy",
+      "parentMissing": false
+    },
+    {
+      "pid": 53132,
+      "parent": 55172,
+      "ageSeconds": 1870,
+      "rssMegabytes": 3,
+      "cpuPercent": 0,
+      "command": "\"C:\\git\\semio\\.??semio\\???teaching\\??cache\\python\\Scripts\\python.exe\" -B C:\\git\\semio\\.??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\verify.py .??semio\\???repo\\???tickets\\???26\\???10\\??28\\GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS\\replay-native-pairs.py --label ns-excel-Beat1_Anatomy --series excel --worker-scene Beat1_Anatomy",
+      "parentMissing": false
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "polygons",
+          "area",
+          "length",
+          "components",
+          "holes"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "polygons": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              }
+            }
+          },
+          "area": {
+            "type": "number"
+          },
+          "length": {
+            "type": "number"
+          },
+          "components": {
+            "type": "integer"
+          },
+          "holes": {
+            "type": "integer"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "id",
+    "scale",
+    "polygons",
+    "expected"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "scalar": {
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "required": [
+            "numerator",
+            "denominator"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "numerator": {
+              "type": "integer"
+            },
+            "denominator": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      ]
+    }
+  },
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "scale": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    },
+    "polygons": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/$defs/scalar"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "area",
+        "length",
+        "components",
+        "holes"
+      ],
+      "properties": {
+        "area": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        },
+        "components": {
+          "type": "integer"
+        },
+        "holes": {
+          "type": "integer"
+        }
+      }
+    }
+  }
+}

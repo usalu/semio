@@ -1,0 +1,7 @@
+# Read-Only Host Memory Identification
+
+A native operating-system counter query completed in0.086seconds without WMI, process mutation or command-line disclosure. At the captured checkpoint, three Python processes held about25.93GB,10.40GB and5.29GB resident memory (private commitments33.80GB,12.11GB and7.29GB). These dominate the58.42GB resident counter sum; shared pages may be counted across processes. The waiting repo process trees were separately measured by the execution owner at only785MiB total with zero admitted grants. This establishes real host pressure rather than an admission-arithmetic fiction.
+
+Bounded command-metadata classification and ancestry found no current ticket marker or BIM/model identifiers in the three large programs. Their ancestor chains include other workspace Python redirectors, shell/timeout processes and a separate agent process. Their command arguments and memory contents were not disclosed. Their ownership as this goal's obsolete work is not established, so none was stopped or altered. The user's parallel-work instruction requires preserving unrelated work.
+
+All our completed analysis kernels were reset, recovering severalGB while retaining every input/report on disk. Required native jobs continue through normal capacity admission; no floor, limit, priority or scientific validation was bypassed. New inputs process-memory-query-r92.py and process-ticket-ownership-r92.py are short read-only diagnostics; generated counter/ownership results stay under the generated directory.

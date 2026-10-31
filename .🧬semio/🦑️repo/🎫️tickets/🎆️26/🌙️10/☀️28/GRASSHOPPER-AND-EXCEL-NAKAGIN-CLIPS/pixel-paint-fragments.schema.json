@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "stage",
+      "rank",
+      "piece",
+      "source",
+      "polygon",
+      "world_vertices",
+      "normal"
+    ],
+    "properties": {
+      "stage": {
+        "enum": [
+          "full",
+          "stable",
+          "culled"
+        ]
+      },
+      "rank": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "piece": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "source": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "polygon": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "world_vertices": {
+        "type": "array",
+        "minItems": 3,
+        "items": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      },
+      "normal": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "number"
+        },
+        "not": {
+          "const": [
+            0,
+            0,
+            0
+          ]
+        }
+      }
+    }
+  }
+}

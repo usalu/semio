@@ -72,6 +72,7 @@
       "m",
       "m²",
       "m³",
+      "kN",
       "kN/m²",
       "kN/m³",
       "°",
@@ -87,23 +88,25 @@
       "IfcCurtainWall": 1,
       "IfcRamp": 2,
       "IfcRampFlight": 4,
-      "IfcWall": 57,
+      "IfcWall": 72,
       "IfcBoiler": 1,
-      "IfcSpaceHeater": 1,
-      "IfcWasteTerminal": 2,
-      "IfcPipeSegment": 8,
-      "IfcOpeningElement": 50,
-      "IfcWindow": 12,
-      "IfcDoor": 20,
+      "IfcWasteTerminal": 3,
+      "IfcPipeSegment": 16,
+      "IfcOpeningElement": 63,
+      "IfcWindow": 16,
+      "IfcDoor": 24,
       "IfcStair": 3,
-      "IfcBuildingElementProxy": 20,
-      "IfcFurnishingElement": 25,
-      "IfcRailing": 7,
+      "IfcBuildingElementProxy": 26,
+      "IfcFurnishingElement": 23,
+      "IfcSanitaryTerminal": 22,
+      "IfcRailing": 8,
+      "IfcSpaceHeater": 6,
       "IfcFooting": 45,
-      "IfcBeam": 110,
-      "IfcColumn": 67,
-      "IfcCovering": 4,
-      "IfcChimney": 3
+      "IfcBeam": 111,
+      "IfcColumn": 68,
+      "IfcCovering": 144,
+      "IfcChimney": 5,
+      "IfcLightFixture": 12
     }
   },
   "sourced": {
@@ -153,7 +156,7 @@
     ],
     "rows": "ABCDE",
     "columns": "12345",
-    "pilotis": 67,
+    "pilotis": 68,
     "ground_tags": [
       "1",
       "2",
@@ -168,7 +171,6 @@
       "11",
       "12",
       "13",
-      "14",
       "15",
       "16",
       "17",
@@ -222,7 +224,8 @@
       "33-FIRST",
       "34",
       "35",
-      "36"
+      "36",
+      "STAIR-RETURN-L"
     ],
     "piloti_type_count": 10,
     "column_tags": [
@@ -292,7 +295,8 @@
       "35",
       "36",
       "PA",
-      "PB"
+      "PB",
+      "STAIR-RETURN-L"
     ],
     "type_occurrences": {
       "TY-STAIR-PA": [
@@ -379,6 +383,9 @@
       "TY-CHAMFER12X15": [
         "PA",
         "PB"
+      ],
+      "TY-STAIR-L22-06": [
+        "STAIR-RETURN-L"
       ]
     }
   },
@@ -408,7 +415,6 @@
       "W-G-GARAGE-END",
       "W-G-SERVICE",
       "W-G-ROOM-10",
-      "W-G-ROOM-13",
       "W-G-ROOM-16",
       "W-G-CHAUFFEUR",
       "W-G-GARAGE",
@@ -417,10 +423,7 @@
       "W-SALON",
       "W-PRIVATE",
       "W-PRIVATE-8.9",
-      "W-SHARED-BATH-S",
-      "W-SHARED-BATH-N",
       "W-PARENT-BATH",
-      "W-SUITE-ENTRY",
       "W-BOUDOIR",
       "W-BOUDOIR-E",
       "W-TERRACE-RAMP",
@@ -428,14 +431,13 @@
       "PAR-N",
       "PAR-W",
       "PAR-E",
+      "PAR-E-REAR",
       "W-G-GARAGE-LOWER",
-      "W-PARENT-BATH-S",
       "W-PARENTS-BOUDOIR",
       "W-G-CHAUFFEUR-RETURN",
       "W-G-CHAUFFEUR-W",
       "W-CHAUFFEUR-BEDROOM",
       "W-CHAUFFEUR-BATH",
-      "W-CHAUFFEUR-BATH-S",
       "W-PANTRY-WEST",
       "W-PANTRY-PATIO",
       "W-PANTRY-SOUTH",
@@ -449,9 +451,25 @@
       "W-CELLAR-STAIR-N",
       "W-SON-PRIVATE",
       "W-PARENT-BATH-W",
+      "W-SHARED-BATH-S",
       "W-SON-ENTRY",
       "W-GARDEN-E",
-      "W-KIOSK-E"
+      "W-KIOSK-E",
+      "W-WC-FIRST-N",
+      "W-WC-FIRST-S",
+      "W-WC-FIRST-W",
+      "W-WC-FIRST-E",
+      "W-WC-FIRST-C",
+      "W-WC-GROUND-SERVICE-E",
+      "W-WC-GROUND-SERVICE-N",
+      "W-PANTRY-FRONT-1",
+      "W-PANTRY-FRONT-2",
+      "W-PANTRY-FRONT-3",
+      "W-PANTRY-FRONT-4",
+      "W-PANTRY-FRONT-5",
+      "W-PANTRY-FRONT-6",
+      "W-PANTRY-FRONT-7",
+      "W-PANTRY-FRONT-8"
     ],
     "openings": [
       "OP-S",
@@ -473,8 +491,6 @@
       "OP-GL-TERRACE",
       "OP-D-GUEST",
       "OP-D-SON",
-      "OP-D-SHARED-BATH-GUEST",
-      "OP-D-SHARED-BATH-SON",
       "OP-D-PARENTS",
       "OP-D-BOUDOIR",
       "OP-GL-RAMP-GARDEN",
@@ -486,24 +502,39 @@
       "OP-KITCHEN-PATIO-FRAME",
       "OP-W-UPPER",
       "OP-CELLAR-STAIR-ACCESS",
+      "OP-D-SHARED-BATH-GUEST",
+      "OP-D-SHARED-BATH-SON",
       "OP-GARAGE",
       "OP-SC-VIEW",
       "OP-HOIST-CELLAR",
       "OP-HOIST-HATCH",
       "OP-COAL-CELLAR",
       "OP-COAL-HATCH",
-      "OP-GARDEN-E",
-      "OP-KIOSK-E",
       "OP-DP-1-FLOOR",
       "OP-DP-1-ROOF",
       "OP-DP-2-FLOOR",
       "OP-DP-2-ROOF",
       "OP-FLUE-FLOOR",
       "OP-SOIL-FLOOR",
+      "OP-GARDEN-E",
+      "OP-KIOSK-E",
       "OP-STAIR-ROOF",
       "OP-FLUE-ROOF",
       "OP-SALON-FLUE-ROOF",
-      "OP-KITCHEN-FLUE-ROOF"
+      "OP-KITCHEN-FLUE-ROOF",
+      "OP-BOUDOIR-LOW-ROOF",
+      "OP-LINGERIE-LOW-ROOF",
+      "OP-N-2",
+      "OP-W-UPPER-2",
+      "OP-W-UPPER-3",
+      "OP-D-WC-FIRST-WEST",
+      "OP-D-WC-FIRST-EAST",
+      "OP-D-WC-GROUND-SERVICE",
+      "OP-D-WC-CHAUFFEUR",
+      "OP-RAIN-9-SL1",
+      "OP-HEAT-5-SL1",
+      "OP-KITCHEN-PATIO-LOW-X",
+      "OP-KITCHEN-PATIO-HIGH-X"
     ],
     "windows": [
       "RW-S",
@@ -517,7 +548,11 @@
       "GL-TERRACE",
       "GL-RAMP-GARDEN",
       "RW-W-UPPER",
-      "RW-KIOSK-E"
+      "RW-N-2",
+      "RW-W-UPPER-2",
+      "RW-W-UPPER-3",
+      "WIN-KITCHEN-PATIO-LOW-X",
+      "WIN-KITCHEN-PATIO-HIGH-X"
     ],
     "curtain_wall": "CW-1",
     "ramps": [
@@ -537,7 +572,6 @@
       "SP-SERVANTS-2",
       "SP-LAUNDRY",
       "SP-CHAUFFEUR",
-      "SP-BOILER",
       "SP-SALON",
       "SP-KITCHEN",
       "SP-PANTRY",
@@ -554,7 +588,11 @@
       "SP-CHAUFFEUR-BATH",
       "SP-KITCHEN-TERRACE",
       "SP-CELLAR-W",
-      "SP-CELLAR-E"
+      "SP-CELLAR-E",
+      "SP-WC-FIRST-WEST",
+      "SP-WC-FIRST-EAST",
+      "SP-WC-GROUND-SERVICE",
+      "SP-WC-CHAUFFEUR"
     ],
     "lookup": [
       "19",
@@ -567,8 +605,12 @@
     ],
     "screens": [
       "SC-1",
+      "W-G-ROOM-13",
       "W-G-GARAGE-CORNER",
-      "W-STAIR-ROOF"
+      "W-PARENT-BATH-S",
+      "W-SHARED-BATH-N",
+      "W-STAIR-ROOF",
+      "W-WC-CHAUFFEUR-CURVE"
     ],
     "doors": [
       "D-SERVANT-1",
@@ -581,16 +623,20 @@
       "D-SALON",
       "D-GUEST",
       "D-SON",
-      "D-SHARED-BATH-GUEST",
-      "D-SHARED-BATH-SON",
       "D-PARENTS",
       "D-BOUDOIR",
       "D-CHAUFFEUR-BEDROOM",
       "D-CHAUFFEUR-BATH",
       "D-SERVICE",
       "D-KITCHEN-PATIO",
+      "D-SHARED-BATH-GUEST",
+      "D-SHARED-BATH-SON",
       "GARAGE-SLIDING",
-      "D-STAIR-ROOF"
+      "D-STAIR-ROOF",
+      "D-WC-FIRST-WEST",
+      "D-WC-FIRST-EAST",
+      "D-WC-GROUND-SERVICE",
+      "D-WC-CHAUFFEUR"
     ],
     "unfilled_openings": [
       "OP-SERVING-HATCH",
@@ -599,16 +645,21 @@
       "OP-SC-VIEW",
       "OP-HOIST-CELLAR",
       "OP-COAL-CELLAR",
-      "OP-GARDEN-E",
       "OP-DP-1-FLOOR",
       "OP-DP-1-ROOF",
       "OP-DP-2-FLOOR",
       "OP-DP-2-ROOF",
       "OP-FLUE-FLOOR",
       "OP-SOIL-FLOOR",
+      "OP-GARDEN-E",
+      "OP-KIOSK-E",
       "OP-FLUE-ROOF",
       "OP-SALON-FLUE-ROOF",
-      "OP-KITCHEN-FLUE-ROOF"
+      "OP-KITCHEN-FLUE-ROOF",
+      "OP-BOUDOIR-LOW-ROOF",
+      "OP-LINGERIE-LOW-ROOF",
+      "OP-RAIN-9-SL1",
+      "OP-HEAT-5-SL1"
     ],
     "foundations": [
       "FT-CELLAR",
@@ -1064,36 +1115,127 @@
     ],
     "services_classes": [
       "IfcBoiler",
-      "IfcSpaceHeater",
-      "IfcWasteTerminal",
-      "IfcPipeSegment",
       "IfcBuildingElementProxy",
-      "IfcCovering",
       "IfcChimney",
-      "IfcOpeningElement"
+      "IfcCovering",
+      "IfcDoor",
+      "IfcFurnishingElement",
+      "IfcLightFixture",
+      "IfcOpeningElement",
+      "IfcPipeSegment",
+      "IfcSanitaryTerminal",
+      "IfcSpaceHeater",
+      "IfcWall",
+      "IfcWasteTerminal"
     ],
     "architectural_columns": [
       "STAIR-PA",
       "16-FIRST",
-      "22-FIRST"
+      "22-FIRST",
+      "STAIR-RETURN-L"
     ],
     "shared_services": [
       "HOIST-JIB"
     ],
     "shared_services_by_model": {
       "architecture": [
+        "BASIN-PARENTS",
+        "BATH-CHAUFFEUR",
+        "BIDET-CHAUFFEUR",
+        "BIDET-GUEST",
+        "BIDET-PARENTS",
+        "BIDET-SHARED",
+        "CHIMNEY-BOUDOIR-LOW",
+        "CHIMNEY-KITCHEN-ROOF",
+        "CHIMNEY-LINGERIE-LOW",
+        "CHIMNEY-SALON-ROOF",
+        "COLLECTOR-KITCHEN-PATIO-9",
+        "D-WC-CHAUFFEUR",
+        "D-WC-FIRST-EAST",
+        "D-WC-FIRST-WEST",
+        "D-WC-GROUND-SERVICE",
+        "FIX-BATH",
+        "FIX-CHAISE",
+        "FIX-CHAUFFEUR-BASIN",
+        "FIX-GUEST-BASIN",
+        "FIX-HALL-BASIN",
+        "FIX-LAUNDRY",
+        "FIX-PARENTS-WET-PLATFORM",
+        "FIX-SERVANT-BASIN-1",
+        "FIX-SERVANT-BASIN-2",
+        "FIX-SERVANT-RADIATOR-1",
+        "FIX-SERVANT-RADIATOR-2",
+        "FIX-SHARED-BASIN",
+        "FIX-SHARED-BATH",
+        "HEAT-RISER-11-RETURN",
+        "HEAT-RISER-6-RETURN",
+        "HEAT-RISER-VESTIBULE-5-MOUNTS",
+        "HEAT-RISER-VESTIBULE-5-RETURN",
+        "HEAT-RISER-VESTIBULE-5-SUPPLY",
         "HOIST-JIB",
+        "KITCHEN-APPLIANCE-CYLINDER",
+        "KITCHEN-APPLIANCE-PLATE",
+        "KITCHEN-APPLIANCE-STAND",
+        "LIGHT-EXTERIOR-11",
+        "LIGHT-EXTERIOR-6",
+        "LIGHT-EXTERIOR-REAR-E",
+        "LIGHT-EXTERIOR-REAR-W",
+        "LIGHT-FIRST-HALL-CEILING",
+        "LIGHT-HALL-BASIN-19",
+        "LIGHT-HALL-CEILING",
+        "LIGHT-HALL-ZEISS-1",
+        "LIGHT-HALL-ZEISS-2",
+        "LIGHT-KITCHEN-1",
+        "LIGHT-KITCHEN-2",
+        "LIGHT-SALON-LINEAR",
+        "OP-BOUDOIR-LOW-ROOF",
+        "OP-D-WC-CHAUFFEUR",
+        "OP-D-WC-FIRST-EAST",
+        "OP-D-WC-FIRST-WEST",
+        "OP-D-WC-GROUND-SERVICE",
         "OP-DP-1-FLOOR",
         "OP-DP-1-ROOF",
         "OP-DP-2-FLOOR",
         "OP-DP-2-ROOF",
         "OP-FLUE-FLOOR",
-        "OP-SOIL-FLOOR",
-        "CHIMNEY-SALON-ROOF",
-        "OP-SALON-FLUE-ROOF",
-        "CHIMNEY-KITCHEN-ROOF",
+        "OP-FLUE-ROOF",
+        "OP-HEAT-5-SL1",
         "OP-KITCHEN-FLUE-ROOF",
-        "OP-FLUE-ROOF"
+        "OP-LINGERIE-LOW-ROOF",
+        "OP-RAIN-9-SL1",
+        "OP-SALON-FLUE-ROOF",
+        "OP-SOIL-FLOOR",
+        "PIPE-KITCHEN-VISIBLE-1",
+        "PIPE-KITCHEN-VISIBLE-2",
+        "PIPE-KITCHEN-VISIBLE-3",
+        "RAD-1",
+        "RAD-HALL-BEHIND-STAIR",
+        "RAD-HALL-GARAGE",
+        "RAD-KITCHEN-SINK",
+        "RAIN-KITCHEN-PATIO-9",
+        "RAIN-KITCHEN-PATIO-9-COVER",
+        "SINK-KITCHEN-1",
+        "SINK-KITCHEN-2",
+        "SINK-PANTRY",
+        "TAP-GUEST",
+        "TAP-HALL",
+        "TAP-KITCHEN",
+        "TAP-KITCHEN-2",
+        "TAP-PANTRY",
+        "TILE-SERVANT-BASIN-1",
+        "TILE-SERVANT-BASIN-2",
+        "W-WC-CHAUFFEUR-CURVE",
+        "W-WC-FIRST-C",
+        "W-WC-FIRST-E",
+        "W-WC-FIRST-N",
+        "W-WC-FIRST-S",
+        "W-WC-FIRST-W",
+        "W-WC-GROUND-SERVICE-E",
+        "W-WC-GROUND-SERVICE-N",
+        "WC-CHAUFFEUR",
+        "WC-FIRST-EAST",
+        "WC-FIRST-WEST",
+        "WC-GROUND-SERVICE"
       ],
       "structure": [
         "HOIST-JIB"
@@ -1165,14 +1307,14 @@
           "property": "LoadBearing",
           "cardinality": "required"
         },
-        "passed": 67,
+        "passed": 68,
         "failed": 0
       },
       {
         "id": "column-fire-rating",
         "spec": "IfcColumn Pset_ColumnCommon.FireRating exists",
         "passed": 66,
-        "failed": 1
+        "failed": 2
       },
       {
         "id": "column-must-not-be-load-bearing",
@@ -1185,13 +1327,13 @@
           "cardinality": "required"
         },
         "passed": 0,
-        "failed": 67
+        "failed": 68
       },
       {
         "id": "column-load-bearing-prohibited",
         "spec": "IfcColumn Pset_ColumnCommon.LoadBearing prohibited",
         "passed": 0,
-        "failed": 67
+        "failed": 68
       },
       {
         "id": "slab-fire-rating",
@@ -1206,13 +1348,13 @@
           "property": "IsExternal",
           "cardinality": "required"
         },
-        "passed": 57,
+        "passed": 72,
         "failed": 0
       },
       {
         "id": "window-fire-rating",
         "spec": "IfcWindow FireRating exists",
-        "passed": 12,
+        "passed": 16,
         "failed": 0
       }
     ]
@@ -1255,7 +1397,14 @@
       "OP-S",
       "RW-S"
     ],
-    "paving_unchanged": []
+    "paving_unchanged": [],
+    "paving_touches": [
+      "SL-R",
+      "SL-KIOSK",
+      "FIN-ROOF-PAVING",
+      "FIN-ROOF-GRAVEL",
+      "FIN-ROOF-STAIR"
+    ]
   },
   "invalid_events": [
     {

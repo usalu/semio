@@ -1,0 +1,22 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "title":"Exact Native Analytic Profile Axes",
+  "type":"object","additionalProperties":false,"required":["languages","cases","uneven_sample"],
+  "properties":{
+    "languages":{"const":["en","de"]},
+    "uneven_sample":{"type":"object","additionalProperties":false,"required":["axis","outline","centroid"],"properties":{"axis":{"$ref":"#/$defs/point"},"centroid":{"$ref":"#/$defs/point"},"outline":{"type":"array","minItems":4,"items":{"$ref":"#/$defs/point"}}}},
+    "cases":{"type":"array","minItems":7,"items":{"type":"object","additionalProperties":false,"required":["id","axis","profile"],"properties":{
+      "id":{"type":"string","minLength":1},"axis":{"$ref":"#/$defs/point"},
+      "profile":{"type":"object","additionalProperties":false,"required":["shape"],"properties":{
+        "shape":{"enum":["circle","ellipse","rectangle","polygon"]},"rotation":{"type":"number"},
+        "diameter":{"$ref":"#/$defs/length"},"width":{"$ref":"#/$defs/length"},"depth":{"$ref":"#/$defs/length"},
+        "outline":{"type":"array","minItems":3,"items":{"$ref":"#/$defs/point"}},
+        "voids":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["offset","diameter"],"properties":{"offset":{"$ref":"#/$defs/point"},"diameter":{"$ref":"#/$defs/length"}}}}
+      }}}
+    }}
+  },
+  "$defs":{
+    "point":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"number"}},
+    "length":{"type":"object","additionalProperties":false,"required":["value","unit","basis"],"properties":{"value":{"type":"number","exclusiveMinimum":0},"unit":{"const":"m"},"basis":{"const":"assumed"}}}
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Pedestal Basin and Paired Tap Acceptance",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "segments",
+    "diameter",
+    "wall",
+    "rows",
+    "stem_offset_x",
+    "stem_offsets_y",
+    "joint_z",
+    "probe_z",
+    "tolerance",
+    "contact_tolerance_m"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "segments": {
+      "type": "integer",
+      "minimum": 24
+    },
+    "diameter": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "wall": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "rows": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "basin",
+          "tap",
+          "axis",
+          "size",
+          "rim",
+          "pairs",
+          "owned",
+          "floor"
+        ],
+        "properties": {
+          "basin": {
+            "type": "string"
+          },
+          "tap": {
+            "type": "string"
+          },
+          "axis": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "size": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "rim": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "pairs": {
+            "const": 2
+          },
+          "owned": {
+            "type": "boolean"
+          },
+          "floor": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "stem_offset_x": {
+      "type": "number"
+    },
+    "stem_offsets_y": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "joint_z": {
+      "type": "number"
+    },
+    "probe_z": {
+      "type": "number"
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "contact_tolerance_m": {
+      "type": "number",
+      "exclusiveMinimum": 0,
+      "maximum": 1e-8
+    }
+  }
+}

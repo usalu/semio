@@ -1,0 +1,45 @@
+# Ramp Plan Owned Footprint Union R93
+
+Confirmed independent production defect: per-convex-part strokes expose decomposition edges and repeated translucent fills darken overlaps. Implement a first-party exact rational segment arrangement over actual owned footprints, retain all disconnected and hole boundaries, render each connected region once. No source/model producer changes. Neutral schema controls cover shared diagonal, T junction, overlap, concavity, hole, disconnected and point-touching components, and finite source gaps. GEOS independently verifies area and complete ink boundary. Source binary64 coordinates are exact inputs; no snapping or seam tolerance. Progress/cancellation and isolated bounded input/producer cache required.
+
+## TDD Evidence
+
+Normal admitted frozen Python3.12 RED session9136 confirmed the missing first-party union API. Neutral helper gate then passed9 GEOS area/full-boundary cases and cancellation/progress/cache isolation plus producer replacement (2 tests,0.017s). Production-loop baseline session11072 failed on all4 current flights: duplicated fill area RF1A0.445095785489m²,RF1B1.256909156491m²,RF2A0.405332081633m²,RF2B0.795834568798m²; neutral hole rendered4m extra ink. Current normal-capacity full gate60709 is pending, not certified.
+
+## Implementation
+
+Domain-neutral `🎨️visuals/📐️drafting/🧩️regions/🐍️.py` accepts finite simple polygon rings and returns connected outer/hole regions. Exact Fraction values retain source binary64 operands. Bounding-box sweep nodes crossings, overlap and collinear T junctions; exact midpoint winding determines union-facing edges. Deterministic exact angular order traces point-touching components; only exact collinear continuation vertices are removed. No snapping, hull, positive-area filter, nominal strip, or external runtime dependency. Each connected material region is one existing drafting compound path, followed by its actual outer/hole ink rings; arrows and landings retained. Optional callbacks observe cancellation/progress. A32-entry isolated cache depends on all geometric input coordinates and helper producer identities.
+
+Portable schema+fixture+3 unittest contracts live beside the helper and are registered in the actual clip portable module tuple. GEOS independently checks filled symmetric difference, full boundary symmetric difference and length; actual production AST recording loop compares all4 current physical flight footprints plus all9 neutral geometries, repeated-opacity area and selected fill/line styles. Final gate must pass before acceptance.
+
+## Combined Topology Control
+
+Static review identified a genuine ambiguous ownership case: an island touching a hole at one vertex can satisfy single-vertex containment even though the rest of the hole lies outside that island. Added a tenth portable donut-plus-point-touching-island case before the queued gate executes; hole assignment must certify the complete hole boundary rather than just its first vertex. Current gate60709 retains this RED control; no unsupported GREEN claim.
+
+## Capacity Checkpoint
+
+Full current-model production gate60709 remains normal6GB admission and has not executed. Root verified a truthful existing normal2GB python3 interface selecting the frozen3.12.11 venv through process-local SEMIO_TOOL_PYTHON; focused gate60979 invokes only neutral GEOS and progress/cancel/cache controls, restores the environment in finally and preserves LASTEXITCODE. Neither command uses --light. Both are queued under independently verified external host memory pressure; no external process was changed.
+
+The historical physical-atlas-r92.json was inspected only as a possible bounded recording input: sourcecd633fc0699e changed tob4cf4b878e7a during capture, stable=false, APIecf220b1ef16. It is not promoted as current geometry. Full current-model recording remains60709. Current known hole/point-touching-island RED control must run before complete-boundary hole ownership is repaired; no claim that the tenth control is already GREEN. Own Node kernels are reset after bounded preparation.
+
+## Observed RED and Exact Owned-Projection Proof
+
+Focused normal2GB60979 reproduced the tenth case as an8.625 area error; native lifetime RSS82,812,928bytes. Complete hole ownership now nodes every hole edge against the candidate outer boundary and certifies every resulting interval; all10 GEOS controls plus cancellation/cache contract GREEN2tests0.022s.
+
+Full normal6GB60709 ran on stable source8dfcfb1bba896e2c/API84a259b943b6e581/plan8ca42a0d5660be7b, native process peak265,289,728bytes,69.766s. RF1A10cells andRF2A13cells match both area and complete ink. Published RF1B297cells andRF2B221cells expose Float64 publication cracks: their exact binary64 arrangements have47/42 components and50.0289626211/54.5179205456m perimeter, while GEOS has one component and20.7661149831/20.9312585462m. Filled areas still agree to~1e−14m²; area-only acceptance would miss this. No component is removed and no coordinate tolerance is introduced.
+
+Ticket-only `ramp-private-projection-r93.py` replays the existing exact owned-material compiler from the same original stock and every declared owner. Private cells count297/221, and EVERY cell vertex multiset matches the existing actual public cells exactly after their single Float64 publication. Union of the actual outward upper facets before publication (306/227 positive projected faces, exact-zero vertical faces have no projected area) yields one valid region and no holes for each. GEOS area symmetric difference0, boundary symmetric difference0; lengths20.766114983131388/20.931258546169467m differ from GEOS totals by~5e−14m. Physical parts are unchanged; neither a nominal strip nor a hull replaces owned material.
+
+A portable source-affine T-junction fixture and schema isolate the publication defect with three polygons. Exact source input yields one region, area1 and boundary4, independently verified through integer-affine GEOS. Publishing coordinates first creates two regions with boundary6.10818510677892 and area error1.3877787807814457e−17. This requires retaining the exact owned projection before publication; generic epsilon snapping could erase genuine finite gaps and is rejected. Runtime API channel coordination is pending; model source JSON and slab producer remain untouched by this lane.
+
+## Final Focused Acceptance
+
+COMPLETED with direct private-source consumption, without a public projection field or any R93 API/source/slab edits in this lane. Native supplied `_ramp_owned_reference_parts` with six-product cell equality, exact2nm, isolation/mutation/producer/cancel tests. Launcher supplied `geometry_context` / `source_model` with recursively read-only, two-revision snapshots. The plan now takes `(model,g)` from that boundary and passes exactly that source snapshot into the projection.
+
+`mesh_projection` computes the complete XY projection from oriented actual closed-cell facets before publication; its independent oracle unions both upper and lower nonzero face projections. Six portable schema cases cover a cube, inclined shadow, concavity, a hole, disconnected material and source-affine T junction. A two-snapshot /32-flights-per-snapshot cache binds immutable model identity and canonical native/math producer closures; it returns isolated region data and checks cancellation before lookup/commit. The planar arrangement separately retains its32-entry exact-input/producer cache. No repeated convex-fragment actors remain.
+
+Five registered contracts GREEN65.156s, process peak442,204,160bytes. Actual541cell vertices match the existing public geometry; all4 flights emit exactly1 compound fill and1 outer-ring stroke. Independently conditioned all-face GEOS area and full boundary symmetric differences are0. Every recorded extra/missing ink length and repeated fill area is0. Selection opacity/pen bonus, holes/disconnected controls, warm cache producer replacement/isolation and warm cancellation all pass. Existing3 visibility plus2 arrival checks GREEN2.479s.
+
+Stable focal run identities: source8dfcfb1bba896e2c37ebcfe7326a9297dc5b66e303bdec281edb0ab610b9e2b9; APIff12e029a8cbdaa6c1ad42d0d15346772aa7bd122080bf2a69692fe0cbc4c9ed; plan7a3a3405eefeedbaffe9dd7575235b49dbc86d4592c863d34efc62450bf2f750; neutral union10803acf4dce3358122dae5ff07f70ed8df896e07e59ab3e638ff249516970aa. These are focused run identities, not final whole-model acceptance. Root still owns frozen all-product interference/native/movie/visual audits and ticket closure. Generated receipts are retained.
+
+The recording test first proves exact-source union against independent GEOS in an exact source-origin/mm chart, then proves the emitted world-coordinate paths equal the single Float64 publication of that certified boundary. It does not accept the public-first microcracked footprint as an authoritative oracle and does not relax ink tolerances or remove positive material. Computed model perimeters are20.29885281374238/20.766114983131388/20.921279220613577/20.931258546169467m, not historical measurements.

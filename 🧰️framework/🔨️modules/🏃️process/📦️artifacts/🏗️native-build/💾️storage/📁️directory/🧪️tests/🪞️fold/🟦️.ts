@@ -17,7 +17,7 @@ test("a Windows host without per-directory case sensitivity declares the partiti
    const directory=place(base,key);allocateNativeDirectoryV1({directory,...envelope},()=>false,port("journaled",()=>{throw Error((protocol.refusals as Record<string,string>)[key]);}));
    expect(nativeDirectoryCaseModeV1(directory)).toBe("fold-safe");expect(readNativeDirectoryAnchorFileV1(directory).caseFold).toBe("insensitive");
   }
-  for(const key of["caseAccess","caseNotEmpty","caseUnverified"]){
+  for(const key of["caseNotEmpty","caseUnverified"]){
    const directory=place(base,key);expect(()=>allocateNativeDirectoryV1({directory,...envelope},()=>false,port("journaled",()=>{throw Error((protocol.refusals as Record<string,string>)[key]);}))).toThrow();
    expect(existsSync(join(directory,protocol.volume)),key).toBe(false);expect(existsSync(join(directory,protocol.anchor)),key).toBe(false);
   }

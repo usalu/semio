@@ -1,0 +1,1684 @@
+{
+  "version": 1,
+  "tolerance": 0.000001,
+  "max_riser": 0.170001,
+  "min_passage_width": 0.6,
+  "support_roles": [
+    "floor",
+    "landing",
+    "stair_tread",
+    "bridge",
+    "bridge_approach",
+    "ground_threshold",
+    "lift_approach",
+    "office_threshold",
+    "bridge_return"
+  ],
+  "expected_capsule_landings": 140,
+  "expected_bridges": 3,
+  "expected_bridge_approaches": 6,
+  "cases": [
+    {
+      "id": "normal-stair-flight",
+      "nodes": [
+        [
+          "ground",
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          0
+        ],
+        [
+          "step",
+          [
+            0,
+            1,
+            1,
+            1.4
+          ],
+          0.16
+        ],
+        [
+          "landing",
+          [
+            0,
+            1,
+            1.4,
+            2
+          ],
+          0.32
+        ]
+      ],
+      "ground": [
+        "ground"
+      ],
+      "reachable": [
+        "ground",
+        "step",
+        "landing"
+      ]
+    },
+    {
+      "id": "physical-gap",
+      "nodes": [
+        [
+          "ground",
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          0
+        ],
+        [
+          "isolated",
+          [
+            1.84,
+            2.84,
+            0,
+            1
+          ],
+          0
+        ]
+      ],
+      "ground": [
+        "ground"
+      ],
+      "reachable": [
+        "ground"
+      ]
+    },
+    {
+      "id": "corner-contact-is-not-passage",
+      "nodes": [
+        [
+          "ground",
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          0
+        ],
+        [
+          "corner",
+          [
+            1,
+            2,
+            1,
+            2
+          ],
+          0
+        ]
+      ],
+      "ground": [
+        "ground"
+      ],
+      "reachable": [
+        "ground"
+      ]
+    },
+    {
+      "id": "narrow-edge-is-not-passage",
+      "nodes": [
+        [
+          "ground",
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          0
+        ],
+        [
+          "narrow",
+          [
+            1,
+            2,
+            0.7,
+            1.7
+          ],
+          0
+        ]
+      ],
+      "ground": [
+        "ground"
+      ],
+      "reachable": [
+        "ground"
+      ]
+    },
+    {
+      "id": "authored-clear-walking-width",
+      "nodes": [
+        [
+          "ground",
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          0
+        ],
+        [
+          "landing",
+          [
+            1,
+            2,
+            0.4,
+            1.4
+          ],
+          0.16
+        ]
+      ],
+      "ground": [
+        "ground"
+      ],
+      "reachable": [
+        "ground",
+        "landing"
+      ]
+    },
+    {
+      "id": "excessive-riser",
+      "nodes": [
+        [
+          "ground",
+          [
+            0,
+            1,
+            0,
+            1
+          ],
+          0
+        ],
+        [
+          "too-high",
+          [
+            0,
+            1,
+            1,
+            2
+          ],
+          0.35
+        ]
+      ],
+      "ground": [
+        "ground"
+      ],
+      "reachable": [
+        "ground"
+      ]
+    }
+  ],
+  "terminals": {
+    "bridge_approach": 6,
+    "ground_threshold": 2,
+    "lift_approach": 26,
+    "office_threshold": 2,
+    "bridge_return": 3
+  },
+  "interior_headroom": 2.1,
+  "capsule_door_headroom": 1.95,
+  "clearance_cases": [
+    {
+      "id": "clear-ceiling",
+      "query": [
+        [
+          0,
+          0,
+          0.000001
+        ],
+        [
+          0.6,
+          1,
+          2.1
+        ]
+      ],
+      "boxes": [
+        [
+          "roof",
+          [
+            0,
+            0,
+            2.2
+          ],
+          [
+            1,
+            1,
+            2.4
+          ]
+        ]
+      ],
+      "blocked": []
+    },
+    {
+      "id": "low-overhanging-phase",
+      "query": [
+        [
+          0,
+          0,
+          0.000001
+        ],
+        [
+          0.6,
+          1,
+          2.1
+        ]
+      ],
+      "boxes": [
+        [
+          "phase",
+          [
+            0,
+            0,
+            0.9167
+          ],
+          [
+            1,
+            1,
+            1.0967
+          ]
+        ]
+      ],
+      "blocked": [
+        "phase"
+      ]
+    },
+    {
+      "id": "shaft-wall",
+      "query": [
+        [
+          0,
+          0,
+          0.000001
+        ],
+        [
+          0.6,
+          1,
+          2.1
+        ]
+      ],
+      "boxes": [
+        [
+          "shaft",
+          [
+            0.5,
+            -1,
+            0
+          ],
+          [
+            0.8,
+            2,
+            10
+          ]
+        ]
+      ],
+      "blocked": [
+        "shaft"
+      ]
+    },
+    {
+      "id": "boundary-touch-is-not-penetration",
+      "query": [
+        [
+          0,
+          0,
+          0.000001
+        ],
+        [
+          0.6,
+          1,
+          2.1
+        ]
+      ],
+      "boxes": [
+        [
+          "wall",
+          [
+            0.6,
+            -1,
+            0
+          ],
+          [
+            0.8,
+            2,
+            10
+          ]
+        ]
+      ],
+      "blocked": []
+    }
+  ],
+  "walking_strip_cases": [
+    {
+      "id": "portal-normal-not-jamb-direction",
+      "node": {
+        "rect": [
+          0,
+          1.1,
+          0,
+          0.7
+        ],
+        "z": 0,
+        "walking_axis": "y"
+      },
+      "expected": [
+        [
+          [
+            0.25,
+            0,
+            0.0001
+          ],
+          [
+            0.85,
+            0.7,
+            2.099999
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "square-turn-has-both-paths",
+      "node": {
+        "rect": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "z": 0
+      },
+      "expected": [
+        [
+          [
+            0,
+            0.2,
+            0.0001
+          ],
+          [
+            1,
+            0.8,
+            2.099999
+          ]
+        ],
+        [
+          [
+            0.2,
+            0,
+            0.0001
+          ],
+          [
+            0.8,
+            1,
+            2.099999
+          ]
+        ]
+      ]
+    }
+  ],
+  "assumptions": {
+    "passage_width": "authored 0.6 m geometric walking corridor, not surveyed or certified",
+    "riser": "authored 0.17 m maximum with 0.000001 m numerical tolerance",
+    "headroom": "authored 2.1 m interior / nominal 1.95 m capsule doorway",
+    "stair_center_scope": "continuous 2 mm centreline tube along every tread, not a full body-width stair clearance certificate"
+  },
+  "surface_tolerance": 0.0001,
+  "obstruction_policy": "All actual physical parts plus conservative capsule envelopes; only coplanar support and geometrically adjacent normal risers are non-overhead.",
+  "mesh_clearance_cases": [
+    {
+      "id": "oblique-bounds-void-is-clear",
+      "vertices": [
+        [
+          -2.05,
+          -1.95,
+          0
+        ],
+        [
+          1.95,
+          2.05,
+          0
+        ],
+        [
+          2.05,
+          1.95,
+          0
+        ],
+        [
+          -1.95,
+          -2.05,
+          0
+        ],
+        [
+          -2.05,
+          -1.95,
+          3
+        ],
+        [
+          1.95,
+          2.05,
+          3
+        ],
+        [
+          2.05,
+          1.95,
+          3
+        ],
+        [
+          -1.95,
+          -2.05,
+          3
+        ]
+      ],
+      "faces": [
+        [
+          3,
+          2,
+          1,
+          0
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          1,
+          2,
+          6,
+          5
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7
+        ]
+      ],
+      "query": [
+        [
+          -1,
+          0.8,
+          0.1
+        ],
+        [
+          -0.6,
+          1.2,
+          2
+        ]
+      ],
+      "blocked": false
+    },
+    {
+      "id": "oblique-actual-wall-blocks",
+      "vertices": [
+        [
+          -2.05,
+          -1.95,
+          0
+        ],
+        [
+          1.95,
+          2.05,
+          0
+        ],
+        [
+          2.05,
+          1.95,
+          0
+        ],
+        [
+          -1.95,
+          -2.05,
+          0
+        ],
+        [
+          -2.05,
+          -1.95,
+          3
+        ],
+        [
+          1.95,
+          2.05,
+          3
+        ],
+        [
+          2.05,
+          1.95,
+          3
+        ],
+        [
+          -1.95,
+          -2.05,
+          3
+        ]
+      ],
+      "faces": [
+        [
+          3,
+          2,
+          1,
+          0
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          1,
+          2,
+          6,
+          5
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7
+        ]
+      ],
+      "query": [
+        [
+          -0.2,
+          -0.2,
+          0.1
+        ],
+        [
+          0.2,
+          0.2,
+          2
+        ]
+      ],
+      "blocked": true
+    },
+    {
+      "id": "concave-void-is-clear",
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          0.5,
+          0
+        ],
+        [
+          0.5,
+          0.5,
+          0
+        ],
+        [
+          0.5,
+          2,
+          0
+        ],
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          0.5,
+          3
+        ],
+        [
+          0.5,
+          0.5,
+          3
+        ],
+        [
+          0.5,
+          2,
+          3
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ],
+      "faces": [
+        [
+          5,
+          4,
+          3,
+          2,
+          1,
+          0
+        ],
+        [
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        [
+          0,
+          1,
+          7,
+          6
+        ],
+        [
+          1,
+          2,
+          8,
+          7
+        ],
+        [
+          2,
+          3,
+          9,
+          8
+        ],
+        [
+          3,
+          4,
+          10,
+          9
+        ],
+        [
+          4,
+          5,
+          11,
+          10
+        ],
+        [
+          5,
+          0,
+          6,
+          11
+        ]
+      ],
+      "query": [
+        [
+          0.8,
+          0.8,
+          0.2
+        ],
+        [
+          1.2,
+          1.2,
+          2
+        ]
+      ],
+      "blocked": false
+    },
+    {
+      "id": "concave-arm-blocks",
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          0.5,
+          0
+        ],
+        [
+          0.5,
+          0.5,
+          0
+        ],
+        [
+          0.5,
+          2,
+          0
+        ],
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          0.5,
+          3
+        ],
+        [
+          0.5,
+          0.5,
+          3
+        ],
+        [
+          0.5,
+          2,
+          3
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ],
+      "faces": [
+        [
+          5,
+          4,
+          3,
+          2,
+          1,
+          0
+        ],
+        [
+          6,
+          7,
+          8,
+          9,
+          10,
+          11
+        ],
+        [
+          0,
+          1,
+          7,
+          6
+        ],
+        [
+          1,
+          2,
+          8,
+          7
+        ],
+        [
+          2,
+          3,
+          9,
+          8
+        ],
+        [
+          3,
+          4,
+          10,
+          9
+        ],
+        [
+          4,
+          5,
+          11,
+          10
+        ],
+        [
+          5,
+          0,
+          6,
+          11
+        ]
+      ],
+      "query": [
+        [
+          0.1,
+          1,
+          0.2
+        ],
+        [
+          0.4,
+          1.4,
+          2
+        ]
+      ],
+      "blocked": true
+    },
+    {
+      "id": "walking-prism-inside-solid",
+      "vertices": [
+        [
+          -1,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ],
+        [
+          1,
+          1,
+          -1
+        ],
+        [
+          -1,
+          1,
+          -1
+        ],
+        [
+          -1,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          -1,
+          1,
+          1
+        ]
+      ],
+      "faces": [
+        [
+          3,
+          2,
+          1,
+          0
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          1,
+          2,
+          6,
+          5
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7
+        ]
+      ],
+      "query": [
+        [
+          -0.1,
+          -0.1,
+          -0.1
+        ],
+        [
+          0.1,
+          0.1,
+          0.1
+        ]
+      ],
+      "blocked": true
+    },
+    {
+      "id": "solid-inside-walking-prism",
+      "vertices": [
+        [
+          -1,
+          -1,
+          -1
+        ],
+        [
+          1,
+          -1,
+          -1
+        ],
+        [
+          1,
+          1,
+          -1
+        ],
+        [
+          -1,
+          1,
+          -1
+        ],
+        [
+          -1,
+          -1,
+          1
+        ],
+        [
+          1,
+          -1,
+          1
+        ],
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          -1,
+          1,
+          1
+        ]
+      ],
+      "faces": [
+        [
+          3,
+          2,
+          1,
+          0
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          1,
+          2,
+          6,
+          5
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7
+        ]
+      ],
+      "query": [
+        [
+          -2,
+          -2,
+          -2
+        ],
+        [
+          2,
+          2,
+          2
+        ]
+      ],
+      "blocked": true
+    }
+  ],
+  "stair_center_tube": 0.002,
+  "stair_center_path_cases": [
+    {
+      "id": "x-directed-tread-centre",
+      "node": {
+        "rect": [
+          0,
+          0.3,
+          0,
+          0.95
+        ],
+        "z": 1
+      },
+      "expected": [
+        [
+          [
+            0,
+            0.474,
+            1.0001
+          ],
+          [
+            0.3,
+            0.476,
+            3.099999
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "y-directed-tread-centre",
+      "node": {
+        "rect": [
+          0,
+          0.95,
+          0,
+          0.3
+        ],
+        "z": 1
+      },
+      "expected": [
+        [
+          [
+            0.474,
+            0,
+            1.0001
+          ],
+          [
+            0.476,
+            0.3,
+            3.099999
+          ]
+        ]
+      ]
+    }
+  ],
+  "convex_support_cases": [
+    {
+      "id": "clipped-corner-wide-contact",
+      "a": {
+        "rect": [
+          -1.9,
+          -0.42,
+          1.9,
+          2.53
+        ],
+        "polygon": [
+          [
+            -1.9,
+            1.9
+          ],
+          [
+            -0.42,
+            1.9
+          ],
+          [
+            -0.42,
+            2.53
+          ],
+          [
+            -1.38,
+            2.53
+          ],
+          [
+            -1.9,
+            2.01
+          ]
+        ],
+        "z": 0
+      },
+      "b": {
+        "rect": [
+          -1.9,
+          -1.25,
+          0.42,
+          1.9
+        ],
+        "z": 0
+      },
+      "adjacent": true
+    },
+    {
+      "id": "bounding-box-fills-triangle-void",
+      "a": {
+        "rect": [
+          0,
+          2,
+          0,
+          2
+        ],
+        "polygon": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z": 0
+      },
+      "b": {
+        "rect": [
+          1.5,
+          2,
+          1.5,
+          2
+        ],
+        "z": 0
+      },
+      "adjacent": false
+    },
+    {
+      "id": "narrow-polygon-contact",
+      "a": {
+        "rect": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "polygon": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0.4,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z": 0
+      },
+      "b": {
+        "rect": [
+          0,
+          0.4,
+          1,
+          2
+        ],
+        "z": 0
+      },
+      "adjacent": false
+    }
+  ],
+  "oriented_clearance_cases": [
+    {
+      "id": "diagonal-centre-blocked",
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        1,
+        1
+      ],
+      "obstacle": [
+        0.4,
+        0.6,
+        0.4,
+        0.6,
+        0.5,
+        1.5
+      ],
+      "blocked": true
+    },
+    {
+      "id": "diagonal-bounding-corner-clear",
+      "start": [
+        0,
+        0
+      ],
+      "end": [
+        1,
+        1
+      ],
+      "obstacle": [
+        0.75,
+        0.85,
+        0.05,
+        0.15,
+        0.5,
+        1.5
+      ],
+      "blocked": false
+    }
+  ],
+  "support_coverage_cases": [
+    {
+      "id": "two-touching-plates-cover-strip",
+      "query": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "supports": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.5,
+            0
+          ],
+          [
+            0.5,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0.5,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0.5,
+            1
+          ]
+        ]
+      ],
+      "unsupported_area": 0
+    },
+    {
+      "id": "physical-gap-remains-uncovered",
+      "query": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "supports": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.4,
+            0
+          ],
+          [
+            0.4,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            0.6,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0.6,
+            1
+          ]
+        ]
+      ],
+      "unsupported_area": 0.2
+    },
+    {
+      "id": "overlapping-triangles-cover-once",
+      "query": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "supports": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        [
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      ],
+      "unsupported_area": 0
+    }
+  ],
+  "office_headroom_cases": [
+    {
+      "id": "office-low-header-is-rejected",
+      "node": {
+        "role": "office_threshold",
+        "rect": [
+          -0.55,
+          0.55,
+          -3,
+          -2.5
+        ],
+        "z": 4,
+        "walking_axis": "y"
+      },
+      "vertices": [
+        [
+          -0.6,
+          -3.1,
+          5.8
+        ],
+        [
+          0.6,
+          -3.1,
+          5.8
+        ],
+        [
+          0.6,
+          -2.4,
+          5.8
+        ],
+        [
+          -0.6,
+          -2.4,
+          5.8
+        ],
+        [
+          -0.6,
+          -3.1,
+          5.95
+        ],
+        [
+          0.6,
+          -3.1,
+          5.95
+        ],
+        [
+          0.6,
+          -2.4,
+          5.95
+        ],
+        [
+          -0.6,
+          -2.4,
+          5.95
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          3,
+          2,
+          1
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          1,
+          2,
+          6,
+          5
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7
+        ]
+      ],
+      "blocked": true
+    },
+    {
+      "id": "office-full-headroom-is-clear",
+      "node": {
+        "role": "office_threshold",
+        "rect": [
+          -0.55,
+          0.55,
+          -3,
+          -2.5
+        ],
+        "z": 4,
+        "walking_axis": "y"
+      },
+      "vertices": [
+        [
+          -0.6,
+          -3.1,
+          6.2
+        ],
+        [
+          0.6,
+          -3.1,
+          6.2
+        ],
+        [
+          0.6,
+          -2.4,
+          6.2
+        ],
+        [
+          -0.6,
+          -2.4,
+          6.2
+        ],
+        [
+          -0.6,
+          -3.1,
+          6.3500000000000005
+        ],
+        [
+          0.6,
+          -3.1,
+          6.3500000000000005
+        ],
+        [
+          0.6,
+          -2.4,
+          6.3500000000000005
+        ],
+        [
+          -0.6,
+          -2.4,
+          6.3500000000000005
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          3,
+          2,
+          1
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          1,
+          2,
+          6,
+          5
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7
+        ]
+      ],
+      "blocked": false
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "type": "object",
+  "required": [
+    "same_content_builds",
+    "retained_revisions",
+    "mutation",
+    "deepcopy",
+    "source_changes",
+    "producer_changes",
+    "membership"
+  ],
+  "properties": {
+    "same_content_builds": {
+      "const": 1
+    },
+    "retained_revisions": {
+      "const": 2
+    },
+    "mutation": {
+      "const": "rejected"
+    },
+    "deepcopy": {
+      "const": "owned mutable JSON"
+    },
+    "source_changes": {
+      "const": "invalidate"
+    },
+    "producer_changes": {
+      "const": "invalidate"
+    },
+    "membership": {
+      "const": "source only"
+    }
+  },
+  "additionalProperties": false
+}

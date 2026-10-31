@@ -1,0 +1,197 @@
+{
+  "type": "object",
+  "required": [
+    "diameter",
+    "gauge",
+    "segments",
+    "cases",
+    "comparison",
+    "source_products",
+    "source_air_controls",
+    "symmetry_path",
+    "route_binding",
+    "source_bearing_controls",
+    "bearing_tolerance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "diameter": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "gauge": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "segments": {
+      "type": "integer",
+      "minimum": 8
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "points",
+          "length"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "length": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "required": [
+        "volume_relative",
+        "radius_absolute",
+        "clearance_margin"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "volume_relative": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "radius_absolute": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "clearance_margin": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "source_products": {
+      "type": "array",
+      "minItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "source_air_controls": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "symmetry_path": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "route_binding": {
+      "type": "object",
+      "required": [
+        "routes",
+        "expected_top",
+        "expected_fraction"
+      ],
+      "properties": {
+        "routes": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object"
+          }
+        },
+        "expected_top": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string"
+          }
+        },
+        "expected_fraction": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "bearing_tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "source_bearing_controls": {
+      "type": "array",
+      "minItems": 120,
+      "items": {
+        "type": "object",
+        "required": [
+          "product",
+          "route",
+          "xy",
+          "expected_foot",
+          "owner"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "product": {
+            "type": "string"
+          },
+          "route": {
+            "type": "string"
+          },
+          "xy": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "expected_foot": {
+            "type": "number"
+          },
+          "owner": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

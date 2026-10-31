@@ -104,7 +104,9 @@ def test_sections_and_elevations_use_actual_xz_solids():
         parts = _parts(tag)
         ymin = min(v[1] for p in parts for v in _vertices(p))
         ymax = max(v[1] for p in parts for v in _vertices(p))
-        cut = (ymin + ymax) / 2
+        obj=model.element(tag)
+        service=obj["class"] in ("IfcPipeSegment","IfcCovering","IfcChimney","IfcWasteTerminal","IfcBoiler","IfcSpaceHeater","IfcSanitaryTerminal","IfcLightFixture") and not (obj["class"]=="IfcCovering" and obj.get("predefined_type")=="FLOORING")
+        cut = obj["geometry"]["axis"][1] if service and "axis" in obj["geometry"] else (ymin+ymax)/2
         expected = [_slice(p,1,cut) for p in parts]
         section = model.represent(tag, "section")
         assert math.isclose(section["derived"]["cut_y"], cut, abs_tol=1e-9)
@@ -118,7 +120,7 @@ def test_sections_and_elevations_use_actual_xz_solids():
         assert math.isclose(actual.bounds[3], max(v[2] for p in parts for v in _vertices(p)), abs_tol=1e-9)
         for kind, identifier in (("axis", "Axis"), ("footprint", "FootPrint")):
             representation = model.represent(tag, kind)
-            assert (representation["identifier"], representation["type"]) == (identifier, "Curve2D")
+            assert (representation["identifier"], representation["type"]) == (identifier, "Curve3D" if kind=="axis" and service else "Curve2D")
 
 
 def test_sections_preserve_real_cavities():

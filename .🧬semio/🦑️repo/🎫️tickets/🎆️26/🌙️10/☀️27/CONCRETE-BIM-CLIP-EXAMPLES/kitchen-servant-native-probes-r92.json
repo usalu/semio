@@ -1,0 +1,589 @@
+{
+  "probes": {
+    "SINK-KITCHEN-1": [
+      {
+        "name": "below-rim cavity",
+        "xyz": [
+          1.5088235294117638,
+          0.46,
+          3.9699999999999998
+        ],
+        "occupied": false
+      },
+      {
+        "name": "through-floor drain",
+        "xyz": [
+          1.5088235294117638,
+          0.46,
+          3.85
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive ceramic floor",
+        "xyz": [
+          1.5888235294117639,
+          0.467,
+          3.85
+        ],
+        "occupied": true
+      },
+      {
+        "name": "discharge into cavity",
+        "xyz": [
+          1.5088235294117638,
+          0.44,
+          4.01
+        ],
+        "occupied": false
+      }
+    ],
+    "TAP-KITCHEN": [
+      {
+        "name": "tap airway 0",
+        "xyz": [
+          1.5088235294117638,
+          0.28,
+          4.15
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap airway 1",
+        "xyz": [
+          1.5088235294117638,
+          0.36,
+          4.27
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap airway 2",
+        "xyz": [
+          1.5088235294117638,
+          0.44,
+          4.21
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall",
+        "xyz": [
+          1.5201165781156123,
+          0.28217187729222976,
+          4.15
+        ],
+        "occupied": true
+      }
+    ],
+    "FIX-KITCHEN-SINK-COUNTER": [
+      {
+        "name": "positive bored mounting deck beside stem",
+        "xyz": [
+          1.5288235294117638,
+          0.28,
+          4.07
+        ],
+        "occupied": true
+      },
+      {
+        "name": "positive bored mounting deck beside stem",
+        "xyz": [
+          0.8582352941176485,
+          0.28,
+          4.07
+        ],
+        "occupied": true
+      }
+    ],
+    "SINK-KITCHEN-2": [
+      {
+        "name": "below-rim cavity",
+        "xyz": [
+          0.8382352941176485,
+          0.46,
+          3.9699999999999998
+        ],
+        "occupied": false
+      },
+      {
+        "name": "through-floor drain",
+        "xyz": [
+          0.8382352941176485,
+          0.46,
+          3.85
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive ceramic floor",
+        "xyz": [
+          0.9182352941176485,
+          0.467,
+          3.85
+        ],
+        "occupied": true
+      },
+      {
+        "name": "discharge into cavity",
+        "xyz": [
+          0.8382352941176485,
+          0.44,
+          4.01
+        ],
+        "occupied": false
+      }
+    ],
+    "TAP-KITCHEN-2": [
+      {
+        "name": "tap airway 0",
+        "xyz": [
+          0.8382352941176485,
+          0.28,
+          4.15
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap airway 1",
+        "xyz": [
+          0.8382352941176485,
+          0.36,
+          4.27
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap airway 2",
+        "xyz": [
+          0.8382352941176485,
+          0.44,
+          4.21
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall",
+        "xyz": [
+          0.8495283428214971,
+          0.28217187729222976,
+          4.15
+        ],
+        "occupied": true
+      }
+    ],
+    "SINK-PANTRY": [
+      {
+        "name": "below-rim cavity",
+        "xyz": [
+          3.6602941176470587,
+          0.46,
+          3.9699999999999998
+        ],
+        "occupied": false
+      },
+      {
+        "name": "through-floor drain",
+        "xyz": [
+          3.6602941176470587,
+          0.46,
+          3.85
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive ceramic floor",
+        "xyz": [
+          3.7402941176470588,
+          0.467,
+          3.85
+        ],
+        "occupied": true
+      },
+      {
+        "name": "discharge into cavity",
+        "xyz": [
+          3.6602941176470587,
+          0.44,
+          4.01
+        ],
+        "occupied": false
+      }
+    ],
+    "TAP-PANTRY": [
+      {
+        "name": "tap airway 0",
+        "xyz": [
+          3.6602941176470587,
+          0.28,
+          4.15
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap airway 1",
+        "xyz": [
+          3.6602941176470587,
+          0.36,
+          4.27
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap airway 2",
+        "xyz": [
+          3.6602941176470587,
+          0.44,
+          4.21
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall",
+        "xyz": [
+          3.6715871663509074,
+          0.28217187729222976,
+          4.15
+        ],
+        "occupied": true
+      }
+    ],
+    "FIX-PANTRY-SINK-COUNTER": [
+      {
+        "name": "positive bored mounting deck beside stem",
+        "xyz": [
+          3.6802941176470587,
+          0.28,
+          4.07
+        ],
+        "occupied": true
+      }
+    ],
+    "FIX-KITCHEN": [
+      {
+        "name": "open air beneath tabletop",
+        "xyz": [
+          1.18,
+          2.24,
+          3.57
+        ],
+        "occupied": false
+      }
+    ],
+    "FIX-SERVANT-BASIN-1": [
+      {
+        "name": "actual below-rim cavity",
+        "xyz": [
+          3.576470588235294,
+          15.54,
+          0.8
+        ],
+        "occupied": false
+      },
+      {
+        "name": "actual through-floor drain",
+        "xyz": [
+          3.576470588235294,
+          15.54,
+          0.7
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive ceramic floor",
+        "xyz": [
+          3.656470588235294,
+          15.546999999999999,
+          0.7
+        ],
+        "occupied": true
+      },
+      {
+        "name": "empty deck bore 0",
+        "xyz": [
+          3.476470588235294,
+          15.72,
+          0.89
+        ],
+        "occupied": false
+      },
+      {
+        "name": "empty deck bore 1",
+        "xyz": [
+          3.676470588235294,
+          15.72,
+          0.89
+        ],
+        "occupied": false
+      }
+    ],
+    "TAP-SERVANT-1": [
+      {
+        "name": "stem bore 0",
+        "xyz": [
+          3.476470588235294,
+          15.72,
+          0.98
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall 0",
+        "xyz": [
+          3.487763636939143,
+          15.722171877292231,
+          0.98
+        ],
+        "occupied": true
+      },
+      {
+        "name": "stem bore 1",
+        "xyz": [
+          3.676470588235294,
+          15.72,
+          0.98
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall 1",
+        "xyz": [
+          3.6877636369391427,
+          15.722171877292231,
+          0.98
+        ],
+        "occupied": true
+      }
+    ],
+    "FIX-SERVANT-BASIN-2": [
+      {
+        "name": "actual below-rim cavity",
+        "xyz": [
+          4.275,
+          15.95,
+          0.8
+        ],
+        "occupied": false
+      },
+      {
+        "name": "actual through-floor drain",
+        "xyz": [
+          4.275,
+          15.95,
+          0.7
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive ceramic floor",
+        "xyz": [
+          4.355,
+          15.956999999999999,
+          0.7
+        ],
+        "occupied": true
+      },
+      {
+        "name": "empty deck bore 0",
+        "xyz": [
+          4.175,
+          15.795,
+          0.89
+        ],
+        "occupied": false
+      },
+      {
+        "name": "empty deck bore 1",
+        "xyz": [
+          4.375,
+          15.795,
+          0.89
+        ],
+        "occupied": false
+      }
+    ],
+    "TAP-SERVANT-2": [
+      {
+        "name": "stem bore 0",
+        "xyz": [
+          4.175,
+          15.795,
+          0.98
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall 0",
+        "xyz": [
+          4.186293048703848,
+          15.79717187729223,
+          0.98
+        ],
+        "occupied": true
+      },
+      {
+        "name": "stem bore 1",
+        "xyz": [
+          4.375,
+          15.795,
+          0.98
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall 1",
+        "xyz": [
+          4.386293048703848,
+          15.79717187729223,
+          0.98
+        ],
+        "occupied": true
+      }
+    ],
+    "FIX-CHAUFFEUR-BASIN": [
+      {
+        "name": "actual below-rim cavity",
+        "xyz": [
+          15.65,
+          18.852941176470587,
+          0.8
+        ],
+        "occupied": false
+      },
+      {
+        "name": "actual through-floor drain",
+        "xyz": [
+          15.65,
+          18.852941176470587,
+          0.7
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive ceramic floor",
+        "xyz": [
+          15.73,
+          18.85994117647059,
+          0.7
+        ],
+        "occupied": true
+      },
+      {
+        "name": "empty deck bore 0",
+        "xyz": [
+          15.868,
+          18.77294117647059,
+          0.89
+        ],
+        "occupied": false
+      },
+      {
+        "name": "empty deck bore 1",
+        "xyz": [
+          15.868,
+          18.932941176470585,
+          0.89
+        ],
+        "occupied": false
+      }
+    ],
+    "TAP-CHAUFFEUR": [
+      {
+        "name": "stem bore 0",
+        "xyz": [
+          15.868,
+          18.77294117647059,
+          0.98
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall 0",
+        "xyz": [
+          15.879293048703849,
+          18.77511305376282,
+          0.98
+        ],
+        "occupied": true
+      },
+      {
+        "name": "stem bore 1",
+        "xyz": [
+          15.868,
+          18.932941176470585,
+          0.98
+        ],
+        "occupied": false
+      },
+      {
+        "name": "positive stem wall 1",
+        "xyz": [
+          15.879293048703849,
+          18.935113053762816,
+          0.98
+        ],
+        "occupied": true
+      }
+    ],
+    "FIX-SERVANT-STORAGE-1-LONG": [
+      {
+        "name": "hollow cupboard interior",
+        "xyz": [
+          5.4,
+          15.7,
+          0.4
+        ],
+        "occupied": false
+      }
+    ],
+    "FIX-SERVANT-BASIN-CABINET-1": [
+      {
+        "name": "hollow cupboard interior",
+        "xyz": [
+          3.55,
+          15.86,
+          0.25
+        ],
+        "occupied": false
+      }
+    ],
+    "RAIN-KITCHEN-PATIO-9": [
+      {
+        "name": "rain airway 0",
+        "xyz": [
+          2.8,
+          8.7,
+          3
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain airway 1",
+        "xyz": [
+          2.8,
+          8.7,
+          2.81
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain airway 2",
+        "xyz": [
+          3.3501873542589005,
+          9.132592072412754,
+          2.81
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain airway 3",
+        "xyz": [
+          3.3501873542589005,
+          9.132592072412754,
+          1
+        ],
+        "occupied": false
+      }
+    ]
+  }
+}

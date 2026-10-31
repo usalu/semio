@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "scalar": {
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "object",
+          "required": [
+            "numerator",
+            "denominator"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "numerator": {
+              "type": "integer"
+            },
+            "denominator": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        }
+      ]
+    },
+    "point": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/scalar"
+      }
+    },
+    "mesh": {
+      "type": "object",
+      "required": [
+        "vertices",
+        "faces"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "$ref": "#/$defs/point"
+          }
+        },
+        "faces": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    }
+  },
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "chart",
+          "meshes",
+          "expected"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "chart": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "meshes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/mesh"
+            }
+          },
+          "expected": {
+            "type": "object",
+            "required": [
+              "area",
+              "length",
+              "components",
+              "holes"
+            ],
+            "properties": {
+              "area": {
+                "type": "number"
+              },
+              "length": {
+                "type": "number"
+              },
+              "components": {
+                "type": "integer"
+              },
+              "holes": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+# Early Whole-Model Interference Diagnostic
+
+A separate output namespace `🗑️generated/whole-diagnostic-r95` runs the existing expanded all-distinct-product auditor while hall, roofevent and visible-skin repairs continue. This intentionally is not final frozen acceptance. It uses an actual fresh canonical native capture, all eleven independent kernel controls, unchanged strict positive/unresolved policy and the auditor explicit diagnostic flag; source/producers are retained before/after and any movement stays visible. No geometry is mocked, hull-replaced or tag-waived.
+
+This early pass is intended to expose remaining real interactions before final publication. All unsupported and nonzero/uncertain findings remain. Same-product component ownership and operated body/leaf routes remain separate gates. Final default fresh capture/audit after freeze is still mandatory. The wrapper provides its own cooperative whole-diagnostic-cancel-r95 file and never sends process broadcasts.
+
+Completed actual full diagnostic: 622 physical products, 55600 owned cells, missing0/unsupported0; 8954 positive part pairs in 222 product groups, 26433 unresolved pairs retained. Pair audit 1557.031s; total capture+audit1813.515s. Status DIAGNOSTIC_STALE_OR_MOVING_CAPTURE as designed; no final acceptance. Independent structural and fixture confirmations are in whole-overlap-confirmation-r95.md and fixture-overlap-confirmation-r95.md. The exact proven-prism optimization was authored later and is not loaded in this old run.

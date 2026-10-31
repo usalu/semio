@@ -63,14 +63,18 @@ def _scope():
     engine=SimpleNamespace(VGroup=Shape,RIGHT=np.array([1,0,0]),UP=np.array([0,1,0]))
     drafting=SimpleNamespace(polygon=_polygon,polyline=_line,segments=lambda *a,**k:Shape(),hatch=lambda *a,**k:Shape(),mix=lambda *a:0,P=lambda p:np.asarray(p,float),
                               CONCRETE=0,STRUCT=0,DATA=0,INK=0,GLASS=0,S_LABEL=1,W_EDGE=1,W_THIN=1,Drawing=lambda view:Shape())
-    shared=SimpleNamespace(_model=MODEL,inside=lambda *a:True,surface_color=lambda *a:0,surface_role=lambda *a:"concrete")
+    shared=SimpleNamespace(_model=MODEL,inside=lambda *a:True,surface_color=lambda *a:0,service_surface_color=lambda *a:0,surface_role=lambda *a:"concrete")
     scope={"np":np,"EPS":1e-9,"_engine":engine,"_d":drafting,"_c":shared,"_model":MODEL,"_s":SimpleNamespace(SheetMixin=object,pseudo=lambda tag,*a:{"tag":tag}),
            "INK":0,"MUTED":0,"GOOD":0,"GLASS":0,"BACKGROUND":0,"CONCRETE":0,"SERV":0,"BEYOND":0,"W_CUT":1,"W_EDGE":1,"W_THIN":1,"W_HAIR":1,"UP":np.array([0,0,1]),"STAGE_TOP":6,"STAGE_UNDER":1,"STAGE_FIRST":3}
     core={"np":np,"_model":MODEL}
-    nodes=_definitions(ROOT/"🧱️core/📐️geometry.py",{"part_faces"})
+    nodes=_definitions(ROOT/"🧱️core/📐️geometry.py",{"part_faces","surface_role","service_surface_role"})
     exec(compile(ast.Module(body=nodes,type_ignores=[]),str(ROOT),"exec"),core)
     if "part_faces" in core:
         shared.part_faces=core["part_faces"]
+    shared.face_appearance=MODEL._surface_finishes().face_appearance
+    shared.appearance_colour=MODEL._surface_finishes().appearance_colour
+    shared.surface_role=core["surface_role"]
+    shared.service_surface_role=core["service_surface_role"]
     nodes=_definitions(ROOT/"📋️plan/🐍️.py")
     exec(compile(ast.Module(body=nodes,type_ignores=[]),str(ROOT),"exec"),scope)
     scope["_plan"]=SimpleNamespace(**{key:value for key,value in scope.items() if callable(value)})

@@ -189,13 +189,16 @@ class Beat5_Interfaces(_visuals.ClipScene):
          "Für die statische Prüfung der Geschossdecke wählen wir ein Analyseschema und idealisieren sie als Mittelfläche."],
         ["mapping",
          "The slab becomes clipped shell members; selected slab supports become line members. Every analytical item records its source GlobalId.",
-         "Die Decke wird zu zugeschnittenen Schalenelementen; gewählte Deckenstützen werden zu Stäben. Jedes Analyseobjekt verweist auf seine Quell-GlobalId."],
+         "Die Decke wird zu zugeschnittenen Schalen, gewählte Deckenstützen zu Stäben; jedes Analyseobjekt behält seine Quell-GlobalId."],
         ["slab",
          "The native slab retains ramp, stair and service apertures. Cellar hatches have separate covers, while the floor area excludes its actual voids.",
-         "Die native Decke behält Rampen-, Treppen- und Haustechniköffnungen. Kellerluken haben getrennte Deckel; die Geschossfläche schließt tatsächliche Aussparungen aus."],
+         "Decken behalten Rampen-, Treppen- und Haustechniköffnungen; Kellerluken eigene Deckel. Aussparungen zählen nicht zur Fläche."],
         ["assumptions",
          "The analysis needs assumptions: self-weight from the thickness, finishes, imposed load, and the support conditions.",
          "Die Analyse braucht Annahmen: Eigengewicht aus der Dicke, Ausbaulasten, Nutzlast und die Auflagerbedingungen."],
+        ["finish-ownership",
+         "Teaching allowance includes floor coverings; their mass is not added twice. It is not a full inventory of nonstructural mass.",
+         "Der Lehransatz enthält Bodenbeläge; ihre Masse wird nicht doppelt addiert. Er ist keine vollständige Bilanz nichttragender Masse."],
         ["buildup",
          "The load is a stack: the slab's own weight, the finishes and the imposed load add up to one area load.",
          "Die Last ist ein Stapel: Eigengewicht der Decke, Ausbaulasten und Nutzlast ergeben eine Flächenlast."],
@@ -704,7 +707,11 @@ class Beat5_Interfaces(_visuals.ClipScene):
                        *[(_to(level[key], loads[key]["value"], 1.4),) for key in order],
                        (_engine.FadeIn(support_label),)),
                   seconds=6.5)
-        self._s = SimpleNamespace(off=[table, swatches, formula, strip, arrows, total, support_label, thickness, plan, cut])
+        ownership_note=self.label("Teaching allowance includes floor coverings.\nTheir mass is not added twice.\nThis is not a full nonstructural mass inventory.", "Der Lehransatz enthält die Bodenbeläge.\nIhre Masse wird nicht doppelt addiert.\nKeine vollständige Bilanz nichttragender Masse.", (-3.4,-1.4,0), size=16.5, color=MUTED, width=6.5)
+        self.step("finish-ownership",
+                  _seq((_engine.FadeOut(plan),_engine.FadeOut(cut),_engine.FadeOut(support_label),_engine.FadeIn(ownership_note)),),
+                  seconds=10.5)
+        self._s = SimpleNamespace(off=[table, swatches, formula, strip, arrows, total, thickness, ownership_note])
 
     def _load_path(self, f, entry, k, point):
         """⬇️ One piloti with its tributary cell in the axonometric: the cell grows by ``k``, load arrows stand on it, and the reaction arrow enters the foot."""

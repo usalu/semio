@@ -1,0 +1,5 @@
+# Independent Current Parking Fixture
+
+Existing guarded native-parking-refresh-r92.py completed allactual native/independent SciPy clipping/GEOS/NumPy/exact-fraction-overlay height/distance/pose controls before applying its derived fixture delta. Source ec165de1 and APIff12 were explicit expected hashes; allnon-testmodelproducers/schema are now bound, plus testbody/input/script. Allbefore/after inputs stayed unchanged until the guarded fixture-only publication; no source geometry, car dimensions, reserve depths/sides, control poses or clearance requirement changed.
+
+Receipt `🗑️generated/native-r92/parking/result.json`: success=true, applied=true, stable=true; independentoccupiedrecords=9793, sourceparts=57707. Published fixtureSHA `fb3ac288984e7d0befbfc4f287a882bebfa9c173d8212b32186301ab6f7b268c`. Two-car control remains verified; three-car scenario remains explicitly unverified with no global impossibility or grounded3Dvehicle trajectory claim. Future hall geometry/source publication properly requires a refreshed final signature and independent projections.

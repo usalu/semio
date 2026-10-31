@@ -1,0 +1,297 @@
+{
+  "title": "Whole Parents Suite Programme Registration R92",
+  "source_snapshot": "c30d74c636da92597cc22145635c86d4554b24d9386a64bd195b2d90d4ad4ff2",
+  "basis": {
+    "primary_original_plan": "FLC19442 book25",
+    "author_reconstruction": "Book46, actual697×876 sprite, nativepixelcoords",
+    "construction": "FLC H1(12)077 Cormier8Jan1930, book167; completionchanges20Jan/31Aug1930 documented168",
+    "grid": {
+      "u0": 7,
+      "v0": 49,
+      "pixel_pitch": 170,
+      "metre_pitch": 4.75
+    },
+    "xy_uncertainty_m": 0.15,
+    "warning": "Fixed structuralpostsremainuntouched; source2022/2024reconstructions have≈.2m individualpostresiduals"
+  },
+  "parents_bath": {
+    "pixel_outline": [
+      [
+        462,
+        420
+      ],
+      [
+        529,
+        420
+      ],
+      [
+        529,
+        610
+      ],
+      [
+        397,
+        610
+      ],
+      [
+        397,
+        470
+      ],
+      [
+        462,
+        470
+      ]
+    ],
+    "outline": [
+      [
+        6.286764705882353,
+        11.616176470588234
+      ],
+      [
+        4.414705882352941,
+        11.616176470588234
+      ],
+      [
+        4.414705882352941,
+        16.925
+      ],
+      [
+        8.102941176470589,
+        16.925
+      ],
+      [
+        8.102941176470589,
+        13.013235294117647
+      ],
+      [
+        6.286764705882353,
+        13.013235294117647
+      ]
+    ],
+    "fixture_ids": [
+      "FIX-BATH",
+      "FIX-CHAISE",
+      "BIDET-PARENTS",
+      "BASIN-PARENTS"
+    ],
+    "original_open_bedroom_edge": {
+      "world": [
+        [
+          4.414705882352941,
+          16.925
+        ],
+        [
+          8.102941176470589,
+          16.925
+        ]
+      ],
+      "role": "Continuousbath/bedroomrelationship pertext167, not an inventedfullheightwall"
+    },
+    "boundary_walls_candidate": [
+      {
+        "id": "BATH-UPPER-HALL-BOUNDARY",
+        "path": [
+          [
+            6.286764705882353,
+            11.616176470588234
+          ],
+          [
+            6.286764705882353,
+            13.013235294117647
+          ],
+          [
+            8.102941176470589,
+            13.013235294117647
+          ]
+        ],
+        "role": "Steppedboundaryseparatesfirsthall/stairfromupperbath; confirmentryratherthanleaveoldfalsecrosswall"
+      },
+      {
+        "id": "BATH-CORRIDOR-BOUNDARY",
+        "path": [
+          [
+            4.414705882352941,
+            11.616176470588234
+          ],
+          [
+            4.414705882352941,
+            16.925
+          ]
+        ],
+        "role": "Rightpubliccorridorboundary; currentW-PARENT-BATH-Wx4.5nearthistrace"
+      },
+      {
+        "id": "BATH-RAMP-BOUNDARY",
+        "path": [
+          [
+            8.102941176470589,
+            13.013235294117647
+          ],
+          [
+            8.102941176470589,
+            16.925
+          ]
+        ],
+        "role": "Bathbesideramp; host/jointownershipmustavoidcuttingexistingrampRC"
+      }
+    ],
+    "shared_WC_boundary": "NorthshortedgeX4.415..6.287/Y11.616 belongsalreadyinstalledWCbacksouthwall; do notduplicatepositivewallvolume"
+  },
+  "fixtures": {
+    "tub": {
+      "id": "FIX-BATH",
+      "status": "WITHDRAWN prior white-strip mapping: identity unresolved; do not implement bounds430..454 as tub",
+      "actual_cavity": "Must locate within mosaic area from original plan/photo"
+    },
+    "tile_platform": {
+      "pixel_bounds": [
+        454,
+        510,
+        525,
+        605
+      ],
+      "bounds_m": [
+        4.526470588235295,
+        14.130882352941176,
+        6.510294117647058,
+        16.78529411764706
+      ],
+      "warning": "ThiswholeadjacenttilezoneisNOTsecurelyonefullwidthwavechaise. Separateflatwetplatformfromrestsurfacewhereoriginal077/sideprofilepermits."
+    },
+    "chaise": {
+      "id": "FIX-CHAISE",
+      "direction_candidate": "WITHDRAWN X-axis claim: orientation unregistered",
+      "profile_status": "Originalconstructionshapeandcantileverattested; exactcompletedwave/subzonewidthnotnumericallyread. Earlier077sectionpredatesdocumentedbackinclinationchanges.",
+      "hollow_plinth": true,
+      "RC_cantilever_over_lower_kick": true,
+      "tile_module_m": [
+        0.05,
+        0.05
+      ],
+      "tile_colours": {
+        "plinth": "blue",
+        "rest_surface": "black"
+      },
+      "metal_edge_profile": true,
+      "dimensions_of_core_and_edges": "inferred; do notsource6cmcorefromunrelatedstairs",
+      "current_conflict": "Solid ground-filled plinth conflicts with attested hollow/cantilever construction; long-axis conflict not established"
+    },
+    "bidet": {
+      "id": "BIDET-PARENTS",
+      "center": [
+        4.945588235294117,
+        12.147058823529411
+      ],
+      "status": "OriginalbidetnotWC"
+    },
+    "basin": {
+      "id": "BASIN-PARENTS",
+      "center": [
+        4.945588235294117,
+        13.46029411764706
+      ],
+      "morphology": "Ellipticalpedestalbasin, standingobjectbesidecolumn20; notwallrectangulartrough"
+    },
+    "cabinet": {
+      "source": "Book168 executedconcretecabinetbetweenbathandpassage replacedproposedpartition+shelf",
+      "region": "Thinlongbuilt-inleftofbathinplan46; footprintrequiresclosertrace",
+      "no_generic_wood_substitution": true,
+      "pixel_bounds_candidate": [
+        430,
+        510,
+        454,
+        605
+      ],
+      "identity_status": "Probable cabinet: continuous white rectangular face with handle-like dash; text168 places executed concrete cabinet between bath and passage. Requires original plan/photo corroboration."
+    }
+  },
+  "affected_parents_bedroom": {
+    "outline_candidate": [
+      [
+        4.414705882352941,
+        16.925
+      ],
+      [
+        8.102941176470589,
+        16.925
+      ],
+      [
+        8.103,
+        15.5
+      ],
+      [
+        10.898,
+        15.5
+      ],
+      [
+        10.898,
+        21.2
+      ],
+      [
+        4.3,
+        21.2
+      ],
+      [
+        4.3,
+        17.277
+      ],
+      [
+        4.414705882352941,
+        17.277
+      ]
+    ],
+    "remove_old_front_arm": "SP-PARENTS oldX6.8..8.1/Y11.7..15.5 iscoarseentryprojection; afterbathrebuilditcanbecomedead/overlap",
+    "fixed_supports": [
+      "20-FIRST",
+      "27-FIRST",
+      "26-FIRST",
+      "19-FIRST"
+    ],
+    "entrance_candidate": {
+      "host": "Newbedroom/publiccorridorboundarynearX4.4147, southofbathendY16.925",
+      "source_door_region_y": [
+        17.1,
+        18.2
+      ],
+      "exact_station_and_swing": "Inferred; existingD-PARENTSatY11.7mustnotremainadeadfirsthallarm",
+      "physical_candidate": {
+        "center_y": 17.8,
+        "rough_width": 0.8,
+        "clear_width": 0.72,
+        "route_centers": [
+          [
+            4.95,
+            17.8
+          ],
+          [
+            4.4147,
+            17.8
+          ],
+          [
+            4,
+            17.8
+          ]
+        ]
+      },
+      "warning": "Portalpositionisbody-coordinatedconstructioncandidate, nothistoricmeasuredstation. Checkactualcolumn27(4.737,17.277),privatewallx3.6 andbilingualuncertainty."
+    }
+  },
+  "first_hall": {
+    "retain": "PubliccorridorbetweenprivatewallX3.6 andsuiteboundaryX≈4.414, connectednorthofbath/WCs andsouthtoSON/PARENTSdoors",
+    "remove_overlap": "SubtractinstalledWCroomsandenclosures;donotclassifyparentsbathaspublichall",
+    "new_north_of_bath": "Keepactualroutewest/eastofWCrow; no route throughsealedbathfrontwall"
+  },
+  "retire_or_reshape": [
+    "W-PARENT-BATH oldX6.8 fullrun cutsactualnarrowtub/chaise",
+    "W-PARENT-BATH-S oldY11.8 fullcrosswall inconsistentsteppedboundary",
+    "W-PARENT-BATH-W mustfollowregisteredcorridorboundarywithoutduplicateWCwall",
+    "W-SUITE-ENTRY/D-PARENTS oldY11.7 entryarm mustreconcileactualbedroomroute"
+  ],
+  "acceptance": [
+    "Sourceindependentwholefloorpolygoncoverage: hall,bath,bedroom,WC,guest/son/corridor nooverlap/gaps",
+    "Actualnativeallmaterial.60mbodyroutesfrompublichalltosuite andallfixtures; dooropenconditionexplicit",
+    "Conservefixedstructureandjointownership; norandompostmoves",
+    "Hollowbath/chaiseplinth/draincavities versusfilledblocks; GEOS/SciPyvolumes andnativeSDKsolids",
+    "Compareplan46/original25 plusphoto167 beforeassertingfinishedwaveprofile",
+    "Allunreadabledetaildimensions/portalstations remainexplicitinferences"
+  ]
+}

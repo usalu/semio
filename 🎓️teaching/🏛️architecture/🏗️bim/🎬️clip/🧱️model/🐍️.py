@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from copy import deepcopy
 from functools import lru_cache
+from itertools import count as _RevisionCounter
+from threading import RLock as _GeometryLock
 import importlib
 import hashlib
 import json
@@ -133,7 +135,7 @@ def _top(model: dict, spec) -> float:
         return _box(model)[2]
     if spec.startswith("soffit:"):
         slab = _find(model, spec[7:])
-        return min(part["z0"] for part in _slab_geometry(model, slab)["parts"])
+        return min(part["z0"] for part in _slab_geometry_entry(model, slab)["parts"])
     return _elevations(model)[spec]
 
 
@@ -188,14 +190,23 @@ def _union_area(polygons: list) -> float:
 
 
 def _convex_hull(points: list) -> list:
-    """🔺 Counterclockwise boundary of a convex set of planar points."""
+    """🔺 Preserve every positive convex turn with adaptive exact binary64 orientation."""
+    from fractions import Fraction
+
     points = sorted(set(tuple(map(float, p)) for p in points))
     if len(points) < 3:
         return [list(p) for p in points]
+    def orientation(a,b,c):
+        """🧭 Replay ambiguous determinant signs from original coordinate values."""
+        if a[0]==b[0]==c[0] or a[1]==b[1]==c[1]:return 0
+        left=(a[0]-c[0])*(b[1]-c[1]);right=(a[1]-c[1])*(b[0]-c[0]);det=left-right
+        if math.isfinite(det) and max(abs(left),abs(right))>=2.2250738585072014e-308 and abs(det)>3.3306690738754716e-16*(abs(left)+abs(right)):return det
+        return (Fraction(a[0])-Fraction(c[0]))*(Fraction(b[1])-Fraction(c[1]))-(Fraction(a[1])-Fraction(c[1]))*(Fraction(b[0])-Fraction(c[0]))
     def half(items):
+        """📐 Keep the minimal convex boundary while retaining arbitrarily small positive turns."""
         result = []
         for p in items:
-            while len(result) > 1 and (result[-1][0]-result[-2][0])*(p[1]-result[-2][1])-(result[-1][1]-result[-2][1])*(p[0]-result[-2][0]) <= 1e-12:
+            while len(result) > 1 and orientation(result[-2],result[-1],p)<=0:
                 result.pop()
             result.append(p)
         return result
@@ -240,20 +251,32 @@ def _polyhedron_part(vertices: list, faces: list | None = None) -> dict:
         a,b,c = [vertices[i] for i in face[:3]]
         u,v = [b[k]-a[k] for k in range(3)],[c[k]-a[k] for k in range(3)]
         normal = [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]
-        scale = math.sqrt(sum(x*x for x in normal))
-        if scale<1e-14 or any(abs(sum(normal[k]*(vertices[i][k]-a[k]) for k in range(3)))>1e-9*scale for i in face) or any(sum(normal[k]*(vertices[i][k]-a[k]) for k in range(3))>1e-9*scale for i in range(len(vertices))):
+        scale = math.hypot(*normal)
+        if not math.isfinite(scale) or scale==0 or any(abs(sum(normal[k]*(vertices[i][k]-a[k]) for k in range(3)))>1e-9*scale for i in face) or any(sum(normal[k]*(vertices[i][k]-a[k]) for k in range(3))>1e-9*scale for i in range(len(vertices))):
             raise ValueError("Native polyhedron faces must bound a convex solid")
     return part
 
 
 def _polyhedron_volume(part: dict) -> float:
-    """🧮 Integrate outward native face triangles around a local origin."""
-    vertices = part_vertices(part)
-    origin,total = vertices[0],0.
-    for face in part_faces(part):
+    """🧮 Integrate native faces locally, retaining exact determinants under cancellation."""
+    vertices,faces = part_vertices(part),part_faces(part)
+    origin,terms,magnitude = vertices[0],[],0.
+    for face in faces:
         for i in range(1,len(face)-1):
             a,b,c = [[vertices[j][k]-origin[k] for k in range(3)] for j in (face[0],face[i],face[i+1])]
-            total += a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0])
+            products = [a[0]*b[1]*c[2],-a[0]*b[2]*c[1],a[1]*b[2]*c[0],-a[1]*b[0]*c[2],a[2]*b[0]*c[1],-a[2]*b[1]*c[0]]
+            terms.extend(products)
+            magnitude += sum(abs(v) for v in products)
+    total = math.fsum(terms)
+    if magnitude*128*math.ulp(1.) > abs(total)*1e-12:
+        from fractions import Fraction
+        points = [[Fraction(c) for c in p] for p in vertices]
+        origin,total = points[0],Fraction(0)
+        for face in faces:
+            for i in range(1,len(face)-1):
+                a,b,c = [[points[j][k]-origin[k] for k in range(3)] for j in (face[0],face[i],face[i+1])]
+                total += a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0])
+        return float(abs(total)/6)
     return abs(total)/6
 
 
@@ -282,7 +305,9 @@ def part_outline_at(part: dict, z: float) -> list:
             x,y,u,v = b[0]-a[0],b[1]-a[1],d[0]-c[0],d[1]-c[1]
             if abs(x*v-y*u) > 1e-10 or x*u+y*v <= 0:
                 raise ValueError("Tapered section edges must have compatible parallel correspondence")
-    t = min(1., max(0., (z-part["z0"])/(part["z1"]-part["z0"])))
+    if z<=part["z0"]:return deepcopy(lower)
+    if z>=part["z1"]:return deepcopy(upper)
+    t = min(1, max(0, (z-part["z0"])/(part["z1"]-part["z0"])))
     return [[a[0]+t*(b[0]-a[0]), a[1]+t*(b[1]-a[1])] for a,b in zip(lower,upper)]
 
 
@@ -369,6 +394,7 @@ def part_section(part: dict, value: float, axis: int = 1) -> list:
 
 def _occupied_volume(parts: list) -> float:
     """🧮 Integrate occupied slice unions, including linearly tapered convex solids."""
+    if any("csg"in p for p in parts):return _analytic_solids_backend().measure_union([_analytic_input(p)for p in parts])["volume"]
     levels = sorted({p[k] for p in parts for k in ("z0", "z1")} | {v[1] for p in parts if "section" in p for v in p["section"]["profile"]})
     total = 0.
     for lo,hi in zip(levels,levels[1:]):
@@ -393,50 +419,76 @@ def _occupied_volume(parts: list) -> float:
 
 
 def _partition_volume(parts: list) -> float:
-    """📦 Integrate an explicitly disjoint vertical material partition."""
-    return sum((_area(p["outline"])-sum(_area(h) for h in p.get("holes",())))*(p["z1"]-p["z0"]) for p in parts)
+    """📦 Integrate true native cells of an explicitly disjoint material partition."""
+    volumes = []
+    for part in parts:
+        if "csg"in part:volumes.append(part_volume(part))
+        elif any(key in part for key in ("mesh","section","top_outline")):
+            volumes.append(_polyhedron_volume(part))
+        elif part.get("holes"):
+            stock = {"material":part.get("material",""),"role":part.get("role","quantity_cell"),**{key:deepcopy(value) for key,value in part.items() if key!="holes"}}
+            holes = [{"outline":ring,"z0":part["z0"],"z1":part["z1"]} for ring in part["holes"]]
+            volumes.extend(_polyhedron_volume(cell) for cell in _reference_material_parts(stock,holes))
+        else:volumes.append(_area(part["outline"])*(part["z1"]-part["z0"]))
+    return math.fsum(volumes)
 
 
 def _length(path: list) -> float:
     return sum(math.dist(a, b) for a, b in zip(path, path[1:]))
 
 
+def _prism_residuals(outline: list, cutters: list, exact: bool = False) -> list:
+    """📐 Replay ordered material cuts from source operands when computed ring topology is invalid."""
+    from fractions import Fraction
+    analysis = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧮️analysis.🐍️")
+    def coordinates(ring):
+        return [[Fraction(x),Fraction(y)] for x,y in ring] if exact else ring
+    pieces = analysis._convex_parts(coordinates(outline))
+    for cutter in cutters:
+        updated = []
+        for current in pieces:
+            updated += [piece for piece in analysis._subtract(current,coordinates(cutter["outline"]),digits=None if exact else 12,tolerance=1e-12) if _area(piece)>1e-12]
+            for hole in cutter.get("holes",()):
+                ring = coordinates(hole)
+                clip = analysis._clip(current,ring if analysis._signed(ring)>0 else list(reversed(ring)),digits=None if exact else 9)
+                if len(clip)>=3 and _area(clip)>1e-12:
+                    updated.append(clip)
+        pieces = updated
+        if not pieces:
+            break
+    if not exact and 1<len(pieces)<=64:
+        rings = analysis._loops(pieces,tolerance=1e-12)
+        if rings and all(analysis._signed(ring)>1e-12 for ring in rings):
+            if math.isclose(sum(_area(ring) for ring in rings),sum(_area(piece) for piece in pieces),rel_tol=1e-11,abs_tol=1e-12):
+                pieces = rings
+    if exact:
+        pieces = [[[float(x),float(y)] for x,y in ring] for ring in pieces]
+    if not all(analysis._simple(ring) for ring in pieces):
+        if exact:
+            raise ValueError("Exact material residuals cannot be published as simple coordinate rings")
+        return _prism_residuals(outline,cutters,exact=True)
+    return pieces
+
+
 def _subtract_prisms(parts: list, cutters: list) -> list:
     """🪚 Partition material prisms around other explicitly owned solids."""
-    analysis = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧮️analysis.🐍️")
     def bounds(ring):
         return min(p[0] for p in ring),min(p[1] for p in ring),max(p[0] for p in ring),max(p[1] for p in ring)
     if any("section" in p for p in [*parts,*cutters]):
         raise ValueError("Material prism subtraction requires vertical profile prisms")
     parts = [{**p,"outline":ring,"holes":[]} for p in parts for ring in part_regions(p,(p["z0"]+p["z1"])/2)] if any(p.get("holes") for p in parts) else parts
-    indexed = [(bounds(c["outline"]),c) for c in cutters if c["z1"] > c["z0"] and len(c["outline"]) >= 3]
+    indexed = [(bounds(c["outline"]),c) for c in cutters if c["z1"]>c["z0"] and len(c["outline"])>=3]
     result = []
     for part in parts:
         xmin,ymin,xmax,ymax = bounds(part["outline"])
-        active = [c for (a,b,d,e),c in indexed if c["z0"] < part["z1"]-1e-10 and c["z1"] > part["z0"]+1e-10 and a < xmax-1e-10 and d > xmin+1e-10 and b < ymax-1e-10 and e > ymin+1e-10]
+        active = [c for (a,b,d,e),c in indexed if c["z0"]<part["z1"]-1e-10 and c["z1"]>part["z0"]+1e-10 and a<xmax-1e-10 and d>xmin+1e-10 and b<ymax-1e-10 and e>ymin+1e-10]
         if not active:
             result.append(deepcopy(part))
             continue
         levels = sorted({part["z0"],part["z1"],*(max(part["z0"],min(part["z1"],c[key])) for c in active for key in ("z0","z1"))})
         for lo,hi in zip(levels,levels[1:]):
-            pieces = analysis._convex_parts(part["outline"])
-            for cutter in active:
-                if cutter["z0"] < (lo+hi)/2 < cutter["z1"]:
-                    updated = []
-                    for current in pieces:
-                        updated += [piece for piece in analysis._subtract(current,cutter["outline"],digits=12,tolerance=1e-12) if _area(piece)>1e-12]
-                        for hole in cutter.get("holes",()):
-                            clip = analysis._clip(current,hole if analysis._signed(hole)>0 else list(reversed(hole)))
-                            if len(clip)>=3 and _area(clip)>1e-12:
-                                updated.append(clip)
-                    pieces = updated
-                if not pieces:
-                    break
-            if 1 < len(pieces) <= 64:
-                rings = analysis._loops(pieces,tolerance=1e-12)
-                if rings and all(analysis._signed(ring) > 1e-12 for ring in rings):
-                    if math.isclose(sum(_area(ring) for ring in rings),sum(_area(piece) for piece in pieces),rel_tol=1e-11,abs_tol=1e-12):
-                        pieces = rings
+            cutters_at_z = [c for c in active if c["z0"]<(lo+hi)/2<c["z1"]]
+            pieces = _prism_residuals(part["outline"],cutters_at_z)
             result += [{**deepcopy(part),"outline":ring,"z0":lo,"z1":hi} for ring in pieces]
     return result
 
@@ -590,20 +642,11 @@ def _opening_values(model: dict, opening: dict) -> dict:
 
 
 def _path_bands(path: list, thickness: float, stations: list = ()) -> list:
-    """🌀 Partition a simple mitered band at cumulative path stations without overlapping boxes."""
+    """🌀 Subdivide original mitered strips without folding short corner-adjacent stations."""
     lengths = [math.dist(a,b) for a,b in zip(path,path[1:])]
     if not lengths or min(lengths) <= 1e-10 or thickness <= 0:
         raise ValueError("A path wall requires a positive thickness and distinct vertices")
-    nodes, offsets = [path[0]], [0.]
-    station = 0.
-    for a,b,length in zip(path,path[1:],lengths):
-        for s in sorted(v for v in stations if station+1e-9 < v < station+length-1e-9):
-            nodes.append([a[i]+(b[i]-a[i])*(s-station)/length for i in (0,1)])
-            offsets.append(s)
-        nodes.append(b)
-        station += length
-        offsets.append(station)
-    normals = [[-(b[1]-a[1])/math.dist(a,b),(b[0]-a[0])/math.dist(a,b)] for a,b in zip(nodes,nodes[1:])]
+    normals = [[-(b[1]-a[1])/length,(b[0]-a[0])/length] for a,b,length in zip(path,path[1:],lengths)]
     miters = [normals[0]]
     for a,b in zip(normals,normals[1:]):
         denominator = 1+a[0]*b[0]+a[1]*b[1]
@@ -611,16 +654,32 @@ def _path_bands(path: list, thickness: float, stations: list = ()) -> list:
             raise ValueError("A path wall cannot reverse through a cusp")
         miters.append([(a[i]+b[i])/denominator for i in (0,1)])
     miters.append(normals[-1])
-    if math.dist(nodes[0],nodes[-1])<1e-9:
+    if math.dist(path[0],path[-1])<1e-9:
         a,b = normals[-1],normals[0]
         denominator = 1+a[0]*b[0]+a[1]*b[1]
         if denominator<1e-8:
             raise ValueError("A closed path wall cannot reverse through a cusp")
         miters[0] = [(a[i]+b[i])/denominator for i in (0,1)]
         miters[-1] = list(miters[0])
-    left = [[p[i]+thickness/2*n[i] for i in (0,1)] for p,n in zip(nodes,miters)]
-    right = [[p[i]-thickness/2*n[i] for i in (0,1)] for p,n in zip(nodes,miters)]
-    return [{"outline":[right[i],right[i+1],left[i+1],left[i]],"start":offsets[i],"end":offsets[i+1]} for i in range(len(nodes)-1)]
+    left = [[p[i]+thickness/2*n[i] for i in (0,1)] for p,n in zip(path,miters)]
+    right = [[p[i]-thickness/2*n[i] for i in (0,1)] for p,n in zip(path,miters)]
+    result,offset = [],0.
+    for index,length in enumerate(lengths):
+        end = offset+length
+        cuts = [offset,*sorted(set(s for s in stations if offset+1e-9<s<end-1e-9)),end]
+        def section(side,station):
+            """📍 Interpolate an existing material edge while preserving original endpoint precision."""
+            if station==offset:
+                return list(side[index])
+            if station==end:
+                return list(side[index+1])
+            t = (station-offset)/length
+            return [side[index][i]+t*(side[index+1][i]-side[index][i]) for i in (0,1)]
+        for a,b in zip(cuts,cuts[1:]):
+            result.append({"outline":[section(right,a),section(right,b),section(left,b),section(left,a)],"start":a,"end":b})
+        offset = end
+    return result
+
 
 
 def _wall_path(model: dict, wall: dict) -> list:
@@ -720,20 +779,22 @@ def path_wall_geometry(model: dict, wall: dict) -> dict:
             ratio = 1-crest/thickness
             upper = [[p[i]+ratio*(q[i]-p[i]) for i in (0,1)] for p,q in ((a,d),(b,c))]+[c,d] if cap["side"]==1 else [a,b]+[[p[i]+ratio*(q[i]-p[i]) for i in (0,1)] for p,q in ((c,b),(d,a))]
             parts.append({**band,"top_outline":upper,"z0":body_top,"z1":top,"material":material["tag"] if material else wall["tag"],"role":"cap"})
-    body,displaced,body_volume = _wall_owned_parts(model,[p for p in parts if p["role"]=="body"])
     caps = [p for p in parts if p["role"]=="cap"]
     gross += caps
-    parts = body+caps
-    cavities,_,_ = _wall_owned_parts(model,cavities)
+    interface_reference = deepcopy(parts) if wall["geometry"].get("interface_owners") or _wall_has_junction(model,wall) else None
+    interfaces = _wall_interface_cutters(model,wall)
+    parts,displaced,_ = _wall_owned_parts(model,parts,wall["geometry"].get("interface_owners",()),interfaces)
+    cavities,_,_ = _wall_owned_parts(model,cavities,wall["geometry"].get("interface_owners",()),interfaces)
+    interface_displaced = displaced if interface_reference is not None else 0.
     def volume(collection):
-        return sum((p["z1"]-p["z0"])*(_area(p["outline"])+4*_area(part_outline_at(p,(p["z0"]+p["z1"])/2))+_area(part_outline_at(p,p["z1"])))/6 for p in collection)
+        return sum(_polyhedron_volume(p) if "mesh" in p else (p["z1"]-p["z0"])*(_area(p["outline"])+4*_area(part_outline_at(p,(p["z0"]+p["z1"])/2))+_area(part_outline_at(p,p["z1"])))/6 for p in collection)
     for opening in openings:
         opening["parts"] = [p for p in voids if p["opening"]==opening["tag"]]
         opening["material_parts"] = [p for p in opening_material if p["opening"]==opening["tag"]]
         opening["material_volume"] = volume(opening["material_parts"])
         opening['p0']=apertures[opening['tag']]['axis'][0]
         opening['p1']=apertures[opening['tag']]['axis'][-1]
-    return {"tag":wall["tag"],"guid":wall["guid"],"storey":wall["storey"],"path":path,"base":base,"body_top":body_top,"top":top,"thickness":thickness,"length":length,"openings":openings,"parts":parts,"gross_parts":gross,"cavity_parts":cavities,"gross_material_volume":volume(gross),"gross_envelope_volume":volume([{**b,"z0":base,"z1":body_top} for b in bands]+caps),"gross_cavity_volume":volume(gross_cavities),"cavity_volume":volume(cavities),"opening_material_volume":volume(opening_material),"joint_displacement_volume":displaced,"solid_volume":volume(parts)}
+    return {"tag":wall["tag"],"guid":wall["guid"],"storey":wall["storey"],"path":path,"base":base,"body_top":body_top,"top":top,"thickness":thickness,"length":length,"openings":openings,"parts":parts,"gross_parts":gross,"cavity_parts":cavities,"gross_material_volume":volume(gross),"gross_envelope_volume":volume([{**b,"z0":base,"z1":body_top} for b in bands]+caps),"gross_cavity_volume":volume(gross_cavities),"cavity_volume":volume(cavities),"opening_material_volume":volume(opening_material),"joint_displacement_volume":displaced,"solid_volume":volume(parts),**({"interface_reference_parts":interface_reference,"interface_displacement_volume":interface_displaced} if interface_reference is not None else {})}
 
 
 def _wall_uses_path(wall: dict) -> bool:
@@ -742,7 +803,43 @@ def _wall_uses_path(wall: dict) -> bool:
     return len(path)!=2 or any(not isinstance(point,list) for point in path)
 
 
-def _wall_geometry(model: dict, wall: dict) -> dict:
+def _wall_has_junction(model: dict, wall: dict) -> bool:
+    """🪢 Distinguish declared material ownership from unrelated geometric proximity."""
+    return any((relation['class']=='IfcRelConnectsPathElements' or relation['class']=='IfcRelConnectsElements' and relation.get('connection',{}).get('kind')=='material_junction') and wall['tag'] in [relation['relating'],*relation['related']] for relation in model.get('relations',()))
+
+
+def _wall_junction_backend():
+    """🔗 Resolve explicit wall layer continuity behind the first-party geometry interface."""
+    return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🏗️facade.🔗️junctions")
+
+
+def _wall_geometry(model: dict, wall: dict, resolve_junctions=True, junctions=None, progress=None, cancel=None) -> dict:
+    """⚖️ Preserve full wall reference stock while assigning declared common material once."""
+    if cancel and cancel():raise InterruptedError("Wall construction cancelled")
+    backend = _wall_junction_backend()
+    api = SimpleNamespace(**globals())
+    state = junctions if junctions is not None else backend.context(api,model) if resolve_junctions else None
+    result = deepcopy(state['raw'][wall['tag']]) if state is not None and wall['tag'] in state['raw'] else _wall_geometry_unjoined(model,wall)
+    if not resolve_junctions or wall['tag'] not in state['index']:return result
+    state['raw'][wall['tag']] = deepcopy(result)
+    result['junction_reference_parts'] = deepcopy(result['parts'])
+    result.setdefault('interface_reference_parts',deepcopy(result['parts']))
+    result['parts'],removed = backend.partition(api,model,wall,result['parts'],state,progress=progress,cancel=cancel)
+    if 'cavity_parts' in result:result['cavity_parts'],_ = backend.partition(api,model,wall,result['cavity_parts'],state,air=True,progress=progress,cancel=cancel)
+    result['junction_displacement_volume'] = removed
+    result['joint_displacement_volume'] += removed
+    result['solid_volume'] = sum(part_volume(part) for part in result['parts'])
+    if 'cavity_parts' in result:result['cavity_volume'] = sum(part_volume(part) for part in result['cavity_parts'])
+    for layer in result.get('layers',()):
+        layer['volume'] = sum(part_volume(part) for part in result['parts']+result.get('cavity_parts',[]) if part.get('layer')==layer['id'] and part.get('region')==layer.get('region'))
+    if 'surface_finishes' in result:
+        materials = [_find(model,region['material']) for region in wall['geometry'].get('layer_regions',())] or [_material(model,wall)]
+        surface = _surface_finishes().wall_regions(wall,result,[{'layers':material.get('layers',[])} for material in materials],lambda tag:_find(model,tag),_wall_station)
+        result['surface_finishes'] = _surface_finishes().summaries(surface,result['parts'],part_vertices,part_faces)
+    return result
+
+
+def _wall_geometry_unjoined(model: dict, wall: dict) -> dict:
     path = wall["geometry"]["path"]
     if _wall_uses_path(wall):
         return path_wall_geometry(model,wall)
@@ -770,21 +867,34 @@ def _wall_geometry(model: dict, wall: dict) -> dict:
 
 _WALL_CUTTERS = {}
 _WALL_OWNERSHIP = {}
+_WALL_INTERFACES = {}
+
+
+def _geometry_source_key(model: dict) -> bytes:
+    """🔐 Bind private geometry caches to complete source content without retaining duplicated source strings."""
+    return hashlib.sha256(json.dumps(model,sort_keys=True,separators=(",",":"),ensure_ascii=False,allow_nan=False,default=_native_cache_scalar).encode()).digest()
 
 
 def _wall_cutters(model: dict) -> list:
     """🏗️ Resolve explicitly owned concrete and filling solids for material interfaces."""
-    classes = {"IfcColumn","IfcBeam","IfcSlab","IfcWall","IfcOpeningElement","IfcWindow","IfcDoor","IfcCurtainWall"}
-    dependencies = [model[key] for key in ("types","materials","storeys","car","grid","building","spaces")]
-    dependencies.append([obj for obj in model["elements"] if obj["class"] in classes])
-    key = hashlib.sha256(json.dumps(dependencies,sort_keys=True,separators=(",",":")).encode()).hexdigest()
+    key = (_geometry_source_key(model),_geometry_producers())
     if key not in _WALL_CUTTERS:
         parts = []
         for obj in model["elements"]:
+            reserved = []
             if obj["class"] == "IfcColumn":
-                owned = column_geometry(model,obj)["parts"]
+                column = column_geometry(model,obj)
+                owned = column["parts"]
+                metrics = column.get("section_metrics",owned)
+                for index,part in enumerate(metrics):
+                    for hole in part.get("holes",()):
+                        air = {"outline":_analysis._ccw(hole),"z0":part["z0"],"z1":part["z1"],"role":"column_bore_air_reservation"}
+                        reserved += _column_end_parts(air,obj["geometry"]["end_plane"],obj["geometry"]["axis"]) if "end_plane" in obj["geometry"] and index==len(metrics)-1 else [air]
             elif obj["class"] == "IfcBeam":
                 solid = _solid_geometry(model,obj)
+                owned = solid["parts"]+solid["shared_parts"]
+            elif obj["class"] == "IfcSlab":
+                solid = _slab_geometry_entry(model,obj)
                 owned = solid["parts"]+solid["shared_parts"]
             elif obj["class"] in ("IfcWindow","IfcDoor"):
                 owned = _filling_geometry(model,obj)["parts"]
@@ -792,35 +902,288 @@ def _wall_cutters(model: dict) -> list:
                 owned = _curtain_filling_geometry(model,obj)["parts"]
             else:
                 continue
-            parts += [{"outline":part["outline"],"z0":part["z0"],"z1":part["z1"],"owner":obj["tag"]} for part in owned]
+            parts += [{**{key:deepcopy(part[key]) for key in ("outline","z0","z1","mesh","section","top_outline","holes","material","role") if key in part},"owner":obj["tag"],"_bounds":_material_bounds(part)} for part in owned+reserved]
         _WALL_CUTTERS[key] = parts
         if len(_WALL_CUTTERS) > 8:
             _WALL_CUTTERS.pop(next(iter(_WALL_CUTTERS)))
     return _WALL_CUTTERS[key]
 
 
-def _wall_owned_parts(model: dict, parts: list) -> tuple:
+def _wall_owned_parts(model: dict, parts: list, excluded_owners: list | tuple = (), native_interfaces: list | tuple = ()) -> tuple:
     """🧩 Keep brick and plaster outside other members' occupied material."""
     if not parts:
         return [],0.,0.
-    xmin = min(p[0] for part in parts for p in part["outline"])
-    xmax = max(p[0] for part in parts for p in part["outline"])
-    ymin = min(p[1] for part in parts for p in part["outline"])
-    ymax = max(p[1] for part in parts for p in part["outline"])
-    zmin,zmax = min(p["z0"] for p in parts),max(p["z1"] for p in parts)
-    cutters = [c for c in _wall_cutters(model) if c["z0"] < zmax-1e-10 and c["z1"] > zmin+1e-10
-               and min(p[0] for p in c["outline"]) < xmax-1e-10 and max(p[0] for p in c["outline"]) > xmin+1e-10
-               and min(p[1] for p in c["outline"]) < ymax-1e-10 and max(p[1] for p in c["outline"]) > ymin+1e-10]
-    key = hashlib.sha256(json.dumps([parts,cutters],sort_keys=True,separators=(",",":")).encode()).hexdigest()
+    boxes = [_material_bounds(part) for part in parts]
+    box = tuple((min(p[k][0] for p in boxes),max(p[k][1] for p in boxes)) for k in range(3))
+    cutters = []
+    for cutter in _wall_cutters(model):
+        if cutter.get("owner") in excluded_owners and cutter.get("role")!="column_bore_air_reservation":continue
+        other = cutter.get("_bounds") or _material_bounds(cutter)
+        if all(a[0]<b[1] and b[0]<a[1] for a,b in zip(box,other)):cutters.append(cutter)
+    extra = [c for c in native_interfaces if all(a[0]<b[1] and b[0]<a[1] for a,b in zip(box,_material_bounds(c)))]
+    backend = _surface_finishes()
+    key = (hashlib.sha256(json.dumps([parts,cutters,extra],sort_keys=True,separators=(",",":"),default=_native_cache_scalar).encode()).hexdigest(),_subtract_prisms,_subtract_native_material,_subtract_convex_material,_native_material_cells,_material_bounds,_polyhedron_part,part_vertices,part_faces,part_outline_at,_polyhedron_volume,backend.clip_stock,backend.publish_stock,backend.stock_separated,_native_public_value)
     if key not in _WALL_OWNERSHIP:
-        owned = _subtract_prisms(parts,cutters)
-        volume = sum(_area(p["outline"])*(p["z1"]-p["z0"]) for p in owned)
-        before = sum(_area(p["outline"])*(p["z1"]-p["z0"]) for p in parts)
+        native = [c for c in cutters if any(key in c for key in ("mesh","section","top_outline"))]
+        vertical = [c for c in cutters if not any(key in c for key in ("mesh","section","top_outline"))]
+        prisms = [p for p in parts if not any(key in p for key in ("mesh","section","top_outline"))]
+        shaped = [p for p in parts if any(key in p for key in ("mesh","section","top_outline"))]
+        owned = []
+        if prisms:
+            if native or extra:
+                owned,_ = _subtract_native_material(prisms,cutters+extra)
+            else:
+                owned = _subtract_prisms(prisms,vertical)
+        if shaped:
+            resolved,_ = _subtract_native_material(shaped,cutters+extra)
+            owned += resolved
+        volume = sum(_polyhedron_volume(p) for p in owned)
+        before = sum(_polyhedron_volume(p) for p in parts)
         _WALL_OWNERSHIP[key] = owned,max(0.,before-volume),volume
         if len(_WALL_OWNERSHIP) > 256:
             _WALL_OWNERSHIP.pop(next(iter(_WALL_OWNERSHIP)))
     owned,displaced,volume = _WALL_OWNERSHIP[key]
     return deepcopy(owned),displaced,volume
+
+
+def _ramp_stringer_reference_stock(model: dict, obj: dict) -> dict:
+    """📐 Preserve the attested stringer depth below the actual source-affine structural upper datum."""
+    g = obj['geometry']['interface_construction']
+    if g['kind']!='ramp_stringer':raise ValueError('A stringer interface requires its native ramp construction')
+    q = _source_fraction
+    flight = _find(model,g['flight'])
+    if flight['class']!='IfcRampFlight':raise ValueError('A stringer requires a native flight')
+    stock = _ramp_reference_stock(model,flight);vertices = stock['mesh']['vertices']
+    ends = sorted({p[1]:p[2] for p in vertices[4:]}.items());(y0,r0),(y1,r1) = ends
+    width,depth = q(g['width']),q(g['depth'])
+    if g['side']=='right':x0 = max(p[0] for p in vertices);x1 = x0+width
+    else:x1 = min(p[0] for p in vertices);x0 = x1-width
+    return {'mesh':{'vertices':[[x0,y0,r0-depth],[x1,y0,r0-depth],[x1,y1,r1-depth],[x0,y1,r1-depth],[x0,y0,r0],[x1,y0,r0],[x1,y1,r1],[x0,y1,r1]],'faces':[[3,2,1,0],[4,5,6,7]]+[[i,(i+1)%4,4+(i+1)%4,4+i]for i in range(4)]},'material':_material(model,obj)['tag'],'role':'original_ramp_stringer'}
+
+
+def _guard_reference_stocks(model: dict, obj: dict) -> list:
+    """🛝️ Construct original guard bands from source-affine flight controls before material ownership cuts."""
+    g = obj['geometry']['interface_construction']
+    if g['kind']!='ramp_guard_bands':raise ValueError('A guard interface requires native ramp band construction')
+    q = _source_fraction
+    ramp = _find(model,g['ramp'])
+    if ramp['class']!='IfcRamp':raise ValueError('A guard construction requires a native ramp')
+    faces = [[3,2,1,0],[4,5,6,7]]+[[i,(i+1)%4,4+(i+1)%4,4+i] for i in range(4)]
+    result = []
+    def make(x0,x1,y0,y1,b0,b1,t0,t1,role):
+        result.append({'mesh':{'vertices':[[x0,y0,b0],[x1,y0,b0],[x1,y1,b1],[x0,y1,b1],[x0,y0,t0],[x1,y0,t0],[x1,y1,t1],[x0,y1,t1]],'faces':deepcopy(faces)},'material':'MAT-RC','role':role})
+    flights = {}
+    for tag in {band['flight'] for band in g['bands']}|({g['arrival_upstand']['flight']} if 'arrival_upstand' in g else set()):
+        flight = _find(model,tag)
+        if flight['class']!='IfcRampFlight' or flight['geometry']['ramp']!=ramp['tag']:raise ValueError('A guard band requires a flight of its declared ramp')
+        source = flight['geometry'];top = _ramp_reference_stock(model,flight)['mesh']['vertices'][4:]
+        lo,hi = q(_z(model,source['from_level'])),q(_z(model,source['to_level']))
+        walking = [lo+(hi-lo)*q(v) for v in source['portion']]
+        by_y = {p[1]:p[2] for p in top}
+        ends = sorted((q(p[1]),z,by_y[q(p[1])]) for p,z in zip(source['path'],walking))
+        flights[tag] = ends
+    width,height,cap,over = [q(g[key]) for key in ('core_width','core_height','cap_height','cap_overhang')]
+    if 'arrival_upstand' in g:
+        up = g['arrival_upstand'];(y0,_,r0),(y1,_,r1) = flights[up['flight']];x,w,h = q(up['axis_x']),q(up['width']),q(up['height'])
+        make(x-w/2,x+w/2,y0,y1,r0,r1,r0+h,r1+h,'original_arrival_upstand')
+    for band in g['bands']:
+        (y0,w0,r0),(y1,w1,r1) = flights[band['flight']];x = q(band['axis_x'])
+        make(x-width/2,x+width/2,y0,y1,r0,r1,w0+height,w1+height,'original_guard_core')
+        make(x-width/2-over,x+width/2+over,y0,y1,w0+height,w1+height,w0+height+cap,w1+height+cap,'original_guard_cap')
+    if g['landing_returns']:
+        rg = ramp['geometry'];mid = next(p for p in rg['landings'] if p['ownership']=='ramp_component')
+        walk = [[q(v) for v in p] for p in _expand(model,mid['walking_outline'])];stock = [[q(v) for v in p] for p in _expand(model,mid['outline'])]
+        sx0,sx1 = min(p[0] for p in stock),max(p[0] for p in stock);wx0,wx1 = min(p[0] for p in walk),max(p[0] for p in walk)
+        y0,wy1,sy1 = min(p[1] for p in walk),max(p[1] for p in walk),max(p[1] for p in stock)
+        lo,hi = q(_z(model,rg['from_level'])),q(_z(model,rg['to_level']));floor = lo+(hi-lo)*q(mid['portion']);rc = floor-q(rg['finish_thickness']['value'])
+        for a,b in ((sx0,wx0),(wx1,sx1)):
+            make(a,b,y0,wy1,rc,rc,floor+height,floor+height,'original_landing_side_core')
+            make(a-over,b+over,y0,wy1,floor+height,floor+height,floor+height+cap,floor+height+cap,'original_landing_side_cap')
+        make(sx0,sx1,wy1,sy1,rc,rc,floor+height,floor+height,'original_landing_end_core')
+        make(sx0-over,sx1+over,wy1-over,sy1+over,floor+height,floor+height,floor+height+cap,floor+height+cap,'original_landing_end_cap')
+    return result
+
+
+def _interface_owner_parts(model: dict, key: str, reference: bool = False) -> list:
+    """🔗 Resolve exclusive native interface material without aggregating aliases or querying the whole building."""
+    owner = _find(model,key)
+    if reference:
+        if owner['geometry'].get('kind')=='ramp_finish':return _ramp_finish_reference_parts(model,owner)
+        if 'interface_construction' in owner['geometry']:
+            if owner['geometry']['interface_construction']['kind']=='ramp_stringer':return [_ramp_stringer_reference_stock(model,owner)]
+            return _guard_reference_stocks(model,owner)
+        if owner['class']=='IfcRampFlight':return [_ramp_reference_stock(model,owner)]
+        if owner['class'] in ('IfcColumn','IfcBeam','IfcFooting'):return _interface_reference_parts(model,key)
+    if owner["class"]=="IfcRamp":
+        parts = _native_public_value(_ramp_owned_reference_parts(model,owner))
+    elif owner["class"]=="IfcRampFlight":
+        parts = _ramp_geometry(model,owner)["parts"]
+    elif owner["class"]=="IfcColumn":
+        parts = column_geometry(model,owner)["parts"]
+    elif owner["class"]=="IfcSlab":
+        parts = _slab_geometry_entry(model,owner)["parts"]
+    elif owner["class"]=="IfcWall":
+        parts = _wall_geometry(model,owner)["parts"]
+    elif owner["class"]in ("IfcWindow","IfcDoor"):
+        parts = _filling_geometry(model,owner)["parts"]
+    elif owner["class"]=="IfcCurtainWall":
+        parts = _curtain_filling_geometry(model,owner)["parts"]
+    elif owner["class"]!="IfcWall" and "parts" in owner["geometry"]:
+        parts = _solid_geometry(model,owner,resolve_embedded=False)["parts"]
+    else:
+        raise ValueError("An interface owner requires independently owned native material")
+    return deepcopy(parts)
+
+
+def _material_bounds(part: dict) -> tuple:
+    """📦 Bound actual native vertices without replacing occupied material by its envelope."""
+    if "csg"in part or(part.get("profile")and"mesh"not in part):return _analytic_bounds(part)
+    vertices = part_vertices(part) if any(key in part for key in ("mesh","section","top_outline")) else [[*p,z] for z in (part["z0"],part["z1"]) for p in part["outline"]]
+    return tuple((min(p[k] for p in vertices),max(p[k] for p in vertices)) for k in range(3))
+
+
+@lru_cache(maxsize=256)
+def _native_profile_regions(outline: tuple, holes: tuple = ()) -> tuple:
+    """🔺 Cache immutable exact planar material regions without building any three-dimensional render or model cells."""
+    from fractions import Fraction
+    def side(a,b,c):
+        return (b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])
+    def clean(points):
+        ring = []
+        for point in points:
+            if not ring or point!=ring[-1]:ring.append(point)
+        if len(ring)>1 and ring[0]==ring[-1]:ring.pop()
+        while len(ring)>2:
+            index = next((i for i,p in enumerate(ring) if side(ring[i-1],p,ring[(i+1)%len(ring)])==0),None)
+            if index is None:break
+            ring.pop(index)
+        return ring
+    rings = [clean([tuple(Fraction(v) for v in p) for p in ring]) for ring in [outline,*holes]]
+    def area(ring):
+        return sum(a[0]*b[1]-b[0]*a[1] for a,b in zip(ring,ring[1:]+ring[:1]))
+    if any(len(ring)<3 or area(ring)==0 for ring in rings):
+        raise ValueError("Native material profiles require finite occupied rings")
+    outer = rings[0] if area(rings[0])>0 else list(reversed(rings[0]))
+    if len(rings)==1 and all(side(outer[i-1],p,outer[(i+1)%len(outer)])>0 for i,p in enumerate(outer)):
+        profiles = [outer]
+    else:
+        stations = sorted({p[0] for ring in rings for p in ring})
+        edges = [(a,b) for ring in rings for a,b in zip(ring,ring[1:]+ring[:1])]
+        def at(edge,x):
+            a,b = edge
+            return a[1]+(b[1]-a[1])*(x-a[0])/(b[0]-a[0])
+        profiles = []
+        for lo,hi in zip(stations,stations[1:]):
+            middle = (lo+hi)/2
+            active = sorted((edge for edge in edges if min(edge[0][0],edge[1][0])<middle<max(edge[0][0],edge[1][0])),key=lambda edge:at(edge,middle))
+            if len(active)%2:raise ValueError("Native material profile boundaries must form closed occupied intervals")
+            for lower,upper in zip(active[::2],active[1::2]):
+                ring = clean([(lo,at(lower,lo)),(hi,at(lower,hi)),(hi,at(upper,hi)),(lo,at(upper,lo))])
+                if len(ring)>=3 and area(ring)!=0:profiles.append(ring if area(ring)>0 else list(reversed(ring)))
+    return tuple(tuple(tuple(p)for p in ring)for ring in profiles)
+
+
+def _native_material_cells(part: dict) -> list:
+    """🧊 Resolve real convex material cells with exact profile predicates and no coordinate snapping."""
+    if "csg"in part:raise ValueError("Analytic material retains semantic authority; display cells are not physical source geometry")
+    metadata = {k:deepcopy(v) for k,v in part.items() if k not in ("outline","top_outline","holes","z0","z1","mesh","section")}
+    if any(key in part for key in ("mesh","section","top_outline")):
+        return [{**metadata,**_polyhedron_part(part_vertices(part),part_faces(part))}]
+    profiles = _native_profile_regions(tuple(tuple(p)for p in part["outline"]),tuple(tuple(tuple(p)for p in ring)for ring in part.get("holes",())))
+    result = []
+    for ring in profiles:
+        cell = {"outline":[list(p) for p in ring],"z0":part["z0"],"z1":part["z1"]}
+        result.append({**metadata,**_polyhedron_part(part_vertices(cell),part_faces(cell))})
+    return result
+
+
+def _native_cache_scalar(value):
+    """🔐 Encode exact private coordinate scalars losslessly without casting before geometry operations."""
+    from fractions import Fraction
+    if isinstance(value,Fraction):return {"$rational":[str(value.numerator),str(value.denominator)]}
+    raise TypeError(f"Unsupported native cache scalar: {type(value).__name__}")
+
+
+def _native_public_value(value):
+    """📤 Publish isolated Float64 JSON values only after every operation on the private coordinates."""
+    from fractions import Fraction
+    if isinstance(value,Fraction):return float(value)
+    if isinstance(value,dict):return {key:_native_public_value(item) for key,item in value.items()}
+    if isinstance(value,list):return [_native_public_value(item) for item in value]
+    if isinstance(value,tuple):return tuple(_native_public_value(item) for item in value)
+    return deepcopy(value)
+
+
+def _subtract_native_material(parts: list, cutters: list) -> tuple:
+    """🧩 Keep exclusive material outside exact native stock planes, preserving layer and face identity."""
+    if any("csg"in p for p in [*parts,*cutters]):
+        result=[cell for part in parts for cell in _reference_material_parts(part,cutters)]
+        removed=max(0.,_occupied_volume(parts)-_occupied_volume(result))
+        return _native_public_value(result),removed
+    if not parts or not cutters:
+        return _native_public_value(parts),0.
+    backend = _surface_finishes()
+    key = (hashlib.sha256(json.dumps([parts,cutters],sort_keys=True,separators=(",",":"),default=_native_cache_scalar).encode()).hexdigest(),_subtract_convex_material,_native_material_cells,_material_bounds,_polyhedron_part,part_vertices,part_faces,part_outline_at,_polyhedron_volume,backend.clip_stock,backend.publish_stock,backend.stock_separated,_native_public_value)
+    if key not in _WALL_INTERFACES:
+        indexed = [(_material_bounds(c),c) for c in cutters]
+        normalized = {}
+        result = []
+        for part in parts:
+            box = _material_bounds(part)
+            active = [i for i,(other,c) in enumerate(indexed) if all(a[0]<b[1] and b[0]<a[1] for a,b in zip(box,other))]
+            if not active:
+                result.append(deepcopy(part))
+                continue
+            for i in active:
+                if i not in normalized:normalized[i] = _native_material_cells(indexed[i][1])
+            for cell in _native_material_cells(part):
+                stock = {**cell,"material":part["material"],"role":part.get("role","owned_material")}
+                result += _subtract_convex_material(stock,[c for i in active for c in normalized[i]])
+        def volume(items):
+            return sum(_polyhedron_volume(p) for p in items)
+        _WALL_INTERFACES[key] = _native_public_value(result),max(0.,volume(parts)-volume(result))
+        if len(_WALL_INTERFACES)>128:
+            _WALL_INTERFACES.pop(next(iter(_WALL_INTERFACES)))
+    return deepcopy(_WALL_INTERFACES[key])
+
+
+def _declared_interfaces(model: dict, obj: dict, reference: bool = False, structural: bool = True) -> list:
+    """🤝 Resolve explicit independent physical owners without aggregating child or borrowed aliases."""
+    direct=obj["geometry"].get("interface_owners",());nested=obj["geometry"].get("ramp_finish",{}).get("interface_owners",())
+    if any(len(values)!=len(set(values))for values in (direct,nested)):
+        raise ValueError("Structural interfaces require distinct independent owners")
+    refs=list(dict.fromkeys([*direct,*nested]))
+    classes={"IfcColumn","IfcBeam","IfcSlab","IfcFooting","IfcRamp","IfcRampFlight","IfcRailing","IfcBuildingElementProxy"}
+    if not structural:classes.update(("IfcWall","IfcWindow","IfcDoor","IfcCurtainWall","IfcCovering","IfcChimney","IfcFurnishingElement"))
+    if len(refs)!=len(set(refs)) or obj["tag"]in refs:
+        raise ValueError("Structural interfaces require distinct independent owners")
+    result=[]
+    for tag in refs:
+        owner=_find(model,tag)
+        if owner["class"]not in classes:
+            raise ValueError("A declared material interface requires an independent structural product")
+        result.extend({**part,"owner":owner["tag"],"owner_guid":owner["guid"],"owner_class":owner["class"]}for part in _interface_owner_parts(model,tag,reference=reference))
+    return result
+
+
+def _declared_structural_interfaces(model: dict, obj: dict, reference: bool = False) -> list:
+    """🏗️ Restrict structural receiving interfaces to declared independent structural products."""
+    return _declared_interfaces(model,obj,reference,True)
+
+
+def _declared_material_interfaces(model: dict, obj: dict, reference: bool = False) -> list:
+    """🧱 Clip receiving finish material against explicitly declared independent physical material."""
+    return _declared_interfaces(model,obj,reference,False)
+
+
+def _wall_interface_cutters(model: dict, wall: dict) -> list:
+    """🛡️ Resolve independently declared source-authoritative material before constructing a wall stock."""
+    return _declared_structural_interfaces(model,wall,reference=True)
+
+
+def _wall_interface_parts(model: dict, wall: dict, parts: list) -> tuple:
+    """🧱 Reserve additional source-authoritative native material in an inferred wall."""
+    return _subtract_native_material(parts,_wall_interface_cutters(model,wall))
 
 
 def _wall_station(spec: dict, geometry: dict) -> float:
@@ -836,10 +1199,16 @@ def _wall_station(spec: dict, geometry: dict) -> float:
     return value+spec["offset"]["value"]
 
 
+def _surface_finishes():
+    """🎨 Resolve first-party material-face identities behind the native model interface."""
+    return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🎨️finishes.🐍️")
+
+
 def _wall_parts(model: dict, wall: dict, geometry: dict) -> tuple:
     """🧱 Partition opening-linked material bands against apertures and physical member ownership."""
     g = geometry
-    dx,dy = [(g["end"][i]-g["start"][i])/g["length"] for i in (0,1)]
+    number = _source_fraction if wall["geometry"].get("interface_owners") else lambda value:value
+    dx,dy = [(number(g["end"][i])-number(g["start"][i]))/number(g["length"]) for i in (0,1)]
     bands = []
     if "layer_regions" in wall["geometry"]:
         for region in wall["geometry"]["layer_regions"]:
@@ -864,30 +1233,43 @@ def _wall_parts(model: dict, wall: dict, geometry: dict) -> tuple:
     if not math.isclose(max(sum(l["thickness"]["value"] for l in b["layers"]) for b in bands),g["thickness"],abs_tol=1e-9):
         raise ValueError("Wall envelope thickness must equal its largest material region")
     openings = g["openings"]
-    xs = sorted({0.,g["length"],*(max(0.,min(g["length"],o[k])) for o in openings for k in ("start","end"))})
+    surface = _surface_finishes().wall_regions(wall,g,bands,lambda tag:_find(model,tag),_wall_station)
+    xs = sorted({0.,g["length"],*(max(0.,min(g["length"],o[k])) for o in openings for k in ("start","end")),*(region[k] for region in surface for k in ("start","end"))})
     resolved,parts,voids = [],[],[]
     for band in bands:
-        zs = sorted({band["z0"],band["z1"],*(max(band["z0"],min(band["z1"],o[k])) for o in openings for k in ("sill_z","head_z"))})
+        zs = sorted({band["z0"],band["z1"],*(max(band["z0"],min(band["z1"],o[k])) for o in openings for k in ("sill_z","head_z")),*(max(band["z0"],min(band["z1"],region[k])) for region in surface for k in ("z0","z1"))})
         cells = [(a,b,c,d) for a,b in zip(xs,xs[1:]) for c,d in zip(zs,zs[1:]) if b>a and d>c and not any(o["start"]<(a+b)/2<o["end"] and o["sill_z"]<(c+d)/2<o["head_z"] for o in openings)]
         side_area = sum((b-a)*(d-c) for a,b,c,d in cells)
-        offset = g["thickness"]/2
+        offset = number(g["thickness"])/2
         for layer in band["layers"]:
-            thickness = layer["thickness"]["value"]
+            thickness = number(layer["thickness"]["value"])
             inner = offset-thickness
             lo,hi = sorted([side*inner,side*offset])
-            resolved.append({"id":layer["id"],"region":band["tag"],"material":layer["material"],"offsets":[lo,hi],"is_void":layer.get("is_void",False),"z0":band["z0"],"z1":band["z1"],"gross_side_area":g["length"]*(band["z1"]-band["z0"]),"net_side_area":side_area})
+            resolved.append({"id":layer["id"],"region":band["tag"],"material":layer["material"],"offsets":[float(lo),float(hi)],"is_void":layer.get("is_void",False),"z0":band["z0"],"z1":band["z1"],"gross_side_area":g["length"]*(band["z1"]-band["z0"]),"net_side_area":side_area})
             for a,b,z0,z1 in cells:
-                ring = [[g["start"][0]+dx*s-dy*t,g["start"][1]+dy*s+dx*t] for s,t in ((a,lo),(b,lo),(b,hi),(a,hi))]
-                (voids if layer.get("is_void") else parts).append({"outline":ring,"z0":z0,"z1":z1,"layer":layer["id"],"region":band["tag"],"material":layer["material"],"start":a,"end":b,"offsets":[lo,hi]})
+                ring = [[number(g["start"][0])+dx*number(s)-dy*t,number(g["start"][1])+dy*number(s)+dx*t] for s,t in ((a,lo),(b,lo),(b,hi),(a,hi))]
+                part = {"outline":ring,"z0":number(z0),"z1":number(z1),"layer":layer["id"],"region":band["tag"],"material":layer["material"],"start":a,"end":b,"offsets":[float(lo),float(hi)]}
+                finish = _surface_finishes().cell_region(surface,layer,a,b,z0,z1) if surface else None
+                if finish:
+                    part["material"] = finish["material"]
+                    part["surface_finish"] = _surface_finishes().face_identity(finish,g,[lo,hi])
+                (voids if layer.get("is_void") else parts).append(part)
             offset = inner
-    owned,displaced,volume = _wall_owned_parts(model,parts)
-    air,_,_ = _wall_owned_parts(model,voids)
+    interfaces = _wall_interface_cutters(model,wall)
+    if wall["geometry"].get("interface_owners") or _wall_has_junction(model,wall):
+        g["interface_reference_parts"] = _native_public_value(parts)
+    owned,displaced,volume = _wall_owned_parts(model,parts,wall["geometry"].get("interface_owners",()),interfaces)
+    air,_,_ = _wall_owned_parts(model,voids,wall["geometry"].get("interface_owners",()),interfaces)
+    if wall["geometry"].get("interface_owners"):
+        g["interface_displacement_volume"] = displaced
     volumes = {}
     for part in owned+air:
         key = part["region"],part["layer"]
-        volumes[key] = volumes.get(key,0.)+_area(part["outline"])*(part["z1"]-part["z0"])
+        volumes[key] = volumes.get(key,0.)+(_polyhedron_volume(part) if "mesh" in part else _area(part["outline"])*(part["z1"]-part["z0"]))
     for layer in resolved:
         layer["volume"] = volumes.get((layer["region"],layer["id"]),0.)
+    if surface:
+        g["surface_finishes"] = _surface_finishes().summaries(surface,owned,part_vertices,part_faces)
     return resolved,owned,displaced,volume
 
 
@@ -965,6 +1347,78 @@ def _panel_layout_parts(model: dict, spec: dict, origin: list, direction: list, 
     return parts,clear
 
 
+@lru_cache(maxsize=2)
+def _filling_structure_snapshot(source: str, producers: tuple) -> tuple:
+    """🏗️ Own complete-source structural cutters without recursing through wall or filling geometry."""
+    model=json.loads(source);parts=[]
+    for obj in model['elements']:
+        if obj['class']=='IfcColumn':resolved=column_geometry(model,obj)['parts']
+        elif obj['class']=='IfcBeam':resolved=_solid_geometry(model,obj,resolve_embedded=False)['parts']
+        else:continue
+        parts.extend({**deepcopy(part),'owner':obj['tag'],'owner_class':obj['class']} for part in resolved)
+    return tuple(parts)
+
+def _filling_structures(model: dict, filling: dict | None = None) -> tuple:
+    """🗃️ Resolve complete-source structure and explicit local authority inherited by hosted filling stock."""
+    source=json.dumps(model,sort_keys=True,separators=(',',':'),ensure_ascii=False,allow_nan=False)
+    base=_filling_structure_snapshot(source,_geometry_producers())
+    if filling is None:return base
+    contexts=[filling]
+    if filling["geometry"].get("opening"):
+        opening=_find(model,filling["geometry"]["opening"])
+        contexts.extend(_find(model,opening["geometry"][field])for field in ("wall","curtain_wall","slab")if field in opening["geometry"])
+    seen={part["owner"]for part in base};extra=[]
+    for context in contexts:
+        parts=[part for part in _declared_structural_interfaces(model,context)if part["owner"]not in seen]
+        seen.update(part["owner"]for part in parts);extra.extend(parts)
+    return base+tuple(extra)
+
+def _filling_receiving_interval(structures: tuple, origin: list, direction: tuple, offset: float, depth: float, length: float, width: float, z0: float, z1: float) -> tuple:
+    """📐 Keep complete perimeter jamb stock inside the actual receiving end-post faces of its gross aperture."""
+    lower,upper,receivers=0.,length,[]
+    if width<=0:return lower,upper,receivers
+    dx,dy=direction;band=[[0.,offset-depth/2],[length,offset-depth/2],[length,offset+depth/2],[0.,offset+depth/2]]
+    for part in structures:
+        if part['owner_class']!='IfcColumn' or part['z0']>z0 or part['z1']<z1:continue
+        ring=[[(p[0]-origin[0])*dx+(p[1]-origin[1])*dy,-(p[0]-origin[0])*dy+(p[1]-origin[1])*dx] for p in part_outline_at(part,(z0+z1)/2)]
+        for convex in _analysis._convex_parts(ring):
+            clipped=_analysis._clip(convex,band,digits=None)
+            if not clipped or _area(clipped)==0:continue
+            start,end=min(p[0] for p in clipped),max(p[0] for p in clipped)
+            if start<width and end>lower:lower=end;receivers.append({'owner':part['owner'],'side':'start','station':end})
+            if end>length-width and start<upper:upper=start;receivers.append({'owner':part['owner'],'side':'end','station':start})
+    if upper-lower<=2*width:raise ValueError('Structural receivers consume the complete filling aperture')
+    return lower,upper,receivers
+
+
+def _filling_owned_parts(model: dict, parts: list, structures: tuple | None = None) -> list:
+    """🪟 Retain filling stock outside actual independently owned and explicitly declared structural material."""
+    if not parts:return []
+    def bounds(part):
+        """📦 Use bounds only for exact rejection; clipping always uses original occupied material."""
+        vertices=part_vertices(part)
+        return [(min(p[k] for p in vertices),max(p[k] for p in vertices)) for k in range(3)]
+    def intersects(a,b):
+        """📏 Keep every strictly positive bounding interval without an invented interface epsilon."""
+        return all(a[k][0]<b[k][1] and b[k][0]<a[k][1] for k in range(3))
+    structures=_filling_structures(model) if structures is None else structures
+    stock_bounds=[bounds(part) for part in parts]
+    cutters=[(part,bounds(part)) for part in structures]
+    cutters=[(part,extent) for part,extent in cutters if any(intersects(extent,stock) for stock in stock_bounds)]
+    result=[]
+    for part,extent in zip(parts,stock_bounds):
+        active=[c for c,area in cutters if intersects(extent,area)]
+        if not active:result.append(deepcopy(part));continue
+        spatial=any(any(key in p for key in ('mesh','section','top_outline')) for p in [part,*active])
+        if not spatial:result.extend(_subtract_prisms([part],active));continue
+        cells=[part] if any(key in part for key in ('mesh','section','top_outline')) else [{**part,'outline':ring,'holes':[]} for region in part_regions(part,(part['z0']+part['z1'])/2) for ring in _analysis._convex_parts(region)]
+        for cell in cells:
+            mesh={'vertices':part_vertices(cell),'faces':part_faces(cell)}
+            stock={k:deepcopy(v) for k,v in cell.items() if k not in ('section','top_outline','holes','profile')}
+            stock['mesh']=mesh;result.extend(_subtract_convex_material(stock,active))
+    return result
+
+
 def _filling_geometry(model: dict, filling: dict) -> dict:
     """🪟 Resolve perimeter members and panel solids from one typed rough aperture."""
     opening = _find(model,filling["geometry"]["opening"])
@@ -979,16 +1433,29 @@ def _filling_geometry(model: dict, filling: dict) -> dict:
         raise ValueError("A native window or door requires a planar host interval")
     dx,dy=(b[0]-a[0])/length,(b[1]-a[1])/length
     base=domain["base"]
-    s0,s1,z0,z1=0.,length,base+v["sill"],base+v["head"]
+    rough_height = v["head"]-v["sill"]
+    extension = filling["geometry"].get("frame_head_extension",{}).get("value",0.)
+    if extension<0:
+        raise ValueError("A frame head extension cannot be negative")
+    s0,s1,z0,z1=0.,length,base+v["sill"],base+v["head"]+extension
     w,d,t = [spec[k]["value"] for k in ("frame_width","frame_depth","panel_thickness")]
     offset = domain.get("offset",0.)+domain["side"]*(domain["thickness"]/2-spec["inset"]["value"]-d/2)
+    offset += domain["side"]*filling["geometry"].get("normal_offset",{}).get("value",0.)
+    structures=_filling_structures(model,filling)
+    source_length=length;receiving_start,receiving_end,receivers=(0.,length,[]) if spec.get("side_wings") else _filling_receiving_interval(structures,a,(dx,dy),offset,d,length,w,z0,z1)
+    a=[a[0]+dx*receiving_start,a[1]+dy*receiving_start];length=receiving_end-receiving_start;s1=length
     low = z0+w if spec["threshold"] else z0
     if s1-s0 <= 2*w or z1-low <= w:
         raise ValueError("A filling frame consumes its complete aperture")
     parts = []
     def part(u0,u1,h0,h1,t0,t1,material,role):
-        ring = [[a[0]+dx*s-dy*n,a[1]+dy*s+dx*n] for s,n in ((u0,t0),(u1,t0),(u1,t1),(u0,t1))]
-        parts.append({"outline":ring,"z0":h0,"z1":h1,"material":material,"role":role})
+        section=spec.get("member_sections",{}).get("interior" if role=="mullion" else "perimeter") if role in ("frame","mullion") else None
+        vertical=role=="mullion" or h1-h0>u1-u0
+        cells=provider.member_section(u1-u0 if vertical else h1-h0,t1-t0,section,reverse=u0>length/2 if vertical else h0>(z0+z1)/2) if section else None
+        bounds=[(u0+v0,u0+v1,h0,h1,(t0+t1)/2+n0,(t0+t1)/2+n1) if vertical else (u0,u1,h0+v0,h0+v1,(t0+t1)/2+n0,(t0+t1)/2+n1) for v0,v1,n0,n1 in cells] if cells else [(u0,u1,h0,h1,t0,t1)]
+        for index,(s0,s1,z0p,z1p,n0,n1) in enumerate(bounds):
+            ring = [[a[0]+dx*s-dy*n,a[1]+dy*s+dx*n] for s,n in ((s0,n0),(s1,n0),(s1,n1),(s0,n1))]
+            parts.append({"outline":ring,"z0":z0p,"z1":z1p,"material":material,"role":role,**({"section_shape":section["shape"],"section_component":index} if section else {})})
     wing=spec.get("side_wings")
     if wing:
         wing_width,wing_depth,skin,recess=[wing[k]["value"] for k in ("width","depth","skin","recess")]
@@ -1025,9 +1492,13 @@ def _filling_geometry(model: dict, filling: dict) -> dict:
         clear_start,clear_end,clear_sill_z,clear_head_z=clear
     else:
         panel = _find(model,spec["panel_material"])
-        stations = [v["value"] for v in spec["panel_stations"]]
-        if stations[0] != 0 or stations[-1] != 1 or any(b<=a for a,b in zip(stations,stations[1:])):
-            raise ValueError("Panel stations must strictly partition the unit interval")
+        stations = [v["value"] for v in filling["geometry"].get("panel_stations",spec["panel_stations"])]
+        operations = filling["geometry"].get("panel_operations",[spec["operation"]]*(len(stations)-1))
+        glazing = [[v["value"] for v in row] for row in filling["geometry"].get("panel_glazing_stations",[[{"value":0},{"value":1}]]*(len(stations)-1))]
+        if any(not row or row[0]!=0 or row[-1]!=1 or any(b<=a for a,b in zip(row,row[1:])) for row in [stations,*glazing]):
+            raise ValueError("Panel and glazing stations must strictly partition the unit interval")
+        if len(operations)!=len(stations)-1 or len(glazing)!=len(stations)-1 or any(value not in ("fixed","swing","sliding","mixed","unknown") for value in operations):
+            raise ValueError("Each primary assembly requires one operation and glazing partition")
         clear_start,clear_end = s0+w,s1-w
         mullion = spec.get("mullion_width",{}).get("value",0.)
         sash = spec.get("sash_width",{}).get("value",0.)
@@ -1046,7 +1517,7 @@ def _filling_geometry(model: dict, filling: dict) -> dict:
                 lane_width = (d-3*track)/2
                 if sash_depth>lane_width:
                     raise ValueError("Sliding sash exceeds its clear track lane")
-                panel_offset = offset-d/2+track+lane_width/2+(panel_index%2)*(lane_width+track)
+                panel_offset = offset-d/2+track+lane_width/2+(1 if operations[panel_index]=="sliding" and "panel_operations" in filling["geometry"] else panel_index%2)*(lane_width+track)
             first_part = len(parts)
             if sash:
                 if u1-u0<=2*sash or h1-h0<=2*sash:
@@ -1055,7 +1526,19 @@ def _filling_geometry(model: dict, filling: dict) -> dict:
                     part(x0,x1,y0,y1,panel_offset-sash_depth/2,panel_offset+sash_depth/2,spec["frame_material"],"sash")
                 u0,u1,h0,h1 = u0+sash,u1-sash,h0+sash,h1-sash
             if "layers" not in panel:
-                part(u0,u1,h0,h1,panel_offset-t/2,panel_offset+t/2,panel["tag"],"glass" if panel.get("category")=="glass" else "panel")
+                divisions = glazing[panel_index]
+                bar = spec.get("glazing_bar_width",{}).get("value",0.)
+                if len(divisions)>2 and bar<=0:
+                    raise ValueError("Secondary glazing divisions require a physical bar width")
+                for station in divisions[1:-1]:
+                    u = u0+(u1-u0)*station
+                    part(u-bar/2,u+bar/2,h0,h1,panel_offset-sash_depth/2,panel_offset+sash_depth/2,spec["frame_material"],"glazing_bar")
+                for glass_index,(left,right) in enumerate(zip(divisions,divisions[1:])):
+                    lo,hi = u0+(u1-u0)*left+(bar/2 if glass_index else 0.),u0+(u1-u0)*right-(bar/2 if glass_index<len(divisions)-2 else 0.)
+                    if hi<=lo:
+                        raise ValueError("Glazing bars consume a complete pane")
+                    part(lo,hi,h0,h1,panel_offset-t/2,panel_offset+t/2,panel["tag"],"glass" if panel.get("category")=="glass" else "panel")
+                    parts[-1]["glazing_index"] = glass_index
             else:
                 if not math.isclose(sum(l["thickness"]["value"] for l in panel["layers"]),t,abs_tol=1e-9):
                     raise ValueError("Panel layers differ from its declared thickness")
@@ -1073,8 +1556,11 @@ def _filling_geometry(model: dict, filling: dict) -> dict:
                     n0 = n1
             for member in parts[first_part:]:
                 member["panel_index"] = panel_index
+                member["panel_operation"] = operations[panel_index]
+    parts=_filling_owned_parts(model,parts,structures)
+    _surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag))
     return {"tag":filling["tag"],"guid":filling["guid"],"class":filling["class"],"opening":opening["tag"],"host":domain["host"],"host_class":domain["host_class"],"parts":parts,
-            "operation":spec["operation"],"frame_width":w,"frame_depth":d,"panel_thickness":t,"rough_width":length,"rough_height":z1-z0,"clear_width":clear_end-clear_start,"clear_height":clear_head_z-clear_sill_z,"clear_start":v["start"]+clear_start,"clear_end":v["start"]+clear_end,"clear_sill_z":clear_sill_z,"clear_head_z":clear_head_z,"storey":filling["storey"],"axis":[[a[0]+dx*s-dy*offset,a[1]+dy*s+dx*offset] for s in (0.,length)]}
+            "operation":spec["operation"],"frame_width":w,"frame_depth":d,"panel_thickness":t,"rough_width":length,"source_rough_width":source_length,"receiving_stations":{"start":receiving_start,"end":receiving_end,"receivers":receivers},"rough_height":rough_height,"overall_height":z1-z0,"clear_width":clear_end-clear_start,"clear_height":clear_head_z-clear_sill_z,"clear_start":v["start"]+receiving_start+clear_start,"clear_end":v["start"]+receiving_start+clear_end,"clear_sill_z":clear_sill_z,"clear_head_z":clear_head_z,"storey":filling["storey"],"axis":[[a[0]+dx*s-dy*offset,a[1]+dy*s+dx*offset] for s in (0.,length)]}
 
 
 def _path_band(path: list, thickness: float) -> list:
@@ -1106,7 +1592,225 @@ def _path_band(path: list, thickness: float) -> list:
 def _curtain_filling_geometry(model: dict, curtain: dict) -> dict:
     """🪟 Resolve source-authored planar panes and native metal members through one physical provider."""
     provider=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🪟️curtain.🐍️")
-    return provider.physical_geometry(SimpleNamespace(**globals()),model,curtain)
+    physical=provider.physical_geometry(SimpleNamespace(**globals()),model,curtain)
+    physical["parts"]=_filling_owned_parts(model,physical["parts"],_filling_structures(model,curtain))
+    return physical
+
+def _subtract_convex_material(part: dict, cutters: list) -> list:
+    """🧩 Partition native convex material at physical joints with original exact plane operands."""
+    backend = _surface_finishes()
+    states = [backend.clip_stock(part,[],exact=True)]
+    for cutter in cutters:
+        vertices = part_vertices(cutter)
+        planes = []
+        for face in part_faces(cutter):
+            anchor = vertices[face[0]]
+            for i in range(1,len(face)-1):
+                points = [anchor,vertices[face[i]],vertices[face[i+1]]]
+                u,v = [[p[k]-anchor[k] for k in range(3)] for p in points[1:]]
+                normal = [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]
+                if any(normal):break
+            else:raise ValueError("A physical joint face requires original noncollinear points")
+            planes.append({"normal":normal,"offset":sum(n*x for n,x in zip(normal,anchor)),"points":points})
+        retained = []
+        for stock in states:
+            bounds = [[min(p[k] for p in part_vertices(obj)),max(p[k] for p in part_vertices(obj))] for obj in (stock,cutter) for k in range(3)]
+            if any(bounds[k][1]<=bounds[k+3][0] or bounds[k+3][1]<=bounds[k][0] for k in range(3)):
+                retained.append(stock)
+                continue
+            if backend.stock_separated(stock,planes):
+                retained.append(stock)
+                continue
+            inside = stock
+            for plane in planes:
+                reverse = {**plane,"normal":[-n for n in plane["normal"]],"offset":-plane["offset"]}
+                outside = backend.clip_stock(inside,[reverse])
+                if outside is not None:retained.append(outside)
+                inside = backend.clip_stock(inside,[plane])
+                if inside is None:break
+        states = retained
+    return [backend.publish_stock(stock) for stock in states]
+
+
+def _source_fraction(value):
+    """🔢 Preserve an authored decimal scalar before affine construction."""
+    from fractions import Fraction
+    return value if isinstance(value,Fraction) else Fraction(str(value))
+
+
+def _ramp_reference_stock(model: dict, obj: dict) -> dict:
+    """🪜 Retain original affine ramp operands privately until one native publication."""
+    q = _source_fraction
+    g = obj["geometry"]
+    a,b = [[q(v) for v in p] for p in g["path"]]
+    dx,dy = b[0]-a[0],b[1]-a[1]
+    square = dx*dx+dy*dy
+    if square<=0:raise ValueError("A ramp reference needs a positive source run")
+    numerator,denominator = math.isqrt(square.numerator),math.isqrt(square.denominator)
+    run = q(numerator)/denominator if numerator*numerator==square.numerator and denominator*denominator==square.denominator else q(math.sqrt(float(square)))
+    normal = [-dy/run,dx/run]
+    lo,hi = q(_z(model,g["from_level"])),q(_z(model,g["to_level"]))
+    z0,z1 = [lo+(hi-lo)*q(portion) for portion in g["portion"]]
+    finish = q(g["finish_thickness"]["value"])
+    if g["finish_direction"]=="normal":finish *= q(math.hypot(1.,_round(float((z1-z0)/run))))
+    thickness = q(g["thickness"]["value"])
+    lower,upper = [q(v["value"]) for v in g["structural_offsets"]]
+    top = [[p[0]+offset*normal[0],p[1]+offset*normal[1],z-finish] for p,z,offset in ((a,z0,upper),(a,z0,lower),(b,z1,lower),(b,z1,upper))]
+    vertices = [[x,y,z-thickness] for x,y,z in top]+top
+    return {"mesh":{"vertices":vertices,"faces":[[3,2,1,0],[4,5,6,7],[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7]]},"outline":[p[:2] for p in top],"z0":min(v[2] for v in vertices),"z1":max(v[2] for v in vertices),"owner":obj["tag"],"owner_guid":obj["guid"],"tag":obj["tag"],"role":"flight","material":_material(model,obj)["tag"]}
+
+
+
+def _ramp_nominal_parts(model: dict, obj: dict) -> list:
+    """🧭 Retain only original uncut ramp product stock, leaving children with their own source references."""
+    if obj["class"]=="IfcRampFlight":return [_ramp_reference_stock(model,obj)]
+    q=_source_fraction;g=obj["geometry"];low,high=q(_z(model,g["from_level"])),q(_z(model,g["to_level"]));result=[]
+    for landing in g["landings"]:
+        if landing["ownership"]!="ramp_component" or landing["owner"]!=obj["tag"]:continue
+        top=low+(high-low)*q(landing["portion"])-q(g["finish_thickness"]["value"])
+        result.append({"outline":[[q(v)for v in p]for p in _expand(model,landing["outline"])],"z0":top-q(landing["thickness"]["value"]),"z1":top,"owner":obj["tag"],"owner_guid":obj["guid"],"tag":landing["tag"],"role":"landing","material":_material(model,obj)["tag"]})
+    return result
+
+def _reference_material_parts(part: dict, cutters: list, bounds: list = (), progress=None, cancel=None) -> list:
+    """🧮 Retain exact original structural stock and physical aperture operands before publication."""
+    if any("csg"in p for p in [part,*cutters,*bounds]):
+        return _analytic_solids_backend().reference_material_parts(_analytic_input(part),[_analytic_input(p)for p in cutters],[_analytic_input(p)for p in bounds],progress=progress,cancel=cancel)
+    backend = _surface_finishes()
+    def planes(cell):
+        vertices = part_vertices(cell)
+        for face in part_faces(cell):
+            anchor = vertices[face[0]]
+            for i in range(1,len(face)-1):
+                u,v = [[vertices[index][k]-anchor[k] for k in range(3)] for index in (face[i],face[i+1])]
+                normal = [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]
+                if any(normal):break
+            else:raise ValueError("Original structural stock requires nondegenerate faces")
+            yield {"normal":normal,"offset":sum(n*x for n,x in zip(normal,anchor)),"points":[anchor,vertices[face[i]],vertices[face[i+1]]]}
+    stocks = []
+    for cell in _native_material_cells(part):
+        for boundary in bounds or (None,):
+            stock = backend.clip_stock(cell,[],exact=True)
+            for plane in planes(boundary) if boundary else ():
+                stock = backend.clip_stock(stock,[plane])
+                if stock is None:break
+            if stock is not None:stocks.append(stock)
+    reference_bounds = _material_bounds(part)
+    for cutter_index,cutter in enumerate(cutters):
+        if cancel and cancel():raise InterruptedError('Native reference construction cancelled')
+        if progress:progress({'phase':'reference-material','completed':cutter_index,'total':len(cutters)})
+        cutter_bounds = _material_bounds(cutter)
+        if not all(a[0]<b[1] and b[0]<a[1] for a,b in zip(reference_bounds,cutter_bounds)):continue
+        for cell in _native_material_cells(cutter):
+            ordered = list(planes(cell))
+            result = []
+            for stock in stocks:
+                if cancel and cancel():raise InterruptedError('Native reference construction cancelled')
+                left,right = _material_bounds({"mesh":stock._exact_mesh}),_material_bounds(cell)
+                if not all(a[0]<b[1] and b[0]<a[1] for a,b in zip(left,right)):
+                    result.append(stock)
+                    continue
+                if backend.stock_separated(stock,ordered):
+                    result.append(stock)
+                    continue
+                current = stock
+                for plane in ordered:
+                    outside = backend.clip_stock(current,[{**plane,"normal":[-v for v in plane["normal"]],"offset":-plane["offset"]}])
+                    if outside is not None:result.append(outside)
+                    current = backend.clip_stock(current,[plane])
+                    if current is None:break
+            stocks = result
+    if cancel and cancel():raise InterruptedError('Native reference construction cancelled')
+    if progress:progress({'phase':'reference-material','completed':len(cutters),'total':len(cutters)})
+    return [{**{key:deepcopy(value) for key,value in part.items() if key not in ("outline","top_outline","holes","mesh","section","z0","z1")},"mesh":deepcopy(stock._exact_mesh)} for stock in stocks]
+
+
+def _interface_reference_parts(model: dict, key: str) -> list:
+    """🧭 Resolve unpartitioned source-affine structural stock without inherited publication seams."""
+    q = _source_fraction
+    obj = _find(model,key)
+    g = obj["geometry"]
+    material = _material(model,obj)["tag"]
+    if obj["class"]=="IfcSlab":return deepcopy(_slab_geometry_entry(model,obj,exact=True)["parts"])
+    if obj["class"]=="IfcColumn":
+        if "end_plane" in g:raise ValueError("A capped column interface requires its original cap construction")
+        profiles = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧊️profiles.🐍️")
+        source = g.get("sections",[{"profile":_find(model,obj["type"])["profile"],"base_level":g["base_level"],"top_level":g["top_level"]}])
+        result = []
+        for section in source:
+            profile = section["profile"]
+            if profile.get("voids"):raise ValueError("Hollow interface stock requires explicit material and bore-air reservations")
+            shape = profile["shape"]
+            approximation = None
+            if shape=="rectangle":
+                w,d = q(profile["width"]["value"])/2,q(profile["depth"]["value"])/2
+                points = [[-w,-d],[w,-d],[w,d],[-w,d]]
+            elif shape=="polygon":points = [[q(v) for v in p] for p in profile["outline"]]
+            elif shape=="circle":
+                approximation = profiles.circle_envelope(float(q(profile["diameter"]["value"])/2),1e-5,2e-9,256)
+                points = [[q(v) for v in p] for p in approximation.pop("outline")]
+            else:raise ValueError("The structural interface profile needs a declared conservative construction")
+            angle = profile.get("rotation",0)
+            if angle%90==0:c,s = ((1,0),(0,1),(-1,0),(0,-1))[int(angle//90)%4]
+            else:c,s = q(math.cos(math.radians(angle))),q(math.sin(math.radians(angle)))
+            x,y = [q(v) for v in section.get("axis",g["axis"])]
+            part = {"outline":[[x+c*u-s*v,y+s*u+c*v] for u,v in points],"z0":q(_z(model,section["base_level"])),"z1":q(_top(model,section["top_level"])),"material":material,"role":"structural_interface"}
+            if approximation:part["interface_approximation"] = approximation
+            result.append(part)
+        return result
+    if obj["class"] not in ("IfcBeam","IfcFooting","IfcBuildingElementProxy") or "parts" not in g or g.get("voids"):
+        raise ValueError("An exact structural interface needs its original independent stock and physical void construction")
+    base = q(_z(model,g["base_level"]))
+    result = []
+    for raw in g["parts"]:
+        part = {"material":raw.get("material",material),"role":raw.get("role","structural_interface")}
+        if "mesh" in raw:part["mesh"] = {"vertices":[[q(x),q(y),base+q(z)] for x,y,z in raw["mesh"]["vertices"]],"faces":deepcopy(raw["mesh"]["faces"])}
+        elif "section" in raw:part["section"] = {**deepcopy(raw["section"]),"profile":[[q(x),base+q(z)] for x,z in raw["section"]["profile"]],"sweep":[q(v) for v in raw["section"]["sweep"]]}
+        else:
+            part.update(outline=[[q(v) for v in p] for p in raw["outline"]],z0=base+q(raw["z0"]),z1=base+q(raw["z1"]))
+            if "top_outline" in raw:part["top_outline"] = [[q(v) for v in p] for p in raw["top_outline"]]
+            if "holes" in raw:part["holes"] = [[[q(v) for v in p] for p in ring] for ring in raw["holes"]]
+        result.append(part)
+    for key in g.get("embedded_slabs",()):
+        slab = _find(model,key)
+        spec = slab["geometry"]
+        level = q(_z(model,spec["level"]))
+        for region in spec["regions"]:
+            if region.get("member")!=obj["tag"]:continue
+            top = level+q(region["top_offset"]["value"])
+            stock = {"outline":[[q(v) for v in p] for p in _expand(model,region["outline"])],"z0":top-q(region["thickness"]["value"]),"z1":top,"material":region.get("material",material),"role":"structural_interface"}
+            boundary = {"outline":[[q(v) for v in p] for p in _expand(model,spec["outline"])],"z0":stock["z0"],"z1":top}
+            voids = [{"outline":[[q(v) for v in p] for p in _expand(model,void["outline"])],"z0":stock["z0"],"z1":top} for void in _slab_voids(model,slab)]
+            result.extend(_reference_material_parts(stock,voids,_native_material_cells(boundary)))
+    return result
+
+
+
+def _ramp_owned_reference_parts_uncached(model: dict, obj: dict, progress=None, cancel=None) -> list:
+    """🛝️ Retain only original source-affine owned flight and middle-landing material before publication."""
+    g = obj['geometry']
+    if obj['class']=='IfcRampFlight':
+        joints = g.get('flight_joint_owners',())
+        if len(set(joints))!=len(joints) or any(key==obj['tag'] or _find(model,key)['class']!='IfcRampFlight' or _find(model,key)['geometry'].get('flight_joint_owners') for key in joints):
+            raise ValueError('Exact ramp joints require distinct acyclic primary flight owners')
+        cutters = [_ramp_reference_stock(model,_find(model,key)) for key in joints]+[part for key in g.get('interface_owners',()) for part in _interface_reference_parts(model,key)]
+        return _reference_material_parts(_ramp_reference_stock(model,obj),cutters,progress=progress,cancel=cancel)
+    if obj['class']!='IfcRamp':raise ValueError('Exact owned ramp material requires a ramp or flight')
+    q = _source_fraction
+    low,high = q(_z(model,g['from_level'])),q(_z(model,g['to_level']))
+    cutters = [part for key in g.get('interface_owners',()) for part in _interface_reference_parts(model,key)]
+    result = []
+    for landing in g['landings']:
+        if landing['ownership']!='ramp_component' or landing['owner']!=obj['tag']:continue
+        datum = low+(high-low)*q(landing['portion'])-q(g['finish_thickness']['value'])
+        stock = {'outline':[[q(v) for v in p] for p in _expand(model,landing['outline'])],'z0':datum-q(landing['thickness']['value']),'z1':datum,'owner':obj['tag'],'owner_guid':obj['guid'],'tag':landing['tag'],'role':'landing','material':_material(model,obj)['tag']}
+        result.extend(_reference_material_parts(stock,cutters,progress=progress,cancel=cancel))
+    return result
+
+
+def _ramp_owned_reference_parts(model: dict, obj: dict, progress=None, cancel=None) -> list:
+    """📦 Isolate exact owned ramp cells inside the complete bounded source/producer geometry memo."""
+    return _geometry_query('ramp_owned_reference',obj['tag'],model,progress=progress,cancel=cancel)
+
 
 def _ramp_geometry(model: dict, obj: dict) -> dict:
     """🛝️ Resolve real flight slabs and landing ownership without changing source stations."""
@@ -1116,9 +1820,8 @@ def _ramp_geometry(model: dict, obj: dict) -> dict:
     if ramp["class"]!="IfcRamp":
         raise ValueError("A native flight requires an authored ramp parent")
     flights,children,parts,shared = [],[],[],[]
-    for flight in _flights(model,ramp):
-        if obj["class"]=="IfcRampFlight" and flight["tag"]!=obj["tag"]:
-            continue
+    references = {}
+    for flight in [flight for parent in _by_class(model,"IfcRamp") for flight in _flights(model,parent)]:
         source = _find(model,flight["tag"])
         if source["geometry"]["thickness_direction"]!="vertical":
             raise ValueError("A ramp slab requires its explicit vertical thickness convention")
@@ -1126,11 +1829,35 @@ def _ramp_geometry(model: dict, obj: dict) -> dict:
         run = math.dist(a,b)
         if run<=1e-12 or flight["width"]<=0 or flight["thickness"]<=0:
             raise ValueError("A ramp flight requires positive run, width and thickness")
-        normal = [-(b[1]-a[1])/run,(b[0]-a[0])/run]
-        top = [[p[0]+sign*normal[0]*flight["width"]/2,p[1]+sign*normal[1]*flight["width"]/2,z] for p,z,sign in ((a,flight["z0"],1),(a,flight["z0"],-1),(b,flight["z1"],-1),(b,flight["z1"],1))]
-        slab = {**_polyhedron_part([[x,y,z-flight["thickness"]] for x,y,z in top]+top),"owner":flight["tag"],"owner_guid":flight["guid"],"tag":flight["tag"],"role":"flight","material":_material(model,source)["tag"]}
+        offsets,walking = flight["structural_offsets"],flight["walking_offsets"]
+        if offsets[1]<=offsets[0] or walking[1]<=walking[0] or not math.isclose(walking[1]-walking[0],flight["width"],abs_tol=1e-10):
+            raise ValueError("Ramp offsets must be ordered and walking span must equal clear width")
+        stock = _ramp_reference_stock(model,source)
+        references[flight["tag"]] = stock
+        slab = _surface_finishes().publish_stock(_surface_finishes().clip_stock(stock,[],exact=True))
         children.append(slab)
         flights.append({**flight,"parts":[deepcopy(slab)]})
+    raw = {flight["tag"]:flight["parts"][0] for flight in flights}
+    descriptors = {flight["tag"]:flight for flight in flights}
+    def arrivals(flight):
+        source = _find(model,flight["ramp"])["geometry"]
+        lo,hi = _z(model,source["from_level"]),_z(model,source["to_level"])
+        return {(landing["owner"],lo+(hi-lo)*landing["portion"]) for landing in source["landings"] if landing["ownership"]=="floor_slab" and lo+(hi-lo)*landing["portion"] in (flight["z0"],flight["z1"])}
+    selected = [flight for flight in flights if flight["ramp"]==ramp["tag"] and (obj["class"]=="IfcRamp" or flight["tag"]==obj["tag"])]
+    for flight in selected:
+        joint = _find(model,flight["tag"])["geometry"].get("flight_joint_owners",[])
+        if any(tag==flight["tag"] or tag not in raw or _find(model,tag)["geometry"].get("flight_joint_owners") for tag in joint) or len(set(joint))!=len(joint):
+            raise ValueError("Ramp flight joints require distinct acyclic primary flight owners")
+        if any(descriptors[tag]["ramp"]!=flight["ramp"] and not arrivals(flight).intersection(arrivals(descriptors[tag])) for tag in joint):
+            raise ValueError("Cross-assembly ramp joints require the same actual floor arrival")
+        refs = _find(model,flight["tag"])["geometry"].get("interface_owners",[])
+        if len(set(refs))!=len(refs) or any(_find(model,tag)["class"] not in ("IfcColumn","IfcBeam","IfcSlab","IfcFooting") for tag in refs):
+            raise ValueError("Ramp structural interfaces require distinct independent structural owners")
+        cutters = [references[tag] for tag in joint]+[part for tag in refs for part in _interface_reference_parts(model,tag)]
+        flight["reference_parts"] = [deepcopy(raw[flight["tag"]])]
+        if cutters:flight["parts"],flight["interface_removed_volume"] = _subtract_native_material([references[flight["tag"]]],cutters)
+    flights = selected
+    children = [part for flight in flights for part in flight["parts"]]
     landings = []
     if obj["class"]=="IfcRamp":
         g = obj["geometry"]
@@ -1140,19 +1867,44 @@ def _ramp_geometry(model: dict, obj: dict) -> dict:
         for landing in g["landings"]:
             top = _round(lo+(hi-lo)*landing["portion"])
             owner = _find(model,landing["owner"])
+            if landing["ownership"]=="floor_slab":
+                if owner["class"]!="IfcSlab":
+                    raise ValueError("A floor arrival must reference its physical supporting slab")
+                ring = _expand(model,landing["outline"])
+                solid = _slab_geometry_entry(model,owner)
+                resolved = []
+                for part in solid["parts"]+solid["shared_parts"]:
+                    for profile in _slab_surface(ring,part["outline"],[]):
+                        resolved.append({**deepcopy(part),"outline":profile,"owner":owner["tag"],"owner_guid":owner["guid"],"tag":landing["tag"],"role":"floor_arrival_reference"})
+                area = sum(_area(part["outline"]) for part in resolved)
+                if not math.isclose(area,_area(ring),abs_tol=1e-7) or any(part["z1"]>top+1e-9 for part in resolved):
+                    raise ValueError("A floor arrival requires full actual slab support below its finished datum")
+                shared.extend(resolved)
+                landings.append({"tag":landing["tag"],"owner":owner["tag"],"owner_guid":owner["guid"],"ownership":"floor_slab","outline":ring,"z":top,"parts":deepcopy(resolved)})
+                continue
             if owner["class"]!="IfcRamp" or not any(p["tag"]==landing["tag"] and p["owner"]==owner["tag"] for p in owner["geometry"]["landings"]):
                 raise ValueError("A landing must reference its native owning ramp component")
             registered = next(p for p in owner["geometry"]["landings"] if p["tag"]==landing["tag"] and p["owner"]==owner["tag"])
             origin = _z(model,owner["geometry"]["from_level"])
             owner_top = origin+(_z(model,owner["geometry"]["to_level"])-origin)*registered["portion"]
-            if registered["outline"]!=landing["outline"] or registered["thickness"]!=landing["thickness"] or abs(owner_top-top)>1e-10:
+            if registered["outline"]!=landing["outline"] or registered["walking_outline"]!=landing["walking_outline"] or registered["thickness"]!=landing["thickness"] or abs(owner_top-top)>1e-10:
                 raise ValueError("A borrowed landing must retain its registered owner geometry")
-            part = {"outline":_expand(model,landing["outline"]),"z0":_round(top-landing["thickness"]["value"]),"z1":top,"owner":owner["tag"],"owner_guid":owner["guid"],"tag":landing["tag"],"role":"landing","material":_material(model,owner)["tag"]}
-            (parts if owner["tag"]==obj["tag"] else shared).append(part)
-            landings.append({"tag":landing["tag"],"owner":owner["tag"],"owner_guid":owner["guid"],"outline":deepcopy(part["outline"]),"z":top,"thickness":landing["thickness"]["value"],"parts":[deepcopy(part)]})
+            structure_top = top-owner["geometry"]["finish_thickness"]["value"]
+            part = {"outline":_expand(model,landing["outline"]),"z0":_round(structure_top-landing["thickness"]["value"]),"z1":structure_top,"owner":owner["tag"],"owner_guid":owner["guid"],"tag":landing["tag"],"role":"landing","material":_material(model,owner)["tag"]}
+            owned = [part]
+            refs = owner["geometry"].get("interface_owners",())
+            if refs:
+                if len(set(refs))!=len(refs) or any(_find(model,key)["class"] not in ("IfcColumn","IfcBeam","IfcFooting") for key in refs):
+                    raise ValueError("Ramp landing interfaces require distinct independent structural owners")
+                q = _source_fraction
+                datum = q(_z(model,owner["geometry"]["from_level"]))+(q(_z(model,owner["geometry"]["to_level"]))-q(_z(model,owner["geometry"]["from_level"])))*q(landing["portion"])-q(owner["geometry"]["finish_thickness"]["value"])
+                stock = {**part,"outline":[[q(v) for v in p] for p in _expand(model,landing["outline"])],"z0":datum-q(landing["thickness"]["value"]),"z1":datum}
+                owned,_ = _subtract_native_material([stock],[p for key in refs for p in _interface_reference_parts(model,key)])
+            (parts if owner["tag"]==obj["tag"] else shared).extend(owned)
+            landings.append({"tag":landing["tag"],"owner":owner["tag"],"owner_guid":owner["guid"],"ownership":"ramp_component","outline":deepcopy(part["outline"]),"walking_outline":deepcopy(landing["walking_outline"]),"z":top,"thickness":landing["thickness"]["value"],"parts":deepcopy(owned)})
     else:
         parts,children = children,[]
-    return {"tag":obj["tag"],"guid":obj["guid"],"class":obj["class"],"storey":obj["storey"],"name":deepcopy(obj["name"]),"domains":deepcopy(obj["metadata"]["domains"]),"thickness_direction":"vertical","parts":parts,"shared_parts":shared,"child_parts":children,"full_parts":deepcopy(parts+shared+children),"flights":flights,"landings":landings,"width":obj["attributes"]["width"]["value"],"children":[{"tag":f["tag"],"guid":f["guid"],"class":"IfcRampFlight"} for f in flights] if obj["class"]=="IfcRamp" else []}
+    return {"tag":obj["tag"],"guid":obj["guid"],"class":obj["class"],"storey":obj["storey"],"name":deepcopy(obj["name"]),"domains":deepcopy(obj["metadata"]["domains"]),"thickness_direction":"vertical","parts":parts,"shared_parts":shared,"child_parts":children,"full_parts":deepcopy(parts+shared+children),"reference_parts":_native_public_value(_ramp_nominal_parts(model,obj)),"flights":flights,"landings":landings,"width":obj["attributes"]["width"]["value"],"children":[{"tag":f["tag"],"guid":f["guid"],"class":"IfcRampFlight"} for f in flights] if obj["class"]=="IfcRamp" else []}
 
 
 def ramp_geometry(key: str, model: dict | None = None) -> dict:
@@ -1169,6 +1921,7 @@ def _flights(model: dict, ramp: dict) -> list:
         z0, z1 = _round(lo + (hi - lo) * g["portion"][0]), _round(lo + (hi - lo) * g["portion"][1])
         run = math.dist(g["path"][0], g["path"][1])
         out.append({"tag": flight["tag"], "guid": flight["guid"], "ramp": ramp["tag"], "start": list(g["path"][0]), "end": list(g["path"][1]),
+                    "structural_offsets": [v["value"] for v in g["structural_offsets"]], "walking_offsets": [v["value"] for v in g["walking_offsets"]], "structural_width": g["structural_offsets"][1]["value"]-g["structural_offsets"][0]["value"],
                     "thickness": g["thickness"]["value"], "width": flight["attributes"]["width"]["value"], "z0": z0, "z1": z1, "run": _round(run), "slope": _round((z1 - z0) / run)})
     return out
 
@@ -1182,18 +1935,49 @@ def _surface_bounds_overlap(a: tuple, b: tuple) -> bool:
     return a[0] < b[2] and b[0] < a[2] and a[1] < b[3] and b[1] < a[3]
 
 
+@lru_cache(maxsize=256)
+def _surface_support_edges(ring: tuple, orientation) -> tuple:
+    """🧭 Cache exact supporting half-planes without assuming a source ring is convex."""
+    result=[]
+    for a,b in zip(ring,ring[1:]+ring[:1]):
+        if a==b:
+            continue
+        signs=[orientation(a,b,p) for p in ring]
+        if min(signs)>=0 and max(signs)>0:
+            result.append((a,b,1))
+        elif max(signs)<=0 and min(signs)<0:
+            result.append((a,b,-1))
+    return tuple(result)
+
+
+def _surface_separated(left: list, right: list) -> bool:
+    """🪚 Preserve original material when an exact support plane proves no positive planar intersection."""
+    orientation=_analysis._orientation
+    return any(all(side*orientation(a,b,p)<=0 for p in other)
+               for ring,other in ((left,right),(right,left))
+               for a,b,side in _surface_support_edges(tuple(tuple(p) for p in ring),orientation))
+
+
 def _surface_difference(pieces: list, voids: list) -> list:
     """🪓 Subtract only holes whose bounding boxes can remove occupied area."""
     for void in voids:
         bounds = _surface_bounds(void)
         pieces = [region for piece in pieces for region in
-                  (_analysis._subtract(piece,void,digits=12,tolerance=1e-12) if _surface_bounds_overlap(_surface_bounds(piece),bounds) else [piece])]
+                  (_analysis._subtract(piece,void,digits=12,tolerance=1e-12) if _surface_bounds_overlap(_surface_bounds(piece),bounds) and not _surface_separated(piece,void) else [piece])]
     return [p for p in pieces if len(p) >= 3 and _area(p) > 1e-12]
 
 
-def _slab_surface(outline: list, bounds: list, voids: list) -> list:
-    pieces = [_analysis._clip(a,b,digits=12) for a in _analysis._convex_parts(outline) for b in _analysis._convex_parts(bounds)]
-    return _surface_difference([p for p in pieces if len(p) >= 3 and _area(p) > 1e-12],voids)
+def _slab_surface(outline: list, bounds: list, voids: list, exact: bool = False) -> list:
+    """📐 Preserve original binary64 slab boundaries through exact rational profile operations."""
+    def profiles(ring):
+        """🔺 Reuse exact domain-neutral material decomposition rather than rounded polygon ears."""
+        return _native_profile_regions(tuple(tuple(p)for p in ring))
+    pieces=[_analysis._clip(left,right,digits=None)for left in profiles(outline)for right in profiles(bounds)]
+    for void in voids:
+        for cutter in profiles(void):
+            pieces=[region for piece in pieces for region in _analysis._subtract(piece,cutter,digits=None,tolerance=0)]
+    retained=[piece for piece in pieces if len(piece)>=3 and _area(piece)>0]
+    return retained if exact else _native_public_value(retained)
 
 
 def _slab_voids(model: dict, slab: dict) -> list:
@@ -1237,35 +2021,40 @@ def _slab_opening_geometry(model: dict, opening: dict) -> dict:
     return {"tag":opening["tag"],"guid":opening["guid"],"host":slab["tag"],"storey":opening["storey"],"outline":outline,"parts":parts}
 
 
-def _slab_finish_parts(slab):
+def _slab_finish_parts(slab, exact: bool = False):
     """🧱 Resolve a level roof finish over different structural slab depths."""
     paving = next((layer for layer in slab.get("layers", ()) if layer["id"] == "paving"), None)
     if paving is None:
         return []
-    top = min(part["z1"] for part in slab["parts"]) + paving["thickness"]
+    from fractions import Fraction
+    top = _round(min(part["z1"] for part in slab["parts"]) + paving["thickness"])
+    if exact:top=Fraction(top)
     if any(top < part["z1"] - 1e-9 for part in slab["parts"]):
         raise ValueError("Roof finish cannot be lower than the structural surface")
-    return [{"outline": deepcopy(part["outline"]), "z0": part["z1"], "z1": _round(top), "region": part["region"], "layer": "paving"}
+    return [{"outline": deepcopy(part["outline"]), "z0": part["z1"], "z1": top if exact else _round(top), "region": part["region"], "layer": "paving"}
             for part in slab["parts"] if top > part["z1"] + 1e-9]
 
 
 _SLAB_GEOMETRIES = {}
 
 
-def _slab_geometry(model: dict, slab: dict) -> dict:
-    """⚡ Cache occupied slab partitions by their actual geometry dependencies."""
-    dependency = [slab, model["storeys"], model["materials"], model["types"], model["spaces"], model["car"],
-                  [obj for obj in model["elements"] if obj["class"] == "IfcCurtainWall" or (obj["class"] == "IfcOpeningElement" and obj["geometry"].get("slab") == slab["tag"])],
-                  [obj for obj in model["elements"] if obj["tag"] in set(slab["geometry"].get("column_reserves",[])) | {v["owner"] for v in slab["geometry"].get("finish_voids",[])}]]
-    key = json.dumps(dependency, sort_keys=True, separators=(",", ":"))
+def _slab_geometry_entry(model: dict, slab: dict, exact: bool = False, progress=None, cancel=None) -> dict:
+    """🗃️ Reuse a private occupied slab entry without exposing mutable memo data."""
+    if cancel and cancel():raise InterruptedError("Native slab construction cancelled")
+    key = (slab["tag"],exact,_geometry_producers(),_geometry_source_key(model))
     if key not in _SLAB_GEOMETRIES:
-        _SLAB_GEOMETRIES[key] = _slab_geometry_uncached(model, slab)
+        _SLAB_GEOMETRIES[key] = _slab_geometry_uncached(model, slab, exact=True,progress=progress,cancel=cancel) if exact else _native_public_value(_slab_geometry_entry(model,slab,exact=True,progress=progress,cancel=cancel))
         if len(_SLAB_GEOMETRIES) > 24:
             _SLAB_GEOMETRIES.pop(next(iter(_SLAB_GEOMETRIES)))
-    return deepcopy(_SLAB_GEOMETRIES[key])
+    return _SLAB_GEOMETRIES[key]
 
 
-def _slab_geometry_uncached(model: dict, slab: dict) -> dict:
+def _slab_geometry(model: dict, slab: dict) -> dict:
+    """🧊 Return an isolated complete slab geometry to each caller."""
+    return deepcopy(_slab_geometry_entry(model,slab))
+
+
+def _slab_geometry_uncached(model: dict, slab: dict, exact: bool = False, progress=None, cancel=None) -> dict:
     g = slab["geometry"]
     level = _z(model, g["level"])
     outline = _expand(model, g["outline"])
@@ -1273,7 +2062,9 @@ def _slab_geometry_uncached(model: dict, slab: dict) -> dict:
     voids = [_expand(model, v["outline"]) for v in resolved_voids]
     parts, regions, reference_parts = [], [], []
     tags = set()
-    for region in g["regions"]:
+    for region_index,region in enumerate(g["regions"]):
+        if cancel and cancel():raise InterruptedError("Native slab construction cancelled")
+        if progress:progress({"phase":"slab-regions","completed":region_index,"total":len(g["regions"]),"tag":slab["tag"]})
         tag = region["tag"]
         if tag in tags:
             raise ValueError("Slab region tags must be unique")
@@ -1283,14 +2074,14 @@ def _slab_geometry_uncached(model: dict, slab: dict) -> dict:
         if thickness <= 0:
             raise ValueError("Slab region thickness must be positive")
         ring = _expand(model, region["outline"])
-        gross = _slab_surface(ring, outline, [])
+        gross = _slab_surface(ring, outline, [],exact=True)
         candidates = [(polygon,_surface_bounds(polygon)) for polygon in gross]
         for polygon,bounds in candidates:
             for other,other_bounds in reference_parts:
                 if _surface_bounds_overlap(bounds,other_bounds) and _area(_analysis._clip(polygon,other)) > 1e-7:
                     raise ValueError("Slab regions overlap in reference surface")
         reference_parts.extend(candidates)
-        occupied = _surface_difference(gross,voids)
+        occupied = _slab_surface(ring,outline,voids,exact=True)
         for polygon in occupied:
             part = {"outline": polygon, "voids": [], "top": _round(top), "thickness": thickness,
                     "z0": _round(top - thickness), "z1": _round(top), "region": tag}
@@ -1323,64 +2114,162 @@ def _slab_geometry_uncached(model: dict, slab: dict) -> dict:
         out["total_thickness"] = _round(sum(l["thickness"]["value"] for l in layerset["layers"]))
     if "zones" in g:
         out["zones"] = {name: _expand(model, _find(model, tag)["outline"]) for name, tag in g["zones"].items()}
-    out["finish_parts"] = _slab_finish_parts(out)
+    out["finish_parts"] = _slab_finish_parts(out,exact=True)
     out.update({"full_parts":deepcopy(out["parts"]),"full_finish_parts":deepcopy(out["finish_parts"]),"shared_parts":[],"shared_finish_parts":[]})
+    if g.get("interface_owners"):
+        out["parts"],out["shared_parts"] = _structural_joint_backend().reserve_interfaces(SimpleNamespace(**globals()),model,slab,out["parts"])
     if g.get("column_reserves"):
-        out["parts"],out["shared_parts"],voids = _column_partition(model,slab,out["parts"],g["column_reserves"])
+        out["parts"],column_shared,voids = _column_partition(model,slab,out["parts"],g["column_reserves"],exact=True)
+        out["shared_parts"] += column_shared
         if out["finish_parts"]:
-            out["finish_parts"],out["shared_finish_parts"],_ = _column_partition(model,slab,out["finish_parts"],g["column_reserves"],require_contact=False)
+            out["finish_parts"],out["shared_finish_parts"],_ = _column_partition(model,slab,out["finish_parts"],g["column_reserves"],require_contact=False,exact=True)
         out["parts"] = [{**p,"top":p["z1"],"thickness":p["z1"]-p["z0"]} for p in out["parts"]]
         out["full_parts"] = _subtract_prisms(out["full_parts"],voids) if voids else out["full_parts"]
     if g.get("finish_voids"):
-        out["finish_parts"],shared = _finish_reservations(model,slab,out["finish_parts"])
+        out["finish_parts"],shared = _finish_reservations(model,slab,out["finish_parts"],exact=True,progress=progress,cancel=cancel)
         out["shared_finish_parts"] += shared
         out["finish_void_tags"] = [v["tag"] for v in g["finish_voids"]]
-    return out
+    return out if exact else _native_public_value(out)
 
-def _finish_reservations(model: dict, slab: dict, parts: list) -> tuple:
-    """🧱 Assign displaced finish to an explicit native prismatic material owner."""
-    if not parts:
-        raise ValueError("A finish reserve requires occupied finish material")
-    cutters,shared,tags = [],[],set()
-    lo,hi = min(p["z0"] for p in parts),max(p["z1"] for p in parts)
-    for reserve in slab["geometry"]["finish_voids"]:
-        if reserve["tag"] in tags:
-            raise ValueError("Finish reserve tags must be unique")
-        tags.add(reserve["tag"])
-        owner = _find(model,reserve["owner"])
-        if owner["tag"]==slab["tag"] or "parts" not in owner["geometry"] or slab["tag"] in owner["geometry"].get("embedded_slabs",[]):
-            raise ValueError("A finish reserve needs an independent native part owner")
-        native = _solid_geometry(model,owner)["parts"]
-        if any(any(key in p for key in ("mesh","section","top_outline")) or p.get("holes") for p in native):
-            raise ValueError("Finish ownership requires native vertical prismatic material")
-        polygons = _analysis._convex_parts(_expand(model,reserve["outline"]))
-        if any(_area(_analysis._clip(a,b["outline"]))>1e-10 for a in polygons for b in cutters):
-            raise ValueError("Finish reserves must not overlap")
-        expected,common = [],[]
-        for part in parts:
-            for a in _analysis._convex_parts(part["outline"]):
-                for b in polygons:
-                    if not _surface_bounds_overlap(_surface_bounds(a),_surface_bounds(b)):
-                        continue
-                    ring = _analysis._clip(a,b)
-                    if len(ring)>=3 and _area(ring)>1e-12:
-                        expected.append({**deepcopy(part),"outline":ring})
-        for part in expected:
-            for owned in native:
-                z0,z1 = max(part["z0"],owned["z0"]),min(part["z1"],owned["z1"])
-                if z1<=z0+1e-12 or not _surface_bounds_overlap(_surface_bounds(part["outline"]),_surface_bounds(owned["outline"])):
-                    continue
-                for polygon in _analysis._convex_parts(owned["outline"]):
-                    ring = _analysis._clip(part["outline"],polygon)
-                    if len(ring)>=3 and _area(ring)>1e-12:
-                        common.append({**deepcopy(part),"outline":ring,"z0":z0,"z1":z1,"owner":owner["tag"],"material":owned.get("material",owner["material"]),"role":"finish_joint","joint_host":slab["tag"]})
-        target = sum(_area(p["outline"])*(p["z1"]-p["z0"]) for p in expected)
-        occupied = sum(_area(p["outline"])*(p["z1"]-p["z0"]) for p in common)
-        if target<=1e-12 or not math.isclose(target,occupied,rel_tol=1e-9,abs_tol=1e-10):
-            raise ValueError("Finish reserve must be exactly occupied by its owner")
-        cutters += [{"outline":ring,"z0":lo,"z1":hi} for ring in polygons]
-        shared += common
-    return _subtract_prisms(parts,cutters),shared
+def _native_parts_exact_volume(parts: list):
+    """🧮 Integrate original closed native cells with exact local tetrahedron determinants."""
+    from fractions import Fraction
+    result=Fraction(0)
+    for part in parts:
+        vertices=[tuple(Fraction(v)for v in p)for p in part_vertices(part)]
+        origin=vertices[0];total=Fraction(0)
+        for face in part_faces(part):
+            for i in range(1,len(face)-1):
+                a,b,c=[tuple(vertices[j][k]-origin[k]for k in range(3))for j in (face[0],face[i],face[i+1])]
+                total+=a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0])
+        result+=abs(total)/6
+    return result
+
+
+def _native_parts_have_volume(parts: list) -> bool:
+    """📏 Detect any strictly positive native cell without a geometric tolerance."""
+    return any(_native_parts_exact_volume([part])for part in parts)
+
+
+def _finish_reservations(model: dict, slab: dict, parts: list, progress=None, cancel=None, exact: bool = False) -> tuple:
+    """🧱 Assign actual three-dimensional finish reserves to disjoint explicitly declared physical owners."""
+    if not parts:raise ValueError("A finish reserve requires occupied finish material")
+    backend=_surface_finishes();host=[]
+    for part in parts:
+        material=part.get("material")
+        if material is None:
+            layers=_material(model,slab)
+            material=next((layer["material"]for layer in layers.get("layers",())if layer["id"]==part.get("layer")),None)if layers else None
+        if material is None:raise ValueError("A finish reserve requires explicit host layer material")
+        host.extend(_native_material_cells({**part,"material":material,"role":part.get("role","finish")}))
+    low,high=min(p["z0"]for p in parts),max(p["z1"]for p in parts)
+    owners={};reserves=[];shared=[];shared_bounds=[];tags=set();records={};boxes={};indices={}
+    def record(part):
+        """🗃️ Index immutable operation-local geometry without retaining another model or render object."""
+        key=id(part)
+        if key not in records:
+            from fractions import Fraction
+            vertices=[tuple(Fraction(v)for v in p)for p in part_vertices(part)];planes=[]
+            for face in part_faces(part):
+                a=vertices[face[0]]
+                for i in range(1,len(face)-1):
+                    u,v=[tuple(vertices[j][k]-a[k]for k in range(3))for j in (face[i],face[i+1])]
+                    n=(u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0])
+                    if any(n):break
+                else:raise ValueError("Native finish cells require nondegenerate faces")
+                offset=sum(n[k]*a[k]for k in range(3));values=[sum(n[k]*p[k]for k in range(3))-offset for p in vertices]
+                if max(values)>0:
+                    if min(values)<0:raise ValueError("Native finish cells require convex material")
+                    n=tuple(-v for v in n);offset=-offset
+                planes.append((n,offset))
+            if len(records)>=4096:records.pop(next(iter(records)))
+            records[key]=(part,tuple((min(p[k]for p in vertices),max(p[k]for p in vertices))for k in range(3)),vertices,planes)
+        return records[key]
+    def box(part):
+        """📦 Retain original numeric bounds as a conservative operation-local broad phase."""
+        key=id(part)
+        if key not in boxes:
+            if len(boxes)>=16384:boxes.pop(next(iter(boxes)))
+            boxes[key]=(part,_material_bounds(part))
+        return boxes[key][1]
+    def candidates(tag,target):
+        """🗂️ Query exact native intervals without replacing any occupied geometry."""
+        from bisect import bisect_left
+        if tag not in indices:
+            rows=sorted(((box(part)[0][0],index,part)for index,part in enumerate(owners[tag][1])),key=lambda row:(row[0],row[1]))
+            indices[tag]=([row[0]for row in rows],rows)
+        lows,rows=indices[tag];target_box=box(target)
+        return (part for _,_,part in rows[:bisect_left(lows,target_box[0][1])]if all(x[0]<y[1]and y[0]<x[1]for x,y in zip(box(part),target_box)))
+    def overlap(a,b):
+        """📦 Reject only exact disjoint native bounding intervals."""
+        return all(x[0]<y[1]and y[0]<x[1]for x,y in zip(box(a),box(b)))
+    def contains(outer,inner):
+        """📐 Prove complete native-cell containment without any geometric tolerance."""
+        return all(sum(n[k]*p[k]for k in range(3))<=offset for n,offset in record(outer)[3]for p in record(inner)[2])
+    def intersect(left,right):
+        """🧊 Intersect original convex native cells before publishing any clipped coordinate."""
+        if not overlap(left,right):return []
+        if contains(right,left):return [deepcopy(left)]
+        if contains(left,right):return [{**{k:deepcopy(v)for k,v in left.items()if k not in ("outline","holes","top_outline","section","mesh","z0","z1")},"mesh":deepcopy(right["mesh"])}]
+        return _reference_material_parts(left,[],[right],progress=progress,cancel=cancel)
+    def resolve(tag):
+        """🔗 Expand only authored covering displacement owners without aggregating borrowed references."""
+        if tag==slab["tag"]:raise ValueError("A finish reserve requires independent physical owners")
+        if tag in owners:return
+        if cancel and cancel():raise InterruptedError("Native finish reservations cancelled")
+        if progress:progress({"phase":"finish-owner","tag":tag,"status":"started"})
+        obj=_find(model,tag);g=obj["geometry"]
+        if obj["class"]in ("IfcRamp","IfcRampFlight","IfcColumn","IfcSlab"):
+            actual=_interface_owner_parts(model,tag)
+        elif "parts"in g or "layer_binding"in g or g.get("kind")=="ramp_finish":
+            actual=_solid_geometry(model,obj,resolve_embedded=False,progress=progress,cancel=cancel,exact=exact)["parts"]
+        else:raise ValueError("A finish reserve needs independent native material owners")
+        fallback=_material(model,obj);fallback=None if fallback is None else fallback["tag"]
+        if cancel and cancel():raise InterruptedError("Native finish reservations cancelled")
+        normalized=[]
+        for part_index,part in enumerate(actual):
+            if cancel and cancel():raise InterruptedError("Native finish reservations cancelled")
+            try:cells=_native_material_cells(part)
+            except ValueError as error:raise ValueError(f"Finish owner {tag} native part {part_index}: {error}")from error
+            normalized.extend({**cell,"material":cell.get("material",fallback),"role":cell.get("role","finish_owner")}for cell in cells)
+        owners[tag]=(obj,normalized)
+        if progress:progress({"phase":"finish-owner","tag":tag,"status":"completed","cells":len(normalized)})
+    for index,reserve in enumerate(slab["geometry"]["finish_voids"]):
+        if cancel and cancel():raise InterruptedError("Native finish reservations cancelled")
+        if progress:progress({"phase":"finish-reservations","completed":index,"total":len(slab["geometry"]["finish_voids"]),"tag":reserve["tag"]})
+        if reserve["tag"]in tags:raise ValueError("Finish reserve tags must be unique")
+        tags.add(reserve["tag"]);bounds=_native_material_cells({"outline":_expand(model,reserve["outline"]),"z0":low,"z1":high,"material":host[0]["material"],"role":"finish_reserve_extent"})
+        targets=[cell for part in host for boundary in bounds for cell in intersect(part,boundary)]
+        if not _native_parts_have_volume(targets):raise ValueError("A finish reserve requires occupied target material")
+        earlier={id(target):[part for part,other in shared_bounds if all(a[0]<b[1]and b[0]<a[1]for a,b in zip(box(target),other))]for target in targets}
+        expected=[cell for target in targets for cell in _reference_material_parts(target,earlier[id(target)],progress=progress,cancel=cancel)]
+        owner_tags=[reserve["owner"],*reserve.get("joint_owners",())]
+        if len(owner_tags)!=len(set(owner_tags)):raise ValueError("Finish joint owners must be distinct")
+        cursor=0
+        while cursor<len(owner_tags):
+            tag=owner_tags[cursor];resolve(tag);obj=owners[tag][0];cursor+=1
+            if obj["class"]=="IfcCovering":
+                refs=[*obj["geometry"].get("interface_owners",()),*obj["geometry"].get("ramp_finish",{}).get("interface_owners",())]
+                owner_tags.extend(key for key in refs if key not in owner_tags)
+        common=[]
+        for tag in owner_tags:
+            obj,native=owners[tag]
+            for target in targets:
+                for part in candidates(tag,target):
+                    for cell in intersect(part,target):
+                        if cell.get("material")is None:raise ValueError("Finish joint material must be explicit")
+                        for other in [*earlier[id(target)],*common]:
+                            if other["owner"]!=tag and _native_parts_have_volume(intersect(cell,other)):
+                                raise ValueError("Finish joint owners share occupied material")
+                        prior=[other for other in [*earlier[id(target)],*common]if other["owner"]==tag and overlap(cell,other)]
+                        for retained in _reference_material_parts(cell,prior,progress=progress,cancel=cancel)if prior else [cell]:
+                            common.append({**retained,"owner":tag,"owner_guid":obj["guid"],"role":"finish_joint","joint_host":slab["tag"]})
+        missing=_native_parts_exact_volume(expected)-_native_parts_exact_volume(common)
+        if missing:raise ValueError(f"Finish reserve {reserve['tag']} is not fully occupied by its declared physical owners: exact missing volume {missing!r} m3")
+        shared.extend(common);shared_bounds.extend((part,box(part))for part in common);reserves.extend(bounds)
+    remaining=[cell for part in host for cell in _reference_material_parts(part,[boundary for boundary in reserves if overlap(part,boundary)],progress=progress,cancel=cancel)]
+    publish=lambda cells:[backend.publish_stock(backend.clip_stock(cell,[],exact=True))for cell in cells]
+    return (remaining,shared) if exact else (publish(remaining),publish(shared))
 
 
 def _service(model: dict, e: dict) -> dict:
@@ -1454,73 +2343,159 @@ def _service(model: dict, e: dict) -> dict:
 
 def service_geometry(key: str, model: dict | None = None) -> dict:
     """🚰 Resolve equipment or a native hollow service segment without leaking a tool-specific type."""
-    m = _m(model)
-    return _service(m,_find(m,key))
+    return _geometry_query("service", key, model)
 
 
-def _column_partition(model: dict, obj: dict, parts: list, owners: list, require_contact: bool = True) -> tuple:
-    """🏗️ Keep full member geometry while assigning occupied common material to columns."""
-    analysis = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧮️analysis.🐍️")
+def _column_partition(model: dict, obj: dict, parts: list, owners: list, require_contact: bool = True, exact: bool = False) -> tuple:
+    """🏗️ Assign exact native occupied common material and retain actual column bore air."""
+    if len(set(owners))!=len(owners) or obj["tag"] in owners:raise ValueError("Column reservations require distinct independent owners")
     cutters,shared,voids = [],[],[]
+    material = _material(model,obj)["tag"]
+    stocks=[{**deepcopy(p),"material":p.get("material",material),"role":p.get("role","structural_member")} for p in parts]
     for tag in owners:
         owner = _find(model,tag)
-        if owner["class"] != "IfcColumn":
-            raise ValueError("A material reserve owner must be a column")
-        columns = column_geometry(model,owner)["parts"]
-        common = []
-        for part in parts:
+        if owner["class"]!="IfcColumn":raise ValueError("A material reserve owner must be a column")
+        columns=column_geometry(model,owner)["parts"];common=[]
+        owner_material=_material(model,owner)["tag"]
+        for part in stocks:
+            box=_material_bounds(part)
             for column in columns:
-                if not _surface_bounds_overlap(_surface_bounds(part["outline"]),_surface_bounds(column["outline"])):
-                    continue
-                lo,hi = max(part["z0"],column["z0"]),min(part["z1"],column["z1"])
-                if hi <= lo+1e-10:
-                    continue
-                for a in analysis._convex_parts(part["outline"]):
-                    for b in analysis._convex_parts(column["outline"]):
-                        ring = analysis._clip(a,b)
-                        if len(ring)>=3 and _area(ring)>1e-12:
-                            pieces = [{**deepcopy(part),"outline":ring,"z0":lo,"z1":hi,"owner":tag,"material":_material(model,owner)["tag"],"role":"column_joint","joint_host":obj["tag"]}]
-                            holes = [{"outline":hole,"z0":lo,"z1":hi} for hole in column.get("holes",())]
-                            common += _subtract_prisms(pieces,holes) if holes else pieces
+                other=_material_bounds(column)
+                if not all(a[0]<b[1] and b[0]<a[1] for a,b in zip(box,other)):continue
+                bounds=_native_material_cells(column)
+                for cell in bounds:
+                    common.extend(_reference_material_parts(part,[],bounds=[cell]))
         if not common:
-            if require_contact:
-                raise ValueError(f"Material reserve owner {tag} has no occupied intersection with {obj['tag']}")
+            if require_contact:raise ValueError(f"Material reserve owner {tag} has no occupied intersection with {obj['tag']}")
             continue
-        shared += common
-        cutters += [{**p,"holes":[]} for p in columns]
-        voids += [{"outline":hole,"z0":p["z0"],"z1":p["z1"]} for p in columns for hole in p.get("holes",())]
-    return _subtract_prisms(parts,cutters),shared,voids
+        shared.extend({**p,"owner":tag,"owner_guid":owner["guid"],"material":owner_material,"role":"column_joint","joint_host":obj["tag"]} for p in common)
+        cutters.extend(columns)
+        voids.extend({"outline":deepcopy(hole),"z0":p["z0"],"z1":p["z1"]} for p in columns for hole in p.get("holes",()))
+    owned=[cell for part in stocks for cell in _reference_material_parts(part,[*cutters,*voids])]
+    def publish(items):
+        """📤 Publish the exact native construction once, retaining closed positive physical cells."""
+        return [{**p,**_polyhedron_part(part_vertices(p),part_faces(p))} for p in (deepcopy(items) if exact else _native_public_value(items))]
+    return publish(owned),publish(shared),deepcopy(voids) if exact else _native_public_value(voids)
 
 
-def _solid_geometry(model: dict, obj: dict) -> dict:
+def _analytic_solids_backend():
+    """➖️ Resolve semantic stock difference geometry behind the first-party solid interface."""
+    return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧊️solids.➖️difference.🐍️")
+
+
+def _analytic_operand(part: dict) -> dict:
+    """🧱 Retain original analytic profiles and native topology without display conversion."""
+    affine="csg"not in part and any(k in part for k in ("section","top_outline"))
+    return _analytic_solids_backend().operand(part,part_vertices(part)if affine else None,part_faces(part)if affine else None)
+
+
+def _analytic_input(part: dict) -> dict:
+    """📦 Normalize an affine physical operand without publishing any generated coordinate."""
+    if "csg"not in part and any(k in part for k in ("section","top_outline")):
+        return {**_analytic_solids_backend()._metadata(part),"csg":_analytic_operand(part)}
+    return part
+
+
+def _analytic_bounds(part: dict) -> tuple:
+    """📦 Convert exact analytic extrema outward only when native Float64 cannot represent them."""
+    from fractions import Fraction
+    result=[]
+    for low,high in _analytic_solids_backend().bounds(_analytic_input(part)):
+        lo,hi=float(low),float(high)
+        if Fraction(lo)>low:lo=math.nextafter(lo,-math.inf)
+        if Fraction(hi)<high:hi=math.nextafter(hi,math.inf)
+        result.append((lo,hi))
+    return tuple(result)
+
+
+def part_volume(part: dict) -> float:
+    """⚖️ Measure actual semantic or native material from its declared geometry authority."""
+    if "csg"in part:return _analytic_solids_backend().measure(part)["volume"]
+    if part.get("profile")and"mesh"not in part:return _profile_moments(part["profile"])["area"]*(part["z1"]-part["z0"])
+    return _polyhedron_volume(part)
+
+
+def _structural_joint_backend():
+    """🔗 Resolve declared same-material structural ownership behind the native geometry interface."""
+    return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🏗️structure.🔗️joints.🐍️")
+
+
+def _flooring_layer_backend():
+    """🧱 Resolve editable exclusive flooring layers behind the native geometry interface."""
+    return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🎨️finishes.🧱️layers.🐍️")
+
+
+def _ramp_finish_backend():
+    """🛝️ Resolve original ramp surface construction behind the native model interface."""
+    return importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🎨️finishes.🛝️ramps")
+
+
+def _ramp_finish_reference_parts(model: dict, obj: dict) -> list:
+    """🤝 Share original exact physical floor operands with receiving material construction."""
+    return _geometry_query("ramp_finish_reference",obj["tag"],model)
+
+
+def _solid_stock_parts(model: dict, obj: dict, raw_parts: list, exact: bool = False) -> list:
+    """📦 Normalize source stocks while retaining original native datums and exact bound-layer coordinates."""
+    from fractions import Fraction
+    base=_z(model,obj["geometry"]["base_level"]);parts=[]
+    def height(value,rounded=False):
+        """📍 Retain private local coordinates while preserving resolved source Float64 datums."""
+        if exact and isinstance(value,Fraction):return Fraction(base)+value
+        return _round(base+value)if rounded else base+value
+    for raw in raw_parts:
+        part=deepcopy(raw)
+        if "csg"in part:
+            parts.append(_analytic_solids_backend().translate(part,[0,0,base]));continue
+        if "mesh" in part:
+            part.update(_polyhedron_part([[v[0],v[1],height(v[2])]for v in part["mesh"]["vertices"]],part["mesh"]["faces"]))
+        elif "section" in part:
+            section=part["section"];profile=section["profile"]
+            if section["sweep"][1]<=section["sweep"][0]or _area(profile)<=1e-12 or not math.isclose(_area(profile),_area(_convex_hull(profile)),rel_tol=1e-10,abs_tol=1e-12):
+                raise ValueError("A section sweep needs a convex positive profile and increasing sweep interval")
+            section["profile"]=[[h,height(z)]for h,z in profile]
+            part["z0"],part["z1"]=min(p[1]for p in section["profile"]),max(p[1]for p in section["profile"])
+            part["outline"]=part_footprint(part)
+        else:part["z0"],part["z1"]=height(part["z0"],True),height(part["z1"],True)
+        parts.append(part)
+    return parts
+
+
+def _solid_geometry(model: dict, obj: dict, resolve_embedded: bool = True, progress=None, cancel=None, exact: bool = False) -> dict:
+    """🧱 Resolve exclusive material and optionally its native embedded reference parts."""
     g = obj["geometry"]
+    if g.get("kind")=="ramp_finish":return _ramp_finish_backend().geometry(SimpleNamespace(**globals()),model,obj)
     if "section_sweep" in g:
         facade = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🏗️facade.🐍️")
         return {"tag":obj["tag"],"guid":obj["guid"],"class":obj["class"],"storey":obj["storey"],"kind":g["kind"],"name":deepcopy(obj["name"]),"domains":deepcopy(obj["metadata"]["domains"]),"parts":facade.owned_parts(SimpleNamespace(**globals()),model,obj),"shared_parts":[]}
-    base = _z(model, g["base_level"])
-    parts = []
-    for raw in g["parts"]:
-        part = deepcopy(raw)
-        if "mesh" in part:
-            part.update(_polyhedron_part([[v[0],v[1],base+v[2]] for v in part["mesh"]["vertices"]],part["mesh"]["faces"]))
-        elif "section" in part:
-            section = part["section"]
-            profile = section["profile"]
-            if section["sweep"][1] <= section["sweep"][0] or _area(profile) <= 1e-12 or not math.isclose(_area(profile),_area(_convex_hull(profile)),rel_tol=1e-10,abs_tol=1e-12):
-                raise ValueError("A section sweep needs a convex positive profile and increasing sweep interval")
-            section["profile"] = [[h,base+z] for h,z in profile]
-            part["z0"],part["z1"] = min(p[1] for p in section["profile"]),max(p[1] for p in section["profile"])
-            part["outline"] = part_footprint(part)
-        else:
-            part["z0"],part["z1"] = _round(base+part["z0"]),_round(base+part["z1"])
-        parts.append(part)
+    raw_parts=_flooring_layer_backend().parts(SimpleNamespace(**globals()),model,obj,progress=progress,cancel=cancel,exact=True)if "layer_binding"in g else g["parts"]
+    parts=_solid_stock_parts(model,obj,raw_parts,exact="layer_binding"in g)
+    _surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag),obj.get("material"))
     for part in parts:
         if "top_outline" in part:
             part_vertices(part)
-    slabs = [_slab_geometry(model,_find(model,tag)) for tag in g.get("embedded_slabs",())]
-    shared = [deepcopy(p) for slab in slabs for p in slab["parts"]+slab.get("shared_parts",[]) if p.get("member")==obj["tag"]]
+    if obj["class"]=="IfcFooting" and g.get("interface_owners"):
+        refs = g["interface_owners"]
+        if len(set(refs))!=len(refs) or obj["tag"] in refs or any(_find(model,key)["class"] not in ("IfcColumn","IfcBeam","IfcFooting","IfcBuildingElementProxy") for key in refs):
+            raise ValueError("A footing joint requires distinct independent native structural owners")
+        parts,_ = _subtract_native_material(_interface_reference_parts(model,obj["tag"]),[part for key in refs for part in _interface_reference_parts(model,key)])
+        _surface_finishes().apply_material_appearance(parts,lambda tag:_find(model,tag),obj.get("material"))
+    slabs = [_slab_geometry_entry(model,_find(model,tag)) for tag in (g.get("embedded_slabs",()) if resolve_embedded else ())]
+    shared = []
+    for slab in slabs:
+        for part in slab["parts"]+slab.get("shared_parts",[]):
+            if part.get("member")==obj["tag"]:
+                owner=_find(model,part.get("owner",slab["tag"]))
+                shared.append({**deepcopy(part),"owner":owner["tag"],"owner_guid":owner["guid"],"role":part.get("role","embedded_slab_reference")})
     slab_full = [deepcopy(p) for slab in slabs for p in slab.get("full_parts",slab["parts"]) if p.get("member")==obj["tag"]]
     full = deepcopy(parts)
+    if "layer_binding"in g:
+        full=_solid_stock_parts(model,obj,g["parts"])
+        _surface_finishes().apply_material_appearance(full,lambda tag:_find(model,tag),obj.get("material"))
+    if obj["class"]=="IfcCovering" and g.get("interface_owners"):
+        blockers=_declared_material_interfaces(model,obj)
+        if exact:parts=[cell for part in parts for cell in _reference_material_parts(part,blockers)]
+        else:parts,_ = _subtract_native_material(parts,blockers)
     voids = []
     if g.get("joint_owners"):
         parts,joints,voids = _column_partition(model,obj,parts,g["joint_owners"])
@@ -1532,12 +2507,32 @@ def _solid_geometry(model: dict, obj: dict) -> dict:
         def ring_key(p):
             return sorted((round(x,9),round(y,9)) for x,y in p["outline"])
         voids = [p for p in voids if not any(ring_key(p)==ring_key(v) and v["z0"]<=p["z0"] and v["z1"]>=p["z1"] for v in reserved)]
-        parts = _subtract_prisms(parts,reserved)
+        parts = _subtract_native_material([{**p,"material":p.get("material",_material(model,obj)["tag"])} for p in parts],reserved)[0]
         voids += reserved
-    full = (_subtract_prisms(full,voids) if voids else full)+slab_full
+    full = (_subtract_native_material([{**p,"material":p.get("material",_material(model,obj)["tag"])} for p in full],voids)[0] if voids else full)+slab_full
     shared += joints
-    return {"tag": obj["tag"], "guid": obj["guid"], "class": obj["class"], "storey": obj["storey"],
-            "kind": g["kind"], "name": deepcopy(obj["name"]), "domains":deepcopy(obj["metadata"]["domains"]), "parts": parts, "shared_parts": shared, "full_parts": full}
+    issues = []
+    if g.get("structural_joints"):
+        parts,shared,issues = _structural_joint_backend().partition(SimpleNamespace(**globals()),model,obj,parts,shared,progress=progress,cancel=cancel,exact=exact)
+    result={"tag": obj["tag"], "guid": obj["guid"], "class": obj["class"], "storey": obj["storey"],
+            "kind": g["kind"], "predefined_type":obj.get("predefined_type"), "name": deepcopy(obj["name"]), "domains":deepcopy(obj["metadata"]["domains"]), "parts": parts, "shared_parts": shared, "full_parts": full, "construction_issues":issues}
+    return result if exact else _native_public_value(result)
+
+
+def reference_parts(key: str, model: dict | None = None) -> list:
+    """🧭 Expose isolated original full structural product stock independently of owned and assembly material."""
+    source=_m(model);obj=_find(source,key);cls=obj["class"]
+    if "interface_construction"in obj["geometry"]:
+        parts=[_ramp_stringer_reference_stock(source,obj)]if obj["geometry"]["interface_construction"]["kind"]=="ramp_stringer"else _guard_reference_stocks(source,obj)
+    elif cls in ("IfcRamp","IfcRampFlight"):parts=_ramp_nominal_parts(source,obj)
+    elif cls=="IfcColumn":parts=column_geometry(source,obj)["parts"]
+    elif cls=="IfcSlab":parts=_slab_geometry_entry(source,obj)["full_parts"]
+    elif cls=="IfcStair":parts=_stair_geometry(source,obj)["full_parts"]
+    elif cls=="IfcFooting"and obj["geometry"].get("interface_owners")and not obj["geometry"].get("voids"):parts=_interface_reference_parts(source,key)
+    elif "parts"in obj.get("geometry",{}):
+        geometry=solid_geometry(key,source);parts=geometry.get("full_parts",geometry["parts"])
+    else:raise ValueError("Full structural reference requires an independently authored native product")
+    return deepcopy(_native_public_value(parts))
 
 
 def stair_geometry(key: str, model: dict | None = None) -> dict:
@@ -1549,13 +2544,17 @@ def stair_geometry(key: str, model: dict | None = None) -> dict:
     return _stair_geometry(source,obj)
 
 
-def _stair_geometry(model: dict, obj: dict) -> dict:
+def _stair_geometry(model: dict, obj: dict, progress=None, cancel=None, exact: bool = False) -> dict:
     g = obj["geometry"]
     z0, z1 = _z(model, g["from_level"]), _z(model, g["to_level"])
     def placed(raw, base):
         part = deepcopy(raw)
+        if exact or g.get("structural_joints"):
+            from fractions import Fraction
+            base=Fraction(base)
+            if "mesh" in raw:part["mesh"]["vertices"]=[[Fraction(v)for v in point]for point in raw["mesh"]["vertices"]]
         if "mesh" in raw:
-            part.update(_polyhedron_part([[v[0],v[1],base+v[2]] for v in raw["mesh"]["vertices"]],raw["mesh"]["faces"]))
+            part.update(_polyhedron_part([[v[0],v[1],base+v[2]] for v in part["mesh"]["vertices"]],part["mesh"]["faces"]))
         else:
             part["outline"] = _expand(model,raw["outline"])
             part["z0"],part["z1"] = _round(base+raw["z0"]),_round(base+raw["z1"])
@@ -1563,9 +2562,15 @@ def _stair_geometry(model: dict, obj: dict) -> dict:
     steps = [placed(part,z0) for part in g["step_parts"]]
     landings = [placed(part,z1) for part in g["landing_parts"]]
     structural = [placed(part,z0) for part in g["structural_parts"]]
-    return {"tag":obj["tag"],"guid":obj["guid"],"class":obj["class"],"storey":obj["storey"],"kind":g["kind"],
+    nosings = [placed(part,z0) for part in g.get("nosing_parts",())]
+    finishes = _subtract_prisms(steps,nosings) if nosings else deepcopy(steps)
+    full=deepcopy(finishes+nosings+landings+structural);shared=[];issues=[]
+    if g.get("structural_joints"):
+        structural,shared,issues=_structural_joint_backend().partition(SimpleNamespace(**globals()),model,obj,structural,[],progress=progress,cancel=cancel,exact=exact)
+    result = {"tag":obj["tag"],"guid":obj["guid"],"class":obj["class"],"storey":obj["storey"],"kind":g["kind"],
             "centre":deepcopy(g["centre"]),"radius":g["radius"],"inner_radius":g["inner_radius"],"domains":deepcopy(obj["metadata"]["domains"]),
-            "base":z0,"top":z1,"name":deepcopy(obj["name"]),"steps":steps,"landings":landings,"structural_parts":structural,"parts":steps+landings+structural}
+            "base":z0,"top":z1,"name":deepcopy(obj["name"]),"steps":steps,"landings":landings,"structural_parts":structural,"finish_parts":finishes,"nosings":nosings,"parts":finishes+nosings+landings+structural,"full_parts":full,"shared_parts":shared,"construction_issues":issues}
+    return result if exact else _native_public_value(result)
 
 
 def _profile_moments(profile: dict) -> dict:
@@ -1629,7 +2634,7 @@ def profile_geometry(profile: dict, axis: list, segments: int = 96) -> dict:
         raise ValueError(f"Unknown column profile {shape}")
     c, s = math.cos(rotation), math.sin(rotation)
     outline = [[axis[0] + c * x - s * y, axis[1] + s * x + c * y] for x, y in points]
-    out = {"outline": outline, "area": area, "perimeter": perimeter, "profile": deepcopy(profile),
+    out = {"axis":deepcopy(axis),"outline": outline, "area": area, "perimeter": perimeter, "profile": deepcopy(profile),
            "curve_error": max(width,depth)/2*(1-math.cos(math.pi/segments)) if shape == "ellipse" else 0.}
     if shape == "circle":
         out["radius"] = profile["diameter"]["value"] / 2
@@ -1650,6 +2655,29 @@ def profile_geometry(profile: dict, axis: list, segments: int = 96) -> dict:
     return out
 
 
+def _column_end_parts(part: dict, plane: dict, axis: list) -> list:
+    """🪚 Clip the final uniform column section to a finite positive upper plane."""
+    normal,origin=plane['normal'],plane['point']
+    if len(normal)!=3 or len(origin)!=3 or any(isinstance(v,bool) or not isinstance(v,(int,float)) or not math.isfinite(v) for v in normal+origin) or abs(normal[2])<1e-12:
+        raise ValueError('A column end plane must intersect its vertical extrusion')
+    def height(point):
+        """📉 Resolve the world elevation of one exact upper profile vertex."""
+        return origin[2]-sum(normal[k]*(point[k]-origin[k]) for k in (0,1))/normal[2]
+    boundaries=[part['outline'],*part.get('holes',())]
+    heights=[height(p) for ring in boundaries for p in ring]
+    if min(heights)<=part['z0'] or max(heights)>part['z1']+1e-9:
+        raise ValueError('A column end plane must preserve a positive final section within its upper bound')
+    rings=part_regions(part,(part['z0']+part['z1'])/2) if part.get('holes') else _analysis._convex_parts(part['outline'])
+    result=[]
+    for ring in rings:
+        n=len(ring)
+        vertices=[[*p,part['z0']] for p in ring]+[[*p,height(p)] for p in ring]
+        faces=[list(reversed(range(n))),list(range(n,2*n))]+[[i,(i+1)%n,n+(i+1)%n,n+i] for i in range(n)]
+        profile={'shape':'polygon','outline':[[p[0]-axis[0],p[1]-axis[1]] for p in ring]}
+        result.append({**profile_geometry(profile,axis),**_polyhedron_part(vertices,faces),**{key:part[key] for key in ('role','material') if key in part}})
+    return result
+
+
 def column_geometry(model: dict, obj: dict, segments: int = 96) -> dict:
     """🏺 Resolve native column sections at their actual placements and elevations."""
     g = obj["geometry"]
@@ -1658,13 +2686,18 @@ def column_geometry(model: dict, obj: dict, segments: int = 96) -> dict:
     parts = [{**profile_geometry(section["profile"], section.get("axis", g["axis"]), segments),
               "z0": _z(model, section["base_level"]), "z1": _top(model, section["top_level"]),
               **({"role":section["role"],"material":(obj["material"] if isinstance(obj.get("material"),dict) else _material(model,obj))["tag"]} if "role" in section else {})} for section in sections]
+    metrics = deepcopy(parts) if "end_plane" in g else None
+    if metrics is not None:
+        parts = parts[:-1]+_column_end_parts(parts[-1],g["end_plane"],g["axis"])
     x, y = g["axis"]
     out = {"tag": obj["tag"], "guid": obj["guid"], "storey": obj["storey"], "x": x, "y": y,
            "profile": deepcopy(profile), "parts": parts, "outline": deepcopy(parts[0]["outline"]),
            "base": min(p["z0"] for p in parts), "top": max(p["z1"] for p in parts),
            "bounding_radius": max(math.dist([x, y], p) for part in parts for p in part["outline"])}
-    if all(p["profile"]["shape"] == "circle" for p in parts):
-        out["radius"] = max(p["profile"]["diameter"]["value"] / 2 for p in parts)
+    if metrics is not None:
+        out.update(end_plane=deepcopy(g["end_plane"]),section_metrics=metrics,outline=deepcopy(metrics[0]["outline"]))
+    if all(p["profile"]["shape"] == "circle" for p in (metrics or parts)):
+        out["radius"] = max(p["profile"]["diameter"]["value"] / 2 for p in (metrics or parts))
     return out
 
 
@@ -1679,13 +2712,19 @@ def filling_geometry(key: str, model: dict | None = None) -> dict:
     raise ValueError(f"No physical filling geometry for {key}")
 
 
-def building_geometry(model: dict | None = None) -> dict:
-    """🗺️ Give drawings shared metric geometry in CMN plan axes, with an explicit north vector."""
-    m = _m(model)
+def is_architectural_covering(obj: dict) -> bool:
+    """🎨 Classify owned architectural finishes without reclassifying shared-domain MEP casings."""
+    domains=obj.get("metadata",{}).get("domains",[])
+    return obj.get("class")=="IfcCovering" and "architecture" in domains and "services" not in domains and "system" not in obj
+
+
+def _building_geometry_uncached(m: dict) -> dict:
+    """🏗️ Build complete shared metric geometry without publishing a memo value."""
     length, width, height = _box(m)
     grid = m["grid"]
     pilotis = [column_geometry(m, e) for e in _by_class(m, "IfcColumn")]
-    wall_geometries = [_wall_geometry(m,w) for w in _by_class(m,"IfcWall")]
+    wall_junctions = _wall_junction_backend().context(SimpleNamespace(**globals()),m)
+    wall_geometries = [_wall_geometry(m,w,junctions=wall_junctions) for w in _by_class(m,"IfcWall")]
     walls = [w for w in wall_geometries if "path" not in w]
     cw = _find(m, "CW-1")
     ramps = [_ramp_geometry(m,obj) for obj in _by_class(m,"IfcRamp")]
@@ -1710,13 +2749,200 @@ def building_geometry(model: dict | None = None) -> dict:
         "screens": [w for w in wall_geometries if "path" in w],
         "spaces": spaces,
         "stairs": [_stair_geometry(m, e) for e in _by_class(m, "IfcStair")],
-        "details": [_solid_geometry(m, e) for e in _by_class(m, "IfcBuildingElementProxy")],
+        "details": [_solid_geometry(m, e) for e in m["elements"] if e["class"]=="IfcBuildingElementProxy" or is_architectural_covering(e)],
         "furnishings": [_solid_geometry(m, e) for e in _by_class(m, "IfcFurnishingElement")],
         "beams": [_solid_geometry(m, e) for e in _by_class(m, "IfcBeam")],
         "foundations": [_solid_geometry(m, e) for e in _by_class(m, "IfcFooting")],
         "railings": [_solid_geometry(m, e) for e in _by_class(m, "IfcRailing")],
-        "services": [_service(m,e) for e in m["elements"] if e["class"] in ("IfcBoiler","IfcSpaceHeater","IfcWasteTerminal","IfcPipeSegment","IfcCovering","IfcChimney")],
+        "services": [_service(m,e) for e in m["elements"] if e["class"] in ("IfcBoiler","IfcSpaceHeater","IfcSanitaryTerminal","IfcLightFixture","IfcWasteTerminal","IfcPipeSegment","IfcCovering","IfcChimney") and not is_architectural_covering(e)],
     }
+
+_GEOMETRY_REVISIONS = _RevisionCounter()
+
+
+@lru_cache(maxsize=2)
+def _geometry_models_cached(source: str, producers: tuple) -> dict:
+    """🧊 Own two canonical model snapshots and their complete producer revision."""
+    return {"model": json.loads(source), "values": {}, "lock": _GeometryLock(), "revision": next(_GEOMETRY_REVISIONS)}
+
+
+def _geometry_producers() -> tuple:
+    """🧬 Bind native geometry memoization to every construction and numeric producer."""
+    return (
+        _polyhedron_volume,
+        _analytic_solids_backend,
+        *_analytic_solids_backend().producers(),
+        _analytic_operand,
+        _analytic_input,
+        _analytic_bounds,
+        part_volume,
+        part_outline_at,
+        part_faces,
+        part_vertices,
+        column_geometry,
+        profile_geometry,
+        _profile_moments,
+        _column_end_parts,
+        _column_partition,
+        _part_pose_distance,
+        _column_pose_distance,
+        _building_geometry_uncached,
+        _ramp_finish_reference_parts,
+        _ramp_finish_backend().reference_stocks,
+        _ramp_finish_backend().reference_parts,
+        _ramp_finish_backend().geometry,
+        _ramp_finish_backend().partitioned,
+        _convex_hull,
+        _filling_geometry,
+        _curtain_filling_geometry,
+        _filling_owned_parts,
+        _filling_receiving_interval,
+        _filling_structures,
+        _filling_structure_snapshot,
+        _service,
+        _solid_geometry,
+        _solid_stock_parts,
+        _stair_geometry,
+        _ramp_geometry,
+        _ramp_reference_stock,
+        _ramp_nominal_parts,
+        reference_parts,
+        _ramp_owned_reference_parts,
+        _ramp_owned_reference_parts_uncached,
+        _interface_reference_parts,
+        _reference_material_parts,
+        _source_fraction,
+        importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧊️profiles.🐍️").circle_envelope,
+        _subtract_convex_material,
+        _surface_finishes().clip_stock,
+        *_flooring_layer_backend().producers(),
+        _flooring_layer_backend,
+        *_structural_joint_backend().producers(),
+        _structural_joint_backend,
+        _declared_structural_interfaces,
+        _declared_material_interfaces,
+        _declared_interfaces,
+        _finish_reservations,
+        _native_parts_have_volume,
+        _native_parts_exact_volume,
+        _native_profile_regions,
+        _geometry_source_key,
+        _surface_finishes().publish_stock,
+        _surface_finishes().stock_separated,
+        _slab_geometry_entry,
+        _slab_geometry_uncached,
+        _slab_surface,
+        _slab_voids,
+        _slab_finish_parts,
+        _quantities_uncached,
+        _ramp_quantity_partitions,
+        _occupied_volume,
+        _material_quantities,
+        _partition_volume,
+        _parts_disjoint,
+        part_footprint,
+        _material_bounds,
+        is_architectural_covering,
+        _wall_parts,
+        _wall_geometry,
+        _wall_geometry_unjoined,
+        path_wall_geometry,
+        _wall_junction_backend,
+        _wall_has_junction,
+        *_wall_junction_backend().producers(),
+        _wall_interface_parts,
+        _wall_interface_cutters,
+        _guard_reference_stocks,
+        _ramp_stringer_reference_stock,
+        _interface_owner_parts,
+        _subtract_native_material,
+        _native_material_cells,
+        _wall_owned_parts,
+        _wall_cutters,
+        _native_cache_scalar,
+        _native_public_value,
+        _surface_finishes().wall_regions,
+        _surface_finishes().cell_region,
+        _surface_finishes().face_identity,
+        _surface_finishes().summaries,
+        _surface_finishes().face_matches,
+        _surface_finishes().apply_material_appearance,
+        _surface_support_edges,
+        _surface_separated,
+        _surface_difference,
+        _analysis._orientation,
+        _geometry_producers,
+        _geometry_memo,
+        _geometry_query,
+        geometry_revision,
+    )
+
+
+def _geometry_memo(model: dict | None) -> dict:
+    """🔒 Resolve a private immutable-input snapshot for one producer revision."""
+    source = json.dumps(_m(model), sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False)
+    return _geometry_models_cached(source, _geometry_producers())
+
+
+def geometry_revision(model: dict | None = None) -> int:
+    """🗂️ Identify the complete source and producer snapshot within this process."""
+    return _geometry_memo(model)["revision"]
+
+
+def _geometry_query(kind: str, key: str | None, model: dict | None, progress=None, cancel=None) -> dict:
+    """📦 Publish only completed native values and return isolated copies to each caller."""
+    if cancel and cancel():raise InterruptedError('Native geometry query cancelled')
+    m = _m(model)
+    key = None if kind == "building" else _find(m, key)["tag"]
+    memo = _geometry_memo(m)
+    slot = (kind, key)
+    with memo["lock"]:
+        value = memo["values"].get(slot)
+    if value is not None:
+        return deepcopy(value)
+    owned = memo["model"]
+    if kind == "building":
+        value = _building_geometry_uncached(owned)
+    elif kind == "wall":
+        value = _native_public_value(_wall_geometry(owned,_find(owned,key),progress=progress,cancel=cancel))
+    elif kind == "service":
+        value = _service(owned, _find(owned, key))
+    elif kind == "solid":
+        value = _solid_geometry(owned, _find(owned, key),progress=progress,cancel=cancel)
+    elif kind == "quantity":
+        value = _quantities_uncached(owned, _find(owned, key))
+    elif kind == "ramp_owned_reference":
+        value = _ramp_owned_reference_parts_uncached(owned,_find(owned,key),progress=progress,cancel=cancel)
+    elif kind == "ramp_finish_reference":
+        value = _ramp_finish_backend().reference_parts(SimpleNamespace(**globals()),owned,_find(owned,key))
+    else:
+        raise ValueError(f"Unknown geometry query: {kind}")
+    if cancel and cancel():raise InterruptedError('Native geometry query cancelled')
+    returned = deepcopy(value)
+    with memo["lock"]:
+        if kind == "building":
+            for obj in (*value.get("walls", ()),*value.get("screens", ())):
+                memo["values"][("wall", obj["tag"])] = obj
+            for obj in value.get("services", ()):
+                memo["values"][("service", obj["tag"])] = obj
+            for group in ("details", "furnishings", "beams", "foundations", "railings"):
+                for obj in value.get(group, ()):
+                    memo["values"][("solid", obj["tag"])] = obj
+        memo["values"][slot] = value
+    return returned
+
+
+def wall_geometry(key: str, model: dict | None = None, progress=None, cancel=None) -> dict:
+    """🧱 Query one revision-bound wall Body and its declared full material Reference in isolated form."""
+    m = _m(model)
+    if _find(m,key)['class']!='IfcWall':raise ValueError('A wall geometry query requires an actual native wall')
+    return _geometry_query('wall',key,m,progress=progress,cancel=cancel)
+
+
+def building_geometry(model: dict | None = None) -> dict:
+    """🗺️ Give drawings isolated shared metric geometry in CMN plan axes and an explicit north vector."""
+    return _geometry_query("building", None, model)
+
 
 
 def _pose_distance(pose: list, car: dict, centre: tuple, radius: float) -> float:
@@ -1769,8 +2995,8 @@ def _vehicle_part(part: dict, car: dict) -> bool:
 def _part_pose_distance(pose: list, car: dict, part: dict) -> float:
     outline = part["outline"]
     if "radius" in part:
-        centre = [sum(p[i] for p in outline) / len(outline) for i in (0,1)]
-        return _pose_distance(pose, car, centre, part["radius"])
+        if "axis" not in part:raise ValueError("An analytic circular collision part requires its explicit profile axis")
+        return _pose_distance(pose, car, part["axis"], part["radius"])
     ring = _car_outline(pose, car)
     if _contains_point(ring, outline[0]) or _contains_point(outline, ring[0]):
         return 0.
@@ -2042,7 +3268,7 @@ def _opening_area(model: dict, wall: dict) -> float:
 
 
 def _slab_areas(model: dict, slab: dict) -> dict:
-    g = _slab_geometry(model, slab)
+    g = _slab_geometry_entry(model, slab)
     gross = _area(g["outline"])
     full = g["full_parts"]
     area = sum(_area(p["outline"]) for p in full)
@@ -2054,6 +3280,37 @@ def _slab_areas(model: dict, slab: dict) -> dict:
             "gross_volume": _round(sum(r["gross_area"] * r["thickness"] for r in g["regions"])),
             "regions": [{"tag": r["tag"], "area": _round(r["area"]), "thickness": r["thickness"],
                          "top": r["top"], "volume": _round(r["area"] * r["thickness"])} for r in g["regions"]]}
+
+def _parts_disjoint(parts: list, progress=None, cancelled=None) -> bool:
+    """📦 Prove native polyhedral component separation by actual world bounds and exact projected support planes."""
+    if cancelled and cancelled():
+        raise InterruptedError("Material partition proof cancelled")
+    if any(part.get("profile") or "radius" in part for part in parts):
+        return False
+    records=[]
+    for part in parts:
+        if cancelled and cancelled():
+            raise InterruptedError("Material partition proof cancelled")
+        box=_material_bounds(part)
+        outline=[[box[0][0],box[1][0]],[box[0][1],box[1][0]],[box[0][1],box[1][1]],[box[0][0],box[1][1]]]if "csg"in part else part_footprint(part)
+        records.append((box,outline))
+    active=[]
+    for index,(bounds,outline) in enumerate(sorted(records,key=lambda row:row[0][0][0]),1):
+        if cancelled and cancelled():
+            raise InterruptedError("Material partition proof cancelled")
+        active=[row for row in active if row[0][0][1]>bounds[0][0]]
+        for other,ring in active:
+            if cancelled and cancelled():
+                raise InterruptedError("Material partition proof cancelled")
+            if any(bounds[k][1]<=other[k][0] or other[k][1]<=bounds[k][0] for k in (1,2)):
+                continue
+            if not _surface_separated(outline,ring):
+                return False
+        active.append((bounds,outline))
+        if progress:
+            progress({"completed":index,"total":len(records)})
+    return True
+
 
 def _material_quantities(model: dict, obj: dict, parts: list, partition: bool = False) -> dict:
     """⚖️ Integrate owned material volumes; unit weights are kN/m³, weight kN and mass kg."""
@@ -2078,19 +3335,69 @@ def _material_quantities(model: dict, obj: dict, parts: list, partition: bool = 
     return {"material_quantities":entries,"weight":_round(weight),"mass":_round(weight*1000/9.80665)}
 
 
-def quantities(key: str, model: dict | None = None) -> dict:
-    """🧮 Derive the quantities of an element, a type total or a space from the authored values."""
-    m = _m(model)
-    obj = _find(m, key)
+def _ramp_quantity_partitions(model: dict, obj: dict, geometry: dict) -> dict:
+    """🛡️ Prove original component separation or complete directed stock subtraction before summing cells."""
+    if obj["class"]=="IfcRampFlight":return {"owned":True,"children":True,"full":True}
+    from fractions import Fraction
+    q = _source_fraction
+    components = [("child",f["tag"],_ramp_reference_stock(model,_find(model,f["tag"])),set(_find(model,f["tag"])["geometry"].get("flight_joint_owners",()))) for f in geometry["flights"]]
+    for landing in geometry["landings"]:
+        if not landing["parts"]:continue
+        owner = _find(model,landing["owner"])
+        original = next(p for p in obj["geometry"]["landings"] if p["tag"]==landing["tag"] and p["owner"]==landing["owner"])
+        if landing["ownership"]=="floor_slab":
+            low,high = min(q(p["z0"]) for p in landing["parts"]),max(q(p["z1"]) for p in landing["parts"])
+        else:
+            spec = owner["geometry"]
+            low = high = q(_z(model,spec["from_level"]))+(q(_z(model,spec["to_level"]))-q(_z(model,spec["from_level"])))*q(original["portion"])-q(spec["finish_thickness"]["value"])
+            low -= q(original["thickness"]["value"])
+        stock = {"outline":[[q(v) for v in p] for p in _expand(model,original["outline"])],"z0":low,"z1":high}
+        components.append(("owned" if landing["owner"]==obj["tag"] else "shared",landing["tag"],stock,set()))
+    def separate(left,right):
+        if left[0]==right[0]=="child" and (left[1] in right[3] or right[1] in left[3]):return True
+        a,b = [[[Fraction(v) for v in p] for p in part_vertices(c[2])] for c in (left,right)]
+        for item,vertices in ((left,a),(right,b)):
+            for face in part_faces(item[2]):
+                origin = vertices[face[0]]
+                for i in range(1,len(face)-1):
+                    u,v = [[vertices[j][k]-origin[k] for k in range(3)] for j in (face[i],face[i+1])]
+                    axis = [u[1]*v[2]-u[2]*v[1],u[2]*v[0]-u[0]*v[2],u[0]*v[1]-u[1]*v[0]]
+                    if any(axis):break
+                else:continue
+                x,y = [[sum(n*z for n,z in zip(axis,p)) for p in points] for points in (a,b)]
+                if max(x)<=min(y) or max(y)<=min(x):return True
+        return False
+    pairs = [(left,right,separate(left,right)) for i,left in enumerate(components) for right in components[:i]]
+    return {"owned":all(valid for left,right,valid in pairs if left[0]==right[0]=="owned"),"children":all(valid for left,right,valid in pairs if left[0]==right[0]=="child"),"full":all(valid for _,_,valid in pairs)}
+
+
+def _quantities_uncached(m: dict, obj: dict) -> dict:
+    """⚖️ Derive exact physical quantities once for one complete canonical source snapshot."""
+    key = obj["tag"]
     cls = obj["class"]
     if cls == "IfcColumn":
         g = column_geometry(m, obj)
-        parts = g["parts"]
+        native_parts = g["parts"]
+        parts = g.get("section_metrics",native_parts)
         out = {"height": _round(g["top"] - g["base"]),
-               "volume": sum(p["area"] * (p["z1"] - p["z0"]) for p in parts),
+               "volume": sum(_polyhedron_volume(p) if "mesh" in p else p["area"]*(p["z1"]-p["z0"]) for p in native_parts),
                "outer_surface_area": sum(p["outer_perimeter"]*(p["z1"]-p["z0"]) for p in parts),
                "bore_surface_area":sum((p["perimeter"]-p["outer_perimeter"])*(p["z1"]-p["z0"]) for p in parts),
                "lateral_surface_area":sum(p["perimeter"]*(p["z1"]-p["z0"]) for p in parts)}
+        if 'end_plane' in g:
+            normal,origin=g['end_plane']['normal'],g['end_plane']['point']
+            last=parts[-1]
+            def lateral(rings):
+                """🧵 Integrate vertical boundary trapezoids beneath the actual upper plane."""
+                total=0.
+                for ring in rings:
+                    for a,b in zip(ring,ring[1:]+ring[:1]):
+                        hs=[origin[2]-sum(normal[k]*(p[k]-origin[k]) for k in (0,1))/normal[2]-last['z0'] for p in (a,b)]
+                        total+=math.dist(a,b)*sum(hs)/2
+                return total
+            outer=sum(p['outer_perimeter']*(p['z1']-p['z0']) for p in parts[:-1])+lateral([last['outline']])
+            bore=sum((p['perimeter']-p['outer_perimeter'])*(p['z1']-p['z0']) for p in parts[:-1])+lateral(last.get('holes',[]))
+            out.update(outer_surface_area=outer,bore_surface_area=bore,lateral_surface_area=outer+bore)
         if all(math.isclose(p["area"],parts[0]["area"],rel_tol=1e-12) for p in parts):
             out["cross_section_area"] = parts[0]["area"]
             out["second_moments"] = deepcopy(parts[0]["second_moments"])
@@ -2121,7 +3428,7 @@ def quantities(key: str, model: dict | None = None) -> dict:
                 "cavity_volume": _round(sum(l["volume"] for l in g["layers"] if l["is_void"])),
                 "gross_volume": _round(sum(l["gross_side_area"]*(l["offsets"][1]-l["offsets"][0]) for l in g["layers"] if not l["is_void"])),
                 "envelope_volume": _round(sum(l["gross_side_area"]*(l["offsets"][1]-l["offsets"][0]) for l in g["layers"])),
-                "bounding_volume": _round(gross*g["thickness"]), "layers":deepcopy(g["layers"])}
+                "bounding_volume": _round(gross*g["thickness"]), "layers":deepcopy(g["layers"]), **({"surface_finishes":deepcopy(g["surface_finishes"])} if "surface_finishes" in g else {})}
 
     if cls == "IfcWall":
         g = path_wall_geometry(m,obj)
@@ -2138,10 +3445,10 @@ def quantities(key: str, model: dict | None = None) -> dict:
         return {"thickness":obj["attributes"]["thickness"]["value"],"material":material["tag"]}
     if cls == "IfcSlab":
         out = _slab_areas(m, obj)
-        geometry = _slab_geometry(m, obj)
+        geometry = _slab_geometry_entry(m, obj)
         if "layers" in geometry:
             out["total_thickness"] = geometry["total_thickness"]
-        if obj["geometry"].get("column_reserves"):
+        if obj["geometry"].get("column_reserves") or obj["geometry"].get("interface_owners"):
             out.update(_material_quantities(m,obj,geometry["parts"],partition=True))
         return out
     if cls == "IfcOpeningElement" and "slab" in obj["geometry"]:
@@ -2178,7 +3485,12 @@ def quantities(key: str, model: dict | None = None) -> dict:
     if cls in ("IfcRamp","IfcRampFlight"):
         g = _ramp_geometry(m,obj)
         flights = g["flights"]
-        out = {"volume":_round(_occupied_volume(g["full_parts"])),"exclusive_volume":_round(_occupied_volume(g["parts"])),"shared_volume":_round(_occupied_volume(g["shared_parts"])),"child_volume":_round(_occupied_volume(g["child_parts"])),"scope":"assembly" if cls=="IfcRamp" else "product","thickness_direction":"vertical",**_material_quantities(m,obj,g["parts"])}
+        proof = _ramp_quantity_partitions(m,obj,g)
+        exclusive = (_partition_volume if proof["owned"] else _occupied_volume)(g["parts"])
+        shared = _occupied_volume(g["shared_parts"]) if g["shared_parts"] else 0.
+        children = (_partition_volume if proof["children"] else _occupied_volume)(g["child_parts"]) if g["child_parts"] else 0.
+        volume = exclusive+shared+children if proof["full"] else _occupied_volume(g["full_parts"])
+        out = {"volume":_round(volume),"exclusive_volume":_round(exclusive),"shared_volume":_round(shared),"child_volume":_round(children),"scope":"assembly" if cls=="IfcRamp" else "product","thickness_direction":"vertical",**_material_quantities(m,obj,g["parts"],partition=proof["owned"])}
         if cls=="IfcRamp":
             return {**out,"width":g["width"],"flight_count":len(flights),"length":_round(sum(f["run"] for f in flights)),"rise":_round(max(f["z1"] for f in flights)-min(f["z0"] for f in flights)),"slope":_round(sum(f["slope"] for f in flights)/len(flights))}
         f = flights[0]
@@ -2190,23 +3502,36 @@ def quantities(key: str, model: dict | None = None) -> dict:
             out["reference_area"] = obj["reference_area"]["value"]
             out["fit"] = _round(out["area"] / out["reference_area"] - 1, 6)
         return out
-    if cls in ("IfcPipeSegment","IfcCovering","IfcChimney","IfcWasteTerminal","IfcBoiler","IfcSpaceHeater"):
-        g = _service(m,obj)
+    if cls in ("IfcPipeSegment","IfcCovering","IfcChimney","IfcWasteTerminal","IfcBoiler","IfcSpaceHeater","IfcSanitaryTerminal","IfcLightFixture") and not is_architectural_covering(obj):
+        g = service_geometry(obj["tag"], m)
         if "parts" in obj["geometry"]:
-            return {"part_count":len(g["parts"]),"volume":_round(_occupied_volume(g["parts"])),**_material_quantities(m,obj,g["parts"])}
+            return {"part_count":len(g["parts"]),"volume":_round(g["volume"]),**_material_quantities(m,obj,g["parts"])}
         return {k:g[k] for k in ("length","diameter","inner_diameter","wall_thickness","volume")} if "tube" in obj["geometry"] else {"volume":sum(_area(p["outline"])*(p["z1"]-p["z0"]) for p in g["parts"])}
     if cls == "IfcStair":
         g = _stair_geometry(m, obj)
         return {"step_count": len(g["steps"]), "rise": g["top"] - g["base"], "volume": _round(_occupied_volume(g["parts"]))}
-    if "parts" in obj.get("geometry", {}):
-        solid = _solid_geometry(m, obj)
-        parts = solid.get("full_parts",solid["parts"] + solid["shared_parts"])
-        volume = _partition_volume if obj["class"]=="IfcBeam" else _occupied_volume
-        out = {"part_count": len(parts), "volume": _round(volume(parts)), **_material_quantities(m,obj,solid["parts"],partition=obj["class"]=="IfcBeam")}
-        if obj["class"] == "IfcBeam":
-            out.update({"exclusive_volume": _round(volume(solid["parts"])), "shared_volume": _round(volume(solid["shared_parts"]))})
+    if "parts" in obj.get("geometry", {}) or obj.get("geometry",{}).get("kind")=="ramp_finish":
+        solid = solid_geometry(obj["tag"], m)
+        reference = solid.get("full_parts",solid["parts"] + solid["shared_parts"])
+        structural = obj["class"] in ("IfcBeam","IfcFooting") or bool(obj["geometry"].get("structural_joints"))
+        parts = reference if structural else solid["parts"]
+        partition = _parts_disjoint(parts)
+        owned_partition = partition if parts==solid["parts"] else _parts_disjoint(solid["parts"])
+        volume = _partition_volume if partition else _occupied_volume
+        owned = _partition_volume if owned_partition else _occupied_volume
+        measured = volume(parts)
+        reference_volume = measured if reference==parts else (_partition_volume if _parts_disjoint(reference) else _occupied_volume)(reference)
+        out = {"part_count":len(parts),"volume":_round(measured),"reference_volume":_round(reference_volume),**_material_quantities(m,obj,solid["parts"],partition=owned_partition)}
+        if structural:
+            shared = (_partition_volume if _parts_disjoint(solid["shared_parts"]) else _occupied_volume)(solid["shared_parts"]) if solid["shared_parts"] else 0.
+            out.update({"exclusive_volume":_round(owned(solid["parts"])),"shared_volume":_round(shared),"scope":"full_member"})
         return out
     raise ValueError(f"No derived quantities for {key}")
+
+def quantities(key: str, model: dict | None = None) -> dict:
+    """🧮 Give each caller isolated exact quantities of an element, type total or space."""
+    return _geometry_query("quantity",key,model)
+
 
 
 def quantity(element_: dict | str, name: str, model: dict | None = None) -> float:
@@ -2342,10 +3667,9 @@ def _footprint(model: dict, wall: dict) -> list:
     return [[_round(x0 - nx, 6), _round(y0 - ny, 6)], [_round(x1 - nx, 6), _round(y1 - ny, 6)], [_round(x1 + nx, 6), _round(y1 + ny, 6)], [_round(x0 + nx, 6), _round(y0 + ny, 6)]]
 
 
-def solid_geometry(key: str, model: dict | None = None) -> dict:
+def solid_geometry(key: str, model: dict | None = None, progress=None, cancel=None) -> dict:
     """🧊 Resolve one authored multipart element through the shared physical part interface."""
-    m = _m(model)
-    return _solid_geometry(m,_find(m,key))
+    return _geometry_query("solid", key, model,progress=progress,cancel=cancel)
 
 
 def part_faces(part: dict) -> list:
@@ -2360,6 +3684,14 @@ def part_faces(part: dict) -> list:
     else:
         n = len(part["section"]["profile"]) if "section" in part else len(part["outline"])
         faces = [list(reversed(range(n))),list(range(n,2*n))] + [[i,(i+1)%n,n+(i+1)%n,n+i] for i in range(n)]
+    if "mesh" not in part:
+        origin = vertices[0]
+        signed = []
+        for face in faces:
+            for i in range(1,len(face)-1):
+                a,b,c = [[vertices[j][k]-origin[k] for k in range(3)] for j in (face[0],face[i],face[i+1])]
+                signed.append(a[0]*(b[1]*c[2]-b[2]*c[1])+a[1]*(b[2]*c[0]-b[0]*c[2])+a[2]*(b[0]*c[1]-b[1]*c[0]))
+        return faces if math.fsum(signed)>=0 else [list(reversed(face)) for face in faces]
     centre = [sum(p[k] for p in vertices)/len(vertices) for k in range(3)]
     for face in faces:
         a = vertices[face[0]]
@@ -2416,7 +3748,7 @@ def represent(key: str, kind: str, model: dict | None = None) -> dict:
         raise ValueError(f"Unknown representation: {kind}")
     if cls in ("IfcRamp","IfcRampFlight"):
         g = _ramp_geometry(m,obj)
-        parts = g["full_parts"]
+        parts = g["parts"]+(g.get("child_parts",[]) if cls=="IfcRamp" else [])
         vertices = [v for p in parts for v in part_vertices(p)]
         cut_y = (min(v[1] for v in vertices)+max(v[1] for v in vertices))/2
         cut_z = (min(v[2] for v in vertices)+max(v[2] for v in vertices))/2
@@ -2424,7 +3756,7 @@ def represent(key: str, kind: str, model: dict | None = None) -> dict:
         table["axis"] = ("Axis","Curve3D",[{"kind":"polyline","points":[[*f["start"],f["z0"]],[*f["end"],f["z1"]]],"owner":f["tag"],"tag":f["tag"]} for f in g["flights"]])
         for name in ("3d","body"):
             table[name] = (table[name][0],"SolidModel",table[name][2])
-        derived = {**quantities(key,m),"cut_z":cut_z,"cut_y":cut_y,"solid":"IfcFacetedBrep","scope":"assembly" if cls=="IfcRamp" else "product"}
+        derived = {**quantities(key,m),"cut_z":cut_z,"cut_y":cut_y,"solid":"IfcFacetedBrep","scope":"assembly" if cls=="IfcRamp" else "product","representation_scope":"owned_assembly_members" if cls=="IfcRamp" else "exclusive_owned_material","representation_volume":_occupied_volume(parts)}
     elif cls == "IfcColumn":
         g = column_geometry(m, obj)
         x, y, z0, z1 = g["x"], g["y"], g["base"], g["top"]
@@ -2474,14 +3806,20 @@ def represent(key: str, kind: str, model: dict | None = None) -> dict:
         table = _physical_representations(g["parts"],g["path"],cut,cut_x,0)
         derived = {**quantities(key,m),"cut_z":cut,"cut_x":cut_x,"profile":"IfcArbitraryClosedProfileDef","solid":"IfcExtrudedAreaSolid"}
 
-    elif cls in ("IfcPipeSegment","IfcCovering","IfcChimney","IfcWasteTerminal","IfcBoiler","IfcSpaceHeater"):
-        g = _service(m,obj)
-        axis = g.get("points") or [[*obj["geometry"]["axis"],min(p["z0"] for p in g["parts"])],[*obj["geometry"]["axis"],max(p["z1"] for p in g["parts"])]]
-        cut_z = sum(p[2] for p in axis)/2
-        cut_value = sum(p[1] for p in axis)/2
+    elif cls in ("IfcPipeSegment","IfcCovering","IfcChimney","IfcWasteTerminal","IfcBoiler","IfcSpaceHeater","IfcSanitaryTerminal","IfcLightFixture") and not is_architectural_covering(obj):
+        g = service_geometry(obj["tag"], m)
+        axis = g.get("points")
+        if not axis:
+            vertices = [v for p in g["parts"] for v in part_vertices(p)]
+            lower = [min(v[i] for v in vertices) for i in range(3)]
+            upper = [max(v[i] for v in vertices) for i in range(3)]
+            center = obj["geometry"].get("axis",[(lower[i]+upper[i])/2 for i in (0,1)])
+            axis = [[*center,lower[2]],[*center,upper[2]]]
+        cut_z = sum(p[2] for p in axis)/len(axis)
+        cut_value = sum(p[1] for p in axis)/len(axis)
         table = _physical_representations(g["parts"],axis,cut_z,cut_value)
         table["axis"] = ("Axis","Curve3D",[{"kind":"polyline","points":axis}])
-        derived = {**quantities(key,m),"cut_z":cut_z,"cut_y":cut_value,"historical_state":m.get("historical_state",{}).get("id")}
+        derived = {**quantities(key,m),"cut_z":cut_z,"cut_y":cut_value,"projection":{"horizontal":"x","vertical":"z","view":"south"},"historical_state":m.get("historical_state",{}).get("id")}
 
     elif cls == "IfcSlab":
         g = _slab_geometry(m, obj)
@@ -2547,11 +3885,12 @@ def represent(key: str, kind: str, model: dict | None = None) -> dict:
                  "3d":("Body","SweptSolid",[{"kind":"prism","role":p["role"],"material":p["material"],"polygon":p["outline"],"z0":p["z0"],"z1":p["z1"],"holes":[]} for p in parts]),
                  "body":("Body","SweptSolid",[{"kind":"extrusion","profile":{"kind":"polygon","points":p["outline"]},"position":[0,0,p["z0"]],"direction":[0,0,1],"depth":p["z1"]-p["z0"],"role":p["role"],"material":p["material"]} for p in parts])}
         derived = {**quantities(key,m),"cut_z":cut_z,"cut_y":cut_y,"projection":{"horizontal":"x","vertical":"z","view":"south"}}
-    elif cls == "IfcStair" or "parts" in obj.get("geometry", {}):
+    elif cls == "IfcStair" or "parts" in obj.get("geometry", {}) or obj.get("geometry",{}).get("kind")=="ramp_finish":
         stair = _stair_geometry(m, obj) if cls == "IfcStair" else None
-        solid = None if stair else _solid_geometry(m, obj)
-        parts = stair["parts"] if stair else solid["parts"] + solid["shared_parts"]
+        solid = None if stair else solid_geometry(obj["tag"], m)
+        parts = stair["parts"] if stair else solid["parts"]
         derived = quantities(obj["tag"], m)
+        derived = {**derived,"representation_scope":"exclusive_owned_material","representation_volume":derived.get("exclusive_volume",derived["volume"])}
         footprints = [point for p in parts for point in part_footprint(p)]
         xmin,xmax = min(v[0] for v in footprints),max(v[0] for v in footprints)
         ymin,ymax = min(v[1] for v in footprints),max(v[1] for v in footprints)
@@ -2567,7 +3906,8 @@ def represent(key: str, kind: str, model: dict | None = None) -> dict:
 
 
 def _wall_geometry_list(model: dict) -> list:
-    return [_wall_geometry(model,w) for w in _by_class(model,"IfcWall") if not _wall_uses_path(w)]
+    junctions = _wall_junction_backend().context(SimpleNamespace(**globals()),model)
+    return [_wall_geometry(model,w,junctions=junctions) for w in _by_class(model,"IfcWall") if not _wall_uses_path(w)]
 
 
 def _bump(model: dict, tags: list) -> None:
@@ -2627,7 +3967,7 @@ def apply_event(event: dict, model: dict | None = None) -> dict:
         if layer is None:
             raise ValueError("Unknown layer")
         layer["thickness"]["value"] = value
-        _bump(source, [target["tag"]])
+        _bump(source, _flooring_layer_backend().dependencies(source,layerset["tag"],layer["id"]))
     return source
 
 
@@ -2672,9 +4012,21 @@ def resolve_link(model: dict | None, link_id: str) -> dict:
     return source
 
 
+
+def service_topology(model: dict | None = None) -> dict:
+    """🕸️ Return validated source-evidence connectivity, separately from unknown metric pipe routes."""
+    source=_m(model)
+    domain=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🔧️services.🐍️")
+    return domain.validated(source["service_topology"],{e["tag"] for e in source["elements"]})
+
+def service_reachable(start: str, model: dict | None = None) -> list:
+    """🧭 Query attested logical service reachability without implying an authored concealed pipe run."""
+    domain=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🔧️services.🐍️")
+    return domain.reachable(service_topology(model),start)
+
 _exchange = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🔌️exchange.🐍️")
 _analysis = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧮️analysis.🐍️")
-step_excerpt, mesh, ids_check = _exchange.step_excerpt, _exchange.mesh, _exchange.ids_check
+step_excerpt, wall_junction_excerpt, mesh, ids_check = _exchange.step_excerpt, _exchange.wall_junction_excerpt, _exchange.mesh, _exchange.ids_check
 translate_structure, tributary = _analysis.translate_structure, _analysis.tributary
 clash_check, link_values = _analysis.clash_check, _analysis.link_values
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  

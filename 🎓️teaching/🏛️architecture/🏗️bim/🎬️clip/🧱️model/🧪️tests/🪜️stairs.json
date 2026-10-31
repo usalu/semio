@@ -17,7 +17,7 @@
       "straight": 3,
       "curved": 7,
       "going": 0.23,
-      "base": -2.42,
+      "base": -2.4,
       "top": 0
     },
     {
@@ -167,7 +167,8 @@
     ],
     "upstand_width": 0.12,
     "upstand_height": 0.28,
-    "rail_envelopes": 2,
-    "inferred_posts": 6
+    "inferred_posts": 6,
+    "rail_routes": 2
   }
 }
+    

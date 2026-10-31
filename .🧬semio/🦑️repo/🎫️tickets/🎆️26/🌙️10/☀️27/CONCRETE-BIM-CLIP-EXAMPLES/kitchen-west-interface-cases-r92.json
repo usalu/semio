@@ -1,0 +1,352 @@
+{
+  "scope": "Read-only floor-semantic boundary and actual material intersection, not a constant full-height free-space claim",
+  "source": "a79ce30e862853baf51146dea0d1df8112d834dab72ed5984f106533c4e442b0",
+  "producer": "30dd45298821886ce761c11742c7f54ec45ba90d48b0e47a1ecaefd6b6d338f0",
+  "source_stable": true,
+  "producer_stable": true,
+  "fixture": "FIX-KITCHEN-SINK-COUNTER",
+  "counter_bounds": {
+    "min": [
+      0.14,
+      0.25,
+      3.17
+    ],
+    "max": [
+      2.955,
+      0.663235294118,
+      4.07
+    ]
+  },
+  "occupied_wall_results": [
+    {
+      "tag": "W-W",
+      "parts": 280,
+      "overlap_volume_m3": 0,
+      "sections": [
+        {
+          "z": 3.2,
+          "axis": "X",
+          "bounds": [
+            -0.13,
+            0.4566,
+            -0.08,
+            0.4566
+          ]
+        },
+        {
+          "z": 3.6,
+          "axis": "X",
+          "bounds": [
+            -0.13,
+            0.4566,
+            0.07,
+            0.4566
+          ]
+        },
+        {
+          "z": 4.029,
+          "axis": "X",
+          "bounds": [
+            -0.13,
+            0.4566,
+            -0.01,
+            0.4566
+          ]
+        },
+        {
+          "z": 4.031,
+          "axis": "X",
+          "bounds": [
+            -0.13,
+            0.4566,
+            -0.01,
+            0.4566
+          ]
+        },
+        {
+          "z": 4.067,
+          "axis": "X",
+          "bounds": [
+            -0.13,
+            0.4566,
+            -0.01,
+            0.4566
+          ]
+        },
+        {
+          "z": 4.071,
+          "axis": "X",
+          "bounds": [
+            -0.13,
+            0.4566,
+            0.13,
+            0.4566
+          ]
+        },
+        {
+          "z": 4.5,
+          "axis": "X",
+          "bounds": [
+            -0.13,
+            0.4566,
+            0.13,
+            0.4566
+          ]
+        }
+      ]
+    },
+    {
+      "tag": "W-S",
+      "parts": 121,
+      "overlap_volume_m3": 0,
+      "sections": [
+        {
+          "z": 3.2,
+          "axis": "Y",
+          "bounds": [
+            1.5,
+            -0.04499999999999996,
+            1.5,
+            0.155
+          ]
+        },
+        {
+          "z": 3.6,
+          "axis": "Y",
+          "bounds": [
+            1.5,
+            -0.04499999999999996,
+            1.5,
+            0.155
+          ]
+        },
+        {
+          "z": 4.029,
+          "axis": "Y",
+          "bounds": [
+            1.5,
+            -0.04499999999999996,
+            1.5,
+            0.07500000000000001
+          ]
+        },
+        {
+          "z": 4.031,
+          "axis": "Y",
+          "bounds": [
+            1.5,
+            -0.04499999999999996,
+            1.5,
+            0.07500000000000001
+          ]
+        },
+        {
+          "z": 4.067,
+          "axis": "Y",
+          "bounds": []
+        },
+        {
+          "z": 4.071,
+          "axis": "Y",
+          "bounds": []
+        },
+        {
+          "z": 4.5,
+          "axis": "Y",
+          "bounds": []
+        }
+      ]
+    }
+  ],
+  "structural_owner": {
+    "tag": "BEAM-PRIMARY-F-5-33",
+    "geometry": {
+      "kind": "primary-beam-shared-section",
+      "base_level": "ground",
+      "embedded_slabs": [
+        "SL-1"
+      ],
+      "parts": [
+        {
+          "outline": [
+            [
+              -0.08,
+              -0.05
+            ],
+            [
+              0.08,
+              -0.05
+            ],
+            [
+              0.08,
+              21.55
+            ],
+            [
+              -0.08,
+              21.55
+            ]
+          ],
+          "z0": 3.14,
+          "z1": 3.41
+        }
+      ],
+      "joint_owners": [
+        "11-FIRST",
+        "17-FIRST",
+        "23-FIRST",
+        "33-FIRST",
+        "5-FIRST"
+      ]
+    },
+    "world_base": "ground0",
+    "occupied_inner_face_x": 0.08,
+    "source_status": "Retained actual source structuralmember; no column/beam displacement or patch proposed"
+  },
+  "foot_support": [
+    {
+      "counter_part": 326,
+      "foot_outline": [
+        [
+          0.16,
+          0.27
+        ],
+        [
+          0.185,
+          0.27
+        ],
+        [
+          0.185,
+          0.29500000000000004
+        ],
+        [
+          0.16,
+          0.29500000000000004
+        ]
+      ],
+      "base_z": 3.17,
+      "area": 0.0006250000000000004,
+      "support_owners": [
+        {
+          "tag": "FIN-FIRST-THRESHOLDS",
+          "area": 0.0006250000000000004
+        }
+      ],
+      "unsupported_area": 0
+    },
+    {
+      "counter_part": 327,
+      "foot_outline": [
+        [
+          0.16,
+          0.61
+        ],
+        [
+          0.185,
+          0.61
+        ],
+        [
+          0.185,
+          0.635
+        ],
+        [
+          0.16,
+          0.635
+        ]
+      ],
+      "base_z": 3.17,
+      "area": 0.0006250000000000004,
+      "support_owners": [
+        {
+          "tag": "FIN-FIRST-THRESHOLDS",
+          "area": 0.0006250000000000004
+        }
+      ],
+      "unsupported_area": 0
+    },
+    {
+      "counter_part": 328,
+      "foot_outline": [
+        [
+          2.9200000000000004,
+          0.27
+        ],
+        [
+          2.9450000000000003,
+          0.27
+        ],
+        [
+          2.9450000000000003,
+          0.29500000000000004
+        ],
+        [
+          2.9200000000000004,
+          0.29500000000000004
+        ]
+      ],
+      "base_z": 3.17,
+      "area": 0.0006249999999999984,
+      "support_owners": [
+        {
+          "tag": "FIN-KITCHEN",
+          "area": 0.0006249999999999984
+        }
+      ],
+      "unsupported_area": 0
+    },
+    {
+      "counter_part": 329,
+      "foot_outline": [
+        [
+          2.9200000000000004,
+          0.61
+        ],
+        [
+          2.9450000000000003,
+          0.61
+        ],
+        [
+          2.9450000000000003,
+          0.635
+        ],
+        [
+          2.9200000000000004,
+          0.635
+        ]
+      ],
+      "base_z": 3.17,
+      "area": 0.0006249999999999984,
+      "support_owners": [
+        {
+          "tag": "FIN-KITCHEN",
+          "area": 0.0006249999999999984
+        }
+      ],
+      "unsupported_area": 0
+    }
+  ],
+  "proposed_floor_space_outline": [
+    [
+      0.08,
+      0.155
+    ],
+    [
+      2.96,
+      0.155
+    ],
+    [
+      2.96,
+      5.931
+    ],
+    [
+      0.08,
+      5.931
+    ]
+  ],
+  "basis": "Floor left edge follows actual RCedgebeamfaceX.08 atwearingfloorheight, not upperfacade envelope norold.30 reserve. Author46 registered kitchen floor/wall trace remains±.15m; this is coherent source-qualified modelboundary, not a new originalmetricmeasurement.",
+  "acceptance": [
+    "No counter shift, wall trimming or floor patch",
+    "Every physicalcounter part lies inside revisedfloorprogramme and remainsseparatefromactualheight-dependentwall/structuralmaterial",
+    "Allfourlegfeetretainpositivefullfloorbearing atZ3.17",
+    "Retainupperwall reveal/screen thickness and semantic warningthat flooroutlineisnotconstantfreevolume"
+  ]
+}

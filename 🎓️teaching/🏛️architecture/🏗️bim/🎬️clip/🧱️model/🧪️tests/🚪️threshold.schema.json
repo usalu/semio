@@ -1,0 +1,211 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slab",
+    "region",
+    "opening",
+    "host",
+    "expected",
+    "points",
+    "previous",
+    "comparison",
+    "separation"
+  ],
+  "properties": {
+    "slab": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "opening": {
+      "type": "string"
+    },
+    "host": {
+      "type": "string"
+    },
+    "expected": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x0",
+        "x1",
+        "y0",
+        "y1",
+        "top",
+        "thickness",
+        "area",
+        "volume",
+        "material"
+      ],
+      "properties": {
+        "x0": {
+          "type": "number"
+        },
+        "x1": {
+          "type": "number"
+        },
+        "y0": {
+          "type": "number"
+        },
+        "y1": {
+          "type": "number"
+        },
+        "top": {
+          "type": "number"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "area": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        },
+        "material": {
+          "type": "string"
+        }
+      }
+    },
+    "points": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "previous": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outline",
+        "region"
+      ],
+      "properties": {
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "region": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate",
+        "volume"
+      ],
+      "properties": {
+        "coordinate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "separation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pieces",
+        "voids",
+        "positive_stock",
+        "positive_cut",
+        "positive_removed_area"
+      ],
+      "properties": {
+        "pieces": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "voids": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "positive_stock": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "positive_cut": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "positive_removed_area": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
+}

@@ -23,3 +23,7 @@
 | RENDER | Sonnet 5.5 | quick preview renders (en/de speaker) via `render/` scripts into `🗑️generated` |
 | CLOSE-PREP | Sonnet 5.5 | `summary.md`, ticket hygiene, fleet and README check |
 | quality directors × 9 | Sonnet 5.5 | whole-video didactic review; `quality-<series>-<topic>.md` (brief: `quality-brief.md`) |
+| energy previews | Sonnet 5.5 | 5 energy previews via the energy script; `previews-energy.md` |
+| BIM + optimization previews | Sonnet 5.5 | 6 optimization previews, BIM fallbacks, BIM geometry cache; `previews-bim-optimization.md` |
+| caption overflow + reruns | Sonnet 5.5 | caption shortenings en/de, `render/rerun_queue.py`, `render/caption_check.py` |
+| course join | Opus 5.5 (main) | `render/course_preview.py`, `render/contact_sheet.py`, course video in `…/en/speaker/preview/` |

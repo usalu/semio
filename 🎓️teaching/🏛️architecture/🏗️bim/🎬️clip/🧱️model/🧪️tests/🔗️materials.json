@@ -1,0 +1,67 @@
+{
+  "title": "Authored Assemblies and Actual Material Constituents",
+  "rows": [
+    {
+      "tag": "FIX-KITCHEN-SINK-COUNTER",
+      "accepted": [
+        "MAT-TILE",
+        "MAT-RC",
+        "MAT-METAL"
+      ],
+      "rejected": [
+        "MAT-GLASS"
+      ],
+      "forged_nominal": "MAT-GLASS"
+    },
+    {
+      "tag": "WIN-KITCHEN-PATIO-LOW-X",
+      "accepted": [
+        "MAT-GLASS",
+        "MAT-WOOD"
+      ],
+      "rejected": [
+        "MAT-RC"
+      ]
+    },
+    {
+      "tag": "FIX-CHAISE",
+      "accepted": [
+        "MAT-RC",
+        "MAT-MOSAIC-BLUE",
+        "MAT-MOSAIC-BLACK",
+        "MAT-METAL"
+      ],
+      "rejected": [
+        "MAT-GLASS"
+      ]
+    },
+    {
+      "tag": "W-G-ROOM-13",
+      "accepted": [
+        "LS-PARTITION-08"
+      ],
+      "rejected": [
+        "LS-PARTITION-15"
+      ]
+    },
+    {
+      "tag": "W-G-ROOM-16",
+      "accepted": [
+        "LS-PARTITION-08"
+      ],
+      "rejected": [
+        "LS-PARTITION-15"
+      ]
+    }
+  ],
+  "typed_occurrences": [
+    {
+      "tag": "W-G-ROOM-13",
+      "type": "TY-PARTITION-08"
+    },
+    {
+      "tag": "W-G-ROOM-16",
+      "type": "TY-PARTITION-08"
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+"""🌿 Build bounded original roof beds and central stair tube with explicit source limits."""
+import importlib,json,math,sys
+from pathlib import Path
+root=next(p for p in Path(__file__).resolve().parents if (p/'AGENTS.md').is_file() and (p/'package.json').is_file());sys.path.insert(0,str(root));sys.dont_write_bytecode=True
+api=importlib.import_module('🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️');m=api.load_model();ticket=Path(__file__).parent;case=json.loads((root/'🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🏗️construction.json').read_text(encoding='utf8'));payload={'elements':[],'materials':[]};proof={}
+def material(tag,names,density):
+    out={'tag':tag,'guid':api.global_id(tag),'class':'IfcMaterial','name':dict(zip(('en','de'),names)),'density':{'value':density,'unit':'kN/m³','basis':'inferred','source':'Original composition and bulk unitweight unmeasured'}};payload['materials'].append(out);return out
+def evidence(sources,en,de):
+    return {'state':'original-completed-1930-1931','status':'inferred_reconstruction','source_kind':'mixed','sources':sources,'uncertainty':{'en':en,'de':de}}
+def product(tag,cls,names,storey,material,parts,ev,kind):
+    return {'tag':tag,'guid':api.global_id(tag),'class':cls,'name':dict(zip(('en','de'),names)),'storey':storey,'material':material,'geometry':{'kind':kind,'base_level':storey,'parts':parts},'attributes':{},'psets':{},'metadata':{'author':'Atelier (architecture)','revision':1,'domains':['architecture']},'historical_evidence':ev}
+mat=material('MAT-STAIR-BLACK-METAL',('Original black painted stair tube; alloy and paint binder unmeasured','Ursprüngliches schwarzes Treppenrohr; Legierung und Farbbinder ungemessen'),78.5);mat['surface_finish']={'binder':'unmeasured_paint','colour_family':'black','substrate':'MAT-METAL','quantity_scope':'existing_substrate_envelope','film_thickness':'unmeasured','basis':'sourced','source':'SAB2024-p141-p145/FLC-H1(12)097-1','display_rgb':{'value':[.055,.055,.055],'basis':'inferred','source':'Illustrative black teaching palette; original RGB and coating film unmeasured'}}
+axis=case['tube']['axis'];bottom=api._z(m,'cellar');roof=api._find(m,'SL-R');regions=roof['geometry']['regions'];near=sorted(regions,key=lambda r:min(math.dist(p,axis)for p in api._expand(m,r['outline'])))[0];top=api._z(m,'roof')+near.get('top_offset',roof['geometry']['top_offset'])['value']-near['thickness']['value'];base=api._z(m,'ground');parts=[]
+for i in range(64):
+    angles=[2*math.pi*i/64,2*math.pi*(i+1)/64];outline=[[axis[0]+r*math.cos(a),axis[1]+r*math.sin(a)]for r,a in ((.0275,angles[0]),(.0275,angles[1]),(.0255,angles[1]),(.0255,angles[0]))];parts.append({'outline':outline,'z0':bottom-base,'z1':top-base,'material':'MAT-STAIR-BLACK-METAL','role':'central_tube_hollow_55mm'})
+ev=evidence(['SAB2024-p141-p145','FLC-H1(12)097-1','FLC19487; original1931 photo SAB147; construction photo SAB146'],'Original55mm black central tube is attested and distinct from35mm perimeter rails,130mm drain and basement Pa. Axis(6.30,9.18)m±.15m is a bounded inner-eye photographic inference, displaced from the reconstructed curve centre.2mm hollow gauge is inferred. Continuous cellar-finished-floor to adjacent registered roof-soffit datum is an inferred terminal convention, not a measured full-length original shaft; exact joints and anchorage remain unknown.','Ursprüngliches schwarzes55mm Zentralrohr belegt und getrennt von35mm Randhandläufen,130mm Fallleitung und Kellerstütze Pa. Achse(6,30;9,18)m±.15m ist begrenzte Fotoableitung im Treppenauge, versetzt zum rekonstruierten Kurvenzentrum.2mm Hohlwandung abgeleitet. Kontinuität vom Kellerfertigboden bis benachbarter registrierter Dachunterseite ist abgeleitete Endkonvention, keine gemessene ursprüngliche Gesamtlänge; Stöße und Verankerung ungeklärt.')
+obj=product('TUBE-STAIR-CENTRAL','IfcRailing',('Original55mm black central stair tube','Ursprüngliches schwarzes55mm Zentralrohr'),'ground','MAT-STAIR-BLACK-METAL',parts,ev,'central_stair_tube');obj['predefined_type']='HANDRAIL';obj['geometry']['axis']=axis;obj['attributes']={'diameter':{'value':.055,'unit':'m','basis':'sourced','source':'SAB2024-p141-p145/FLC-H1(12)097-1'},'wall_thickness':{'value':.002,'unit':'m','basis':'inferred','source':'Hollow tube fabrication gauge unmeasured'}};payload['elements'].append(obj)
+from shapely.geometry import Polygon
+from shapely.ops import unary_union
+floor=api._solid_geometry(m,api._find(m,'FIN-CELLAR-CEMENT'));ring=unary_union([Polygon(p['outline'])for p in parts]);support=unary_union([Polygon(p['outline'])for p in floor['parts'] if abs(p['z1']-bottom)<1e-8]);proof['tube']={'axis':axis,'base':bottom,'top':top,'roof_region':near['tag'],'floor_support_missing_area':ring.difference(support).area,'material_volume':sum(Polygon(p['outline']).area*(top-bottom)for p in parts),'part_count':len(parts)}
+assert proof['tube']['floor_support_missing_area']<1e-9,proof['tube']
+neighbours=[]
+for tag in ('ST-CG','ST-GF','ST-FR'):
+    neighbours.extend((tag,p)for p in api.stair_geometry(tag,m)['parts'])
+for tag in ('STAIR-PA','GUARD-ST-GF','GUARD-ST-FR','TUBE-ST-GF','TUBE-ST-FR'):
+    e=api._find(m,tag);g=api.column_geometry(m,e)if e['class']=='IfcColumn'else api._solid_geometry(m,e);neighbours.extend((tag,p)for p in g['parts'])
+active=[(tag,p)for tag,p in neighbours if min(v[0]for v in api.part_vertices(p))<axis[0]+.0275 and max(v[0]for v in api.part_vertices(p))>axis[0]-.0275 and min(v[1]for v in api.part_vertices(p))<axis[1]+.0275 and max(v[1]for v in api.part_vertices(p))>axis[1]-.0275]
+collisions=[]
+for tag,p in active:
+    lo,hi=max(bottom,p['z0']),min(top,p['z1'])
+    if hi<=lo:continue
+    for portion in (.1127016654,.5,.8872983346):
+        z=lo+(hi-lo)*portion;regions=api.part_regions(p,z);area=ring.intersection(unary_union([Polygon(poly)for poly in regions])).area
+        if area>1e-10:collisions.append({'tag':tag,'z':z,'area':area})
+proof['tube']['sampled_route_candidates']=len(active);proof['tube']['sampled_route_collisions']=collisions;assert not collisions,collisions
+material('MAT-PLANTING-SOIL',('Roof planting soil, original composition unmeasured','Dachpflanzerde, ursprüngliche Zusammensetzung ungemessen'),18)
+gravel=api._solid_geometry(m,api._find(m,'FIN-ROOF-GRAVEL'));support=unary_union([Polygon(p['outline'])for p in gravel['parts']if abs(p['z1']-6.6)<1e-8]);proof['beds']=[]
+for index,(x0,y0,x1,y1)in enumerate(case['roof_beds']['rectangles'],1):
+    def box(a,b,c,d,z0,z1,mat,role):return {'outline':[[a,b],[c,b],[c,d],[a,d]],'z0':z0,'z1':z1,'material':mat,'role':role}
+    parts=[box(x0,y0,x1,y1,0,.04,'MAT-RENDERED','planter_base_inferred'),box(x0,y0,x1,y0+.06,.04,.35,'MAT-RENDERED','planter_rim_inferred'),box(x0,y1-.06,x1,y1,.04,.35,'MAT-RENDERED','planter_rim_inferred'),box(x0,y0+.06,x0+.06,y1-.06,.04,.35,'MAT-RENDERED','planter_rim_inferred'),box(x1-.06,y0+.06,x1,y1-.06,.04,.35,'MAT-RENDERED','planter_rim_inferred'),box(x0+.06,y0+.06,x1-.06,y1-.06,.04,.28,'MAT-PLANTING-SOIL','soil_fill_inferred')]
+    outline=Polygon(parts[0]['outline']);missing=outline.difference(support).area;proof['beds'].append({'tag':'FIX-ROOF-BED-'+str(index),'support_missing_area':missing,'footprint_area':outline.area});assert missing<1e-8,proof['beds'][-1]
+    ev=evidence(['SAB2024-p192-p193','1930 Gravot FLC-L2(17)043 photograph'],'Original roof planting beds are source-attested; text describes at least two new/changed beds, not a secure total. These two compact beds are bounded reconstructions in the original gravel/left-screen zone; positions±.50m, rectangular outlines,35cm rim,6cm shell,4cm base,28cm soil surface and material composition are inferred. No later gray-plan form, unexecuted opposite-curve proposal, exact plant species, concealed drainage or secure total bed count is asserted.','Ursprüngliche Dachpflanzbeete sind belegt; Text nennt mindestens zwei neue/geänderte Beete, keine gesicherte Gesamtzahl. Diese zwei kompakten Beete sind begrenzte Rekonstruktionen in der ursprünglichen Kies-/linken Schirmzone; Positionen±.50m, rechteckige Umrisse,35cm Rand,6cm Schale,4cm Boden,28cm Erdoberfläche und Materialzusammensetzung sind abgeleitet. Keine spätere graue Planform, unausgeführte Gegenkurve, exakte Pflanzenart, verdeckte Entwässerung oder gesicherte Gesamtzahl behauptet.')
+    payload['elements'].append(product('FIX-ROOF-BED-'+str(index),'IfcFurnishingElement',('Original roof planting bed '+str(index)+', bounded registration','Ursprüngliches Dachpflanzbeet '+str(index)+', begrenzte Verortung'),'roof','MAT-RENDERED',parts,ev,'planter'))
+(ticket/'🗑️generated'/'missing-construction-tube-beds-payload-r92.json').write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding='utf8');(ticket/'🗑️generated'/'missing-construction-tube-beds-proof-r92.json').write_text(json.dumps(proof,indent=2),encoding='utf8');print(json.dumps(proof))

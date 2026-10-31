@@ -1,0 +1,81 @@
+{
+  "cases": [
+    {
+      "id": "negative_stock_circle_radius",
+      "target": "stock.profile.radius",
+      "value": -1,
+      "stock_from_cutter": true
+    },
+    {
+      "id": "zero_stock_circle_radius",
+      "target": "stock.profile.radius",
+      "value": 0,
+      "stock_from_cutter": true
+    },
+    {
+      "id": "negative_cutter_radius",
+      "target": "cutters.0.operand.profile.radius",
+      "value": -1
+    },
+    {
+      "id": "nonfinite_source_axis",
+      "target": "cutters.0.operand.axis.0",
+      "special": "infinity"
+    },
+    {
+      "id": "nonfinite_rotation",
+      "target": "cutters.0.operand.rotation",
+      "special": "nan"
+    },
+    {
+      "id": "reversed_height",
+      "target": "cutters.0.operand.z1",
+      "value": -100
+    },
+    {
+      "id": "empty_cutters",
+      "target": "cutters",
+      "value": []
+    },
+    {
+      "id": "unknown_operator",
+      "target": "operator",
+      "value": "union"
+    },
+    {
+      "id": "unknown_shape",
+      "target": "cutters.0.operand.profile.shape",
+      "value": "star"
+    },
+    {
+      "id": "dual_physical_outline",
+      "part_target": "outline",
+      "value": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "id": "negative_ellipse_radius",
+      "base": "rotated-eccentric-ellipse-owner",
+      "target": "cutters.0.operand.profile.radii.0",
+      "value": -1
+    },
+    {
+      "id": "negative_bore_radius",
+      "base": "annular-owner-keeps-donor-bore-material",
+      "target": "cutters.0.operand.profile.voids.0.radius",
+      "value": -1
+    }
+  ]
+}

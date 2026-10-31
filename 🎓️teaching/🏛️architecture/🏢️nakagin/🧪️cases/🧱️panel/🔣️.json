@@ -1,0 +1,47 @@
+{
+  "families": [
+    "Slash",
+    "Backslash",
+    "J",
+    "L",
+    "P",
+    "S"
+  ],
+  "details": {
+    "full": 48,
+    "exterior": 16
+  },
+  "radii": [
+    0,
+    0.0005,
+    0.0012,
+    0.25
+  ],
+  "steel_skin": 0.0012,
+  "lining_thickness": 0.015,
+  "aperture_radius": 0.6512,
+  "tolerance": 1e-9,
+  "corner_inset": 0.001,
+  "ray_depth": 0.01,
+  "reference_front_bounds": [
+    -1.05,
+    1.05,
+    0.25,
+    2.25
+  ],
+  "reference_side_bounds": [
+    0.15,
+    3.85,
+    0.25,
+    2.25
+  ],
+  "witness": [
+    1.049,
+    4.1,
+    2.249
+  ],
+  "expected_witness_covered": true,
+  "edge_incidence": 2,
+  "directed_balance": 0,
+  "lining_material_role": "lining"
+}

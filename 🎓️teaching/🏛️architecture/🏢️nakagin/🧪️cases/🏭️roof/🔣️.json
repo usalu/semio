@@ -1,0 +1,200 @@
+{
+  "surfaces": [
+    "east",
+    "south",
+    "west",
+    "north",
+    "roof-0",
+    "roof-1"
+  ],
+  "roles": [
+    "capital",
+    "capital_seam",
+    "capital_flashing"
+  ],
+  "dimension_overrides": [
+    [
+      1,
+      1
+    ],
+    [
+      0.55,
+      0.8
+    ],
+    [
+      1.5,
+      1.2
+    ]
+  ],
+  "panel_pitch": 0.45,
+  "seam_projection": 0.018,
+  "flashing_projection": 0.022,
+  "minimum_volume": 1e-11,
+  "tolerance": 1e-7,
+  "sign_text": "中銀",
+  "sign_faces": [
+    "north",
+    "west"
+  ],
+  "invalid": [
+    {
+      "id": "zero-panel-pitch",
+      "path": [
+        "capital",
+        "cladding",
+        "panel_pitch",
+        "value"
+      ],
+      "value": 0
+    },
+    {
+      "id": "negative-sheet",
+      "path": [
+        "capital",
+        "cladding",
+        "sheet_thickness",
+        "value"
+      ],
+      "value": -0.01
+    },
+    {
+      "id": "missing-provenance",
+      "path": [
+        "capital",
+        "cladding",
+        "source"
+      ],
+      "remove": true
+    },
+    {
+      "id": "zero-frame-post",
+      "path": [
+        "capital",
+        "framing",
+        "post_side",
+        "value"
+      ],
+      "value": 0
+    },
+    {
+      "id": "negative-frame-sheet-clearance",
+      "path": [
+        "capital",
+        "framing",
+        "sheet_clearance",
+        "value"
+      ],
+      "value": -0.001
+    },
+    {
+      "id": "missing-frame-quantities",
+      "path": [
+        "capital",
+        "framing"
+      ],
+      "remove": true
+    }
+  ],
+  "glyph_queries": [
+    {
+      "character": "中",
+      "point": [
+        0.5,
+        0.1
+      ],
+      "solid": true
+    },
+    {
+      "character": "中",
+      "point": [
+        0.12,
+        0.5
+      ],
+      "solid": true
+    },
+    {
+      "character": "中",
+      "point": [
+        0.3,
+        0.5
+      ],
+      "solid": false
+    },
+    {
+      "character": "銀",
+      "point": [
+        0.7,
+        0.18
+      ],
+      "solid": false
+    },
+    {
+      "character": "銀",
+      "point": [
+        0.7,
+        0.38
+      ],
+      "solid": false
+    },
+    {
+      "character": "銀",
+      "point": [
+        0.24,
+        0.2
+      ],
+      "solid": false
+    },
+    {
+      "character": "銀",
+      "point": [
+        0.24,
+        0.5
+      ],
+      "solid": true
+    },
+    {
+      "character": "銀",
+      "point": [
+        0.82,
+        0.8
+      ],
+      "solid": true
+    }
+  ],
+  "louvre_queries": [
+    {
+      "x": -0.6,
+      "z": 0.7,
+      "solid": false
+    },
+    {
+      "x": 0,
+      "z": 0.7,
+      "solid": false
+    },
+    {
+      "x": 0.6,
+      "z": 0.7,
+      "solid": false
+    },
+    {
+      "x": -1,
+      "z": 0.7,
+      "solid": true
+    },
+    {
+      "x": 1,
+      "z": 0.7,
+      "solid": true
+    }
+  ],
+  "framing": {
+    "post_side": 0.07,
+    "brace_side": 0.06,
+    "sheet_clearance": 0.005,
+    "roles": [
+      "steel_truss"
+    ],
+    "minimum_posts": 3
+  }
+}

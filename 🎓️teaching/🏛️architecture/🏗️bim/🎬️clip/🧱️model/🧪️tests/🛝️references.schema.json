@@ -1,0 +1,49 @@
+{
+  "type": "object",
+  "required": [
+    "version",
+    "flight",
+    "landing",
+    "positive_cut_width",
+    "actual_tags"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "flight": {
+      "type": "object",
+      "required": [
+        "path",
+        "portion",
+        "thickness",
+        "finish",
+        "offsets",
+        "volume"
+      ]
+    },
+    "landing": {
+      "type": "object",
+      "required": [
+        "outline",
+        "portion",
+        "thickness",
+        "volume",
+        "top"
+      ]
+    },
+    "positive_cut_width": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "actual_tags": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 6,
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

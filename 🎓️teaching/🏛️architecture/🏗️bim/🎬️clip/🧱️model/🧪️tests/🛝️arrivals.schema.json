@@ -1,0 +1,181 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "arrivals",
+    "finishes",
+    "asymmetric",
+    "structural_joint_cuts"
+  ],
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "arrivals": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ramp",
+          "landing",
+          "slab",
+          "level",
+          "outline"
+        ],
+        "properties": {
+          "ramp": {
+            "type": "string"
+          },
+          "landing": {
+            "type": "string"
+          },
+          "slab": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "outline": {
+            "$ref": "#/$defs/ring"
+          }
+        }
+      }
+    },
+    "finishes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "ramp",
+          "tag",
+          "depth",
+          "wearing",
+          "direction",
+          "material",
+          "exclusive_cut_m3"
+        ],
+        "properties": {
+          "ramp": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          },
+          "depth": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "wearing": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "direction": {
+            "enum": [
+              "vertical",
+              "normal"
+            ]
+          },
+          "material": {
+            "type": "string"
+          },
+          "exclusive_cut_m3": {
+            "type": "number",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "asymmetric": {
+      "type": "object",
+      "required": [
+        "path",
+        "walking_offsets",
+        "structural_offsets",
+        "clear_width",
+        "structure_width",
+        "finish",
+        "footprint",
+        "volume"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "walking_offsets": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "structural_offsets": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "clear_width": {
+          "type": "number"
+        },
+        "structure_width": {
+          "type": "number"
+        },
+        "finish": {
+          "type": "number"
+        },
+        "footprint": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "volume": {
+          "type": "number"
+        }
+      }
+    },
+    "structural_joint_cuts": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0
+      }
+    }
+  },
+  "$defs": {
+    "ring": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

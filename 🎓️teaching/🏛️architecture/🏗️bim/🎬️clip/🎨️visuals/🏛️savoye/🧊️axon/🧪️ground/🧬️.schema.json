@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "context",
+    "surfaces",
+    "column",
+    "raster"
+  ],
+  "properties": {
+    "context": {
+      "type": "object",
+      "required": [
+        "elevation",
+        "box",
+        "source_tag",
+        "surveyed"
+      ],
+      "properties": {
+        "elevation": {
+          "type": "number"
+        },
+        "box": {
+          "type": "object",
+          "required": [
+            "length",
+            "width"
+          ],
+          "properties": {
+            "length": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "width": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "source_tag": {
+          "type": "string"
+        },
+        "surveyed": {
+          "const": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "surfaces": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "class",
+          "kind",
+          "predefined_type",
+          "storey",
+          "z0",
+          "z1",
+          "expected_stage"
+        ],
+        "properties": {
+          "class": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "predefined_type": {
+            "type": "string"
+          },
+          "storey": {
+            "enum": [
+              "cellar",
+              "ground",
+              "first",
+              "roof"
+            ]
+          },
+          "z0": {
+            "type": "number"
+          },
+          "z1": {
+            "type": "number"
+          },
+          "expected_stage": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "column": {
+      "type": "object"
+    },
+    "raster": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,20 @@
+"""🔎 Read exact command identities and creation stamps for the three observed Python processes only."""
+import ctypes,hashlib,json,re
+from ctypes import wintypes as W
+from pathlib import Path
+class Unicode(ctypes.Structure):
+    """📜 Bound the native inline command-line descriptor before reading its buffer."""
+    _fields_=[('length',W.USHORT),('maximum',W.USHORT),('buffer',ctypes.c_void_p)]
+class Basic(ctypes.Structure):
+    """🧬 Match the native process identity and parent information structure."""
+    _fields_=[('status',W.LONG),('peb',ctypes.c_void_p),('affinity',ctypes.c_size_t),('priority',W.LONG),('pid',ctypes.c_size_t),('parent',ctypes.c_size_t)]
+k=ctypes.WinDLL('kernel32',use_last_error=True);n=ctypes.WinDLL('ntdll');k.OpenProcess.argtypes=[W.DWORD,W.BOOL,W.DWORD];k.OpenProcess.restype=W.HANDLE;k.CloseHandle.argtypes=[W.HANDLE];k.CloseHandle.restype=W.BOOL;n.NtQueryInformationProcess.argtypes=[W.HANDLE,W.ULONG,ctypes.c_void_p,W.ULONG,ctypes.POINTER(W.ULONG)];n.NtQueryInformationProcess.restype=W.LONG;k.GetProcessTimes.argtypes=[W.HANDLE,*([ctypes.POINTER(W.FILETIME)]*4)];k.GetProcessTimes.restype=W.BOOL;k.QueryFullProcessImageNameW.argtypes=[W.HANDLE,W.DWORD,W.LPWSTR,ctypes.POINTER(W.DWORD)];k.QueryFullProcessImageNameW.restype=W.BOOL
+rows=[];ticket=Path(__file__).parent;ticket_scripts={p.name for p in ticket.glob('*.py')}
+for pid in (53880,24828,23300,46580,36872,16512):
+    h=k.OpenProcess(0x1000,False,pid)
+    if not h:rows.append({'pid':pid,'error':ctypes.get_last_error()});continue
+    try:
+        needed=W.ULONG();first=n.NtQueryInformationProcess(h,60,None,0,ctypes.byref(needed));assert 16<=needed.value<=2*1024*1024;buf=ctypes.create_string_buffer(needed.value);status=n.NtQueryInformationProcess(h,60,buf,len(buf),ctypes.byref(needed));assert status>=0,(pid,status);desc=Unicode.from_buffer(buf);base=ctypes.addressof(buf);assert desc.length%2==0 and desc.length<=desc.maximum and base+ctypes.sizeof(Unicode)<=desc.buffer<=base+len(buf)-desc.length;command=ctypes.wstring_at(desc.buffer,desc.length//2)
+        stamp=[W.FILETIME()for _ in range(4)];assert k.GetProcessTimes(h,*[ctypes.byref(s)for s in stamp]);birth=stamp[0].dwLowDateTime+(stamp[0].dwHighDateTime<<32);basic=Basic();n.NtQueryInformationProcess(h,0,ctypes.byref(basic),ctypes.sizeof(basic),None);name=ctypes.create_unicode_buffer(32768);length=W.DWORD(len(name));assert k.QueryFullProcessImageNameW(h,0,name,ctypes.byref(length));matches=sorted(name for name in ticket_scripts if name in command);known='🎓️teaching' in command or 'CONCRETE-BIM-CLIP-EXAMPLES' in command or bool(matches);rows.append({'pid':pid,'parent':basic.parent,'creation_filetime':birth,'executable':name.value,'command_sha256':hashlib.sha256(command.encode('utf8')).hexdigest(),'ticket_scripts':matches,'multiprocessing_spawn':'multiprocessing' in command,'length':len(command),'command':command if known else '[Unrelated command withheld; no task ownership established]'})
+    finally:k.CloseHandle(h)
+ticket=Path(__file__).parent;(ticket/'🗑️generated/host-commandline-review-r93.json').write_text(json.dumps(rows,ensure_ascii=False,indent=2),encoding='utf8');(ticket/'host-commandline-review-r93.md').write_text('# Read-Only Native Command Identity Review\n\nOnly the three previously observed Python process IDs are queried. Command data is retained only when it contains this repository teaching namespace or the active ticket; unrelated command lines are withheld. Creation stamps and command hashes support a later ownership check, not an automatic process action. No process is controlled.\n\nNative signature: https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntqueryinformationprocess . Command-line class60/inlineUNICODESTRING pattern independently reviewed against the primary osquery implementation: https://github.com/osquery/osquery/blob/master/osquery/tables/system/windows/processes.cpp . This is a bounded current-Windows diagnostic, not a production dependency.\n',encoding='utf8');print('[DEBUG] '+json.dumps(rows,ensure_ascii=False))

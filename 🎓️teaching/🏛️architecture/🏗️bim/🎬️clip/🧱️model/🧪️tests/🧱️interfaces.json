@@ -1,0 +1,537 @@
+{
+  "version": 1,
+  "wall": "W-G-GARAGE",
+  "owner": "TEST-INCLINED-RC",
+  "stock": {
+    "outline": [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "z0": 0,
+    "z1": 1,
+    "material": "MAT-HOLLOW-CLAY",
+    "layer": "body",
+    "region": "body"
+  },
+  "cutter": {
+    "mesh": {
+      "vertices": [
+        [
+          0,
+          0.2,
+          0.2
+        ],
+        [
+          1,
+          0.2,
+          0.7
+        ],
+        [
+          1,
+          0.8,
+          0.7
+        ],
+        [
+          0,
+          0.8,
+          0.2
+        ],
+        [
+          0,
+          0.2,
+          0.3
+        ],
+        [
+          1,
+          0.2,
+          0.8
+        ],
+        [
+          1,
+          0.8,
+          0.8
+        ],
+        [
+          0,
+          0.8,
+          0.3
+        ]
+      ],
+      "faces": [
+        [
+          0,
+          3,
+          2,
+          1
+        ],
+        [
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          0,
+          1,
+          5,
+          4
+        ],
+        [
+          1,
+          2,
+          6,
+          5
+        ],
+        [
+          2,
+          3,
+          7,
+          6
+        ],
+        [
+          3,
+          0,
+          4,
+          7
+        ]
+      ]
+    },
+    "material": "MAT-RC",
+    "role": "source_authoritative_inclined_rc"
+  },
+  "expected": {
+    "stock_volume": 1,
+    "cutter_volume": 0.06,
+    "retained_volume": 0.94,
+    "retained_points": [
+      [
+        0.1,
+        0.5,
+        0.9
+      ],
+      [
+        0.9,
+        0.5,
+        0.1
+      ]
+    ],
+    "removed_points": [
+      [
+        0.5,
+        0.5,
+        0.5
+      ]
+    ]
+  },
+  "column_bore": {
+    "part": {
+      "outline": [
+        [
+          0.2,
+          0.2
+        ],
+        [
+          0.8,
+          0.2
+        ],
+        [
+          0.8,
+          0.8
+        ],
+        [
+          0.2,
+          0.8
+        ]
+      ],
+      "holes": [
+        [
+          [
+            0.4,
+            0.4
+          ],
+          [
+            0.4,
+            0.6
+          ],
+          [
+            0.6,
+            0.6
+          ],
+          [
+            0.6,
+            0.4
+          ]
+        ]
+      ],
+      "z0": 0,
+      "z1": 1
+    },
+    "expected_wall_volume": 0.64,
+    "expected_physical_difference_volume": 0.68
+  },
+  "native_shapes": [
+    {
+      "id": "closed_mesh",
+      "part": {
+        "mesh": {
+          "vertices": [
+            [
+              0,
+              0.2,
+              0.2
+            ],
+            [
+              1,
+              0.2,
+              0.7
+            ],
+            [
+              1,
+              0.8,
+              0.7
+            ],
+            [
+              0,
+              0.8,
+              0.2
+            ],
+            [
+              0,
+              0.2,
+              0.3
+            ],
+            [
+              1,
+              0.2,
+              0.8
+            ],
+            [
+              1,
+              0.8,
+              0.8
+            ],
+            [
+              0,
+              0.8,
+              0.3
+            ]
+          ],
+          "faces": [
+            [
+              0,
+              3,
+              2,
+              1
+            ],
+            [
+              4,
+              5,
+              6,
+              7
+            ],
+            [
+              0,
+              1,
+              5,
+              4
+            ],
+            [
+              1,
+              2,
+              6,
+              5
+            ],
+            [
+              2,
+              3,
+              7,
+              6
+            ],
+            [
+              3,
+              0,
+              4,
+              7
+            ]
+          ]
+        },
+        "material": "MAT-RC",
+        "role": "source_authoritative_inclined_rc"
+      },
+      "removed_volume": 0.06,
+      "retained_volume": 0.94
+    },
+    {
+      "id": "convex_section",
+      "part": {
+        "section": {
+          "plane": "XZ",
+          "profile": [
+            [
+              0,
+              0.2
+            ],
+            [
+              1,
+              0.7
+            ],
+            [
+              1,
+              0.8
+            ],
+            [
+              0,
+              0.3
+            ]
+          ],
+          "sweep": [
+            0.2,
+            0.8
+          ]
+        },
+        "material": "MAT-RC",
+        "role": "inclined_section"
+      },
+      "removed_volume": 0.06,
+      "retained_volume": 0.94
+    },
+    {
+      "id": "shifted_loft",
+      "part": {
+        "outline": [
+          [
+            0,
+            0.2
+          ],
+          [
+            0.5,
+            0.2
+          ],
+          [
+            0.5,
+            0.8
+          ],
+          [
+            0,
+            0.8
+          ]
+        ],
+        "top_outline": [
+          [
+            0.5,
+            0.2
+          ],
+          [
+            1,
+            0.2
+          ],
+          [
+            1,
+            0.8
+          ],
+          [
+            0.5,
+            0.8
+          ]
+        ],
+        "z0": 0.2,
+        "z1": 0.8,
+        "material": "MAT-RC",
+        "role": "shifted_loft"
+      },
+      "removed_volume": 0.18,
+      "retained_volume": 0.82
+    }
+  ],
+  "cache_producers": [
+    "_subtract_convex_material",
+    "_native_material_cells",
+    "clip_stock",
+    "publish_stock",
+    "part_outline_at",
+    "_polyhedron_volume",
+    "stock_separated"
+  ],
+  "exact_cache": {
+    "numerator": "9007199254740993",
+    "denominator": "9007199254740992",
+    "float_value": 1,
+    "kernel_calls": 2
+  },
+  "combined_native": {
+    "extra_y_shift": 0.1,
+    "removed_volume": 0.07,
+    "retained_volume": 0.93,
+    "kernel_batches": 1,
+    "cutters": 2
+  },
+  "combined_prism": {
+    "cutter": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          0.1,
+          0
+        ],
+        [
+          0.1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "material": "MAT-RC",
+      "role": "vertical_rc",
+      "owner": "PRIMARY-RC"
+    },
+    "removed_volume": 0.154,
+    "retained_volume": 0.846,
+    "kernel_batches": 1,
+    "cutters": 2
+  },
+  "guard_union": {
+    "wall": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "material": "brick",
+      "role": "wall"
+    },
+    "guard": {
+      "outline": [
+        [
+          0.2,
+          0
+        ],
+        [
+          0.6,
+          0
+        ],
+        [
+          0.6,
+          1
+        ],
+        [
+          0.2,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "material": "rc",
+      "role": "guard"
+    },
+    "structure": {
+      "outline": [
+        [
+          0.4,
+          0
+        ],
+        [
+          0.8,
+          0
+        ],
+        [
+          0.8,
+          1
+        ],
+        [
+          0.4,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "material": "rc",
+      "role": "beam"
+    },
+    "retained_volume": 0.4
+  },
+  "wall_affine": {
+    "wall": "W-PARENT-BATH",
+    "coordinate_type": "source_rational"
+  },
+  "guard_reference": {
+    "guard": "GUARD-RM-1",
+    "construction": {
+      "kind": "ramp_guard_bands",
+      "ramp": "RM-1",
+      "core_width": 0.06,
+      "core_height": 0.85,
+      "cap_height": 0.1,
+      "cap_overhang": 0.02,
+      "bands": [
+        {
+          "flight": "RF-1A",
+          "axis_x": 9.5
+        }
+      ],
+      "landing_returns": false
+    },
+    "parts": 2,
+    "core_width": [
+      "3",
+      "50"
+    ],
+    "cap_first_x": [
+      "189",
+      "20"
+    ]
+  },
+  "stringer_reference": {
+    "beam": "BEAM-RAMP-FIRST-STRINGER",
+    "construction": {
+      "kind": "ramp_stringer",
+      "flight": "RF-1A",
+      "width": 0.12,
+      "depth": 0.26,
+      "side": "right"
+    },
+    "width": [
+      "3",
+      "25"
+    ],
+    "depth": [
+      "13",
+      "50"
+    ]
+  }
+}

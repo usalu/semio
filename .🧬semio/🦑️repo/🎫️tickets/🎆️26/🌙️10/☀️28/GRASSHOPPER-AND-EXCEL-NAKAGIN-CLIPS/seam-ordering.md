@@ -1,0 +1,9 @@
+# Crossing Seam and Panel Surfaces
+
+The post-SCC capital ray audit identifies four real pixel-centre errors and106 point-painter disagreements in23,450 finite rays. Frame leakage is fixed: none of the938 former frame pixels has a nearest steel-truss surface, and the current source-ID raster contains no visible steel there. The remaining errors concern actual raised seam sides crossing their backing panel plane.
+
+For source items816/1090, panel `capital-panel-west-3-2-0-0` lies at X=−13.85. The side face of `capital-seam-west-vertical-3-0-0` spans X=[−13.868,−13.8485], crossing that plane. Across every vertex of their exact convex projected intersection, seam-minus-panel ray depth ranges from−0.0023220742064m to+0.0247687915349m. Items894/1108 give the same signed range. A single whole-face order cannot reproduce both physically visible regions. The candidate misses a seam nearer by22.8714548mm at two reported centres; no colour tolerance is justified.
+
+A principled next correction must preserve the actual source solids and shade only real per-view surface fragments, or expose an exact physical union boundary. It must not force a seam role tier, fake depth, move geometry or erase the source member. If fragments are used, cut at the actual opposing world plane, preserve concave/disconnected regions through genuine polygon decomposition, and avoid drawing artificial strokes along extended partition lines. Caches may retain only geometric fragment descriptors and source indices; current palette, opacity and semantic owners must be rebuilt from the current input objects.
+
+The21-test occlusion gate passed after the SCC-source repair, but its scope did not yet cover these crossing seam regions. Final renderer/native acceptance remains open. Independent artifacts are generated `capital-ray-classification.json` and the immutable `capital-after-dependency-order` source/camera export.

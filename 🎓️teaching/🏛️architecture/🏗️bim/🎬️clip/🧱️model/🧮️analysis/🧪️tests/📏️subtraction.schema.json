@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "rings"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "parts",
+          "cutters"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parts": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/part"
+            }
+          },
+          "cutters": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/part"
+            }
+          }
+        }
+      }
+    },
+    "rings": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "valid",
+          "ring"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "ring": {
+            "$ref": "#/$defs/ring"
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ring": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "outline",
+        "z0",
+        "z1"
+      ],
+      "properties": {
+        "outline": {
+          "$ref": "#/$defs/ring"
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ring"
+          }
+        },
+        "z0": {
+          "type": "number"
+        },
+        "z1": {
+          "type": "number"
+        },
+        "region": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
+ 

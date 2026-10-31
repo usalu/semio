@@ -1,0 +1,13 @@
+{
+  "observed": [
+    {
+      "id": "ntfs-file-id-above-double-precision",
+      "platform": "win32",
+      "path": "🎓️teaching",
+      "ino": "12947848932114887",
+      "roundedByDouble": "12947848932114888"
+    }
+  ],
+  "module": "../../🟦️.ts",
+  "identityFields": ["dev", "ino"]
+}

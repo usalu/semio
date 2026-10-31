@@ -1,0 +1,7 @@
+# Raised Beam / Floor Repair: Independent Recheck R92
+
+PASS on stable sourcecb9b138ff147e39b134247e9aa67b93545a9f5c8d48df99fe33795fad7c5a8a9/API40c6d61ad047994b7292c2a8fb2971c41c4bbc1b41e33e66762a9277309a2703. Four affected covering products,1933actualparts, were checked against all six previously colliding exclusive native beam bodies. Exact occupied intersection volume is zero. All six old material-group interior witnesses are empty in finish material and still occupied by the real beam. No structural/slab/column ownership was masked or removed. Capture5.155seconds.
+
+This closes the identified.430371908918m³ physical material overlap. The original smaller global-union number and cross-beam-duplication explanation are withdrawn in floor-beam-owned-intersections-r92.md: the discrepancy was an unquantized GEOS union precision artifact, with no independently detected overlapping control prisms. Preserve the positive original counterexample and its corrected arithmetic as a red control.
+
+The source owner retained4cm sourced concrete pavers where reserve permits, and explicitly unresolved15mmwearing+15mmbedding on3cm constrained bands. This recheck does not claim those constrained original thicknesses are now historically known. Full finish support/material/native contracts and final whole-building interference remain separate. Input floor-beam-repaired-intersections-r92.py; no complete SDK or master suite was duplicated. No production edits.

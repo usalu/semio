@@ -1,0 +1,126 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "rain": {
+    "tag": "RAIN-KITCHEN-PATIO-9",
+    "collector": "COLLECTOR-KITCHEN-PATIO-9",
+    "opening": "OP-RAIN-9-SL1",
+    "spine": [
+      [
+        2.8,
+        8.6,
+        3.17
+      ],
+      [
+        2.8,
+        8.6,
+        2.81
+      ],
+      [
+        3.3501873542589005,
+        9.132592072412754,
+        2.81
+      ],
+      [
+        3.3501873542589005,
+        9.132592072412754,
+        0
+      ]
+    ],
+    "diameter": 0.08,
+    "gauge": 0.004,
+    "sectors": 48,
+    "obstacles": [
+      "SL-1",
+      "FIN-KITCHEN-PATIO",
+      "COLLECTOR-KITCHEN-PATIO-9"
+    ]
+  },
+  "lamp": {
+    "tag": "LIGHT-HALL-BASIN-19",
+    "host": "19",
+    "mount_height": 2,
+    "old_mount_height": 2.35,
+    "minimum_human_clearance": 1.8,
+    "obstacles": [
+      "RF-1B",
+      "GUARD-RM-1"
+    ],
+    "translation": [
+      0,
+      0,
+      -0.35
+    ],
+    "positive_witness": [
+      8.12081285223133,
+      12.876816812740655,
+      2.3465104111717325
+    ]
+  },
+  "taps": [
+    {
+      "tag": "TAP-KITCHEN",
+      "sink": "SINK-KITCHEN-1",
+      "counter": "FIX-KITCHEN-SINK-COUNTER",
+      "axis": [
+        1.5088235294117638,
+        0.2785
+      ],
+      "flange_z": [
+        0.9,
+        0.905
+      ]
+    },
+    {
+      "tag": "TAP-KITCHEN-2",
+      "sink": "SINK-KITCHEN-2",
+      "counter": "FIX-KITCHEN-SINK-COUNTER",
+      "axis": [
+        0.8382352941176485,
+        0.2785
+      ],
+      "flange_z": [
+        0.9,
+        0.905
+      ]
+    },
+    {
+      "tag": "TAP-PANTRY",
+      "sink": "SINK-PANTRY",
+      "counter": "FIX-PANTRY-SINK-COUNTER",
+      "axis": [
+        3.6602941176470587,
+        0.2785
+      ],
+      "flange_z": [
+        0.9,
+        0.905
+      ]
+    }
+  ],
+  "tap_translation": [
+    0,
+    -0.0015,
+    0
+  ],
+  "storage": {
+    "tag": "FIX-PANTRY-STORAGE",
+    "wall": "W-PANTRY-WEST",
+    "wall_path": [
+      [
+        3,
+        0.3
+      ],
+      [
+        3,
+        6.006
+      ]
+    ],
+    "wall_thickness": 0.08,
+    "rear_x": 3.04,
+    "parts": 38
+  }
+}

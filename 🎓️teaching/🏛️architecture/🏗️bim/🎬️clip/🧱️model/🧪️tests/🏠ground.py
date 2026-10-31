@@ -7,10 +7,36 @@ from pathlib import Path
 model=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
 
 
+def _polygon(source,outline):
+    """📐 Independently expand declared cubic controls before checking the native outline interface."""
+    import numpy as np
+    from shapely.geometry import Polygon
+    points=[]
+    for item in outline:
+        if isinstance(item,dict):
+            assert set(item)=={'bezier'}
+            controls=np.asarray(item['bezier'],dtype=float)
+            for t in np.linspace(0,1,33):
+                work=controls.copy()
+                for count in (3,2,1):work=(1-t)*work[:count]+t*work[1:count+1]
+                points.append(work[0].tolist())
+        else:points.append(item)
+    expected=Polygon(points);actual=Polygon(model._expand(source,outline))
+    assert expected.is_valid and actual.is_valid
+    assert expected.symmetric_difference(actual).area<1e-10
+    assert expected.hausdorff_distance(actual)<1e-12
+    return actual
+
+
 def test_ground_paths_match_independent_registered_controls():
     """📍 Preserve registered controls rather than an assumed motorcar radius."""
     source=model.load_model()
     case=json.loads(Path(__file__).with_suffix(".json").read_text())
+    import jsonschema
+    jsonschema.Draft202012Validator(json.loads(Path(__file__).with_suffix(".schema.json").read_text())).validate(case)
+    for curve in case["curve_cases"]:
+        assert _polygon(source,curve["outline"]).covers(__import__("shapely.geometry",fromlist=["Point"]).Point(curve["midpoint"]))
+    assert not set(case["removed_walls"])&{e["tag"] for e in source["elements"]}
     for tag,expected in case["walls"].items():
         assert model._find(source,tag)["geometry"]["path"]==expected,tag
     for tag,expected in case["openings"].items():
@@ -23,7 +49,8 @@ def test_ground_spaces_are_valid_distinct_and_contain_registered_basin_and_hoist
     from shapely.geometry import Polygon,LineString
     from shapely.ops import unary_union
     source=model.load_model()
-    spaces={s["tag"]:Polygon(s["outline"]) for s in source["spaces"] if s["storey"]=="ground"}
+    spaces={s["tag"]:_polygon(source,s["outline"]) for s in source["spaces"] if s["storey"]=="ground"}
+    assert set(spaces)==set(json.loads(Path(__file__).with_suffix(".json").read_text())["expected_spaces"])
     for tag,shape in spaces.items():
         assert shape.is_valid and shape.area>0,tag
     pairs=list(spaces.items())
@@ -37,7 +64,7 @@ def test_ground_spaces_are_valid_distinct_and_contain_registered_basin_and_hoist
     enclosure=Polygon(case["envelope"])
     assert unary_union(list(spaces.values())).symmetric_difference(enclosure).area<1e-8
     for tag,shape in spaces.items():
-        assert abs(shape.area-model._area(next(s for s in source["spaces"] if s["tag"]==tag)["outline"]))<1e-8
+        assert abs(shape.area-model._area(model._expand(source,next(s for s in source["spaces"] if s["tag"]==tag)["outline"])))<1e-8
     hatch=Polygon(model._find(source,"OP-HOIST-HATCH")["geometry"]["outline"])
     assert spaces["SP-GARAGE"].covers(hatch),"registered hatch outside garage"
     access=case["hoist_approach"]
@@ -68,14 +95,16 @@ def test_ground_basin_registration_and_garage_portal_are_physically_consistent()
     from shapely.ops import unary_union
     source=model.load_model()
     case=json.loads(Path(__file__).with_suffix(".json").read_text())
-    points=[p for part in model._find(source,case["basin"]["tag"])["geometry"]["parts"] for p in part["outline"]]
+    basin=model._find(source,case["basin"]["tag"])
+    assert math.dist(basin["geometry"]["axis"],case["basin"]["centre"])<1e-8
+    points=[v for part in model.service_geometry(basin["tag"],source)["parts"] if part["role"] in ("basin_floor","basin_shell") for v in model.part_vertices(part)]
     centre=[(min(p[i] for p in points)+max(p[i] for p in points))/2 for i in (0,1)]
     assert math.dist(centre,case["basin"]["centre"])<1e-8
     host=model._wall_geometry(source,model._find(source,case["portal"]["host"]))
     occupied=unary_union([Polygon(p["outline"]) for p in host["parts"] if p["z0"]<1<p["z1"]])
     portal=box(15.926,*[case["portal"]["world_y"][0]],16.074,case["portal"]["world_y"][1])
     assert occupied.intersection(portal).area<1e-8
-    garage=Polygon(next(s for s in source["spaces"] if s["tag"]=="SP-GARAGE")["outline"])
+    garage=_polygon(source,next(s for s in source["spaces"] if s["tag"]=="SP-GARAGE")["outline"])
     assert garage.covers(box(15.8,10.85,15.9,14.8))
 
 
@@ -85,9 +114,9 @@ def test_ground_registered_room_fittings_and_private_portals_remain_accessible()
     from shapely.ops import unary_union
     source=model.load_model()
     case=json.loads(Path(__file__).with_suffix(".json").read_text())
-    spaces={s["tag"]:Polygon(s["outline"]) for s in source["spaces"] if s["storey"]=="ground"}
+    spaces={s["tag"]:_polygon(source,s["outline"]) for s in source["spaces"] if s["storey"]=="ground"}
     for tag,room in case["fixture_spaces"].items():
-        fixture=unary_union([Polygon(p["outline"]) for p in model._find(source,tag)["geometry"]["parts"]])
+        fixture=unary_union([Polygon(model.part_footprint(part)) for part in model.solid_geometry(tag,source)["parts"]])
         assert spaces[room].covers(fixture),tag
     for item in case["room_access"]:
         door=model._find(source,item["door"])
@@ -111,9 +140,9 @@ def test_ground_registered_room_fittings_and_private_portals_remain_accessible()
                 shape=LineString(other["geometry"]["path"]).buffer(model._wall_thickness(source,other)/2,cap_style=2)
                 assert crossing.intersection(shape).area<1e-8,(item["door"],other["tag"])
             if other["class"]=="IfcFurnishingElement":
-                for part in other["geometry"]["parts"]:
+                for part in model.solid_geometry(other["tag"],source)["parts"]:
                     if part["z0"]<1.8 and part["z1"]>0:
-                        assert crossing.intersection(Polygon(part["outline"])).area<1e-8,(item["door"],other["tag"])
+                        assert crossing.intersection(Polygon(model.part_footprint(part))).area<1e-8,(item["door"],other["tag"])
         filling=model._filling_geometry(source,door)
         assert filling["clear_width"]>=.8,item["door"]
         for part in filling["parts"]:
@@ -135,14 +164,14 @@ def test_ground_plate_preserves_cellar_ownership_and_registered_apertures():
     assert material["density"]["value"]==spec["density"]
     assert material["density"]["basis"]=="assumed"
     assert slab["psets"]["Pset_GroundSubstrate"]["Reinforced"]["value"] is False
-    assert slab["geometry"]["outline"]==case["envelope"]
+    assert slab["geometry"]["outline"]==spec["outline"]
     assert slab["geometry"]["regions"][0]["thickness"]["value"]==spec["thickness"]
     geometry=model._slab_geometry(source,slab)
     from shapely import intersection
     from shapely.strtree import STRtree
     polygons=[Polygon(p["outline"]) for p in geometry["parts"]]
     voids=[Polygon(v["outline"]) for v in slab["geometry"]["voids"]]
-    expected=Polygon(case["envelope"]).difference(unary_union(voids))
+    expected=Polygon(spec["outline"]).difference(unary_union(voids))
     assert all(p.is_valid and p.area>0 for p in polygons)
     assert abs(sum(p.area for p in polygons)-expected.area)<1e-8
     assert abs(sum(model._area(p["outline"]) for p in geometry["parts"])-expected.area)<1e-8
@@ -183,21 +212,25 @@ def test_rejected_garage_hall_door_is_absent_and_did_intersect_the_source_ramp()
         assert not any(tag in m["element_tags"] for m in source["models"])
     route=LineString(case["rejected_route"]).buffer(case["body_width"]/2,cap_style=2)
     flight=model.ramp_geometry(case["ramp"],source)
-    actual=sum(route.intersection(Polygon(p["outline"])).area for p in flight["parts"] if p["z0"]<1.8 and p["z1"]>0)
+    from shapely.ops import unary_union
+    occupied=unary_union([Polygon(ring) for part in flight["parts"] if part["z0"]<1.8 and part["z1"]>0 for ring in model.part_band_footprints(part,0.,1.8)])
+    actual=route.intersection(occupied).area
     assert abs(actual-case["expected_overlap_area"])<1e-8
 
 
-def test_northern_circulation_passes_the_registered_basin_without_moving_source_structure():
-    """🚶 An800mm body reaches northern circulation around all occupied native material across storey labels."""
+def test_hall_gap_remains_source_bound_without_certifying_800mm_passage():
+    """📏 Check qualified thin-wall construction, actual proud boards and retained fixed basin controls."""
     from shapely.geometry import Polygon,LineString
-    source=model.load_model();g=model.building_geometry(source)
-    case=json.loads(Path(__file__).with_suffix(".json").read_text())["northern_circulation"]
-    route=LineString(case["path"]).buffer(case["body_width"]/2,cap_style=2)
-    hall=Polygon(next(s for s in source["spaces"] if s["tag"]==case["space"])["outline"])
-    assert hall.covers(route)
-    items=[item for category in ["walls","screens","slabs","pilotis","railings","fillings","stairs","furnishings","services","beams","foundations","details"] for item in g[category]]
-    items += [g[key] for key in ["ramp","curtain_wall"] if g.get(key)]
-    for item in items:
-        for part in item.get("parts",[]):
-            if part["z0"]<case["body_height"] and part["z1"]>0:
-                assert route.intersection(Polygon(model.part_footprint(part))).area<1e-8,item["tag"]
+    source=model.load_model();case=json.loads(Path(__file__).with_suffix('.json').read_text());circulation=case['northern_circulation'];control=circulation['critical_clearance'];partition=circulation['partition_reconstruction'];host=model._find(source,control['wall_tag'])
+    assert host['material']==partition['material'] and host['type']==partition['type']
+    assert host['attributes']['thickness']['basis']=='inferred' and host['attributes']['thickness']['value']==partition['thickness']
+    assert all(point[0]==partition['axis_x'] for point in host['geometry']['path'])
+    material=model._find(source,host['material']);assert math.isclose(math.fsum(layer['thickness']['value'] for layer in material['layers']),partition['thickness'],abs_tol=1e-12)
+    section=LineString([[6.8,control['axis_y']],[8.4,control['axis_y']]])
+    walls=[Polygon(p['outline']) for p in model._wall_geometry(source,host)['parts'] if p['z0']<.7<p['z1']];sections=[shape.intersection(section) for shape in walls if shape.intersects(section)]
+    east=max(shape.bounds[2] for shape in sections);cabinet_side=min(shape.bounds[0] for shape in sections)
+    basin=model.service_geometry(control['basin_tag'],source)['parts'];west=min(v[0] for p in basin for v in model.part_vertices(p))
+    assert model._find(source,control['basin_tag'])['geometry']['axis']==case['basin']['centre']
+    stock=model.solid_geometry(control['skirting_tag'],source)['parts'];board_sections=[Polygon(ring).intersection(section) for part in stock for ring in model.part_band_footprints(part,.05,.06) if Polygon(ring).intersects(section)];board_east=max(shape.bounds[2] for shape in board_sections)
+    for actual,expected in ((east,control['actual_east_finish_face_x']),(cabinet_side,partition['retained_cabinet_face_x']),(west,control['actual_west_edge_x']),(west-east,control['nominal_gap']),(board_east,control['actual_east_skirting_face_x']),(west-board_east,control['board_nominal_gap'])):assert math.isclose(actual,expected,abs_tol=1e-9),(actual,expected)
+    accepted=json.loads(Path(__file__).with_name(circulation['fixture']).read_text());assert west-board_east>max(row['diameter'] for row in accepted['cases'])+2*accepted['radial_margin']

@@ -13,6 +13,7 @@ _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️ener
 _engine = importlib.import_module("manim")
 
 mix, place, segments, polygon, polyline = _drafting.mix, _drafting.place, _drafting.segments, _drafting.polygon, _drafting.polyline
+building_fit = importlib.import_module("🎓️teaching.🏛️architecture.🧲️fit.🐍️").building_fit
 
 
 def P(point) -> np.ndarray:
@@ -34,7 +35,7 @@ RIBBON_TABS = ("Params", "Maths", "Sets", "Vector", "Curve", "Surface", "Mesh", 
 TAB_TINTS = {"Params": "#E8B4A0", "Maths": "#A9C7E8", "Sets": "#C3D9A3", "Vector": "#E8D28A", "Curve": "#B7A7E0", "Surface": "#E0A7BD",
              "Mesh": "#9ED6CF", "Intersect": "#D8B98F", "Transform": "#A7B8C9", "Display": "#E3A5A5"}
 KINDS = ("item", "list", "tree")
-ROW, GRIP, PAD, SLIDER_H = 0.33, 0.085, 0.09, 0.42
+ROW, GRIP, PAD, SLIDER_H, LABEL_ROW = 0.33, 0.085, 0.09, 0.42, 0.45
 
 
 def _get(obj, *names, default=None):
@@ -556,6 +557,10 @@ class Canvas:
         widget.body, widget.parts, widget.origin = frame, {"body": frame, "title": tab}, np.array(view(0, 0, 0))
         widget.view = view
         return place(widget, at, "c")
+
+    def gh_building_fit(self, viewport, *, view="axon", margin: float = 0.12, **parts) -> dict:
+        """🧲 ``at`` and ``scale`` that fit the Nakagin drawing inside a ``gh_viewport`` below its label row: ``self.tower_axon(**self.gh_building_fit(viewport), lit=...)``."""
+        return building_fit(viewport.body.width, viewport.body.height, centre=viewport.body.get_center(), view=view, top=LABEL_ROW, margin=margin, **parts)
 
     def gh_canvas(self, definition, solution, *, view: str | None = None, at=(0, 0, 0), frame=None, scale: float = 1.0, only=None, gap=(0.45, 0.3), max_lines: int = 10, pixels: float = 135.0):
         """🕸️ A whole canvas (or one named ``view``) from the engine: every object as its widget, wires from the data (item thin, list double, tree dashed double),

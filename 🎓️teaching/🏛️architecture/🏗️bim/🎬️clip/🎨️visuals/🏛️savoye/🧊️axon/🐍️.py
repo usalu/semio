@@ -33,6 +33,7 @@ _wall_solids = _primitives._wall_solids
 _stage = _primitives._stage
 _column_prims = _primitives._column_prims
 _ground_index = _primitives._ground_index
+_ground_context = _primitives._ground_context
 _slab_prims = _primitives._slab_prims
 _service_prims = _primitives._service_prims
 prims = _primitives.prims
@@ -78,7 +79,7 @@ LAYER_GAP = 1.2
 SORTED_STAGES = (STAGE_CELLAR, STAGE_UNDER, STAGE_FIRST, STAGE_WALLS, STAGE_TOP, STAGE_OVERLAY)
 ROLES = {"wall": _d.INK, "slab": _d.mix(_d.INK, _d.CONCRETE, 0.3), "post": _d.CONCRETE, "ramp": _d.CONCRETE, "ground": _d.GREEN_GROUND,
          "glass": _d.GLASS, "service": _d.SERV, "garden": _d.mix(_d.GOOD, _d.BACKGROUND, 0.3), "soil": _d.mix(_d.INK, _d.GOOD, 0.1),
-         "paving": _d.mix(_d.INK, _d.CONCRETE, 0.7), "wood": "#A48869", "tile": _d.CONCRETE, "metal": _d.MUTED, "concrete": _d.CONCRETE, "hall": _d.mix(_d.GREEN_GROUND, _d.BACKGROUND, 0.5), "frame": _d.INK, "void": _d.MUTED, "foot": _d.MUTED}
+         "paving": _d.mix(_d.INK, _d.CONCRETE, 0.7), "wood": "#A48869", "tile": _d.CONCRETE, "resilient_gray": _c.surface_color({"kind":"flooring"},{"material":"MAT-RAMP-RESILIENT"}), "gravel": _c.surface_color({"kind":"flooring"},{"material":"MAT-GRAVEL"}), "sand": _c.surface_color({"kind":"flooring"},{"material":"MAT-SAND"}), "gres_black": _c.surface_color({"kind":"flooring"},{"material":"MAT-GRES-BLACK"}), "substrate": _c.surface_color({"kind":"flooring"},{"material":"MAT-PLANTING-SUBSTRATE"}), "gres_white": _c.surface_color({"kind":"flooring"},{"material":"MAT-GRES-WHITE"}), "gres_ochre": _c.surface_color({"kind":"flooring"},{"material":"MAT-GRES-OCHRE"}), "bitumen": _c.surface_color({"kind":"flooring"},{"material":"MAT-BITUMEN"}), "cast_iron": _c.surface_color({"kind":"radiator"},{"material":"MAT-CAST-IRON"}), "painted_wood": _c.surface_color({"kind":"shelf"},{"material":"MAT-PAINTED-WOOD"}), "mosaic_blue": _c.surface_color({"kind":"tile"},{"material":"MAT-MOSAIC-BLUE"}), "mosaic_black": _c.surface_color({"kind":"tile"},{"material":"MAT-MOSAIC-BLACK"}), "metal": _d.MUTED, "concrete": _d.CONCRETE, "hall": _d.mix(_d.GREEN_GROUND, _d.BACKGROUND, 0.5), "frame": _d.INK, "void": _d.MUTED, "foot": _d.MUTED}
 SMOOTH_ROLES = ("ground",)
 P = _d.P
 
@@ -159,10 +160,33 @@ class AxonDrawing(_d.Drawing):
     def layer_part(self, layer: str, tag: str, shape):
         """🏷️ Register a part inside one discipline layer."""
         bucket = self.layer_parts.setdefault(layer, {})
-        if tag in bucket and bucket[tag] is not shape:
+        if tag not in bucket:
+            bucket[tag] = _engine.VGroup(shape)
+        elif bucket[tag] is not shape:
             bucket[tag].add(shape)
-        else:
-            bucket[tag] = shape if isinstance(shape, _engine.VGroup) else _engine.VGroup(shape)
+
+
+    def _assemble(self, records):
+        """🗂️ Batch ordered actors into independent root, discipline and selector containers."""
+        if not records:
+            return
+        roots, layers, parts, layer_parts = [], {}, {}, {}
+        for shape, names, tags in records:
+            roots.append(shape)
+            for name in names:
+                layers.setdefault(name, []).append(shape)
+                layer_parts.setdefault(name, {}).setdefault(tags[0], []).append(shape)
+            for tag in dict.fromkeys(tags):
+                parts.setdefault(tag, []).append(shape)
+        self.add(*roots)
+        for name, shapes in layers.items():
+            self.layers.setdefault(name, _engine.VGroup()).add(*shapes)
+        for tag, shapes in parts.items():
+            self.parts.setdefault(tag, _engine.VGroup()).add(*shapes)
+        for name, buckets in layer_parts.items():
+            target = self.layer_parts.setdefault(name, {})
+            for tag, shapes in buckets.items():
+                target.setdefault(tag, _engine.VGroup()).add(*shapes)
 
 
 class _Selection(_c.Selection):
@@ -191,7 +215,7 @@ class _Painter:
         if self.discipline_mode:
             colour = _d.DISCIPLINES[layer]
             return _d.mix(colour, _d.BACKGROUND, 0.35) if role in ("glass", "frame") else colour
-        return ROLES[role]
+        return _c.appearance_colour(role,ROLES["wall"]) if isinstance(role,dict) else ROLES[role]
 
     def factor(self, prim, layer, state):
         if state in ("highlight", "ghost") or prim.item["kind"] == "pilotis":
@@ -212,6 +236,8 @@ class _Painter:
 
     def render(self, prim, layer, dz):
         """🧱 The mobjects of one piece, in painter's order."""
+        if prim.skin is not None:
+            return self._skin(prim,layer,dz)
         group, buckets = _engine.VGroup(), {}
         for face in prim.faces:
             kind = face[0]
@@ -227,6 +253,51 @@ class _Painter:
             group.add(_multi(rings, fill, opacity, stroke, width, stroke_opacity))
         return group
 
+    def _skin(self, prim, layer, dz):
+        """🎨 Fill actual exposed facets once and ink only visible native material boundaries."""
+        group=_engine.VGroup();facets=[];styles=[];fills={}
+        for index,face in enumerate(prim.faces):
+            rings,normal,role=face[1],face[2],face[3]
+            if normal is not None and self.view.facing(normal)<=1e-6:
+                continue
+            bright=.8 if normal is None else brightness(normal,self.view.turns)
+            state,fill,opacity,stroke,stroke_opacity,width=self.style(prim,role,self.base(prim,role,layer),bright,layer)
+            if state in ("normal","dim"):
+                stroke,width=fill,.5
+            screen=[self.view.project(ring,dz)for ring in rings]
+            for ri,ring in enumerate(screen):
+                area=sum(a[0]*b[1]-a[1]*b[0]for a,b in zip(ring,np.roll(ring,-1,axis=0)))
+                if (area>0)!=(ri==0):screen[ri]=ring[::-1]
+            key=(fill,opacity)
+            if len(rings)==1:
+                fills.setdefault(key,[]).append(screen[0])
+            else:
+                group.add(_d.material_fill(_d.region(screen,fill,opacity,None,0,0)))
+            facets.append({"rings":rings,"material":prim.skin[index]});styles.append((state,stroke,stroke_opacity,width))
+        for (fill,opacity),rings in fills.items():
+            group.add(_d.material_fill(_multi(rings,fill,opacity,None,0,0)))
+        c,s=round(math.cos(math.pi/2*self.view.turns)),round(math.sin(math.pi/2*self.view.turns))
+        matrix=((c-s,c+s),(-s-c,c-s),(0,2))
+        key=(self.view.turns,_primitives._surfaces.producer_token())
+        if key not in prim.outlines:
+            prim.outlines.clear() if len(prim.outlines)>=4 else None
+            prim.outlines[key]=_primitives._surfaces.projected_material_regions(facets,matrix)
+        centre=np.asarray(self.view.centre)@np.asarray(matrix)
+        outlines={}
+        for region in prim.outlines[key]:
+            state,stroke,stroke_opacity,width=styles[region["facet"]]
+            for ring in region["rings"]:
+                coordinates=np.asarray(ring)-centre
+                screen=self.view.point+self.view.scale*np.column_stack((.866*coordinates[:,0],.5*coordinates[:,1]+dz,np.zeros(len(ring))))
+                if state=="ghost":
+                    group.add(_d.polyline(screen,stroke,1.,.8,True,.07))
+                else:
+                    pairs=list(zip(screen,np.roll(screen,-1,axis=0)))
+                    outlines.setdefault((stroke,stroke_opacity,width),[]).extend(pairs)
+        for (stroke,opacity,width),pairs in outlines.items():
+            group.add(_d.segments(pairs,stroke,width,opacity))
+        return group
+
     def _poly(self, prim, face, layer, dz, group, buckets):
         rings, normal, role = face[1], face[2], face[3]
         if normal is not None and self.view.facing(normal) <= 1e-6:
@@ -240,7 +311,7 @@ class _Painter:
             group.add(_d.polyline(screen[0], colour, 1.2, 0.9, True, 0.08))
             return
         state, fill, opacity, stroke, stroke_opacity, width = self.style(prim, role, self.base(prim, role, layer), bright, layer)
-        smooth = role in SMOOTH_ROLES or (prim.merge and normal is not None and normal[2] < 0.5)
+        smooth = isinstance(role,dict) or role in SMOOTH_ROLES or (prim.merge and normal is not None and normal[2] < 0.5)
         if smooth and state in ("normal", "dim"):
             stroke, width = fill, 0.5
         if prim.merge and len(rings) == 1:
@@ -355,7 +426,7 @@ def _lift(prim, zb: float, factor: float):
             faces.append(("line", np.column_stack([points[:, :2], z(points[:, 2])]), *face[2:]))
         else:
             faces.append(("segs", [((a[0], a[1], z(a[2])), (b[0], b[1], z(b[2]))) for a, b in face[1]], *face[2:]))
-    return Prim(prim.tag, prim.item, prim.stage, prim.foot, faces, merge=prim.merge, alias=prim.alias, sub=prim.sub, z=prim.z, base=prim.base)
+    return Prim(prim.tag, prim.item, prim.stage, prim.foot, faces, merge=prim.merge, alias=prim.alias, sub=prim.sub, z=prim.z, base=prim.base, skin=prim.skin)
 
 
 def _wall_pieces(g, model, wall, e: float, o: float, w: float) -> list:
@@ -432,7 +503,7 @@ class Axon:
         ``explode`` lifts architecture by ``explode × 8 m`` and lowers services by the same, each shared element is drawn once per layer. ``shell`` is the opacity of everything that is not a piloti
         (automatic 0.22 when pilotis are highlighted or ghosted, so every piloti shows through; 0.55 for the structure layer of partial or exploded drawings). ``view`` is ``"sw"`` (default), ``"se"``, ``"ne"`` or ``"nw"``.
         Occlusion follows the authored solids; ``shell`` reveals internal supports and circulation. Returns an ``AxonDrawing`` with ``parts[tag]``, ``layers[discipline]``, ``layer_parts``, ``at(...)``."""
-        g = _c.geometry(model)
+        model,g = _c.geometry_context(model)
         projection = self.axon_view(point, scale, model=model, view=view)
         selection = _Selection(highlight, ghost, dim)
         layered = explode > 0
@@ -465,22 +536,21 @@ class Axon:
         entries.sort(key=lambda row: row[:6])
         if ground is None:
             ground = not discipline_mode
-        ground_index = _ground_index(entries) if ground else -1
+        context = _ground_context(g,model) if ground else None
+        ground_index = _ground_index(entries) if context else -1
+        records = []
         for entry_index, entry in enumerate(entries):
             if entry_index == ground_index:
-                self._ground(drawing, g, projection)
+                drawing._assemble(records)
+                records.clear()
+                self._ground(drawing, g, projection, context)
             _, _, _, _, _, _, prim, layer, present = entry
             group = painter.render(prim, layer, lifts[layer] if layered else 0.0)
-            if not len(group.submobjects):
-                continue
-            drawing.add(group)
-            for name in ([layer] if layered else present):
-                drawing.layers[name].add(group)
-                drawing.layer_part(name, prim.tag, group)
-            for tag in (prim.tag, *prim.alias):
-                drawing.part(tag, group)
+            if len(group.submobjects):
+                records.append((group, (layer,) if layered else present, (prim.tag, *prim.alias)))
+        drawing._assemble(records)
         if ground_index == len(entries):
-            self._ground(drawing, g, projection)
+            self._ground(drawing, g, projection, context)
         for tag in {p.tag for p in pieces if p.item["kind"] == "pilotis"}:
             members = [p for p in pieces if p.tag == tag]
             layer = next((name for name in PRIMARY if name in members[0].item["disciplines"] and name in disciplines), None)
@@ -505,7 +575,7 @@ class Axon:
         of the wall, ``window`` slides the glass into the hole. Pilotis: ``extrude`` is the height. Slabs: ``extrude`` is the thickness, ``opening`` spreads the roof build-up layers apart (``parts["paving"]`` …).
         Any other tag (``"RM-1"``, ``"CW-1"``, ``"SC-1"``, services): its pieces as in ``villa_axon`` with heights scaled by ``extrude``. ``colors`` is ``"discipline"`` (default) or ``"material"``.
         Returns an ``AxonDrawing`` with ``parts[tag]`` (and ``parts["wall"]``, ``["void"]``, ``["glass"]``, ``["footprint"]`` for walls) and ``at(x, y, z)`` in model metres."""
-        g = _c.geometry(model)
+        model,g = _c.geometry_context(model)
         e, o, w = (min(max(float(v), 0.0), 1.0) for v in (extrude, opening, window))
         wall = next((x for x in g["walls"] if tag in (x["tag"], *(y for op in x.get("openings", ()) for y in (op["tag"], op.get("fill_tag"))))), None)
         slab = next((x for x in g["slabs"] if x["tag"] == tag), None)
@@ -541,14 +611,12 @@ class Axon:
             stage_key = projection.key(*prim.foot) if prim.stage in SORTED_STAGES else 0.0
             entries.append((prim.stage, stage_key, prim.sub, index, prim, layer))
         entries.sort(key=lambda row: row[:4])
+        records = []
         for _, _, _, _, prim, layer in entries:
             group = painter.render(prim, layer, 0.0)
-            if not len(group.submobjects):
-                continue
-            drawing.add(group)
-            drawing.layers.setdefault(layer, _engine.VGroup()).add(group)
-            for name in (prim.tag, *prim.alias):
-                drawing.part(name, group)
+            if len(group.submobjects):
+                records.append((group, (layer,), (prim.tag, *prim.alias)))
+        drawing._assemble(records)
         if wall:
             drawing.parts["wall"] = drawing.parts.get(wall["tag"], _engine.VGroup())
             for alias, key in (("void", "tag"), ("glass", "fill_tag")):
@@ -556,17 +624,14 @@ class Axon:
                 drawing.parts[alias] = group
         return drawing
 
-    def _ground(self, drawing, g, view):
-        """🟩 Ground plane with the shadow of the box on it."""
-        box = g["box"]
-        pad = 3.0
-        plane = _d.polygon([view(x, y, 0.0) for x, y in ((-pad, -pad), (box["length"] + pad, -pad), (box["length"] + pad, box["width"] + pad), (-pad, box["width"] + pad))],
-                           _d.GROUND_PLANE, 1.0, None)
-        shadow = _d.polygon([view(x + 1.2, y + 2.2, 0.0) for x, y in ((0, 0), (box["length"], 0), (box["length"], box["width"]), (0, box["width"]))], _d.BACKGROUND, 0.38, None)
-        group = _engine.VGroup(plane, shadow)
+    def _ground(self, drawing, g, view, context):
+        """🟩 Annotate bounded local context; only physical source surfaces may occlude model material."""
+        z = context["elevation"]
+        outline = _d.polygon([view(x,y,z) for x,y in context["outline"]],None,0.,_d.MUTED,_d.W_HAIR,.35)
+        group = _engine.VGroup(outline)
         drawing.add(group)
-        drawing.ground = group
-        drawing.part("ground", group)
+        drawing.ground, drawing.ground_context = group, dict(context)
+        drawing.part("ground",group)
 
     def _axon_labels(self, drawing, selection, pieces):
         """🏷️ Tag labels above the highlighted pieces (at most ten)."""

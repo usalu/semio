@@ -1,0 +1,33 @@
+{
+  "source_sha256": "8dfcfb1bba896e2c37ebcfe7326a9297dc5b66e303bdec281edb0ab610b9e2b9",
+  "selected_baseline": {
+    "FIN-SERVANTS-1": "9e9d7b192545070c846dd633ea61983497b38a7144c9cc154967a3b15f640dc8",
+    "FIN-SERVANTS-1-WASH": "4d70acd7d8cdbf7765611d714ab3c1d6d3af70d4db42bd50f1e5c310d15099dc",
+    "FIN-SERVANTS-2": "950aec66195589b437cd65b566704b66f8c3795a19caadf30c0af8d235c2d007",
+    "FIN-SERVANTS-2-WASH": "81ee3477c9c2aedd93a66baf2e07d485f13c4c9871296b505c55d7e7d9f3f845",
+    "FIN-PILOTIS-GRAVEL": "aff53940a58ce63cbcaf05beb86d0fa04d090f8716bc25894df4daaf2c514c1c"
+  },
+  "floor_candidate_sha256": "cf10f0ff3660fddccc6d0a0e7e5015b25f0e9179dc687e6672e8800cb7136fd6",
+  "approach_candidate_sha256": "f72dd3247f06b548105c2db01000335d1aa58646804a5ce135611570f2da11ce",
+  "publication_preconditions": [
+    "strict physical+GEOS+SciPy floor and approach green",
+    "actual_parts_disjoint and public approach quantity green",
+    "strict ALL native ENDE cells floor and approach green",
+    "fresh selected object hashes unchanged",
+    "Fresh targeted five-object patch plus declared bilingual property-name metadata only; preserve every other field/GUID/relation"
+  ],
+  "property_name_baseline": {
+    "UniformExtension": "8dd84acec5223d01a3a914ee57a420b710187d2366074dd4fc6d752f73c7582c"
+  },
+  "new_property_names": [
+    "GarageApproachInferred",
+    "GarageApproachRun",
+    "GarageApproachRise",
+    "GarageApproachFanSegments",
+    "GarageApproachMaximumHeightError"
+  ],
+  "native_frame_producer": {
+    "path": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔌️exchange/📐️frames/🐍️.py",
+    "sha256": "ee6fcd7ad18005bb8bc6fce5562171466ef7268abf52c903465aad55c3b38d9c"
+  }
+}

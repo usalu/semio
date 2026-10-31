@@ -1,0 +1,1 @@
+{"name":"@semio-tech/framework-cache","version":"0.1.0","private":true,"type":"module","exports":{".":"./🟦️.ts"},"license":"LGPL-3.0-or-later","bundleKind":"library","devDependencies":{"ajv":"8.20.0","lru-cache":"11.5.3"}}

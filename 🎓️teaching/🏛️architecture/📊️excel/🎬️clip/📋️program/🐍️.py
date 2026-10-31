@@ -18,6 +18,7 @@ _nk = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagi
 _draw = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🐍️")
 _art = _visuals._art
 _engine = importlib.import_module("manim")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 _d = _visuals._drafting
 
 INK, MUTED, ARCH, STRUCT, DATA, GOOD, WARN, GLASS = (getattr(_visuals, name) for name in ("INK", "MUTED", "ARCH", "STRUCT", "DATA", "GOOD", "WARN", "GLASS"))
@@ -30,8 +31,8 @@ PLAN_AT = np.array([2.95, 0.15, 0.0])
 PLAN_SCALE = 0.82
 LEGEND_AT = np.array([4.55, 1.6, 0.0])
 CARD_AT = (4.55, -0.25, 0)
-TOWER_AT = np.array([4.3, 0.12, 0.0])
-TOWER_SCALE = 0.09
+TOWER_AT = np.array([4.3, 0.0, 0.0])
+TOWER_FIT = _visuals.building_fit(5.4, 4.4, centre=TOWER_AT)
 FITTING_COLORS = {"bed": DATA, "bath": STRUCT, "storage": INK, "desk": mix(INK, DATA, 0.5), "sofa": mix(STRUCT, WARN, 0.5)}
 PROGRAM_CELLS = ("B4:F8", "B9:B9", "B11:F13", "B15:C15", "B16:B16", "B18:B18", "B21:D25", "B26:B26", "B27:C27")
 TYPE_CELLS = ("G12:G16", "B9:B10", "B16:B16")
@@ -66,8 +67,8 @@ class Beat3_Program(_visuals.ClipScene):
 
     TITLE = {"en": "The Room Program in Excel", "de": "Das Raumprogramm in Excel"}
     NARRATION = [
-        ["hook", "In our teaching model the Nakagin Capsule Tower carries 140 capsules of four types. How many of each, and how much floor do they offer?",
-         "Im Lehrmodell trägt der Nakagin Capsule Tower 140 Kapseln in vier Typen. Wie viele von jedem Typ, und wie viel Fläche bieten sie?"],
+        ["hook", "Four proposed room programs, A to D, fill the 140 reconstructed capsules. How many of each, and how much floor?",
+         "Vier vorgeschlagene Raumprogramme A–D füllen die 140 rekonstruierten Kapseln. Wie viele je Programm, und wie viel Fläche?"],
         ["program", "A room program lists, per room, the fittings, the areas and the users. Here it is reduced to one capsule.",
          "Ein Raumprogramm listet je Raum die Einbauten, die Flächen und die Nutzer. Hier ist es auf eine Kapsel reduziert."],
         ["sheet", "One worksheet per capsule type. The sheet of type A lists this capsule's fittings with width and length in metres.",
@@ -128,6 +129,9 @@ class Beat3_Program(_visuals.ClipScene):
         self.types = {t.key: t for t in _nk.capsule_types()}
         self.slots = _nk.slots()
         self.keys = [(s.building, s.tower, s.storey, s.facade, s.item) for s in self.slots]
+        self.ktype = {k: s.type for k, s in zip(self.keys, self.slots)}
+        self._later, self._seconds = {"pre": [], "post": [], "trash": []}, None
+        self._axon = self.tower_axon(**TOWER_FIT, types=False)
         self.paint, self.litset, self.stamp = {}, None, _engine.ValueTracker(0)
         self.L, self.R = None, []
         self.swap_row = next(i + 2 for i, s in enumerate(self.slots) if s.type == SWAP_FROM)
@@ -145,6 +149,66 @@ class Beat3_Program(_visuals.ClipScene):
         self.act_areas()
         self.act_edit()
         self.act_recap()
+
+    def step(self, key, *animations, seconds=1.2):
+        """⏱️ A clause whose queued morphs play around its main animation."""
+        self._seconds = seconds
+        return super().step(key, *animations, seconds=seconds)
+
+    def play(self, *animations, **kwargs):
+        """🎬 Play queued morphs before and after the main animation of a clause; morph targets that only bridge are removed afterwards."""
+        main = kwargs.get("run_time") == getattr(self, "_seconds", None) and bool(self._later["pre"] or self._later["post"] or self._later["trash"])
+        if not main:
+            return super().play(*animations, **kwargs)
+        queue, self._later = self._later, {"pre": [], "post": [], "trash": []}
+        for animation, clean, adopt in queue["pre"]:
+            self.play(animation)
+            self.remove(*clean)
+            self.add(*adopt)
+        result = super().play(*animations, **kwargs)
+        for animation, clean, adopt in queue["post"]:
+            self.play(animation)
+            self.remove(*clean)
+            self.add(*adopt)
+        self.remove(*queue["trash"])
+        return result
+
+    def later(self, animation, *, when="pre", clean=(), adopt=()):
+        """📥 Queue a morph before (pre) or after (post) the next clause animation; ``clean`` leaves the scene when it has played."""
+        self._later[when].append((animation, list(clean), list(adopt)))
+
+    def keep(self, *mobs):
+        """📌 Register mobjects that morphs brought into the scene as live right-panel objects."""
+        self.R += [m for m in mobs if m not in self.R]
+
+    def coloured(self, color):
+        """🎨 The tower drawn in one flat tint, cached per colour; its capsules are the real morph sources."""
+        cache = self.__dict__.setdefault("_coloured", {})
+        if color not in cache:
+            cache[color] = self.tower_axon(**TOWER_FIT, types=False, tint=lambda k, c=color: c)
+        return cache[color]
+
+    def silhouettes(self, keys, color=None):
+        """🔶 One real capsule drawing per key in the capsule's type colour (or the given colour), at its place on the tower, as morph source or target."""
+        return [self.coloured(color or self.tcol(self.ktype[k])).capsules[k].copy() for k in keys]
+
+    def swarm(self, animations, run, total):
+        """🐝 Staggered group of morphs whose total duration is ``total`` seconds."""
+        lag = max(total - run, 0.0) / max(len(animations) - 1, 1) / run
+        return _morph.Swarm(*animations, lag_ratio=lag)
+
+    def collect(self, pairs, run=0.8, total=2.0):
+        """🧲 Several gathers in one swarm: the sources of each pair collapse into its target, which appears last."""
+        animations = []
+        for sources, target in pairs:
+            sink = _morph.silhouette(target)
+            sink.set_fill(opacity=sink.get_fill_opacity() * 0.5).set_stroke(opacity=sink.get_stroke_opacity() * 0.5)
+            animations += [_morph.Morph(s, sink.copy(), consume=True, path_arc=0.4, run_time=run) for s in sources] + [_engine.FadeIn(target, scale=0.85, run_time=run)]
+        return self.swarm(animations, run, total)
+
+    def fly(self, sources, targets, run=0.9, total=1.8, arc=0.3):
+        """🎆 Each source flies into its own target (many to many, in order)."""
+        return self.swarm([_morph.Morph(s, t, keep_source=True, path_arc=arc, run_time=run) for s, t in zip(sources, targets)], run, total)
 
     def say(self, string, point, *, size=S_SMALL, color=INK, anchor="c", width=None):
         """🔤 One label in the clip's body face."""
@@ -226,12 +290,12 @@ class Beat3_Program(_visuals.ClipScene):
         """🗼 The tower drawing: capsules neutral, painted ones in their colour, optionally only a lit set; rebuilt when the stamp changes."""
         def build():
             lit = None if self.litset is None else (lambda k, s=self.litset: k in s)
-            return self.tower_axon(at=TOWER_AT, scale=TOWER_SCALE, types=False, tint=lambda k: self.paint.get(k), lit=lit, **kw)
+            return self.tower_axon(**TOWER_FIT, types=False, tint=lambda k: self.paint.get(k), lit=lit, **kw)
         return self.live(build, lambda: self.stamp.get_value())
 
     def capsule_center(self, key):
         """🎯 Screen centre of one capsule of the tower currently drawn."""
-        return self.tower_axon(at=TOWER_AT, scale=TOWER_SCALE, types=False).capsules[key].get_center()
+        return self.tower_axon(**TOWER_FIT, types=False).capsules[key].get_center()
 
     def bump(self):
         """🔔 Make the tower rebuild with the current paint and lit set."""
@@ -331,7 +395,12 @@ class Beat3_Program(_visuals.ClipScene):
         big = self.say(self.number(len(self.slots), 0), (3.2, 2.4), size=S_BODY, color=DATA)
         q2 = self.chip("? m²", (5.3, 2.4, 0), DATA)
         counts = [self.chip(f"{self.sheet_title(f'Type {k}')[-1]}  {self.number(self.vals[('Program', f'B{4 + i}')], 0)}", (2.55 + i * 1.07, -2.42, 0), self.tcol(k)) for i, k in enumerate(self.types)]
-        self.step("hook", *self.stage(left=win, right=[tw, big, q2, *counts]), seconds=2.2)
+        plays = self.stage(left=win, right=[big, q2])
+        self.add(tw)
+        self.keep(tw, *counts)
+        pairs = [(self.silhouettes([k for k in self.keys if self.ktype[k] == t]), chip) for t, chip in zip(self.types, counts)]
+        self.later(self.collect(pairs, run=0.8, total=2.4))
+        self.step("hook", *plays, seconds=2.2)
         self.paint = {}
         self.bump()
 
@@ -343,10 +412,20 @@ class Beat3_Program(_visuals.ClipScene):
         bed = plan.fits[0][0][1]
         bed_dim = self.dimension(bed[0], bed[1], self.number(t.fittings[0]["width"], 2) + " m", offset=-0.3, color=DATA)
         heads = [self.chip(self.tr(*w), (PLAN_AT[0] + dx, 2.35, 0), INK) for w, dx in ((("fittings", "Einbauten"), -0.65), (("areas", "Flächen"), 0.7), (("users", "Nutzer"), 1.75))]
-        self.step("program", *self.stage(right=[plan, outline, plan.people, bed_dim, *heads]), seconds=2.0)
+        plays = self.stage(right=[plan, outline, plan.people, bed_dim, *heads])
+        rects = [rect.copy().set_fill(colour, opacity=0.5) for fits in plan.fits.values() for rect, _, colour in fits]
+        spots = [_morph.token("", kind="item", color=r.get_color(), size=0.8).move_to((PLAN_AT[0] - 0.65 + 0.3 * i, 2.0, 0)) for i, r in enumerate(rects)]
+        person = _morph.token(self.number(t.occupants, 0), kind="item", color=INK, size=0.8).move_to((PLAN_AT[0] + 1.75, 2.0, 0))
+        self.later(self.fly([*rects, plan.people.copy()], [*spots, person], run=1.0, total=1.8, arc=0.5), when="post")
+        self.later(_engine.FadeOut(*spots, person, run_time=0.4), when="post", clean=[*spots, person])
+        self.step("program", *plays, seconds=2.0)
         win = self.window(self.type_book("A"), "Type A", "C:G", (11, 16), selected="C12")
         legend = self.legend(t, "A", 0)
-        self.step("sheet", *self.stage(left=win, drop=[*heads, bed_dim], add=[legend]), seconds=2.0)
+        plays = self.stage(left=win, drop=[*heads, bed_dim], add=[legend])
+        names = [_morph.token(f["name"][self.lang], kind="cell", color=FITTING_COLORS[f["key"]], size=0.8).move_to(win.point(f"C{12 + i}")) for i, f in enumerate(t.fittings)]
+        shapes = [plan.fits[i][0][0].copy().set_fill(FITTING_COLORS[f["key"]], opacity=0.5) for i, f in enumerate(t.fittings)]
+        self.later(self.fly(names, shapes, run=0.9, total=1.6, arc=-0.4), clean=shapes)
+        self.step("sheet", *plays, seconds=2.0)
         formula = self.wb.cell("Type A", "G12").formula
         frames, card = self.frames(win, formula), self.formula_card(formula, CARD_AT)
         dims = [self.dimension(bed[0], bed[1], self.number(t.fittings[0]["width"], 2) + " m", offset=-0.3, color=DATA),
@@ -355,8 +434,12 @@ class Beat3_Program(_visuals.ClipScene):
         hatches = [self.fit_hatch(plan, i) for i in plan.fits]
         handle = self.xl_fill_handle(win, "G12", to=f"G{last}")
         legend2 = self.legend(t, "A", len(t.fittings))
-        self.step("area", *self.stage(win.select("G12"), win.recalculate(self.type_book("A", keep=(f"G12:G{last}", "G16:G16"))),
-                  drop=[legend], add=[*hatches, *dims, card, *frames, handle, legend2]), seconds=2.8)
+        plays = self.stage(win.select("G12"), drop=[legend], add=[*hatches, *dims, card, *frames, handle, legend2])
+        areas = [_morph.token(self.cell_text(self.wb, self.vals, "Type A", f"G{12 + i}"), kind="cell", color=FITTING_COLORS[f["key"]], size=0.8).move_to(win.point(f"G{12 + i}")) for i, f in enumerate(t.fittings)]
+        rects = [plan.fits[i][0][0].copy().set_fill(FITTING_COLORS[f["key"]], opacity=0.5) for i, f in enumerate(t.fittings)]
+        self.later(self.fly(rects, areas, run=0.9, total=1.6, arc=0.4), when="post")
+        self.later(win.recalculate(self.type_book("A", keep=(f"G12:G{last}", "G16:G16"))), when="post", clean=areas)
+        self.step("area", *plays, seconds=2.8)
         iw, il = t.interior_width, t.interior_length
         floor_hatch = self.hatch([plan.ring], color=GOOD, spacing=0.12, angle=-45.0, width=W_THIN, opacity=0.8)
         d1 = self.dimension(plan.pt(0, 0), plan.pt(iw, 0), self.number(iw, 2) + " m", offset=-0.3, color=DATA)
@@ -365,8 +448,14 @@ class Beat3_Program(_visuals.ClipScene):
         formula = self.wb.cell("Type A", "B9").formula
         frames2, card2 = self.frames(net_win, formula), self.formula_card(formula, CARD_AT)
         net_label = self.say(self.cell_text(self.wb, self.vals, "Type A", "B9"), (LEGEND_AT[0], 1.2), size=S_BODY, color=GOOD, anchor="l")
-        self.step("net", *self.stage(net_win.select("B9"), net_win.recalculate(self.type_book("A", keep=("G12:G16", "B9:B9"))), left=net_win,
-                  drop=[*hatches, *dims, card, *frames, handle, legend2], add=[floor_hatch, d1, d2, net_label, card2, *frames2]), seconds=2.2)
+        plays = self.stage(net_win.select("B9"), left=net_win, drop=[*hatches, *dims, card, *frames, handle, legend2], add=[floor_hatch, d1, d2, net_label, card2, *frames2])
+        labels = [_morph.token(self.number(v, 2) + " m", kind="cell", color=DATA, size=0.8).move_to(d.get_center()) for d, v in ((d1, iw), (d2, il))]
+        landings = [_morph.token(self.cell_text(self.wb, self.vals, "Type A", "B9"), kind="cell", color=GOOD, size=0.8).move_to(net_win.point("B9")) for _ in labels]
+        floor_to = plan.floor.copy().set_fill(GOOD, opacity=0.3)
+        self.later(self.fly(labels, landings, run=1.0, total=1.2, arc=0.4), when="post")
+        self.later(net_win.recalculate(self.type_book("A", keep=("G12:G16", "B9:B9"))), when="post", clean=[landings[1]])
+        self.later(_morph.morph(landings[0], floor_to, path_arc=-0.5, run_time=1.2), when="post", clean=[floor_to])
+        self.step("net", *plays, seconds=2.2)
         free_win = self.window(self.type_book("A", keep=("G12:G16", "B9:B10")), "Type A", "A:B", (16, 17), selected="B16", height=3.0)
         formula = self.wb.cell("Type A", "B16").formula
         card3 = self.formula_card(formula, CARD_AT)
@@ -378,14 +467,25 @@ class Beat3_Program(_visuals.ClipScene):
         fit_all = _engine.VGroup(*[self.fit_hatch(plan, i) for i in plan.fits])
         free_label = self.say(self.tr("free ", "frei ") + self.cell_text(self.wb, self.vals, "Type A", "B16"), (PLAN_AT[0] - 0.3, plan.pt(0, il - 0.3)[1]), size=S_LABEL, color=GOOD)
         legend3 = self.legend(t, "A", len(t.fittings))
-        self.step("free", *self.stage(free_win.recalculate(self.type_book("A", keep=("G12:G16", "B9:B10", "B16:B16"))), left=free_win,
-                  drop=[floor_hatch, d1, d2, net_label, card2, *frames2], add=[floor_fill, fit_all, free_label, card3, legend3, occupants, *refs]), seconds=2.2)
+        plays = self.stage(left=free_win, drop=[floor_hatch, d1, d2, net_label, card2, *frames2], add=[fit_all, card3, legend3, occupants, *refs])
+        pieces = [rect.copy().set_fill(colour, opacity=0.5) for fits in plan.fits.values() for rect, _, colour in fits]
+        free_val = _morph.token(self.cell_text(self.wb, self.vals, "Type A", "B16"), kind="cell", color=GOOD, size=0.8).move_to(free_win.point("B16"))
+        tint = floor_fill.copy()
+        self.later(self.collect([(pieces, free_val)], run=0.8, total=1.6), when="post")
+        self.later(free_win.recalculate(self.type_book("A", keep=("G12:G16", "B9:B10", "B16:B16"))), when="post", clean=[])
+        self.later(_morph.morph(free_val, tint, path_arc=-0.5, run_time=1.2), when="post")
+        self.step("free", *plays, seconds=2.2)
+        self.keep(tint)
+        self.add(free_label)
+        self.keep(free_label)
         vol_win = self.window(self.type_book("A", keep=("G12:G16", "B9:B10", "B16:B16")), "Type A", "A:B", (5, 10), selected="B10")
-        box = {"key": "A", "width": t.interior_width, "length": t.interior_length, "height": t.interior_height, "corner_radius": 0.0}
-        axon = self.capsule_axon(box, at=np.array([3.3, 1.75, 0.0]), scale=0.36, window=False, dims=("width", "length", "height"), base=mix(BACKGROUND, DATA, 0.55))
+        axon = self.analytical_box_axon(t.interior_width, t.interior_length, t.interior_height, at=np.array([3.3, 1.75, 0.0]), scale=0.36, dims=True, base=mix(BACKGROUND, DATA, 0.55))
         vol_frames = self.frames(vol_win, self.wb.cell("Type A", "B10").formula)
         pop = self.xl_cell_pop(vol_win, "B10", at=np.array([4.2, -1.15, 0.0]), width=4.6)
-        self.step("volume", *self.stage(vol_win.select("B10"), left=vol_win, right=[axon, pop, *vol_frames]), seconds=2.4)
+        plays = self.stage(vol_win.select("B10"), left=vol_win, right=[axon, pop, *vol_frames])
+        volume = _morph.token(self.cell_text(self.wb, self.vals, "Type A", "B10"), kind="cell", color=DATA, size=0.8).move_to(vol_win.point("B10"))
+        self.later(_morph.morph(axon.copy(), volume, path_arc=0.5, run_time=1.2), when="post", clean=[volume])
+        self.step("volume", *plays, seconds=2.4)
         free_note = self.chip(self.tr("free floor per capsule", "freie Fläche je Kapsel"), (4.3, -1.8, 0), GOOD)
         self.step("types", *self.stage(left=self.window(self.wb, "Type C", "C:G", (11, 16), selected="C12"), right=[*self.small_plans(free=False), free_note]), seconds=2.4)
 
@@ -408,14 +508,34 @@ class Beat3_Program(_visuals.ClipScene):
         self.bump()
         tw = self.tower()
         ribbon = self.chip(self.tr("Home > Format as Table", "Start > Als Tabelle formatieren"), (TOWER_AT[0], 2.4, 0), GOOD)
-        name_chip = self.chip(f"{self.tr('Table name', 'Tabellenname')}: {self.table_name}", (TOWER_AT[0], -2.42, 0), GOOD)
-        self.step("table", *self.stage(lst.select("H1"), left=lst, right=[tw, ribbon, name_chip, *self.table_dressing(lst)]), seconds=2.6)
+        name_chip = self.chip(f"{self.tr('Name', 'Name')}: {self.table_name}", (2.9, 1.95, 0), GOOD)
+        old = list(self.R)
+        plays = self.stage(lst.select("H1"), left=lst, right=[ribbon, name_chip, *self.table_dressing(lst)])
+        self.later(_engine.FadeOut(*old, run_time=0.4))
+        self.add(tw)
+        self.R.append(tw)
+        shown = 10
+        dots = []
+        for i in range(shown):
+            _, top, right, bottom = lst.rect(f"M{i + 2}")
+            dots.append(_morph.token("", kind="item", color=self.tcol(self.ktype[self.keys[i]]), size=0.8).move_to((right + 0.3, (top + bottom) / 2, 0)))
+        rest = self.silhouettes(self.keys[shown:])
+        rows = _morph.token(f"{len(self.slots)} {self.tr('rows', 'Zeilen')}", kind="cell", color=GOOD).move_to((6.3, 1.75, 0))
+        self.later(_morph.scatter([self._axon.capsules[k].copy() for k in self.keys[:shown]], dots, lag=0.12, path_arc=-0.7, run_time=1.0, limit=2.4, pairs_fn=_morph.capsule_pairs, dip=0.15))
+        self.later(_morph.gather(rest, rows, lag=0.012, run_time=0.7, limit=1.6))
+        self.step("table", *plays, seconds=2.6)
+        self.keep(rows, *dots)
         key = self.keys[self.swap_row - 2]
         self.litset, self.paint = {key}, {key: self.tcol(SWAP_FROM)}
         self.bump()
         tag = self.say(self.vals[("Program", f"H{self.swap_row}")], (TOWER_AT[0], -2.42), size=S_LABEL)
         row_frame = self.xl_ref_frame(lst, f"H{self.swap_row}:M{self.swap_row}", color=DATA, dashed=True)
-        self.step("row", *self.stage(lst.select(f"M{self.swap_row}"), drop=[ribbon, name_chip], add=[tag, row_frame]), seconds=2.2)
+        plays = self.stage(lst.select(f"M{self.swap_row}"), drop=[ribbon, name_chip, rows], add=[tag, row_frame])
+        pill = _morph.token(self.vals[("Program", f"M{self.swap_row}")], kind="item", color=self.tcol(SWAP_FROM)).move_to(lst.point(f"M{self.swap_row}"))
+        lit = self._axon.capsules[key].copy()
+        self.later(_engine.FadeIn(pill, run_time=0.3), when="post")
+        self.later(_morph.morph(pill, lit, pairs=[(b, a) for a, b in _morph.capsule_pairs(lit, pill)], path_arc=-0.6, run_time=1.3, dip=0.15), when="post", clean=[lit])
+        self.step("row", *plays, seconds=2.2)
         self.litset, self.paint = None, {}
         self.bump()
         summary = self.window(self.program_book(self.wb), "Program", "A:E", (3, 8), selected="B4")
@@ -425,22 +545,35 @@ class Beat3_Program(_visuals.ClipScene):
         total_counter = self.live_label(lambda: self.number(round(self.counts.get_value()), 0), (TOWER_AT[0], 2.4, 0), size=S_BODY, color=INK)
         token = re.search(r"\w+\[[^\]]+\]", _x.formula_text(self.wb, "Program", "B4", self.lang)).group(0)
         callout = self.chip(f"{token} = M2:M141", (TOWER_AT[0], -2.42, 0), INK)
-        self.counts.set_value(0)
+        self.counts.set_value(self.vals[("Program", "B4")])
         a_keys = {k: self.tcol("A") for k, s in zip(self.keys, self.slots) if s.type == "A"}
-        self.step("countif", *self.stage(self.repaint(a_keys), _engine.UpdateFromAlphaFunc(self.counts, lambda m, a: m.set_value(self.vals[("Program", "B4")] * a), run_time=1.6),
-                  summary.recalculate(self.program_book(self.wb, keep=("B4:B4",))), left=summary, drop=[tag, row_frame], add=[counter, callout, *frames]), seconds=2.4)
+        plays = self.stage(self.repaint(a_keys), summary.recalculate(self.program_book(self.wb, keep=("B4:B4",))), left=summary, drop=[tag, row_frame], add=[callout, *frames])
+        shown = self.text(self.number(self.vals[("Program", "B4")], 0), (TOWER_AT[0], 2.4, 0), size=S_BODY, color=self.tcol("A"))
+        self.later(self.collect([(self.silhouettes([k for k in self.keys if self.ktype[k] == "A"]), shown)], run=0.8, total=1.8), clean=[shown], adopt=[counter])
+        self.step("countif", *plays, seconds=2.4)
+        self.keep(counter)
         handle = self.xl_fill_handle(summary, "B4", to="B7")
         everything = {k: self.tcol(s.type) for k, s in zip(self.keys, self.slots)}
         total, first = len(self.slots), self.vals[("Program", "B4")]
-        self.step("rest", *self.stage(summary.select("B4"), summary.recalculate(self.program_book(self.wb, keep=("B4:B8",))), self.repaint(everything),
-                  _engine.UpdateFromAlphaFunc(self.counts, lambda m, a: m.set_value(first + (total - first) * a), run_time=1.6), drop=[*frames, counter], add=[handle, total_counter]), seconds=2.6)
+        plays = self.stage(summary.select("B4"), summary.recalculate(self.program_book(self.wb, keep=("B4:B8",))), self.repaint(everything),
+                           _engine.UpdateFromAlphaFunc(self.counts, lambda m, a: m.set_value(first + (total - first) * a), run_time=1.6), drop=[*frames, counter], add=[handle])
+        others = [k for k in self.keys if self.ktype[k] != "A"]
+        self.later(_engine.FadeOut(counter, run_time=0.3))
+        shown = self.text(self.number(first, 0), (TOWER_AT[0], 2.4, 0), size=S_BODY, color=INK)
+        self.later(self.collect([(self.silhouettes(others), shown)], run=0.7, total=2.2), clean=[shown], adopt=[total_counter])
+        self.step("rest", *plays, seconds=2.6)
+        self.keep(total_counter)
         mat = self.window(self.program_book(self.wb, keep=("B4:B8",)), "Program", "A:E", (10, 13), selected="B11", wide=True)
         formula = self.wb.cell("Program", "B11").formula
         frames = self.frames(mat, formula)
         only = {k: self.tcol("A") for k, s in zip(self.keys, self.slots) if s.type == "A" and s.tower == 0}
         self.litset, self.paint = set(only), only
         self.bump()
-        self.step("countifs", *self.stage(mat.select("B11"), mat.recalculate(self.program_book(self.wb, keep=("B4:B8", "B11:E13"))), left=mat, drop=[handle, total_counter, callout], add=frames), seconds=2.6)
+        plays = self.stage(mat.select("B11"), mat.recalculate(self.program_book(self.wb, keep=("B4:B8", "B11:E13"))), left=mat, drop=[handle, total_counter, callout], add=frames)
+        seeds = [_morph.token("", kind="item", color=self.tcol("A"), size=0.9).move_to(mat.point("B11")) for _ in only]
+        targets = self.silhouettes(list(only))
+        self.later(self.swarm([_morph.morph(s, t, pairs=[(b, a) for a, b in _morph.capsule_pairs(t, s)], path_arc=-0.3, run_time=0.9, dip=0.15) for s, t in zip(seeds, targets)], 0.9, 1.8), when="post", clean=targets)
+        self.step("countifs", *plays, seconds=2.6)
 
     def act_areas(self):
         """📐 Free floor per type, XLOOKUP, SUMPRODUCT, the chart and the tower totals."""
@@ -451,7 +584,12 @@ class Beat3_Program(_visuals.ClipScene):
         arrows = [self.xl_trace(pull, f"'Type {k}'!B16", f"C{21 + i}") for i, k in enumerate(self.types)]
         net_note = self.chip(f"{self.tr('net floor area, all types', 'Nettogrundfläche, alle Typen')}: {self.cell_text(self.wb, self.vals, 'Program', 'C4')}", (4.3, -2.1, 0), GOOD)
         minis = self.small_plans(free=False, text_cell=lambda i, k: self.cell_text(self.wb, self.vals, "Program", f"C{21 + i}"))
-        self.step("pull", *self.stage(pull.select("C21"), pull.recalculate(self.program_book(self.wb, keep=(*kept, "C21:C24"))), left=pull, right=[*minis, net_note], add=arrows), seconds=2.8)
+        plays = self.stage(pull.select("C21"), left=pull, right=[*minis, net_note], add=arrows)
+        values = [minis[4 + 5 * i] for i in range(len(self.types))]
+        cells = [_morph.token(self.cell_text(self.wb, self.vals, "Program", f"C{21 + i}"), kind="cell", color=self.tcol(k), size=0.8).move_to(pull.point(f"C{21 + i}")) for i, k in enumerate(self.types)]
+        self.later(self.fly([v.copy() for v in values], cells, run=1.0, total=1.8, arc=0.5), when="post")
+        self.later(pull.recalculate(self.program_book(self.wb, keep=(*kept, "C21:C24"))), when="post", clean=cells)
+        self.step("pull", *plays, seconds=2.8)
         look = self.window(self.program_book(self.wb, keep=(*kept, "B21:C24")), "Program", "A:D", (19, 27), selected="C27")
         formula = self.wb.cell("Program", "C27").formula
         frames = self.frames(look, formula)
@@ -463,20 +601,39 @@ class Beat3_Program(_visuals.ClipScene):
         tag = self.chip(self.sheet_title("Type C"), (PLAN_AT[0], 2.35, 0), self.tcol("C"))
         val = self.say(self.tr("free ", "frei ") + self.cell_text(self.wb, self.vals, "Program", "C27"), (PLAN_AT[0], -1.95), size=S_BODY, color=GOOD)
         count = self.say(self.tr("count ", "Anzahl ") + self.cell_text(self.wb, self.vals, "Program", "B27"), (LEGEND_AT[0], -0.5), size=S_BODY, color=self.tcol("C"), anchor="l")
-        self.step("xlookup", *self.stage(look.select("C27"), look.recalculate(self.program_book(self.wb, keep=(*kept, "B21:C24", "B27:C27"))), left=look,
-                  right=[plan, floor, fills, plan.people, legend, tag, val, count, *frames]), seconds=2.8)
+        plays = self.stage(look.select("C27"), look.recalculate(self.program_book(self.wb, keep=(*kept, "B21:C24", "B27:C27"))), left=look,
+                           right=[plan, floor, fills, plan.people, legend, tag, val, count, *frames])
+        found = _morph.token(self.cell_text(self.wb, self.vals, "Program", "C27"), kind="cell", color=GOOD, size=0.8).move_to(look.point("C27"))
+        landing = floor.copy().set_fill(GOOD, opacity=0.45)
+        self.later(_engine.FadeIn(found, run_time=0.3), when="post")
+        self.later(_morph.morph(found, landing, path_arc=-0.5, run_time=1.2), when="post", clean=[landing])
+        self.step("xlookup", *plays, seconds=2.8)
         sp = self.window(self.program_book(self.wb, keep=(*kept, "B21:C24", "B27:C27")), "Program", "A:D", (20, 27), selected="B26")
         sum_frames = self.frames(sp, self.wb.cell("Program", "B26").formula)
         tiles = self.product_tiles()
         card = self.formula_card(self.wb.cell("Program", "B26").formula, (1.9, -2.3, 0))
         total_label = self.say("= " + self.cell_text(self.wb, self.vals, "Program", "B26"), (2.0, -1.5), size=S_BODY, color=GOOD, anchor="l")
-        self.step("sumproduct", *self.stage(sp.select("B26"), sp.recalculate(self.program_book(self.wb, keep=(*kept, "B21:C24", "B26:B26", "B27:C27"))), left=sp,
-                  right=[*tiles, card, total_label, *sum_frames]), seconds=3.0)
+        old = list(self.R)
+        plays = self.stage(sp.select("B26"), sp.recalculate(self.program_book(self.wb, keep=(*kept, "B21:C24", "B26:B26", "B27:C27"))), left=sp,
+                           right=[*tiles[1::2], card, total_label, *sum_frames])
+        strips = tiles[0::2]
+        self.strips = strips
+        self.R += [tile for strip in strips for tile in strip.submobjects]
+        counts = [_morph.token(self.number(self.vals[("Program", f"B{21 + i}")], 0), kind="number", color=self.tcol(k), size=0.8).move_to(sp.point(f"B{21 + i}")) for i, k in enumerate(self.types)]
+        sources = [c.copy() for c, strip in zip(counts, strips) for _ in strip.submobjects]
+        targets = [tile for strip in strips for tile in strip.submobjects]
+        self.later(_engine.FadeOut(*old, run_time=0.4))
+        self.later(self.fly(sources, targets, run=0.8, total=2.0, arc=0.3))
+        self.step("sumproduct", *plays, seconds=3.0)
         win = self.window(self.program_book(self.wb, keep=(*kept, "B21:C24", "B26:B26", "B27:C27")), "Program", "A:D", (20, 27), selected="D21")
         rows = [(self.sheet_title(f"Type {k}"), self.area_tr[k], self.tcol(k)) for k in self.types]
         chart = self.xl_bar_chart(rows, at=np.array([4.3, 0.1, 0.0]), width=4.5, height=3.7, unit="m²", title=self.tr("Free floor by type", "Freie Fläche je Typ"), decimals=1)
         grow = [_engine.UpdateFromAlphaFunc(self.area_tr[k], (lambda m, a, i=i: m.set_value(self.vals[("Program", f"D{21 + i}")] * a)), run_time=2.0) for i, k in enumerate(self.types)]
-        self.step("chart", *self.stage(win.select("D21"), win.recalculate(self.program_book(self.wb, keep=KEEP_ALL)), *grow, left=win, right=[chart]), seconds=3.0)
+        plays = self.stage(win.select("D21"), win.recalculate(self.program_book(self.wb, keep=KEEP_ALL)), *grow, left=win, right=[chart])
+        bases = [_engine.Rectangle(width=0.7, height=0.2, stroke_width=0, fill_color=self.tcol(k), fill_opacity=0.9).move_to((4.3 - 1.65 + 1.1 * i, -1.35, 0)) for i, k in enumerate(self.types)]
+        self.later(self.collect([(list(strip.submobjects), base) for strip, base in zip(self.strips, bases)], run=0.8, total=1.8))
+        self.later(_engine.FadeOut(*bases, run_time=0.3), when="post", clean=bases)
+        self.step("chart", *plays, seconds=3.0)
         tw_win = self.window(self.program_book(self.wb, keep=("B4:F8", "B11:E13")), "Program", "A:F", (10, 13), selected="F11", wide=True)
         formula = self.wb.cell("Program", "F11").formula
         frames = self.frames(tw_win, formula)
@@ -484,13 +641,25 @@ class Beat3_Program(_visuals.ClipScene):
         self.bump()
         tower = self.tower()
         parts = [self.cell_text(self.wb, self.vals, "Program", f"F{r}") for r in (11, 12, 13)]
-        equal = self.chip(f"{parts[0]} + {parts[1]} = {parts[2]}", (TOWER_AT[0], -2.42, 0), GOOD)
+        equal = self.chip(f"{parts[0].replace(' m²', '')} + {parts[1].replace(' m²', '')} = {parts[2]}", (TOWER_AT[0], -2.58, 0), GOOD)
         names = [self.tr("Tower A", "Turm A"), self.tr("Tower B", "Turm B")]
         n_towers = [sum(self.vals[("Program", f"{c}{11 + i}")] for c in "BCDE") for i in range(2)]
         ta = self.chip(f"{names[0]} · {self.number(n_towers[0], 0)}", (3.25, 2.4, 0), TOWER_COLORS[0])
         tb = self.chip(f"{names[1]} · {self.number(n_towers[1], 0)}", (5.75, 2.4, 0), "#9db5c4")
-        self.step("towers", *self.stage(tw_win.select("F11"), tw_win.recalculate(self.program_book(self.wb, keep=(*KEEP_ALL, "F11:F13"))), left=tw_win,
-                  right=[tower, equal, ta, tb, *frames]), seconds=2.8)
+        old = list(self.R)
+        plays = self.stage(tw_win.select("F11"), tw_win.recalculate(self.program_book(self.wb, keep=(*KEEP_ALL, "F11:F13"))), left=tw_win, right=[equal, ta, tb, *frames])
+        self.later(_engine.FadeOut(*old, run_time=0.4))
+        self.add(tower)
+        self.R.append(tower)
+        sums = [_morph.token("", kind="item", color=TOWER_COLORS[i], size=0.9).move_to(tw_win.point(f"F{11 + i}")) for i in range(2)]
+        pairs = [(self.silhouettes([k for k, s in zip(self.keys, self.slots) if s.tower == i], color=TOWER_COLORS[i]), sums[i]) for i in range(2)]
+        self.later(self.collect(pairs, run=0.7, total=2.0))
+        total_pill = _morph.token(parts[2], kind="number", color=GOOD).move_to(tw_win.point("F13"))
+        glow = _morph.proxy(tower).set_fill(GOOD, opacity=0.22)
+        self.later(_engine.FadeOut(*sums, run_time=0.01), when="post", clean=sums)
+        self.later(_engine.FadeIn(total_pill, run_time=0.3), when="post")
+        self.later(_morph.morph(total_pill, glow, path_arc=0.4, run_time=1.2), when="post", clean=[glow])
+        self.step("towers", *plays, seconds=2.8)
 
     def product_tiles(self):
         """🟦 One row of tiles per type: as many tiles as capsules, with the product count times free floor written below."""
@@ -521,7 +690,16 @@ class Beat3_Program(_visuals.ClipScene):
         self.bump()
         tower = self.tower()
         chips = [self.chip(self.sheet_title(f"Type {old}"), (3.2, -2.42, 0), self.tcol(old)), self.chip("→", (4.3, -2.42, 0), INK), self.chip(self.sheet_title(f"Type {new}"), (5.4, -2.42, 0), self.tcol(new))]
-        self.step("swap", *self.stage(lst.select(f"M{self.swap_row}"), lst.recalculate(self.swapped), self.repaint({key: self.tcol(new)}, seconds=1.0), left=lst, right=[tower, *chips], add=[edited]), seconds=2.8)
+        plays = self.stage(lst.select(f"M{self.swap_row}"), lst.recalculate(self.swapped), left=lst, right=[tower, *chips], add=[edited])
+        out, lifted, back = self.silhouettes([key]), self.silhouettes([key]), self.silhouettes([key], color=self.tcol(new))
+        lifted[0].shift(_engine.UP * 0.55)
+        self.ktype[key] = new
+        self.later(_engine.FadeIn(out[0], run_time=0.2), when="post")
+        self.later(self.repaint({key: BACKGROUND}, seconds=0.1), when="post")
+        self.later(_morph.morph(out[0], lifted[0], run_time=0.7), when="post")
+        self.later(_morph.morph(lifted[0], back[0], path_arc=0.0, run_time=0.8), when="post")
+        self.later(self.repaint({key: self.tcol(new)}, seconds=0.1), when="post", clean=back)
+        self.step("swap", *plays, seconds=2.8)
         self.litset = None
         self.bump()
         before = self.program_book(self.wb, keep=KEEP_ALL)
@@ -538,7 +716,11 @@ class Beat3_Program(_visuals.ClipScene):
         total_chip = self.chip(f"{self.tr('total', 'Summe')} {'+' if gain >= 0 else ''}{self.number(gain, 1)} m²", (4.3, -2.42, 0), GOOD)
         move = [_engine.UpdateFromAlphaFunc(self.area_tr[k], (lambda m, a, s=self.vals[("Program", f"D{21 + i}")], e=va[("Program", f"D{21 + i}")]: m.set_value(s + (e - s) * a)), run_time=1.8)
                 for i, k in enumerate(self.types)]
-        self.step("update", *self.stage(win.recalculate(self.program_book(self.swapped, keep=KEEP_ALL)), *move, left=win, right=[chart, *delta, total_chip], add=trace), seconds=3.0)
+        plays = self.stage(win.recalculate(self.program_book(self.swapped, keep=KEEP_ALL)), *move, left=win, right=[chart, total_chip], add=trace)
+        starts = [d.copy().move_to(self.capsule_center(key)) for d in delta]
+        self.later(self.fly(starts, delta, run=1.1, total=1.4, arc=-0.4))
+        self.step("update", *plays, seconds=3.0)
+        self.keep(*delta)
         check = self.window(self.program_book(self.swapped, keep=KEEP_ALL), "Program", "A:C", (17, 18), selected="B18", height=3.0)
         self.paint = {k: self.tcol(s.type) for k, s in zip(self.keys, self.slots)}
         self.paint[key] = self.tcol(new)
@@ -546,7 +728,11 @@ class Beat3_Program(_visuals.ClipScene):
         tower2 = self.tower_keep = self.tower()
         ok = self.badge(self.cell_text(self.swapped, self.swapped_vals, "Program", "B18"), (TOWER_AT[0], 2.4, 0), color=GOOD)
         eq = self.chip(f"{self.number(self.swapped_vals[('Program', 'B8')], 0)} = {self.number(self.swapped_vals[('Program', 'B17')], 0)}", (TOWER_AT[0], -2.42, 0), GOOD)
-        self.step("check", *self.stage(check.select("B18"), check.recalculate(self.swapped), left=check, right=[tower2, ok, eq]), seconds=2.6)
+        plays = self.stage(check.select("B18"), check.recalculate(self.swapped), left=check, right=[tower2, eq])
+        sums = [_morph.token(self.number(self.swapped_vals[("Program", c)], 0), kind="number", color=GOOD, size=0.8).move_to(p) for c, p in (("B8", (TOWER_AT[0] - 0.9, -1.7, 0)), ("B17", (TOWER_AT[0] + 0.9, -1.7, 0)))]
+        self.later(self.collect([(sums, ok)], run=0.9, total=1.3), when="post")
+        self.step("check", *plays, seconds=2.6)
+        self.keep(ok)
         tkey = self.keys[self.typo_row - 2]
         lst2 = self.window(self.swapped, "Program", "H:M", (1, 11), selected=f"M{self.typo_row}")
         name = self.sheet_title(f"Type {TYPO_TYPE}")
@@ -561,13 +747,20 @@ class Beat3_Program(_visuals.ClipScene):
         edge = lst2.cell(f"M{self.typo_row}").text.get_right()
         dot = _engine.Rectangle(width=0.1, height=0.2, stroke_width=0, fill_color=FALSE_RED, fill_opacity=0.95).move_to((edge[0] + 0.09, lst2.point(f"M{self.typo_row}")[1], 0))
         ring = _engine.Circle(radius=0.3, stroke_color=FALSE_RED, stroke_width=4).move_to(self.capsule_center(tkey))
-        self.step("typo", *self.stage(lst2.recalculate(self.typo), left=lst2, drop=[ok, eq], add=[bad, eq2, quoted, mark, cell_frame, dot, ring]), seconds=2.4)
+        plays = self.stage(lst2.recalculate(self.typo), left=lst2, drop=[ok, eq], add=[bad, eq2, quoted, mark, cell_frame])
+        self.later(_engine.FadeIn(dot, run_time=0.2), when="post")
+        self.later(_morph.morph(dot, ring, path_arc=-0.8, run_time=1.2), when="post")
+        self.step("typo", *plays, seconds=2.4)
+        self.keep(ring)
         good = self.badge(self.cell_text(self.swapped, self.swapped_vals, "Program", "B18"), (TOWER_AT[0], 2.4, 0), color=GOOD)
         eq3 = self.chip(f"{self.number(self.swapped_vals[('Program', 'B8')], 0)} = {self.number(self.swapped_vals[('Program', 'B17')], 0)}", (TOWER_AT[0], -2.42, 0), GOOD)
         fixed = self.chip(f'"{name}"', (2.7, 2.4, 0), GOOD)
         self.paint[tkey] = self.tcol(TYPO_TYPE)
         self.bump()
-        self.step("fix", *self.stage(lst2.recalculate(self.swapped), drop=[bad, eq2, quoted, mark, cell_frame, dot, ring], add=[good, eq3, fixed]), seconds=2.6)
+        plays = self.stage(lst2.recalculate(self.swapped), drop=[bad, eq2, quoted, mark, cell_frame, ring], add=[eq3, fixed])
+        self.later(self.collect([([ring], good)], run=0.9, total=0.9))
+        self.step("fix", *plays, seconds=2.6)
+        self.keep(good)
         self.litset = None
         self.bump()
 
@@ -588,4 +781,8 @@ class Beat3_Program(_visuals.ClipScene):
         area = self.say(self.cell_text(self.swapped, self.swapped_vals, "Program", "B26") + " " + self.tr("free", "frei"), (-3.4, -2.1), size=S_BODY, color=GOOD, anchor="l")
         self.purge()
         self.L = None
-        self.step("recap", *self.stage(drop=[m for m in self.R if m is not self.tower_keep], add=[*rows, total, area]), seconds=3.0)
+        sink = _morph.token("", kind="item", color=DATA, size=0.9).move_to((-6.9, -2.1, 0))
+        plays = self.stage(drop=[m for m in self.R if m is not self.tower_keep], add=[*rows, total, area])
+        self.later(self.collect([(self.silhouettes(self.keys), sink)], run=0.6, total=2.2), clean=[sink])
+        self.step("recap", *plays, seconds=3.0)
+        self.keep(total)

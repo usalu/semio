@@ -1,0 +1,1231 @@
+{
+  "cases": [
+    {
+      "id": "lime-footing-floor-interface",
+      "donor_class": "IfcFooting",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -1,
+        "z1": -0.7
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -0.78,
+        "z1": -0.7
+      },
+      "union_volume": 1.2,
+      "common_volume": 0.32
+    },
+    {
+      "id": "rib-structural-cap",
+      "donor_class": "IfcBeam",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0.2
+          ],
+          [
+            0,
+            0.2
+          ]
+        ],
+        "z0": -0.27,
+        "z1": -0.07
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -0.11,
+        "z1": -0.04
+      },
+      "union_volume": 0.344,
+      "common_volume": 0.016
+    },
+    {
+      "id": "trimmer-architectural-aperture",
+      "donor_class": "IfcBeam",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0.2
+          ],
+          [
+            0,
+            0.2
+          ]
+        ],
+        "z0": -0.25,
+        "z1": -0.07
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -0.11,
+        "z1": -0.04,
+        "voids": [
+          [
+            [
+              0.5,
+              0
+            ],
+            [
+              1.5,
+              0
+            ],
+            [
+              1.5,
+              1
+            ],
+            [
+              0.5,
+              1
+            ]
+          ]
+        ]
+      },
+      "union_volume": 0.274,
+      "common_volume": 0.008
+    },
+    {
+      "id": "embedded-full-member-reference",
+      "donor_class": "IfcBeam",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            0.2
+          ],
+          [
+            0,
+            0.2
+          ]
+        ],
+        "z0": -0.2,
+        "z1": 0
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": -0.1,
+        "z1": 0
+      },
+      "embedded": true,
+      "union_volume": 0.34,
+      "common_volume": 0.04
+    },
+    {
+      "id": "positive-two-nanometre-height",
+      "donor_class": "IfcBeam",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": -1,
+        "z1": 0
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": -2e-09,
+        "z1": 0
+      },
+      "union_volume": 1.0,
+      "common_volume": 2e-09
+    },
+    {
+      "id": "positive-two-nanometre-width",
+      "donor_class": "IfcBeam",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": -1,
+        "z1": 0
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0.999999998,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0.999999998,
+            1
+          ]
+        ],
+        "z0": -1,
+        "z1": 0
+      },
+      "union_volume": 1.0,
+      "common_volume": 2e-09
+    },
+    {
+      "id": "proxy-monolithic-cap-canopy",
+      "donor_class": "IfcBuildingElementProxy",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.3
+      },
+      "owner_class": "IfcBuildingElementProxy",
+      "owner": {
+        "outline": [
+          [
+            1,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "z0": 0.2,
+        "z1": 0.4
+      },
+      "union_volume": 0.9,
+      "common_volume": 0.1
+    },
+    {
+      "id": "proxy-tapered-actual-owner",
+      "donor_class": "IfcBuildingElementProxy",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.3
+      },
+      "owner_class": "IfcBuildingElementProxy",
+      "owner": {
+        "outline": [
+          [
+            1,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "top_outline": [
+          [
+            1.1,
+            0.1
+          ],
+          [
+            2.9,
+            0.1
+          ],
+          [
+            2.9,
+            0.9
+          ],
+          [
+            1.1,
+            0.9
+          ]
+        ],
+        "z0": 0.2,
+        "z1": 0.4
+      },
+      "union_volume": 0.85,
+      "common_volume": 0.09266666666666667
+    },
+    {
+      "id": "touching-is-not-positive-material",
+      "donor_class": "IfcBeam",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": -1,
+        "z1": 0
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": 0,
+        "z1": 0.1
+      },
+      "union_volume": 1.1,
+      "common_volume": 0.0
+    },
+    {
+      "id": "product-material-and-default-role",
+      "donor_class": "IfcFooting",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -1,
+        "z1": -0.7
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -0.78,
+        "z1": -0.7
+      },
+      "union_volume": 1.2,
+      "common_volume": 0.72,
+      "implicit_material": true,
+      "second_owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -1,
+        "z1": -0.9
+      }
+    },
+    {
+      "id": "nested-owner-exact-continuation",
+      "donor_class": "IfcBeam",
+      "donor": {
+        "outline": [
+          [
+            0,
+            -0.2
+          ],
+          [
+            4,
+            -0.2
+          ],
+          [
+            4,
+            1.2
+          ],
+          [
+            0,
+            1.2
+          ]
+        ],
+        "z0": 0,
+        "z1": 1
+      },
+      "owner_class": "IfcBuildingElementProxy",
+      "owner": {
+        "outline": [
+          [
+            1,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "top_outline": [
+          [
+            1.1,
+            0.1
+          ],
+          [
+            2.9,
+            0.1
+          ],
+          [
+            2.9,
+            0.9
+          ],
+          [
+            1.1,
+            0.9
+          ]
+        ],
+        "z0": 0.2,
+        "z1": 0.4
+      },
+      "second_owner": {
+        "outline": [
+          [
+            0.9,
+            -0.1
+          ],
+          [
+            3.1,
+            -0.1
+          ],
+          [
+            3.1,
+            1.1
+          ],
+          [
+            0.9,
+            1.1
+          ]
+        ],
+        "z0": 0.1,
+        "z1": 0.35
+      },
+      "second_owner_first_joint": true,
+      "union_volume": 5.6,
+      "common_volume": 0.7352916666666666
+    },
+    {
+      "id": "actual-hollow-owner-preserves-bore-material",
+      "donor_class": "IfcBeam",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "z0": -1,
+        "z1": 0
+      },
+      "owner_class": "IfcBuildingElementProxy",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [
+          [
+            [
+              0.2,
+              0.2
+            ],
+            [
+              0.8,
+              0.2
+            ],
+            [
+              0.8,
+              0.8
+            ],
+            [
+              0.2,
+              0.8
+            ]
+          ]
+        ],
+        "z0": -1,
+        "z1": 0
+      },
+      "union_volume": 1.0,
+      "common_volume": 0.64
+    },
+    {
+      "id": "structural-guard-bearing",
+      "donor_class": "IfcRailing",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -1,
+        "z1": -0.7
+      },
+      "owner_class": "IfcSlab",
+      "owner": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": -0.78,
+        "z1": -0.7
+      },
+      "union_volume": 1.2,
+      "common_volume": 0.32
+    }
+  ],
+  "relationship": "monolithic_same_material",
+  "comparison": {
+    "volume": 1e-12,
+    "coordinate": 1e-12
+  },
+  "invalid": [
+    "cycle",
+    "self-owner",
+    "duplicate-owner",
+    "unknown-owner"
+  ],
+  "cross_material_behavior": "retain_and_report",
+  "section_control": {
+    "outline": [
+      [
+        6.7,
+        10.2
+      ],
+      [
+        6.8,
+        10.3
+      ],
+      [
+        6.8,
+        10.30000000000001
+      ],
+      [
+        6.7,
+        10.20000000000001
+      ]
+    ],
+    "z0": 0,
+    "z1": 1,
+    "height": 0.5,
+    "positive": true
+  },
+  "column_controls": [
+    {
+      "id": "positive-fifty-picometre-bearing",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            0,
+            2
+          ]
+        ],
+        "z0": 0.75,
+        "z1": 0.75000000005
+      },
+      "column": {
+        "outline": [
+          [
+            1,
+            1
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            1,
+            3
+          ]
+        ],
+        "z0": 0,
+        "z1": 1
+      }
+    },
+    {
+      "id": "hollow-column-bore-remains-air",
+      "donor": {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "z0": 0,
+        "z1": 1
+      },
+      "column": {
+        "outline": [
+          [
+            1,
+            1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            2,
+            2
+          ],
+          [
+            1,
+            2
+          ]
+        ],
+        "holes": [
+          [
+            [
+              1.25,
+              1.25
+            ],
+            [
+              1.25,
+              1.75
+            ],
+            [
+              1.75,
+              1.75
+            ],
+            [
+              1.75,
+              1.25
+            ]
+          ]
+        ],
+        "z0": 0,
+        "z1": 1
+      },
+      "additional_void": {
+        "tag": "EXPLICIT-VOID",
+        "outline": [
+          [
+            2.1,
+            2.1
+          ],
+          [
+            2.5,
+            2.1
+          ],
+          [
+            2.5,
+            2.5
+          ],
+          [
+            2.1,
+            2.5
+          ]
+        ]
+      }
+    }
+  ],
+  "receiving_interface": {
+    "donor_outline": [
+      [
+        1,
+        1
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        1,
+        3
+      ]
+    ],
+    "full_volume": 0.32,
+    "owned_volume": 0.24,
+    "shared_volume": 0.08,
+    "owner_material": "MAT-OTHER"
+  },
+  "native_stair_joint": {
+    "structural": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "material": "MAT-TEST",
+      "role": "structural_waist"
+    },
+    "wearing": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          2
+        ],
+        [
+          0,
+          2
+        ]
+      ],
+      "z0": 1,
+      "z1": 1.03,
+      "material": "MAT-TEST",
+      "role": "wearing"
+    },
+    "full_volume": 4.12,
+    "owned_volume": 3.12,
+    "structural_owned_volume": 3
+  },
+  "ramp_representation": {
+    "full": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          2,
+          0
+        ],
+        [
+          2,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "owner": "DONOR",
+      "material": "MAT-TEST"
+    },
+    "owned": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "owner": "DONOR",
+      "material": "MAT-TEST"
+    },
+    "child": {
+      "outline": [
+        [
+          2,
+          0
+        ],
+        [
+          3,
+          0
+        ],
+        [
+          3,
+          1
+        ],
+        [
+          2,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 1,
+      "owner": "CHILD",
+      "material": "MAT-TEST"
+    },
+    "flight_volume": 1,
+    "assembly_volume": 2
+  },
+  "union_arrangement_control": {
+    "parts": [
+      {
+        "section": {
+          "plane": "XZ",
+          "profile": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "sweep": [
+            0,
+            1
+          ]
+        }
+      },
+      {
+        "section": {
+          "plane": "XZ",
+          "profile": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              0
+            ],
+            [
+              0,
+              1
+            ]
+          ],
+          "sweep": [
+            0,
+            1
+          ]
+        }
+      }
+    ],
+    "union_volume": 0.75
+  },
+  "slab_interface_control": {
+    "hole": [
+      [
+        0.5,
+        0.5
+      ],
+      [
+        0.5,
+        1.5
+      ],
+      [
+        1.5,
+        1.5
+      ],
+      [
+        1.5,
+        0.5
+      ]
+    ],
+    "independent_footing": [
+      [
+        1,
+        1
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        3,
+        3
+      ],
+      [
+        1,
+        3
+      ]
+    ],
+    "occupied_volume": 0.18
+  },
+  "ramp_reference_control": {
+    "path": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ]
+    ],
+    "offsets": [
+      -0.6,
+      0.6
+    ],
+    "from_level": 0,
+    "to_level": 1,
+    "portion": [
+      0,
+      1
+    ],
+    "finish": 0.008,
+    "depth": 0.06,
+    "volume": 0.144
+  }
+}

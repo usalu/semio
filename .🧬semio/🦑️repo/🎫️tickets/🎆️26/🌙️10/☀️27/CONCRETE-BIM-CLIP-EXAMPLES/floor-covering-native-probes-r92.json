@@ -1,0 +1,956 @@
+{
+  "probes": {
+    "FIN-GUEST-PARQUET": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-GUEST-TILE": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-TERRACE-PAVING": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-TERRACE-GRASS": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-KITCHEN-PATIO": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-SALON": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-KITCHEN": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-PANTRY": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-SON": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-SHARED-BATH": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-PARENTS": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-PARENT-BATH": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-BOUDOIR": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-FIRST-HALL": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-WC-FIRST-WEST": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-WC-FIRST-EAST": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ],
+    "FIN-FIRST-THRESHOLDS": [
+      {
+        "name": "rain9 unblocked wearing/bedding 3.145",
+        "xyz": [
+          2.8,
+          8.7,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.155",
+        "xyz": [
+          2.8,
+          8.7,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "rain9 unblocked wearing/bedding 3.165",
+        "xyz": [
+          2.8,
+          8.7,
+          3.165
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.145",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.145
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.155",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.155
+        ],
+        "occupied": false
+      },
+      {
+        "name": "heat5 unblocked wearing/bedding 3.165",
+        "xyz": [
+          7.905984276846601,
+          5.009160916732979,
+          3.165
+        ],
+        "occupied": false
+      }
+    ]
+  }
+}

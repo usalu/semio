@@ -1,0 +1,5 @@
+import importlib,sys,json,hashlib
+from pathlib import Path
+from shapely.geometry import Polygon
+from shapely.validation import explain_validity
+r=next(p for p in Path(__file__).resolve().parents if (p/'package.json').exists());sys.path.insert(0,str(r));a=importlib.import_module('🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️');m=a.load_model();wall=a.element('W-SHARED-BATH-N',m);g=a._wall_geometry(m,wall);ps=g['parts'];out={'source':hashlib.sha256(Path(a.__file__).with_name('🔣️.json').read_bytes()).hexdigest(),'geometry':wall['geometry'],'part_count':len(ps),'part316':ps[316],'part316_validity':explain_validity(Polygon(ps[316]['outline'])),'invalid_parts':[{'index':i,'outline':p['outline'],'z0':p['z0'],'z1':p['z1'],'validity':explain_validity(Polygon(p['outline']))} for i,p in enumerate(ps) if not Polygon(p['outline']).is_valid],'openings':[o for o in m['elements'] if o['class']=='IfcOpeningElement' and o['geometry'].get('wall')==wall['tag']]};Path(__file__).with_name('🗑️generated').joinpath('shared-wall-preexport-r92.json').write_text(json.dumps(out,ensure_ascii=False),encoding='utf8');print(json.dumps(out,ensure_ascii=False))

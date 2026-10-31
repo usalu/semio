@@ -42,21 +42,21 @@ A parameter holds typed data. Floating it stands alone; as input X of a componen
 
 A Boolean Toggle has two states. True gives the capsule its round window, 1.3 metres across, in the front face.
 
-A Value List offers fixed choices: the capsule types A to D. Pick one and the capsule takes that type's window.
+A Value List offers fixed choices: the proposed room-program studies A to D. They share the nominal 1.30 metre porthole.
 
 A plugin, a .gha file, adds a tab to the ribbon. Ladybug Tools studies the sun on the capsule window: more sun, warmer tint.
 
-Now the data. One value is an item: the height 0 m of the first storey, one capsule on Tower A.
+Now the data. One value is an item: the elevation offset zero metres for the first capsule level of Tower B.
 
-A Series with step 2.75 metres makes a list: nine heights in one branch {0}, indices 0 to 8, one capsule on each of nine storeys.
+A Series with step 2.8 metres gives 9 offsets in one branch, indices 0 to 8: one capsule per level of Tower B.
 
-Change Count from 9 to 11 and the list grows by two: Tower B has eleven capsule storeys.
+Change Count from 9 to 11 and the list grows. Tower A has 11 capsule levels.
 
-Many lists form a data tree. Each facade of a storey is one branch with its own path, here {0;0;3;1}, holding two capsule items.
+Many lists form a data tree. Each occupied facade group is a branch with its displayed address and a variable number of capsule items.
 
-A common mistake is to read a tree as one long list. The index 1 alone fits all 27 branches of Tower A, so it names 27 capsules.
+A common mistake is to read a tree as one long list. Index one exists in many branches; a singleton branch has no item at that index.
 
-Only path plus index names exactly one capsule: path {0;0;3;1}, index 1. The Panel shows both.
+Only path plus index identifies exactly one capsule. The Panel shows the actual selected address and index one.
 
 The canvas terms, row by row in English and German: script, Skript; component, Komponente; and six more.
 
@@ -66,17 +66,17 @@ The data terms in English and German: item, Element; list, Liste; tree, Datenbau
 
 Video: `grasshopper_capsule`
 
-The Nakagin tower hangs 140 capsules on two cores, yet a single Grasshopper definition builds every one of them.
+The Nakagin tower hangs its capsules on two cores, yet a single Grasshopper definition builds every one of them.
 
 Parametric means: parameters feed dependencies, dependencies build geometry. Change one value and everything follows.
 
-Six Number Sliders hold the parameters: width, length, height, corner radius, window diameter and window offset.
+Six Number Sliders control the physical reference casing: 2.6 metres wide and 4.2 metres long, its height, corner radius, window diameter and offset.
 
 Everything starts on a plane: origin plus X, Y and Z axes in Rhino's red, green and blue. This is the capsule's base plane.
 
 Center Box takes the plane and the sliders for width, length and height. It centres itself on the plane, so half of it sinks below the floor.
 
-Plane Origin lifts the plane by half the length and half the height: now the box stands with its bottom face on the base plane.
+Plane Origin uses the physical rear datum minus 0.1 metres, half the casing length and half its height. The box now stands on the base plane.
 
 Drag the length slider: the dimension line, the box and every component behind it follow in the same moment.
 
@@ -84,7 +84,7 @@ Fillet Edge rounds the edges with the corner radius slider: the soft shell of th
 
 A typical mistake: a Circle on the base plane lies on the floor, not on the front face. A wire does not know where you mean.
 
-The fix: a plane on the front face, moved by the length and the window offset, carries the circle to the right place.
+The fix: the front datum is the rear datum plus casing length. The glazing plane sits at its source-derived recess, while the cutting cylinder starts on the steel face.
 
 Solid Difference subtracts a cylinder of that circle from the shell: the round window is cut into the front face.
 
@@ -94,9 +94,9 @@ Each slider domain is a design constraint; here the limits are assumptions, for 
 
 Push the width past its domain: the slider clamps at its upper limit and the envelope turns red. The domain is a design rule.
 
-The capsule types of the teaching model are one definition with different parameter values.
+A to D are proposed room-program studies, not historical capsule families. They share the nominal capsule envelope.
 
-Feed type A to D into the same sliders: window offset and window diameter change, and the definition builds four capsules.
+All four studies keep the nominal centred 1.30 metre porthole. Slider edits explore dimensions; they are not surveyed types.
 
 On the core the capsule needs a target plane on the wall; the base plane must land on it.
 
@@ -104,7 +104,7 @@ Orient moves the capsule in one step from its base plane A to the target plane B
 
 Rotate the target plane about the core axis and the capsule turns with it, because it follows plane B.
 
-List Item picks the type for each plane: index 0 gives type A, 1 gives B, 2 gives C, 3 gives D.
+Each slot retains its historical physical family. List Item chooses among four proposed program variants: index 0 gives A, 1 gives B, 2 gives C, 3 gives D.
 
 Eight planes need indices up to 7, but there are only four types: without Wrap, List Item warns from index 4.
 
@@ -120,43 +120,43 @@ The Nakagin Capsule Tower has 140 capsules. How do they become two towers?
 
 The tower splits into five parts: core, planes, capsules, capital and podium. Each part gets its own coloured group on the canvas.
 
-The core is a square extrusion. Plan side, storey height and storey count are the sliders; they decide the height of the box.
+Start with the square core envelope. Its height combines selected capsule crowns with the roof clearance of this tower.
 
-The result is the shaft: one box with a line on every storey, and the storey count is read straight from the definition.
+The envelope sets out the shaft. Its detailed assembly contains slabs, stairs, landings and lift doors on every storey.
 
-A Series gives one elevation per storey. Each elevation becomes a level for the capsules on the shaft.
+A Series starts at the provisional 7.72 metre podium roof, with the sourced 2.80 metre pitch. Authored phase offsets place the capsules.
 
-A second list holds the four facade angles. Rotating one plane by each angle gives one plane per facade.
+Authored origins and handed axes define the door-port frames. Construct Plane assembles each one without an inferred rotation.
 
 Every plane carries its axes: X runs along the facade, Y points outward, Z points up.
 
-Two capsules sit side by side on each facade: item 0 and item 1, one step to each side along X.
+Each authored facade group has indexed candidate ports. The authored floor masks select the occupied positions.
 
-Orient moves the capsule from its base plane onto each target plane. One capsule, one component, every plane.
+Orient maps the local door port to the reconstructed world door port. Its result is the capsule body plane, including the handed layout.
 
 A type pattern picks the capsule type for every plane. List Item reads the pattern by index; only the list differs.
 
-Now the capsule storeys slider: the count is storeys times facades times items, and the drawing grows with it.
+The slider reveals one reconstructed capsule level after another. The total is the sum of the occupied positions on the selected levels.
 
-Not one wire changes. The definition does not know how tall the tower is; it only follows the number.
+The wires stay unchanged. Floor masks, capsule crowns and the tower-specific roof clearance determine the resulting height.
 
-A typical mistake: without Cull Index, tower B gets 88 capsules, two of them west on the top storey, where the building has none.
+Without the floor masks, the regular candidate grid includes unoccupied positions. Its repeated pattern is not the documented building.
 
-Cull Index removes exactly those two planes, indices 6 and 7. Now the definition gives 86, the number the building really has.
+Cull Index removes the unoccupied positions on every level. The documented result is 76 capsules in A and 64 in B.
 
-The capital is its own small parametric part. Height and overhang are two sliders on top of the core.
+The machinery head is a separate part. A has a sourced height of 11.36 metres; B uses a provisional derived 10.83 metres.
 
-It sits on top of the core at the height the capsule storeys slider gives, so it rises with the tower.
+The head starts at the core roof: 42.14 m in A, a provisional 36.62 m in B; each tower keeps its own clearance.
 
-The lower building is only an extruded massing: one footprint, one height.
+The footprint and height define the podium envelope. The detailed model adds its slabs, columns, glazing, entrance and parapets.
 
-That is on purpose. The podium is context, not the subject: one extrusion is enough, while one capsule parameter changes every copy.
+The envelope is the first construction step. Named assemblies carry the circulation, services and façade details throughout the building.
 
-The same definition builds tower A and tower B. Capsule storeys and facades differ; the formulas show both.
+The same definition reads the authored floor masks for both towers: 76 capsules in A, 64 in B.
 
 Together they give the historical count, 140 capsules, read from the definition and not typed in.
 
-Metabolism: capsules are replaceable. Swap type B for type C, and every capsule of that type gets the larger window at once.
+Metabolism proposes replaceable capsules. Here the switch changes the room program from type B to type C; the porthole stays.
 
 Recap: core, planes, capsules, capital, podium. This is the teaching model of the Nakagin Capsule Tower.
 
@@ -170,13 +170,13 @@ In this teaching model of the Nakagin Capsule Tower, every parameter has a type:
 
 A wire connects whatever you drag. When the types differ, Grasshopper tries to cast the data.
 
-A Panel holds the text 2.5. The Number input reads it as the number 2.5, and the capsule becomes 2.5 metres wide.
+A Panel holds the text 2.5. The Number input reads it as the number 2.5, and the nominal study width becomes 2.5 metres. Its physical reference casing is 2.6 metres wide.
 
-A slider says 10.6, but Storeys wants an Integer. Grasshopper rounds, here to 11; check this in Rhino 8.
+A slider says 8.6, but Storeys wants an Integer. Grasshopper rounds, here to 9; check this in Rhino 8.
 
 Grasshopper rounds; at exactly .5 it rounds to the even number: 2.5 gives 2, 3.5 gives 4. Check this in Rhino 8.
 
-To decide the rounding yourself, put a component such as Floor before the Integer input: the eleventh storey disappears.
+To decide the rounding yourself, put a component such as Floor before the Integer input: the top storey disappears.
 
 A Point at a Plane input becomes a plane at that point with the world axes. Here the point is the origin of a facade slot.
 
@@ -186,7 +186,7 @@ A Line becomes a plane whose Z axis follows the line. From the core to the slot 
 
 Build the plane explicitly from origin and axes. The capsule turns into place and faces outwards.
 
-A Number can stand in for a Domain: the capsule length 4.0 becomes the interval 0 To 4, and Divide Domain cuts it.
+A Number can stand in for a Domain: the nominal study length 4.0 becomes the interval 0 To 4, and Divide Domain cuts it.
 
 A Circle is a Curve and a Box is a Brep: window outline and capsule body pass as the more general type.
 
@@ -218,44 +218,44 @@ Item 21 is one capsule of 140. The list does not say its tower, its storey or it
 
 A data tree keeps the address: building, tower, storey, facade. Each level splits into more branches.
 
-The smallest piece: tower A, storey 0, facade 0. Its two capsules form one branch, a list of two items.
+One occupied facade group is one branch. Its length follows the reconstructed floor layout.
 
-Capsule 21 has the path {0;0;3;1}: building 0, tower 0, which is A, storey 3, facade 1.
+The selected capsule keeps its path: building, tower, capsule level and facade. Read its actual address on screen.
 
-The branch is a list. An index addresses one item in it: {0;0;3;1}[1] is capsule 21, the right capsule of that facade.
+An index selects one capsule inside its branch. The path and index together identify the selected capsule.
 
-A Panel in tree mode lists every branch with its path. Tree Statistics counts 70 branches of two items each.
+A Panel lists the occupied facade branches. Tree Statistics reveals the different branch lengths.
 
-Flatten first, on one storey of tower A: its three branches become one list of six items.
+Flatten on one occupied storey joins its facade branches into one list, preserving every capsule.
 
 Flatten puts all 140 capsules into one list. Nothing is lost, except the structure.
 
-Graft on the same storey: each of the six capsules gets its own branch, six branches of one item.
+Graft gives every capsule of that storey its own branch, with one item per branch.
 
 Graft does the opposite: every capsule gets its own branch, and the path grows by one index.
 
-Simplify on that storey strips the path prefix {0;0;0} that its three branches share. The branches stay.
+Simplify removes the common building, tower and storey prefix. The occupied facade branches remain.
 
 Simplify removes the leading 0 that every path shares, because there is only one building. The branches stay.
 
-Path Mapper binds the letters to a path. Capsule 21: A is 0, B is 0, C is 3, D is 1. D, the facade, is dropped.
+Path Mapper binds letters to the displayed address. The facade letter is dropped; the remaining address selects a storey.
 
 Applied to all branches, the rule {A;B;C;D}(i) to {A;B;C} merges the facades: each branch is a storey, 20 branches.
 
-Now each branch is a storey: six capsules where it has three facades, eight where it has four.
+Each branch now contains one occupied storey. The documented counts vary: two, seven or eight capsules.
 
-Mapping to {A;B} gives one branch per tower: 54 capsules in tower A, 86 in tower B.
+Mapping to {A;B} gives one branch per tower: 76 capsules in A and 64 in B.
 
-Flip Matrix swaps branches and items, so all left capsules form one list and all right ones another: two branches of 70.
+Flip Matrix swaps branches and item positions. Short branches receive null placeholders: empty addresses, not capsules.
 
 A component pairs data branch by branch. Custom Preview takes capsules and a colour, and the paths decide who pairs with whom.
 
-The classic mistake: the short colour list repeats in every branch. Left capsules turn teal, right ones orange, in both towers.
+The classic mistake: the short colour list repeats in every branch. Alternating colours follow item indices instead of tower addresses.
 
 The Param Viewer shows why: no path matches, so the short colour list repeats in every branch. Read both paths first.
 
 The fix: map the capsules to {A;B} and graft the colour list. Now both trees have the paths {0;0} and {0;1}.
 
-With matching paths, each tower's colour reaches all its capsules: 54 teal in tower A, 86 orange in tower B.
+Matching paths send the tower colours to the documented totals: 76 teal capsules in A and 64 orange in B.
 
 Recap: tree, branch, path, item, index, Flatten, Graft, Simplify, Path Mapper, Flip Matrix. Ten terms, one address.

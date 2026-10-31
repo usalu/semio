@@ -629,169 +629,64 @@
     "rows": [
      [
       "A",
-      1,
-      "N",
-      1,
-      "Type A"
-     ],
-     [
-      "A",
-      1,
+      3,
       "N",
       2,
       "Type B"
      ],
      [
       "A",
-      1,
-      "E",
+      3,
+      "W",
       1,
       "Type C"
      ],
      [
       "A",
-      1,
-      "E",
-      2,
-      "Type D"
-     ],
-     [
-      "A",
-      1,
-      "S",
-      1,
-      "Type A"
-     ],
-     [
-      "A",
-      1,
-      "S",
-      2,
-      "Type B"
-     ],
-     [
-      "A",
-      2,
+      4,
       "N",
       1,
       "Type B"
      ],
      [
       "A",
-      2,
+      4,
       "N",
       2,
       "Type C"
      ],
      [
       "A",
-      2,
+      4,
       "E",
       1,
       "Type D"
      ],
      [
       "A",
-      2,
+      4,
       "E",
       2,
       "Type A"
      ],
      [
       "A",
-      2,
-      "S",
-      1,
-      "Type B"
-     ],
-     [
-      "A",
-      2,
+      4,
       "S",
       2,
       "Type C"
      ],
      [
       "A",
-      3,
-      "N",
-      1,
-      "Type C"
-     ],
-     [
-      "A",
-      3,
-      "N",
-      2,
-      "Type D"
-     ],
-     [
-      "A",
-      3,
-      "E",
-      1,
-      "Type A"
-     ],
-     [
-      "A",
-      3,
-      "E",
-      2,
-      "Type B"
-     ],
-     [
-      "A",
-      3,
-      "S",
-      1,
-      "Type C"
-     ],
-     [
-      "A",
-      3,
-      "S",
-      2,
-      "Type D"
-     ],
-     [
-      "A",
       4,
-      "N",
+      "W",
       1,
       "Type D"
      ],
      [
       "A",
       4,
-      "N",
-      2,
-      "Type A"
-     ],
-     [
-      "A",
-      4,
-      "E",
-      1,
-      "Type B"
-     ],
-     [
-      "A",
-      4,
-      "E",
-      2,
-      "Type C"
-     ],
-     [
-      "A",
-      4,
-      "S",
-      1,
-      "Type D"
-     ],
-     [
-      "A",
-      4,
-      "S",
+      "W",
       2,
       "Type A"
      ],
@@ -800,319 +695,466 @@
       5,
       "N",
       1,
-      "Type A"
-     ],
-     [
-      "A",
-      5,
-      "N",
-      2,
-      "Type B"
-     ],
-     [
-      "A",
-      5,
-      "E",
-      1,
       "Type C"
      ],
      [
       "A",
       5,
-      "E",
+      "N",
       2,
       "Type D"
      ],
      [
       "A",
       5,
-      "S",
+      "E",
       1,
       "Type A"
      ],
      [
       "A",
       5,
-      "S",
-      2,
-      "Type B"
-     ],
-     [
-      "A",
-      6,
-      "N",
-      1,
-      "Type B"
-     ],
-     [
-      "A",
-      6,
-      "N",
-      2,
-      "Type C"
-     ],
-     [
-      "A",
-      6,
-      "E",
-      1,
-      "Type D"
-     ],
-     [
-      "A",
-      6,
-      "E",
-      2,
-      "Type A"
-     ],
-     [
-      "A",
-      6,
-      "S",
-      1,
-      "Type B"
-     ],
-     [
-      "A",
-      6,
-      "S",
-      2,
-      "Type C"
-     ],
-     [
-      "A",
-      7,
-      "N",
-      1,
-      "Type C"
-     ],
-     [
-      "A",
-      7,
-      "N",
-      2,
-      "Type D"
-     ],
-     [
-      "A",
-      7,
-      "E",
-      1,
-      "Type A"
-     ],
-     [
-      "A",
-      7,
       "E",
       2,
       "Type B"
      ],
      [
       "A",
-      7,
-      "S",
-      1,
-      "Type C"
-     ],
-     [
-      "A",
-      7,
+      5,
       "S",
       2,
       "Type D"
      ],
      [
       "A",
-      8,
-      "N",
-      1,
-      "Type D"
-     ],
-     [
-      "A",
-      8,
-      "N",
-      2,
-      "Type A"
-     ],
-     [
-      "A",
-      8,
-      "E",
-      1,
-      "Type B"
-     ],
-     [
-      "A",
-      8,
-      "E",
-      2,
-      "Type C"
-     ],
-     [
-      "A",
-      8,
-      "S",
-      1,
-      "Type D"
-     ],
-     [
-      "A",
-      8,
-      "S",
-      2,
-      "Type A"
-     ],
-     [
-      "A",
-      9,
-      "N",
-      1,
-      "Type A"
-     ],
-     [
-      "A",
-      9,
-      "N",
-      2,
-      "Type B"
-     ],
-     [
-      "A",
-      9,
-      "E",
-      1,
-      "Type C"
-     ],
-     [
-      "A",
-      9,
-      "E",
-      2,
-      "Type D"
-     ],
-     [
-      "A",
-      9,
-      "S",
-      1,
-      "Type A"
-     ],
-     [
-      "A",
-      9,
-      "S",
-      2,
-      "Type B"
-     ],
-     [
-      "B",
-      1,
-      "N",
-      1,
-      "Type B"
-     ],
-     [
-      "B",
-      1,
-      "N",
-      2,
-      "Type C"
-     ],
-     [
-      "B",
-      1,
-      "E",
-      1,
-      "Type D"
-     ],
-     [
-      "B",
-      1,
-      "E",
-      2,
-      "Type A"
-     ],
-     [
-      "B",
-      1,
-      "S",
-      1,
-      "Type B"
-     ],
-     [
-      "B",
-      1,
-      "S",
-      2,
-      "Type C"
-     ],
-     [
-      "B",
-      1,
-      "W",
-      1,
-      "Type D"
-     ],
-     [
-      "B",
-      1,
-      "W",
-      2,
-      "Type A"
-     ],
-     [
-      "B",
-      2,
-      "N",
-      1,
-      "Type C"
-     ],
-     [
-      "B",
-      2,
-      "N",
-      2,
-      "Type D"
-     ],
-     [
-      "B",
-      2,
-      "E",
-      1,
-      "Type A"
-     ],
-     [
-      "B",
-      2,
-      "E",
-      2,
-      "Type B"
-     ],
-     [
-      "B",
-      2,
-      "S",
-      1,
-      "Type C"
-     ],
-     [
-      "B",
-      2,
-      "S",
-      2,
-      "Type D"
-     ],
-     [
-      "B",
-      2,
+      5,
       "W",
       1,
       "Type A"
      ],
      [
-      "B",
+      "A",
+      5,
+      "W",
       2,
+      "Type B"
+     ],
+     [
+      "A",
+      6,
+      "N",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      6,
+      "N",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      6,
+      "E",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      6,
+      "S",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      6,
+      "S",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      6,
+      "W",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      6,
+      "W",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      7,
+      "N",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      7,
+      "N",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      7,
+      "E",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      7,
+      "E",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      7,
+      "S",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      7,
+      "S",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      7,
+      "W",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      7,
+      "W",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      8,
+      "N",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      8,
+      "N",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      8,
+      "E",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      8,
+      "E",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      8,
+      "S",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      8,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      8,
+      "W",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      8,
+      "W",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      9,
+      "N",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      9,
+      "N",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      9,
+      "E",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      9,
+      "S",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      9,
+      "S",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      9,
+      "W",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      9,
+      "W",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      10,
+      "N",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      10,
+      "N",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      10,
+      "E",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      10,
+      "E",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      10,
+      "S",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      10,
+      "S",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      10,
+      "W",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      10,
+      "W",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      11,
+      "N",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      11,
+      "N",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      11,
+      "E",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      11,
+      "E",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      11,
+      "S",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      11,
+      "S",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      11,
+      "W",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      11,
+      "W",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      12,
+      "N",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      12,
+      "N",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      12,
+      "E",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      12,
+      "S",
+      1,
+      "Type B"
+     ],
+     [
+      "A",
+      12,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "A",
+      12,
+      "W",
+      1,
+      "Type D"
+     ],
+     [
+      "A",
+      12,
+      "W",
+      2,
+      "Type A"
+     ],
+     [
+      "A",
+      13,
+      "N",
+      1,
+      "Type C"
+     ],
+     [
+      "A",
+      13,
+      "N",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      13,
+      "E",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      13,
+      "E",
+      2,
+      "Type B"
+     ],
+     [
+      "A",
+      13,
+      "S",
+      2,
+      "Type D"
+     ],
+     [
+      "A",
+      13,
+      "W",
+      1,
+      "Type A"
+     ],
+     [
+      "A",
+      13,
       "W",
       2,
       "Type B"
@@ -1120,490 +1162,448 @@
      [
       "B",
       3,
-      "N",
+      "E",
       1,
       "Type D"
      ],
      [
       "B",
       3,
-      "N",
-      2,
-      "Type A"
-     ],
-     [
-      "B",
-      3,
-      "E",
-      1,
-      "Type B"
-     ],
-     [
-      "B",
-      3,
       "E",
       2,
-      "Type C"
-     ],
-     [
-      "B",
-      3,
-      "S",
-      1,
-      "Type D"
-     ],
-     [
-      "B",
-      3,
-      "S",
-      2,
       "Type A"
-     ],
-     [
-      "B",
-      3,
-      "W",
-      1,
-      "Type B"
-     ],
-     [
-      "B",
-      3,
-      "W",
-      2,
-      "Type C"
      ],
      [
       "B",
       4,
       "N",
       1,
-      "Type A"
-     ],
-     [
-      "B",
-      4,
-      "N",
-      2,
-      "Type B"
-     ],
-     [
-      "B",
-      4,
-      "E",
-      1,
       "Type C"
      ],
      [
       "B",
       4,
-      "E",
+      "N",
       2,
       "Type D"
      ],
      [
       "B",
       4,
-      "S",
+      "E",
       1,
       "Type A"
      ],
      [
       "B",
       4,
-      "S",
+      "E",
       2,
       "Type B"
      ],
      [
       "B",
       4,
-      "W",
+      "S",
       1,
       "Type C"
      ],
      [
       "B",
       4,
-      "W",
+      "S",
       2,
       "Type D"
      ],
      [
       "B",
-      5,
-      "N",
+      4,
+      "W",
       1,
+      "Type A"
+     ],
+     [
+      "B",
+      4,
+      "W",
+      2,
       "Type B"
      ],
      [
       "B",
       5,
       "N",
-      2,
-      "Type C"
-     ],
-     [
-      "B",
-      5,
-      "E",
       1,
       "Type D"
      ],
      [
       "B",
       5,
-      "E",
+      "N",
       2,
       "Type A"
      ],
      [
       "B",
       5,
-      "S",
+      "E",
       1,
       "Type B"
      ],
      [
       "B",
       5,
-      "S",
+      "E",
       2,
       "Type C"
      ],
      [
       "B",
       5,
-      "W",
+      "S",
       1,
       "Type D"
      ],
      [
       "B",
       5,
-      "W",
-      2,
-      "Type A"
-     ],
-     [
-      "B",
-      6,
-      "N",
-      1,
-      "Type C"
-     ],
-     [
-      "B",
-      6,
-      "N",
-      2,
-      "Type D"
-     ],
-     [
-      "B",
-      6,
-      "E",
-      1,
-      "Type A"
-     ],
-     [
-      "B",
-      6,
-      "E",
-      2,
-      "Type B"
-     ],
-     [
-      "B",
-      6,
-      "S",
-      1,
-      "Type C"
-     ],
-     [
-      "B",
-      6,
-      "S",
-      2,
-      "Type D"
-     ],
-     [
-      "B",
-      6,
-      "W",
-      1,
-      "Type A"
-     ],
-     [
-      "B",
-      6,
-      "W",
-      2,
-      "Type B"
-     ],
-     [
-      "B",
-      7,
-      "N",
-      1,
-      "Type D"
-     ],
-     [
-      "B",
-      7,
-      "N",
-      2,
-      "Type A"
-     ],
-     [
-      "B",
-      7,
-      "E",
-      1,
-      "Type B"
-     ],
-     [
-      "B",
-      7,
-      "E",
-      2,
-      "Type C"
-     ],
-     [
-      "B",
-      7,
-      "S",
-      1,
-      "Type D"
-     ],
-     [
-      "B",
-      7,
       "S",
       2,
       "Type A"
      ],
      [
       "B",
+      5,
+      "W",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      5,
+      "W",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      6,
+      "N",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      6,
+      "N",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      6,
+      "E",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      6,
+      "E",
+      2,
+      "Type D"
+     ],
+     [
+      "B",
+      6,
+      "S",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      6,
+      "S",
+      2,
+      "Type B"
+     ],
+     [
+      "B",
+      6,
+      "W",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      7,
+      "N",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      7,
+      "N",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      7,
+      "E",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      7,
+      "E",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      7,
+      "S",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      7,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
       7,
       "W",
       1,
-      "Type B"
+      "Type D"
      ],
      [
       "B",
       7,
       "W",
       2,
-      "Type C"
-     ],
-     [
-      "B",
-      8,
-      "N",
-      1,
       "Type A"
      ],
      [
       "B",
       8,
       "N",
-      2,
-      "Type B"
-     ],
-     [
-      "B",
-      8,
-      "E",
       1,
       "Type C"
      ],
      [
       "B",
       8,
-      "E",
+      "N",
       2,
       "Type D"
      ],
      [
       "B",
       8,
-      "S",
+      "E",
       1,
       "Type A"
      ],
      [
       "B",
       8,
-      "S",
+      "E",
       2,
       "Type B"
      ],
      [
       "B",
       8,
-      "W",
+      "S",
       1,
       "Type C"
      ],
      [
       "B",
       8,
-      "W",
+      "S",
       2,
       "Type D"
+     ],
+     [
+      "B",
+      8,
+      "W",
+      1,
+      "Type A"
+     ],
+     [
+      "B",
+      8,
+      "W",
+      2,
+      "Type B"
      ],
      [
       "B",
       9,
       "N",
       1,
-      "Type B"
+      "Type D"
      ],
      [
       "B",
       9,
       "N",
       2,
-      "Type C"
-     ],
-     [
-      "B",
-      9,
-      "E",
-      1,
-      "Type D"
-     ],
-     [
-      "B",
-      9,
-      "E",
-      2,
       "Type A"
      ],
      [
       "B",
       9,
-      "S",
+      "E",
       1,
       "Type B"
      ],
      [
       "B",
       9,
-      "S",
+      "E",
       2,
       "Type C"
      ],
      [
       "B",
       9,
-      "W",
+      "S",
       1,
       "Type D"
      ],
      [
       "B",
       9,
-      "W",
+      "S",
       2,
       "Type A"
+     ],
+     [
+      "B",
+      9,
+      "W",
+      1,
+      "Type B"
      ],
      [
       "B",
       10,
       "N",
       1,
-      "Type C"
+      "Type A"
      ],
      [
       "B",
       10,
       "N",
       2,
-      "Type D"
-     ],
-     [
-      "B",
-      10,
-      "E",
-      1,
-      "Type A"
-     ],
-     [
-      "B",
-      10,
-      "E",
-      2,
       "Type B"
      ],
      [
       "B",
       10,
-      "S",
+      "E",
       1,
       "Type C"
      ],
      [
       "B",
       10,
-      "S",
+      "E",
       2,
       "Type D"
      ],
      [
       "B",
       10,
-      "W",
+      "S",
       1,
       "Type A"
      ],
      [
       "B",
       10,
-      "W",
+      "S",
       2,
       "Type B"
+     ],
+     [
+      "B",
+      10,
+      "W",
+      1,
+      "Type C"
+     ],
+     [
+      "B",
+      10,
+      "W",
+      2,
+      "Type D"
      ],
      [
       "B",
       11,
       "N",
       1,
-      "Type D"
+      "Type B"
      ],
      [
       "B",
       11,
       "N",
       2,
-      "Type A"
-     ],
-     [
-      "B",
-      11,
-      "E",
-      1,
-      "Type B"
-     ],
-     [
-      "B",
-      11,
-      "E",
-      2,
       "Type C"
      ],
      [
       "B",
       11,
-      "S",
+      "E",
       1,
       "Type D"
      ],
      [
       "B",
       11,
+      "E",
+      2,
+      "Type A"
+     ],
+     [
+      "B",
+      11,
       "S",
+      1,
+      "Type B"
+     ],
+     [
+      "B",
+      11,
+      "S",
+      2,
+      "Type C"
+     ],
+     [
+      "B",
+      11,
+      "W",
+      1,
+      "Type D"
+     ],
+     [
+      "B",
+      11,
+      "W",
       2,
       "Type A"
      ]
@@ -1640,7 +1640,7 @@
     },
     "C1": {
      "text": {
-      "en": "Single residence with bed, bathroom unit and storage",
+      "en": "Assumed teaching program: Single residence with bed, bathroom unit and storage",
       "de": "Einzelwohnung mit Bett, Nasszelle und Stauraum"
      }
     },
@@ -1664,7 +1664,7 @@
      }
     },
     "B3": {
-     "value": 4.0,
+     "value": 4,
      "from": "capsule.length",
      "basis": "sourced",
      "format": "0.00 \"m\"",
@@ -2008,7 +2008,7 @@
      "format": "0.00 \"m\""
     },
     "E12": {
-     "value": 2.0,
+     "value": 2,
      "from": "types.A.fittings.bed.length",
      "basis": "assumed",
      "format": "0.00 \"m\""
@@ -2030,7 +2030,7 @@
      }
     },
     "D13": {
-     "value": 1.0,
+     "value": 1,
      "from": "types.A.fittings.bath.width",
      "basis": "assumed",
      "format": "0.00 \"m\""
@@ -2133,7 +2133,7 @@
     },
     "C1": {
      "text": {
-      "en": "Residence for working, with desk next to the window",
+      "en": "Assumed teaching program: Residence for working, with desk next to the window",
       "de": "Wohnkapsel zum Arbeiten, mit Schreibtisch am Fenster"
      }
     },
@@ -2157,7 +2157,7 @@
      }
     },
     "B3": {
-     "value": 4.0,
+     "value": 4,
      "from": "capsule.length",
      "basis": "sourced",
      "format": "0.00 \"m\"",
@@ -2501,7 +2501,7 @@
      "format": "0.00 \"m\""
     },
     "E12": {
-     "value": 2.0,
+     "value": 2,
      "from": "types.B.fittings.bed.length",
      "basis": "assumed",
      "format": "0.00 \"m\""
@@ -2523,7 +2523,7 @@
      }
     },
     "D13": {
-     "value": 1.0,
+     "value": 1,
      "from": "types.B.fittings.bath.width",
      "basis": "assumed",
      "format": "0.00 \"m\""
@@ -2654,8 +2654,8 @@
     },
     "C1": {
      "text": {
-      "en": "Small studio for two with large window, no bed",
-      "de": "Kleines Atelier für zwei mit grossem Fenster, ohne Bett"
+      "en": "Assumed program study: small studio for two with nominal porthole, no bed",
+      "de": "Angenommene Programmstudie: kleines Atelier für zwei mit nominalem Rundfenster, ohne Bett"
      }
     },
     "A2": {
@@ -2678,7 +2678,7 @@
      }
     },
     "B3": {
-     "value": 4.0,
+     "value": 4,
      "from": "capsule.length",
      "basis": "sourced",
      "format": "0.00 \"m\"",
@@ -2743,10 +2743,11 @@
      }
     },
     "B8": {
-     "value": 1.6,
+     "value": 1.3,
      "from": "types.C.window_diameter",
-     "basis": "assumed",
-     "format": "0.00 \"m\""
+     "basis": "sourced",
+     "format": "0.00 \"m\"",
+     "source": "archeyes"
     },
     "A9": {
      "text": {
@@ -3015,7 +3016,7 @@
      }
     },
     "D12": {
-     "value": 1.0,
+     "value": 1,
      "from": "types.C.fittings.bath.width",
      "basis": "assumed",
      "format": "0.00 \"m\""
@@ -3168,14 +3169,14 @@
     },
     "B1": {
      "text": {
-      "en": "Splayed residence",
-      "de": "Gefächerte Wohnkapsel"
+      "en": "Residence study D",
+      "de": "Wohnstudie D"
      }
     },
     "C1": {
      "text": {
-      "en": "Residence with side window, turned 5 degrees on its plane (teaching variant)",
-      "de": "Wohnkapsel mit seitlichem Fenster, 5 Grad auf ihrer Ebene gedreht (Lehrvariante)"
+      "en": "Assumed teaching program: Teaching program study; no historical yaw or offset is asserted",
+      "de": "Lehrprogrammstudie; keine historische Verdrehung oder Verschiebung behauptet"
      }
     },
     "A2": {
@@ -3198,7 +3199,7 @@
      }
     },
     "B3": {
-     "value": 4.0,
+     "value": 4,
      "from": "capsule.length",
      "basis": "sourced",
      "format": "0.00 \"m\"",
@@ -3542,7 +3543,7 @@
      "format": "0.00 \"m\""
     },
     "E12": {
-     "value": 2.0,
+     "value": 2,
      "from": "types.D.fittings.bed.length",
      "basis": "assumed",
      "format": "0.00 \"m\""
@@ -3564,7 +3565,7 @@
      }
     },
     "D13": {
-     "value": 1.0,
+     "value": 1,
      "from": "types.D.fittings.bath.width",
      "basis": "assumed",
      "format": "0.00 \"m\""
@@ -3665,7 +3666,7 @@
      }
     },
     "B2": {
-     "value": 20.0,
+     "value": 20,
      "from": "energy.indoor_temperature",
      "basis": "assumed",
      "format": "0.0 \"°C\""
@@ -3677,7 +3678,7 @@
      }
     },
     "B3": {
-     "value": 0.0,
+     "value": 0,
      "from": "energy.design_temperature",
      "basis": "assumed",
      "format": "0.0 \"°C\""
@@ -3689,7 +3690,7 @@
      }
     },
     "B4": {
-     "value": 18.0,
+     "value": 18,
      "from": "energy.heating_base",
      "basis": "assumed",
      "format": "0.0 \"°C\""
@@ -3945,7 +3946,7 @@
      }
     },
     "E12": {
-     "value": 18.0,
+     "value": 18,
      "from": "climate.months.10.mean",
      "basis": "sourced",
      "format": "0.0 \"°C\"",

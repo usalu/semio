@@ -21,6 +21,8 @@ def _fixture():
     source["elements"]=[e for e in source["elements"] if e["class"]!="IfcOpeningElement" or e["geometry"].get("wall")!="W-S" or e["tag"]=="OP-S"]
     opening=next(e for e in source["elements"] if e["tag"]=="OP-S")
     opening["attributes"].update({k:{"value":v,"unit":"m","basis":"assumed"} for k,v in case["openings"][0].items()})
+    filling=next(e for e in source["elements"] if e["tag"]=="RW-S")
+    filling["geometry"]={"opening":"OP-S","panel_stations":[{"value":value,"unit":"1","basis":"assumed"} for value in case["filling"]["panel_stations"]],"panel_operations":case["filling"]["panel_operations"]}
     source["elements"]=[e for e in source["elements"] if e["class"]!="IfcBeam"]
     return source,wall,case
 

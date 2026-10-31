@@ -1,0 +1,13 @@
+"""📋 Execute actual source-only inventory and IDS contract bodies without unrelated geometry setup."""
+import hashlib,importlib,json,sys,time,unittest
+from pathlib import Path
+sys.dont_write_bytecode=True
+root=next(p for p in Path(__file__).resolve().parents if(p/'AGENTS.md').is_file()and(p/'package.json').is_file());sys.path.insert(0,str(root));ticket=Path(__file__).parent;clip=root/'🎓️teaching/🏛️architecture/🏗️bim/🎬️clip';model=clip/'🧱️model';paths=[p for p in model.rglob('*.py')if '🧪️tests'not in str(p)]+[model/'🔣️.json',model/'🧬️schema/🔣️.schema.json',clip/'🧪️tests/🐍️.py',clip/'🧪️cases/🔣️.json',Path(__file__)]
+def hashes():
+    """🔐 Bind source-level expectations and every physical producer."""
+    return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in paths}
+before=hashes();prefix='🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.';main=importlib.import_module(prefix+'🧪️tests.🐍️');api=main.model_api();source=api.load_model();items=main.registry(source);functions=[]
+for cls,names in ((main.BimModelStructureContract,['test_every_opening_has_a_native_host_and_optional_filling','test_every_element_is_complete_and_references_exist','test_every_quantity_is_sourced_or_assumed_with_a_unit']),(main.BimIdsContract,['test_counts_equal_an_independent_recount_of_the_json']),(main.BimPartialModelContract,['test_models_share_schema_and_differ_in_content','test_counts_by_class_are_recomputed_from_the_guids','test_structure_holds_pilotis_and_architecture_holds_windows','test_slabs_are_shared_between_architecture_and_structure_by_global_id'])):
+    for name in names:
+        subject=cls(name);subject.api=api;subject.model=source;subject.items=items;functions.append(getattr(subject,name))
+assert len(functions)==8;start=time.monotonic();result=unittest.TextTestRunner(verbosity=2).run(unittest.TestSuite(unittest.FunctionTestCase(fn)for fn in functions));after=hashes();out={'pass':result.wasSuccessful()and not result.skipped and before==after,'tests':result.testsRun,'failures':[(str(t),msg)for t,msg in result.failures],'errors':[(str(t),msg)for t,msg in result.errors],'skipped':result.skipped,'before':before,'after':after,'stable':before==after,'seconds':time.monotonic()-start,'scope':'Actual eight source-only production test bodies with explicit source bindings; unrelated shared ModelCase whole-building geometry setup is not invoked. Full standard suite remains separately required.'};(ticket/'🗑️generated'/('source-completeness-'+sys.argv[1]+'-r95.json')).write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf8');print('[DEBUG] '+json.dumps({k:v for k,v in out.items()if k not in ('before','after','failures','errors')}));raise SystemExit(not out['pass'])

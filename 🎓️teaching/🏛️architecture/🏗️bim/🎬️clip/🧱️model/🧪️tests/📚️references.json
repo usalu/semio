@@ -1,0 +1,84 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "cases": [
+    {
+      "id": "compact-page",
+      "source": "SAB2024-p99",
+      "accepted": true
+    },
+    {
+      "id": "compact-multiple",
+      "source": "SAB2024-p99; CSIC2022-Annex6",
+      "accepted": true
+    },
+    {
+      "id": "qualified-datum",
+      "source": "SAB2024-p99; CSIC2022 Annex6 cellar finished datum leader",
+      "accepted": true
+    },
+    {
+      "id": "qualified-document",
+      "source": "SAB2024-p187-p188; H1(12)112 Electro-Cable5mm graphite-gray specification/invoice",
+      "accepted": true
+    },
+    {
+      "id": "official-leaflet",
+      "source": "CMN2021",
+      "accepted": true
+    },
+    {
+      "id": "supplied-drawing",
+      "source": "Author46 office orthogonal tile hatch",
+      "accepted": true
+    },
+    {
+      "id": "original-publication",
+      "source": "ArchitectureVivante1931-plate34; FLC-L2-17-176/SAB2024-p236",
+      "accepted": true
+    },
+    {
+      "id": "explicit-url",
+      "source": "https://example.org/reference.pdf",
+      "accepted": true
+    },
+    {
+      "id": "internal-teaching",
+      "source": "teaching-services-original",
+      "accepted": true
+    },
+    {
+      "id": "unknown-source",
+      "source": "A random unregistered book",
+      "accepted": false
+    },
+    {
+      "id": "empty",
+      "source": "",
+      "accepted": false
+    },
+    {
+      "id": "unanchored",
+      "source": "unqualified text SAB2024-p99",
+      "accepted": false
+    },
+    {
+      "id": "newline",
+      "source": "SAB2024-p99\nforged line",
+      "accepted": false
+    },
+    {
+      "id": "partial-book",
+      "source": "SAB202",
+      "accepted": false
+    },
+    {
+      "id": "invalid-url",
+      "source": "https://invalid source.pdf",
+      "accepted": false
+    }
+  ]
+}

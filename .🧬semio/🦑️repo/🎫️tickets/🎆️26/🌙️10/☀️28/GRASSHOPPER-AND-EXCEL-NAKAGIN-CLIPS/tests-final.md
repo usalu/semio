@@ -1,5 +1,7 @@
 # Test Run Report: Grasshopper, Excel and Nakagin Clips
 
+Historical validation snapshot: this record predates the completed physical-casing, 33-pose, window-unit, fixture and renderer integration. It is retained as chronology and does not certify the current source. See [current remodel status](remodel-summary.md) and [architecture gate](final-architecture-gate.md) for current acceptance.
+
 Run date: 2026-10-28 to 2026-10-29 (local time, Windows 11). Tests were run only; no source files were edited.
 Logs and exit codes: `🗑️generated/tests/` in this ticket. Temp dirs: `🗑️generated/tests/tmp/<suite>`.
 Interpreter: `.🧬semio/🎓️teaching/⚡️cache/python/Scripts/python.exe` with `PYTHONIOENCODING=utf-8`, `SEMIO_REPO_BINARY` set to the repo-shim.cmd of ticket CONCRETE-OPTIMIZATION-CLIP-EXAMPLES.

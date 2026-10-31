@@ -1,0 +1,132 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "floor",
+    "uncertainty_m",
+    "bowls",
+    "table",
+    "doors",
+    "body_diameter",
+    "body_height",
+    "routes",
+    "patio_glazing",
+    "patio_door",
+    "spaces",
+    "tap_cross_arms",
+    "divider_junction"
+  ],
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "floor": {
+      "type": "number"
+    },
+    "uncertainty_m": {
+      "type": "number"
+    },
+    "bowls": {
+      "type": "array"
+    },
+    "table": {
+      "type": "object"
+    },
+    "doors": {
+      "type": "array"
+    },
+    "body_diameter": {
+      "type": "number"
+    },
+    "body_height": {
+      "type": "number"
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "points"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "diameter": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "patio_glazing": {
+      "type": "array"
+    },
+    "patio_door": {
+      "type": "object"
+    },
+    "spaces": {
+      "type": "object"
+    },
+    "tap_cross_arms": {
+      "type": "integer"
+    },
+    "divider_junction": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "z0",
+          "z1",
+          "face_y",
+          "axis_x",
+          "width",
+          "main_y"
+        ],
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "z0": {
+            "type": "number"
+          },
+          "z1": {
+            "type": "number"
+          },
+          "face_y": {
+            "type": "number"
+          },
+          "axis_x": {
+            "type": "number"
+          },
+          "width": {
+            "type": "number"
+          },
+          "main_y": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

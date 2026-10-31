@@ -289,5 +289,6 @@
       "line",
       "segs"
     ]
-  }
+  },
+  "terrain_elevation": 0
 }

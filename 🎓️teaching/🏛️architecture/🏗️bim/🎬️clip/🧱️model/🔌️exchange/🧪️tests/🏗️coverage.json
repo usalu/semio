@@ -1,0 +1,39 @@
+{
+  "physical_classes": [
+    "IfcFooting",
+    "IfcRailing"
+  ],
+  "languages": [
+    "en",
+    "de"
+  ],
+  "attributes": 9,
+  "tolerance": 1e-7,
+  "void_class": "IfcOpeningElement",
+  "void_relationship": "IfcRelVoidsElement",
+  "opening_witnesses": [
+    "OP-S",
+    "OP-D-SHARED-BATH-SON",
+    "OP-FLUE-ROOF",
+    "OP-KITCHEN-PATIO-FRAME"
+  ],
+  "identity": {
+    "namespace": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+    "seed": "semio:villa-savoye:",
+    "alphabet": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$",
+    "groups": [
+      "types",
+      "materials",
+      "elements",
+      "spaces",
+      "storeys",
+      "relations"
+    ],
+    "roots": [
+      "project",
+      "site",
+      "building"
+    ]
+  },
+  "void_spatial_containment": false
+}

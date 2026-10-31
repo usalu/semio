@@ -1,0 +1,28 @@
+{
+  "axis_x": 9.5,
+  "y_interval": [
+    16.889,
+    8.23
+  ],
+  "rail_z": [
+    [
+      2.265,
+      3.98
+    ],
+    [
+      2.615,
+      4.33
+    ]
+  ],
+  "post_stations": [
+    0,
+    0.2,
+    0.4,
+    0.6,
+    0.8,
+    1
+  ],
+  "bearing_owner": "GUARD-RM-2",
+  "bearing_role": "original_arrival_upstand",
+  "terminal_inset": 0.0175
+}

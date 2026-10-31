@@ -1,0 +1,188 @@
+{
+  "model": {
+    "revision": 1,
+    "project": {
+      "tag": "PROJECT",
+      "guid": "GUID-PROJECT"
+    },
+    "site": {
+      "tag": "SITE",
+      "guid": "GUID-SITE"
+    },
+    "building": {
+      "tag": "BUILDING",
+      "guid": "GUID-BUILDING"
+    },
+    "elements": [
+      {
+        "tag": "SERVICE",
+        "guid": "GUID-SERVICE",
+        "class": "IfcLightFixture",
+        "geometry": {
+          "height": 3
+        }
+      },
+      {
+        "tag": "SOLID",
+        "guid": "GUID-SOLID",
+        "class": "IfcBuildingElementProxy",
+        "geometry": {
+          "height": 2
+        }
+      }
+    ],
+    "types": [
+      {
+        "tag": "TYPE",
+        "guid": "GUID-TYPE",
+        "profile": {
+          "width": 0.22
+        }
+      }
+    ],
+    "materials": [
+      {
+        "tag": "MAT",
+        "guid": "GUID-MAT",
+        "density": 24
+      }
+    ],
+    "spaces": [
+      {
+        "tag": "ROOM",
+        "guid": "GUID-ROOM",
+        "name": {
+          "en": "Room",
+          "de": "Raum"
+        }
+      }
+    ],
+    "storeys": [],
+    "car": {
+      "width": 1.8
+    },
+    "demo_events": [
+      {
+        "depth": 0.09
+      }
+    ],
+    "source": {
+      "basis": "assumed"
+    }
+  },
+  "body": {
+    "parts": [
+      {
+        "outline": [
+          [
+            0,
+            0
+          ],
+          [
+            1,
+            0
+          ],
+          [
+            1,
+            2e-18
+          ],
+          [
+            0,
+            2e-18
+          ]
+        ],
+        "holes": [],
+        "material": "MAT"
+      }
+    ]
+  },
+  "changes": [
+    {
+      "path": [
+        "materials",
+        0,
+        "density"
+      ],
+      "value": 26
+    },
+    {
+      "path": [
+        "types",
+        0,
+        "profile",
+        "width"
+      ],
+      "value": 0.24
+    },
+    {
+      "path": [
+        "spaces",
+        0,
+        "name",
+        "en"
+      ],
+      "value": "Other"
+    },
+    {
+      "path": [
+        "car",
+        "width"
+      ],
+      "value": 2
+    },
+    {
+      "path": [
+        "demo_events",
+        0,
+        "depth"
+      ],
+      "value": 0.14
+    },
+    {
+      "path": [
+        "source",
+        "basis"
+      ],
+      "value": "inferred"
+    },
+    {
+      "path": [
+        "elements",
+        0,
+        "geometry",
+        "height"
+      ],
+      "value": 4
+    }
+  ],
+  "revisions": [
+    1,
+    2,
+    1,
+    3,
+    2
+  ],
+  "expected_builds": 4,
+  "families": [
+    {
+      "public": "building_geometry",
+      "producer": "_building_geometry_uncached",
+      "key": null
+    },
+    {
+      "public": "service_geometry",
+      "producer": "_service",
+      "key": "SERVICE"
+    },
+    {
+      "public": "solid_geometry",
+      "producer": "_solid_geometry",
+      "key": "SOLID"
+    },
+    {
+      "public": "quantities",
+      "producer": "_quantities_uncached",
+      "key": "SERVICE"
+    }
+  ]
+}

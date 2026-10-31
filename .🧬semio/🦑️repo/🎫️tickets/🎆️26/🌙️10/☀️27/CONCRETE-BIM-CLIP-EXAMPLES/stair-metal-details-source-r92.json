@@ -1,0 +1,899 @@
+{
+  "version": 1,
+  "source": {
+    "pages": [
+      141,
+      191,
+      192
+    ],
+    "primary_account": "FLC H1(12)097-1",
+    "original_detail": "FLC19487 tread doublelines; StuttgartFLC07663 design precedent, executed flush-front qualificationSAB141",
+    "images": [
+      "🗑️generated/book-figures-144-r92.jpg",
+      "🗑️generated/book-figures-25-r92.jpg"
+    ]
+  },
+  "attested": {
+    "supplied_nosings": 52,
+    "angle_profile": "LD40.25.4",
+    "horizontal_leg_m": 0.04,
+    "vertical_leg_m": 0.025,
+    "metal_thickness_m": 0.004,
+    "executed_front": "Flush tread/riser; do not reproduce proposed15mm overhang",
+    "tread_width_author_m": 0.85
+  },
+  "current": {
+    "tread_components": 49,
+    "stairs": {
+      "ST-GF": 18,
+      "ST-FR": 18,
+      "ST-CG": 13
+    },
+    "metal_nosings_present": true,
+    "actual_front_width_nominal_m": 0.81,
+    "arrival_parts": 0,
+    "mapped_installed_reconstruction_nosings": 49,
+    "supplied_pieces_without_mapped_location": 3
+  },
+  "unknown": [
+    "Individual mapping of all52 supplied pieces",
+    "Whether extra supplied pieces correspond to arrivals, split pieces or other locations; no alternative is asserted",
+    "Original metal alloy/coating/finish and attachment",
+    "Current81cm versus author85cm tread width reconciliation"
+  ],
+  "candidate_schedule": [
+    {
+      "stair": "ST-GF",
+      "tread_index": 0,
+      "front_edge": [
+        [
+          4.907144828882639,
+          9.100220372262651
+        ],
+        [
+          4.907144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 0.176111111,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 1,
+      "front_edge": [
+        [
+          5.157144828882639,
+          9.100220372262651
+        ],
+        [
+          5.157144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 0.352222222,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 2,
+      "front_edge": [
+        [
+          5.407144828882639,
+          9.100220372262651
+        ],
+        [
+          5.407144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 0.528333333,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 3,
+      "front_edge": [
+        [
+          5.657144828882639,
+          9.100220372262651
+        ],
+        [
+          5.657144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 0.704444444,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 4,
+      "front_edge": [
+        [
+          5.907144828882639,
+          9.100220372262651
+        ],
+        [
+          5.907144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 0.880555556,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 5,
+      "front_edge": [
+        [
+          6.157144828882639,
+          9.100220372262651
+        ],
+        [
+          6.157144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 1.056666667,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 6,
+      "front_edge": [
+        [
+          6.407144829,
+          9.100220372
+        ],
+        [
+          6.407144829,
+          8.290220372
+        ]
+      ],
+      "world_top_Z": 1.232777778,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 7,
+      "front_edge": [
+        [
+          6.447144829,
+          9.11093834
+        ],
+        [
+          6.852144829,
+          8.409457763
+        ]
+      ],
+      "world_top_Z": 1.408888889,
+      "current_edge_length_m": 0.8099999999433661,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 8,
+      "front_edge": [
+        [
+          6.476426861,
+          9.140220372
+        ],
+        [
+          7.177907438,
+          8.735220372
+        ]
+      ],
+      "world_top_Z": 1.585,
+      "current_edge_length_m": 0.8099999999433656,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 9,
+      "front_edge": [
+        [
+          6.487144829,
+          9.180220372
+        ],
+        [
+          7.297144829,
+          9.180220372
+        ]
+      ],
+      "world_top_Z": 1.761111111,
+      "current_edge_length_m": 0.8099999999999996,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 10,
+      "front_edge": [
+        [
+          6.476426861,
+          9.220220372
+        ],
+        [
+          7.177907438,
+          9.625220372
+        ]
+      ],
+      "world_top_Z": 1.937222222,
+      "current_edge_length_m": 0.8099999999433656,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 11,
+      "front_edge": [
+        [
+          6.447144829,
+          9.249502405
+        ],
+        [
+          6.852144829,
+          9.950982982
+        ]
+      ],
+      "world_top_Z": 2.113333333,
+      "current_edge_length_m": 0.8099999999433661,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 12,
+      "front_edge": [
+        [
+          6.407144828882639,
+          9.260220372262651
+        ],
+        [
+          6.407144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 2.289444444,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 13,
+      "front_edge": [
+        [
+          6.157144828882639,
+          9.260220372262651
+        ],
+        [
+          6.157144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 2.465555556,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 14,
+      "front_edge": [
+        [
+          5.907144828882639,
+          9.260220372262651
+        ],
+        [
+          5.907144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 2.641666667,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 15,
+      "front_edge": [
+        [
+          5.657144828882639,
+          9.260220372262651
+        ],
+        [
+          5.657144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 2.817777778,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 16,
+      "front_edge": [
+        [
+          5.407144828882639,
+          9.260220372262651
+        ],
+        [
+          5.407144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 2.993888889,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-GF",
+      "tread_index": 17,
+      "front_edge": [
+        [
+          5.157144828882639,
+          9.260220372262651
+        ],
+        [
+          5.157144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 3.17,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 0,
+      "front_edge": [
+        [
+          4.907144828882639,
+          9.100220372262651
+        ],
+        [
+          4.907144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 3.360555556,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 1,
+      "front_edge": [
+        [
+          5.157144828882639,
+          9.100220372262651
+        ],
+        [
+          5.157144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 3.551111111,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 2,
+      "front_edge": [
+        [
+          5.407144828882639,
+          9.100220372262651
+        ],
+        [
+          5.407144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 3.741666667,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 3,
+      "front_edge": [
+        [
+          5.657144828882639,
+          9.100220372262651
+        ],
+        [
+          5.657144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 3.932222222,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 4,
+      "front_edge": [
+        [
+          5.907144828882639,
+          9.100220372262651
+        ],
+        [
+          5.907144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 4.122777778,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 5,
+      "front_edge": [
+        [
+          6.157144828882639,
+          9.100220372262651
+        ],
+        [
+          6.157144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": 4.313333333,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 6,
+      "front_edge": [
+        [
+          6.407144829,
+          9.100220372
+        ],
+        [
+          6.407144829,
+          8.290220372
+        ]
+      ],
+      "world_top_Z": 4.503888889,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 7,
+      "front_edge": [
+        [
+          6.447144829,
+          9.11093834
+        ],
+        [
+          6.852144829,
+          8.409457763
+        ]
+      ],
+      "world_top_Z": 4.694444444,
+      "current_edge_length_m": 0.8099999999433661,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 8,
+      "front_edge": [
+        [
+          6.476426861,
+          9.140220372
+        ],
+        [
+          7.177907438,
+          8.735220372
+        ]
+      ],
+      "world_top_Z": 4.885,
+      "current_edge_length_m": 0.8099999999433656,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 9,
+      "front_edge": [
+        [
+          6.487144829,
+          9.180220372
+        ],
+        [
+          7.297144829,
+          9.180220372
+        ]
+      ],
+      "world_top_Z": 5.075555555999999,
+      "current_edge_length_m": 0.8099999999999996,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 10,
+      "front_edge": [
+        [
+          6.476426861,
+          9.220220372
+        ],
+        [
+          7.177907438,
+          9.625220372
+        ]
+      ],
+      "world_top_Z": 5.266111111,
+      "current_edge_length_m": 0.8099999999433656,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 11,
+      "front_edge": [
+        [
+          6.447144829,
+          9.249502405
+        ],
+        [
+          6.852144829,
+          9.950982982
+        ]
+      ],
+      "world_top_Z": 5.456666667,
+      "current_edge_length_m": 0.8099999999433661,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 12,
+      "front_edge": [
+        [
+          6.407144828882639,
+          9.260220372262651
+        ],
+        [
+          6.407144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 5.647222222,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 13,
+      "front_edge": [
+        [
+          6.157144828882639,
+          9.260220372262651
+        ],
+        [
+          6.157144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 5.8377777779999995,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 14,
+      "front_edge": [
+        [
+          5.907144828882639,
+          9.260220372262651
+        ],
+        [
+          5.907144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 6.028333333,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 15,
+      "front_edge": [
+        [
+          5.657144828882639,
+          9.260220372262651
+        ],
+        [
+          5.657144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 6.2188888890000005,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 16,
+      "front_edge": [
+        [
+          5.407144828882639,
+          9.260220372262651
+        ],
+        [
+          5.407144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 6.409444444,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-FR",
+      "tread_index": 17,
+      "front_edge": [
+        [
+          5.157144828882639,
+          9.260220372262651
+        ],
+        [
+          5.157144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 6.6,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 0,
+      "front_edge": [
+        [
+          5.717144828882638,
+          9.100220372262651
+        ],
+        [
+          5.717144828882638,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": -2.215384615,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 1,
+      "front_edge": [
+        [
+          5.947144828882639,
+          9.100220372262651
+        ],
+        [
+          5.947144828882639,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": -2.030769231,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 2,
+      "front_edge": [
+        [
+          6.177144828882638,
+          9.100220372262651
+        ],
+        [
+          6.177144828882638,
+          8.29022037226265
+        ]
+      ],
+      "world_top_Z": -1.846153846,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 3,
+      "front_edge": [
+        [
+          6.407144829,
+          9.100220372
+        ],
+        [
+          6.407144829,
+          8.290220372
+        ]
+      ],
+      "world_top_Z": -1.6615384619999998,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 4,
+      "front_edge": [
+        [
+          6.441855528,
+          9.108142863
+        ],
+        [
+          6.793301357,
+          8.37835808
+        ]
+      ],
+      "world_top_Z": -1.476923077,
+      "current_edge_length_m": 0.8100000001357122,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 5,
+      "front_edge": [
+        [
+          6.469691347,
+          9.130341188
+        ],
+        [
+          7.102974848,
+          8.625314449
+        ]
+      ],
+      "world_top_Z": -1.2923076919999998,
+      "current_edge_length_m": 0.8099999998418458,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 6,
+      "front_edge": [
+        [
+          6.485139062,
+          9.162418698
+        ],
+        [
+          7.274830671,
+          8.982176741
+        ]
+      ],
+      "world_top_Z": -1.1076923079999998,
+      "current_edge_length_m": 0.8100000002396289,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 7,
+      "front_edge": [
+        [
+          6.485139062,
+          9.198022047
+        ],
+        [
+          7.274830671,
+          9.378264003
+        ]
+      ],
+      "world_top_Z": -0.923076923,
+      "current_edge_length_m": 0.8100000000171079,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 8,
+      "front_edge": [
+        [
+          6.469691347,
+          9.230099556
+        ],
+        [
+          7.102974848,
+          9.735126296
+        ]
+      ],
+      "world_top_Z": -0.7384615379999999,
+      "current_edge_length_m": 0.8100000004653356,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 9,
+      "front_edge": [
+        [
+          6.441855528,
+          9.252297882
+        ],
+        [
+          6.793301357,
+          9.982082665
+        ]
+      ],
+      "world_top_Z": -0.5538461539999999,
+      "current_edge_length_m": 0.8100000001357122,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 10,
+      "front_edge": [
+        [
+          6.407144828882639,
+          9.260220372262651
+        ],
+        [
+          6.407144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": -0.36923076900000007,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 11,
+      "front_edge": [
+        [
+          6.177144828882639,
+          9.260220372262651
+        ],
+        [
+          6.177144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": -0.18461538499999985,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    },
+    {
+      "stair": "ST-CG",
+      "tread_index": 12,
+      "front_edge": [
+        [
+          5.947144828882639,
+          9.260220372262651
+        ],
+        [
+          5.947144828882639,
+          10.070220372262652
+        ]
+      ],
+      "world_top_Z": 0,
+      "current_edge_length_m": 0.8100000000000005,
+      "placement_basis": "Current authored ascending-tread boundary candidate, not individually measured original nosing"
+    }
+  ],
+  "acceptance": [
+    "Add real L-shaped owned metal with flushfront profile, not merely black painted tread line",
+    "Partition tile/metal occupied material exactly; do not double-own wearing volume",
+    "Preserve actual stair/support/door paths pending independent source correction",
+    "Do not invent three positions or52treads solely to match supplied-piece count"
+  ],
+  "central_tube": {
+    "presence": "Represented separately by TUBE-STAIR-CENTRAL; source diameter/black identity with bounded inferred registration",
+    "diameter_m": 0.055,
+    "colour": "Black",
+    "source": "SAB141/145; FLC H1(12)097-1",
+    "distinguished_from": [
+      "STAIR-PA11×11cm RC support",
+      "35mm perimeter stair handrails",
+      "SOIL-STAIR130mm service drain"
+    ],
+    "axis": "(6.30,9.18)m±.15m photographic inner-eye inference; deliberately displaced from curve centre, not an original measured coordinate",
+    "terminal_heights": "−2.40m actual cellar-finish bearing to6.34m adjacent SL-R region soffit; inferred continuous terminal convention, not secured original full-length shaft",
+    "wall_thickness": "2mm inferred hollow fabrication gauge"
+  }
+}

@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cells",
+    "stringer",
+    "query",
+    "overlap"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cells": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "part",
+          "volume"
+        ],
+        "properties": {
+          "part": {
+            "type": "object"
+          },
+          "volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "stringer": {
+      "type": "object",
+      "required": [
+        "tag",
+        "volume"
+      ],
+      "properties": {
+        "tag": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "query": {
+      "type": "object",
+      "required": [
+        "tag",
+        "volume"
+      ],
+      "properties": {
+        "tag": {
+          "type": "string"
+        },
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "overlap": {
+      "type": "object",
+      "required": [
+        "path",
+        "landing",
+        "width",
+        "thickness",
+        "finish",
+        "volume"
+      ],
+      "properties": {
+        "path": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "landing": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "thickness": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "finish": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    }
+  }
+}

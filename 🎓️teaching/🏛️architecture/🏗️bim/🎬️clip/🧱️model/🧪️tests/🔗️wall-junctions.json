@@ -1,0 +1,240 @@
+{
+  "height": 3,
+  "layers": {
+    "A": [
+      {
+        "id": "skin-a",
+        "material": "MAT-PLASTER",
+        "thickness": 0.02
+      },
+      {
+        "id": "core",
+        "material": "MAT-BRICK",
+        "thickness": 0.16
+      },
+      {
+        "id": "skin-b",
+        "material": "MAT-PLASTER",
+        "thickness": 0.02
+      }
+    ],
+    "B": [
+      {
+        "id": "skin-a",
+        "material": "MAT-PLASTER",
+        "thickness": 0.01
+      },
+      {
+        "id": "core",
+        "material": "MAT-BRICK",
+        "thickness": 0.08
+      },
+      {
+        "id": "skin-b",
+        "material": "MAT-PLASTER",
+        "thickness": 0.01
+      }
+    ]
+  },
+  "priorities": {
+    "A": [
+      30,
+      100,
+      30
+    ],
+    "B": [
+      20,
+      80,
+      20
+    ]
+  },
+  "cases": [
+    {
+      "id": "T",
+      "paths": {
+        "A": [
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            0
+          ]
+        ],
+        "B": [
+          [
+            2,
+            -2
+          ],
+          [
+            2,
+            0
+          ]
+        ]
+      },
+      "sides": {
+        "A": 1,
+        "B": 1
+      },
+      "connection_types": {
+        "A": "ATPATH",
+        "B": "ATEND"
+      },
+      "bounds": [
+        1.8,
+        -0.2,
+        2.2,
+        0.2
+      ],
+      "expected_volume": {
+        "A": 2.3952,
+        "B": 0.5748
+      },
+      "expected_union": 2.97,
+      "expected_raw_overlap": 0.03
+    },
+    {
+      "id": "L",
+      "paths": {
+        "A": [
+          [
+            0,
+            0
+          ],
+          [
+            4,
+            0
+          ]
+        ],
+        "B": [
+          [
+            4,
+            0
+          ],
+          [
+            4,
+            2
+          ]
+        ]
+      },
+      "sides": {
+        "A": 1,
+        "B": 1
+      },
+      "connection_types": {
+        "A": "ATEND",
+        "B": "ATSTART"
+      },
+      "bounds": [
+        3.8,
+        -0.2,
+        4.2,
+        0.2
+      ],
+      "expected_volume": {
+        "A": 2.3976,
+        "B": 0.5874
+      },
+      "expected_union": 2.985,
+      "expected_raw_overlap": 0.015
+    },
+    {
+      "id": "RotatedT",
+      "paths": {
+        "A": [
+          [
+            0,
+            0
+          ],
+          [
+            2.4,
+            3.2
+          ]
+        ],
+        "B": [
+          [
+            2.8,
+            0.4
+          ],
+          [
+            1.2,
+            1.6
+          ]
+        ]
+      },
+      "sides": {
+        "A": 1,
+        "B": 1
+      },
+      "connection_types": {
+        "A": "ATPATH",
+        "B": "ATEND"
+      },
+      "bounds": [
+        0.9,
+        1.3,
+        1.5,
+        1.9
+      ],
+      "expected_volume": {
+        "A": 2.3952,
+        "B": 0.5748
+      },
+      "expected_union": 2.97,
+      "expected_raw_overlap": 0.03
+    },
+    {
+      "id": "ReversedT",
+      "paths": {
+        "A": [
+          [
+            4,
+            0
+          ],
+          [
+            0,
+            0
+          ]
+        ],
+        "B": [
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            -2
+          ]
+        ]
+      },
+      "sides": {
+        "A": -1,
+        "B": -1
+      },
+      "connection_types": {
+        "A": "ATPATH",
+        "B": "ATSTART"
+      },
+      "bounds": [
+        1.8,
+        -0.2,
+        2.2,
+        0.2
+      ],
+      "expected_volume": {
+        "A": 2.3952,
+        "B": 0.5748
+      },
+      "expected_union": 2.97,
+      "expected_raw_overlap": 0.03
+    },
+    {"id":"PolylineT","paths":{"A":[[0,0],[2,0],[4,0]],"B":[[2,-2],[2,0]]},"sides":{"A":1,"B":1},"connection_types":{"A":"ATPATH","B":"ATEND"},"bounds":[1.8,-0.2,2.2,0.2],"expected_volume":{"A":2.3952,"B":0.5748},"expected_union":2.97,"expected_raw_overlap":0.03}
+  ],
+  "coating_material": "MAT-OIL-BLUE-PLASTER",
+  "positive_overlap_width": 2e-09,
+  "languages": [
+    "en",
+    "de"
+  ]
+}

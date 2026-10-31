@@ -1,0 +1,31 @@
+{
+  "candidate": 243,
+  "host": "W-WC-CHAUFFEUR-CURVE",
+  "join_point": [
+    14.808410012765632,
+    17.49503872370089,
+    0
+  ],
+  "host_edge_other_point": [
+    14.818336852225592,
+    17.49381172793794,
+    0
+  ],
+  "join_plane_normal": [
+    0.12267034727060291,
+    0.9924474726153065,
+    0
+  ],
+  "actual_host_plane_normal": [
+    -0.12267034727047377,
+    -0.9924474726153226,
+    0
+  ],
+  "exact_binary_input_dot_n_BminusA": {
+    "numerator": "21212709100919563188738047383909507285273095500450541900056207606524244131840",
+    "denominator": "16296287810675888690147565507275025288411747149327490005089123594835050398106693649467179008",
+    "value": 1.301689645357323e-15,
+    "nonzero": true
+  },
+  "interpretation": "Independent normalized bisector and true host cap are different exact planes despite shared corner. Reuse actual host cap construction plane; do not delete residual facets or snap sourcegeometry."
+}

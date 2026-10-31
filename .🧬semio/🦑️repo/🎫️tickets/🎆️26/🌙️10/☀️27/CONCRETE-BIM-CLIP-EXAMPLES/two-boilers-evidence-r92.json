@@ -1,0 +1,69 @@
+{
+  "title": "Early Two-Ideal-Boiler Evidence and Chronology R92",
+  "target_state": "original-completed-1930-1931",
+  "observation": {
+    "date": "1932-05-31",
+    "report_author": "Compagnie de Chauffage Central par le Vide",
+    "archive_refs": [
+      "FLC H1(12)102",
+      "FLC H1(12)147"
+    ],
+    "accessible_content": "SAB2024 p231 narrative explicitly cites report; original report sheets not directly inspected",
+    "count": 2,
+    "brand": "Idéal",
+    "capacities_as_printed": [
+      44800,
+      16800
+    ],
+    "unit_as_printed": "calorías; per-hour unit not established from this reproduction",
+    "relationship": "not combined",
+    "smoke_route": "Both sheet-metal smoke conduits, reported four elbows, connected to one cement chimney stated20cm diameter/12m height; elbow distribution and diameter meaning not resolved"
+  },
+  "source_grade": {
+    "count_by_1932": "Strong explicit archival-report attribution in scholarly2024 source, but primary report not directly read",
+    "presence_in_1930_1931": "Plausible early installation, not securely established by this dated report alone",
+    "distinct_original_positions": "Not secured",
+    "functions_per_unit": "Unknown; do not invent heating vs domestic-hot-water split",
+    "shape_or_manufacturer_dimensions": "Not recovered"
+  },
+  "drawings_reviewed": [
+    {
+      "ref": "FLC U1(14)063",
+      "date": "1965-03-30",
+      "role": "Trace dorigine basement+ground heating plan, book230",
+      "result": "Retained raster shows plant/network cluster but cannot securely separate/read two distinct boiler bodies or register a second independent footprint; do not infercountfromunreadablemarks."
+    },
+    {
+      "ref": "FLC U1(14)064",
+      "date": "1965-03-30",
+      "role": "First+roof heating plan, book231",
+      "result": "No distinct cellarplant location secured from upperfloor network."
+    },
+    {
+      "ref": "FLC U1(14)065",
+      "date": "1965-03-30",
+      "role": "Original-trace heating axonometry, book232",
+      "result": "Network connectivity only; no readable independentlylocated secondboiler."
+    },
+    {
+      "ref": "SAB2024 author basement plan44",
+      "result": "No separately identifiable labelled pair of plant footprints; cannotassignsecondlocation."
+    }
+  ],
+  "chronology_cautions": [
+    "1965 original-trace drawings have known discrepancies: kitchen radiator misplaced and originalparentsbath radiator omitted, perbook230.",
+    "1934 alterations/increased radiator sections documentedp233; a later early-state observation cannot automaticallybe1930geometry.",
+    "One boiler-base/conduit singular construction accountp234 doesnotexclude anotherunit but doesnotlocateone."
+  ],
+  "current_model": {
+    "tag": "BL-1",
+    "represented_count": 1,
+    "coverage": "One physical boiler only; do not call the1932 two-unit record represented by a passing singleboiler test."
+  },
+  "proposed_action": {
+    "physical_second_placement": "Do not add arbitrary secondphysicalboiler. No credible secondXY region recovered.",
+    "evidence_registry": "Record unlocated secondearlyunit and explicit1932date/count/capacity, outside occupiedgeometry until location/chronology secured.",
+    "next_primary_evidence": "Read FLC H1(12)102/147 report sheets and early Ferrari plantinstallation/budget material; a labelled primary cellarplan/section/photo is needed for secondlocation.",
+    "completion_language": "1930–31 model cannot be claimed to exhaust all early plant evidence; distinguish unresolved1932unit from a provenmissing1930placedasset."
+  }
+}

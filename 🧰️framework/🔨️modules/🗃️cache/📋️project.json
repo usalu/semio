@@ -1,0 +1,11 @@
+{
+  "name":"@semio-tech/framework-cache",
+  "targets":{
+    "test-contract":{
+      "executor":"repo:script","cache":true,
+      "inputs":["default","^default","{projectRoot}/**/*","sharedGlobals"],
+      "outputs":[],"dependsOn":[],
+      "options":{"cwd":"🧰️framework/🔨️modules/🗃️cache","command":"repo ./📜️script.ts test contract","forwardAllArgs":true}
+    }
+  }
+}

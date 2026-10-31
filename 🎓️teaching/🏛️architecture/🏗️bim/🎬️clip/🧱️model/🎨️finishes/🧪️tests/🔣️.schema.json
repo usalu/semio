@@ -1,0 +1,271 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "version",
+    "source",
+    "wall",
+    "opening",
+    "layers",
+    "material",
+    "region",
+    "expected",
+    "invalid",
+    "skirting",
+    "original_faces",
+    "original_treatments",
+    "uniform_appearance",
+    "native_property_set"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "wall": {
+      "type": "object",
+      "required": [
+        "tag",
+        "path",
+        "base",
+        "top",
+        "thickness"
+      ]
+    },
+    "opening": {
+      "type": "object",
+      "required": [
+        "tag",
+        "start",
+        "end",
+        "sill",
+        "head"
+      ]
+    },
+    "layers": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "material",
+          "thickness"
+        ]
+      }
+    },
+    "material": {
+      "type": "object",
+      "required": [
+        "tag",
+        "name",
+        "surface_finish"
+      ]
+    },
+    "region": {
+      "type": "object",
+      "required": [
+        "tag",
+        "layer",
+        "face",
+        "substrate",
+        "material",
+        "start",
+        "end",
+        "from",
+        "to",
+        "basis",
+        "source"
+      ]
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "volume",
+        "substrate_volume",
+        "face_area",
+        "normal",
+        "plane_offset"
+      ]
+    },
+    "invalid": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "overlap",
+          "wrong_layer",
+          "wrong_substrate",
+          "unknown_material",
+          "outside_station",
+          "inverted_height"
+        ]
+      },
+      "minItems": 6
+    },
+    "skirting": {
+      "type": "object",
+      "required": [
+        "section",
+        "cases",
+        "invalid",
+        "clips",
+        "source_joint",
+        "joints",
+        "positive_interface_mesh",
+        "support_domain",
+        "plane_provenance"
+      ],
+      "properties": {
+        "section": {
+          "type": "object",
+          "required": [
+            "thickness",
+            "height",
+            "round_radius",
+            "round_segments"
+          ],
+          "properties": {
+            "thickness": {
+              "const": 0.015
+            },
+            "height": {
+              "const": 0.09
+            },
+            "round_radius": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "round_segments": {
+              "type": "integer",
+              "minimum": 2
+            }
+          }
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "object",
+            "required": [
+              "start",
+              "end",
+              "normal"
+            ]
+          }
+        },
+        "invalid": {
+          "type": "array",
+          "minItems": 4
+        },
+        "clips": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "required": [
+              "planes",
+              "mode"
+            ]
+          }
+        },
+        "source_joint": {
+          "type": "object",
+          "required": [
+            "host",
+            "start",
+            "end",
+            "normal",
+            "station",
+            "positive_width"
+          ]
+        },
+        "joints": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "path"
+            ]
+          }
+        },
+        "positive_interface_mesh": {
+          "type": "object",
+          "required": [
+            "mesh",
+            "outline",
+            "z0",
+            "z1",
+            "material"
+          ]
+        },
+        "support_domain": {
+          "type": "object",
+          "required": [
+            "stock",
+            "planes",
+            "cell"
+          ]
+        },
+        "plane_provenance": {
+          "type": "object",
+          "required": [
+            "start",
+            "end",
+            "normal",
+            "extensions",
+            "plane",
+            "expected_intercept",
+            "back_clearance"
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "original_faces": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "host",
+          "family",
+          "binder",
+          "face",
+          "layer",
+          "source"
+        ]
+      }
+    },
+    "original_treatments": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "host",
+          "binder",
+          "scope"
+        ]
+      }
+    },
+    "uniform_appearance": {
+      "type": "object",
+      "required": [
+        "host",
+        "substrate",
+        "tag",
+        "rgb",
+        "family",
+        "binder"
+      ]
+    },
+    "native_property_set": {
+      "const": "Pset_OriginalSurfaceTreatment"
+    }
+  },
+  "additionalProperties": false
+}
+                                                                                                                

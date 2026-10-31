@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import importlib
+from copy import deepcopy
+from threading import RLock
 
 import numpy as np
 
 _PREFIX = "🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye."
+_regions = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🧩️regions.🐍️")
 _d = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _c = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.🧱️core.🐍️")
 _s = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.📏️sheet.🐍️")
@@ -18,6 +21,37 @@ WALL_FILL = _d.mix(INK, BACKGROUND, 0.12)
 GROUND_WALL_FILL = _d.mix(GOOD, BACKGROUND, 0.42)
 BUBBLE_GAP = 0.38
 BUBBLE_R = 0.13
+
+
+_RAMP_REGIONS_CACHE = {}
+_RAMP_REGIONS_LOCK = RLock()
+
+
+def ramp_plan_regions(flight,model,progress=None,cancelled=None):
+    """🛝️ Reuse exact owned material projections for two immutable source/producer snapshots."""
+    def check():
+        """🛑 Stop before cache reads and before publishing a completed projection."""
+        if cancelled and cancelled():
+            raise _regions.UnionCancelled('Ramp plan projection cancelled')
+    check();api=_c._model;key=(id(model),api._geometry_producers(),api._find,api.part_vertices,api.part_faces,_regions.producer_token(),ramp_plan_regions)
+    with _RAMP_REGIONS_LOCK:
+        bucket=_RAMP_REGIONS_CACHE.get(key)
+        if bucket is not None and bucket[0] is model:
+            result=bucket[1].get(flight['tag'])
+            if result is not None:
+                _RAMP_REGIONS_CACHE.pop(key);_RAMP_REGIONS_CACHE[key]=bucket
+                return deepcopy(result)
+    cells=api._ramp_owned_reference_parts(model,api._find(model,flight['tag']),progress=progress,cancel=cancelled)
+    result=_regions.mesh_projection(({'vertices':api.part_vertices(cell),'faces':api.part_faces(cell)} for cell in cells),progress=progress,cancelled=cancelled)
+    check()
+    with _RAMP_REGIONS_LOCK:
+        bucket=_RAMP_REGIONS_CACHE.pop(key,None)
+        if bucket is None or bucket[0] is not model:bucket=(model,{})
+        bucket[1][flight['tag']]=deepcopy(result)
+        while len(bucket[1])>32:bucket[1].pop(next(iter(bucket[1])))
+        _RAMP_REGIONS_CACHE[key]=bucket
+        while len(_RAMP_REGIONS_CACHE)>2:_RAMP_REGIONS_CACHE.pop(next(iter(_RAMP_REGIONS_CACHE)))
+    return result
 
 
 def quad(a, b, half: float) -> list:
@@ -99,16 +133,18 @@ def part_plan_outline(part, cut):
 
 def plan_part_rank(data):
     """🪵 Source floor finishes sit beneath fixtures, walls and ramps."""
-    return 1.0 if data["kind"] in ("parquet","tile","paving","grass_joint") else 3.5
+    return 1.0 if data["kind"] in ("parquet","tile","paving","grass_joint","flooring") or data.get("class")=="IfcCovering" and data.get("predefined_type")=="FLOORING" else 3.5
 
 
 def plan_part_visible(data, part, level, band, below, structural=False):
-    """🧱 Keep capped finish layers and buried structure only on their authored storey."""
+    """🧱 Show ramp wearing at occupied arrivals while retaining ordinary floor storey ownership."""
     elev,top = band
+    if data.get("class")=="IfcCovering" and data.get("predefined_type")=="FLOORING" and part.get("role","wearing")!="wearing":
+        return False
     if part["z0"] >= top-1e-6:
         return False
-    if plan_part_rank(data) == 1.0:
-        return data["storey"] == level
+    if plan_part_rank(data) == 1.0 or data.get("class")=="IfcCovering" and data.get("predefined_type")=="FLOORING":
+        return part["z1"] >= elev-1e-6 if data["kind"] == "ramp_finish" else data["storey"] == level
     return part["z1"] >= elev-1e-6 or structural and below and data["storey"] == level
 
 
@@ -201,7 +237,7 @@ class Plan(_s.SheetMixin):
         ``highlight`` / ``ghost`` take tags, IFC classes or kinds; ``highlight_colors`` maps a tag to its colour (default DATA); ``halo`` is the screen radius of the ring around lit pilotis.
         ``dims`` may contain ``"grid"`` and ``"overall"`` (chains on the top and right side); ``cuts`` is a list of section marks (``"salon"``, ``"ramp"``, ``"row:3"`` …).
         ``label_sides`` places grid bubbles; ``thumbnail`` drops labels, grid, dimensions and names. Returns a ``Sheet`` with ``parts[tag]``, ``at(x, y)``, ``to_screen(x, y)``."""
-        g = _c.geometry(model)
+        model, g = _c.geometry_context(model)
         if thumbnail:
             labels = grid = north = scalebar = ramp_arrow = False
             dims, cuts, names = (), (), False
@@ -220,7 +256,7 @@ class Plan(_s.SheetMixin):
         entries: list = []
         use = set(layers)
         w = 0.7 if thumbnail else 1.0
-        ctx = {"g": g, "view": view, "look": look, "level": level, "scale": scale, "w": w, "window": window, "bands": bands, "catalogue": catalogue, "cut_z": d.cut_z, "use": use, "below": below,
+        ctx = {"model": model, "g": g, "view": view, "look": look, "level": level, "scale": scale, "w": w, "window": window, "bands": bands, "catalogue": catalogue, "cut_z": d.cut_z, "use": use, "below": below,
                "put": lambda rank, tag, group, anchor=None, aliases=(): entries.append((rank, len(entries), tag, group, anchor, aliases)),
                "screen": lambda ring: [view(p[0], p[1], 0.0) for p in ring]}
         if use & {"architecture", "structure"}:
@@ -418,8 +454,6 @@ class Plan(_s.SheetMixin):
                 structural = "structure" in data["domains"]
                 if not set(data["domains"]).intersection(ctx["use"]):
                     continue
-                if not structural and kind != "stairs" and data["storey"] != ctx["level"]:
-                    continue
                 item = next((it for it in ctx["catalogue"] if it["tag"] == data["tag"]),None) or _s.pseudo(data["tag"],data["class"],kind,data["guid"])
                 group = _engine.VGroup()
                 for part in data["parts"]:
@@ -430,7 +464,9 @@ class Plan(_s.SheetMixin):
                         continue
                     ring = ctx["screen"](part_plan_outline(part,ctx["cut_z"]))
                     above = part["z0"] > ctx["cut_z"] or structural and part["z1"] < elev
-                    group.add(_d.polygon(ring,fill,0.08*opacity if above else 0.3*opacity),_d.polyline(ring,stroke,(W_HAIR if above else W_THIN)+bonus,0.45*opacity if above else opacity,closed=True,dash=0.05 if above else None))
+                    group.add(_d.polygon(ring,fill,0.08*opacity if above else 0.3*opacity))
+                    if not (data.get("class")=="IfcCovering" and data.get("predefined_type")=="FLOORING"):
+                        group.add(_d.polyline(ring,stroke,(W_HAIR if above else W_THIN)+bonus,0.45*opacity if above else opacity,closed=True,dash=0.05 if above else None))
                 if len(group.submobjects):
                     ctx["put"](plan_part_rank(data),data["tag"],group)
 
@@ -458,7 +494,7 @@ class Plan(_s.SheetMixin):
             ctx["put"](4.,item["tag"],group)
 
     def _plan_ramps(self, ctx, ramp_arrow):
-        """⏫ Ramp flights of the storey: outlined strips with an arrow in the rising direction and a dot at the low end; landings as outlines."""
+        """⏫ Ramp owned footprint unions with only actual boundary ink and an optional rising arrow."""
         g, view, look, level, w = ctx["g"], ctx["view"], ctx["look"], ctx["level"], ctx["w"]
         elev, top = ctx["bands"][level]
         for ramp in g["ramp"]["ramps"]:
@@ -468,8 +504,12 @@ class Plan(_s.SheetMixin):
                 if flight["z1"] <= elev + 1e-9 or flight["z0"] >= top - 1e-9:
                     continue
                 s, e = np.array(flight["start"], float), np.array(flight["end"], float)
-                strip = [view(*p,0.0) for p in _c._model.part_footprint(flight["parts"][0])]
-                shape = _engine.VGroup(_d.polygon(strip, fill, 0.1 * opacity, stroke, (W_THIN + bonus) * w, 0.9 * opacity))
+                regions = ramp_plan_regions(flight, ctx["model"], progress=ctx.get("progress"), cancelled=ctx.get("cancelled"))
+                shape = _engine.VGroup()
+                for region in regions:
+                    rings = [[view(*point,0.0) for point in ring] for ring in (region["outer"], *region["holes"])]
+                    shape.add(_d.region(rings, fill, 0.1 * opacity))
+                    shape.add(*[_d.polyline(ring, stroke, (W_THIN + bonus) * w, 0.9 * opacity, closed=True) for ring in rings])
                 if ramp_arrow:
                     a, b = view(*s, 0.0), view(*e, 0.0)
                     shape.add(_d.polyline([a, b], stroke, W_THIN * w, 0.9 * opacity))
@@ -495,9 +535,9 @@ class Plan(_s.SheetMixin):
             if item["kind"] != "services":
                 continue
             data = item["data"]
-            fill,stroke,opacity,bonus = self._pair(look,item,SERV,SERV)
             group = _engine.VGroup()
             for part in data["parts"]:
+                fill,stroke,opacity,bonus = self._pair(look,item,_c.service_surface_color(data,part),SERV)
                 if part["z1"] < elev or part["z0"] >= top or not _c.inside(ctx["window"],_c._model.part_footprint(part),0.5):
                     continue
                 if "size" not in data and not part["z0"]-1e-10 <= ctx["cut_z"] <= part["z1"]+1e-10:
@@ -617,4 +657,4 @@ class Plan(_s.SheetMixin):
                           _d.polygon([tip + direction * 0.1, tip - direction * 0.03 + side * 0.06, tip - direction * 0.03 - side * 0.06], INK),
                           self._t("ABCDEFG"[index], end + out * 0.17 + direction * 0.05, _d.S_SMALL, INK))
             put(8.0, "cut:" + (spec if isinstance(spec, str) else str(spec)), group)
-                                                                                                                                                                                                                                                                                    
+                                                                                                                                                                                                                                                                                                                                         

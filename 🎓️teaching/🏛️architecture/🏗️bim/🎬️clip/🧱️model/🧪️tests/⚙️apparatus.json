@@ -1,0 +1,182 @@
+{
+  "title": "Native Purpose-Qualified Unknown Apparatus",
+  "fixture": {
+    "tag": "NEUTRAL-ELECTRIC-APPLIANCE",
+    "class": "IfcBuildingElementProxy",
+    "predefined_type": "USERDEFINED",
+    "name": {
+      "en": "Neutral photographed appliance with unknown function",
+      "de": "Neutrales fotografiertes Gerät unbekannter Funktion"
+    },
+    "storey": "first",
+    "material": "MAT-METAL",
+    "geometry": {
+      "kind": "photographed_apparatus",
+      "base_level": "first",
+      "parts": [
+        {
+          "outline": [
+            [
+              0,
+              0
+            ],
+            [
+              0.4,
+              0
+            ],
+            [
+              0.4,
+              0.3
+            ],
+            [
+              0,
+              0.3
+            ]
+          ],
+          "z0": 0.72,
+          "z1": 1.24,
+          "material": "MAT-METAL",
+          "role": "neutral_body"
+        }
+      ]
+    },
+    "attributes": {},
+    "psets": {},
+    "metadata": {
+      "author": "Atelier (architecture)",
+      "revision": 1,
+      "domains": [
+        "architecture",
+        "services"
+      ]
+    },
+    "historical_evidence": {
+      "state": "original-completed-1930-1931",
+      "status": "inferred_reconstruction",
+      "source_kind": "mixed",
+      "sources": [
+        "ArchitectureVivante1931-plate34"
+      ],
+      "uncertainty": {
+        "en": "Neutral dimensions inferred; function and manufacturer unknown.",
+        "de": "Neutrale Maße abgeleitet; Funktion und Hersteller unbekannt."
+      }
+    }
+  },
+  "volume": 0.0624,
+  "physical": {
+    "base": 3.17,
+    "stand": "KITCHEN-APPLIANCE-STAND",
+    "top": 0.72,
+    "products": [
+      {
+        "tag": "KITCHEN-APPLIANCE-CYLINDER",
+        "class": "IfcBuildingElementProxy",
+        "empty": [
+          [
+            0.44,
+            3.65,
+            1
+          ]
+        ],
+        "metal": [
+          [
+            0.649,
+            3.65,
+            1
+          ]
+        ]
+      },
+      {
+        "tag": "KITCHEN-APPLIANCE-PLATE",
+        "class": "IfcBuildingElementProxy",
+        "empty": [
+          [
+            0.45,
+            4.35,
+            0.75
+          ]
+        ],
+        "metal": [
+          [
+            0.45,
+            4.35,
+            0.796
+          ]
+        ]
+      },
+      {
+        "tag": "KITCHEN-APPLIANCE-STAND",
+        "class": "IfcFurnishingElement",
+        "empty": [
+          [
+            0.45,
+            4,
+            0.4
+          ]
+        ],
+        "metal": [
+          [
+            0.161,
+            3.26,
+            0.35
+          ]
+        ]
+      },
+      {
+        "tag": "PIPE-KITCHEN-VISIBLE-1",
+        "class": "IfcPipeSegment",
+        "empty": [
+          [
+            0.115,
+            3.2,
+            0.2
+          ]
+        ],
+        "metal": [
+          [
+            0.1265,
+            3.2,
+            0.2
+          ]
+        ]
+      },
+      {
+        "tag": "PIPE-KITCHEN-VISIBLE-2",
+        "class": "IfcPipeSegment",
+        "empty": [
+          [
+            0.115,
+            3.2,
+            0.27
+          ]
+        ],
+        "metal": [
+          [
+            0.1265,
+            3.2,
+            0.27
+          ]
+        ]
+      },
+      {
+        "tag": "PIPE-KITCHEN-VISIBLE-3",
+        "class": "IfcPipeSegment",
+        "empty": [
+          [
+            0.115,
+            3.2,
+            0.34
+          ]
+        ],
+        "metal": [
+          [
+            0.1265,
+            3.2,
+            0.34
+          ]
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,534 @@
+{
+  "version": 1,
+  "scope": "Same owner GUID never proves geometric exclusion; compare actual semantic material.",
+  "cases": [
+    {
+      "id": "actual_annulus_excluded",
+      "left": {
+        "operator": "difference",
+        "stock": {
+          "kind": "prism",
+          "outline": [
+            [
+              -2,
+              -2
+            ],
+            [
+              2,
+              -2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "holes": [],
+          "z0": 0,
+          "z1": 1
+        },
+        "cutters": [
+          {
+            "operand": {
+              "kind": "profile_extrusion",
+              "axis": [
+                0,
+                0
+              ],
+              "rotation": 0,
+              "profile": {
+                "shape": "circle",
+                "radius": 1,
+                "voids": [
+                  {
+                    "offset": [
+                      0,
+                      0
+                    ],
+                    "radius": 0.25
+                  }
+                ]
+              },
+              "z0": 0,
+              "z1": 1
+            },
+            "owner": "COLUMN",
+            "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+            "role": "material"
+          }
+        ]
+      },
+      "right": {
+        "kind": "profile_extrusion",
+        "axis": [
+          0,
+          0
+        ],
+        "rotation": 0,
+        "profile": {
+          "shape": "circle",
+          "radius": 1,
+          "voids": [
+            {
+              "offset": [
+                0,
+                0
+              ],
+              "radius": 0.25
+            }
+          ]
+        },
+        "z0": 0,
+        "z1": 1
+      },
+      "expected_zero": true
+    },
+    {
+      "id": "same_guid_filled_bore_is_real_intersection",
+      "left": {
+        "operator": "difference",
+        "stock": {
+          "kind": "prism",
+          "outline": [
+            [
+              -2,
+              -2
+            ],
+            [
+              2,
+              -2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "holes": [],
+          "z0": 0,
+          "z1": 1
+        },
+        "cutters": [
+          {
+            "operand": {
+              "kind": "profile_extrusion",
+              "axis": [
+                0,
+                0
+              ],
+              "rotation": 0,
+              "profile": {
+                "shape": "circle",
+                "radius": 1,
+                "voids": [
+                  {
+                    "offset": [
+                      0,
+                      0
+                    ],
+                    "radius": 0.25
+                  }
+                ]
+              },
+              "z0": 0,
+              "z1": 1
+            },
+            "owner": "COLUMN",
+            "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+            "role": "material"
+          }
+        ]
+      },
+      "right": {
+        "kind": "profile_extrusion",
+        "axis": [
+          0,
+          0
+        ],
+        "rotation": 0,
+        "profile": {
+          "shape": "circle",
+          "radius": 1,
+          "voids": []
+        },
+        "z0": 0,
+        "z1": 1
+      },
+      "owner_guid_source": "22ab2_$gxg2o0zCVq9eCxJ",
+      "owner_guid_actual": "22ab2_$gxg2o0zCVq9eCxJ",
+      "expected_volume": 0.19634954084936207
+    },
+    {
+      "id": "identical_solid_owner_excluded",
+      "left": {
+        "operator": "difference",
+        "stock": {
+          "kind": "prism",
+          "outline": [
+            [
+              -2,
+              -2
+            ],
+            [
+              2,
+              -2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "holes": [],
+          "z0": 0,
+          "z1": 1
+        },
+        "cutters": [
+          {
+            "operand": {
+              "kind": "profile_extrusion",
+              "axis": [
+                0,
+                0
+              ],
+              "rotation": 0,
+              "profile": {
+                "shape": "circle",
+                "radius": 1,
+                "voids": []
+              },
+              "z0": 0,
+              "z1": 1
+            },
+            "owner": "COLUMN",
+            "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+            "role": "material"
+          }
+        ]
+      },
+      "right": {
+        "kind": "profile_extrusion",
+        "axis": [
+          0,
+          0
+        ],
+        "rotation": 0,
+        "profile": {
+          "shape": "circle",
+          "radius": 1,
+          "voids": []
+        },
+        "z0": 0,
+        "z1": 1
+      },
+      "expected_zero": true
+    },
+    {
+      "id": "same_guid_shifted_two_nanometres_is_real_intersection",
+      "left": {
+        "operator": "difference",
+        "stock": {
+          "kind": "prism",
+          "outline": [
+            [
+              -2,
+              -2
+            ],
+            [
+              2,
+              -2
+            ],
+            [
+              2,
+              2
+            ],
+            [
+              -2,
+              2
+            ]
+          ],
+          "holes": [],
+          "z0": 0,
+          "z1": 1
+        },
+        "cutters": [
+          {
+            "operand": {
+              "kind": "profile_extrusion",
+              "axis": [
+                0,
+                0
+              ],
+              "rotation": 0,
+              "profile": {
+                "shape": "circle",
+                "radius": 1,
+                "voids": []
+              },
+              "z0": 0,
+              "z1": 1
+            },
+            "owner": "COLUMN",
+            "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+            "role": "material"
+          }
+        ]
+      },
+      "right": {
+        "kind": "profile_extrusion",
+        "axis": [
+          2e-9,
+          0
+        ],
+        "rotation": 0,
+        "profile": {
+          "shape": "circle",
+          "radius": 1,
+          "voids": []
+        },
+        "z0": 0,
+        "z1": 1
+      },
+      "owner_guid_source": "22ab2_$gxg2o0zCVq9eCxJ",
+      "owner_guid_actual": "22ab2_$gxg2o0zCVq9eCxJ",
+      "expected_volume": 4e-9,
+      "absolute_tolerance": 2e-16
+    },
+    {
+      "id": "finite_height_owner_excluded",
+      "left": {
+        "operator": "difference",
+        "stock": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                0,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 0.5,
+                  "voids": []
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            }
+          ]
+        },
+        "cutters": [
+          {
+            "operand": {
+              "kind": "prism",
+              "outline": [
+                [
+                  1,
+                  -1
+                ],
+                [
+                  2,
+                  -1
+                ],
+                [
+                  2,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "holes": [],
+              "z0": 0,
+              "z1": 0.25
+            },
+            "owner": "SLAB",
+            "owner_guid": "3HDWsZh3VjN08aIxuk_QDE",
+            "role": "material"
+          }
+        ]
+      },
+      "right": {
+        "kind": "prism",
+        "outline": [
+          [
+            1,
+            -1
+          ],
+          [
+            2,
+            -1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "holes": [],
+        "z0": 0,
+        "z1": 0.25
+      },
+      "expected_zero": true
+    },
+    {
+      "id": "same_guid_owner_two_nanometres_higher_is_real_intersection",
+      "left": {
+        "operator": "difference",
+        "stock": {
+          "operator": "difference",
+          "stock": {
+            "kind": "prism",
+            "outline": [
+              [
+                0,
+                -1
+              ],
+              [
+                2,
+                -1
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            "holes": [],
+            "z0": 0,
+            "z1": 1
+          },
+          "cutters": [
+            {
+              "operand": {
+                "kind": "profile_extrusion",
+                "axis": [
+                  0,
+                  0
+                ],
+                "rotation": 0,
+                "profile": {
+                  "shape": "circle",
+                  "radius": 0.5,
+                  "voids": []
+                },
+                "z0": 0,
+                "z1": 1
+              },
+              "owner": "COLUMN",
+              "owner_guid": "22ab2_$gxg2o0zCVq9eCxJ",
+              "role": "material"
+            }
+          ]
+        },
+        "cutters": [
+          {
+            "operand": {
+              "kind": "prism",
+              "outline": [
+                [
+                  1,
+                  -1
+                ],
+                [
+                  2,
+                  -1
+                ],
+                [
+                  2,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "holes": [],
+              "z0": 0,
+              "z1": 0.25
+            },
+            "owner": "SLAB",
+            "owner_guid": "3HDWsZh3VjN08aIxuk_QDE",
+            "role": "material"
+          }
+        ]
+      },
+      "right": {
+        "kind": "prism",
+        "outline": [
+          [
+            1,
+            -1
+          ],
+          [
+            2,
+            -1
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            1,
+            1
+          ]
+        ],
+        "holes": [],
+        "z0": 0,
+        "z1": 0.250000002
+      },
+      "owner_guid_source": "3HDWsZh3VjN08aIxuk_QDE",
+      "owner_guid_actual": "3HDWsZh3VjN08aIxuk_QDE",
+      "positive_range": [
+        3e-9,
+        5e-9
+      ]
+    }
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases",
+    "source_wall",
+    "source_opening",
+    "digits",
+    "tolerance"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "path",
+          "thickness",
+          "stations",
+          "aperture"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "path": {
+            "$ref": "#/$defs/ring"
+          },
+          "thickness": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "stations": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "aperture": {
+            "$ref": "#/$defs/ring"
+          }
+        }
+      }
+    },
+    "source_wall": {
+      "type": "string"
+    },
+    "source_opening": {
+      "type": "string"
+    },
+    "digits": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  },
+  "$defs": {
+    "ring": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "array",
+        "prefixItems": [
+          {
+            "type": "number"
+          },
+          {
+            "type": "number"
+          }
+        ],
+        "minItems": 2,
+        "maxItems": 2
+      }
+    }
+  }
+}

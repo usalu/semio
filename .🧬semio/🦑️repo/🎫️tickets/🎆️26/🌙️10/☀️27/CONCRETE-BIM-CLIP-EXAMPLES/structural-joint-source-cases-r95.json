@@ -1,0 +1,560 @@
+{
+  "relationships": [
+    {
+      "donor": "FT-CELLAR",
+      "owner": "SL-CELLAR",
+      "reason": "The same lime-concrete upper8cm is the cellar structural floor; retain full strip reference and the lower footing body."
+    },
+    {
+      "donor": "BEAM-CELLAR-STAIR",
+      "owner": "SL-GROUND-CELLAR",
+      "reason": "Monolithic RC trimmer/cap common material is physically assigned to the slab."
+    },
+    {
+      "donor": "RIB-CELLAR",
+      "owner": "SL-GROUND-CELLAR",
+      "reason": "Monolithic RC rib/cap common material is physically assigned to the slab."
+    },
+    {
+      "donor": "RIB-CELLAR",
+      "owner": "BEAM-CELLAR-STAIR",
+      "reason": "The continuous opening trimmer owns the actual rib-end bearing intersection below the slab cap."
+    },
+    {
+      "donor": "BEAM-PRIMARY-F-14-15",
+      "owner": "SL-1",
+      "reason": "Retain existing slab-owned member strip semantics and the complete nominal beam reference."
+    },
+    {
+      "donor": "BEAM-PRIMARY-R-14-15",
+      "owner": "SL-R",
+      "reason": "Retain existing slab-owned member strip semantics and the complete nominal beam reference."
+    },
+    {
+      "donor": "GARDEN-WEATHER-CAP",
+      "owner": "SALON-CANOPY",
+      "reason": "The registered cap corner return is unresolved; infer same-RC overlap assignment to the sourced70mm canopy, preserving both full profiles and reporting unresolved finish/core conflicts."
+    },
+    {
+      "donor": "ST-CG",
+      "owner": "STAIR-PA",
+      "reason": "The independent continuous stair pier owns its actual RC bearing in the stair waist; all original tread and finish parts remain."
+    },
+    {
+      "donor": "ST-CG",
+      "owner": "SL-GROUND-CELLAR",
+      "reason": "The receiving cellar cap owns actual same-RC stair bearing material; preserve the complete original stair waist reference."
+    },
+    {
+      "donor": "ST-GF",
+      "owner": "SL-1",
+      "reason": "The receiving first structural slab owns actual same-RC stair bearing material; preserve all source waist/tread geometry as reference."
+    },
+    {
+      "donor": "ST-FR",
+      "owner": "SL-1",
+      "reason": "The first-floor structural landing slab owns the actual lower same-RC stair bearing."
+    },
+    {
+      "donor": "ST-FR",
+      "owner": "SL-R",
+      "reason": "The roof structural slab owns the actual upper same-RC stair bearing, with all nominal stair sections retained."
+    },
+    {
+      "donor": "GUARD-ST-FR",
+      "owner": "STAIR-RETURN-L",
+      "reason": "The independently capped original L return pier owns actual same-RC contact with the guard. Any foreign render intersection remains present and reported."
+    }
+  ],
+  "ramp_interfaces": [
+    {
+      "donor": "RF-1B",
+      "owner": "BEAM-PRIMARY-F-13-14"
+    },
+    {
+      "donor": "RF-2A",
+      "owner": "BEAM-PRIMARY-F-13-14"
+    },
+    {
+      "donor": "RF-1A",
+      "owner": "SL-GROUND-CELLAR",
+      "reason": "The receiving cap owns the exact same-RC material at the lower original ramp bearing; preserve original ramp path, datums and section as full reference."
+    }
+  ],
+  "groups": [
+    [
+      "FT-CELLAR",
+      "SL-CELLAR",
+      "FT-STAIR-PA"
+    ],
+    [
+      "RIB-CELLAR",
+      "BEAM-CELLAR-STAIR",
+      "SL-GROUND-CELLAR",
+      "14"
+    ],
+    [
+      "BEAM-PRIMARY-F-14-15",
+      "SL-1"
+    ],
+    [
+      "BEAM-PRIMARY-R-14-15",
+      "SL-R"
+    ],
+    [
+      "GARDEN-WEATHER-CAP",
+      "SALON-CANOPY"
+    ],
+    [
+      "ST-CG",
+      "STAIR-PA",
+      "SL-GROUND-CELLAR",
+      "14",
+      "ST-GF",
+      "ST-FR",
+      "SL-1",
+      "SL-R"
+    ],
+    [
+      "GUARD-ST-FR",
+      "STAIR-RETURN-L"
+    ],
+    [
+      "RF-1A",
+      "RF-1B",
+      "RF-2A",
+      "BEAM-PRIMARY-F-13-14",
+      "SL-GROUND-CELLAR",
+      "SL-1",
+      "13",
+      "14"
+    ]
+  ],
+  "relationship": "monolithic_same_material",
+  "basis": "inferred native construction bookkeeping, not a claim of a surveyed original notch or pour sequence",
+  "group_ids": [
+    "cellar-lime",
+    "cellar-rc",
+    "first-floor",
+    "roof",
+    "canopy",
+    "stairs",
+    "guard-bearing",
+    "ramp-bearings"
+  ],
+  "column_reservations": [
+    {
+      "donor": "SL-GROUND",
+      "owners": [
+        "12",
+        "21",
+        "24",
+        "27",
+        "31"
+      ],
+      "reason": "Actual RC occupied column sections and bore air remain excluded from the ground substrate; authored holes and full source floor references remain."
+    },
+    {
+      "donor": "SL-GROUND-CELLAR",
+      "owners": [
+        "14"
+      ],
+      "reason": "Explicit continuous RC support 14 owns its actual cap-bearing common material; no nominal profile or priority approximation."
+    }
+  ],
+  "complete_ledger": [
+    {
+      "source": "STAIR-PA",
+      "source_class": "IfcColumn",
+      "target": "ST-CG",
+      "target_class": "IfcStair",
+      "diagnostic_pairs": 5,
+      "diagnostic_volume": 0.000893883202073
+    },
+    {
+      "source": "2",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-2-7",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 28,
+      "diagnostic_volume": 4.97958457656e-06
+    },
+    {
+      "source": "2-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-2-7",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 24,
+      "diagnostic_volume": 4.22080730888e-06
+    },
+    {
+      "source": "3",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-3-34",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 4.65647079951e-06
+    },
+    {
+      "source": "3-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-3-34",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 2.49510388066e-06
+    },
+    {
+      "source": "4",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-4-10",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 4.97958457609e-06
+    },
+    {
+      "source": "4-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-4-10",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 4.22080731116e-06
+    },
+    {
+      "source": "7",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-2-7",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 35,
+      "diagnostic_volume": 4.65647080257e-06
+    },
+    {
+      "source": "7",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-7-24",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 26,
+      "diagnostic_volume": 2.95208621514e-06
+    },
+    {
+      "source": "7-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-2-7",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 49,
+      "diagnostic_volume": 4.07004774506e-06
+    },
+    {
+      "source": "7-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-6-34",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 4,
+      "diagnostic_volume": 3.12036992939e-06
+    },
+    {
+      "source": "8",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-8-9",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 2,
+      "diagnostic_volume": 4.65647078823e-06
+    },
+    {
+      "source": "9",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-8-9",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 2,
+      "diagnostic_volume": 4.65647080087e-06
+    },
+    {
+      "source": "12",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-7-24",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 44,
+      "diagnostic_volume": 5.95263532168e-06
+    },
+    {
+      "source": "12",
+      "source_class": "IfcColumn",
+      "target": "SL-GROUND",
+      "target_class": "IfcSlab",
+      "diagnostic_pairs": 52,
+      "diagnostic_volume": 3.45924244996e-06
+    },
+    {
+      "source": "14",
+      "source_class": "IfcColumn",
+      "target": "SL-GROUND-CELLAR",
+      "target_class": "IfcSlab",
+      "diagnostic_pairs": 3,
+      "diagnostic_volume": 0.001936
+    },
+    {
+      "source": "14-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-14-26",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 30,
+      "diagnostic_volume": 2.3287636162e-06
+    },
+    {
+      "source": "15",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-15-20",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 3.82055844162e-06
+    },
+    {
+      "source": "19-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-14-26",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 62,
+      "diagnostic_volume": 4.65752723407e-06
+    },
+    {
+      "source": "20-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-20-32",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 86,
+      "diagnostic_volume": 7.26178193554e-06
+    },
+    {
+      "source": "21",
+      "source_class": "IfcColumn",
+      "target": "SL-GROUND",
+      "target_class": "IfcSlab",
+      "diagnostic_pairs": 100,
+      "diagnostic_volume": 6.5928045923e-06
+    },
+    {
+      "source": "21",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-7-24",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 46,
+      "diagnostic_volume": 5.95263532872e-06
+    },
+    {
+      "source": "24",
+      "source_class": "IfcColumn",
+      "target": "SL-GROUND",
+      "target_class": "IfcSlab",
+      "diagnostic_pairs": 96,
+      "diagnostic_volume": 6.5928045942e-06
+    },
+    {
+      "source": "24",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-7-24",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 23,
+      "diagnostic_volume": 2.976317665e-06
+    },
+    {
+      "source": "24",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-24-30",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 1.38894824325e-06
+    },
+    {
+      "source": "27",
+      "source_class": "IfcColumn",
+      "target": "SL-GROUND",
+      "target_class": "IfcSlab",
+      "diagnostic_pairs": 96,
+      "diagnostic_volume": 6.59280459042e-06
+    },
+    {
+      "source": "27",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-20-32",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 72,
+      "diagnostic_volume": 9.37285483096e-06
+    },
+    {
+      "source": "27-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-20-32",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 88,
+      "diagnostic_volume": 7.26178193157e-06
+    },
+    {
+      "source": "31",
+      "source_class": "IfcColumn",
+      "target": "SL-GROUND",
+      "target_class": "IfcSlab",
+      "diagnostic_pairs": 100,
+      "diagnostic_volume": 6.59280459677e-06
+    },
+    {
+      "source": "31",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-F-28-31",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 29,
+      "diagnostic_volume": 3.82055844635e-06
+    },
+    {
+      "source": "31-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-28-31",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 49,
+      "diagnostic_volume": 4.07004774003e-06
+    },
+    {
+      "source": "32-FIRST",
+      "source_class": "IfcColumn",
+      "target": "BEAM-PRIMARY-R-20-32",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 44,
+      "diagnostic_volume": 3.6308909678e-06
+    },
+    {
+      "source": "STAIR-RETURN-L",
+      "source_class": "IfcColumn",
+      "target": "GUARD-ST-FR",
+      "target_class": "IfcRailing",
+      "diagnostic_pairs": 14,
+      "diagnostic_volume": 6.98548496488e-12
+    },
+    {
+      "source": "SL-1",
+      "source_class": "IfcSlab",
+      "target": "BEAM-PRIMARY-F-14-15",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 13,
+      "diagnostic_volume": 0.067275274046
+    },
+    {
+      "source": "SL-1",
+      "source_class": "IfcSlab",
+      "target": "ST-FR",
+      "target_class": "IfcStair",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 1.64886606507e-14
+    },
+    {
+      "source": "SL-1",
+      "source_class": "IfcSlab",
+      "target": "ST-GF",
+      "target_class": "IfcStair",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 1.75683467774e-14
+    },
+    {
+      "source": "SL-R",
+      "source_class": "IfcSlab",
+      "target": "BEAM-PRIMARY-R-14-15",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 13,
+      "diagnostic_volume": 0.067275274046
+    },
+    {
+      "source": "SL-R",
+      "source_class": "IfcSlab",
+      "target": "ST-FR",
+      "target_class": "IfcStair",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 1.75683467774e-14
+    },
+    {
+      "source": "SL-CELLAR",
+      "source_class": "IfcSlab",
+      "target": "FT-CELLAR",
+      "target_class": "IfcFooting",
+      "diagnostic_pairs": 25,
+      "diagnostic_volume": 1.973268528
+    },
+    {
+      "source": "SL-CELLAR",
+      "source_class": "IfcSlab",
+      "target": "FT-STAIR-PA",
+      "target_class": "IfcFooting",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 0.0072
+    },
+    {
+      "source": "SL-GROUND-CELLAR",
+      "source_class": "IfcSlab",
+      "target": "RIB-CELLAR",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 64,
+      "diagnostic_volume": 0.140430372948
+    },
+    {
+      "source": "SL-GROUND-CELLAR",
+      "source_class": "IfcSlab",
+      "target": "RF-1A",
+      "target_class": "IfcRampFlight",
+      "diagnostic_pairs": 3,
+      "diagnostic_volume": 0.00292961558612
+    },
+    {
+      "source": "SL-GROUND-CELLAR",
+      "source_class": "IfcSlab",
+      "target": "BEAM-CELLAR-STAIR",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 60,
+      "diagnostic_volume": 0.0388215518681
+    },
+    {
+      "source": "SL-GROUND-CELLAR",
+      "source_class": "IfcSlab",
+      "target": "ST-CG",
+      "target_class": "IfcStair",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 1.46402889812e-14
+    },
+    {
+      "source": "GARDEN-WEATHER-CAP",
+      "source_class": "IfcBuildingElementProxy",
+      "target": "SALON-CANOPY",
+      "target_class": "IfcBuildingElementProxy",
+      "diagnostic_pairs": 4,
+      "diagnostic_volume": 0.00205708831793
+    },
+    {
+      "source": "RIB-CELLAR",
+      "source_class": "IfcBeam",
+      "target": "BEAM-CELLAR-STAIR",
+      "target_class": "IfcBeam",
+      "diagnostic_pairs": 6,
+      "diagnostic_volume": 0.0816304728
+    },
+    {
+      "source": "BEAM-PRIMARY-F-13-14",
+      "source_class": "IfcBeam",
+      "target": "RF-2A",
+      "target_class": "IfcRampFlight",
+      "diagnostic_pairs": 1,
+      "diagnostic_volume": 0.010035
+    },
+    {
+      "source": "BEAM-PRIMARY-F-13-14",
+      "source_class": "IfcBeam",
+      "target": "RF-1B",
+      "target_class": "IfcRampFlight",
+      "diagnostic_pairs": 2,
+      "diagnostic_volume": 0.00843155819159
+    }
+  ],
+  "receiving_interfaces": [
+    {
+      "donor": "SL-CELLAR",
+      "owners": [
+        "FT-STAIR-PA"
+      ],
+      "reason": "Infer a physical receiving-floor reservation around the independent RC stair footing. Preserve the complete lime-concrete floor reference and the complete RC footing, with actual source solids and one occupied owner."
+    }
+  ]
+}

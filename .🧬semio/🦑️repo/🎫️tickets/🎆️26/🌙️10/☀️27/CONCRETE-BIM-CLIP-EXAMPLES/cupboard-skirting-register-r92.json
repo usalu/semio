@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "source": "SAB2024-p190; continuous lower visible skirting below cupboards; metric stock positions and joints inferred from reconstructed native cupboard envelopes",
+  "fitting_clearance": 0.0001,
+  "section": {
+    "thickness": 0.015,
+    "height": 0.09,
+    "round_radius": 0.002,
+    "round_segments": 8
+  },
+  "runs": [
+    {
+      "host": "FIX-GUEST-WARDROBE",
+      "path": [
+        [
+          2.012,
+          11.5
+        ],
+        [
+          2.012,
+          10.219
+        ]
+      ]
+    },
+    {
+      "host": "FIX-SON-STORAGE",
+      "path": [
+        [
+          2.3,
+          17.1
+        ],
+        [
+          0.5,
+          17.1
+        ]
+      ]
+    },
+    {
+      "host": "FIX-PANTRY-STORAGE",
+      "path": [
+        [
+          3.548529411764706,
+          1.557352941176
+        ],
+        [
+          3.548529411764706,
+          4.407352941176
+        ],
+        [
+          3.7441176470588236,
+          4.407352941176
+        ],
+        [
+          3.7441176470588236,
+          5.931
+        ]
+      ]
+    },
+    {
+      "host": "FIX-DRESSING-STORAGE",
+      "path": [
+        [
+          7.180882352941177,
+          14.130882352941176
+        ],
+        [
+          7.180882352941177,
+          16.78529411764706
+        ]
+      ]
+    },
+    {
+      "host": "FIX-PARENTS-STORAGE",
+      "path": [
+        [
+          5.2,
+          20.55
+        ],
+        [
+          7.6,
+          20.55
+        ]
+      ]
+    },
+    {
+      "host": "FIX-SERVANT-STORAGE-1-LONG",
+      "path": [
+        [
+          4.790000000000001,
+          15.38823529411765
+        ],
+        [
+          6.9750000000000005,
+          15.38823529411765
+        ]
+      ]
+    },
+    {
+      "host": "FIX-SERVANT-BASIN-CABINET-1",
+      "path": [
+        [
+          3.2249999999999996,
+          15.723529411764705
+        ],
+        [
+          3.9099999999999997,
+          15.723529411764705
+        ]
+      ]
+    }
+  ],
+  "sliding_clearance": {
+    "host": "FIX-PARENTS-STORAGE",
+    "role": "inferred_sliding_closure",
+    "axis": [
+      1,
+      0
+    ],
+    "travel": 0.5,
+    "basis": "inferred horizontal sliding motion behind the fixed front strip, preserving current leaf geometry and localZ.08"
+  }
+}
+      

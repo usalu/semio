@@ -1,0 +1,24 @@
+{
+  "$schema": "🪚️source.schema.json",
+  "historical_state": "original-completed-1930-1931",
+  "evidence": "SAB2024 p211-214: original oak ribbon frame80x40mm, moving sash30x50mm, glass6mm; metal vestibule transom0.90m. Section axis interpretation follows the inspected p211/213 sections and remains inferred.",
+  "types": [
+    {
+      "tag": "TY-RIBBON",
+      "dimensions": {
+        "frame_width": 0.04,
+        "frame_depth": 0.08,
+        "sash_width": 0.05,
+        "sash_depth": 0.03,
+        "panel_thickness": 0.006
+      }
+    }
+  ],
+  "curtain": {
+    "tag": "CW-1",
+    "type": "TY-CURTAIN-METAL",
+    "transom": "CW-MID-RAIL",
+    "height": 0.9
+  },
+  "tolerance": 1e-8
+}

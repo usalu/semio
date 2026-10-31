@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "band",
+    "rejections"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "band": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "rejections": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "part"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "part": {
+            "type": "object",
+            "required": [
+              "z0",
+              "z1",
+              "mesh"
+            ],
+            "properties": {
+              "z0": {
+                "type": "number"
+              },
+              "z1": {
+                "type": "number"
+              },
+              "mesh": {
+                "type": "object",
+                "required": [
+                  "vertices",
+                  "faces"
+                ],
+                "properties": {
+                  "vertices": {
+                    "type": "array",
+                    "minItems": 4,
+                    "items": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  },
+                  "faces": {
+                    "type": "array",
+                    "minItems": 4,
+                    "items": {
+                      "type": "array",
+                      "minItems": 3,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0
+                      }
+                    }
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      }
+    }
+  }
+}

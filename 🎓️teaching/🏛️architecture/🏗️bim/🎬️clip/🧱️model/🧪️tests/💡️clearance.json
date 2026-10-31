@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "tag": "LIGHT-EXTERIOR-11",
+      "post": "11",
+      "axis": [
+        0,
+        6
+      ],
+      "radius": 0.14,
+      "witness": [
+        0.1225413951052298,
+        6.000877906449073,
+        2.1667538846729677
+      ],
+      "nominal_rotation_degrees": 45
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-6",
+      "post": "6",
+      "axis": [
+        19,
+        6
+      ],
+      "radius": 0.14,
+      "witness": [
+        18.87745860489477,
+        6.000877906449073,
+        2.1667538846729677
+      ],
+      "nominal_rotation_degrees": -45
+    }
+  ],
+  "absolute_distance_tolerance": 1e-12
+}

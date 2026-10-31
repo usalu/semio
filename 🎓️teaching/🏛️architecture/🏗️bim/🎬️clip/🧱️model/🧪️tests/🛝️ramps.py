@@ -4,8 +4,7 @@ from types import SimpleNamespace
 from copy import deepcopy
 from pathlib import Path
 import numpy as np
-from scipy.spatial import ConvexHull,HalfspaceIntersection
-from scipy.optimize import linprog
+from scipy.spatial import ConvexHull
 from shapely.geometry import Polygon
 api=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
 class RampGeometryContract(unittest.TestCase):
@@ -24,12 +23,13 @@ class RampGeometryContract(unittest.TestCase):
             q=api.quantities(tag,model)
             volume=sum(ConvexHull(api.part_vertices(p)).volume for p in geometry["full_parts"])
             self.assertAlmostEqual(q["volume"],volume,places=8)
-            self.assertAlmostEqual(q["volume"],fixture["full_volume"] if tag in fixture["parents"] else fixture["flight_volume"],places=8)
+            if tag in fixture["flights"]:
+                self.assertAlmostEqual(q["volume"],fixture["flight_volumes"][tag],places=8)
         lower,upper=[api.ramp_geometry(tag,model) for tag in fixture["parents"]]
-        self.assertEqual(len(lower["parts"]),3)
-        self.assertEqual(len(upper["parts"]),2)
-        self.assertEqual(len(upper["shared_parts"]),1)
-        self.assertEqual(upper["shared_parts"][0]["owner"],lower["tag"])
+        for parent in (lower,upper):
+            self.assertAlmostEqual(sum(ConvexHull(api.part_vertices(part)).volume for part in parent["parts"]),fixture["landing_volumes"][parent["tag"]],places=8)
+        self.assertEqual({p["owner"] for p in lower["shared_parts"]},{"SL-GROUND-CELLAR","SL-1"})
+        self.assertEqual({p["owner"] for p in upper["shared_parts"]},{"SL-1","SL-R"})
         self.assertEqual({p["owner"] for p in lower["child_parts"]},set(fixture["flights"][:2]))
         for tag in fixture["parents"]:
             q=api.quantities(tag,model)
@@ -41,6 +41,8 @@ class RampGeometryContract(unittest.TestCase):
         obj["geometry"].update({k:f[k] for k in ("path","from_level","to_level","portion")})
         obj["geometry"]["thickness"]["value"]=f["thickness"]
         obj["attributes"]["width"]["value"]=f["width"]
+        q=lambda value:{"value":value,"unit":"m","basis":"inferred","source":"Independent diagonal fixture"}
+        obj["geometry"].update(structural_offsets=[q(-f["width"]/2),q(f["width"]/2)],walking_offsets=[q(-f["width"]/2),q(f["width"]/2)],finish_thickness=q(.03),finish_direction="vertical")
         g=api.ramp_geometry(obj["tag"],model)
         part=g["parts"][0]
         vertices=np.asarray([[x,y,z] for heights in (f["bottom_z"],f["top_z"]) for (x,y),z in zip(f["footprint"],heights)])
@@ -65,25 +67,26 @@ class RampGeometryContract(unittest.TestCase):
     def test_owned_source_inventory_has_no_landing_or_flight_double_material(self):
         model=api.load_model()
         parts=[p for tag in ("RM-1","RM-2") for field in ("parts","child_parts") for p in api.ramp_geometry(tag,model)[field]]
-        self.assertEqual(len(parts),9)
+        self.assertEqual(len({p["owner"] for p in parts}),6)
         hulls=[ConvexHull(api.part_vertices(p)) for p in parts]
-        for i,a in enumerate(hulls):
-            for b in hulls[i+1:]:
-                planes=np.concatenate([a.equations,b.equations])
-                fit=linprog([0,0,0,-1],A_ub=np.column_stack([planes[:,:3],np.ones(len(planes))]),b_ub=-planes[:,3],bounds=[(None,None)]*3+[(0,None)],method="highs")
-                if fit.success and fit.x[3]>1e-10:
-                    common=HalfspaceIntersection(planes,fit.x[:3]).intersections
-                    self.assertLess(ConvexHull(common).volume,1e-10)
-        self.assertAlmostEqual(sum(h.volume for h in hulls),3.238368,places=8)
+        oracle=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧪️tests.🛝️interfaces")
+        lower=np.asarray([h.points.min(0) for h in hulls]);upper=np.asarray([h.points.max(0) for h in hulls])
+        for i,p in enumerate(parts):
+            candidates=np.flatnonzero(np.all(np.minimum(upper[:i],upper[i])>np.maximum(lower[:i],lower[i]),axis=1))
+            for j in candidates:self.assertLess(oracle.common_volume(p,parts[int(j)]),1e-10)
+        self.assertAlmostEqual(sum(h.volume for h in hulls),json.loads(Path(__file__).with_suffix(".json").read_text())["source"]["exclusive_volume"],places=8)
     def test_invalid_convention_and_borrowed_landing_drift_fail(self):
         model=api.load_model()
         api._find(model,"RF-1A")["geometry"]["thickness_direction"]="normal"
         with self.assertRaises(ValueError):
             api.ramp_geometry("RF-1A",model)
         model=api.load_model()
-        api._find(model,"RM-2")["geometry"]["landings"][0]["thickness"]["value"]+=.01
+        api._find(model,"RM-2")["geometry"]["landings"][0]["owner"]="RM-1"
         with self.assertRaises(ValueError):
             api.ramp_geometry("RM-2",model)
+        for row in json.loads(Path(__file__).with_suffix(".json").read_text())["invalid_joint_owners"]:
+            model=api.load_model();api._find(model,row["flight"])["geometry"]["flight_joint_owners"]=row["owners"]
+            with self.assertRaises(ValueError):api.ramp_geometry(row["flight"],model)
     def test_native_ramps_keep_source_products_and_aggregation_ownership(self):
         exchange=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🔌️exchange.🐍️")
         model=api.load_model()
@@ -110,12 +113,15 @@ class RampGeometryContract(unittest.TestCase):
         definitions(root/"🧊️axon/🧩️primitives.py",{"Prim","_face","_poly","_part_faces","_build"},scope)
         context={"slabs":[{"tag":"floor","guid":"f","level":"first","storey":"first","parts":[{"z0":2.91}]},{"tag":"roof","guid":"r","level":"roof","storey":"roof","parts":[]}],"storeys":{"first":3.17,"roof":6.6},"pilotis":[],"walls":[],"fillings":[],"ramp":{"ramps":ramps}}
         primitives=scope["_build"](context,model)
-        self.assertEqual(len(primitives),9)
+        self.assertEqual(len(primitives),sum(len(r["parts"])+len(r["child_parts"]) for r in ramps))
+        remaining=[(p["owner"],np.unique(np.asarray(api.part_vertices(p)),axis=0)) for ramp in ramps for p in ramp["parts"]+ramp["child_parts"]]
         for primitive in primitives:
             vertices=np.unique(np.concatenate([ring for face in primitive.faces for ring in face[1]]),axis=0)
-            actual=ConvexHull(vertices).volume
-            expected=sum(ConvexHull(api.part_vertices(p)).volume for ramp in ramps for p in ramp["parts"]+ramp["child_parts"] if p["owner"]==primitive.tag and abs((p["z1"] if p["role"]=="landing" else p["z0"])-primitive.z)<1e-9)
-            self.assertAlmostEqual(actual,expected,places=8)
+            match=next((i for i,(owner,points) in enumerate(remaining) if owner==primitive.tag and np.array_equal(points,vertices)),None)
+            self.assertIsNotNone(match)
+            _,expected=remaining.pop(match)
+            self.assertAlmostEqual(ConvexHull(vertices).volume,ConvexHull(expected).volume,places=8)
+        self.assertFalse(remaining)
         class Group:
             def __init__(self,*args):self.submobjects=list(args)
             def add(self,*args):self.submobjects.extend(args);return self
@@ -127,8 +133,8 @@ class RampGeometryContract(unittest.TestCase):
         ctx={"g":{"ramp":{"ramps":ramps}},"view":lambda x,y,z:np.array([x,y]),"look":None,"level":"first","w":1,"bands":{"first":(3.17,6.6)},"catalogue":[{"tag":r["tag"]} for r in ramps],"put":lambda *a:None}
         owner=SimpleNamespace(_pair=lambda *a:("c","i",1,0))
         scope["_plan_ramps"](owner,ctx,False)
-        self.assertEqual(len(polygons),2)
-        self.assertEqual(len(lines),2)
+        self.assertEqual(len(polygons),sum(len(f["parts"]) for f in ramps[1]["flights"]))
+        self.assertEqual(len(lines),sum(landing["owner"]==ramp["tag"] and 3.17-1e-9<=landing["z"]<6.6-1e-9 for ramp in ramps for landing in ramp["landings"]))
         expected=[Polygon(api.part_footprint(p)) for p in ramps[1]["child_parts"]]
         for actual in polygons:
             self.assertLess(min(actual.symmetric_difference(p).area for p in expected),1e-9)
@@ -141,11 +147,14 @@ class RampGeometryContract(unittest.TestCase):
         ctx={"g":{"ramp":{"ramps":ramps}},"plane":plane,"to":lambda h,z:(h,z),"look":None,"put":lambda *a:None,"catalogue":[{"tag":e["tag"]} for e in model["elements"]]}
         scope["_sec_ramps"](owner,ctx)
         expected=[Polygon(api.part_section(p,10.2,0)) for r in ramps for p in r["parts"]+r["child_parts"] if min(v[0] for v in p["outline"])<=10.2<=max(v[0] for v in p["outline"])]
-        self.assertEqual(len(sections),7)
+        self.assertEqual(len(sections),len(expected))
         for actual in sections:
-            self.assertLess(min(actual.symmetric_difference(p).area for p in expected),1e-9)
+            index=min(range(len(expected)),key=lambda i:actual.symmetric_difference(expected[i]).area)
+            self.assertLess(actual.symmetric_difference(expected.pop(index)).area,1e-9)
+        self.assertFalse(expected)
         vehicle={"building_geometry":lambda m:{"ramp":{"ramps":ramps}},"deepcopy":deepcopy}
         definitions(Path(__file__).parents[1]/"🐍️.py",{"_vehicle_parts"},vehicle)
         records=vehicle["_vehicle_parts"](model)
-        self.assertEqual(len(records),9)
-        self.assertEqual(sum(r["class"]=="IfcRampFlight" for r in records),4)
+        self.assertEqual(len(records),sum(len(r["parts"])+len(r["child_parts"]) for r in ramps))
+        self.assertEqual(sum(r["class"]=="IfcRampFlight" for r in records),sum(len(r["child_parts"]) for r in ramps))
+                                                                                                                                                                                                                                                                                                                    

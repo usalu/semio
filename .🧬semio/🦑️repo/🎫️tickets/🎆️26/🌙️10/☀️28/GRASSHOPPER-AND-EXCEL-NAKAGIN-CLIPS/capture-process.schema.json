@@ -1,0 +1,103 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "defaults",
+    "cases",
+    "required"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "interval_seconds",
+        "cleanup_timeout_seconds"
+      ],
+      "properties": {
+        "interval_seconds": {
+          "const": 5
+        },
+        "cleanup_timeout_seconds": {
+          "const": 30
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mode",
+          "minimum_checkpoints"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "success",
+              "keyboard",
+              "source-drift"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "success",
+              "tree"
+            ]
+          },
+          "exception": {
+            "enum": [
+              "KeyboardInterrupt",
+              "SourceDrift"
+            ]
+          },
+          "minimum_checkpoints": {
+            "type": "integer",
+            "minimum": 3
+          }
+        }
+      }
+    },
+    "required": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "silent_checkpoints",
+        "child_and_grandchild_gone",
+        "foreign_parent_refused",
+        "worker_inside_ticket",
+        "output_inside_generated",
+        "exited_root_held_pipe_unverified"
+      ],
+      "properties": {
+        "silent_checkpoints": {
+          "const": true
+        },
+        "child_and_grandchild_gone": {
+          "const": true
+        },
+        "foreign_parent_refused": {
+          "const": true
+        },
+        "worker_inside_ticket": {
+          "const": true
+        },
+        "output_inside_generated": {
+          "const": true
+        },
+        "exited_root_held_pipe_unverified": {
+          "const": true
+        }
+      }
+    }
+  }
+}

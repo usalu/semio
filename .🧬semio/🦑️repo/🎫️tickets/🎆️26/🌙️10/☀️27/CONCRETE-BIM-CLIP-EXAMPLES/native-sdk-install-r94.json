@@ -1,0 +1,6 @@
+{
+  "version": "0.0.78",
+  "parallel_calls": 8,
+  "expected_module_generations": 1,
+  "immutable_reuse": true
+}

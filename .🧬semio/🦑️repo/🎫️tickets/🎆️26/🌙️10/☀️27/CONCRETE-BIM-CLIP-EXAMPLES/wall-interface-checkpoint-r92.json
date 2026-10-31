@@ -1,0 +1,37 @@
+{
+  "stage": "Neutral inclined RC difference GREEN; global native-cutter shadow extension RED waiting normal capacity",
+  "source_sha256": "360deca335378c7ea5fc71596113827910c8b21d209f65df3a4c1073f187e023",
+  "api_sha256": "87f4d07f847746e0575940967a7c353985ce36c8bed2e8c0fef1c49562380a07",
+  "live_session": 43428,
+  "do_not_cancel": true,
+  "wall_inputs": [
+    "wall-interface-plan-r92.md",
+    "wall-interface-implementation-r92.py",
+    "wall-interface-test-r92.py"
+  ],
+  "portable_tests": [
+    "🧱️model/🧪️tests/🧱️interfaces.json",
+    "🧱️model/🧪️tests/🧱️interfaces.py"
+  ],
+  "schema_published": "geometry.interface_owners array minItems1 uniqueItems tags",
+  "registration": "clip/🧪️tests/🐍️.py first actual tuple includes 🧱️model.🧪️tests.🧱️interfaces",
+  "production_helper_published": true,
+  "next": [
+    "Poll write_stdin43428 for shadowRED:excluded_owners thirdargument missing and globalnativecutter currentlyflattened",
+    "Integrate prepared sharedrawresolver/lowerexacthelper; preserveactualmesh/section/top_outline in _wall_cutters",
+    "Route globalverticalprisms separatelyfromnonprismaticnativecutters; preservecolumnbore airreservations explicitly",
+    "Add explicitguard/flight owners to only actual3D-positive walls afterrootcontinuousguard76040 publication",
+    "RunneutralGREENandactualwall3D/volume/paint/nativechecks"
+  ],
+  "helper_contract": "Launcher _subtract_convex_material takes explicit convex mesh stock with material+role. Normalize prism via _polyhedron_part(part_vertices(cell),part_faces(cell)); originalplaneprovenance/exactprivate states preserved; no bboxovercut.",
+  "construction_green": "construction-details-complete-green-r92.json5PASS5.796s, runner5.828s; c3182d049882 beforelaterrootchanges",
+  "remaining_native_note": "Pilotis gravel1652parts minimum XYarea4.3221533e-9m²;5below1e-6,1below1e-8. Do notfilter/snap arbitrarily; finalnativeSDKcohort must audit these legitimate partitionfragments and diagnose anyresolutionlimit.",
+  "previous_session": {
+    "id": 40085,
+    "status": "Unknown process id after root hardware recovery; no generated RED result; not cancelled by this lane"
+  },
+  "current_green": "wall-interface-green-r92.json:1testPASS0.764s",
+  "new_inputs": [
+    "wall-interface-implementation-r92.py now has prepared shared _interface_owner_parts + _subtract_native_material + smallwalladapter; not yet replacing published singlehelper"
+  ]
+}

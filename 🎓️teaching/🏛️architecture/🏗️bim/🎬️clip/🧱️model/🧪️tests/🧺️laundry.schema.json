@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "uncertainty_m",
+    "tag",
+    "class",
+    "predefined_type",
+    "bounds",
+    "bowls",
+    "wall",
+    "back_deck",
+    "floor",
+    "rim",
+    "legs",
+    "tap_segments",
+    "tolerance"
+  ],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "uncertainty_m": {
+      "type": "number"
+    },
+    "tag": {
+      "type": "string"
+    },
+    "class": {
+      "const": "IfcSanitaryTerminal"
+    },
+    "predefined_type": {
+      "const": "SINK"
+    },
+    "bounds": {
+      "$ref": "#/$defs/bounds"
+    },
+    "bowls": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tap",
+          "bounds",
+          "mount",
+          "outlet",
+          "drain"
+        ],
+        "properties": {
+          "tap": {
+            "type": "string"
+          },
+          "bounds": {
+            "$ref": "#/$defs/bounds"
+          },
+          "mount": {
+            "$ref": "#/$defs/p3"
+          },
+          "outlet": {
+            "$ref": "#/$defs/p3"
+          },
+          "drain": {
+            "$ref": "#/$defs/p3"
+          }
+        }
+      }
+    },
+    "wall": {
+      "type": "number"
+    },
+    "back_deck": {
+      "type": "number"
+    },
+    "floor": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "rim": {
+      "type": "number"
+    },
+    "legs": {
+      "const": 8
+    },
+    "tap_segments": {
+      "const": 32
+    },
+    "tolerance": {
+      "type": "number"
+    }
+  },
+  "$defs": {
+    "bounds": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "p3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

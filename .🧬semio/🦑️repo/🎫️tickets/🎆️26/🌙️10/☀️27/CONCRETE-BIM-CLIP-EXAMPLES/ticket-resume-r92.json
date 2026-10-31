@@ -1,0 +1,11 @@
+{
+  "name": "ticket_reopen",
+  "arguments": {
+    "path": "26/10/27/CONCRETE-BIM-CLIP-EXAMPLES",
+    "prompt": "Complete Villa Savoye end to end. Repair all blockers, remodel every source-attested missing element and detail across all storeys, complete native tests and all six bilingual clips for both audiences, visually verify and close only on completion.",
+    "client": "codex",
+    "effort": "high",
+    "no_management": true
+  }
+}
+                         

@@ -417,9 +417,9 @@ class Section(_s.SheetMixin):
             if item["kind"] != "services":
                 continue
             data = item["data"]
-            fill, stroke, opacity, bonus = self._pair(look, item, SERV, SERV)
             cut_group, back = _engine.VGroup(), _engine.VGroup()
             for part in data["parts"]:
+                fill,stroke,opacity,bonus = self._pair(look,item,_c.service_surface_color(data,part),SERV)
                 ring = _c._model.part_footprint(part)
                 z0,z1 = part["z0"],part["z1"]
                 kind = plane.classify(*plane.extent(ring))
@@ -477,7 +477,9 @@ class Section(_s.SheetMixin):
                 if facing <= 1e-3:
                     continue
                 centre = np.mean(vertices,axis=0)
-                faces.append({"tag":tag,"item":item,"vertices":vertices,"facing":facing,"fill":fill,"stroke":INK,"kind":kind,"depth":view.depth(*centre)})
+                appearance=_c.face_appearance(part,vertices,"solid")
+                colour=_c.appearance_colour(appearance,fill)
+                faces.append({"tag":tag,"item":item,"vertices":vertices,"facing":facing,"fill":colour,"stroke":colour if isinstance(appearance,dict) else INK,"kind":kind,"depth":view.depth(*centre)})
 
         centre_xy = np.array([box["length"] / 2, box["width"] / 2])
         if "architecture" in use:
@@ -490,7 +492,8 @@ class Section(_s.SheetMixin):
                         dv = np.asarray(b)-np.asarray(a)
                         n = np.array([dv[1],-dv[0]])/max(np.linalg.norm(dv),EPS)
                         glass = part["role"]=="glass"
-                        add_face(curtain["tag"],curtain,a,b,part["z0"],part["z1"],n,GLASS if glass else INK,GLASS if glass else INK,"glass" if glass else "solid",extra={"opening":curtain["data"]["opening"]} if "opening" in curtain["data"] else None)
+                        colour=_c.appearance_colour(_c.face_appearance(part,[],"frame"),GLASS if glass else INK) if part.get("surface_appearance") else GLASS if glass else INK
+                        add_face(curtain["tag"],curtain,a,b,part["z0"],part["z1"],n,colour,colour,"glass" if glass else "solid",extra={"opening":curtain["data"]["opening"]} if "opening" in curtain["data"] else None)
 
             for item in catalogue:
                 if item["kind"] == "walls":
@@ -507,7 +510,10 @@ class Section(_s.SheetMixin):
                         for a,b in zip(ring,ring[1:]+ring[:1]):
                             delta = np.asarray(b)-np.asarray(a)
                             normal = np.array([delta[1],-delta[0]])/max(np.linalg.norm(delta),EPS)*(1 if area>=0 else -1)
-                            add_face(wall["tag"],item,a,b,part["z0"],part["z1"],normal,GREEN_FILL if wall["storey"]=="ground" else WALL_FILL,INK,"solid")
+                            points=[[*a,part["z0"]],[*b,part["z0"]],[*b,part["z1"]],[*a,part["z1"]]]
+                            appearance=_c.face_appearance(part,points if area>=0 else points[::-1],"wall")
+                            fill=_c.appearance_colour(appearance,GREEN_FILL if wall["storey"]=="ground" else WALL_FILL)
+                            add_face(wall["tag"],item,a,b,part["z0"],part["z1"],normal,fill,fill if isinstance(appearance,dict) else INK,"solid")
                     for op in wall["openings"]:
                         tag = op.get("fill_tag") or op.get("window_tag") or op["tag"]
                         cls = op.get("fill_class")
@@ -522,7 +528,8 @@ class Section(_s.SheetMixin):
                                     delta = np.asarray(b)-np.asarray(a)
                                     normal = np.array([delta[1],-delta[0]])/max(np.linalg.norm(delta),EPS)
                                     glass = part["role"]=="glass"
-                                    add_face(tag,opening_item,a,b,part["z0"],part["z1"],normal,GLASS if glass else INK,GLASS if glass else INK,"glass" if glass else "solid",{"opening":op["tag"]})
+                                    colour=_c.appearance_colour(_c.face_appearance(part,[],"frame"),GLASS if glass else INK) if part.get("surface_appearance") else GLASS if glass else INK
+                                    add_face(tag,opening_item,a,b,part["z0"],part["z1"],normal,colour,colour,"glass" if glass else "solid",{"opening":op["tag"]})
                 elif item["kind"] == "screens":
                     data = item["data"]
                     for part in data["parts"]:
@@ -564,7 +571,7 @@ class Section(_s.SheetMixin):
                     continue
                 data = item["data"]
                 for part in data["parts"]:
-                    if "top_outline" in part:
+                    if any(key in part for key in ("top_outline","section","mesh")):
                         if _c.inside(window,_c._model.part_footprint(part),0.5):
                             add_loft(data["tag"],item,part,CONCRETE,"solid")
                         continue
@@ -582,7 +589,7 @@ class Section(_s.SheetMixin):
             for item in catalogue:
                 if item["kind"] == "services":
                     for part in item["data"]["parts"]:
-                        add_loft(item["tag"],item,part,SERV,"solid")
+                        add_loft(item["tag"],item,part,_c.service_surface_color(item["data"],part),"solid")
         if ground:
             strip = _s.ground_strip(self, to, -1.5, horizontal + 1.5, 0.5)
             d.parts["ground"] = strip

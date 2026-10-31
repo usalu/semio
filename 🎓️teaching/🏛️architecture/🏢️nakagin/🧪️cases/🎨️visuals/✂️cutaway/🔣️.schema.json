@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Exact Cutaway Material",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases",
+    "boundary_identity"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "vertices",
+          "normal",
+          "planes",
+          "area",
+          "loops"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "vertices": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "normal": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "planes": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 2,
+              "maxItems": 2
+            }
+          },
+          "area": {
+            "type": "number",
+            "minimum": 0
+          },
+          "loops": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "boundary_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contacts",
+        "positive_limit",
+        "ulp_multiplier"
+      ],
+      "properties": {
+        "contacts": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "vertices",
+              "normal",
+              "planes"
+            ],
+            "properties": {
+              "vertices": {
+                "type": "array",
+                "minItems": 3,
+                "items": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "normal": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "planes": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "prefixItems": [
+                    {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "number"
+                      }
+                    },
+                    {
+                      "type": "number"
+                    }
+                  ],
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            }
+          }
+        },
+        "positive_limit": {
+          "type": "number"
+        },
+        "ulp_multiplier": {
+          "const": 64
+        }
+      }
+    }
+  }
+}

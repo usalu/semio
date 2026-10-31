@@ -13,7 +13,7 @@ Vollständige Texte der vier Excel-Videos. Alle Werte stammen aus einem gerundet
 
 Video: `excel_anatomy`
 
-Der Nakagin-Turm im Lehrmodell: Kapseln in vier Typen. Wie viel Fläche bietet eine, und was passiert, wenn sich ihre Breite ändert?
+Wir wenden vier vorgeschlagene A–D-Studien auf den rekonstruierten Nakagin an. Arbeitsmappenmaße sind nominale Studieneingaben; das detaillierte Referenzgehäuse misst 2,6 mal 4,2 Meter. Wie viel Nutzfläche bietet eine?
 
 Eine Arbeitsmappe ist die ganze Datei: Nakagin.xlsx enthält die Berechnung des ganzen Gebäudes.
 
@@ -21,7 +21,7 @@ Arbeitsblätter sind die Register darin: Programm, je Kapseltyp ein Blatt, Klima
 
 Ein Arbeitsblatt ist ein Raster: Spalten haben Buchstaben, Zeilen Nummern. Typ A beschreibt eine Kapsel.
 
-Eine Zelle heißt nach Spalte und Zeile. B2 ist die Breite der Kapsel, angezeigt mit Einheit.
+Eine Zelle heißt nach Spalte und Zeile. B2 ist die nominale Studienbreite, angezeigt mit Einheit.
 
 Ein Bereich fasst Zellen zusammen: B2:B4 enthält Breite, Länge und Höhe.
 
@@ -63,7 +63,7 @@ Merken wir uns: Arbeitsmappe, Arbeitsblatt, Zelle, Bezug, Formel, Funktion, Name
 
 Video: `excel_references`
 
-In diesem Lehrmodell des Nakagin-Turms steht die Breite jeder Typ-A-Kapsel in einer Zelle. Was folgt, wenn sie sich ändert?
+Die nominale Breite des vorgeschlagenen Programms A steht in einer Zelle. Die detaillierte Gehäusezeichnung bleibt die physische Referenz. Was folgt, wenn sich die Studieneingabe ändert?
 
 Ein Bezug ist eine Adresse, keine Zahl. D3 zeigt auf B2 und B3, eine breitere Kapsel ergibt also eine größere Dachfläche.
 
@@ -115,7 +115,7 @@ Fazit: relativ wandert, absolut bleibt, gemischt sperrt eine Richtung, Blatt- un
 
 Video: `excel_program`
 
-Im Lehrmodell trägt der Nakagin Capsule Tower 140 Kapseln in vier Typen. Wie viele von jedem Typ, und wie viel Fläche bieten sie?
+Vier vorgeschlagene Raumprogramme A–D füllen die 140 rekonstruierten Kapseln. Wie viele je Programm, und wie viel Fläche?
 
 Ein Raumprogramm listet je Raum die Einbauten, die Flächen und die Nutzer. Hier ist es auf eine Kapsel reduziert.
 
@@ -169,11 +169,11 @@ Video: `excel_energy`
 
 Wie viel Wärme braucht eine Nakagin-Kapsel im Tokioter Winter? Wir rechnen es in Excel, Blatt für Blatt.
 
-Jeder Kapseltyp hat ein eigenes Arbeitsblatt. Typ A enthält Maße, Flächen und Ergebnisse dieses vereinfachten Lehrmodells.
+Jedes vorgeschlagene A–D-Programm hat ein Arbeitsblatt. Maße und thermische Randbedingungen sind nominale Eingaben der Lehrstudie.
 
-Drei Konstanten beschreiben die Hülle: Breite, Länge und Höhe. An der Kapsel sind es die drei Maßlinien.
+Die nominale Energiestudie misst 2,5 mal 4 Meter. Referenzmaßlinien messen das tatsächliche 2,6 mal 4,2 Meter große Gehäuse; beide Maßgrundlagen bleiben getrennt.
 
-Jede Fläche ist eine Formel aus diesen Maßen. Die Frontwand ist Breite mal Höhe abzüglich des runden Fensters.
+Studienflächen nutzen nominale Maße: Die Frontwand ist Breite mal Höhe abzüglich Rundfenster. Die Referenzzeichnung zeigt die zugehörigen physischen Bauteile.
 
 Die Rückwand ist am Kern verschraubt, deshalb entweicht nur ein Teil ihrer Wärme: Ihr U·A wird mit dem Anbindungsfaktor b multipliziert.
 
@@ -201,7 +201,7 @@ Jahresbedarf: Verlust je Kelvin mal Gradtage mal 24 Stunden, geteilt durch 1000,
 
 Das Blatt Energie multipliziert den Bedarf jedes Typs mit seiner Kapselzahl aus dem Blatt Programm und summiert das ganze Gebäude.
 
-A, B und D teilen eine Hülle, Einbauten ändern den Verlust nicht. Nur C mit dem größeren Fenster braucht mehr.
+Die vier Programmstudien haben dieselbe Hülle und dasselbe Rundfenster, ihr Wärmeverlust ist gleich.
 
 Warum so viel für so wenig Boden? Fünf Außenflächen umhüllen einen kleinen Raum. Beheizte Nachbarn würden den Bedarf deutlich senken.
 

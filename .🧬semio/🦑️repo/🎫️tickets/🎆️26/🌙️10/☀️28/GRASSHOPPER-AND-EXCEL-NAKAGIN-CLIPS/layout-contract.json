@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "total": 140,
+  "source": "https://readyfor.jp/projects/time_capsule_2072/announcements/241581",
+  "floor_schedule_source": "https://note.com/kotatsustories/n/nb6c501853f0f",
+  "towers": {
+    "A": {
+      "total": 76,
+      "first_floor": 3,
+      "floors": [
+        2,
+        7,
+        7,
+        7,
+        8,
+        8,
+        7,
+        8,
+        8,
+        7,
+        7
+      ]
+    },
+    "B": {
+      "total": 64,
+      "first_floor": 3,
+      "floors": [
+        2,
+        8,
+        8,
+        7,
+        8,
+        8,
+        7,
+        8,
+        8
+      ]
+    }
+  }
+}

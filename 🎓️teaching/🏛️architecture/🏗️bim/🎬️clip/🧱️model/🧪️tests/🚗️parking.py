@@ -97,6 +97,75 @@ def _signature(source,vehicle):
     return hashlib.sha256(json.dumps(normalize(data),ensure_ascii=False,separators=(',',':')).encode()).hexdigest()
 
 
+def _independent_band_records(records, lower, upper):
+    """🔬 Project native occupied parts with independent SciPy mesh clipping and GEOS planar operations."""
+    from scipy.spatial import ConvexHull
+    from shapely.ops import triangulate
+    result=[]
+    for record in records:
+        part=record['geometry']
+        lo,hi=max(part['z0'],lower),min(part['z1'],upper)
+        if hi-lo<=1e-10:
+            continue
+        if 'mesh' in part:
+            vertices=np.asarray(part['mesh']['vertices'],dtype=float)
+            hull=ConvexHull(vertices)
+            volume=abs(sum(float(np.dot(vertices[face[0]],np.cross(vertices[face[i]],vertices[face[i+1]])))/6 for face in part['mesh']['faces'] for i in range(1,len(face)-1)))
+            if not math.isclose(volume,hull.volume,rel_tol=1e-9,abs_tol=1e-12):
+                raise ValueError('Independent parking oracle requires a proven convex mesh: '+record['tag'])
+            points=[p[:2] for p in vertices if lo<=p[2]<=hi]
+            for face in hull.simplices:
+                for i,j in zip(face,np.roll(face,1)):
+                    a,b=vertices[i],vertices[j]
+                    for z in (lo,hi):
+                        if (a[2]-z)*(b[2]-z)<0:
+                            points.append((a+(b-a)*(z-a[2])/(b[2]-a[2]))[:2])
+            shapes=[MultiPoint(points).convex_hull]
+        elif 'section' in part:
+            section=part['section']
+            clipped=Polygon(section['profile']).intersection(box(-1e6,lo,1e6,hi))
+            components=list(clipped.geoms) if hasattr(clipped,'geoms') else [clipped]
+            shapes=[]
+            for shape in components:
+                if shape.area<=1e-12:
+                    continue
+                u,_,v,_=shape.bounds
+                a,b=section['sweep']
+                shapes.append(Polygon([[u,a],[v,a],[v,b],[u,b]] if section['plane']=='XZ' else [[a,u],[b,u],[b,v],[a,v]]))
+        elif 'top_outline' in part:
+            bottom=np.asarray(part['outline'],dtype=float)
+            delta=np.asarray(part['top_outline'],dtype=float)-bottom
+            start=bottom+(lo-part['z0'])/(part['z1']-part['z0'])*delta
+            end=bottom+(hi-part['z0'])/(part['z1']-part['z0'])*delta
+            shapes=[Polygon(start),Polygon(end)]
+            for index in range(len(start)):
+                following=(index+1)%len(start)
+                for points in ((start[index],start[following],end[following]),(start[index],end[following],end[index])):
+                    polygon=Polygon(points)
+                    if polygon.area>0:
+                        shapes.append(polygon)
+            from shapely.ops import unary_union
+            shapes=[unary_union(shapes)]
+        else:
+            shapes=[Polygon(part['outline'],part.get('holes',[]))]
+        pending=[shape for shape in shapes if not shape.is_empty and shape.area>0]
+        while pending:
+            shape=pending.pop()
+            if shape.geom_type in ('MultiPolygon','GeometryCollection'):
+                pending.extend(g for g in shape.geoms if g.area>0)
+                continue
+            if not shape.is_valid:
+                raise ValueError('Independent parking source polygon is invalid: '+record['tag'])
+            if shape.interiors:
+                for triangle in triangulate(shape):
+                    clipped=triangle.intersection(shape)
+                    if not clipped.is_empty and clipped.area>0:
+                        pending.append(clipped)
+                continue
+            result.append({**{k:v for k,v in record.items() if k!='geometry'},'outline':[list(map(float,p)) for p in list(shape.exterior.coords)[:-1]],'z0':lo,'z1':hi})
+    return result
+
+
 def _rectangle(pose,vehicle):
     a=math.radians(pose['angle_degrees']);c,s=math.cos(a),math.sin(a)
     points=np.array([[-1,-1],[1,-1],[1,1],[-1,1]])*np.array([vehicle['length'],vehicle['width']])/2
@@ -198,38 +267,49 @@ class ParkingContract(unittest.TestCase):
         self.assertLess(areas["source-identity"], fixture["total_xor_tolerance"])
 
     def test_physical_oracle_matches_native_height_intersections(self):
+        """🧊 Cross-check current native projection, independent3D clipping and the source-bound fixture."""
         from collections import defaultdict
-        from scipy.spatial import ConvexHull
         from shapely.ops import unary_union
-        actual,expected=defaultdict(list),defaultdict(list)
-        def key(record,lo,hi):return record['tag'],record['kind'],record['role'],round(lo,6),round(hi,6)
-        for record in api._vehicle_parts(api.load_model()):
-            part=record['geometry'];lo=max(part['z0'],self.fixture['car']['z0']);hi=min(part['z1'],self.fixture['car']['z0']+self.fixture['car']['height'])
-            if hi-lo<=1e-10:continue
-            if 'mesh' in part:
-                vertices=np.asarray(part['mesh']['vertices']);hull=ConvexHull(vertices);points=[p[:2] for p in vertices if lo<=p[2]<=hi]
-                for face in hull.simplices:
-                    for i,j in zip(face,np.roll(face,1)):
-                        a,b=vertices[i],vertices[j]
-                        for z in (lo,hi):
-                            if (a[2]-z)*(b[2]-z)<0:points.append((a+(b-a)*(z-a[2])/(b[2]-a[2]))[:2])
-                shapes=[MultiPoint(points).convex_hull]
-            elif part.get('holes'):shapes=[Polygon(part['outline'],part['holes'])]
-            elif 'section' in part:
-                sec=part['section'];cut=Polygon(sec['profile']).intersection(box(-1e6,lo,1e6,hi));components=list(cut.geoms) if hasattr(cut,'geoms') else [cut];shapes=[]
-                for shape in components:
-                    if shape.area<=1e-12:continue
-                    u,_,v,_=shape.bounds;a,b=sec['sweep']
-                    shapes.append(Polygon([[u,a],[v,a],[v,b],[u,b]] if sec['plane']=='XZ' else [[a,u],[b,u],[b,v],[a,v]]))
-            elif 'top_outline' in part:
-                alpha=(lo-part['z0'])/(part['z1']-part['z0']);beta=(hi-part['z0'])/(part['z1']-part['z0']);bottom=np.asarray(part['outline']);delta=np.asarray(part['top_outline'])-bottom
-                shapes=[MultiPoint(np.concatenate([bottom+alpha*delta,bottom+beta*delta])).convex_hull]
-            else:shapes=[Polygon(part['outline'])]
-            actual[key(record,lo,hi)].extend(shapes)
-        for record in self.fixture['physical_obstacles']:expected[key(record,record['z0'],record['z1'])].append(Polygon(record['outline']))
+        low,high=self.fixture['car']['z0'],self.fixture['car']['z0']+self.fixture['car']['height']
+        oracle=_independent_band_records(api._vehicle_parts(self.source),low,high)
+        native=api.vehicle_obstacles(self.source,low,high)
+        def groups(records):
+            grouped=defaultdict(list)
+            for record in records:
+                key=record['tag'],record['kind'],record['role'],round(record['z0'],6),round(record['z1'],6)
+                grouped[key].append(Polygon(record['outline']))
+            return grouped
+        independent,actual,expected=map(groups,(oracle,native,self.fixture['physical_obstacles']))
+        self.assertEqual(set(actual),set(independent))
         self.assertEqual(set(actual),set(expected))
-        cases = [{"id":json.dumps(group), "actual":[polygon for geometry in actual[group] for polygon in _polygon_rings(geometry)], "expected":[polygon for geometry in expected[group] for polygon in _polygon_rings(geometry)]} for group in actual]
-        for case in _overlay_cases(cases):self.assertLess(case["xor_area"],1e-8,case["id"])
+        cases=[]
+        for key in actual:
+            reference=unary_union(independent[key])
+            self.assertLess(unary_union(actual[key]).symmetric_difference(reference).area,1e-8,str(key))
+            self.assertLess(unary_union(expected[key]).symmetric_difference(reference).area,1e-8,str(key))
+            for name,values in (('native',actual),('fixture',expected)):
+                cases.append({'id':name+json.dumps(key),'actual':[polygon for geometry in values[key] for polygon in _polygon_rings(geometry)],'expected':[polygon for polygon in _polygon_rings(reference)]})
+        for case in _overlay_cases(cases):
+            self.assertLess(case['xor_area'],1e-8,case['id'])
+
+
+    def test_independent_height_oracle_preserves_neutral_band_cases(self):
+        """🧪 Compare independent GEOS/SciPy height projections with the neutral native-shape cases."""
+        from shapely.ops import unary_union
+        data=self.fixture['band_cases']
+        for case in data['cases']:
+            record={'tag':case['id'],'kind':'neutral','role':'occupied','geometry':case['part']}
+            result=_independent_band_records([record],*data['band'])
+            actual=unary_union([Polygon(r['outline']) for r in result])
+            expected=unary_union([Polygon(r) for r in case['expected']])
+            self.assertLess(actual.symmetric_difference(expected).area,1e-9,case['id'])
+        import jsonschema
+        extra=json.loads(PATH.with_name("🚗️parking-oracle.json").read_text(encoding="utf-8"))
+        jsonschema.validate(extra,json.loads(PATH.with_name("🚗️parking-oracle.schema.json").read_text(encoding="utf-8")))
+        for case in extra["rejections"]:
+            with self.assertRaisesRegex(ValueError,"proven convex"):
+                _independent_band_records([{"tag":case["id"],"kind":"neutral","role":"occupied","geometry":case["part"]}],*extra["band"])
+
 
     def test_native_collision_band_projects_actual_section_occupancy(self):
         data=self.fixture['band_cases']
@@ -267,4 +347,4 @@ class ParkingContract(unittest.TestCase):
             self.assertEqual(_signature(model,self.fixture['car'])!=baseline,case['included'],case['id'])
 
 if __name__=='__main__':unittest.main()
-      
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    

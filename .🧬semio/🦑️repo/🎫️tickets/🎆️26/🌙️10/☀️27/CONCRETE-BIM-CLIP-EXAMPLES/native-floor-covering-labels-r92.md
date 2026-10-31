@@ -1,0 +1,5 @@
+# Native Floor Covering Labels R92
+
+Floor ownership uses the explicit class IfcCovering plus predefined_type FLOORING discriminator. Architecture-only FLOORING products now receive a dedicated bilingual analytical-loss row. CLADDING and INSULATION coverings remain in service products. Shared IfcCovering class meanings are now finishes/cladding/insulation rather than falsely describing every covering as service casing.
+
+The portable neutral fixture adds one FLOORING architecture identity and one CLADDING service identity of the same native class. The actual chapter callback is executed in both languages, with independent Counter class counts and exact-once loss partition assertions. Source floor products must have metadata.domains=[architecture], architecture model membership and no services membership. The class-label and floor-row tests first failed; all19chapter contracts then passed17.101seconds, followed by the explicit domain check0.581seconds. Final native visual inspection will check the additional floor-loss row at full resolution.

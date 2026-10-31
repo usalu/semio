@@ -1,0 +1,19 @@
+{
+  "title": "Raised Exclusive Beam Ownership Above Regional Slab Caps",
+  "floor_tags": [
+    "FIN-FIRST-THRESHOLDS",
+    "FIN-TERRACE-PAVING",
+    "FIN-TERRACE-GRASS",
+    "FIN-BOUDOIR"
+  ],
+  "beam_tags": [
+    "BEAM-PRIMARY-F-1-6",
+    "BEAM-PRIMARY-F-6-29",
+    "BEAM-PRIMARY-F-5-33",
+    "BEAM-PRIMARY-F-24-30",
+    "BEAM-PRIMARY-F-13-25",
+    "BEAM-PRIMARY-F-25-28"
+  ],
+  "finished": 3.17,
+  "tolerance": 1e-8
+}

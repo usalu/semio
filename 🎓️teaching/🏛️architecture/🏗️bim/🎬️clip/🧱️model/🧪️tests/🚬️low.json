@@ -1,0 +1,37 @@
+{
+  "historical_state": "original-completed-1930-1931",
+  "source": "SAB2024-p47-p234-p235",
+  "structural_top": 6.51,
+  "top": 6.9,
+  "outside": 0.36,
+  "bore": 0.17,
+  "render": 0.01,
+  "inner_finish": 0.01,
+  "segments": 96,
+  "tolerance": 1e-8,
+  "xy_uncertainty": 0.08,
+  "top_uncertainty": 0.15,
+  "terminals": [
+    {
+      "tag": "CHIMNEY-BOUDOIR-LOW",
+      "opening": "OP-BOUDOIR-LOW-ROOF",
+      "axis": [
+        11.916912,
+        18.783088
+      ],
+      "space": "SP-BOUDOIR",
+      "function": "Boudoir stove"
+    },
+    {
+      "tag": "CHIMNEY-LINGERIE-LOW",
+      "opening": "OP-LINGERIE-LOW-ROOF",
+      "axis": [
+        3.981618,
+        19.872794
+      ],
+      "space": "SP-LAUNDRY",
+      "function": "Laundry/linen room flue"
+    }
+  ],
+  "native_attributes": 9
+}

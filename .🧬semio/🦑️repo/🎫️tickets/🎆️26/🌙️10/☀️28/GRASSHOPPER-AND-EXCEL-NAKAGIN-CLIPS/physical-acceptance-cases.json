@@ -1,0 +1,41 @@
+{
+  "expected_domains": {
+    "shared": 59,
+    "🚶️circulation": 18,
+    "📦️casing": 22,
+    "💊️detail": 9,
+    "🪟️window": 2,
+    "🧭️poses": 2,
+    "📍️survey": 6,
+    "🪟️unit": 8,
+    "🔧️mounts": 4,
+    "💡️light": 2,
+    "🧱️panel": 3
+  },
+  "unconsumed_paths": [
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️cases/👁️occlusion/🔣️.json",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️tests/👁️occlusion/🐍️.py",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️tests/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️cases/🎨️visuals/🔣️.json",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️cases/👁️occlusion/🔣️.schema.json",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️tests/👁️occlusion/🟨️.cjs"
+  ],
+  "invalid_domain_mutations": [
+    "empty",
+    "missing",
+    "duplicate",
+    "wrong-count",
+    "unknown",
+    "failure",
+    "error"
+  ],
+  "drift_during_run": [],
+  "drift_after_run": [
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️cases/🎨️visuals/🔣️.json",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️cases/👁️occlusion/🔣️.json",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️tests/🎨️visuals/🐍️.py",
+    "🎓️teaching/🏛️architecture/🏢️nakagin/🧪️tests/👁️occlusion/🐍️.py"
+  ]
+}

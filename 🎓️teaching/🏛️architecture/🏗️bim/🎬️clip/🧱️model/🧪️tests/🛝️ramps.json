@@ -10,10 +10,32 @@
       "RF-2A",
       "RF-2B"
     ],
-    "full_volume": 1.677354,
-    "landing_volume": 0.430458,
-    "shared_landing_volume": 0.11634,
-    "flight_volume": 0.623448
+    "flight_volumes": {
+      "RF-1A": 0.7089646074749076,
+      "RF-1B": 0.7317611576080238,
+      "RF-2A": 0.7495117914113748,
+      "RF-2B": 0.7396049103830065
+    },
+    "flight_joint_owners": {
+      "RF-1B": [
+        "RF-1A",
+        "RF-2A"
+      ],
+      "RF-2B": [
+        "RF-2A"
+      ]
+    },
+    "joint_cuts": {
+      "RF-1A": 0.0017661125250922876,
+      "RF-1B": 0.012220122391973523,
+      "RF-2A": 0.007977528588620905,
+      "RF-2B": 0.0199625696169963
+    },
+    "exclusive_volume": 3.3376804668773126,
+    "landing_volumes": {
+      "RM-1": 0.204162,
+      "RM-2": 0.203676
+    }
   },
   "diagonal": {
     "path": [
@@ -54,20 +76,41 @@
       ]
     ],
     "top_z": [
-      0,
-      0,
-      1,
-      1
+      -0.03,
+      -0.03,
+      0.97,
+      0.97
     ],
     "bottom_z": [
-      -0.2,
-      -0.2,
-      0.8,
-      0.8
+      -0.23,
+      -0.23,
+      0.77,
+      0.77
     ],
     "cut": {
       "axis": 0,
       "value": 1.5
     }
-  }
+  },
+  "invalid_joint_owners": [
+    {
+      "flight": "RF-1A",
+      "owners": [
+        "RF-2A"
+      ]
+    },
+    {
+      "flight": "RF-1B",
+      "owners": [
+        "RF-1B"
+      ]
+    },
+    {
+      "flight": "RF-1B",
+      "owners": [
+        "RF-1A",
+        "RF-1A"
+      ]
+    }
+  ]
 }

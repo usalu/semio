@@ -97,26 +97,17 @@ def test_upper_stair_arrival_is_supported_and_clear_of_its_guards():
                     assert body.intersection(MultiPoint(p["outline"]+p.get("top_outline",[])).convex_hull).area<1e-8,(tag,rail["tag"])
 
 
-def test_u_handrails_have_connected_physical_sections_and_nominal_volume():
-    """🔗 Check the complete U handrail against GEOS caps and independent NumPy volume."""
-    import numpy as np
-    from shapely.geometry import Polygon
-    geometry=model.building_geometry()
-    rails={e["tag"]:e for e in geometry["railings"]}
-    for tag in ["TUBE-ST-GF","TUBE-ST-FR"]:
-        parts=rails[tag]["parts"]
-        oracle=0.;length=0.
-        for p in parts:
-            bottom,top=np.array(p["outline"]),np.array(p["top_outline"])
-            assert np.allclose(top-bottom,(top-bottom)[0],atol=1e-10)
-            area=abs(np.dot(bottom[:,0],np.roll(bottom[:,1],1))-np.dot(bottom[:,1],np.roll(bottom[:,0],1)))/2
-            dz=p["z1"]-p["z0"]
-            oracle+=area*dz
-            delta=top.mean(axis=0)-bottom.mean(axis=0)
-            length+=np.linalg.norm(np.r_[delta,dz])
-        assert abs(oracle/(math.pi*.0175**2*length)-1)<.012
-        assert math.isclose(model._occupied_volume(parts),oracle,rel_tol=1e-8,abs_tol=1e-9)
-        for a,b in zip(parts,parts[1:]):
-            assert math.isclose(a["z1"],b["z0"],abs_tol=1e-9)
-            assert Polygon(a["top_outline"]).intersection(Polygon(b["outline"])).area>1e-6
-  
+def test_u_handrails_keep_hollow_material_and_registered_miter_routes():
+    """🔗 Compare hollow handrail metal with SciPy and preserve shared original route stations."""
+    from scipy.spatial import ConvexHull
+    source=model.load_model();profiles=importlib.import_module('🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🧊️profiles.🐍️')
+    for tag in ('TUBE-ST-GF','TUBE-ST-FR'):
+        obj=model._find(source,tag);construction=obj['geometry']['tube_construction'];parts=model.solid_geometry(tag,source)['parts']
+        diameter,gauge=construction['diameter']['value'],construction['wall_thickness']['value'];n=construction['segments'];length=0.
+        for route in construction['routes']:
+            length+=sum(math.dist(a,b)for a,b in zip(route['points'],route['points'][1:]));reference=profiles.hollow_polyline(route['points'],diameter,gauge,n)
+            for a,b in zip(reference['outer'],reference['outer'][1:]):assert a['mesh']['vertices'][n:]==b['mesh']['vertices'][:n]
+        oracle=sum(ConvexHull(model.part_vertices(p)).volume for p in parts);native=sum(model._polyhedron_volume(p)for p in parts)
+        nominal=n*math.sin(2*math.pi/n)/2*((diameter/2)**2-(diameter/2-gauge)**2)*length
+        assert 0<oracle<=nominal*(1+1e-8)
+        assert math.isclose(native,oracle,rel_tol=1e-8,abs_tol=1e-10)

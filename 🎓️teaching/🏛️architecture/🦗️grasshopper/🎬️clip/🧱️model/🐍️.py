@@ -250,16 +250,22 @@ class Brep:
         s = self.solid
         while s["kind"] in ("fillet", "difference"):
             s = s["base"]
-        return apply(self.xform, s["box"]) if s["kind"] == "box" else None
+        return apply(self.xform, s["box"]) if s["kind"] in ("box", "assembly") else None
 
     def cuts(self) -> tuple:
         return tuple(self.solid["cuts"]) if self.solid["kind"] == "difference" else ()
 
     def window(self) -> Circle | None:
+        if self.solid["kind"] == "assembly":
+            return apply(self.xform, self.solid["window"])
         for cut in self.cuts():
             if cut["kind"] == "cylinder":
                 return apply(self.xform, Circle(cut["plane"], cut["radius"]))
         return None
+
+    def parts(self) -> tuple:
+        """🧱 World-space semantic polyhedra carried by an authored capsule assembly."""
+        return tuple({**part, "vertices": tuple(xform_point(self.xform, p) for p in part["vertices"])} for part in self.solid.get("parts", ()))
 
     def fillet_radius(self) -> float:
         s = self.solid
@@ -284,6 +290,8 @@ def solid_volume(s: dict) -> float:
     k = s["kind"]
     if k == "box":
         return s["box"].volume
+    if k == "assembly":
+        return sum(abs(sum(_dot(vertices[face[0]], _cross(vertices[face[i]], vertices[face[i + 1]])) / 6 for face in part["faces"] for i in range(1, len(face) - 1))) for part in s["parts"] for vertices in (part["vertices"],))
     if k == "cylinder":
         return math.pi * s["radius"] ** 2 * s["length"]
     if k == "extrusion":
@@ -809,12 +817,14 @@ def decode(x):
             return Line(Point(*_f(v[0])), Point(*_f(v[1])))
         if k == "box":
             return Box(decode(v["plane"]), Domain(*_f(v["x"])), Domain(*_f(v["y"])), Domain(*_f(v["z"])))
-        if k == "capsule":
-            return make_capsule_of(v)
-        if k == "capsule_window":
-            return make_capsule_of(v).window()
-        if k == "capsule_box":
-            return make_capsule_of(v).root_box()
+        if k == "reference_capsule":
+            return make_reference_capsule(v["type"], v["family"], v["interior"])
+        if k == "casing_property":
+            return getattr(_nakagin().capsule_casing(v["type"]), v["property"])
+        if k == "reference_window":
+            return make_reference_capsule(v["type"], v["family"], "reference").window()
+        if k == "reference_casing":
+            return make_reference_capsule(v, "Slash", "reference").root_box()
         if k == "nakagin":
             return nakagin_value(v)
         if k == "slot":
@@ -852,7 +862,7 @@ def capsule_type(key: str) -> dict:
 
 
 def make_capsule(width, length, height, corner, window, wall, tag=None, window_u=0.0, window_v=None) -> Brep:
-    """💊 Build a capsule exactly like the capsule canvas: box, fillet, window cut (back face at y=0, base on XY)."""
+    """💊 Build the nominal program-study canvas: box, fillet and window cut, with its program back at y=0."""
     plane = Plane.world_xy(Point(0.0, length / 2, height / 2))
     box = Box(plane, Domain(-width / 2, width / 2), Domain(-length / 2, length / 2), Domain(-height / 2, height / 2))
     fillet = {"kind": "fillet", "base": {"kind": "box", "box": box}, "radius": corner, "edges": None}
@@ -862,8 +872,9 @@ def make_capsule(width, length, height, corner, window, wall, tag=None, window_u
 
 
 def make_capsule_of(key: str) -> Brep:
+    """🧪 Construct the nominal program study from its scalar controls."""
     t = capsule_type(key)
-    return make_capsule(t["width"], t["length"], t["height"], t["corner_radius"], t["window_diameter"], t["wall"], {"type": key}, t["window_u"], t["window_v"])
+    return make_capsule(t["width"], t["length"], t["height"], t["corner_radius"], t["window_diameter"], t["wall"], {"type": key, "reference": "nominal_program"}, t["window_u"], t["window_v"])
 
 
 def _plane_of(p) -> Plane:
@@ -871,9 +882,9 @@ def _plane_of(p) -> Plane:
 
 
 def slot_part(index, part: str):
-    """📍 A part of a Nakagin slot: its plane, the unrotated facade origin or axes, or the line from the core centre."""
+    """📍 A canonical capsule placement frame, its origin or axes, or the line from the core centre."""
     slot = next(s for s in _nakagin().slots() if (s.building, s.tower, s.storey, s.facade, s.item) == tuple(index))
-    base = _plane_of(slot.facade_plane)
+    base = _plane_of(slot.plane)
     if part == "plane":
         return _plane_of(slot.plane)
     if part == "origin":
@@ -887,16 +898,8 @@ def slot_part(index, part: str):
 
 
 def aggregate_tree() -> Tree:
-    """🏢 The aggregated {BUILDING;TOWER;STORY;FACADE} tree of the Nakagin model with its oriented capsules per branch."""
-    cache = {t["key"]: make_capsule_of(t["key"]) for t in capsule_types()}
-    out = {}
-    for path, slots in _nakagin().tree().items():
-        items = []
-        for s in slots:
-            b = cache[s.type]
-            items.append(replace(b, xform=plane_to_plane(Plane.world_xy(), _plane_of(s.plane)), tag={**b.tag, "slot": (s.building, s.tower, s.storey, s.facade, s.item)}))
-        out[tuple(path)] = tuple(items)
-    return Tree(out)
+    """🏢 Actual ragged {BUILDING;TOWER;STORY;FACADE} branches with authored capsule families and typed detail."""
+    return Tree({tuple(path): tuple(replace(make_slot_capsule(s), xform=plane_to_plane(Plane.world_xy(), _plane_of(s.plane))) for s in slots) for path, slots in _nakagin().tree().items()})
 
 
 def _tower(key: str):
@@ -904,31 +907,72 @@ def _tower(key: str):
 
 
 def slot_tree(tower: str, part: str) -> Tree:
-    """🗼 Per-slot data of one Nakagin tower as a tree {0;storey}: yaw degrees, indices of absent planes to cull, or oriented-ready capsule Breps."""
+    """🚪 Authored door ports and local source frames, grouped by actual floor with explicit absent candidate indices."""
     nak, t = _nakagin(), _tower(tower)
-    base = nak.load()["towers"][t.index]["facades"]
-    present = nak.facade_storeys(t)
-    by_storey = {}
-    for slot in nak.slots():
-        if slot.tower == t.index:
-            by_storey.setdefault(slot.storey, []).append(slot)
-    if part == "cull":
-        return Tree({(0, s): tuple(p for p in range(2 * len(base)) if base[p // 2] not in present[s]) for s in range(t.capsule_storeys)})
-    if part == "yaw":
-        return Tree({(0, s): tuple(float(x.rotation) for x in by_storey[s]) for s in range(t.capsule_storeys)})
-    if part == "capsule":
-        cache = {c["key"]: make_capsule_of(c["key"]) for c in capsule_types()}
-        return Tree({(0, s): tuple(cache[x.type] for x in by_storey[s]) for s in range(t.capsule_storeys)})
-    raise ValueError(f"Unknown slot tree part {part}")
+    rows = [s for s in nak.slots() if s.tower == t.index]
+    datum = nak.value("podium.levels.2").value
+    if part == "crown_offset":
+        height = nak.value("capsule.height").value
+        return Tree.from_list(tuple(max(s.plane.origin[2] + height for s in rows if s.storey == floor) - datum - (floor + 1) * t.storey_height for floor in range(t.capsule_storeys)))
+    candidates = sorted({(s.facade, s.item) for s in rows})
+    examples = {(s.facade, s.item): s for s in rows}
+    out = {}
+    for floor in range(t.capsule_storeys):
+        actual = {(s.facade, s.item): s for s in rows if s.storey == floor}
+        present = [actual[k] for k in candidates if k in actual]
+        if part == "cull":
+            values = tuple(i for i, k in enumerate(candidates) if k not in actual)
+        elif part == "capsule":
+            values = tuple(make_slot_capsule(s) for s in present)
+        elif part == "source":
+            values = tuple(apply(invert(plane_to_plane(Plane.world_xy(), _plane_of(s.plane))), _plane_of(s.facade_plane)) for s in present)
+        elif part in ("origin", "x", "y"):
+            values = []
+            for k in candidates:
+                s = actual.get(k, examples[k])
+                p = _plane_of(s.facade_plane)
+                if part == "origin":
+                    values.append(Point(p.origin.x, p.origin.y, p.origin.z - datum - s.storey * t.storey_height))
+                else:
+                    values.append(getattr(p, part))
+            values = tuple(values)
+        else:
+            raise ValueError(f"Unknown slot tree part {part}")
+        out[(0, floor)] = values
+    return Tree(out)
+
+
+@lru_cache(maxsize=256)
+def make_reference_capsule(key: str, layout: str, interior: str) -> Brep:
+    """🧩 Decode a physical authored assembly with its casing and glazing-midplane metadata."""
+    nak = _nakagin()
+    t = nak.capsule_type(key)
+    assembly = nak.capsule_assembly(t, "exterior", layout, interior)
+    parts = tuple({"key": p.key, "role": p.role, "material": p.material, "vertices": p.solid.vertices, "faces": p.solid.faces} for p in assembly.parts)
+    casing = nak.capsule_casing(t)
+    centre = Point((casing.left + casing.right) / 2, (casing.back + casing.front) / 2, (casing.bottom + casing.top) / 2)
+    box = Box(Plane.world_xy(centre), Domain(-casing.width / 2, casing.width / 2), Domain(-casing.length / 2, casing.length / 2), Domain(-casing.height / 2, casing.height / 2))
+    glazing = nak.capsule_window(t, layout)
+    reference = (0, 0, 1) if abs(glazing.normal[2]) < .9 else (0, 1, 0)
+    x = _unit(_cross(reference, glazing.normal))
+    plane = Plane.from_axes(Point(*glazing.center), Vector(*x), Vector(*_cross(glazing.normal, x)))
+    window = Circle(plane, glazing.radius)
+    return Brep({"kind": "assembly", "parts": parts, "box": box, "window": window, "window_reference": "glazing_midplane", "box_reference": "physical_casing"}, tag={"type": key, "family": layout, "interior": interior, "reference": "physical_casing"})
+
+
+def make_slot_capsule(slot) -> Brep:
+    """🧩 Bind an authored physical reference to its actual tower slot identity."""
+    reference = make_reference_capsule(slot.type, slot.layout, "reference")
+    return replace(reference, tag={**reference.tag, "slot": (*slot.path, slot.item)})
 
 
 def tower_overrides(tower: str) -> dict:
-    """🗼 Overrides that turn the tower canvas into tower A or B of the Nakagin model (storeys, facades, centre, per-slot data)."""
-    nak, t = _nakagin(), _tower(tower)
-    base = nak.load()["towers"][t.index]["facades"]
-    lit = lambda part: {"slot_tree": {"tower": tower, "part": part}}
-    return {"n": t.capsule_storeys, "ang": [str(-90 * f) for f in base], "cx": t.center[0], "cy": t.center[1],
-            "cullp": lit("cull"), "yawp": lit("yaw"), "capp": lit("capsule")}
+    """🗼 Bind actual floor count, core centre and authored handed door-port trees for one tower."""
+    t = _tower(tower)
+    result = {"n": t.capsule_storeys, "n.max": t.capsule_storeys, "cx": t.center[0], "cy": t.center[1], "over": t.roof_clearance, "over.bind": f"towers.{tower}.roof_clearance", "ch": nakagin_value(f"towers.{tower}.capital_height"), "ch.bind": f"towers.{tower}.capital_height"}
+    for oid, part in (("portp", "origin"), ("portx", "x"), ("porty", "y"), ("cullp", "cull"), ("sourcep", "source"), ("capp", "capsule"), ("tailp", "crown_offset")):
+        result[oid] = {"slot_tree": {"tower": tower, "part": part}}
+    return result
 
 
 def data_tree(data) -> Tree:

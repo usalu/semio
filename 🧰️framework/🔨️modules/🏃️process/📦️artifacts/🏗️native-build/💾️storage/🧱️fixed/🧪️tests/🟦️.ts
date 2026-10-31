@@ -28,3 +28,14 @@ test("every reservation, commit and recheck charges the directory meter before t
  expect(fixed).toContain("await meter.admit(request,actual.signal)");expect(fixed).toContain("createNativeDirectoryMeterV1({root,filesystemBytes:options.filesystemBytes,maximumPhysicalBytes:options.maximumPhysicalBytes})");
  expect(fixed).not.toContain("measureCommitBytes");expect(port).toContain('mode:"reserve"|"commit"|"recheck"');
 });
+
+
+test("incomplete fixed births preserve only the inactive mount envelope",async()=>{
+ const {nativeFixedIncompleteBirthV1}=await import("../🌱️birth/🟦️.ts"),db=new Database(":memory:");try{for(const row of fixture.incompleteBirths){const oracle=db.query("SELECT ? = 0 AND json_array_length(?) = 1 AND json_extract(?, '$[0]') = 'm' AS accepted").get(Number(row.attached),JSON.stringify(row.entries),JSON.stringify(row.entries)) as {accepted:number};expect(Boolean(oracle.accepted),row.name).toBe(row.accepted);expect(nativeFixedIncompleteBirthV1(row.entries,row.attached),row.name).toBe(row.accepted);}}finally{db.close();}
+});
+
+
+test("fresh receipts route directory durability through the portable native interface",async()=>{
+ const ts=(await import("typescript")).default,text=await Bun.file(new URL("../🟦️.ts",import.meta.url)).text(),tree=ts.createSourceFile("fixed.ts",text,ts.ScriptTarget.Latest,true),db=new Database(":memory:");try{db.exec("CREATE TABLE call(name TEXT)");const visit=(node:import("typescript").Node)=>{if(ts.isCallExpression(node)&&ts.isIdentifier(node.expression))db.query("INSERT INTO call VALUES(?)").run(node.expression.text);ts.forEachChild(node,visit);};const target=tree.statements.find(node=>ts.isFunctionDeclaration(node)&&node.name?.text==="syncFixedPersistentReceiptV1");expect(target).toBeDefined();visit(target!);expect((db.query("SELECT count(*) AS count FROM call WHERE name=?").get(fixture.receiptDirectorySync.requiredCall) as {count:number}).count).toBe(1);expect((db.query("SELECT count(*) AS count FROM call WHERE name=?").get(fixture.receiptDirectorySync.forbiddenCall) as {count:number}).count).toBe(0);}finally{db.close();}
+});
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

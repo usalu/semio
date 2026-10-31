@@ -205,3 +205,8 @@ test("exchange binding is lazy, cached only after success and absent from non-sw
   }
  }}finally{db.close();}
 });
+
+
+test("permission-limited Windows hosts allocate only through declared fold-safe refusals",()=>{
+ const db=new Database(":memory:");try{for(const row of fixture.foldSafeRefusals){const oracle=db.query("SELECT ? IN ('caseBuild','caseFeature','caseAccess') AS accepted").get(row.key) as {accepted:number};expect(Boolean(oracle.accepted),row.key).toBe(row.accepted);expect((protocol.foldSafeRefusals as readonly string[]).includes(row.key),row.key).toBe(row.accepted);}}finally{db.close();}
+});

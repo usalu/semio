@@ -1,4 +1,37 @@
 {
+  "native_leaf": {
+    "input": "sequence",
+    "expanded": {
+      "expanded": "sequence"
+    }
+  },
+  "narration_observer": {
+    "events": [
+      {
+        "method": "step",
+        "key": "direct"
+      },
+      {
+        "method": "_clause",
+        "key": "manual"
+      },
+      {
+        "method": "_clause",
+        "key": "nested",
+        "delegates": true
+      },
+      {
+        "method": "step",
+        "key": "direct"
+      }
+    ],
+    "expected": [
+      "direct",
+      "manual",
+      "nested",
+      "direct"
+    ]
+  },
   "languages": [
     "en",
     "de"
@@ -247,5 +280,71 @@
   "long_formula": {
     "cell": "B4",
     "de": "=SUMMENPRODUKT((Kapseln!$D$2:$D$400=B2)*(Kapseln!$E$2:$E$400=\"A\")*Kapseln!$F$2:$F$400)+ZÄHLENWENNS(Kapseln!$A$2:$A$400;B2;Kapseln!$B$2:$B$400;\"Turm 1\")"
+  },
+  "program_study_hook": {
+    "scene": "Beat3_Program",
+    "key": "hook",
+    "localized": {
+      "en": "Four proposed room programs, A to D, fill the 140 reconstructed capsules. How many of each, and how much floor?",
+      "de": "Vier vorgeschlagene Raumprogramme A–D füllen die 140 rekonstruierten Kapseln. Wie viele je Programm, und wie viel Fläche?"
+    },
+    "schema": {
+      "type": "object",
+      "required": [
+        "en",
+        "de"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "string",
+          "const": "Four proposed room programs, A to D, fill the 140 reconstructed capsules. How many of each, and how much floor?",
+          "allOf": [
+            {
+              "type": "string",
+              "pattern": "proposed room programs"
+            },
+            {
+              "type": "string",
+              "pattern": "A to D"
+            },
+            {
+              "type": "string",
+              "pattern": "140 reconstructed capsules"
+            }
+          ]
+        },
+        "de": {
+          "type": "string",
+          "const": "Vier vorgeschlagene Raumprogramme A–D füllen die 140 rekonstruierten Kapseln. Wie viele je Programm, und wie viel Fläche?",
+          "allOf": [
+            {
+              "type": "string",
+              "pattern": "vorgeschlagene Raumprogramme"
+            },
+            {
+              "type": "string",
+              "pattern": "A–D"
+            },
+            {
+              "type": "string",
+              "pattern": "140 rekonstruierten Kapseln"
+            }
+          ]
+        }
+      }
+    },
+    "required_phrases": {
+      "en": [
+        "proposed room programs",
+        "A to D",
+        "140 reconstructed capsules"
+      ],
+      "de": [
+        "vorgeschlagene Raumprogramme",
+        "A–D",
+        "140 rekonstruierten Kapseln"
+      ]
+    }
   }
 }

@@ -1,0 +1,191 @@
+{
+  "dimensions": [
+    2.6,
+    4.2,
+    2.5
+  ],
+  "bounds": [
+    -1.3,
+    1.3,
+    -0.1,
+    4.1,
+    0,
+    2.5
+  ],
+  "interior": [
+    2.3,
+    3.8,
+    2.1
+  ],
+  "finish": 0.2,
+  "prototype": {
+    "width": 2.9,
+    "length": 4.8,
+    "height": 2.8
+  },
+  "prototype_physical": [
+    3,
+    5,
+    2.8
+  ],
+  "families": [
+    "Slash",
+    "Backslash",
+    "J",
+    "L",
+    "P",
+    "S"
+  ],
+  "total": 140,
+  "tolerance": 1e-8,
+  "side_offset": 0.6,
+  "recess_front": 0.065666667,
+  "recess_side": 0.065123725,
+  "reveal_depth": 0.066666667,
+  "aperture_radius": 0.65,
+  "steel_skin": 0.0012,
+  "prototype_interior": [
+    2.7,
+    4.6,
+    2.4
+  ],
+  "explicit_reference_interior": [
+    2.3,
+    3.8,
+    2.1
+  ],
+  "fitting_specs": [
+    {},
+    {
+      "width": 3.4,
+      "length": 5.2,
+      "height": 3.1,
+      "interior_width": 2.3,
+      "interior_length": 3.8,
+      "interior_height": 2.1
+    },
+    {
+      "width": 3.4,
+      "length": 5.2,
+      "height": 3.1
+    }
+  ],
+  "floor_contacts": [
+    "wetroom-floor",
+    "bed-front-rail",
+    "media-wall"
+  ],
+  "ceiling_contacts": [
+    "ceiling-light",
+    "smoke-detector"
+  ],
+  "fillet_radius": 0.25,
+  "rounded_core": [
+    1.05,
+    1.85,
+    1
+  ],
+  "rounded_centre": [
+    0,
+    2,
+    1.25
+  ],
+  "spherical_witness": [
+    1.175,
+    3.975,
+    2.426776695296637
+  ],
+  "longitudinal_witness": [
+    -1.05,
+    -0.026776695296637,
+    0.0732233047033631
+  ],
+  "external_hardware": {
+    "bolt-": "Intentional core-attachment steel outside the casing wall",
+    "entry-frame-": "Manufactured doorframe crosses the rounded entrance roll",
+    "entry-handle": "Operable handle outside the entrance plane",
+    "entry-hinge-": "External door hinge knuckles and leaves",
+    "entry-lock": "External lock/rose/viewer hardware",
+    "entry-viewer": "External door viewer",
+    "entry-key-slot": "External lock slot",
+    "entry-latch": "Door latch projecting into the frame",
+    "entry-threshold": "Finite entrance threshold connecting the curved body to its actual port"
+  },
+  "door_rays": {
+    "heights": [
+      0.2001,
+      0.21,
+      0.3,
+      1.1,
+      2.1499
+    ],
+    "width_fractions": [
+      -0.49,
+      0,
+      0.49
+    ],
+    "material_controls": [
+      -0.55,
+      0.55
+    ],
+    "outside_depth": 0.04,
+    "inside_depth": 0.4
+  },
+  "quarter_lods": [
+    1,
+    2,
+    4
+  ],
+  "floor_bearing_area": 7.77,
+  "control_conversions": [
+    {
+      "physical": {
+        "width": 2.6,
+        "length": 4.2,
+        "height": 2.5
+      },
+      "nominal": [
+        2.5,
+        4,
+        2.5
+      ]
+    },
+    {
+      "physical": {
+        "width": 3.4,
+        "length": 5.3,
+        "height": 3,
+        "window_u": 0.1,
+        "corner_segments": 2,
+        "interior_width": 2.3
+      },
+      "nominal": [
+        3.3,
+        5.1,
+        3
+      ]
+    }
+  ],
+  "rounding_controls": [
+    0,
+    0.0005,
+    0.0012,
+    0.125,
+    0.25
+  ],
+  "material_topology": {
+    "edge_incidence": 2,
+    "details": [
+      "full",
+      "exterior"
+    ],
+    "radii": [
+      0,
+      0.0005,
+      0.0012,
+      0.125,
+      0.25
+    ],
+    "directed_edge_balance": 0
+  }
+}

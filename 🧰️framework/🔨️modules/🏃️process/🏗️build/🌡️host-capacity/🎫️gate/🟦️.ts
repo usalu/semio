@@ -1,3 +1,4 @@
+import {concurrentEditV1,retryOnConcurrentEditSyncV1,type ChurnOptionsV1} from "../../../../📁️filesystem/🧾️observation/🔁️churn/🟦️.ts";
 import {randomBytes} from "node:crypto";
 import {appendFileSync,existsSync,mkdirSync,readdirSync,readFileSync,renameSync,rmSync,statSync,unlinkSync,utimesSync,writeFileSync} from "node:fs";
 import {homedir,uptime} from "node:os";
@@ -125,21 +126,29 @@ function readWaiters(directory:string,now:number,policy:HostCapacityPolicyV1):Ho
 const lockOwners=new Map<string,string>(),lockKey=(lock:string,pid:number):string=>lock+"\n"+pid,ownerText=(lock:string):string|undefined=>{try{return readFileSync(join(lock,"owner"),"utf8");}catch{return undefined;}};
 /** 🔏️ Whether the gate lock is still the one `pid` took in this process: the owner file holds exactly the text it wrote. A holder that stalled past `wait.lockStaleMilliseconds` (swap, a stopped process) may have been broken by a peer that then took the lock; such a holder must write nothing more. */
 function holdsLock(directory:string,pid:number):boolean{const lock=join(directory,"lock"),mine=lockOwners.get(lockKey(lock,pid));return mine!==undefined&&ownerText(lock)===mine;}
+/** 🧪️ Narrow removal and retry ports for the fenced lock-release laws. */
+export type HostLockReleasePortsV1=Readonly<{remove?:(path:string)=>void;retry?:ChurnOptionsV1}>;
+/** 🔂️ Retry only a known busy lock removal and recheck its exact owner before every attempt. */
+function removeLock(lock:string,expected:string,ports:HostLockReleasePortsV1={}):void{
+ retryOnConcurrentEditSyncV1("read",()=>{if((ownerText(lock)??"")!==expected)return;try{(ports.remove??(path=>rmSync(path,{recursive:true,force:true})))(lock);}catch(error){if((error as NodeJS.ErrnoException).code==="EBUSY")throw concurrentEditV1("busy",lock);throw error;}},ports.retry);
+}
 /** 🔓️ Gives the gate lock back only while it is still the one `pid` took (see `holdsLock`), so a holder whose lock was broken never removes the lock of the peer that holds it now. */
-function releaseLock(directory:string,pid:number):void{const lock=join(directory,"lock"),key=lockKey(lock,pid),mine=lockOwners.get(key);lockOwners.delete(key);if(mine!==undefined&&ownerText(lock)===mine)rmSync(lock,{recursive:true,force:true});}
-function takeLock(directory:string,now:number,policy:HostCapacityPolicyV1,pid:number,afterCreate?:()=>void):boolean{
+function releaseLock(directory:string,pid:number,ports:HostLockReleasePortsV1={}):void{const lock=join(directory,"lock"),key=lockKey(lock,pid),mine=lockOwners.get(key);try{if(mine!==undefined)removeLock(lock,mine,ports);}finally{lockOwners.delete(key);}}
+/** 🔐️ Narrow creation and bounded retry ports for atomic lock acquisition laws. */
+export type HostLockAcquirePortsV1=Readonly<{create?:(path:string)=>void;retry?:ChurnOptionsV1}>;
+function takeLock(directory:string,now:number,policy:HostCapacityPolicyV1,pid:number,afterCreate?:()=>void,ports:HostLockAcquirePortsV1={}):boolean{
  const lock=join(directory,"lock");
- try{mkdirSync(lock,{mode:0o700});}
+ try{retryOnConcurrentEditSyncV1("read",()=>{try{(ports.create??(path=>mkdirSync(path,{mode:0o700})))(lock);}catch(error){if(["EPERM","EBUSY"].includes((error as NodeJS.ErrnoException).code??""))throw concurrentEditV1("busy",lock);throw error;}},ports.retry);}
  catch(error){
   if((error as NodeJS.ErrnoException).code!=="EEXIST")throw error;
   let text="";try{text=readFileSync(join(lock,"owner"),"utf8");}catch{}
   const owner=/^(\d+):(\d+)$/u.exec(text),since=owner?Number(owner[2]):modified(lock);
-  if(owner&&!alive(Number(owner[1]))||now-since>policy.wait.lockStaleMilliseconds){let again="";try{again=readFileSync(join(lock,"owner"),"utf8");}catch{}if(again===text)rmSync(lock,{recursive:true,force:true});}
+  if(owner&&!alive(Number(owner[1]))||now-since>policy.wait.lockStaleMilliseconds){let again="";try{again=readFileSync(join(lock,"owner"),"utf8");}catch{}if(again===text)removeLock(lock,text);}
   return false;
  }
  afterCreate?.();
- try{const text=`${pid}:${now}`;writeFileSync(join(lock,"owner"),text);lockOwners.set(lockKey(lock,pid),text);return true;}
- catch(error){if((error as NodeJS.ErrnoException).code==="ENOENT")return false;throw error;}
+ try{const text=`${pid}:${now}`;writeFileSync(join(lock,"owner"),text,{flag:"wx"});lockOwners.set(lockKey(lock,pid),text);return true;}
+ catch(error){if(["ENOENT","EEXIST"].includes((error as NodeJS.ErrnoException).code??""))return false;throw error;}
 }
 /** 🧷️ The ledger lock primitive for laws that need to pause inside it. */
 export const takeHostLockV1=takeLock;

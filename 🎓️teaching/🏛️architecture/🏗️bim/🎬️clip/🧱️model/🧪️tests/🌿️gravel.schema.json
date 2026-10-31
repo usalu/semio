@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "product",
+    "reference_elevation",
+    "depth",
+    "stock",
+    "maximum_circle_reservation",
+    "comparison",
+    "previous_circle",
+    "elevation_cases",
+    "approach"
+  ],
+  "properties": {
+    "product": {
+      "type": "string"
+    },
+    "reference_elevation": {
+      "type": "number"
+    },
+    "depth": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "stock": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "maximum_circle_reservation": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "coordinate",
+        "volume"
+      ],
+      "properties": {
+        "coordinate": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "previous_circle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "radius",
+        "segments",
+        "depth",
+        "gap_volume"
+      ],
+      "properties": {
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "segments": {
+          "type": "integer",
+          "minimum": 3
+        },
+        "depth": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "gap_volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "elevation_cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "value",
+          "unit",
+          "valid"
+        ],
+        "properties": {
+          "value": {
+            "type": [
+              "number",
+              "string"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "approach": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "portal",
+        "run",
+        "rise",
+        "sector_count",
+        "maximum_vertical_facet_error",
+        "inferred",
+        "samples",
+        "field_controls",
+        "uniform_actual_surface"
+      ],
+      "properties": {
+        "portal": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y0",
+            "y1"
+          ],
+          "properties": {
+            "x": {
+              "type": "number"
+            },
+            "y0": {
+              "type": "number"
+            },
+            "y1": {
+              "type": "number"
+            }
+          }
+        },
+        "run": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "rise": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "sector_count": {
+          "type": "integer",
+          "minimum": 4,
+          "multipleOf": 4
+        },
+        "maximum_vertical_facet_error": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "inferred": {
+          "const": true
+        },
+        "uniform_actual_surface": {
+          "const": false
+        },
+        "samples": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "point",
+              "height",
+              "material"
+            ],
+            "properties": {
+              "point": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "height": {
+                "type": "number"
+              },
+              "material": {
+                "const": true
+              }
+            }
+          }
+        },
+        "field_controls": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "point",
+              "height"
+            ],
+            "properties": {
+              "point": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "height": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

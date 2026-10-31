@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "representation_axes",
+    "covering_discriminator"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "part",
+          "volume",
+          "section",
+          "cut_z",
+          "cut_bounds"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "part": {
+            "type": "object",
+            "required": [
+              "section"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "section": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "plane",
+                  "profile",
+                  "sweep"
+                ],
+                "properties": {
+                  "plane": {
+                    "enum": [
+                      "XZ",
+                      "YZ"
+                    ]
+                  },
+                  "profile": {
+                    "$ref": "#/$defs/ring"
+                  },
+                  "sweep": {
+                    "$ref": "#/$defs/point"
+                  }
+                }
+              }
+            }
+          },
+          "volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "section": {
+            "$ref": "#/$defs/ring"
+          },
+          "cut_z": {
+            "type": "number"
+          },
+          "cut_bounds": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 4,
+            "maxItems": 4
+          }
+        }
+      }
+    },
+    "representation_axes": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "declared"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "declared": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/$defs/point"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "covering_discriminator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "class",
+        "predefined_type"
+      ],
+      "properties": {
+        "class": {
+          "const": "IfcCovering"
+        },
+        "predefined_type": {
+          "const": "FLOORING"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "ring": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/point"
+      },
+      "minItems": 3
+    }
+  }
+}

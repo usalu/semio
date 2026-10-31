@@ -382,6 +382,33 @@
           "file": "architecture-parametric-parametrization-de.pdf"
         }
       }
+    },
+    {
+      "id": "typology",
+      "topic": "parametric",
+      "emoji": "🏙",
+      "title": {
+        "en": "Assignment 1: Parametric Design of a Modular Typology",
+        "de": "Aufgabe 1: Parametrischer Entwurf einer modularen Typologie"
+      },
+      "description": {
+        "en": "Develop eight module types of a high-rise façade in Grasshopper, generate variants and evaluate their energy performance.",
+        "de": "Entwickle acht Modultypen einer Hochhausfassade in Grasshopper, erzeuge Varianten und werte sie energetisch aus."
+      },
+      "documents": {
+        "en": {
+          "namespace": "course",
+          "id": "architecture-parametric-typology-en",
+          "producer": "@teaching/architecture-course:build-typology-en",
+          "file": "architecture-parametric-typology-en.pdf"
+        },
+        "de": {
+          "namespace": "course",
+          "id": "architecture-parametric-typology-de",
+          "producer": "@teaching/architecture-course:build-typology-de",
+          "file": "architecture-parametric-typology-de.pdf"
+        }
+      }
     }
   ]
 }

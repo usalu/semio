@@ -1,0 +1,323 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "coverage_witness",
+    "single_cover",
+    "single_cover_bounds",
+    "overlap_candidates",
+    "refinement_progress"
+  ],
+  "properties": {
+    "coverage_witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "expansion",
+        "cases"
+      ],
+      "properties": {
+        "expansion": {
+          "const": 1e-10
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 7,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "footprint",
+              "covers",
+              "possible",
+              "hidden"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "footprint": {
+                "$ref": "#/$defs/polygon"
+              },
+              "covers": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/polygon"
+                }
+              },
+              "possible": {
+                "type": "boolean"
+              },
+              "hidden": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    },
+    "single_cover": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "footprints",
+          "cover",
+          "expected",
+          "pillow"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "footprints": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/polygon"
+            }
+          },
+          "cover": {
+            "$ref": "#/$defs/polygon"
+          },
+          "expected": {
+            "type": "boolean"
+          },
+          "pillow": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "single_cover_bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "candidate_order"
+      ],
+      "properties": {
+        "cases": {
+          "type": "array",
+          "minItems": 5,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "footprint",
+              "cover",
+              "expected",
+              "skip_halfplanes"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "footprint": {
+                "$ref": "#/$defs/polygon"
+              },
+              "cover": {
+                "$ref": "#/$defs/polygon"
+              },
+              "expected": {
+                "type": "boolean"
+              },
+              "skip_halfplanes": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "candidate_order": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "target",
+            "blockers",
+            "expected_first_center",
+            "expected_attempts",
+            "expected_retained"
+          ],
+          "properties": {
+            "target": {
+              "$ref": "#/$defs/box_case"
+            },
+            "blockers": {
+              "type": "array",
+              "minItems": 3,
+              "items": {
+                "$ref": "#/$defs/box_case"
+              }
+            },
+            "expected_first_center": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "expected_attempts": {
+              "const": 1
+            },
+            "expected_retained": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      }
+    },
+    "overlap_candidates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "margin",
+        "cases"
+      ],
+      "properties": {
+        "margin": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "name",
+              "first",
+              "second",
+              "inclusive",
+              "strict"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "first": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/overlapBox"
+                }
+              },
+              "second": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/overlapBox"
+                }
+              },
+              "inclusive": {
+                "$ref": "#/$defs/overlapPairs"
+              },
+              "strict": {
+                "$ref": "#/$defs/overlapPairs"
+              }
+            }
+          }
+        }
+      }
+    },
+    "refinement_progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "phase",
+        "interval",
+        "edges"
+      ],
+      "properties": {
+        "phase": {
+          "const": "occlusion-refine"
+        },
+        "interval": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "edges": {
+          "$ref": "#/$defs/overlapPairs"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "polygon": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "box_case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "y",
+        "x",
+        "z"
+      ],
+      "properties": {
+        "key": {
+          "type": "string"
+        },
+        "y": {
+          "type": "number"
+        },
+        "x": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "z": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "overlapBox": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "number"
+      }
+    },
+    "overlapPairs": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

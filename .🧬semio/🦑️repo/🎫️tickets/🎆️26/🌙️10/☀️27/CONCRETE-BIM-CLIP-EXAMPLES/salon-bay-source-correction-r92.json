@@ -1,0 +1,234 @@
+{
+  "schema": "salon_source_correction_r92",
+  "sources": [
+    {
+      "id": "SAB216",
+      "path": "🗑️generated/book-page-216-r92.jsonp",
+      "fact": "Nominal overall vitrage925×320cm, floor-to-ceiling; fixedpanelnearentry plusone slidingpanel; chainwithinrectangularhandrail; executed7cmcanopy/25cmprojection/Zform; proposedexternalshutter notexecuted."
+    },
+    {
+      "id": "author46",
+      "path": "🗑️generated/book-figures-46-r92.jpg",
+      "region": {
+        "u": [
+          0,
+          540
+        ],
+        "v": [
+          195,
+          255
+        ]
+      },
+      "fact": "Bay ends at squarecolumn34/gridX9.5; currentstartnearcolumn8X10.898too farhighX."
+    },
+    {
+      "id": "author219",
+      "path": "🗑️generated/book-figures-219-r92.png",
+      "plan_region": {
+        "u": [
+          275,
+          830
+        ],
+        "v": [
+          720,
+          810
+        ]
+      },
+      "fact": "Primarypaneljunction nearcolumn7 andglazingoutboardofcolumnaxis; executedZcanopyinsection."
+    },
+    {
+      "id": "Gravot220",
+      "path": "🗑️generated/book-figures-220-r92.jpg",
+      "fact": "Originalphoto showscolumn7 atbayjunction/centre andhandrailataboutquarterwindowheight."
+    },
+    {
+      "id": "Célio184",
+      "path": "🗑️generated/book-page-184-r92.jsonp",
+      "fact": "Blue3.04×10.42m grosswallquantity reconcilesactualcornerafterbaywidthcorrection."
+    }
+  ],
+  "current": {
+    "opening": "OP-GL-TERRACE",
+    "host": "W-SALON",
+    "host_axis": [
+      [
+        4.8,
+        6.006
+      ],
+      [
+        18.85,
+        6.006
+      ]
+    ],
+    "local_interval": [
+      6.173,
+      13.975
+    ],
+    "world_x": [
+      10.973,
+      18.775
+    ],
+    "width": 7.802,
+    "sill": 0.05,
+    "head": 2.7,
+    "rough_height": 2.65,
+    "handrail_local_z": [
+      0.06,
+      0.12
+    ],
+    "chain_centre_local_z": 0.09
+  },
+  "source_controls": {
+    "nominal_overall_width": 9.25,
+    "nominal_overall_height": 3.2,
+    "nominal_dimensions_basis": "SAB216 documentary/scholarlystatement, notexactclearopeningmeasurement.",
+    "column34": {
+      "tag": "34",
+      "axis": [
+        9.5,
+        6.006
+      ],
+      "actual_retained_structural_x": [
+        9.41,
+        9.59
+      ],
+      "finish_extension": null
+    },
+    "column7": {
+      "tag": "7-FIRST",
+      "axis": [
+        14.25,
+        6
+      ],
+      "radius": 0.11,
+      "z": [
+        3.14,
+        6.34
+      ]
+    },
+    "current_strict_collision": {
+      "point": [
+        14.25,
+        6.01175,
+        4.5
+      ],
+      "glass_bounds": [
+        [
+          13.011085164071854,
+          6.00975,
+          3.263
+        ],
+        [
+          14.863751999999998,
+          6.01375,
+          5.827
+        ]
+      ],
+      "actual_capture_source": "b54353ce1417fe19736eadebf1e88b59e99657c3c5852d3a0c8d158106793c13",
+      "note": "Currentopening/typecontrols unchanged at discovery; finalactualnativecollisionmustbererun."
+    }
+  },
+  "registration_candidates": {
+    "bay_x": [
+      9.6,
+      18.85
+    ],
+    "width": 9.25,
+    "qualification": "Checkactualjamb/columnfaces;9.60 inferred10mmoffcurrentstructuralcolumn34. Do notinvent15mmexistingcolumnfinish.",
+    "height": "Actualfloor3.17→rawroofsoffit6.34 gives3.17m. Correctunsupported.47mheadband; sourceoverall3.20mustnotbeforcedthroughRCwithoutsectionregistration.",
+    "normal_offset_from_column_axis": {
+      "author219_plan_pixels": {
+        "column_axis_v": 746.7,
+        "glass_track_v": [
+          761.3,
+          764
+        ],
+        "bay_u": [
+          305.3,
+          791
+        ],
+        "nominal_width": 9.25
+      },
+      "metres": [
+        0.278,
+        0.33
+      ],
+      "uncertainty_m": 0.04,
+      "qualification": "Inferredfromauthorreconstructionplan, currentcenterline6.006±. Valuesmustbehost-normal-orientedcorrectly; pane/trackaxisdefinitionmaydiffer."
+    },
+    "handrail": {
+      "height_local_m": 0.83,
+      "uncertainty_m": 0.1,
+      "photo_pixels": {
+        "head_v": 71,
+        "floor_v": 254,
+        "rail_v": 207,
+        "image_size": [
+          475,
+          387
+        ]
+      },
+      "method": "Atoneverticalwindowstation, heightfraction(254−207)/(254−71)×3.20=.822m. Perspectiveandframeextentuncertaintyexplicit.",
+      "scope": "FixedlowXpanelonly, roughlyX9.60..14.25; originalphoto220stopsrailatcolumn7/junction. Currentfullbaybarwouldobstructmovinghalfwhenraised.",
+      "normal_position": {
+        "candidate_y": 6.22,
+        "uncertainty_m": 0.05,
+        "relation": "Roomsideofglass(Y~6.28/.33), outboardofcolumnaxisY6.0. Plan219 andoriginalplan218supportrelativeordering; exactmetresinferred."
+      }
+    },
+    "blue_faces": {
+      "W_KITCHEN": "Salon-facing eastside X4.875,Y.245..5.931",
+      "W_SALON": "Salon-facing northside Y5.931,X4.875..9.60",
+      "gross_length": 10.411,
+      "source_invoice_length": 10.42,
+      "qualification": "Facepositionsderivedfromcurrent15cmwalls; do notpaintglass/openings orforceinvoicegrossareaintonetbody."
+    },
+    "head_outer_frame_extension": {
+      "candidate_m": 0.03,
+      "basis": "inferred only; author219 showsheadseatedinoutboardZcanopyrecess aboveinternalsoffit. Source3.20isnominaloverall, notclearheight.",
+      "acceptance": "Actualglassbelowroughsoffit, extendedframeclearRCandproperlyseatedincanopy; do notforceunsupported3.20clearaperture."
+    }
+  },
+  "dependent_tags": [
+    "GL-TERRACE",
+    "SALON-HANDRAIL",
+    "SALON-CHAIN-DRIVE",
+    "SALON-CRANK",
+    "SALON-CANOPY"
+  ],
+  "acceptance": [
+    "Source9.25mspanandfloor-to-ceilingproportions, withsourcegrading",
+    "No positiveglass/frame overlapwithcolumn7/34 orRCbeam/slab",
+    "Glazingoutboardofcolumnaxis perauthorplan, notarbitrarycolumncutout",
+    "Primaryfixed/slidingjunctionnearcolumn7X14.25",
+    "Hollowrail/chain/crankactualmountedinterfaces atsourcequalifiedhandheight",
+    "ExecutedZcanopywith7cmthinmember/25cmprojection; unknownfoldriseinferred",
+    "NativeENDEclassarity/material/spatial/closedparts/XYZ/volume",
+    "Preserveactualdooroperationandtrueentryroutes"
+  ],
+  "limits": "Sourcewidth/heightdocumentaryoverall; exactclearroughopening, frameoffset, foldingstations, RGB andmechanisminternalsareinferred whereunmeasured. No productionedits.",
+  "additional_acceptance": {
+    "canopy": "Verify actual occupied boundary contact between outboard frame head and Z-fold canopy; old canopy world6.50..6.57 cannot be assumed to touch a corrected frame top≈6.37. Fold/drop dimensions remain inferred unless a direct leader is readable.",
+    "head": "30mm outward head extension is a source-consistent inferred allocation of nominal3.20m overall against3.17m rough interior height, not a recovered dimension. Keep glass beneath actual RC soffit.",
+    "actual_roof_beam": {
+      "tag": "BEAM-PRIMARY-R-6-34",
+      "source_strip": {
+        "x": [
+          9.59,
+          19
+        ],
+        "y": [
+          6.006,
+          6.11
+        ],
+        "local_z": [
+          2.94,
+          3.34
+        ],
+        "base_level": "first"
+      },
+      "conflict": "A lower ledgeY6.006..6.30/worldZ6.37..6.44 overlaps this actual beam. Use its occupied outboardfaceY6.11 as exposed ledge start, or truthful material ownership and disjoint union.",
+      "normal_thickness": "Clarified full wing runY6.23→6.55=.32m, rise.08m: slope.25,70mm normal→72.154mm vertical. The250mm projection beyondglassY6.30 is onlypartofthisslope, so80/250 is not applicable."
+    }
+  }
+}

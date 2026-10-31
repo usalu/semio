@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "flight": {
+    "path": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        2
+      ]
+    ],
+    "z0": 0,
+    "z1": 1,
+    "walking_offsets": [
+      -0.5,
+      0.5
+    ],
+    "finish_direction": "normal"
+  },
+  "layers": [
+    {
+      "role": "wearing",
+      "material": "MAT-RAMP-RESILIENT",
+      "depth": {
+        "value": 0.005,
+        "unit": "m",
+        "basis": "assumed"
+      }
+    },
+    {
+      "role": "bedding",
+      "material": "MAT-MORTAR-PUTTY",
+      "depth": {
+        "value": 0.003,
+        "unit": "m",
+        "basis": "assumed"
+      }
+    }
+  ],
+  "expected": {
+    "footprint_area": 2,
+    "volume": 0.01788854381999832,
+    "endpoints": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        2,
+        1
+      ]
+    ]
+  },
+  "positive_cut_width": 2e-9,
+  "actual": [
+    {
+      "tag": "FIN-RAMP-INTERIOR",
+      "layers": {
+        "wearing": 0.12799807211903128,
+        "bedding": 0.07680618170667841
+      },
+      "direction": "vertical"
+    },
+    {
+      "tag": "FIN-RAMP-EXTERIOR",
+      "layers": {
+        "wearing": 1.0408509145869163,
+        "bedding": 0.5204121333899091
+      },
+      "direction": "normal"
+    }
+  ],
+  "representations": [
+    "plan",
+    "section",
+    "elevation",
+    "3d",
+    "axis",
+    "footprint",
+    "body"
+  ]
+}

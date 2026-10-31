@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "material": "MAT-SKIRTING-GRAY",
+  "levels": [
+    "ground",
+    "first"
+  ],
+  "class": "IfcCovering",
+  "predefined_type": "SKIRTINGBOARD",
+  "display_rgb": [
+    0.47,
+    0.48,
+    0.49
+  ],
+  "forbidden_host": "GUARD-RM-2",
+  "source": "SAB2024-p190; original1930 hall/salon photographs",
+  "section": {
+    "thickness": 0.015,
+    "height": 0.09
+  }
+}

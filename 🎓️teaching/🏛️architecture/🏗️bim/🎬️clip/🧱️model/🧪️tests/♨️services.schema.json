@@ -1,0 +1,52 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "source_refs",
+    "products",
+    "paired_risers",
+    "openings",
+    "reachability",
+    "unresolved",
+    "excluded_original",
+    "standing_diameter",
+    "geometry_variants",
+    "rain_airway"
+  ],
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "source_refs": {
+      "type": "array"
+    },
+    "products": {
+      "type": "array"
+    },
+    "paired_risers": {
+      "type": "array"
+    },
+    "openings": {
+      "type": "array"
+    },
+    "reachability": {
+      "type": "array"
+    },
+    "unresolved": {
+      "type": "array"
+    },
+    "excluded_original": {
+      "type": "array"
+    },
+    "standing_diameter": {
+      "type": "number"
+    },
+    "geometry_variants": {
+      "type": "array"
+    },
+    "rain_airway": {
+      "type": "array"
+    }
+  }
+}

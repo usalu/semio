@@ -60,12 +60,8 @@ def test_native_filling_materials_and_clear_widths_are_explicit():
 
 def test_material_relations_do_not_reassign_typed_fillings_to_concrete():
     """🔗 Material association targets match their actual authored material ownership."""
-    source=model.load_model()
-    registry=model._registry(source)
-    for relation in source["relations"]:
-        if relation["class"]=="IfcRelAssociatesMaterial":
-            for tag in relation["related"]:
-                assert registry[tag].get("material")==relation["relating"]
+    contract=importlib.import_module(__package__+'.🔗️materials')
+    contract._assert_relations(model.load_model())
 
 
 def test_glass_face_area_excludes_frames_and_includes_glazed_doors():
@@ -75,7 +71,9 @@ def test_glass_face_area_excludes_frames_and_includes_glazed_doors():
     window=model.quantities("RW-S",source)
     spec=model._find(source,"TY-RIBBON")["filling"]
     sash=spec["sash_width"]["value"]
-    assert abs(window["glazing_area"]-(window["clear_width"]-2*sash)*(window["clear_height"]-2*sash))<1e-8
+    count=len(model._find(source,"RW-S")["geometry"]["panel_stations"])-1
+    clear_glass_width=window["clear_width"]-2*sash*count-spec["mullion_width"]["value"]*(count-1)
+    assert abs(window["glazing_area"]-clear_glass_width*(window["clear_height"]-2*sash))<1e-8
     assert window["glazing_area"]<window["area"]
     door=model._find(source,"D-SALON")
     physical=model._filling_geometry(source,door)
@@ -92,3 +90,4 @@ def test_glass_face_area_excludes_frames_and_includes_glazed_doors():
     assert abs(wall["glazing_area"]-glass_total)<1e-8
     assert abs(wall["glazing_share"]-glass_total/wall["gross_side_area"])<1e-8
     assert model.quantities("D-ENTRY",source)["glazing_area"]==0
+                                                                                                                                                                    

@@ -1,9 +1,9 @@
 Feature: Published assignment PDFs
-  Scenario: Both explicit language documents are delivered
-    Given the course declares English and German print artifact documents
+  Scenario: Every declared assignment is delivered in both explicit languages
+    Given the course declares English and German print artifact documents for the parametrization and typology assignments
     And the parent retains the exact published documents
     When the site consumes its authenticated local PDF transport
-    Then it receives both PDF bodies at assignments/parametrization-en.pdf and assignments/parametrization-de.pdf
+    Then it receives all four PDF bodies in course order below assignments/, from architecture-parametric-parametrization-en.pdf to architecture-parametric-typology-de.pdf
 
   Scenario: Missing or invalid PDFs fail the build
     Given the transport is missing or sends an oversized or non-PDF body

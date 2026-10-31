@@ -1,0 +1,180 @@
+{
+  "title": "Source-Qualified Roof Wearing Assemblies",
+  "finished": 6.6,
+  "source_reserve_caps": [
+    6.51,
+    6.57
+  ],
+  "floors": [
+    {
+      "tag": "FIN-ROOF-PAVING",
+      "wearing_materials": [
+        "MAT-PAVING",
+        "MAT-PAVING-UNRESOLVED"
+      ],
+      "minimum_area": 20
+    },
+    {
+      "tag": "FIN-ROOF-GRAVEL",
+      "wearing_materials": [
+        "MAT-GRAVEL"
+      ],
+      "minimum_area": 200
+    },
+    {
+      "tag": "FIN-ROOF-STAIR",
+      "wearing_materials": [
+        "MAT-GRES-BLACK"
+      ],
+      "minimum_area": 5
+    }
+  ],
+  "limits": [
+    "Gravel20mm and weathering composition inferred; actual source-specific cap datums retained.",
+    "4cm concrete pavers source-attested; high3cm bands remain explicitly unresolved nominal wearing."
+  ],
+  "adjacent_precision": {
+    "a": [
+      [
+        4.700427757,
+        1.24347369
+      ],
+      [
+        4.798276375,
+        0.25
+      ],
+      [
+        4.824892946,
+        0.489599157
+      ]
+    ],
+    "b": [
+      [
+        4.798276375,
+        0.25
+      ],
+      [
+        4.700107054,
+        1.246729844
+      ],
+      [
+        4.73273661,
+        0.25
+      ]
+    ],
+    "tolerance": 1e-10
+  },
+  "structural_joint": {
+    "reserve": {
+      "tag": "NEUTRAL-RESERVE",
+      "owner": "NEUTRAL-FINISH",
+      "joint_owners": [
+        "NEUTRAL-BEAM"
+      ],
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    "floor_part": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0.06,
+      "z1": 0.09,
+      "material": "MAT-CEMENT-SAND"
+    },
+    "beam_part": {
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "z0": 0,
+      "z1": 0.06,
+      "material": "MAT-RC"
+    },
+    "expected": {
+      "NEUTRAL-FINISH": 0.03,
+      "NEUTRAL-BEAM": 0.06
+    }
+  },
+  "raised_beams": [
+    "BEAM-PRIMARY-R-34-10",
+    "BEAM-PRIMARY-R-10-11"
+  ],
+  "weather_cap": {
+    "tag": "GARDEN-WEATHER-CAP",
+    "parapet_prefix": "PAR-E",
+    "authority_y": [
+      6.081,
+      15.5
+    ],
+    "perimeter_y": [
+      0.15,
+      21.35
+    ],
+    "top": 6.77,
+    "positive": [
+      18.97,
+      10,
+      6.7
+    ],
+    "air": [
+      [
+        18.85,
+        10,
+        6.765
+      ],
+      [
+        18.78,
+        10,
+        6.63
+      ]
+    ],
+    "support_level": 6.51,
+    "minimum_support_area": 0.5
+  }
+}

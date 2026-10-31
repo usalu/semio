@@ -42,38 +42,47 @@ assert.ok(all.length > 100);
 for (const leaf of all) if ("source" in leaf) assert.ok(sourceKeys.has(leaf.source), "unknown source " + leaf.source);
 console.log("Nakagin leaves: " + all.length + " values, every source key listed.");
 
-const perFacade = model.items.per_facade.value;
 const branches = {};
+const capsuleCounts = {};
 const typeCounts = {};
 const order = model.assignment.order;
 const a = model.assignment;
 model.towers.forEach((tower, ti) => {
-  let n = 0;
-  for (let s = 0; s < tower.capsule_storeys.value; s++) {
-    const exception = tower.exceptions.find(e => e.storey === s);
-    for (const f of exception ? exception.facades : tower.facades) {
+  let n = 0, capsules = 0;
+  const floorCounts = [];
+  tower.floors.forEach((floor, s) => {
+    let count = 0;
+    for (const group of floor.groups) {
       n++;
-      for (let i = 0; i < perFacade; i++) {
-        const index = a.tower_weight.value * ti + a.storey_weight.value * s + a.facade_weight.value * f + a.item_weight.value * i + a.offset.value;
+      for (const slot of group.items) {
+        count++;
+        const index = a.tower_weight.value * ti + a.storey_weight.value * s + a.facade_weight.value * group.facade + a.item_weight.value * slot.item + a.offset.value;
         const key = order[index % order.length];
         typeCounts[key] = (typeCounts[key] || 0) + 1;
+        assert.ok(slot.sublevel >= 0 && slot.sublevel <= 2);
       }
     }
-  }
+    assert.equal(count, floor.count.value);
+    floorCounts.push(count);
+    capsules += count;
+  });
+  assert.deepEqual(floorCounts, cases.floor_counts[tower.key]);
+  assert.equal(capsules, tower.capsule_count.value);
   branches[tower.key] = n;
+  capsuleCounts[tower.key] = capsules;
 });
 const total = Object.values(branches).reduce((x, y) => x + y, 0);
+const capsules = Object.values(capsuleCounts).reduce((x, y) => x + y, 0);
 assert.equal(total, cases.counts.branches);
-assert.equal(total * perFacade, cases.counts.slots);
-assert.equal(total * perFacade, 140);
+assert.equal(capsules, cases.counts.slots);
+assert.equal(capsules, 140);
 assert.deepEqual(branches, cases.counts.branches_per_tower);
 assert.deepEqual(typeCounts, cases.counts.per_type);
-for (const [key, count] of Object.entries(branches)) assert.equal(count * perFacade, cases.counts.per_tower[key]);
-console.log("Nakagin counts: " + total + " branches, " + total * perFacade + " capsules, types " + JSON.stringify(typeCounts) + ".");
+assert.deepEqual(capsuleCounts, cases.counts.per_tower);
+console.log("Nakagin counts: " + total + " ragged branches, " + capsules + " capsules, tower counts " + JSON.stringify(capsuleCounts) + ".");
 
 const c = model.capsule;
-const pitch = model.items.pitch.value;
-assert.ok(pitch >= c.width.value && perFacade * pitch <= model.core.side.value + 1e-9, "two capsules fit the core facade");
+assert.ok(model.towers.flatMap(t => t.floors).flatMap(f => f.groups).every(g => g.items.length >= 1 && g.items.length <= 2), "authored facade branches contain one or two attachment ports");
 assert.ok(c.interior.width.value < c.width.value && c.interior.length.value < c.length.value && c.interior.height.value < c.height.value);
 for (const t of model.types) {
   const r = t.window_diameter.value / 2;

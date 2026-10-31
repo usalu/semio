@@ -1,0 +1,35 @@
+{
+  "root": "C:/git/semio",
+  "ticket": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️27/CONCRETE-BIM-CLIP-EXAMPLES",
+  "gen": "C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️27/CONCRETE-BIM-CLIP-EXAMPLES/🗑️generated",
+  "modelPath": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔣️.json",
+  "modelSchemaPath": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧬️schema/🔣️.schema.json",
+  "apiPath": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🐍️.py",
+  "modelModule": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model",
+  "clipDir": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip",
+  "hookPath": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧪️tests/🐍️.py",
+  "facadePath": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🏗️facade/🐍️.py",
+  "visualCorePath": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/🐍️.py",
+  "geomVisualPath": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/📐️geometry.py",
+  "axonPath": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧊️axon/🐍️.py",
+  "planfile": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/📋️plan/🐍️.py",
+  "arrBase": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🛝️arrivals",
+  "rb": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🛝️ramps",
+  "crBase": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🛝️interfaces",
+  "active": {
+    "82410": "ramp-floor-final-r92.py"
+  },
+  "functions": {
+    "overwriteMappedText": "async function overwriteMappedText(p,s){var size=(await fs.stat(p)).size,b=Buffer.from(s);if(b.length<size)b=Buffer.concat([b,Buffer.from(' '.repeat(size-b.length))]);var h=await fs.open(p,'r+');try{await h.write(b,0,b.length,0);}finally{await h.close();}}",
+    "q": "(value,unit='1',source='SAB2024-author-reconstruction-r92')=>({value,unit,basis:'inferred',source})",
+    "guidFor": "tag=>{var digest=crypto.createHash('sha1').update(Buffer.from('6ba7b8119dad11d180b400c04fd430c8','hex')).update('semio:villa-savoye:'+tag).digest().subarray(0,16);digest[6]=(digest[6]&15)|80;digest[8]=(digest[8]&63)|128;var n=BigInt('0x'+digest.toString('hex')),out='',alphabet='0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$';for(var i=0;i<22;i++){out=alphabet[Number(n%64n)]+out;n/=64n;}return out;}",
+    "writeModelChecked": "async function writeModelChecked(model){var schemaNow=JSON.parse(await fs.readFile(modelSchemaPath,'utf8')),schemaHash=crypto.createHash('sha256').update(JSON.stringify(schemaNow)).digest('hex');if(schemaHash!==modelValidatorSchemaHash){modelAjv=new ajvModule.default({strict:false,allErrors:true,validateFormats:false});validateModelCandidate=modelAjv.compile(schemaNow);modelValidatorSchemaHash=schemaHash;}if(!validateModelCandidate(model))throw Error(JSON.stringify(validateModelCandidate.errors?.slice(0,8)));await overwriteMappedText(modelPath,JSON.stringify(model,null,2)+'\\n');}"
+  },
+  "live_handles": [],
+  "latest_owned_source": "d776a5d4b6c2",
+  "latest_parent_source": "24e6fd48355b",
+  "owned_source_work_remaining": [],
+  "coal_native_report": "native-coal-proof-r92.md",
+  "current_handoff": "ramp-floor-final-handoff-r92.md",
+  "status": "complete; ready for parent stable freeze and whole-model audit"
+}

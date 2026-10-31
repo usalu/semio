@@ -1,0 +1,45 @@
+{
+  "source": "24e6fd48355bb2bcd2fab4ba65b8a89047b8b517fcde6fa7f62ca1b26ae502c2",
+  "tag": "FIN-PILOTIS-GRAVEL",
+  "current": {
+    "parts": 1652,
+    "z": [
+      -0.04,
+      0
+    ],
+    "basis": "inferred uniform extent and depth"
+  },
+  "primary": {
+    "path": "🗑️generated/register-r9-section23.png",
+    "annex": 6,
+    "terrain_z": -0.15,
+    "coal_cover_z": -0.13,
+    "scope": "two transverse external terrain section lines; not surveyed site grading"
+  },
+  "coal_terminal": {
+    "bounds": [
+      2.56267,
+      15.648639,
+      3.02861,
+      16.269048
+    ],
+    "gravel_bbox_candidates": 0
+  },
+  "conclusion": "Uniform gravel top0 is not primary-supported; source shows exterior terrain -0.15. No gravel cell currently intersects the coal terminal XY, so a direct local 0.13m cover-burial collision is NOT established. Uniformly moving entire gravel to -0.15 would remain inferred extension, not recovered grading.",
+  "proposal": {
+    "local_controls": [
+      {
+        "z": -0.15,
+        "kind": "terrain line",
+        "source": "CSIC2022 Annex6"
+      },
+      {
+        "z": -0.13,
+        "kind": "coal cover top",
+        "source": "CSIC2022 Annex6"
+      }
+    ],
+    "global_grade": null,
+    "required": "Register actual bounded gravel zones against source section tracks; qualify any uniform extension explicitly, rebuild column/wall/slab exclusions at chosen actual Z band."
+  }
+}

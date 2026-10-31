@@ -1,0 +1,395 @@
+{
+  "source": "24e6fd48355bb2bcd2fab4ba65b8a89047b8b517fcde6fa7f62ca1b26ae502c2",
+  "columns": [
+    {
+      "tag": "13",
+      "axis": [
+        10.898,
+        8.23
+      ],
+      "type": "TY-SQUARE22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "14",
+      "axis": [
+        8.128,
+        8.23
+      ],
+      "type": "TY-SQUARE22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": [
+        {
+          "profile": {
+            "shape": "rectangle",
+            "width": {
+              "value": 0.22,
+              "unit": "m",
+              "basis": "sourced",
+              "source": "CSIC2022-register-r9"
+            },
+            "depth": {
+              "value": 0.22,
+              "unit": "m",
+              "basis": "sourced",
+              "source": "CSIC2022-register-r9"
+            }
+          },
+          "axis": [
+            8.128,
+            8.23
+          ],
+          "base_level": -2.22,
+          "top_level": -0.07
+        },
+        {
+          "profile": {
+            "shape": "rectangle",
+            "width": {
+              "value": 0.22,
+              "unit": "m",
+              "basis": "sourced",
+              "source": "CSIC2022-register-r9"
+            },
+            "depth": {
+              "value": 0.22,
+              "unit": "m",
+              "basis": "sourced",
+              "source": "CSIC2022-register-r9"
+            }
+          },
+          "axis": [
+            8.128,
+            8.23
+          ],
+          "base_level": 0,
+          "top_level": 2.91
+        }
+      ]
+    },
+    {
+      "tag": "14-FIRST",
+      "axis": [
+        8.128,
+        8.23
+      ],
+      "type": "TY-CIRC22",
+      "profile": {
+        "shape": "circle",
+        "diameter": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "18",
+      "axis": [
+        10.898,
+        12.572
+      ],
+      "type": "TY-SQUARE22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "18-FIRST",
+      "axis": [
+        10.898,
+        12.572
+      ],
+      "type": "TY-SQUARE22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "19",
+      "axis": [
+        8.128,
+        12.572
+      ],
+      "type": "TY-CIRC22",
+      "profile": {
+        "shape": "circle",
+        "diameter": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "19-FIRST",
+      "axis": [
+        8.128,
+        12.572
+      ],
+      "type": "TY-CIRC22",
+      "profile": {
+        "shape": "circle",
+        "diameter": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "25",
+      "axis": [
+        10.898,
+        16.889
+      ],
+      "type": "TY-SQUARE22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "25-FIRST",
+      "axis": [
+        10.898,
+        16.889
+      ],
+      "type": "TY-SQUARE22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "26",
+      "axis": [
+        8.128,
+        16.889
+      ],
+      "type": "TY-RECT16X22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.16,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "26-FIRST",
+      "axis": [
+        8.128,
+        16.889
+      ],
+      "type": "TY-RECT16X22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.16,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    },
+    {
+      "tag": "28",
+      "axis": [
+        9.5,
+        18.079
+      ],
+      "type": "TY-RECT16X22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.16,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": [
+        {
+          "profile": {
+            "shape": "rectangle",
+            "width": {
+              "value": 0.22,
+              "unit": "m",
+              "basis": "sourced",
+              "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+            },
+            "depth": {
+              "value": 0.22,
+              "unit": "m",
+              "basis": "sourced",
+              "source": "Savoye-as-built-p69-and-CSIC2022-Annex1-5"
+            }
+          },
+          "axis": [
+            9.5,
+            18.079
+          ],
+          "base_level": -1,
+          "top_level": -0.3
+        },
+        {
+          "profile": {
+            "shape": "rectangle",
+            "width": {
+              "value": 0.16,
+              "unit": "m",
+              "basis": "sourced",
+              "source": "CSIC2022-register-r9"
+            },
+            "depth": {
+              "value": 0.22,
+              "unit": "m",
+              "basis": "sourced",
+              "source": "CSIC2022-register-r9"
+            }
+          },
+          "axis": [
+            9.5,
+            18.079
+          ],
+          "base_level": -0.3,
+          "top_level": 2.91
+        }
+      ]
+    },
+    {
+      "tag": "28-FIRST",
+      "axis": [
+        9.5,
+        18.079
+      ],
+      "type": "TY-RECT16X22",
+      "profile": {
+        "shape": "rectangle",
+        "width": {
+          "value": 0.16,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        },
+        "depth": {
+          "value": 0.22,
+          "unit": "m",
+          "basis": "sourced",
+          "source": "CSIC2022-register-r9"
+        }
+      },
+      "sections": null
+    }
+  ],
+  "api": "🧱️model/🐍️.py:column_geometry",
+  "exchange": "🧱️model/🔌️exchange/🐍️.py:composite extrusion native profile dispatch"
+}

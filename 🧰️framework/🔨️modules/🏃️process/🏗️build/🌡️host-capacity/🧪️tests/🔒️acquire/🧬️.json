@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "errors",
+          "replace",
+          "expect"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "EPERM",
+                "EBUSY",
+                "EACCES",
+                "EEXIST"
+              ]
+            }
+          },
+          "replace": {
+            "type": "boolean"
+          },
+          "expect": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "attempts",
+              "sleeps",
+              "acquired",
+              "error"
+            ],
+            "properties": {
+              "attempts": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 6
+              },
+              "sleeps": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "error": {
+                "enum": [
+                  null,
+                  "busy",
+                  "EACCES"
+                ]
+              },
+              "acquired": {
+                "type": "boolean"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

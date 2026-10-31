@@ -1,0 +1,33 @@
+{
+  "source": "24e6fd48355bb2bcd2fab4ba65b8a89047b8b517fcde6fa7f62ca1b26ae502c2",
+  "production_plan": "31f55b37771712ac24fcf3e4c4a085becd56438d7d62485506d6a38be288ad8d",
+  "cases": [
+    {
+      "id": "gravel-wearing-role",
+      "tag": "FIN-PILOTIS-GRAVEL",
+      "actual_visible": 0,
+      "parts": 1652,
+      "expected": "visible source surface despite descriptive wearing role",
+      "code_line": 108
+    },
+    {
+      "id": "cross-storey-central-tube",
+      "tag": "TUBE-STAIR-CENTRAL",
+      "contained_storey": "ground",
+      "bounds_z": [
+        -2.4,
+        6.34
+      ],
+      "expected_visible_plans": [
+        "cellar",
+        "ground",
+        "first"
+      ],
+      "not_claimed": [
+        "roof"
+      ],
+      "code_line": 423
+    }
+  ],
+  "scope": "production predicate evidence; no full render"
+}

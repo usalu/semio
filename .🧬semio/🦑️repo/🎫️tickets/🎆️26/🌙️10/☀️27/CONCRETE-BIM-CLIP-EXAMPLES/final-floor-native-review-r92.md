@@ -1,0 +1,9 @@
+# All 28 Published Floors: Independent Native IFC R92
+
+PASS for 28 physical FLOORING products × English/German: 56 real STEP fragments, 9,424 closed native components and 204 penetration probes. Exact nine-attribute records, FLOORING predefined type, canonical GUID/tag/name, all material constituents, storey containment, body representation, XYZ and independent Shapely/SciPy volumes agree. Native wearing/bedding has no plug at either rain9 or heat5 axis through Z3.145/3.155/3.165.
+
+The snapshot includes all 17 first-floor and 11 ground-floor assemblies, after source material resolution: bedroom parquet, white/ochre tile identities, ground battens/bitumen, washing-niche patches and laundry finish. The two explicitly unresolved material zones retain their qualification. No extra ground cavity probes were claimed; ground layered geometry is verified by actual native part closure, material association, XYZ and independent volume.
+
+Capture is stable on exact raw source bf43626b646f9beae09520a03a4b8b153f15456784725f3ec13eb4ffcbb68525 for 34.464 seconds. The model is parsed from those same captured bytes. Main producer 7404871af67e6067cf7b7d233f2b4bc6217691e257ae3ca01f748ac2cf1ec8f8; exchange c42f7117cfea66f44ad64ee122d5f723ae3b1db6038f66934a8a483d8ec924e9. Official authenticated web-ifc 0.0.78 decodes all fragments. Known empty-IfcProject scaling-context warnings apply to selected excerpts; this is not a full-project export test.
+
+Inputs final-floor-native-r92.py/.mjs and final-floor-native-probes-r92.json; selected hashes and detailed results under generated. The forthcoming cellar wearing floor is not included. Later source thickness/material changes require a delta audit. Original paving thickness/datum questions and unmodelled roof finishes remain in roof-finish-evidence-r92.md; native success does not settle them. No production edits.

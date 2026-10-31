@@ -1,0 +1,77 @@
+{
+  "source": "SAB2024 pp184–186, Célio executed-work records cited therein; CMN2021 salon blue/pink distinction",
+  "material_facts": [
+    {
+      "surface": "Firstfloor box facades",
+      "material": "Jurasite lime-aggregate final coat over bastard mortar base",
+      "total_render_m": 0.025,
+      "source": "SAB185–186",
+      "current": "LS-FACADE-29/26 alreadyhas25mm MAT-RENDER layer; substrate thickness represented, brand/materialidentitygeneric."
+    },
+    {
+      "surface": "Ground peripheral walls/pilotis, firstterrace exteriors, roof elements",
+      "material": "Cimentol coating, two coats stated for roof/ground",
+      "source": "SAB184, FLC H1(12)0783 and0791",
+      "current": "Generic render/plaster materials; no explicit paint identity."
+    },
+    {
+      "surface": "Interior painted walls",
+      "material": "Oil paint rather than initial glue paint",
+      "source": "SAB184/FLC H1(12)0793"
+    }
+  ],
+  "colour_facts": [
+    {
+      "surface": "Salon interior corner blue",
+      "invoice_dimensions_m": [
+        3.04,
+        10.42
+      ],
+      "interpretation": "Author maps height excluding skirting and summed cornerwall length from squarebayendpost to facade ribbon, grosswithoutdoor deductions.",
+      "source": "SAB184, Célio FLC H1(12)078/090/363,H1(13)143",
+      "current_hosts_candidates": [
+        "W-KITCHEN salon-facing eastside X4.875",
+        "W-SALON salon-facing northsideY5.931 up to column34/bayendX9.60"
+      ],
+      "metric_mapping": "AftercorrectingbaytoendnearX9.60, grossLlength(9.60−4.875)+(5.931−.245)=10.411m agreeswith10.42invoice; clearopeningsmustbesubtractedfromphysicalpaint."
+    },
+    {
+      "surface": "Salon southwest ribbon wall pink",
+      "invoice_dimensions_m": [
+        2.34,
+        6
+      ],
+      "interpretation": "Combined sill/parapet,curtainvalance and headspandrel height over6m grosswall.",
+      "source": "SAB184",
+      "current_host_candidate": "W-E salon-facing body onX19/Y.3..6, geographical mapping stilltoverify"
+    },
+    {
+      "surface": "Firstfloor hall earthumber",
+      "invoice_dimensions_m": [
+        2,
+        0.86
+      ],
+      "interpretation": "Authorconcludes probablya door, notwholehall.",
+      "source": "SAB184",
+      "unlocated": true
+    },
+    {
+      "surface": "Garage sliding door",
+      "colour": "green",
+      "source": "SAB184/1928estimateFLC H1(13)010, authorstatesexecutedthus",
+      "current_tag": "GARAGE-SLIDING"
+    },
+    {
+      "surface": "Groundrecessedenclosure",
+      "colour": "darkgreen",
+      "source": "OfficialFLC teacher dossierhttps://www.fondationlecorbusier.fr/wp-content/uploads/2022/05/2049_3993.pdf andCMN context",
+      "extent": "Register recessedbody surfaces, not allpilotis."
+    }
+  ],
+  "unresolved": [
+    "Exact original RGB/pigment codes",
+    "Precise firstfloorgray column/baypaintextent (authoronlyprobable)",
+    "Wallpaperroom: supplyattestedSAB185/FLC H1(12)0782, roomidentitynotsecured"
+  ],
+  "representation_gap": "Currentmaterial censushasgenericMAT-PLASTER/RENDER/RENDERED andnooriginalblue/pink/greenpaintidentityorpaintingproducts. Existing source-grade materialfacts canbe encoded without inventing exactRGB; do not claimcompleteoriginalpolychromy."
+}

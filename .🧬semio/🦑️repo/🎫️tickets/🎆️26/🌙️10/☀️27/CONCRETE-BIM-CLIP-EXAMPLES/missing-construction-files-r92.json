@@ -1,0 +1,81 @@
+{
+  "qualification": "Shared files include peer work; hashes are handoff snapshots, not sole authorship claims.",
+  "files": [
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔣️.json",
+      "sha256": "8dfcfb1bba896e2c37ebcfe7326a9297dc5b66e303bdec281edb0ab610b9e2b9"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🐍️.py",
+      "sha256": "99c2562763f008e320037f6a4a99c346d376eb5403c26dd5ed7d900cb06b4f0d"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧬️schema/🔣️.schema.json",
+      "sha256": "7c021dbe7100c7f49968d5fbc7005de3031604fcd303e4ae117cf9cd6d0f0c93"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧊️profiles/🐍️.py",
+      "sha256": "22643791ddd6a009bc3db3ab2001aae68ac3eb0b5293fd8c9559878362e5ea33"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🏗️construction.py",
+      "sha256": "f644fb9abc1362b9ee388adaa2a85607607bd2fa295fda17da3247b34fea7740"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🏗️construction.json",
+      "sha256": "f6c6ebc3b9f8a4596e5faff870bb19655a68ff0bdcc010e77569d14980e1a201"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🪜️stair-parts.py",
+      "sha256": "ea8c5f9cbe30db43502df783b0797d97721f7a083a15812c4ebc0d033b636a9b"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧱️interfaces.py",
+      "sha256": "6798c03a61f7c8a890314b6a1ec0fb259a3dc1d292e1375d079201108260b011"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧱️interfaces.json",
+      "sha256": "cbf9ee12905f6bc072bd6ada78f8d55995d4f5574bea40ca15db8d0c78261389"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🪈️tubes.py",
+      "sha256": "69d83fbe8ec9a223b2f0965fa68f6e91b49226c69852f48db72b095845005f45"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🪈️tubes.json",
+      "sha256": "00bc1e4285e5dec3f6aefb11773f2645abfaefb6de290fd4a831c472feba8c59"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🪈️tubes.schema.json",
+      "sha256": "883048e0a8440e17e97a562f647c1fed06ec260b102637ab0bb0796d1b5ab313"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🏛️suite.py",
+      "sha256": "b70a4fdbba10416f743d43eb1d1af1656dca4dae2d737a11a51c598a4c7873f2"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🪜️stairs.py",
+      "sha256": "c009a9299253697f8f4a45c7e61664dcca62723398cbd8b8fb8d7f05ca267f43"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🪜️stairs.json",
+      "sha256": "249c6cf9a0ef54c904baccc808d758f679f70969e97adfc4b13235b7d99a4052"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧾️capture.py",
+      "sha256": "bde7cb045d10c2f894da44aa2c520df19958e7686e456b55c80fd506489cb744"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧾️capture.json",
+      "sha256": "14dab80dc085e3651facd57f3a015edc55055de1d733d8189b7eec19bf559b0b"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧪️tests/🧾️capture.schema.json",
+      "sha256": "0f3bdb00c26a518e470fe5af53f39fa226cd19c797eba451b7669b0265eb2a5c"
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧪️tests/🐍️.py",
+      "sha256": "d859c4bae26253a6781158e2dfcd9fd5d8b537fe2637199b7f8a1446fa4124b0"
+    }
+  ]
+}

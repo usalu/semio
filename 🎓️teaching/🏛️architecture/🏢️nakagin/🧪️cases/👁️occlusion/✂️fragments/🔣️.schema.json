@@ -1,0 +1,425 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "view": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "frame": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "pixels": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/scenario"
+      },
+      "minItems": 1
+    },
+    "transparent": {
+      "$ref": "#/$defs/scenario"
+    },
+    "compound": {
+      "type": "object",
+      "properties": {
+        "polygon": {
+          "$ref": "#/$defs/polygon"
+        },
+        "triangles": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/polygon"
+          },
+          "minItems": 2
+        },
+        "normal": {
+          "$ref": "#/$defs/point"
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        }
+      },
+      "required": [
+        "polygon",
+        "triangles",
+        "normal",
+        "opacity",
+        "color"
+      ],
+      "additionalProperties": false
+    },
+    "warped_quad": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "vertices": {
+          "$ref": "#/$defs/polygon"
+        },
+        "triangles": {
+          "$ref": "#/$defs/indices"
+        },
+        "planar": {
+          "$ref": "#/$defs/polygon"
+        },
+        "tie_triangles": {
+          "$ref": "#/$defs/indices"
+        }
+      },
+      "required": [
+        "id",
+        "vertices",
+        "triangles",
+        "planar",
+        "tie_triangles"
+      ],
+      "additionalProperties": false
+    },
+    "warped_overlap": {
+      "$ref": "#/$defs/scenario"
+    },
+    "folded_singleton": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "normal": {
+          "$ref": "#/$defs/point"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/polygon"
+          },
+          "minItems": 1
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "id": {
+          "type": "string"
+        },
+        "visible_indices": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "minItems": 3,
+          "maxItems": 3
+        }
+      },
+      "required": [
+        "id",
+        "key",
+        "normal",
+        "color",
+        "polygons",
+        "visible_indices"
+      ],
+      "additionalProperties": false
+    },
+    "occluder_guard": {
+      "$ref": "#/$defs/scenario"
+    },
+    "progress": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 129
+        },
+        "interval": {
+          "const": 128
+        },
+        "phases": {
+          "type": "array",
+          "uniqueItems": true,
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "enum": [
+              "occlusion-inputs",
+              "occlusion-planes",
+              "occlusion-projection",
+              "occlusion-overlap"
+            ]
+          }
+        },
+        "cancel_phase": {
+          "const": "occlusion-projection"
+        }
+      },
+      "required": [
+        "count",
+        "interval",
+        "phases",
+        "cancel_phase"
+      ],
+      "additionalProperties": false
+    },
+    "draw_override": {
+      "type": "object",
+      "properties": {
+        "part": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimum_polygons": {
+          "type": "integer",
+          "minimum": 2
+        },
+        "polygon": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fraction": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "exclusiveMaximum": 1
+        },
+        "view": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "expected_fragment_vertices": {
+          "const": 3
+        }
+      },
+      "required": [
+        "part",
+        "minimum_polygons",
+        "polygon",
+        "fraction",
+        "view",
+        "expected_fragment_vertices"
+      ],
+      "additionalProperties": false
+    },
+    "plane_lineage": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "polygon": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "carrier": {
+          "$ref": "#/$defs/polygon"
+        },
+        "fragment": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/point"
+          },
+          "minItems": 3,
+          "maxItems": 3
+        },
+        "normal": {
+          "$ref": "#/$defs/point"
+        },
+        "unstable_normal": {
+          "$ref": "#/$defs/point"
+        },
+        "epsilon": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "recomputed_residual_minimum": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "required": [
+        "source",
+        "polygon",
+        "carrier",
+        "fragment",
+        "normal",
+        "unstable_normal",
+        "epsilon",
+        "recomputed_residual_minimum"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "version",
+    "view",
+    "frame",
+    "pixels",
+    "cases",
+    "transparent",
+    "compound",
+    "warped_quad",
+    "warped_overlap",
+    "folded_singleton",
+    "occluder_guard",
+    "progress",
+    "draw_override",
+    "plane_lineage"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "polygon": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/point"
+      },
+      "minItems": 3
+    },
+    "probe": {
+      "type": "object",
+      "properties": {
+        "point": {
+          "$ref": "#/$defs/point"
+        },
+        "source": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "point",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "item": {
+      "type": "object",
+      "properties": {
+        "key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "normal": {
+          "$ref": "#/$defs/point"
+        },
+        "color": {
+          "type": "string",
+          "pattern": "^#[0-9A-Fa-f]{6}$"
+        },
+        "polygons": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/polygon"
+          },
+          "minItems": 1
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "required": [
+        "key",
+        "normal",
+        "color",
+        "polygons"
+      ],
+      "additionalProperties": false
+    },
+    "scenario": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/item"
+          },
+          "minItems": 1
+        },
+        "probes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/probe"
+          },
+          "minItems": 1
+        },
+        "no_stroke_probe": {
+          "$ref": "#/$defs/point"
+        },
+        "void_probe": {
+          "$ref": "#/$defs/point"
+        }
+      },
+      "required": [
+        "id",
+        "items",
+        "probes"
+      ],
+      "additionalProperties": false
+    },
+    "indices": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3
+        },
+        "minItems": 3,
+        "maxItems": 3
+      },
+      "minItems": 2,
+      "maxItems": 2
+    }
+  }
+}

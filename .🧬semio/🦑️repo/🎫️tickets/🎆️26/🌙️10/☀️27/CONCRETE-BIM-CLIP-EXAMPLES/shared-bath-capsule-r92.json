@@ -1,0 +1,100 @@
+{
+  "title": "Shared Bathroom Capsule Construction Registration R92",
+  "sources": {
+    "completed_author_plan": "book46",
+    "original": "FLC19442 book25",
+    "official_two_doors": "https://www.villa-savoye.fr/content/download/9824393/file/document-visite-villa-savoye-FR-2021.pdf?inLanguage=fre-FR&version=3"
+  },
+  "registration": {
+    "u0": 7,
+    "v0": 49,
+    "pixel_pitch": 170,
+    "metres": 4.75,
+    "uncertainty_m": 0.15
+  },
+  "tub": {
+    "pixel_outer_bounds": [
+      594,
+      552,
+      656,
+      579
+    ],
+    "outer_world_bounds": [
+      0.8661764705882362,
+      15.304411764705883,
+      2.598529411764705,
+      16.058823529411764
+    ],
+    "axis": "X",
+    "shape": "horizontal capsule in plan, with north portion inside wetroom and south curved projection into son room"
+  },
+  "niche_wall": {
+    "source_pixels": {
+      "straight_y": 561,
+      "straight_left_extent": [
+        562,
+        594
+      ],
+      "curved_envelope_bounds": [
+        590,
+        550,
+        660,
+        583
+      ],
+      "straight_right_extent": [
+        660,
+        689
+      ]
+    },
+    "interpretation": "Do not retain straight bedroom partition through bathtub. Route around south capsule half with wall thickness inferred from parallel lines.",
+    "world_stations": {
+      "left_join": [
+        2.598529411764705,
+        15.555882352941177
+      ],
+      "right_join": [
+        0.7544117647058819,
+        15.555882352941177
+      ],
+      "southmost": [
+        1.7323529411764689,
+        16.17058823529412
+      ]
+    },
+    "exact_arc_radii": "raster inferred, wall/core thickness not dimensioned"
+  },
+  "fixtures": {
+    "bidet": {
+      "center": [
+        2.975735294117648,
+        14.410294117647059
+      ],
+      "facing": "away from north wall, south/+Y",
+      "tap_location": "north/-Y end inferred from original25 and author46 fixture symbols"
+    },
+    "basin": {
+      "center": [
+        0.7963235294117652,
+        14.410294117647059
+      ],
+      "shape": "elliptical pedestal basin",
+      "taps": "two short marks on north/-Y rim visible author46; exact hardware shape/dimensions unknown"
+    }
+  },
+  "doors": {
+    "count": 2,
+    "functions": [
+      "guest room",
+      "son room"
+    ],
+    "presence": "official CMN visitor guide explicitly confirms access to friends and son via two doors",
+    "exact_portal_coordinates": "not securely registered in current raster; do not manufacture original swings",
+    "original25_corroboration": "door strokes at ends of shared partition traces, inspect retained enlarged crop"
+  },
+  "acceptance": [
+    "Capsule bath hollow cavity retained; no straight wall cutting basin",
+    "Son room boundary must follow capsule niche; no room or wall positive-volume overlaps",
+    "Two real portal routes with0.60m body clearance; station/swing inference explicit",
+    "Bidet is original toilet-washing fixture, not WC"
+  ]
+}

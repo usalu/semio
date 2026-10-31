@@ -1,0 +1,8 @@
+{
+  "fitted": {
+    "🦗️grasshopper/🎬️clip": ["🦴️anatomy", "💊️capsule", "🫗️casting", "🌳️trees", "🗼️tower"],
+    "📊️excel/🎬️clip": ["🦴️anatomy", "📋️program", "📍️references", "⚡️energy"]
+  },
+  "drawing_calls": ["tower_axon", "tower_elevation"],
+  "legends": {"tool": {"terms": "TOOL_TERMS", "order": "TOOL_ORDER"}, "data": {"terms": "DATA_TERMS", "order": "DATA_ORDER"}}
+}

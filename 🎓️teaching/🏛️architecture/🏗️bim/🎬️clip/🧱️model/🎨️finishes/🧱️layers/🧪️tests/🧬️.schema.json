@@ -1,0 +1,136 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "layer_values",
+    "baseline",
+    "base",
+    "wearing",
+    "domains",
+    "beam_z",
+    "affected_tags",
+    "invalid_values",
+    "comparison",
+    "representations",
+    "binding_units",
+    "baseline_authority",
+    "host_hole",
+    "window_union"
+  ],
+  "properties": {
+    "window_union": {
+      "type":"object","required":["slab","finish","ring","expected_owned_volume"],"additionalProperties":false,
+      "properties": {
+        "slab":{"type":"string"},"finish":{"type":"string"},
+        "ring":{"type":"array","minItems":3,"items":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"number"}}},
+        "expected_owned_volume":{"type":"number","exclusiveMinimum":0}
+      }
+    },
+    "host_hole": {
+      "type": "object",
+      "required": ["slab", "finish", "ring", "expected_owned_volume"],
+      "additionalProperties": false,
+      "properties": {
+        "slab": {"type": "string"},
+        "finish": {"type": "string"},
+        "ring": {"type": "array", "minItems": 3, "items": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "number"}}},
+        "expected_owned_volume": {"type": "number", "exclusiveMinimum": 0}
+      }
+    },
+    "baseline_authority": {
+      "type": "object",
+      "required": ["owner", "finish", "expected_owned_volume", "materials"],
+      "additionalProperties": false,
+      "properties": {
+        "owner": {"type": "string"},
+        "finish": {"type": "string"},
+        "expected_owned_volume": {"type": "number", "exclusiveMinimum": 0},
+        "materials": {"type": "object", "additionalProperties": {"type": "number", "minimum": 0}}
+      }
+    },
+    "layer_values": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "baseline": {
+      "type": "number"
+    },
+    "base": {
+      "type": "number"
+    },
+    "wearing": {
+      "type": "object"
+    },
+    "domains": {
+      "type": "object"
+    },
+    "beam_z": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "affected_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "invalid_values": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "comparison": {
+      "type": "object"
+    },
+    "representations": {
+      "type": "array",
+      "minItems": 7,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "axis",
+          "footprint",
+          "plan",
+          "section",
+          "elevation",
+          "3d",
+          "body"
+        ]
+      }
+    },
+    "binding_units": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "unit",
+          "valid"
+        ],
+        "properties": {
+          "field": {
+            "enum": [
+              "maximum_reference_capacity",
+              "depth"
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "valid": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

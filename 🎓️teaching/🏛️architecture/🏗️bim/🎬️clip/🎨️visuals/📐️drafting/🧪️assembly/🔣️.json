@@ -1,0 +1,66 @@
+{
+  "records": [
+    {
+      "shape": "a1",
+      "tag": "A",
+      "aliases": [
+        "P"
+      ],
+      "layers": [
+        "structure"
+      ]
+    },
+    {
+      "shape": "b1",
+      "tag": "B",
+      "aliases": [
+        "P"
+      ],
+      "layers": [
+        "architecture"
+      ]
+    },
+    {
+      "shape": "a2",
+      "tag": "A",
+      "aliases": [
+        "P"
+      ],
+      "layers": [
+        "structure",
+        "architecture"
+      ]
+    }
+  ],
+  "expected": {
+    "root": [
+      "a1",
+      "b1",
+      "a2"
+    ],
+    "parts": {
+      "A": [
+        "a1",
+        "a2"
+      ],
+      "B": [
+        "b1"
+      ],
+      "P": [
+        "a1",
+        "b1",
+        "a2"
+      ]
+    },
+    "layers": {
+      "structure": [
+        "a1",
+        "a2"
+      ],
+      "architecture": [
+        "b1",
+        "a2"
+      ]
+    }
+  }
+}

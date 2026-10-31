@@ -1,0 +1,10 @@
+"""🔗 Execute complete current model-structure and event-driven analytical-consistency contracts."""
+import hashlib,importlib,json,sys,time,unittest
+from pathlib import Path
+sys.dont_write_bytecode=True
+root=next(p for p in Path(__file__).resolve().parents if(p/'AGENTS.md').is_file()and(p/'package.json').is_file());sys.path.insert(0,str(root));ticket=Path(__file__).parent;clip=root/'🎓️teaching/🏛️architecture/🏗️bim/🎬️clip';model=clip/'🧱️model';paths=[p for p in model.rglob('*.py')if '🧪️tests'not in str(p)]+[model/'🔣️.json',model/'🧬️schema/🔣️.schema.json',clip/'🧪️tests/🐍️.py',clip/'🧪️cases/🔣️.json',Path(__file__)]
+def hashes():
+    """🔐 Bind source-level expectations and every physical producer."""
+    return {str(p.relative_to(root)):hashlib.sha256(p.read_bytes()).hexdigest()for p in paths}
+before=hashes();prefix='🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.';main=importlib.import_module(prefix+'🧪️tests.🐍️');api=main.model_api();source=api.load_model();items=main.registry(source);suite=unittest.TestSuite([unittest.TestLoader().loadTestsFromTestCase(main.BimModelStructureContract),unittest.TestLoader().loadTestsFromTestCase(main.BimConsistencyContract)]);start=time.monotonic();result=unittest.TextTestRunner(verbosity=2).run(suite);after=hashes();out={'pass':result.wasSuccessful()and not result.skipped and before==after,'tests':result.testsRun,'failures':[(str(t),msg)for t,msg in result.failures],'errors':[(str(t),msg)for t,msg in result.errors],'skipped':result.skipped,'before':before,'after':after,'stable':before==after,'seconds':time.monotonic()-start,'scope':'Actual complete model-structure and analytical-consistency classes with unmodified shared whole-building setup; full standard suite remains separately required.'};(ticket/'🗑️generated'/'analysis-consistency-r95.json').write_text(json.dumps(out,ensure_ascii=False,indent=2),encoding='utf8');print('[DEBUG] '+json.dumps({k:v for k,v in out.items()if k not in ('before','after','failures','errors')}));raise SystemExit(not out['pass'])
+   

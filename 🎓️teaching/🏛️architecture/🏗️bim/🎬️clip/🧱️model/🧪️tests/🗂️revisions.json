@@ -1,0 +1,27 @@
+{
+  "payloads": [
+    {
+      "counter": 1
+    },
+    {
+      "counter": 2
+    },
+    {
+      "counter": 3
+    }
+  ],
+  "producer_names": [
+    "_surface_support_edges",
+    "_surface_separated",
+    "_surface_difference",
+    "_geometry_query",
+    "column_geometry",
+    "part_vertices",
+    "part_faces",
+    "part_outline_at",
+    "_polyhedron_volume"
+  ],
+  "analysis_producer": "_orientation",
+  "backend_producer": "reference_parts",
+  "maximum_models": 2
+}

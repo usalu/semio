@@ -1,0 +1,146 @@
+{
+  "type": "object",
+  "required": [
+    "fixture",
+    "expected",
+    "ground",
+    "remaining_storeys"
+  ],
+  "properties": {
+    "fixture": {
+      "type": "object",
+      "required": [
+        "tag",
+        "class",
+        "predefined_type",
+        "geometry",
+        "metadata",
+        "material"
+      ],
+      "properties": {
+        "class": {
+          "const": "IfcCovering"
+        },
+        "predefined_type": {
+          "const": "FLOORING"
+        },
+        "geometry": {
+          "type": "object",
+          "required": [
+            "kind",
+            "parts",
+            "base_level"
+          ]
+        }
+      }
+    },
+    "expected": {
+      "type": "object",
+      "required": [
+        "architecture_group",
+        "volume",
+        "wearing_area"
+      ]
+    },
+    "ground": {
+      "type": "object",
+      "required": [
+        "required",
+        "oak_thickness",
+        "oak_strip_width",
+        "ground_cap",
+        "slab_thickness",
+        "tile_module",
+        "hall_angle",
+        "laundry_angle",
+        "coal_bay_roles"
+      ],
+      "properties": {
+        "coal_bay_roles": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "inferred_indoor_coal_bay_levelling",
+              "inferred_continuous_wall_underlay"
+            ]
+          },
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true
+        }
+      }
+    },
+    "remaining_storeys": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cellar_slab",
+        "cellar_top",
+        "cellar_rooms",
+        "roof_slab",
+        "roof_room",
+        "roof_finished_top",
+        "roof_mid",
+        "roof_material",
+        "cellar_finished_top",
+        "cellar_floor",
+        "cellar_structural_material",
+        "roof_slabs",
+        "roof_coverings"
+      ],
+      "properties": {
+        "cellar_slab": {
+          "type": "string"
+        },
+        "cellar_top": {
+          "type": "number"
+        },
+        "cellar_rooms": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "roof_slab": {
+          "type": "string"
+        },
+        "roof_room": {
+          "type": "string"
+        },
+        "roof_finished_top": {
+          "type": "number"
+        },
+        "roof_mid": {
+          "type": "number"
+        },
+        "roof_material": {
+          "type": "string"
+        },
+        "cellar_finished_top": {
+          "type": "number"
+        },
+        "cellar_floor": {
+          "type": "string"
+        },
+        "cellar_structural_material": {
+          "type": "string"
+        },
+        "roof_slabs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        },
+        "roof_coverings": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

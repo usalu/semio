@@ -1,0 +1,33 @@
+# Unpublished Fixture Fit Candidate
+
+Actual original-source RED ran all4registered functions: three expected source-fit failures and one passing2nm/contact control. The authored candidate then passed all4functions in34.000s under normal2GB lockedCPython3.12, with source/schema/allphysicalproducers/test/driver/author-helper hashes unchanged. No source assets have been published.
+
+The candidate keeps the lamp family/hostXY/normal and99parts, lowering the inferred mount to2.00m with1.88m minimum material height. Exact rational support intervals prove separation from the complete ramp/guard references, while conditionedSciPy retains the original occupied collision witness. All3tap flanges have zero GEOS intersection volume with actual raised ceramic rims and retain distributed deck bearing at unchanged heights after1.5mm rearward fitting. The144cell pipe uses the real collector atY8.60, unchanged lower station,80mm diameter/4mm gauge; every cell is closed/positive and independentSciPy mass agrees with the annular-section/path formula.
+
+An additional fifth contract now requires exact native material separation from actual ownedSL1, patio finish and collector sleeve; it remains to run. EN/DE SDK, full-current-source acceptance and guarded5object source publication also remain. The candidate JSON is generated/fixture-fits-stock-r95.json; no complete tracked source file was copied.
+
+All5bodies passed42.319s after exact sleeve-profile sharing, preserving80mm/4mm. The complete certificate is stable=false/pass=false because producers moved; no publication. A runner-clone receipt-path collision overwrote the prior quantity receipt. The actual fixture record is preserved separately as fixture-fits-candidate-moving-r95.json; its runner now uses a dedicated namespace. The four quantity functions are being rerun to renew their current proof. Model source was unaffected.
+
+## Stable Five-Contract and Independent Native Proof
+
+All five actual candidate test bodies passed in 47.770 s with source, schema, physical producers, neutral controls, test runner and author inputs unchanged. The run retained no skips. The additional pipe contract now proves separation from the actual owned slab, patio finish and collector sleeve. Its outer ring shares the existing sleeve boundary exactly; diameter and gauge were preserved.
+
+Independent web-ifc 0.0.78 verification passed for English and German: ten product fragments, 1470 closed positive cells and 35808 exact binary64 coordinate readbacks. This includes native extrusion and tapered profile positions as well as BREP and mapped placements. Every cell has a positive occupancy control; the pipe and taps retain negative airway controls. Native source capture was stable.
+
+Existing rain airway and kitchen tap bearing/discharge/airway controls were translated coherently. Sink registration, cavities, counter decks, lamp host and all product identities remain unchanged. Full-model independent candidate schema and nine-body compatibility checks are now running. Publication remains pending these checks and a fresh input-bound guard.
+
+## Broader Compatibility and Sixth Asset
+
+The nine-body compatibility run finished with seven passing bodies and two integration errors in 177.541 s. Both errors are in strict roof finish-reservation ownership through actual light hosts or curtain/facade support; source producers also moved, so the run is explicitly RED. The five fitting bodies, existing kitchen material/airway/deck/discharge body and actual service-bore removal body passed. No source publication occurred.
+
+Review of the complete diagnostic identified the final root-owned group: pantry storage against the pantry west finish. Its authored rear plane is X=3.039999999999706 m, whereas the declared 80 mm wall about X=3.00 m has the exact intended finish plane X=3.04 m. The resulting approximately 294 femtometre intrusion is retained, with diagnostic volume 1.6468806073115523e-12 m³ over eight cell pairs. It is a coordinate authoring defect, not an additional historically measured placement. A sixth language-neutral contract now requires all 38 cabinet parts to meet the complete source wall envelope at X=3.04 with zero independent GEOS interior overlap and nonzero boundary contact. The new contract is being run RED before correction; its result supersedes the earlier five-body fixture scope.
+
+The sixth native asset uses the real eight inherited IfcFurnishingElement attributes and has no native PredefinedType field. The strict decoder now checks this class distinction explicitly; nine attributes remain mandatory for the five typed service fixtures. The official [IFC4 IfcFurnishingElement definition](https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD1/HTML/schema/ifcproductextension/lexical/ifcfurnishingelement.htm) supports this contract. The source exporter already emits the correct class-specific attribute layout; no exporter change was required.
+
+## Sixth Candidate Proof
+
+The isolated actual pantry contract is now RED on the original source and GREEN on the candidate, with unchanged input hashes. It preserves all 38 parts, exact declared wall contact and zero GEOS interior intersection. The six-contract first run retained its expected pantry failure before this authoring correction; its other five bodies passed in 358.314 s. That run is not a stable acceptance certificate because producers and the author changed; the RED record remains fixture-fits-six-red-r95.json.
+
+The extended six-asset native capture passed with stable hashes in 31.812 s. Independent web-ifc verification passes all 12 bilingual fragments: 1,546 closed positive cells, 37,632 exact binary64 coordinate readbacks, every-cell positive occupancy, and retained pipe/tap airway negatives. Furnishing identity uses the correct eight-attribute native class. Generated product excerpts have no project context, so the engine reports missing-project unit-context messages; the decoder separately checks native bounds and mass. This excerpt proof does not replace final whole-project IFC verification.
+
+The much slower actual slab contract is traced to rebuilding exact hole decompositions for each slab region, before structural ownership resolution. Construction is correcting the measured hot path while preserving exact boundaries and 2 nm positive controls. Full current six-body/ten-body compatibility and current schema remain pending before guarded publication. The publisher is prepared and has not been run; it preserves all product GUIDs, classes, part counts, materials, roles, memberships, source references and unrelated properties.

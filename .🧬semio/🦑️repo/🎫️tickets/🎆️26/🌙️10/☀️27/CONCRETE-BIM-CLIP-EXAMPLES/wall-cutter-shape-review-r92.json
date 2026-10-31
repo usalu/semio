@@ -1,0 +1,130 @@
+{
+  "source": "d575c427b7e090bfe1d73c9da9e25e4b7a26e841a429364b7e427a7df3992d62",
+  "scope": "Meaningful shape-key inventory in actual exclusive native parts; empty holes arrays excluded; shared-reference cutters not separately recaptured",
+  "candidate_count": 10,
+  "candidates": [
+    {
+      "tag": "2",
+      "index": 2,
+      "class": "IfcColumn",
+      "holes": 1,
+      "mesh": false,
+      "z": [
+        -0.55,
+        -0.3
+      ]
+    },
+    {
+      "tag": "2",
+      "index": 3,
+      "class": "IfcColumn",
+      "holes": 1,
+      "mesh": false,
+      "z": [
+        -0.3,
+        2.91
+      ]
+    },
+    {
+      "tag": "2-FIRST",
+      "index": 0,
+      "class": "IfcColumn",
+      "holes": 1,
+      "mesh": false,
+      "z": [
+        3.14,
+        6.34
+      ]
+    },
+    {
+      "tag": "4",
+      "index": 2,
+      "class": "IfcColumn",
+      "holes": 1,
+      "mesh": false,
+      "z": [
+        -0.55,
+        -0.3
+      ]
+    },
+    {
+      "tag": "4",
+      "index": 3,
+      "class": "IfcColumn",
+      "holes": 1,
+      "mesh": false,
+      "z": [
+        -0.3,
+        2.91
+      ]
+    },
+    {
+      "tag": "4-FIRST",
+      "index": 0,
+      "class": "IfcColumn",
+      "holes": 1,
+      "mesh": false,
+      "z": [
+        3.14,
+        6.34
+      ]
+    },
+    {
+      "tag": "STAIR-RETURN-L",
+      "index": 0,
+      "class": "IfcColumn",
+      "holes": 0,
+      "mesh": true,
+      "z": [
+        3.14,
+        5.5343555562799995
+      ]
+    },
+    {
+      "tag": "STAIR-RETURN-L",
+      "index": 1,
+      "class": "IfcColumn",
+      "holes": 0,
+      "mesh": true,
+      "z": [
+        3.14,
+        5.412400000439999
+      ]
+    },
+    {
+      "tag": "STAIR-RETURN-L",
+      "index": 2,
+      "class": "IfcColumn",
+      "holes": 0,
+      "mesh": true,
+      "z": [
+        3.14,
+        5.412400000439999
+      ]
+    },
+    {
+      "tag": "STAIR-RETURN-L",
+      "index": 3,
+      "class": "IfcColumn",
+      "holes": 0,
+      "mesh": true,
+      "z": [
+        3.14,
+        5.5343555562799995
+      ]
+    }
+  ],
+  "conclusion": "No actual wall overcut yet established; six bored-column sections intentionally preserve service airways and four L cap solids require actual raw-wall intersection witness, not bounding box inference",
+  "L_cap_local_negative_controls": {
+    "north_wall": "W-WC-FIRST-N",
+    "north_wall_minY": 10.179118,
+    "L_horizontal_leg_maxY": 10.150220372,
+    "Y_gap_m": 0.028897628000001063,
+    "east_wall": "W-WC-FIRST-E",
+    "east_wall_maxX": 6.326765,
+    "L_vertical_leg_minX": 6.347144829,
+    "X_gap_m": 0.02037982900000035,
+    "conclusion": "The two nearby raw partition strips are separated from the actual concave L footprint even though its overall XY box overlaps their overall boxes; no cap-induced missing wall witness here",
+    "other_scope": "Roof stair enclosure is above cap and cellar/ground-only walls below the sloped-cap region; source holes are intentional service airways"
+  }
+}

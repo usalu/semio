@@ -1,0 +1,49 @@
+{
+  "source": "elliptical-basins-r92.json; original paired low-X tap marks; sizes and valves explicitly inferred",
+  "segments": 32,
+  "diameter": 0.025,
+  "wall": 0.002,
+  "rows": [
+    {
+      "basin": "FIX-HALL-BASIN",
+      "tap": "TAP-HALL",
+      "axis": [
+        8.128,
+        13.15
+      ],
+      "size": [
+        0.46,
+        0.8
+      ],
+      "rim": 0.88,
+      "pairs": 2,
+      "owned": false,
+      "floor": 0
+    },
+    {
+      "basin": "BASIN-PARENTS",
+      "tap": "BASIN-PARENTS",
+      "axis": [
+        4.945588235294117,
+        13.46029411764706
+      ],
+      "size": [
+        0.46,
+        0.8
+      ],
+      "rim": 0.88,
+      "pairs": 2,
+      "owned": true,
+      "floor": 3.17
+    }
+  ],
+  "stem_offset_x": -0.195,
+  "stem_offsets_y": [
+    -0.12,
+    0.12
+  ],
+  "joint_z": 1.1,
+  "probe_z": 0.98,
+  "tolerance": 1e-7,
+  "contact_tolerance_m": 1e-9
+}

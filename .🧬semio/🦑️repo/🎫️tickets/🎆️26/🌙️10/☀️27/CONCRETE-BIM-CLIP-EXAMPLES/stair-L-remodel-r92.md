@@ -1,0 +1,17 @@
+# Original L Stair Support and Transfer Births R92
+
+Original FLC H1(13)314,published atSAB2024 p145,establishes a22×22cm L section with6cm legs beside the first-floor WC. Source141 identifies structural guards as part of the continuous stair system. Initial placement at the outer render edge had no real waist/RC bearing; the failed10-ray proof remains retained. A60mm registration toward actual RC within±0.15m source uncertainty preserves original−X/+Y leg orientation and produces positive structural-guard contact.
+
+STAIR-RETURN-L/ TY-STAIR-L22-06 now use the actual sloping guard underside plane n=(.762222224,0,1),point(6.407144829,10.150220372,5.366666667). No flat cap substitutes for this face. Base3.14m bears on the actual first-floor structural edge over0.0096m². SL-1 has no owned finish layer at this location; no material reserve or slab patch is needed. No false full-height ground continuation is added. Source column count68.
+
+Schema-first geometry.end_plane clips the final uniform column section to a finite positive world plane. Native convex pieces preserve closed faceted bodies,exact material volume and sloped-end mesh export. Source-section metrics remain separate from convex tessellation so internal diagonals do not inflate lateral area. Invalid parallel,zero-normal or below-base planes reject. Source-neutral RED1.547s fails the previously ignored cap; two producer cases then pass before adding the real support. Final3tests PASS1.609s on stablec30d74c636da92597cc22145635c86d4554b24d9386a64bd195b2d90d4ad4ff2. Independent SciPy/NumPy/GEOS verify closed signed mesh volume,analytic plane integration,sourceL volume0.05209426667736m³ and actual RC projected bearing0.011m² with no guard overlap.
+
+New source relations register first-floor transfer births34→F-8-9,35→F-13-14,36→F-13-25 and qualify reinforcement details. PB original PoutreF identity is now explicit; nominal1.585m and unresolved exact embedded-joint ordinate remain distinguished. The−1.50/−1.65 footing reference conflict remains documented; no unsupported15cm foundation shift occurred.
+
+Independent strict native SDK capped-column/body verification passes. The complete current standard suite remains pending. Retained inputs: 🪜post.json/.py,stair-post-r92.py,stair-L-contact/guard-contact probes; all generated results remain beneath ticket generated.
+
+## Lower Bearing Integration Correction
+
+The initially added SL-1 column material reserve was invalid: a bearing boundary has zero occupied intersection volume,and SL-1 has no owned finish parts. Strict existing ownership validation correctly rejected it. Removed that reserve without changing slab material or post birth. A temporary combined-contact protocol change was reverted; no unused alternate ownership behaviour remains.
+
+Independent native+GEOS review confirms10actual R-PRIMARY-SL-1-50 polygons atZ2.91..3.14 bear the L vertical tail over0.009599999984128018m². The horizontal leg overlaps the real stair opening0.013200000015759222m²; this does not make the entire post float. The first interpretation confusing zero shared volume with zero bearing-face area was corrected. Original145 first-ceiling starter-bar photograph corroborates the registered floor/trimmer birth. A fourth permanent test verifies actual0.0096m²lower bearing,unchanged full structural material and absence of a fictitious finish reserve. Its fresh result is retained separately from the earlier3test run.

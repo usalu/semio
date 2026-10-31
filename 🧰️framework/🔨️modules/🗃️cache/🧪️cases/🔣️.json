@@ -1,0 +1,41 @@
+{
+  "invalid_numbers":[true,false,-1,0.5,null,"1",9007199254740992],
+  "ownership":["owned","borrowed","nested_failure"],
+  "cases":[
+    {"name":"Integral JSON Numbers Normalize","policy":[2.0,5.0,5.0,2.0],"steps":[
+      {"op":"request","key":"whole","cost":[2.0,2.0],"reserve":[2.0,2.0],"keys":["whole"],"total":[2,2],"outcome":"clone"},
+      {"op":"request","key":"limit","cost":[3.0,3.0],"reserve":[3.0,3.0],"keys":["whole","limit"],"total":[5,5],"outcome":"clone"}
+    ]},
+    {"name":"Independent Budgets And LRU","policy":[3,10,10,4],"steps":[
+      {"op":"request","key":"a","cost":[4,1],"reserve":[4,1],"keys":["a"],"total":[4,1],"outcome":"clone"},
+      {"op":"request","key":"b","cost":[1,5],"reserve":[1,5],"keys":["a","b"],"total":[5,6],"outcome":"clone"},
+      {"op":"request","key":"a","cost":[4,1],"keys":["b","a"],"total":[5,6],"outcome":"clone"},
+      {"op":"request","key":"c","cost":[5,5],"reserve":[5,5],"keys":["a","c"],"total":[9,6],"outcome":"clone"},
+      {"op":"request","key":"d","cost":[2,1],"reserve":[2,1],"keys":["c","d"],"total":[7,6],"outcome":"clone"},
+      {"op":"configure","policy":[3,6,10,1],"keys":["d"],"total":[2,1]},
+      {"op":"release","keys":[],"total":[0,0]},
+      {"op":"release","keys":[],"total":[0,0]}
+    ]},
+    {"name":"Unknown Coverage And Oversize","policy":[8,1000000,10000000,2],"steps":[
+      {"op":"request","key":"a","cost":[759230,100],"keys":["a"],"total":[759230,100],"outcome":"clone"},
+      {"op":"request","key":"b","cost":[759230,100],"keys":["b"],"total":[759230,100],"outcome":"clone"},
+      {"op":"request","key":"b","cost":[20,20],"invalid":true,"keys":["b"],"total":[20,20],"outcome":"clone"},
+      {"op":"request","key":"huge","cost":[1000001,1],"keys":[],"total":[0,0],"outcome":"original"},
+      {"op":"request","key":"points","cost":[1,10000001],"keys":[],"total":[0,0],"outcome":"original"},
+      {"op":"request","key":"exact","cost":[1000000,10000000],"keys":["exact"],"total":[1000000,10000000],"outcome":"clone"},
+      {"op":"invalidate","key":"exact","keys":[],"total":[0,0]},
+      {"op":"configure","policy":[0,1000000,10000000,0],"keys":[],"total":[0,0]},
+      {"op":"request","key":"disabled","cost":[0,0],"keys":[],"total":[0,0],"outcome":"original"}
+    ]},
+    {"name":"Failure Rollback And Safe Integer Limits","policy":[2,9007199254740991,9007199254740991,2],"steps":[
+      {"op":"request","key":"a","cost":[9007199254740991,1],"reserve":[9007199254740991,1],"keys":["a"],"total":[9007199254740991,1],"outcome":"clone"},
+      {"op":"request","key":"b","cost":[1,1],"reserve":[1,1],"keys":["b"],"total":[1,1],"outcome":"clone"},
+      {"op":"request","key":"factory","cost":[1,1],"fail":"factory","keys":[],"total":[0,0],"outcome":"error"},
+      {"op":"request","key":"measure","cost":[1,1],"fail":"measure","keys":[],"total":[0,0],"outcome":"error"},
+      {"op":"request","key":"clone","cost":[1,1],"fail":"clone","keys":[],"total":[0,0],"outcome":"error"},
+      {"op":"request","key":"cancel","cost":[1,1],"fail":"cancel","keys":[],"total":[0,0],"outcome":"error"},
+      {"op":"request","key":"zero","cost":[0,0],"reserve":[0,0],"keys":["zero"],"total":[0,0],"outcome":"clone"},
+      {"op":"request","key":"unknown","cost":[1,1],"keys":["unknown"],"total":[1,1],"outcome":"clone"}
+    ]}
+  ]
+}

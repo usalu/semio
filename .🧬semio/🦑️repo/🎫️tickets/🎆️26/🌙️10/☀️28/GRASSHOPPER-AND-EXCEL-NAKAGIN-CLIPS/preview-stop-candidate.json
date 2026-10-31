@@ -1,0 +1,13 @@
+{
+  "snapshot_at": "2026-10-30T03:43:00.450Z",
+  "process": {
+    "pid": 53880,
+    "parent": 46580,
+    "ageSeconds": 8519,
+    "rssMegabytes": 43559,
+    "cpuPercent": 0,
+    "command": "\"C:\\Users\\Ueli\\AppData\\Roaming\\uv\\python\\cpython-3.12-windows-x86_64-none\\python.exe\" .??semio/???repo/???tickets/???26/???10/??28/GRASSHOPPER-AND-EXCEL-NAKAGIN-CLIPS/render/preview.py ???excel ???references Beat2_References Excel_references en",
+    "parentMissing": false
+  },
+  "authorization": "Awaiting explicit human response; this record grants no permission"
+}

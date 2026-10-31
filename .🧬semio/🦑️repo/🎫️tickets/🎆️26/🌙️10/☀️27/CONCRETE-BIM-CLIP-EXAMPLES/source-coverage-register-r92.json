@@ -1,0 +1,6769 @@
+{
+  "version": 1,
+  "source": "7bb88ea3b796bbbf824748ce2fd0e3978d46ecbf764826860c79c5f085efc145",
+  "source_product_count": 576,
+  "physical_products": 513,
+  "scope": "Consolidated chapter/topic coverage of all relevant construction evidence already reviewed in this ticket; no claim every archive sheet or hidden detail has been recovered Topic rows for five construction details updated after original roster snapshot; root final source/count/roster refresh and frozen native acceptance remain required.",
+  "classification_policy": {
+    "represented": "Authored identity/body exists; exact historical measurement and final interference acceptance are separate",
+    "missing": "Positive executed/presence evidence has no current physical counterpart",
+    "contradicted": "Recovered evidence or actual physical interface disproves a current assumption; repair owner pending",
+    "unlocated": "Attested supply/count or design record cannot be assigned a truthful executed1930 location"
+  },
+  "topics": [
+    {
+      "id": "foundations_cellar",
+      "pages": "54–69,99",
+      "refs": [
+        "Annex1/6",
+        "FLC cellar drawings"
+      ],
+      "tags": [
+        "FT-CELLAR",
+        "FT-STAIR-PA",
+        "FT-CELLAR-C14",
+        "FT-BLINDING-1",
+        "FT-PAD-1",
+        "FT-BLINDING-2",
+        "FT-PAD-2",
+        "FT-BLINDING-3",
+        "FT-PAD-3",
+        "FT-BLINDING-4",
+        "FT-PAD-4",
+        "FT-BLINDING-5",
+        "FT-PAD-5",
+        "FT-BLINDING-6",
+        "FT-PAD-6",
+        "FT-BLINDING-7-12",
+        "FT-PAD-7-12",
+        "FT-BLINDING-11",
+        "FT-PAD-11",
+        "FT-BLINDING-16",
+        "FT-PAD-16",
+        "FT-BLINDING-17",
+        "FT-PAD-17",
+        "FT-BLINDING-21",
+        "FT-PAD-21",
+        "FT-BLINDING-22",
+        "FT-PAD-22",
+        "FT-BLINDING-23",
+        "FT-PAD-23",
+        "FT-BLINDING-24",
+        "FT-PAD-24",
+        "FT-BLINDING-27",
+        "FT-PAD-27",
+        "FT-BLINDING-28",
+        "FT-PAD-28",
+        "FT-BLINDING-29",
+        "FT-PAD-29",
+        "FT-BLINDING-30",
+        "FT-PAD-30",
+        "FT-BLINDING-31",
+        "FT-PAD-31",
+        "FT-BLINDING-32",
+        "FT-PAD-32",
+        "FT-BLINDING-33",
+        "FT-PAD-33",
+        "SL-CELLAR",
+        "CELLAR-HOIST-PIT",
+        "CELLAR-COAL-CHUTE",
+        "HOIST-JIB"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Footings, cellar walls,8cm lime slab,2cm cement/sand finished datum−2.40, coal/hoist construction",
+      "unknown": "Plant identities/positions, concealed waterproofing and several original construction joints",
+      "registers": [
+        "cellar-floor-evidence-r92.md",
+        "cellar-services-r21.md"
+      ]
+    },
+    {
+      "id": "structural_columns",
+      "pages": "90–105,134–145",
+      "refs": [
+        "Annex1–6",
+        "FLC H1(13)310/314"
+      ],
+      "tags": [
+        "STAIR-PA",
+        "1",
+        "1-FIRST",
+        "2",
+        "2-FIRST",
+        "3",
+        "3-FIRST",
+        "4",
+        "4-FIRST",
+        "5",
+        "5-FIRST",
+        "6",
+        "6-FIRST",
+        "7",
+        "7-FIRST",
+        "8",
+        "9",
+        "10",
+        "10-FIRST",
+        "11",
+        "11-FIRST",
+        "12",
+        "13",
+        "14",
+        "14-FIRST",
+        "15",
+        "15-FIRST",
+        "16",
+        "16-FIRST",
+        "17",
+        "17-FIRST",
+        "18",
+        "18-FIRST",
+        "19",
+        "19-FIRST",
+        "20",
+        "20-FIRST",
+        "21",
+        "22",
+        "22-FIRST",
+        "23",
+        "23-FIRST",
+        "24",
+        "24-FIRST",
+        "25",
+        "25-FIRST",
+        "26",
+        "26-FIRST",
+        "27",
+        "27-FIRST",
+        "28",
+        "28-FIRST",
+        "29",
+        "29-FIRST",
+        "30",
+        "30-FIRST",
+        "31",
+        "31-FIRST",
+        "32",
+        "32-FIRST",
+        "33",
+        "33-FIRST",
+        "34",
+        "35",
+        "36",
+        "PA",
+        "PB",
+        "STAIR-RETURN-L"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Native variable profiles, bored posts, three garden sections, Pa and sloping-cap L support",
+      "unknown": "Several transitions and core/render splits inferred; material stiffness not generally assessed",
+      "registers": [
+        "garden-r28.md",
+        "structural-register-r9.md"
+      ]
+    },
+    {
+      "id": "structural_beams_slabs",
+      "pages": "70–99,132–145",
+      "refs": [
+        "Annex2–6"
+      ],
+      "tags": [
+        "RIB-CELLAR",
+        "BEAM-CELLAR-STAIR",
+        "BEAM-PRIMARY-F-1-6",
+        "BEAM-PRIMARY-F-6-29",
+        "BEAM-PRIMARY-F-5-33",
+        "BEAM-PRIMARY-F-2-7",
+        "BEAM-PRIMARY-F-7-24",
+        "BEAM-PRIMARY-F-24-30",
+        "BEAM-PRIMARY-F-3-34",
+        "BEAM-PRIMARY-F-28-31",
+        "BEAM-PRIMARY-F-4-10",
+        "BEAM-PRIMARY-F-15-20",
+        "BEAM-PRIMARY-F-20-32",
+        "BEAM-PRIMARY-F-13-25",
+        "BEAM-PRIMARY-F-25-28",
+        "BEAM-PRIMARY-F-26-28",
+        "BEAM-PRIMARY-F-8-9",
+        "BEAM-PRIMARY-F-13-14",
+        "BEAM-PRIMARY-F-28-CROSS",
+        "BEAM-PRIMARY-R-1-6",
+        "BEAM-PRIMARY-R-22-29",
+        "BEAM-PRIMARY-R-5-33",
+        "BEAM-PRIMARY-R-2-7",
+        "BEAM-PRIMARY-R-3-34",
+        "BEAM-PRIMARY-R-4-10",
+        "BEAM-PRIMARY-R-34-35",
+        "BEAM-PRIMARY-R-14-26",
+        "BEAM-PRIMARY-R-20-32",
+        "BEAM-PRIMARY-R-24-30",
+        "BEAM-PRIMARY-R-28-31",
+        "BEAM-PRIMARY-R-10-11",
+        "BEAM-PRIMARY-R-6-34",
+        "BEAM-PRIMARY-R-6-22",
+        "BEAM-PRIMARY-F-10-15",
+        "BEAM-PRIMARY-F-FRONT",
+        "BEAM-PRIMARY-F-REAR",
+        "BEAM-PRIMARY-R-10-15",
+        "BEAM-PRIMARY-R-22-36",
+        "BEAM-PRIMARY-R-FRONT",
+        "BEAM-PRIMARY-R-REAR",
+        "BEAM-PRIMARY-F-END-FRONT-2",
+        "BEAM-PRIMARY-F-END-REAR-2",
+        "BEAM-PRIMARY-R-END-FRONT-2",
+        "BEAM-PRIMARY-R-END-REAR-2",
+        "BEAM-PRIMARY-F-END-FRONT-3",
+        "BEAM-PRIMARY-F-END-REAR-3",
+        "BEAM-PRIMARY-R-END-FRONT-3",
+        "BEAM-PRIMARY-R-END-REAR-3",
+        "BEAM-PRIMARY-F-END-FRONT-4",
+        "BEAM-PRIMARY-F-END-REAR-4",
+        "BEAM-PRIMARY-R-END-FRONT-4",
+        "BEAM-PRIMARY-R-END-REAR-4",
+        "BEAM-PRIMARY-F-14-19",
+        "BEAM-PRIMARY-F-19-26",
+        "BEAM-PRIMARY-F-14-15",
+        "BEAM-PRIMARY-F-BATH-LOW",
+        "BEAM-PRIMARY-F-BATH-HIGH",
+        "BEAM-PRIMARY-R-RAMP-END",
+        "BEAM-PRIMARY-R-34-10",
+        "BEAM-PRIMARY-R-14-15",
+        "BEAM-PRIMARY-R-STAIR-LOW",
+        "SC-SILL",
+        "SC-HEAD",
+        "FACADE-L-S",
+        "FACADE-U-S",
+        "FACADE-SHELF-S",
+        "FACADE-CORNER-S-A",
+        "FACADE-STIFFENER-S-1",
+        "FACADE-STIFFENER-S-2",
+        "FACADE-STIFFENER-S-3",
+        "FACADE-STIFFENER-S-4",
+        "FACADE-STIFFENER-S-5",
+        "FACADE-STIFFENER-S-6",
+        "FACADE-STIFFENER-S-7",
+        "FACADE-CORNER-S-B",
+        "FACADE-L-N",
+        "FACADE-U-N",
+        "FACADE-SHELF-N",
+        "FACADE-CORNER-N-A",
+        "FACADE-STIFFENER-N-1",
+        "FACADE-STIFFENER-N-2",
+        "FACADE-STIFFENER-N-3",
+        "FACADE-STIFFENER-N-4",
+        "FACADE-STIFFENER-N-5",
+        "FACADE-STIFFENER-N-6",
+        "FACADE-STIFFENER-N-7",
+        "FACADE-CORNER-N-B",
+        "FACADE-L-W",
+        "FACADE-U-W",
+        "FACADE-SHELF-W",
+        "FACADE-TIE-W-0",
+        "FACADE-L-W-UPPER",
+        "FACADE-U-W-UPPER",
+        "FACADE-SHELF-W-UPPER",
+        "FACADE-TIE-W-UPPER-2",
+        "FACADE-TIE-W-UPPER-3",
+        "FACADE-L-E",
+        "FACADE-U-E",
+        "FACADE-SHELF-E",
+        "FACADE-TIE-E-0",
+        "FACADE-L-KITCHEN-COURT",
+        "FACADE-U-KITCHEN-COURT",
+        "FACADE-SHELF-KITCHEN-COURT",
+        "FACADE-TIE-KITCHEN-COURT",
+        "FACADE-L-GARDEN-E",
+        "FACADE-SHELF-GARDEN-E",
+        "FACADE-L-KIOSK-E",
+        "FACADE-U-KIOSK-E",
+        "FACADE-SHELF-KIOSK-E",
+        "FACADE-TIE-KIOSK-E",
+        "SL-1",
+        "SL-R",
+        "SL-KIOSK",
+        "SL-CELLAR",
+        "SL-GROUND-CELLAR",
+        "COVER-HOIST",
+        "COVER-COAL",
+        "SL-GROUND",
+        "SL-STAIR-CANOPY",
+        "SL-STAIR-WEATHER",
+        "BEAM-RAMP-FIRST-STRINGER"
+      ],
+      "status": "REPRESENTED_BOUNDED_FINAL_JOINT_RECONCILIATION_PENDING",
+      "known": "Regional RC/clay slabs, ribs, primary beam identities and explicit shared ownership, plus the single attested RF1A12x26cm stringer",
+      "missing": "One positively attested first-flight12×26cm inclined stringer is not represented by existing flat floor beams",
+      "unknown": "Remaining actual ramp/member joints and final frozen source census pending",
+      "registers": [
+        "ramp-stringer-support-source-r92.md",
+        "structural-register-r9.md"
+      ]
+    },
+    {
+      "id": "facade_auxiliary_structure",
+      "pages": "95–105",
+      "refs": [
+        "FLC Figure6/10",
+        "Annex5/6"
+      ],
+      "tags": [
+        "FACADE-L-S",
+        "FACADE-U-S",
+        "FACADE-SHELF-S",
+        "FACADE-CORNER-S-A",
+        "FACADE-STIFFENER-S-1",
+        "FACADE-STIFFENER-S-2",
+        "FACADE-STIFFENER-S-3",
+        "FACADE-STIFFENER-S-4",
+        "FACADE-STIFFENER-S-5",
+        "FACADE-STIFFENER-S-6",
+        "FACADE-STIFFENER-S-7",
+        "FACADE-CORNER-S-B",
+        "FACADE-L-N",
+        "FACADE-U-N",
+        "FACADE-SHELF-N",
+        "FACADE-CORNER-N-A",
+        "FACADE-STIFFENER-N-1",
+        "FACADE-STIFFENER-N-2",
+        "FACADE-STIFFENER-N-3",
+        "FACADE-STIFFENER-N-4",
+        "FACADE-STIFFENER-N-5",
+        "FACADE-STIFFENER-N-6",
+        "FACADE-STIFFENER-N-7",
+        "FACADE-CORNER-N-B",
+        "FACADE-L-W",
+        "FACADE-U-W",
+        "FACADE-SHELF-W",
+        "FACADE-TIE-W-0",
+        "FACADE-L-W-UPPER",
+        "FACADE-U-W-UPPER",
+        "FACADE-SHELF-W-UPPER",
+        "FACADE-TIE-W-UPPER-2",
+        "FACADE-TIE-W-UPPER-3",
+        "FACADE-L-E",
+        "FACADE-U-E",
+        "FACADE-SHELF-E",
+        "FACADE-TIE-E-0",
+        "FACADE-L-KITCHEN-COURT",
+        "FACADE-U-KITCHEN-COURT",
+        "FACADE-SHELF-KITCHEN-COURT",
+        "FACADE-TIE-KITCHEN-COURT",
+        "FACADE-L-GARDEN-E",
+        "FACADE-SHELF-GARDEN-E",
+        "FACADE-L-KIOSK-E",
+        "FACADE-U-KIOSK-E",
+        "FACADE-SHELF-KIOSK-E",
+        "FACADE-TIE-KIOSK-E"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "L lintels, U inner-leaf supports, shelves, stiffeners, corner hangers",
+      "unknown": "Metric profiles/placements partly inferred; current filling/post interfaces require repair",
+      "registers": [
+        "facade-structure-r23.md",
+        "filling-structure-owned-cases-r92.json"
+      ]
+    },
+    {
+      "id": "wall_envelopes",
+      "pages": "106–125,180–187",
+      "refs": [
+        "FLC19451/19452",
+        "original plans44–47"
+      ],
+      "tags": [
+        "SC-1",
+        "W-S",
+        "W-E",
+        "W-N",
+        "W-W",
+        "W-G-W",
+        "W-G-N",
+        "W-G-E",
+        "W-G-GARAGE-END",
+        "W-G-SERVICE",
+        "W-G-ROOM-10",
+        "W-G-ROOM-13",
+        "W-G-ROOM-16",
+        "W-G-CHAUFFEUR",
+        "W-G-GARAGE",
+        "W-KITCHEN",
+        "W-PANTRY",
+        "W-SALON",
+        "W-PRIVATE",
+        "W-PRIVATE-8.9",
+        "W-PARENT-BATH",
+        "W-BOUDOIR",
+        "W-BOUDOIR-E",
+        "W-TERRACE-RAMP",
+        "PAR-S",
+        "PAR-N",
+        "PAR-W",
+        "PAR-E",
+        "W-G-GARAGE-LOWER",
+        "W-G-GARAGE-CORNER",
+        "W-PARENT-BATH-S",
+        "W-PARENTS-BOUDOIR",
+        "W-G-CHAUFFEUR-RETURN",
+        "W-G-CHAUFFEUR-W",
+        "W-CHAUFFEUR-BEDROOM",
+        "W-CHAUFFEUR-BATH",
+        "W-PANTRY-WEST",
+        "W-PANTRY-PATIO",
+        "W-PANTRY-SOUTH",
+        "W-CELLAR-W",
+        "W-CELLAR-E",
+        "W-CELLAR-S",
+        "W-CELLAR-N",
+        "W-CELLAR-DIVIDER",
+        "W-CELLAR-STAIR-E",
+        "W-CELLAR-STAIR-S",
+        "W-CELLAR-STAIR-N",
+        "W-SON-PRIVATE",
+        "W-PARENT-BATH-W",
+        "W-SHARED-BATH-S",
+        "W-SHARED-BATH-N",
+        "W-SON-ENTRY",
+        "W-GARDEN-E",
+        "W-KIOSK-E",
+        "W-STAIR-ROOF",
+        "W-WC-FIRST-N",
+        "W-WC-FIRST-S",
+        "W-WC-FIRST-W",
+        "W-WC-FIRST-E",
+        "W-WC-FIRST-C",
+        "W-WC-GROUND-SERVICE-E",
+        "W-WC-GROUND-SERVICE-N",
+        "W-WC-CHAUFFEUR-CURVE",
+        "W-PANTRY-FRONT-1",
+        "W-PANTRY-FRONT-2",
+        "W-PANTRY-FRONT-3",
+        "W-PANTRY-FRONT-4",
+        "W-PANTRY-FRONT-5",
+        "W-PANTRY-FRONT-6",
+        "W-PANTRY-FRONT-7",
+        "W-PANTRY-FRONT-8",
+        "PAR-E-REAR"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Layered walls, cavities, source programmes, roof screen/caps/return boundaries",
+      "unknown": "Some material-region transitions and exact corner returns inferred",
+      "registers": [
+        "weather-cap-parapet-source-review-r92.md",
+        "wall-cutter-shape-review-r92.md"
+      ]
+    },
+    {
+      "id": "ground_first_room_programmes",
+      "pages": "44–46,155–179",
+      "refs": [
+        "FLC19440/19442",
+        "original plans25/45/46"
+      ],
+      "tags": [
+        "W-G-W",
+        "W-G-N",
+        "W-G-E",
+        "W-G-GARAGE-END",
+        "W-G-SERVICE",
+        "W-G-ROOM-10",
+        "W-G-ROOM-13",
+        "W-G-ROOM-16",
+        "W-G-CHAUFFEUR",
+        "W-G-GARAGE",
+        "W-KITCHEN",
+        "W-PANTRY",
+        "W-PARENT-BATH",
+        "W-G-GARAGE-LOWER",
+        "W-G-GARAGE-CORNER",
+        "W-PARENT-BATH-S",
+        "W-PARENTS-BOUDOIR",
+        "W-G-CHAUFFEUR-RETURN",
+        "W-G-CHAUFFEUR-W",
+        "W-CHAUFFEUR-BEDROOM",
+        "W-CHAUFFEUR-BATH",
+        "W-PANTRY-WEST",
+        "W-PANTRY-PATIO",
+        "W-PANTRY-SOUTH",
+        "W-PARENT-BATH-W",
+        "W-SHARED-BATH-S",
+        "W-SHARED-BATH-N",
+        "W-WC-FIRST-N",
+        "W-WC-FIRST-S",
+        "W-WC-FIRST-W",
+        "W-WC-FIRST-E",
+        "W-WC-FIRST-C",
+        "W-WC-GROUND-SERVICE-E",
+        "W-WC-GROUND-SERVICE-N",
+        "W-WC-CHAUFFEUR-CURVE",
+        "W-PANTRY-FRONT-1",
+        "W-PANTRY-FRONT-2",
+        "W-PANTRY-FRONT-3",
+        "W-PANTRY-FRONT-4",
+        "W-PANTRY-FRONT-5",
+        "W-PANTRY-FRONT-6",
+        "W-PANTRY-FRONT-7",
+        "W-PANTRY-FRONT-8"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "WC cubicles, guest wash niche, stepped servant niches, kitchen/pantry, parents/shared suite corrections",
+      "unknown": "Some doors/swings/niche wall stations inferred within registered uncertainty",
+      "registers": [
+        "guest-wash-niche-r92.json",
+        "whole-interference-findings-r92.md"
+      ]
+    },
+    {
+      "id": "ramp_slabs_clear_width",
+      "pages": "132–139",
+      "refs": [
+        "H1(13)305/306/309/311"
+      ],
+      "tags": [
+        "RM-1",
+        "RM-2",
+        "RF-1A",
+        "RF-1B",
+        "RF-2A",
+        "RF-2B"
+      ],
+      "status": "REPRESENTED_BOUNDED_STRUCTURAL_JOINTS_PENDING",
+      "known": "Four physical inclined flights use explicit signed walking/structural offsets to meet registered guard/upstand faces; old unsecured1.2m widths removed; actual arrival/finish gates passed",
+      "unknown": "Original measured clear width remains unlocated; relational fits and depth convention inferred; actual remaining RC joints under repair",
+      "registers": [
+        "ramp-stringer-support-source-r92.json"
+      ]
+    },
+    {
+      "id": "ramp_continuous_guards",
+      "pages": "134–138",
+      "refs": [
+        "H1(13)305/306/309",
+        "H1(13)271-5"
+      ],
+      "tags": [
+        "GUARD-RM-1",
+        "GUARD-RM-2",
+        "TUBE-RM-2"
+      ],
+      "status": "REPRESENTED_NATIVE_VERIFIED_FINAL_WALL_JOINTS_PENDING",
+      "known": "Both guards now own continuous6cm inclined reinforced bands and central scissor unions, midlanding returns and the RF2B12x28cm upstand; all912 cells and EN/DE SDK points/meshes/top controls verified",
+      "unknown": "Nominal85/95cm heights,10cm caps and exact landing returns inferred; unreadable groove not invented; final actual wall/structure joints pending",
+      "registers": [
+        "ramp-guard-remodel-r92.md",
+        "ramp-guard-construction-constraints-r92.md",
+        "ramp-guards-finishes-source-r92.json"
+      ]
+    },
+    {
+      "id": "ramp_inclined_first_stringer",
+      "pages": "134",
+      "refs": [
+        "H1(13)306"
+      ],
+      "tags": [
+        "BEAM-RAMP-FIRST-STRINGER"
+      ],
+      "status": "REPRESENTED_BOUNDED_FINAL_JOINT_RECONCILIATION_PENDING",
+      "known": "ONE sourced12x26cm RF1A garage-side stringer at supports13/18/25,7positive native-owned cells, section/support contracts verified",
+      "unknown": "Exact plane alignment and vertical-depth convention inferred; final current-source reconciliation pending; no fourfold copying",
+      "registers": [
+        "ramp-stringer-support-source-r92.json"
+      ]
+    },
+    {
+      "id": "ramp_interior_finish",
+      "pages": "139,187–188",
+      "refs": [
+        "H1(12)128-5",
+        "H1(13)013/031-2",
+        "H1(12)092/112"
+      ],
+      "tags": [
+        "FIN-RAMP-INTERIOR"
+      ],
+      "status": "REPRESENTED_BOUNDED_NATIVE_FINAL_FREEZE_PENDING",
+      "known": "Graphite-gray resilient5mm wearing specification plus inferred3mm mortar,8mm total assembly now authored; old30mm tile removed and actual floor/ramp joints partitioned",
+      "unknown": "Rubber primary wording versus author linoleum; mortar difference and thickness direction inferred",
+      "registers": [
+        "ramp-guards-finishes-source-r92.json"
+      ]
+    },
+    {
+      "id": "ramp_exterior_finish",
+      "pages": "139,192–194",
+      "refs": [
+        "H1(13)116"
+      ],
+      "tags": [
+        "FIN-RAMP-EXTERIOR"
+      ],
+      "status": "REPRESENTED_BOUNDED_INTERFACE_REPAIR_PENDING",
+      "known": "58cm nominal concrete tiles,4cm pavers/2cm sand; diagonal layout",
+      "unknown": "Exact joints/build-up direction and several reservations inferred",
+      "registers": [
+        "ramp-guards-finishes-source-r92.json",
+        "whole-interference-positive-cases-r92.json"
+      ]
+    },
+    {
+      "id": "ramp_exterior_soffit",
+      "pages": "138–139",
+      "refs": [
+        "H1(13)309",
+        "H1(12)128-5 item22"
+      ],
+      "tags": [
+        "FIN-SOFFIT-RF-2A",
+        "FIN-SOFFIT-RF-2B"
+      ],
+      "status": "REPRESENTED_BOUNDED_NATIVE_FREEZE_PENDING",
+      "known": "Both exterior-flight soffits own35×35mm timber battens and separate board ceiling; source-positive presence represented",
+      "unknown": "Embedded block stations unlocated;≤50cm spacing,10mm board thickness/substrate/density and under-flight extent inferred. No insulation asserted.",
+      "registers": [
+        "ramp-guards-finishes-source-r92.json",
+        "missing-construction-progress-r92.md"
+      ]
+    },
+    {
+      "id": "service_stair_rc_and_finish",
+      "pages": "139–147,190–192",
+      "refs": [
+        "FLC19487",
+        "H1(13)313/314"
+      ],
+      "tags": [
+        "ST-GF",
+        "ST-FR",
+        "ST-CG",
+        "GUARD-ST-GF",
+        "GUARD-ST-FR",
+        "STAIR-PA",
+        "STAIR-RETURN-L"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Three independent RC flights,61cm guards,1cm render text, black14.5cm tiles, local supports",
+      "unknown": "Detailed compensated executed tread registration and81cm authored versus85cm author width unresolved; no stock-count-driven extra treads",
+      "registers": [
+        "stair-metal-details-source-r92.json"
+      ]
+    },
+    {
+      "id": "stair_metal_nosings",
+      "pages": "141,191–192",
+      "refs": [
+        "H1(12)097-1",
+        "FLC19442/19487"
+      ],
+      "tags": [
+        "ST-CG",
+        "ST-GF",
+        "ST-FR"
+      ],
+      "status": "REPRESENTED_49_MAPPED_WITH_3_SUPPLIER_PIECES_UNLOCATED",
+      "known": "49 current tread edges own flush LD40×25×4mm metal noses, partitioned from ceramic.52 supplied pieces remain the account count.",
+      "unknown": "Three supplied pieces unlocated;49treads already include arrivals. Current81cm clear versus author85cm nominal width unresolved; attachment/alloy unmeasured.",
+      "registers": [
+        "stair-metal-details-source-r92.json",
+        "missing-construction-progress-r92.md"
+      ]
+    },
+    {
+      "id": "stair_central_tube",
+      "pages": "141,145",
+      "refs": [
+        "H1(12)097-1"
+      ],
+      "tags": [
+        "TUBE-STAIR-CENTRAL"
+      ],
+      "status": "REPRESENTED_SOURCE_DIAMETER_BOUNDED_INFERRED_REGISTRATION",
+      "known": "Separate hollow55mm source-black tube, distinct from35mm handrails/RC Pa/130mm drain. Actual cellar-finish bearing and selected route proven.",
+      "unknown": "Axis(6.30,9.18)m±.15m,2mm wall gauge,−2.40→adjacent registered roofsoffit6.34 terminal convention are inferred; exact original ends/joints unknown.",
+      "registers": [
+        "stair-metal-details-source-r92.json",
+        "missing-construction-progress-r92.md"
+      ]
+    },
+    {
+      "id": "stair_and_ramp_handrail_construction",
+      "pages": "136,141",
+      "refs": [
+        "H1(12)097-1",
+        "H1(13)309/311"
+      ],
+      "tags": [
+        "TUBE-ST-GF",
+        "TUBE-ST-FR",
+        "TUBE-RM-2"
+      ],
+      "status": "REPRESENTED_HOLLOW_NATIVE_SDK_VERIFIED_INFERRED_GAUGE",
+      "known": "Three hollow products now hold888/864/5937nativecells. Stair35mm diameter is sourced; ramp35mm diameter and2mmgauge remain inferred. Shared miter rings, networkair and RC-exclusive interfaces are represented. Five physical ramp posts bear onGUARD-RM2; logicalpost1 isPB-occluded. Last unmeasuredpost is inset17.5mm for full annular upstand bearing. EN/DE SDK verified15378closedpositivecells,355590exactpoint scalars,358aircontrols and240bearingcontrols.",
+      "unknown": "Original hidden gauge, alloy, bending/fixing methods, bracket presence, welds, endplugs and original ramp-post count remain unmeasured. Stair source-profile quantization≤0.126nm is separate from inferred ramp terminal inset and model-derived1.1655mm lower-plane fit. Final whole-model render/interference acceptance remains a separate frozen-source gate.",
+      "registers": [
+        "whole-interference-findings-r92.md",
+        "missing-construction-progress-r92.md",
+        "handrail-construction-audit-r92.md",
+        "hollow-handrail-construction-r92.md"
+      ]
+    },
+    {
+      "id": "solarium_screen_and_openings",
+      "pages": "47,148–154",
+      "refs": [
+        "FLC19443",
+        "Annex5/6"
+      ],
+      "tags": [
+        "SC-1",
+        "W-STAIR-ROOF",
+        "SL-KIOSK"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Curved/straight screen, landscape aperture, crest9.325, original enclosed roof stair arrival",
+      "unknown": "Several curve/outline registrations and edge returns inferred; exact original RGB unknown",
+      "registers": [
+        "roof-photo-audit-r46.md"
+      ]
+    },
+    {
+      "id": "roof_planters",
+      "pages": "192–193",
+      "refs": [
+        "H1(13)327-1",
+        "L2(17)043"
+      ],
+      "tags": [
+        "FIX-ROOF-BED-1",
+        "FIX-ROOF-BED-2"
+      ],
+      "status": "REPRESENTED_TWO_BOUNDED_BEDS_TOTAL_COUNT_UNKNOWN",
+      "known": "Two hollow shell/base/soil beds represent source-positive original1930 presence, each1.05m² fully supported in source-qualified gravel/leftscreen zone.",
+      "unknown": "Positions±.50m, outlines,35cm rim/6cm shell/4cm base/28cm soil surface/materials inferred. Text does not prove totalcount; later grayplan/unexecuted oppositecurve excluded.",
+      "registers": [
+        "source-coverage-register-r92.md",
+        "missing-construction-progress-r92.md"
+      ]
+    },
+    {
+      "id": "parents_bath_builtins",
+      "pages": "166–171",
+      "refs": [
+        "original plan46",
+        "original bath167/168"
+      ],
+      "tags": [
+        "FIX-BATH",
+        "FIX-CHAISE",
+        "FIX-PARENTS-WET-PLATFORM",
+        "FIX-DRESSING-STORAGE",
+        "FIX-PARENTS-STORAGE",
+        "BIDET-PARENTS",
+        "BASIN-PARENTS"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Tub/chaise/cabinet identity correction, separate flat wet platform, hollow RC cabinet/plinth, paired basin taps",
+      "unknown": "Completed wave stations, hidden support details, exact tub/chair dimensions and cabinet subdivision inferred",
+      "registers": [
+        "parents-bath-identity-r92.md",
+        "whole-interference-findings-r92.md"
+      ]
+    },
+    {
+      "id": "fixed_storage_and_tables",
+      "pages": "155–179",
+      "refs": [
+        "original plans45/46",
+        "original interior photographs"
+      ],
+      "tags": [
+        "FIX-TERRACE-TABLE",
+        "FIX-BOUDOIR",
+        "FIX-GUEST-WARDROBE",
+        "FIX-SON-DESK",
+        "FIX-SON-STORAGE",
+        "FIX-PANTRY-STORAGE",
+        "FIX-HALL-TABLE-1",
+        "FIX-HALL-TABLE-2",
+        "FIX-TERRACE-PLANTER-1",
+        "FIX-TERRACE-PLANTER-2",
+        "FIX-CHAISE",
+        "FIX-PARENTS-WET-PLATFORM",
+        "FIX-DRESSING-STORAGE",
+        "FIX-PARENTS-STORAGE",
+        "FIX-KITCHEN-SINK-COUNTER",
+        "FIX-KITCHEN",
+        "FIX-PANTRY-SINK-COUNTER",
+        "FIX-SALON-RADIATOR-SHELVES",
+        "FIX-SERVANT-STORAGE-1-LONG",
+        "FIX-SERVANT-BASIN-CABINET-1",
+        "KITCHEN-APPLIANCE-STAND"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Hollow wardrobes/cabinets, desks/tables, pantry relocation and source-qualified counters",
+      "unknown": "Joinery gauges, hardware, panel subdivisions and some hidden furniture internals inferred",
+      "registers": [
+        "built-in-census-followup-r92.md"
+      ]
+    },
+    {
+      "id": "interior_floors",
+      "pages": "187–192",
+      "refs": [
+        "H1(13)122",
+        "H1(12)378",
+        "H1(12)084-2"
+      ],
+      "tags": [
+        "FIN-GUEST-PARQUET",
+        "FIN-GUEST-TILE",
+        "FIN-TERRACE-PAVING",
+        "FIN-TERRACE-GRASS",
+        "FIN-KITCHEN-PATIO",
+        "FIN-SALON",
+        "FIN-KITCHEN",
+        "FIN-PANTRY",
+        "FIN-SON",
+        "FIN-SHARED-BATH",
+        "FIN-PARENTS",
+        "FIN-PARENT-BATH",
+        "FIN-BOUDOIR",
+        "FIN-FIRST-HALL",
+        "FIN-WC-FIRST-WEST",
+        "FIN-WC-FIRST-EAST",
+        "FIN-FIRST-THRESHOLDS",
+        "FIN-SERVANTS-1-WASH",
+        "FIN-SERVANTS-2-WASH",
+        "FIN-LAUNDRY",
+        "FIN-HALL",
+        "FIN-CHAUFFEUR",
+        "FIN-CHAUFFEUR-BATH",
+        "FIN-WC-GROUND-SERVICE",
+        "FIN-WC-CHAUFFEUR",
+        "FIN-SERVANTS-1",
+        "FIN-SERVANTS-2",
+        "FIN-CHAUFFEUR-BEDROOM",
+        "FIN-CELLAR-CEMENT"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Ground25mm oak/60mm strips, first28mm panel parquet,15cm gres/diagonal or square placement, cellar2cm cement",
+      "unknown": "Substrate split/density and leveling inferred; every individual tile/Versailles joint is not a recovered physical shop model",
+      "registers": [
+        "first-floor-finish-evidence-r92.md",
+        "floor-load-policy-audit-r92.md"
+      ]
+    },
+    {
+      "id": "exterior_pavers_roof_gravel",
+      "pages": "192–194",
+      "refs": [
+        "H1(13)116",
+        "L2(17)043/044"
+      ],
+      "tags": [
+        "FIN-ROOF-PAVING",
+        "FIN-ROOF-GRAVEL",
+        "FIN-ROOF-STAIR",
+        "FIN-TERRACE-PAVING",
+        "FIN-TERRACE-GRASS"
+      ],
+      "status": "REPRESENTED_BOUNDED_LOCAL_DEPTH_LIMITS",
+      "known": "4cm paver family,73cm×65–72cm variants and roof gravel; column reservations are not walkable holes",
+      "unknown": "3cm constrained bands cannot honestly claim4cm pavers; jointfill chronology earth/gravel varies",
+      "registers": [
+        "roof-finish-gap-independent-r92.md",
+        "mep-kitchen-handoff-r92.md"
+      ]
+    },
+    {
+      "id": "ground_pilotis_gravel",
+      "pages": "192",
+      "refs": [
+        "Original pilotis photographs",
+        "SAB192 material account"
+      ],
+      "tags": [
+        "FIN-PILOTIS-GRAVEL"
+      ],
+      "status": "REPRESENTED_BOUNDED_UNDER_BUILDING_EXTENT",
+      "known": "Actual native gravel product under pilotis circumdrive, bounded by19×21.5m under-building rectangle and net of ground slab/wall/column footprints.",
+      "unknown": "Exact perimeter, grading,40mm depth/subgrade/drainage inferred; no estate surface reconstructed.",
+      "registers": [
+        "source-coverage-register-r92.md",
+        "missing-construction-progress-r92.md"
+      ]
+    },
+    {
+      "id": "skirting",
+      "pages": "190",
+      "refs": [
+        "Original hall/salon photographs",
+        "H1(13)016-10"
+      ],
+      "tags": [],
+      "status": "MISSING_PENDING_OWNER_PUBLICATION",
+      "known": "15×90mm gray painted timber, rounded upper edge, pilotis/ramp and cupboard-front continuation",
+      "unknown": "Exact radius/RGB and specific flush/projecting/raised-cupboard joints inferred; owner prototype not source publication",
+      "registers": [
+        "interior-skirting-evidence-r92.md",
+        "skirting-shared-plane-review-r92.md"
+      ]
+    },
+    {
+      "id": "paint_render_surface_identity",
+      "pages": "180–187",
+      "refs": [
+        "H1(13)087",
+        "H1(12)062/067/069/070"
+      ],
+      "tags": [
+        "SC-1",
+        "W-S",
+        "W-E",
+        "W-N",
+        "W-W",
+        "W-G-W",
+        "W-G-N",
+        "W-G-E",
+        "W-G-GARAGE-END",
+        "W-G-SERVICE",
+        "W-G-ROOM-10",
+        "W-G-ROOM-13",
+        "W-G-ROOM-16",
+        "W-G-CHAUFFEUR",
+        "W-G-GARAGE",
+        "W-KITCHEN",
+        "W-PANTRY",
+        "W-SALON",
+        "W-PRIVATE",
+        "W-PRIVATE-8.9",
+        "W-PARENT-BATH",
+        "W-BOUDOIR",
+        "W-BOUDOIR-E",
+        "W-TERRACE-RAMP",
+        "PAR-S",
+        "PAR-N",
+        "PAR-W",
+        "PAR-E",
+        "W-G-GARAGE-LOWER",
+        "W-G-GARAGE-CORNER",
+        "W-PARENT-BATH-S",
+        "W-PARENTS-BOUDOIR",
+        "W-G-CHAUFFEUR-RETURN",
+        "W-G-CHAUFFEUR-W",
+        "W-CHAUFFEUR-BEDROOM",
+        "W-CHAUFFEUR-BATH",
+        "W-PANTRY-WEST",
+        "W-PANTRY-PATIO",
+        "W-PANTRY-SOUTH",
+        "W-CELLAR-W",
+        "W-CELLAR-E",
+        "W-CELLAR-S",
+        "W-CELLAR-N",
+        "W-CELLAR-DIVIDER",
+        "W-CELLAR-STAIR-E",
+        "W-CELLAR-STAIR-S",
+        "W-CELLAR-STAIR-N",
+        "W-SON-PRIVATE",
+        "W-PARENT-BATH-W",
+        "W-SHARED-BATH-S",
+        "W-SHARED-BATH-N",
+        "W-SON-ENTRY",
+        "GARAGE-SLIDING",
+        "W-GARDEN-E",
+        "W-KIOSK-E",
+        "W-STAIR-ROOF",
+        "W-WC-FIRST-N",
+        "W-WC-FIRST-S",
+        "W-WC-FIRST-W",
+        "W-WC-FIRST-E",
+        "W-WC-FIRST-C",
+        "W-WC-GROUND-SERVICE-E",
+        "W-WC-GROUND-SERVICE-N",
+        "W-WC-CHAUFFEUR-CURVE",
+        "W-PANTRY-FRONT-1",
+        "W-PANTRY-FRONT-2",
+        "W-PANTRY-FRONT-3",
+        "W-PANTRY-FRONT-4",
+        "W-PANTRY-FRONT-5",
+        "W-PANTRY-FRONT-6",
+        "W-PANTRY-FRONT-7",
+        "W-PANTRY-FRONT-8",
+        "PAR-E-REAR"
+      ],
+      "status": "REPRESENTED_BOUNDED_FACE_TREATMENT",
+      "known": "25mm facade render family, source-specific interior/garage color identity; treatment belongs to existing substrate faces",
+      "unknown": "Original RGB, film density/thickness, some host applicability; SDK selected-face color limitation does not invalidate IFC graph",
+      "registers": [
+        "paint-face-native-review-r92.md",
+        "uniform-finish-native-review-r92.md"
+      ]
+    },
+    {
+      "id": "wallpaper_supply",
+      "pages": "185",
+      "refs": [
+        "H1(12)078-2"
+      ],
+      "tags": [],
+      "status": "UNLOCATED_ATTESTED_SUPPLY",
+      "known": "Wallpaper supplied for one room is invoiced",
+      "unknown": "Room, installed extent, pattern and construction unlocated; no fabricated wallpaper room",
+      "registers": [
+        "source-coverage-register-r92.md"
+      ]
+    },
+    {
+      "id": "wood_ribbon_carpentry",
+      "pages": "200–216",
+      "refs": [
+        "Original carpentry drawings210–216",
+        "FLC19505"
+      ],
+      "tags": [
+        "RW-S",
+        "RW-E",
+        "RW-N",
+        "RW-W",
+        "RW-W-UPPER",
+        "RW-N-2",
+        "RW-W-UPPER-2",
+        "RW-W-UPPER-3"
+      ],
+      "status": "REPRESENTED_BOUNDED_STRUCTURAL_INTERFACE_REPAIR_PENDING",
+      "known": "Source-derived frame/sash members and nonuniform stations per actual openings",
+      "unknown": "Several dimensions/stations proportional traces with raster uncertainty; exact historic construction tolerances unknown",
+      "registers": [
+        "filling-structure-owned-cases-r92.json"
+      ]
+    },
+    {
+      "id": "metal_curved_service_glazing",
+      "pages": "210–216",
+      "refs": [
+        "Original curved vestibule carpentry drawings"
+      ],
+      "tags": [
+        "CW-1",
+        "D-ENTRY",
+        "GARAGE-SLIDING"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Curved service curtain, doors and distinct metal profiles",
+      "unknown": "T/L profile applicability is source-specific, not globally imposed;6valid microscopic curtain profiles exceed SDK tessellation resolution",
+      "registers": [
+        "filling-structure-owned-cases-r92.json"
+      ]
+    },
+    {
+      "id": "salon_moving_bay_and_canopy",
+      "pages": "217–221",
+      "refs": [
+        "Original217/218 mechanism",
+        "Executed219 photograph"
+      ],
+      "tags": [
+        "GL-TERRACE",
+        "SALON-HANDRAIL",
+        "SALON-CHAIN-DRIVE",
+        "SALON-CRANK",
+        "SALON-CANOPY"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Two-panel moving train, counterbalance/operating details,3.20overall framing, executed folded canopy",
+      "unknown": "Exact fold rise/stations, outward offset and hardware construction inferred; no unbuilt217 canopy substituted",
+      "registers": [
+        "whole-interference-findings-r92.md"
+      ]
+    },
+    {
+      "id": "sanitary_equipment",
+      "pages": "224–239",
+      "refs": [
+        "Original plans25/45/46",
+        "Original sanitary photographs"
+      ],
+      "tags": [
+        "FIX-LAUNDRY",
+        "FIX-HALL-BASIN",
+        "FIX-GUEST-BASIN",
+        "FIX-SERVANT-BASIN-1",
+        "FIX-SERVANT-BASIN-2",
+        "FIX-SHARED-BATH",
+        "FIX-SHARED-BASIN",
+        "FIX-CHAUFFEUR-BASIN",
+        "WC-FIRST-WEST",
+        "WC-FIRST-EAST",
+        "WC-GROUND-SERVICE",
+        "WC-CHAUFFEUR",
+        "BIDET-CHAUFFEUR",
+        "BATH-CHAUFFEUR",
+        "BIDET-SHARED",
+        "FIX-BATH",
+        "BIDET-PARENTS",
+        "BASIN-PARENTS",
+        "BIDET-GUEST",
+        "SINK-KITCHEN-1",
+        "SINK-KITCHEN-2",
+        "SINK-PANTRY",
+        "TAP-HALL",
+        "TAP-LAUNDRY-1",
+        "TAP-LAUNDRY-2",
+        "TAP-GUEST",
+        "TAP-SERVANT-1",
+        "TAP-SERVANT-2",
+        "TAP-CHAUFFEUR",
+        "TAP-KITCHEN",
+        "TAP-KITCHEN-2",
+        "TAP-PANTRY"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Current22sanitary terminals, WC/bath/bidet/basin/trough identities, real cavities/drains and mounted paired taps",
+      "unknown": "Most manufacturer profiles, gauges, concealed cisterns and pipe routes inferred; fixture presence is stronger than exact fabrication",
+      "registers": [
+        "ground-services-plan-r92.md",
+        "guest-wash-niche-r92.json",
+        "whole-interference-findings-r92.md"
+      ]
+    },
+    {
+      "id": "kitchen_apparatus_and_counters",
+      "pages": "236,originalplate34",
+      "refs": [
+        "L2(17)176",
+        "Vivante1931plate34"
+      ],
+      "tags": [
+        "SINK-KITCHEN-1",
+        "SINK-KITCHEN-2",
+        "SINK-PANTRY",
+        "FIX-KITCHEN",
+        "FIX-KITCHEN-SINK-COUNTER",
+        "FIX-PANTRY-SINK-COUNTER",
+        "KITCHEN-APPLIANCE-CYLINDER",
+        "KITCHEN-APPLIANCE-PLATE",
+        "KITCHEN-APPLIANCE-STAND",
+        "PIPE-KITCHEN-VISIBLE-1",
+        "PIPE-KITCHEN-VISIBLE-2",
+        "PIPE-KITCHEN-VISIBLE-3"
+      ],
+      "status": "REPRESENTED_PURPOSE_QUALIFIED",
+      "known": "Two visible apparatus bodies/stand, sink/worktable morphology and exposed local pipes",
+      "unknown": "Individual energy source/function/manufacturer unsecure; bodies correctly remain purpose-unresolved apparatus",
+      "registers": [
+        "kitchen-original-appliances-r92.json",
+        "mep-kitchen-handoff-r92.md"
+      ]
+    },
+    {
+      "id": "heating_radiators_and_visible_risers",
+      "pages": "224–241",
+      "refs": [
+        "FLC063/064/065",
+        "Original hall/kitchen photographs"
+      ],
+      "tags": [
+        "FIX-SERVANT-RADIATOR-1",
+        "FIX-SERVANT-RADIATOR-2",
+        "RAD-HALL-GARAGE",
+        "RAD-HALL-BEHIND-STAIR",
+        "RAD-KITCHEN-SINK",
+        "RAD-1",
+        "HEAT-RISER-6-CASING",
+        "HEAT-RISER-6-INSULATION",
+        "HEAT-RISER-6-PIPE",
+        "HEAT-RISER-11-CASING",
+        "HEAT-RISER-11-INSULATION",
+        "HEAT-RISER-11-PIPE",
+        "HEAT-RISER-VESTIBULE-5-SUPPLY",
+        "HEAT-RISER-VESTIBULE-5-RETURN",
+        "HEAT-RISER-VESTIBULE-5-MOUNTS",
+        "HEAT-RISER-6-RETURN",
+        "HEAT-RISER-11-RETURN"
+      ],
+      "status": "REPRESENTED_BOUNDED_LOCAL_COLLISIONS_PENDING",
+      "known": "Six radiators, source-photographed fin/feet families, paired exposed risers, actual casing mounts",
+      "unknown": "Many counts/sizes inferred; later1965traces cannot automatically establish1930 concealed routes",
+      "registers": [
+        "mep-kitchen-handoff-r92.md",
+        "whole-interference-findings-r92.md"
+      ]
+    },
+    {
+      "id": "boilers",
+      "pages": "services chapter;1932report",
+      "refs": [
+        "H1(12)102/147"
+      ],
+      "tags": [
+        "BL-1"
+      ],
+      "status": "UNLOCATED_ATTESTED_EARLY_TWO_UNIT_COUNT",
+      "known": "1932report twoIdeal units44800/16800calories; currentBL1 is explicitly unregistered envelope",
+      "unknown": "Second position and installation dates/functions do not establish two precisely located1930 units",
+      "registers": [
+        "two-boilers-evidence-r92.md"
+      ]
+    },
+    {
+      "id": "drains_flues_and_chimneys",
+      "pages": "services chapter,44–53",
+      "refs": [
+        "FLC063/064/065",
+        "Original photos/roof plan"
+      ],
+      "tags": [
+        "DP-1",
+        "DP-2",
+        "HEAT-RISER-6-PIPE",
+        "HEAT-RISER-11-PIPE",
+        "WATER-RISER-11",
+        "SOIL-STAIR",
+        "DP-1-OUTLET",
+        "DP-2-OUTLET",
+        "RAIN-KITCHEN-PATIO-9",
+        "HEAT-RISER-VESTIBULE-5-SUPPLY",
+        "HEAT-RISER-VESTIBULE-5-RETURN",
+        "HEAT-RISER-6-RETURN",
+        "HEAT-RISER-11-RETURN",
+        "PIPE-KITCHEN-VISIBLE-1",
+        "PIPE-KITCHEN-VISIBLE-2",
+        "PIPE-KITCHEN-VISIBLE-3",
+        "DR-1",
+        "DR-2",
+        "COLLECTOR-KITCHEN-PATIO-9",
+        "BOILER-FLUE-VISIBLE",
+        "CHIMNEY-SALON-ROOF",
+        "CHIMNEY-KITCHEN-ROOF",
+        "CHIMNEY-BOUDOIR-LOW",
+        "CHIMNEY-LINGERIE-LOW"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Five hollow chimney identities, source-bound drains/outlets, collector9 and penetrations",
+      "unknown": "Lowterminal height and several diameters/hidden network branches inferred; collector/host interfaces flagged for repair",
+      "registers": [
+        "whole-interference-findings-r92.md"
+      ]
+    },
+    {
+      "id": "electrical_visible_fixtures",
+      "pages": "242–247",
+      "refs": [
+        "Original lighting photographs",
+        "FLC19439B phase-qualified"
+      ],
+      "tags": [
+        "LIGHT-HALL-ZEISS-1",
+        "LIGHT-HALL-ZEISS-2",
+        "LIGHT-HALL-BASIN-19",
+        "LIGHT-HALL-CEILING",
+        "LIGHT-FIRST-HALL-CEILING",
+        "LIGHT-KITCHEN-1",
+        "LIGHT-KITCHEN-2",
+        "LIGHT-SALON-LINEAR",
+        "LIGHT-EXTERIOR-REAR-W",
+        "LIGHT-EXTERIOR-REAR-E",
+        "LIGHT-EXTERIOR-11",
+        "LIGHT-EXTERIOR-6"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "12photo-attested light fixtures, repaired exterior6/11 native witnesses and mounts",
+      "unknown": "Most fabrication/mount/aim dimensions inferred;45° azimuth not historical measurement",
+      "registers": [
+        "light-post-native-review-r92.md",
+        "electrical-completeness-boundary-r92.md"
+      ]
+    },
+    {
+      "id": "electrical_concealed_network_and_unexecuted_controls",
+      "pages": "242–247",
+      "refs": [
+        "FLC19439B",
+        "Dubuisson1965scope"
+      ],
+      "tags": [],
+      "status": "UNLOCATED_OR_PHASE_UNSECURED",
+      "known": "Design symbols and supplier/control proposals exist",
+      "unknown": "Executed complete wiring/switch/socket network not recovered; Timoler proposal is not automatic proof of installed devices",
+      "registers": [
+        "electrical-completeness-boundary-r92.md"
+      ]
+    },
+    {
+      "id": "other_doors_and_windows",
+      "pages": "200–216;plans25/45/46",
+      "refs": [
+        "Original carpentry and programme plans"
+      ],
+      "tags": [
+        "RW-S",
+        "RW-E",
+        "RW-N",
+        "RW-W",
+        "G-WIN-1",
+        "G-WIN-2",
+        "G-WIN-3",
+        "G-N-WIN",
+        "D-SERVANT-1",
+        "D-SERVANT-2",
+        "D-LAUNDRY",
+        "D-CHAUFFEUR",
+        "D-ENTRY",
+        "D-KITCHEN",
+        "D-PANTRY",
+        "D-SALON",
+        "GL-TERRACE",
+        "D-GUEST",
+        "D-SON",
+        "D-PARENTS",
+        "D-BOUDOIR",
+        "GL-RAMP-GARDEN",
+        "D-CHAUFFEUR-BEDROOM",
+        "D-CHAUFFEUR-BATH",
+        "D-SERVICE",
+        "D-KITCHEN-PATIO",
+        "RW-W-UPPER",
+        "D-SHARED-BATH-GUEST",
+        "D-SHARED-BATH-SON",
+        "GARAGE-SLIDING",
+        "D-STAIR-ROOF",
+        "RW-N-2",
+        "RW-W-UPPER-2",
+        "RW-W-UPPER-3",
+        "D-WC-FIRST-WEST",
+        "D-WC-FIRST-EAST",
+        "D-WC-GROUND-SERVICE",
+        "D-WC-CHAUFFEUR",
+        "WIN-KITCHEN-PATIO-LOW-X",
+        "WIN-KITCHEN-PATIO-HIGH-X"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "All current24doors/16windows, small historical portals and source-qualified kitchen/patio spans",
+      "unknown": "Many swings, hardware and widths inferred; preserve narrow original-sized portals rather than generic enlargement",
+      "registers": [
+        "filling-structure-owned-cases-r92.json",
+        "chauffeur-bath-doors-independent-r92.md"
+      ]
+    },
+    {
+      "id": "rooflights_and_garage_planting",
+      "pages": "plans44–47;rooflight detail sources",
+      "refs": [
+        "Original rooflight detail and primary reconstruction register"
+      ],
+      "tags": [
+        "ROOFLIGHT-1",
+        "GL-GARAGE-1",
+        "GL-GARAGE-2",
+        "FIX-TERRACE-PLANTER-1",
+        "FIX-TERRACE-PLANTER-2"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Hollow constructed main rooflight and two garage glazing/planter identities",
+      "unknown": "Garage glass is an aggregate glazing body; exact block/joint pattern and concealed planter drainage not fully recovered",
+      "registers": [
+        "garden-r28.md",
+        "built-in-census-followup-r92.md"
+      ]
+    },
+    {
+      "id": "garden_weather_cap",
+      "pages": "garden post/cornice chapter;Annex6",
+      "refs": [
+        "H1(13)310",
+        "CSICFigure10/Annex6"
+      ],
+      "tags": [
+        "GARDEN-WEATHER-CAP"
+      ],
+      "status": "REPRESENTED_BOUNDED_INTERFACE_CORRECTED_OWNER",
+      "known": "Concave upper/stepped lower weather-cap silhouette with6.77leader and6.51registered contact",
+      "unknown": "Intermediate stations/render split and exact return endpoints inferred; no ordinarycurb may fill its hollow profile",
+      "registers": [
+        "weather-cap-parapet-source-review-r92.md",
+        "garden-r28.md"
+      ]
+    },
+    {
+      "id": "service_casings_and_local_tile_splashes",
+      "pages": "services chapter;190–191",
+      "refs": [
+        "Original service photos and servant niche registrations"
+      ],
+      "tags": [
+        "HEAT-RISER-6-CASING",
+        "HEAT-RISER-6-INSULATION",
+        "HEAT-RISER-11-CASING",
+        "HEAT-RISER-11-INSULATION",
+        "TILE-SERVANT-BASIN-1",
+        "TILE-SERVANT-BASIN-2",
+        "RAIN-KITCHEN-PATIO-9-COVER"
+      ],
+      "status": "REPRESENTED_BOUNDED",
+      "known": "Exposed riser/collector casings and two servant basin tile backings",
+      "unknown": "Gauge/anchor details and some localized finish extents inferred; actual tile/steel/wall contact chains audited separately",
+      "registers": [
+        "ground-services-plan-r92.md",
+        "whole-interference-findings-r92.md"
+      ]
+    }
+  ],
+  "required_unfinished_topic_ids": [
+    "ramp_slabs_clear_width",
+    "ramp_continuous_guards",
+    "ramp_inclined_first_stringer",
+    "ramp_interior_finish",
+    "skirting"
+  ],
+  "roster": [
+    {
+      "tag": "SL-1",
+      "guid": "0pGEEBTyDTuRFhzLBoa7lM",
+      "class": "IfcSlab",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SL-R",
+      "guid": "2DXklET1jK3AZcJz_ZtAN9",
+      "class": "IfcSlab",
+      "storey": "roof",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "CW-1",
+      "guid": "18Tk7ZT$fV29ih7n549tv9",
+      "class": "IfcCurtainWall",
+      "storey": "ground",
+      "topics": [
+        "metal_curved_service_glazing"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RM-1",
+      "guid": "0_yUehthXMBg4KJDgWjzCa",
+      "class": "IfcRamp",
+      "storey": "ground",
+      "topics": [
+        "ramp_slabs_clear_width"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RM-2",
+      "guid": "3oI2oOntLScR7huffQzd0G",
+      "class": "IfcRamp",
+      "storey": "first",
+      "topics": [
+        "ramp_slabs_clear_width"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RF-1A",
+      "guid": "0VVtov00DVsQDhvoFSA3L5",
+      "class": "IfcRampFlight",
+      "storey": "ground",
+      "topics": [
+        "ramp_slabs_clear_width"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RF-1B",
+      "guid": "3a9iXPRBnPfOt1xYPzR8G8",
+      "class": "IfcRampFlight",
+      "storey": "ground",
+      "topics": [
+        "ramp_slabs_clear_width"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RF-2A",
+      "guid": "190dLteUnICwSp6v_JS2lO",
+      "class": "IfcRampFlight",
+      "storey": "first",
+      "topics": [
+        "ramp_slabs_clear_width"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RF-2B",
+      "guid": "0WiUV8g_9Jz9SUgi61qEEE",
+      "class": "IfcRampFlight",
+      "storey": "first",
+      "topics": [
+        "ramp_slabs_clear_width"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SC-1",
+      "guid": "3dCkziyzfRtfAp5dPvn0xq",
+      "class": "IfcWall",
+      "storey": "roof",
+      "topics": [
+        "wall_envelopes",
+        "solarium_screen_and_openings",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BL-1",
+      "guid": "3dTjOMxp1JcQ7i67HdQ8Tp",
+      "class": "IfcBoiler",
+      "storey": "cellar",
+      "topics": [
+        "boilers"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "DR-1",
+      "guid": "06LVQFCKLTlvLtlXeeFxeu",
+      "class": "IfcWasteTerminal",
+      "storey": "roof",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "DR-2",
+      "guid": "09lAGtOwzPYAY10Fx0aZ92",
+      "class": "IfcWasteTerminal",
+      "storey": "roof",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "DP-1",
+      "guid": "0bgPDike5TRg3hJFuJQRTO",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "DP-2",
+      "guid": "0FOebW4g5Ns9jwJVWmKVLb",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-S",
+      "guid": "3fNY9OuTHQ5QVew2$dtdIV",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-E",
+      "guid": "28tb6V2rfShP0kIyNz3BdC",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-N",
+      "guid": "3yyoTz4kvVK90JrTq199pi",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-W",
+      "guid": "29MaCncJLHawWD5OhV6u5D",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RW-S",
+      "guid": "1b9ulVlcPLiO2Z50WzfaEJ",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "wood_ribbon_carpentry",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RW-E",
+      "guid": "2c7tu5toHNWemXqXGz6Kwi",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "wood_ribbon_carpentry",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RW-N",
+      "guid": "1E4nm0seTPVwt$ztpeZXGd",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "wood_ribbon_carpentry",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RW-W",
+      "guid": "125$SRHrTPbA267EuIZR2m",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "wood_ribbon_carpentry",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-W",
+      "guid": "1zgZi6FLvJihlHUftnV9Yu",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "G-WIN-1",
+      "guid": "2ocIMehqjV6R5EW8XKGCCm",
+      "class": "IfcWindow",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "G-WIN-2",
+      "guid": "2NheAT1vTLX8u48MYA5CGi",
+      "class": "IfcWindow",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "G-WIN-3",
+      "guid": "0krkC9N9PJ$RfDJSRclZxN",
+      "class": "IfcWindow",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-N",
+      "guid": "34B8zCzwXURRRhoaLJs2Ty",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "G-N-WIN",
+      "guid": "339YlxhETQSvZp2OUOXe$e",
+      "class": "IfcWindow",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-E",
+      "guid": "14KbhwtavG8Qlyfm17tTY5",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-GARAGE-END",
+      "guid": "0DS9kso3XUwPSF2DhX0mkj",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-SERVICE",
+      "guid": "14gZ5OCHTUJBPZ7aHTA4TY",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-SERVANT-1",
+      "guid": "09kNu88aPGgxa1JwNEj2Fu",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-SERVANT-2",
+      "guid": "39fJbP53zTmAfwALblNWV6",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-LAUNDRY",
+      "guid": "1ncO4iXTvRVvVQ3pQpDOe9",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-ROOM-10",
+      "guid": "37W_aNgqnHL8gbQhGTUr3q",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-ROOM-13",
+      "guid": "2zRZffeVTH$QZ1YIIwUjMM",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-ROOM-16",
+      "guid": "0DhrzVQ1fGjB3Q7TncXjV7",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-CHAUFFEUR",
+      "guid": "3PUXwi9g9S8RqSpiMNHlub",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-CHAUFFEUR",
+      "guid": "1X91bPR4DLg96XWocZiTRa",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-GARAGE",
+      "guid": "0THtJ7HKPIU8osnmP6oEHe",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-ENTRY",
+      "guid": "3ZsoDJH_LKqA4WEDqb0mYH",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "metal_curved_service_glazing",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-KITCHEN",
+      "guid": "0WBlq2oC5Rxw0s1LSph0ZX",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-KITCHEN",
+      "guid": "09WyU6b4PPgAi3yWvZB55f",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY",
+      "guid": "0HefO2NtnV0wkCOQCsiS8y",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-PANTRY",
+      "guid": "3inerLwdLVmRrqg$kJlz67",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-SALON",
+      "guid": "29mhWuYoPSfRHRqsCKK1qn",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-SALON",
+      "guid": "1eCHJxpALSuB8cWzHCgeuS",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GL-TERRACE",
+      "guid": "0byHW1u6XHzfU0mJEXdx$L",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "salon_moving_bay_and_canopy",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PRIVATE",
+      "guid": "1y2fOkm_TIKuZQs9Ew7cBb",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-GUEST",
+      "guid": "0tqJ0JPxfHJPlfx0Fl6OCu",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-SON",
+      "guid": "0Li3_NGI5JXRQ$IPgyZdPA",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PRIVATE-8.9",
+      "guid": "2TxlfA5cHPdfDegwrkkfl1",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PARENT-BATH",
+      "guid": "1K6CrjDb1VNOthtVX$vz7x",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-PARENTS",
+      "guid": "0vZfA5MfnMIQJNU13rmZpN",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-BOUDOIR",
+      "guid": "2Ff9ldI9XK9Aw01XI_vnSQ",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-BOUDOIR",
+      "guid": "0AiE6tyULU_epnvQ8aGyT7",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-BOUDOIR-E",
+      "guid": "2gHl3wb9HIB8VLsq9c6dLu",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-TERRACE-RAMP",
+      "guid": "3BJpknaIPPfehe$0kHq6RJ",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GL-RAMP-GARDEN",
+      "guid": "2gTT6Nns5LPRmViruKJAWA",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "ST-GF",
+      "guid": "35UCxlYm5Qb93YOwx0bo_g",
+      "class": "IfcStair",
+      "storey": "ground",
+      "topics": [
+        "service_stair_rc_and_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "ST-FR",
+      "guid": "2MJB68IPPV_OzfQSMJCBwq",
+      "class": "IfcStair",
+      "storey": "first",
+      "topics": [
+        "service_stair_rc_and_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PAR-S",
+      "guid": "1zPzvgPy1L9x40Ruj9fCwg",
+      "class": "IfcWall",
+      "storey": "roof",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PAR-N",
+      "guid": "3zroFkjdvJ5fzihPfh6byz",
+      "class": "IfcWall",
+      "storey": "roof",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PAR-W",
+      "guid": "3VXa4sgvDVV8_JLk827PJg",
+      "class": "IfcWall",
+      "storey": "roof",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PAR-E",
+      "guid": "0UFF03p7bSDRtCAWtBXMMZ",
+      "class": "IfcWall",
+      "storey": "roof",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "ROOFLIGHT-1",
+      "guid": "3PRLYGwSjTPAwjq4Z81DBN",
+      "class": "IfcBuildingElementProxy",
+      "storey": "roof",
+      "topics": [
+        "rooflights_and_garage_planting"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-LAUNDRY",
+      "guid": "1bCTrVyb1Qu94YB8NNcvdw",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-TERRACE-TABLE",
+      "guid": "1XXN2Pi7TNWP1Ps1oSqUJC",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-BOUDOIR",
+      "guid": "169EbElufHUhFpUWvVurU4",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-HALL-BASIN",
+      "guid": "2dWxCGUNHOdvGkhz$yullP",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GUARD-RM-1",
+      "guid": "1MdB_DTCnNQ8MjVLTTJBJ6",
+      "class": "IfcRailing",
+      "storey": "ground",
+      "topics": [
+        "ramp_continuous_guards"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GUARD-RM-2",
+      "guid": "2oSbS0wNLN5BkKK23gxwhx",
+      "class": "IfcRailing",
+      "storey": "first",
+      "topics": [
+        "ramp_continuous_guards"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-GARAGE-LOWER",
+      "guid": "2CJMX7St5Mk8WUQWLGNpwx",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-GARAGE-CORNER",
+      "guid": "14_3rgJtzN2QknrLnXn8w5",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PARENT-BATH-S",
+      "guid": "1WpJUfDbjSIOmLbF3J1VaO",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PARENTS-BOUDOIR",
+      "guid": "1wU7ARYnrSsw7UO5iJ3_Kq",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-CHAUFFEUR-RETURN",
+      "guid": "1jpQS1rKHUxOM6liNftRPc",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-G-CHAUFFEUR-W",
+      "guid": "3mdZKzLq5HDfy5s$Rp14ho",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SL-KIOSK",
+      "guid": "2YWOROadLU8uN7TUjvwppA",
+      "class": "IfcSlab",
+      "storey": "roof",
+      "topics": [
+        "structural_beams_slabs",
+        "solarium_screen_and_openings"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GL-GARAGE-1",
+      "guid": "1m8yZfDLzLvexoWeTBktaK",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "rooflights_and_garage_planting"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GL-GARAGE-2",
+      "guid": "2dH04AinXJkud0$rbgdo26",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "rooflights_and_garage_planting"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CHAUFFEUR-BEDROOM",
+      "guid": "1xeG$hRtfHMhZMOcfrs0OT",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CHAUFFEUR-BATH",
+      "guid": "0svNDFp3rJRfgVKr2$uHGt",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-CHAUFFEUR-BEDROOM",
+      "guid": "2merYa84LHdRAuuOhUigtu",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-CHAUFFEUR-BATH",
+      "guid": "0InbTxuXDT4gTC6Iu5rqul",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-GUEST-WARDROBE",
+      "guid": "39FvdHEF5ThvQjxATDQTBg",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-GUEST-BASIN",
+      "guid": "2LyBBwNIXOHQ_EVcSbVlv4",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SON-DESK",
+      "guid": "1COjHd2p5MgQq33wGevIBG",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SON-STORAGE",
+      "guid": "3alQwB_LnJWx3NrJ3$M41m",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-PANTRY-STORAGE",
+      "guid": "1AtDfI_9bTowQLzJt37Xr1",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-1",
+      "guid": "2rJYceKF5Scx7FOIw812R0",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SERVANT-RADIATOR-1",
+      "guid": "2U6r0PDenMowOp_yJ3NJmq",
+      "class": "IfcSpaceHeater",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-2",
+      "guid": "07356bnbLHKQsXiq2fdsAj",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SERVANT-RADIATOR-2",
+      "guid": "3oUSQmKYLK4OLbJyD_rD2H",
+      "class": "IfcSpaceHeater",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-HALL-TABLE-1",
+      "guid": "20wFgpV$1Pbwk7lJhxUmdI",
+      "class": "IfcFurnishingElement",
+      "storey": "ground",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-HALL-TABLE-2",
+      "guid": "271ylrRozG$e9INAexAzJx",
+      "class": "IfcFurnishingElement",
+      "storey": "ground",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-TERRACE-PLANTER-1",
+      "guid": "3boFvXEjPPVeKSP8IAk2cT",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables",
+        "rooflights_and_garage_planting"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-TERRACE-PLANTER-2",
+      "guid": "3Yi_R4zxbGkw5wQETPAO14",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables",
+        "rooflights_and_garage_planting"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-HALL",
+      "guid": "1TItlN$2DH$OQJu3Y2JosB",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-LAUNDRY-1",
+      "guid": "39Kb8_xlPUJx4ZRZvq3ggD",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-LAUNDRY-2",
+      "guid": "18dC8c4uDQmxljbjDNGEEb",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-GUEST",
+      "guid": "1QFS3CQd1PZRmcHHw9zwJB",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-SERVANT-1",
+      "guid": "2Wc2kTj3XQxenh52Mod8t8",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-SERVANT-2",
+      "guid": "03jdWmlRDKxhjFIONH_Y1S",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GUARD-ST-GF",
+      "guid": "2A4pv55jLTtQMxMXH0vUjW",
+      "class": "IfcRailing",
+      "storey": "ground",
+      "topics": [
+        "service_stair_rc_and_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TUBE-ST-GF",
+      "guid": "0LkwYMT79OuednbMj9YAEm",
+      "class": "IfcRailing",
+      "storey": "ground",
+      "topics": [
+        "stair_and_ramp_handrail_construction"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GUARD-ST-FR",
+      "guid": "3b3nA9XVnLVfgTlhrWEBoq",
+      "class": "IfcRailing",
+      "storey": "first",
+      "topics": [
+        "service_stair_rc_and_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TUBE-ST-FR",
+      "guid": "0XCo$2E6nLRB7qfR$cQHiA",
+      "class": "IfcRailing",
+      "storey": "first",
+      "topics": [
+        "stair_and_ramp_handrail_construction"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SHARED-BATH",
+      "guid": "3SWeyTCR5MkxMLvqvN8K5j",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SHARED-BASIN",
+      "guid": "3D__VGorLVzeMCis0P1A7W",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-CHAUFFEUR-BASIN",
+      "guid": "134Jibm1rOiPaj_6mL$9KZ",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-CHAUFFEUR",
+      "guid": "1Vlr7RXgzHJB0_wLp5H1Uh",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-SERVICE",
+      "guid": "2SbpbRK61UMfwYhar_VBSb",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-GUEST-PARQUET",
+      "guid": "0NXzime8vNbfVoFaBqhdIZ",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-GUEST-TILE",
+      "guid": "1A083U_q5VJu9PPdXk_diq",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-TERRACE-PAVING",
+      "guid": "3Uvb9NBdbGw9pwymL1gWDT",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors",
+        "exterior_pavers_roof_gravel"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-TERRACE-GRASS",
+      "guid": "38LP_bL_1L_vfaxax6Wf5u",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors",
+        "exterior_pavers_roof_gravel"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-WEST",
+      "guid": "2u2BdS5P5J2vAydFNME2Yq",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-PATIO",
+      "guid": "1H_tiLpijV6wPYYHXDA62J",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-SOUTH",
+      "guid": "3O_PH3GJ5VnQmcGinVS$R7",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-KITCHEN-PATIO",
+      "guid": "0w0DwAlrTS5OQjlh4s37i_",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RW-W-UPPER",
+      "guid": "0wQbATgurQS8KpG7cxdFuT",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "wood_ribbon_carpentry",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-KITCHEN-PATIO",
+      "guid": "2upS7MSLzIA9MPTwRhc6vG",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SL-CELLAR",
+      "guid": "1GCLdcJEbTZAKsPxTr4YfT",
+      "class": "IfcSlab",
+      "storey": "cellar",
+      "topics": [
+        "foundations_cellar",
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SL-GROUND-CELLAR",
+      "guid": "1lsr$Lhp1RMRcOxet5qxAG",
+      "class": "IfcSlab",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CELLAR-W",
+      "guid": "11IrU$YNPStQ7feNYKb2pY",
+      "class": "IfcWall",
+      "storey": "cellar",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CELLAR-E",
+      "guid": "13te2qb0HI39TgqkbkKSsQ",
+      "class": "IfcWall",
+      "storey": "cellar",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CELLAR-S",
+      "guid": "2stWmCytDIQfRR_Yk7OdUb",
+      "class": "IfcWall",
+      "storey": "cellar",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CELLAR-N",
+      "guid": "1uuUpw8KLPxOxg2jnR9Gn6",
+      "class": "IfcWall",
+      "storey": "cellar",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CELLAR-DIVIDER",
+      "guid": "2yXhjSPqnHBvd17zJwDqwv",
+      "class": "IfcWall",
+      "storey": "cellar",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-CELLAR",
+      "guid": "3SeJOpBR9RePs6IvI2qUK3",
+      "class": "IfcFooting",
+      "storey": "cellar",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RIB-CELLAR",
+      "guid": "0aNYP7Ub9LRfK0zZQhgQMU",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-CELLAR-STAIR",
+      "guid": "1AqNWAvs9SVf4uoobdAhk$",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "STAIR-PA",
+      "guid": "2qYHvWGujSnfW2C2NTwsIo",
+      "class": "IfcColumn",
+      "storey": "cellar",
+      "topics": [
+        "structural_columns",
+        "service_stair_rc_and_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-STAIR-PA",
+      "guid": "3hZHzv0U9Q5886yIbcQGm4",
+      "class": "IfcFooting",
+      "storey": "cellar",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "ST-CG",
+      "guid": "0jmNLIXi5OD9DSOfPfFqjW",
+      "class": "IfcStair",
+      "storey": "cellar",
+      "topics": [
+        "service_stair_rc_and_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CELLAR-STAIR-E",
+      "guid": "16tHW4YETIi8Ngd4jQzR4W",
+      "class": "IfcWall",
+      "storey": "cellar",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CELLAR-STAIR-S",
+      "guid": "3tOY7A2njVyPFcE65_lWbG",
+      "class": "IfcWall",
+      "storey": "cellar",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-CELLAR-STAIR-N",
+      "guid": "0ppPElISXIdOSXNVZLW5Nu",
+      "class": "IfcWall",
+      "storey": "cellar",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-CELLAR-C14",
+      "guid": "3HJ6T$R95NRe1UaAAyQRLF",
+      "class": "IfcFooting",
+      "storey": "cellar",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "1",
+      "guid": "3ja6AorJTQERQYr3LRl0gJ",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "1-FIRST",
+      "guid": "1pAceFzgLREP7qL8NPXt96",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "2",
+      "guid": "2n2U7HMmLTwwAJ_nIr8Cb4",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "2-FIRST",
+      "guid": "0GGOVlSKPJ7gHoXTvuusF6",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "3",
+      "guid": "1XaoVXfN9QWAeKpfQoiL7o",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "3-FIRST",
+      "guid": "3CGfjQ0XHVYuDVXm1rjxja",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "4",
+      "guid": "1t_TKvJ89M5waj3yz3oHh7",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "4-FIRST",
+      "guid": "22Wr0mhRzLFvOu_mcyFM_g",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "5",
+      "guid": "2k13ABhDTLDu7GngQe2cDL",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "5-FIRST",
+      "guid": "3LbhXs09vLs8$mYjZSqp_Q",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "6",
+      "guid": "36xv3BJJrI5QVEv1Y3VfIt",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "6-FIRST",
+      "guid": "0chnB0U8bMQfYWwWRIQd7o",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "7",
+      "guid": "2gx3RavmnK$eVUn4$8OiZK",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "7-FIRST",
+      "guid": "3V_KhBta9UZhjq67LcDMNJ",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "8",
+      "guid": "2epwQX8WLQpQw3urK$E0l5",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "9",
+      "guid": "1VO2dZcHLRVOH7IEx2CVOC",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "10",
+      "guid": "2zd3EM1cXVMf7c9NXnPl2p",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "10-FIRST",
+      "guid": "1IiGRRXdLUj8y3d2frKROY",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "11",
+      "guid": "0tVZNBbRTSjujNGUsJtMq0",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "11-FIRST",
+      "guid": "0YWzNSlHLO$8GKnjH4LiFf",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "12",
+      "guid": "02RnoCZj5NPxdAZCPVj1T$",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "13",
+      "guid": "0Y_ycf3JDNWuTUUMwUKwr5",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "14",
+      "guid": "3rsrQNjFvRN83UoIBAJT09",
+      "class": "IfcColumn",
+      "storey": "cellar",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "14-FIRST",
+      "guid": "1yqt6Y$HXTHeM$XfVyLyxc",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "15",
+      "guid": "1hHBK1OQnSlfI3Kb_iuQN1",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "15-FIRST",
+      "guid": "1SiZWgebvS4P$DhxrCwCtt",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "16",
+      "guid": "2XdOFwLArOvQnezc8by6gb",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "16-FIRST",
+      "guid": "3y5tcyyTzJvQvuO55wVvwM",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "17",
+      "guid": "3JiWaH9Q5N7hCH6HbtXj1J",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "17-FIRST",
+      "guid": "3zFblEP$rJFA3naIhU9Zl1",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "18",
+      "guid": "0lZda$E71Vvurrkhm4bd$B",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "18-FIRST",
+      "guid": "18JD4MMlrUNOL986HDBlBi",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "19",
+      "guid": "2bDkHNkjLTKeNozzc1V7kw",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "19-FIRST",
+      "guid": "38R$IPvIjGgx_HV2KRVnGk",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "20",
+      "guid": "3WirL9EJTI4OTm_utGb2lp",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "20-FIRST",
+      "guid": "3IbOTB9BXS0xLRTmL3nuC$",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "21",
+      "guid": "3n12PXy$rVnQkUafaG1Dac",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "22",
+      "guid": "1HpAnqJSTIq8_ded5iryCq",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "22-FIRST",
+      "guid": "0NzdwXjO5H_QvIyBsFmTRo",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "23",
+      "guid": "3kAyZ4jV1SxQC0odBjfWxs",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "23-FIRST",
+      "guid": "2UAgHuxN1UKPpKIeu85BEj",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "24",
+      "guid": "1y_nccslbJBv2vAbtGJWeG",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "24-FIRST",
+      "guid": "33VP4FgbTUDfBbfETXX4Js",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "25",
+      "guid": "1983DEagHQOua0v$Pt3zo9",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "25-FIRST",
+      "guid": "2bfmJlFjfUtQwlHxpw3wx0",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "26",
+      "guid": "24i_9KrdXGVenPpGW4EOQO",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "26-FIRST",
+      "guid": "3RR2U791fGJ8ZH8zJp1cql",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "27",
+      "guid": "3gD$e49AzLHQUtJMzFkJaS",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "27-FIRST",
+      "guid": "1QnGXTKmHQMRRafAXcopXN",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "28",
+      "guid": "0Z1A8sYcfTfgHBdeJrLhJG",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "28-FIRST",
+      "guid": "0EQwXNgmzOf8D2njFQ$1Q0",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "29",
+      "guid": "3D_F2aKO1SnPuNSY7i87sF",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "29-FIRST",
+      "guid": "1WEetwQ79LsQv3gQHShPzl",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "30",
+      "guid": "2X5jBdZGDHQuwEPvisHcHK",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "30-FIRST",
+      "guid": "0WCMzASiLNYhnFi5_PhlFE",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "31",
+      "guid": "2HocsI5SbNoBODt3ZrCI17",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "31-FIRST",
+      "guid": "1V_F_tD1zHxvIl_fFtZ1ba",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "32",
+      "guid": "015zQ91d9HZB4RI9Cp47FG",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "32-FIRST",
+      "guid": "1MBWiMxdfNMw0bBqP1MR9w",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "33",
+      "guid": "1NPrLsne9Hh9ExfoI0D0pc",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "33-FIRST",
+      "guid": "3UCyUSQ$PHVPkTsmInqTdS",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "34",
+      "guid": "2EVvJCDY5UBOS0ahmBfx0M",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "35",
+      "guid": "3IfMKp0urNHQyGpKZNG4Hp",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "36",
+      "guid": "1VAKTaXs9KO8f0WSg1lpHX",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PA",
+      "guid": "2VVtWbqsXIeO90n$BLr1hd",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PB",
+      "guid": "2_TesrMcLS3gHohcvBkKgY",
+      "class": "IfcColumn",
+      "storey": "ground",
+      "topics": [
+        "structural_columns"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-1-6",
+      "guid": "07yjDREGvVBwBUGp9uVMFp",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-6-29",
+      "guid": "3LWunh_LjPWPY8r63WzJHl",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-5-33",
+      "guid": "2w$JLRM89QSQYqRDdvf_NZ",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-2-7",
+      "guid": "33NjJaOhHS98RHd1WGSG3Q",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-7-24",
+      "guid": "0S_au8RB5NaOL64_dNriEJ",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-24-30",
+      "guid": "3KvtZKgRbIhvsy_pGhdz4y",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-3-34",
+      "guid": "1eXG9mN3nShufw5yITYMFy",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-28-31",
+      "guid": "03UxYX_ZDRWemY2zTADMDh",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-4-10",
+      "guid": "1DLqEQf99TbAbC4scrh0By",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-15-20",
+      "guid": "2QWSweoCjS2uc1PhWuo341",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-20-32",
+      "guid": "0_all_WAvPYvAvpM8pvDjs",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-13-25",
+      "guid": "21dfR_3aPQXQ3uJQthd68$",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-25-28",
+      "guid": "2zYkmOJOzLSgd9MujCFn_$",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-26-28",
+      "guid": "2WwWd08iXSEe3roR1916xK",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-8-9",
+      "guid": "3CBGMgUGrHyx1OiK_atnlz",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-13-14",
+      "guid": "0povv0BpDMYv4gDis3K1la",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-28-CROSS",
+      "guid": "0bL_ad3cjKRxTRVKZQ$HpJ",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-1-6",
+      "guid": "2CHp1Tqy9UHenIPW0bY2jY",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-22-29",
+      "guid": "26T25lqX1SWg2Ld$G6EKyY",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-5-33",
+      "guid": "0VgEj2hVbPBezmt42zg62I",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-2-7",
+      "guid": "3kf0LLjdzSeBqcQftKFcnQ",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-3-34",
+      "guid": "3hjG$H4PjJzfiBrtwNLCTa",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-4-10",
+      "guid": "1QGLKoZw5GOelnenzVGkIx",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-34-35",
+      "guid": "1e$xfGrOzSWh3vKmLrrFTT",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-14-26",
+      "guid": "3YmH00qfnHfR$aWynUnxO9",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-20-32",
+      "guid": "3wsDrCpXTMMO9tgJ0zjtNn",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-24-30",
+      "guid": "1wgHLiKmXVwBDYxQQc0GYG",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-28-31",
+      "guid": "0RMYvWhmbVIQaUADe1n$6d",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-10-11",
+      "guid": "0pcy8jNv9Q3AghC4acbcCi",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-6-34",
+      "guid": "1Gd6MVF75IMB_B7pdIBKtu",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-6-22",
+      "guid": "1VKW9ECKHPKhOCUvRTbm3T",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-SON-PRIVATE",
+      "guid": "2Y9L9QhFvRYAl1ksdzISlL",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PARENT-BATH-W",
+      "guid": "1gSg61pyXQiO3MbOqtdaUB",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-10-15",
+      "guid": "3gB8CRVr1Jb8qVXJ5nAuew",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-FRONT",
+      "guid": "10Fe5sA_HRKQSvajW5WzoP",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-REAR",
+      "guid": "1VCH9eMgPJtuhI0s2XSM6O",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-10-15",
+      "guid": "05hVGhf8bSMxMxtdHMP32E",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-22-36",
+      "guid": "21mZoJoCXVc8RqDwadHHTr",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-FRONT",
+      "guid": "3QYBeg_B9RZvd68g127pEm",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-REAR",
+      "guid": "0RjQgZByHP0RvK5mj27Qy4",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-END-FRONT-2",
+      "guid": "1zqlfRO4XS3hDLKbj1JcEY",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-END-REAR-2",
+      "guid": "0w7F3It_XOUBRXao65bvCq",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-END-FRONT-2",
+      "guid": "2RoqIOJ15Hcf22r2ZFGE5I",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-END-REAR-2",
+      "guid": "0io2yhD5vMGgwmywXP_WQI",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-END-FRONT-3",
+      "guid": "2FUyp9WF5OewuVhpJ$SkCM",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-END-REAR-3",
+      "guid": "3mW$3N4XLVL8z$kzjOFVN1",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-END-FRONT-3",
+      "guid": "0HfKbVxk9Lbw$Rypv69QOQ",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-END-REAR-3",
+      "guid": "1Z6Wqt3_LK89g6MySb0Nv$",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-END-FRONT-4",
+      "guid": "0mTE5NUV5LOBNvZVY131CZ",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-END-REAR-4",
+      "guid": "1nY8KbrC5GMxHMcaJU9fsN",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-END-FRONT-4",
+      "guid": "2Mg_333CHTXBb_D3sls7q_",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-END-REAR-4",
+      "guid": "1jthpcXYrLI8lnPttJxnaz",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-14-19",
+      "guid": "1ecsAFzfjJHPob42FITTKQ",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-19-26",
+      "guid": "2L15abRtfM98maKWLEMmWH",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-14-15",
+      "guid": "0MoOuzGTXH4AvIqatYh$jr",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-BATH-LOW",
+      "guid": "1ITBeXFRrVMOIKpuyNDpsa",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-F-BATH-HIGH",
+      "guid": "3gPJeUfXrV6hFr$Q40VEm$",
+      "class": "IfcBeam",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-RAMP-END",
+      "guid": "0dFLekesTNEeSoSkwbVep7",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-34-10",
+      "guid": "3i3qgVzwDPe8cZsg818oj_",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-14-15",
+      "guid": "3zKhZZEZfRaO8Nbyt_gqcI",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BEAM-PRIMARY-R-STAIR-LOW",
+      "guid": "2zer9b29rIK9jpMZ3tEzrT",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-1",
+      "guid": "1KCT$nKNHRowNNbDEL708t",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-1",
+      "guid": "3m83KvW0bMsQdUsEXiFOO7",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-2",
+      "guid": "12SIBsWLrJ6BI8QVYH6k1w",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-2",
+      "guid": "3FGBFU5ujOpgA0uWJlsFJB",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-3",
+      "guid": "1mlnYtSUzKPOBdHPKo_WwL",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-3",
+      "guid": "16sEqqR5HNB8rl2zp3exb1",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-4",
+      "guid": "32jA21Uc5LBx3jKVfLC0aH",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-4",
+      "guid": "3Yx31wne5HqeCYGxiBrcoX",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-5",
+      "guid": "0q49s8$hHUUAV2OTnYYX1W",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-5",
+      "guid": "2$F_W_8FXNB8QyN0WhUANG",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-6",
+      "guid": "1FpJyqwsvGsvzjq91m_vCX",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-6",
+      "guid": "1xqv$G_jHROf9PBirRctVT",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-7-12",
+      "guid": "104R8yHArJK8TNx59oaYlS",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-7-12",
+      "guid": "0hQ$AhLLnMG9AVZeO7Icsm",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-11",
+      "guid": "2jj3YSURfG8RmJdbh_fbuQ",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-11",
+      "guid": "2PiCxw5BvRPxGfGu_A6MP3",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-16",
+      "guid": "2VfnulW2bVgRovje1QQ_DS",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-16",
+      "guid": "3Y2O4KehbLueSnykqF8Jr_",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-17",
+      "guid": "0iMCGeJaLMs9rSPzPF2C2H",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-17",
+      "guid": "0Jhb8DFWjLhvBjL_pDKIqS",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-21",
+      "guid": "1cVV$pVnvSqQqykYHfpdzP",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-21",
+      "guid": "23YS185mbKWf8CPXl6NXuj",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-22",
+      "guid": "0yOPXIfUHJfgg3dzerkqF3",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-22",
+      "guid": "27mQCIa8DSveChjWBCjirf",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-23",
+      "guid": "0ZgI84ZLnHFOkfndIVjNHz",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-23",
+      "guid": "28_F7xRwbKS9X0bSBa4JA2",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-24",
+      "guid": "0gohPPfn1OzgIvOrXFHaUG",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-24",
+      "guid": "137EMkCxXIfgNlExoTtt9r",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-27",
+      "guid": "3gt7ChLZzRigTjwZaMZhnr",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-27",
+      "guid": "1Gudk379fKOxatzR9dfGin",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-28",
+      "guid": "0UCDI4TZfQ5hwuM3d6xPVT",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-28",
+      "guid": "0b5walpkzSZQHqe6CW7qwh",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-29",
+      "guid": "1aDKS4czvUYPbvg51N4tC8",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-29",
+      "guid": "0gtnc8UqTNURU5mQfC3B6U",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-30",
+      "guid": "0_7WTA3K9J9uAdywcxBbUv",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-30",
+      "guid": "1O_iww6ufRUfQtZ8p$EOMm",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-31",
+      "guid": "01zcMG$KzHye_S09276iUu",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-31",
+      "guid": "2pNp5JKL9RavMG56iwu_LU",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-32",
+      "guid": "0xDpfvVeTSwgTsFUHfd9ov",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-32",
+      "guid": "2syUKPwi9NgRBbHp_W8qas",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-BLINDING-33",
+      "guid": "0LAmpS6fzNBPVVVordZ5UJ",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FT-PAD-33",
+      "guid": "14pxth16LJAfp2gO$xJrEE",
+      "class": "IfcFooting",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-SHARED-BATH-S",
+      "guid": "0_25Q6eOHQzBwHxnD7RKL2",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-SHARED-BATH-GUEST",
+      "guid": "2xTJH$x_fUsxxyB14veLjI",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-SHARED-BATH-N",
+      "guid": "1iMfWmQk9SHOHRxsoDJIQp",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-SHARED-BATH-SON",
+      "guid": "1e$EsaTGHUAxfdIm7l6bXu",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-SON-ENTRY",
+      "guid": "2Aw3nDILbK4PRuLyAqRdMG",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GARAGE-SLIDING",
+      "guid": "1iyL6mrNbK2gw9VUKeFRJj",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "paint_render_surface_identity",
+        "metal_curved_service_glazing",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SC-SILL",
+      "guid": "3wlitdKnTGGvwAnEa4SqEZ",
+      "class": "IfcBeam",
+      "storey": "roof",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SC-HEAD",
+      "guid": "2LyCCkWorSKh0OxEvgpObS",
+      "class": "IfcBeam",
+      "storey": "roof",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "CELLAR-HOIST-PIT",
+      "guid": "00AINtwTLVyAhtTcr0ij9q",
+      "class": "IfcBuildingElementProxy",
+      "storey": "cellar",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "COVER-HOIST",
+      "guid": "0viSi7igzJ8e4XumHRuBcs",
+      "class": "IfcSlab",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "COVER-COAL",
+      "guid": "36gktEDYnRF8Htsnyn5_n5",
+      "class": "IfcSlab",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HOIST-JIB",
+      "guid": "1yj0DymLHPRhGyde_FO6fc",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "CELLAR-COAL-CHUTE",
+      "guid": "00ktoO6tfLC8p3vCD1KjYd",
+      "class": "IfcBuildingElementProxy",
+      "storey": "cellar",
+      "topics": [
+        "foundations_cellar"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-6-CASING",
+      "guid": "0Hul88LPLU_8r1lSWXs6wx",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "service_casings_and_local_tile_splashes"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-6-INSULATION",
+      "guid": "3onQwMMDjNBxhYeY1qLZ11",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "service_casings_and_local_tile_splashes"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-6-PIPE",
+      "guid": "3KBV9aBonSUQ6MRawrusHd",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-11-CASING",
+      "guid": "38rcruPFPH09StD7jORB2p",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "service_casings_and_local_tile_splashes"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-11-INSULATION",
+      "guid": "2iWg1x4tPLkfMoYRqOKmBa",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "service_casings_and_local_tile_splashes"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-11-PIPE",
+      "guid": "24gM_Hl9rQiRv0KN5u9cPm",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "WATER-RISER-11",
+      "guid": "3SxhtlQRrKZgiETz0JvEuC",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BOILER-FLUE-VISIBLE",
+      "guid": "3W6pjtXNTSvQsjMLQMU$Ok",
+      "class": "IfcChimney",
+      "storey": "ground",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SOIL-STAIR",
+      "guid": "0nXMxJx59LDOAaREuHsAD$",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-L-S",
+      "guid": "0SPIzZUfjJSBx4C0BOQ5sd",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-U-S",
+      "guid": "1a6MwOOfTOMfNwVbFQrPzx",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-SHELF-S",
+      "guid": "3mz0yAG5HMQOLYBruSsvFU",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-CORNER-S-A",
+      "guid": "05baLpEJvQif$NqDc7u_6r",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-S-1",
+      "guid": "3u3VxaIMnRW8vr9HACv0WR",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-S-2",
+      "guid": "0DpiKxhkLGYuM5XHD2ce9G",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-S-3",
+      "guid": "0lTfaVNkDRRBXutxKGQySH",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-S-4",
+      "guid": "3rU1b6SonJqesDlNKALZ49",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-S-5",
+      "guid": "1xNPh78ebIswb3f$Lm7Nrv",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-S-6",
+      "guid": "1jKx7tTxLLPwOUkFu03WzV",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-S-7",
+      "guid": "2N0M8K2UzTGeOM8IT7gpWo",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-CORNER-S-B",
+      "guid": "0YmcslPrzPGhh$HDJ5j4Hu",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-L-N",
+      "guid": "1UDXDSvuLVshDuk4zVta$P",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-U-N",
+      "guid": "081yqY71fU$OfV8cg9tkC4",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-SHELF-N",
+      "guid": "0I8Wbx2hvLi9a$uQshnnVo",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-CORNER-N-A",
+      "guid": "2h1SWtTVjPGf8GTSJdJSv_",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-N-1",
+      "guid": "1TspPWYDLQnOAA8hdUXGzZ",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-N-2",
+      "guid": "1WkKqLh1jLlhnUnW6D5qZy",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-N-3",
+      "guid": "3I0gya$anUzfwLREWib5Fo",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-N-4",
+      "guid": "0RW7ddtLnQZO5sAIj2uHZX",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-N-5",
+      "guid": "1eaX_JRd1TyRvFjZtTd6qQ",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-N-6",
+      "guid": "0QRj6olkDPNRzJjHPnQOBz",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-STIFFENER-N-7",
+      "guid": "1x$3oYaUXLNxc4tMQKGQyv",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-CORNER-N-B",
+      "guid": "0rmfaVn3zUFhP4m9xAJzeC",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-L-W",
+      "guid": "3gB6xKNdvMCgIqz_o94F5p",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-U-W",
+      "guid": "3mfnN8OgLIu9D4$Zu2D6d3",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-SHELF-W",
+      "guid": "1urfnO5kTHgOGz4vQQWboK",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-TIE-W-0",
+      "guid": "2qDxShosLIzxZEh4i$_NSy",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-L-W-UPPER",
+      "guid": "0mAlCxzIzQqOCZ76j1zn0d",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-U-W-UPPER",
+      "guid": "0g5$7LSrDKN8PIAVsyC7Vh",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-SHELF-W-UPPER",
+      "guid": "1RBonwN1XLWAn7nhYgeiR0",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-TIE-W-UPPER-2",
+      "guid": "2pTVf0LynKe9THo$5_IisJ",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-TIE-W-UPPER-3",
+      "guid": "3fkt1VCVDPRfm97nwmbv3x",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-L-E",
+      "guid": "3errTaDCbM1B44XO_XkX0J",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-U-E",
+      "guid": "2yy41f3uvNbgzn0_RK4y__",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-SHELF-E",
+      "guid": "0kT7uelpvKvhkYkP2nAJY$",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-TIE-E-0",
+      "guid": "2Q6VxiU39GyOnfF9LXDcMS",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-GARDEN-E",
+      "guid": "0D_jEy_B9VuR_ToXTBXSQK",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-KIOSK-E",
+      "guid": "3QtGEStQrJu8KHOwMplLDV",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-L-KITCHEN-COURT",
+      "guid": "1lgQuRq_jHZhMuBHjW0z64",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-U-KITCHEN-COURT",
+      "guid": "0q9qo2AfnTqxTwRivMCm$7",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-SHELF-KITCHEN-COURT",
+      "guid": "1VcKAeLw1KFwDUp2WVowAp",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-TIE-KITCHEN-COURT",
+      "guid": "1wSj67pl9HbeoRITdcHAQi",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-L-GARDEN-E",
+      "guid": "1ZKrx8fPTTjRQQXQgkszFU",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-SHELF-GARDEN-E",
+      "guid": "2yQZa31GjSTh7wNMp_o1dp",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-L-KIOSK-E",
+      "guid": "2YEWNklMHGsRw4NHSo9iA$",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-U-KIOSK-E",
+      "guid": "2J6hI6OYjSQPWIDOrMFHWx",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-SHELF-KIOSK-E",
+      "guid": "3YjnYWDQ9MDe8j2v5Yk7Y5",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FACADE-TIE-KIOSK-E",
+      "guid": "0X0JJ3N$9UZPV$NIw1rlhq",
+      "class": "IfcBeam",
+      "storey": "first",
+      "topics": [
+        "structural_beams_slabs",
+        "facade_auxiliary_structure"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "DP-1-OUTLET",
+      "guid": "3CiZMWh7DTQvOCiGfzQ_3d",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "DP-2-OUTLET",
+      "guid": "1Fbag6OknONOjp$7i6NSIV",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "GARDEN-WEATHER-CAP",
+      "guid": "1VhCqHKGbT3eXZaPBBqh4G",
+      "class": "IfcBuildingElementProxy",
+      "storey": "roof",
+      "topics": [
+        "garden_weather_cap"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SL-GROUND",
+      "guid": "2mT$6_fTbU7BWC6KB6dehp",
+      "class": "IfcSlab",
+      "storey": "ground",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-STAIR-ROOF",
+      "guid": "3HbUVvoGrLchmE0X7TjqAE",
+      "class": "IfcWall",
+      "storey": "roof",
+      "topics": [
+        "wall_envelopes",
+        "solarium_screen_and_openings",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-STAIR-ROOF",
+      "guid": "3wzfFqZALT_QgpA7kk9HZq",
+      "class": "IfcDoor",
+      "storey": "roof",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SL-STAIR-CANOPY",
+      "guid": "3zR0v_2orH69XgS0ZYlm0I",
+      "class": "IfcSlab",
+      "storey": "roof",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SL-STAIR-WEATHER",
+      "guid": "2bsgicxKrSHg485tX7s$AC",
+      "class": "IfcSlab",
+      "storey": "roof",
+      "topics": [
+        "structural_beams_slabs"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TUBE-RM-2",
+      "guid": "1ve351iffP1Pv_E1pmnas3",
+      "class": "IfcRailing",
+      "storey": "first",
+      "topics": [
+        "ramp_continuous_guards",
+        "stair_and_ramp_handrail_construction"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "CHIMNEY-SALON-ROOF",
+      "guid": "2mjiRRuUzMQh3jeCQ4Yb$e",
+      "class": "IfcChimney",
+      "storey": "roof",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "CHIMNEY-KITCHEN-ROOF",
+      "guid": "1YFpXHlqDPquTAvPooVzhF",
+      "class": "IfcChimney",
+      "storey": "roof",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "CHIMNEY-BOUDOIR-LOW",
+      "guid": "3yQgmC1knVywwVvU9MObS8",
+      "class": "IfcChimney",
+      "storey": "roof",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "CHIMNEY-LINGERIE-LOW",
+      "guid": "3TkaMgi0TV6OEQmd90XCQQ",
+      "class": "IfcChimney",
+      "storey": "roof",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RW-N-2",
+      "guid": "0_qRQT7q9UXxz3nJUjca6j",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "wood_ribbon_carpentry",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RW-W-UPPER-2",
+      "guid": "2$OIb8UYvKgxD2RSXsfPzg",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "wood_ribbon_carpentry",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RW-W-UPPER-3",
+      "guid": "1mPpTY865Tsuay29KX3V3p",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "wood_ribbon_carpentry",
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SALON-HANDRAIL",
+      "guid": "20ph5ZrI9Qtv1MqsBLnL6F",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "salon_moving_bay_and_canopy"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SALON-CHAIN-DRIVE",
+      "guid": "0BB$GJROzQxPcZiPNydPZy",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "salon_moving_bay_and_canopy"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SALON-CRANK",
+      "guid": "0KRDjU$KnQKwqkFWqmxd65",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "salon_moving_bay_and_canopy"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SALON-CANOPY",
+      "guid": "3VQwkHIKnSDuKteCEnKxZL",
+      "class": "IfcBuildingElementProxy",
+      "storey": "roof",
+      "topics": [
+        "salon_moving_bay_and_canopy"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-WC-FIRST-N",
+      "guid": "3wFmw9gQDJaPdC3WczejmP",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-WC-FIRST-S",
+      "guid": "3gHCX77gPL$u3CJKEpEL18",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-WC-FIRST-W",
+      "guid": "25QWipZTPLoRGyjgQt43qR",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-WC-FIRST-E",
+      "guid": "0rPPLtKwnORhc4RwONePuj",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-WC-FIRST-C",
+      "guid": "1COLZHkuzUlgKm8RkUTJK0",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "WC-FIRST-WEST",
+      "guid": "1Myv$BRX5HDO9JkdT9Eeuc",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-WC-FIRST-WEST",
+      "guid": "21PZMBLL1TZvAB0qKcWG1G",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "WC-FIRST-EAST",
+      "guid": "1QASvu5xTHNhaZfUr0L2Vr",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-WC-FIRST-EAST",
+      "guid": "0ru72jh2jQrO6AGvgoaTho",
+      "class": "IfcDoor",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "STAIR-RETURN-L",
+      "guid": "0cN0QyPtTVUg4A9VEoO07E",
+      "class": "IfcColumn",
+      "storey": "first",
+      "topics": [
+        "structural_columns",
+        "service_stair_rc_and_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "WC-GROUND-SERVICE",
+      "guid": "3hzCB5ksvTuQYDjwP4F7hy",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "WC-CHAUFFEUR",
+      "guid": "3kKc$HsOXTihoye1cjFrw8",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BIDET-CHAUFFEUR",
+      "guid": "3MPHKLb7bKsBf9q2H7EiCq",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BATH-CHAUFFEUR",
+      "guid": "1Z5MVxYCLQ2ftSX5SiMASn",
+      "class": "IfcSanitaryTerminal",
+      "storey": "ground",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-WC-GROUND-SERVICE-E",
+      "guid": "0DAbrq_WzVbg5CP20v$qSE",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-WC-GROUND-SERVICE-N",
+      "guid": "35Gk8iCZXOpeqZegIeZJXO",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-WC-CHAUFFEUR-CURVE",
+      "guid": "2KW3ChKjnQI9IXRT4tCwd1",
+      "class": "IfcWall",
+      "storey": "ground",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-WC-GROUND-SERVICE",
+      "guid": "0Sm4Y$HgDKFfebjprUJOaT",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "D-WC-CHAUFFEUR",
+      "guid": "0cz3zNxYLLKP4WgK0TAM3H",
+      "class": "IfcDoor",
+      "storey": "ground",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TILE-SERVANT-BASIN-1",
+      "guid": "16q00MP6rRlQeVc9ypbzg0",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "service_casings_and_local_tile_splashes"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TILE-SERVANT-BASIN-2",
+      "guid": "339QTswnzP$80U_cTcjR$E",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "service_casings_and_local_tile_splashes"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-HALL-ZEISS-1",
+      "guid": "23h8405Z5UrwBSKtMyJHLE",
+      "class": "IfcLightFixture",
+      "storey": "ground",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-HALL-ZEISS-2",
+      "guid": "2BKDANe7bOaAIgc2ELt8dM",
+      "class": "IfcLightFixture",
+      "storey": "ground",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-HALL-BASIN-19",
+      "guid": "0TUnZyQ4XPzfiBpwvrqvrD",
+      "class": "IfcLightFixture",
+      "storey": "ground",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-HALL-CEILING",
+      "guid": "2HLOl_3rDSHACgPtL7zYon",
+      "class": "IfcLightFixture",
+      "storey": "ground",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-FIRST-HALL-CEILING",
+      "guid": "3XbVhFGIjT$8O2vKI0NWOg",
+      "class": "IfcLightFixture",
+      "storey": "first",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-KITCHEN-1",
+      "guid": "0OT95JknDVkhKaA6jnh5sn",
+      "class": "IfcLightFixture",
+      "storey": "first",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-KITCHEN-2",
+      "guid": "35vEb9$YjLSQxf4BEiaA28",
+      "class": "IfcLightFixture",
+      "storey": "first",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-SALON-LINEAR",
+      "guid": "2VjuVWxzHIcQ2yKi95fHYp",
+      "class": "IfcLightFixture",
+      "storey": "first",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-REAR-W",
+      "guid": "2D_wfVxHfVUP_fKudaF6Nm",
+      "class": "IfcLightFixture",
+      "storey": "ground",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-REAR-E",
+      "guid": "0i3QtXhzvOwOitE0Sbh7ui",
+      "class": "IfcLightFixture",
+      "storey": "ground",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-11",
+      "guid": "2$EDP8OqPIuRRBbxtCzlou",
+      "class": "IfcLightFixture",
+      "storey": "ground",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "LIGHT-EXTERIOR-6",
+      "guid": "3sU3RyQvfMDPneJtkLHRce",
+      "class": "IfcLightFixture",
+      "storey": "ground",
+      "topics": [
+        "electrical_visible_fixtures"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BIDET-SHARED",
+      "guid": "1aC5mwfbHLaQXwi$X5TNt4",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-CHAISE",
+      "guid": "0y$i8kaaTMQxYl$1atjTey",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "parents_bath_builtins",
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-BATH",
+      "guid": "187fizxVvG0xBYFJODjwq$",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "parents_bath_builtins",
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-PARENTS-WET-PLATFORM",
+      "guid": "2AEGC35TTJuP6wb0sFsSBk",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "parents_bath_builtins",
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BIDET-PARENTS",
+      "guid": "0urA2_ocbRFgROjTn5KTbS",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "parents_bath_builtins",
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BASIN-PARENTS",
+      "guid": "3cbb$vwQbP3flpXtrCHTEU",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "parents_bath_builtins",
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-DRESSING-STORAGE",
+      "guid": "2CsmdKJnfNYh28w4SRyMw3",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "parents_bath_builtins",
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-PARENTS-STORAGE",
+      "guid": "0DCmDrYVvS19sFNcwLMqDP",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "parents_bath_builtins",
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "BIDET-GUEST",
+      "guid": "1ljyV7LnXOhAOKNnYpGFUZ",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RAIN-KITCHEN-PATIO-9",
+      "guid": "04x5M$M6vIdeqhEprDdP04",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "COLLECTOR-KITCHEN-PATIO-9",
+      "guid": "11BRQYd7HInRraVXt6J3rR",
+      "class": "IfcWasteTerminal",
+      "storey": "first",
+      "topics": [
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RAIN-KITCHEN-PATIO-9-COVER",
+      "guid": "3q0urUBBLKnAPffELS813h",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "service_casings_and_local_tile_splashes"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-VESTIBULE-5-SUPPLY",
+      "guid": "1IOhHmxPTVvOP49Yk9_Pdj",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-VESTIBULE-5-RETURN",
+      "guid": "3ZRKmSyRrSKQjv9G6ZCeot",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-VESTIBULE-5-MOUNTS",
+      "guid": "0WGYYJj55VGwDGNRhHaLtI",
+      "class": "IfcBuildingElementProxy",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-6-RETURN",
+      "guid": "3xQeGa2wLHyOD5Uelw0$sW",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "HEAT-RISER-11-RETURN",
+      "guid": "3pePjlCEzUz8Aq4AJG8NHt",
+      "class": "IfcPipeSegment",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RAD-HALL-GARAGE",
+      "guid": "1IfRnq57zJsOtgAKLYsRPf",
+      "class": "IfcSpaceHeater",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RAD-HALL-BEHIND-STAIR",
+      "guid": "2k8JWikLvI2A6JbaerMSAL",
+      "class": "IfcSpaceHeater",
+      "storey": "ground",
+      "topics": [
+        "heating_radiators_and_visible_risers"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RAD-KITCHEN-SINK",
+      "guid": "0U9JnDkvTMfQdAxfpJgJWk",
+      "class": "IfcSpaceHeater",
+      "storey": "first",
+      "topics": [
+        "heating_radiators_and_visible_risers"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "RAD-1",
+      "guid": "2$qDB1YrPRVwgV1LGdNhXx",
+      "class": "IfcSpaceHeater",
+      "storey": "first",
+      "topics": [
+        "heating_radiators_and_visible_risers"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SINK-KITCHEN-1",
+      "guid": "2P1hBUO_bJ1BIa1ZnF5kO5",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment",
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-KITCHEN",
+      "guid": "1BiMOdIbbPb8O9NObukmRr",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SINK-KITCHEN-2",
+      "guid": "1GVeXdUt1JU942NLcVKynD",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment",
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-KITCHEN-2",
+      "guid": "0a4ZkzIurSJuMnbNMhBGtx",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-KITCHEN-SINK-COUNTER",
+      "guid": "3ZI3tVBNbUlg8jvaUjcEU5",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables",
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-KITCHEN",
+      "guid": "3GLUlx9L5HpPdIZV9CvqAS",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables",
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "SINK-PANTRY",
+      "guid": "3ldlVPUezVJRr78BRQkKD$",
+      "class": "IfcSanitaryTerminal",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment",
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "TAP-PANTRY",
+      "guid": "0e5JSrhW9QBuLxVbRzGXSN",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "sanitary_equipment"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-PANTRY-SINK-COUNTER",
+      "guid": "1FVUYhEcvMigDktnZlO5oY",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables",
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SALON-RADIATOR-SHELVES",
+      "guid": "2CrfdqG8rMnuKHcs9njgUk",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "WIN-KITCHEN-PATIO-LOW-X",
+      "guid": "1vAQdCAvrHZvIWtlf543hw",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "WIN-KITCHEN-PATIO-HIGH-X",
+      "guid": "22wory3XvJmQNmxFAnUjWb",
+      "class": "IfcWindow",
+      "storey": "first",
+      "topics": [
+        "other_doors_and_windows"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SERVANT-STORAGE-1-LONG",
+      "guid": "3GrPgUxB1ViA$RHQhkdaVB",
+      "class": "IfcFurnishingElement",
+      "storey": "ground",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-CABINET-1",
+      "guid": "3bdVZvwNfTYuXhQksfC2LL",
+      "class": "IfcFurnishingElement",
+      "storey": "ground",
+      "topics": [
+        "fixed_storage_and_tables"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-SALON",
+      "guid": "3cTzs34lLJIP_PRuGD2Yhy",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-KITCHEN",
+      "guid": "2NtphSLqfJ7PO8iKAmA4wI",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-PANTRY",
+      "guid": "3Q7NcHn9TRxOxx5UPqq9aN",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-SON",
+      "guid": "12YHXgvDvVoP4jf254f9xx",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-SHARED-BATH",
+      "guid": "2Y7etQ4znICOMFlAjiqh0o",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-PARENTS",
+      "guid": "1EeAgquHnK$fIgTN6G68GI",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-PARENT-BATH",
+      "guid": "2r77eHaIjGMQ1vMr06yFJJ",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-BOUDOIR",
+      "guid": "2raIf12ljHixRucboBuxtW",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-FIRST-HALL",
+      "guid": "3xFNAMCsnOoBZhVK97mq4R",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-WC-FIRST-WEST",
+      "guid": "1urLVyxi5OYuNueyrX2FRZ",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-WC-FIRST-EAST",
+      "guid": "19baPpNuLHqBRal3S2Yilw",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-FIRST-THRESHOLDS",
+      "guid": "1Ero3LzqLGSgx9DTIxNqga",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-SERVANTS-1-WASH",
+      "guid": "3ec9_D2q1J58KekXrEqL5P",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-SERVANTS-2-WASH",
+      "guid": "3v1f4ZYofTp9PKTyAKcfJW",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-LAUNDRY",
+      "guid": "1deLj$RP1QE9rMsBJ$JIWl",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-HALL",
+      "guid": "3sWYH_aG9KLPNoUIGdZT9I",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-CHAUFFEUR",
+      "guid": "0Sr44XU2rOFhy0_88uiPfO",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-CHAUFFEUR-BATH",
+      "guid": "2_0npjtdTVfuyLf$FrIYMZ",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-WC-GROUND-SERVICE",
+      "guid": "0CGaNVhUPNUQtjIsI8xCJC",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-WC-CHAUFFEUR",
+      "guid": "2spTY3KSLIQvvVz5cL8wmQ",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-SERVANTS-1",
+      "guid": "1n2d4VfFPRih$oyS31lDHz",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-SERVANTS-2",
+      "guid": "1YpUXQ$dzOEh$f8zHLjdbF",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-CHAUFFEUR-BEDROOM",
+      "guid": "2_3rDHpd5GbBxE3J5sNojJ",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-CELLAR-CEMENT",
+      "guid": "09kS2onHLObRFVGqanii_t",
+      "class": "IfcCovering",
+      "storey": "cellar",
+      "topics": [
+        "interior_floors"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-RAMP-INTERIOR",
+      "guid": "3VxSXDHpPJIfq970JxxJN3",
+      "class": "IfcCovering",
+      "storey": "ground",
+      "topics": [
+        "ramp_interior_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-RAMP-EXTERIOR",
+      "guid": "2_p6HZS41HevHY6aGiBLZT",
+      "class": "IfcCovering",
+      "storey": "first",
+      "topics": [
+        "ramp_exterior_finish"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-ROOF-PAVING",
+      "guid": "2fnpIVv9PLRv9EnkZl5GNq",
+      "class": "IfcCovering",
+      "storey": "roof",
+      "topics": [
+        "exterior_pavers_roof_gravel"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-ROOF-GRAVEL",
+      "guid": "163FrYoQXVF80kYgbwndvb",
+      "class": "IfcCovering",
+      "storey": "roof",
+      "topics": [
+        "exterior_pavers_roof_gravel"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "FIN-ROOF-STAIR",
+      "guid": "3wrY2LeIfOXQWk8oWEtb6Q",
+      "class": "IfcCovering",
+      "storey": "roof",
+      "topics": [
+        "exterior_pavers_roof_gravel"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-FRONT-1",
+      "guid": "19xp$QdADHR9sxAt12Ih2V",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-FRONT-2",
+      "guid": "28WL6itx1RxAsLTi1BKa5H",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-FRONT-3",
+      "guid": "27pkM8i$9NgA_1zSnr9X4V",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-FRONT-4",
+      "guid": "2VPoZWCOzUtwjFxwkLy3w2",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-FRONT-5",
+      "guid": "1xsZWZvsLR0eiPPsMXw3Ep",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-FRONT-6",
+      "guid": "3_xdj$3$XJMARRdf44Jlsw",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-FRONT-7",
+      "guid": "2Ebdv5pL1JtACxwQBT1d98",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "W-PANTRY-FRONT-8",
+      "guid": "0J0EDuEYrIgOM96If49R$6",
+      "class": "IfcWall",
+      "storey": "first",
+      "topics": [
+        "wall_envelopes",
+        "ground_first_room_programmes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "KITCHEN-APPLIANCE-CYLINDER",
+      "guid": "1mzaMn6$zOF8ET6tmPVyuc",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "KITCHEN-APPLIANCE-PLATE",
+      "guid": "1t2IWhsmvTGR9ugL3D6CYk",
+      "class": "IfcBuildingElementProxy",
+      "storey": "first",
+      "topics": [
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "KITCHEN-APPLIANCE-STAND",
+      "guid": "20QnV1yGLNrxSTzBuwy1va",
+      "class": "IfcFurnishingElement",
+      "storey": "first",
+      "topics": [
+        "fixed_storage_and_tables",
+        "kitchen_apparatus_and_counters"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PIPE-KITCHEN-VISIBLE-1",
+      "guid": "1CaAWqsXzNA8BucO_xg$Hq",
+      "class": "IfcPipeSegment",
+      "storey": "first",
+      "topics": [
+        "kitchen_apparatus_and_counters",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PIPE-KITCHEN-VISIBLE-2",
+      "guid": "2i81dxD_PR8PP2Gx9HQRr2",
+      "class": "IfcPipeSegment",
+      "storey": "first",
+      "topics": [
+        "kitchen_apparatus_and_counters",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PIPE-KITCHEN-VISIBLE-3",
+      "guid": "0jGfWqBcLReuvm7C5QdQrU",
+      "class": "IfcPipeSegment",
+      "storey": "first",
+      "topics": [
+        "kitchen_apparatus_and_counters",
+        "drains_flues_and_chimneys"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    },
+    {
+      "tag": "PAR-E-REAR",
+      "guid": "1bUWEBLTnI$8LP1yjizx51",
+      "class": "IfcWall",
+      "storey": "roof",
+      "topics": [
+        "wall_envelopes",
+        "paint_render_surface_identity"
+      ],
+      "status": "AUTHORED_NOT_A_HISTORICAL_PERFECTION_CERTIFICATE"
+    }
+  ],
+  "global_limits": [
+    "Original_RGB_and_many_construction_gauges_unmeasured",
+    "Full_concealed_services_unrecovered",
+    "Individual_stock/supply_counts_not_automatically_installed_geometry",
+    "Final_frozen_native/interference/render_acceptance_pending"
+  ],
+  "physical_unmapped": []
+}

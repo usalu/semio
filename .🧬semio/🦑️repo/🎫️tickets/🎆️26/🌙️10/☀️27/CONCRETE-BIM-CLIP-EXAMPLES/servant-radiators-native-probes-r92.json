@@ -1,0 +1,44 @@
+{
+  "probes": {
+    "FIX-SERVANT-RADIATOR-1": [
+      {
+        "name": "actual central inter-section air gap",
+        "xyz": [
+          3.675,
+          13.205,
+          0.4
+        ],
+        "occupied": false
+      },
+      {
+        "name": "actual cast metal section",
+        "xyz": [
+          3.735,
+          13.0175,
+          0.4
+        ],
+        "occupied": true
+      }
+    ],
+    "FIX-SERVANT-RADIATOR-2": [
+      {
+        "name": "actual central inter-section air gap",
+        "xyz": [
+          3.675,
+          17.35,
+          0.4
+        ],
+        "occupied": false
+      },
+      {
+        "name": "actual cast metal section",
+        "xyz": [
+          3.735,
+          17.1625,
+          0.4
+        ],
+        "occupied": true
+      }
+    ]
+  }
+}

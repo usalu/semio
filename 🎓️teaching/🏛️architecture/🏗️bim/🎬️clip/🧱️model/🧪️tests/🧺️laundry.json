@@ -1,0 +1,73 @@
+{
+  "source": "CMN2021 §7 two concrete troughs; SAB2024-p45 author completed-state reconstruction; original1929 comparison kept separate",
+  "uncertainty_m": 0.15,
+  "tag": "FIX-LAUNDRY",
+  "class": "IfcSanitaryTerminal",
+  "predefined_type": "SINK",
+  "bounds": [
+    3.235,
+    18.54558823529412,
+    3.793823529411765,
+    20.361764705882354
+  ],
+  "bowls": [
+    {
+      "tap": "TAP-LAUNDRY-1",
+      "bounds": [
+        3.235,
+        18.54558823529412,
+        3.793823529411765,
+        19.188235294117646
+      ],
+      "mount": [
+        3.275,
+        18.866911764705883,
+        0.95
+      ],
+      "outlet": [
+        3.475,
+        18.866911764705883,
+        1.145
+      ],
+      "drain": [
+        3.514411764705882,
+        18.866911764705883,
+        0.69
+      ]
+    },
+    {
+      "tap": "TAP-LAUNDRY-2",
+      "bounds": [
+        3.235,
+        19.272058823529413,
+        3.793823529411765,
+        20.361764705882354
+      ],
+      "mount": [
+        3.275,
+        19.816911764705882,
+        0.95
+      ],
+      "outlet": [
+        3.475,
+        19.816911764705882,
+        1.145
+      ],
+      "drain": [
+        3.514411764705882,
+        19.816911764705882,
+        0.69
+      ]
+    }
+  ],
+  "wall": 0.05,
+  "back_deck": 0.07,
+  "floor": [
+    0.65,
+    0.73
+  ],
+  "rim": 0.95,
+  "legs": 8,
+  "tap_segments": 32,
+  "tolerance": 1e-8
+}

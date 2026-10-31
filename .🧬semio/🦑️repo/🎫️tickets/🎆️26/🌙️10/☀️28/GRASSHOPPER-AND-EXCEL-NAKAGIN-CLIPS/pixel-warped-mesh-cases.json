@@ -1,0 +1,473 @@
+{
+  "roundoff_ulps": 64,
+  "tie_diagonal": [
+    0,
+    2
+  ],
+  "cases": [
+    {
+      "id": "warped-shorter-1-3",
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0.5
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "warped": true,
+      "triangles": [
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "warped-shorter-0-2",
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0.5
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "warped": true,
+      "triangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "warped-tie-0-2",
+      "vertices": [
+        [
+          0,
+          0,
+          0.25
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0.25
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "warped": true,
+      "triangles": [
+        [
+          0,
+          1,
+          2
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "actual-entry-handle",
+      "vertices": [
+        [
+          -0.1799497474683059,
+          -0.08500000000000009,
+          0.9699497474683058
+        ],
+        [
+          -0.17774562589193463,
+          -0.13088156116209823,
+          0.9699497474683058
+        ],
+        [
+          -0.17500000000000004,
+          -0.1350000000000001,
+          0.972
+        ],
+        [
+          -0.17500000000000004,
+          -0.08500000000000009,
+          0.972
+        ]
+      ],
+      "warped": true,
+      "triangles": [
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "planar-preserves-existing-boundary",
+      "vertices": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "warped": false,
+      "triangles": [
+        [
+          3,
+          0,
+          1
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ]
+    }
+  ],
+  "facing_cases": [
+    {
+      "id": "warped-forward-facet-with-backward-raw-normal",
+      "items": [
+        {
+          "index": 0,
+          "key": "facing-source-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            -1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              2,
+              2,
+              0
+            ],
+            [
+              0,
+              2,
+              1
+            ],
+            [
+              2,
+              0,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                0,
+                2
+              ],
+              [
+                2,
+                0
+              ]
+            ]
+          ],
+          "removed": false,
+          "raw_camera_facing": false,
+          "facet_camera_facing": [
+            [
+              false,
+              false
+            ]
+          ]
+        },
+        {
+          "index": 1,
+          "key": "facing-source-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              -5
+            ],
+            [
+              2,
+              0,
+              -5
+            ],
+            [
+              2,
+              2,
+              -5
+            ],
+            [
+              0,
+              2,
+              -5
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ]
+          ],
+          "removed": false,
+          "raw_camera_facing": false,
+          "facet_camera_facing": [
+            [
+              false,
+              false
+            ]
+          ]
+        }
+      ],
+      "point": [
+        1.5,
+        0.75
+      ],
+      "nearest": [
+        0
+      ]
+    },
+    {
+      "id": "planar-canonical-face-with-backward-raw-normal",
+      "items": [
+        {
+          "index": 0,
+          "key": "facing-source-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            -1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              2,
+              2,
+              1
+            ],
+            [
+              0,
+              2,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ]
+          ],
+          "removed": false,
+          "raw_camera_facing": false,
+          "facet_camera_facing": [
+            [
+              false,
+              false
+            ]
+          ]
+        },
+        {
+          "index": 1,
+          "key": "facing-source-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              -5
+            ],
+            [
+              2,
+              0,
+              -5
+            ],
+            [
+              2,
+              2,
+              -5
+            ],
+            [
+              0,
+              2,
+              -5
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                2,
+                0
+              ],
+              [
+                2,
+                2
+              ],
+              [
+                0,
+                2
+              ]
+            ]
+          ],
+          "removed": false,
+          "raw_camera_facing": false,
+          "facet_camera_facing": [
+            [
+              false,
+              false
+            ]
+          ]
+        }
+      ],
+      "point": [
+        1.5,
+        0.75
+      ],
+      "nearest": [
+        0
+      ]
+    }
+  ]
+}

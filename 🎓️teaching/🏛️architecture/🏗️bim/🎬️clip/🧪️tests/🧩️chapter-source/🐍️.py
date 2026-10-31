@@ -15,6 +15,161 @@ CASES = json.loads((HERE / "🔣️.json").read_text(encoding="utf-8"))
 class BimChapterSourceContract(unittest.TestCase):
     """🧩 Reject stale provider keys and duplicated geometry before native rendering."""
 
+    def test_native_class_matrix_pages_keep_resolvable_nonoverlapping_cells(self):
+        """📊 Preserve every matrix class in readable native pages verified with independent GEOS boxes."""
+        from shapely.geometry import box
+        import numpy as np
+        case=CASES['matrix_pages']
+        tree=ast.parse((CLIP/'🧩️models/🐍️.py').read_text(encoding='utf-8'))
+        method=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='_matrix_pages')
+        scope={}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[method],type_ignores=[])),'actual-matrix-page-layout','exec'),scope)
+        subject=type('MatrixPages',(),{'_matrix_pages':scope['_matrix_pages']})()
+        for example in case['cases']:
+            classes=[f'IfcNeutral{i}' for i in range(example['count'])]
+            pages=subject._matrix_pages(classes)
+            self.assertEqual([len(p['classes']) for p in pages],example['sizes'])
+            self.assertEqual([name for p in pages for name in p['classes']],classes)
+            for page in pages:
+                self.assertEqual(page['top'],case['top'])
+                self.assertEqual(page['pitch'],case['pitch'])
+                cells=[box(0,page['top']-i*page['pitch']-case['cell_height']/2,1,page['top']-i*page['pitch']+case['cell_height']/2) for i in range(len(page['classes']))]
+                self.assertTrue(all(c.bounds[1]>=case['bottom'] for c in cells))
+                self.assertTrue(all(a.intersection(b).area==0 for i,a in enumerate(cells) for b in cells[i+1:]))
+                np.testing.assert_allclose([c.centroid.y for c in cells],[page['top']-i*page['pitch'] for i in range(len(cells))],rtol=0,atol=1e-12)
+        schema=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='_schema')
+        self.assertTrue(any(isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=='_matrix_pages' for n in ast.walk(schema)))
+
+    def test_model_class_pages_preserve_every_count_without_table_overlap(self):
+        """📑 Execute source-driven row pagination and independently verify every visible page with GEOS."""
+        import numpy as np
+        from shapely.geometry import box
+        case=CASES['class_pages']
+        tree=ast.parse((CLIP/'🧩️models/🐍️.py').read_text(encoding='utf-8'))
+        function=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='_rows')
+        class Group(list):
+            def add(self,*items):
+                self.extend(items)
+                return self
+        class Tracker:
+            def __init__(self,value):
+                self.value=value
+            def animate(self,**kwargs):
+                return self
+            def set_value(self,value):
+                self.value=value
+                return {'action':'count','value':value}
+        scope={'VGroup':Group,'ValueTracker':Tracker,'COLORS':{'architecture':'blue'},'MUTED':'grey','LINEAR':None,'FadeIn':lambda item,**kwargs:{'action':'in','item':item},'FadeOut':lambda item,**kwargs:{'action':'out','item':list(item)}}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[])),'actual-native-class-pages','exec'),scope)
+        subject=type('Pages',(),{'_rows':scope['_rows']})()
+        subject.number=lambda value,digits:str(value)
+        subject._tags=lambda name,kind:kind
+        subject._lit=lambda drawing,tags:{'action':'highlight','tag':tags}
+        subject._class_row=lambda tracker,kind,text,y,color:{'type':'row','class':kind,'y':y}
+        subject.label=lambda en,de,point,**kwargs:{'type':'page','en':en,'de':de,'y':point[1]}
+        for example in case['cases']:
+            count=example['count']
+            counts={f'IfcNeutral{i}':i+1 for i in range(count)}
+            subject.info={'architecture':{'counts_by_class':counts}}
+            rows=[(kind,('English','Deutsch')) for kind in counts]
+            final,steps=subject._rows('architecture',rows,case['y0'],None,pitch=case['pitch'],page_size=case['page_size'])
+            self.assertEqual(len(steps),count)
+            visible,seen,pages,ys=set(),[],[],[]
+            for index,(_,animations) in enumerate(steps):
+                for animation in animations:
+                    if animation['action']=='out':
+                        visible.difference_update(item['class'] for item in animation['item'] if item['type']=='row')
+                    elif animation['action']=='in':
+                        item=animation['item']
+                        if item['type']=='row':
+                            visible.add(item['class']);seen.append(item['class']);ys.append(item['y'])
+                        else:
+                            pages.append(item)
+                self.assertLessEqual(len(visible),case['page_size'])
+                rectangles=[box(0,case['y0']-(int(kind.removeprefix('IfcNeutral'))%case['page_size'])*case['pitch']-case['row_height']/2,1,case['y0']-(int(kind.removeprefix('IfcNeutral'))%case['page_size'])*case['pitch']+case['row_height']/2) for kind in visible]
+                self.assertTrue(all(r.bounds[1]>=case['bottom'] for r in rectangles))
+                self.assertTrue(all(a.intersection(b).area==0 for i,a in enumerate(rectangles) for b in rectangles[i+1:]))
+            np.testing.assert_equal(ys,[case['y0']-(i%case['page_size'])*case['pitch'] for i in range(count)])
+            self.assertEqual(seen,list(counts))
+            self.assertEqual([page['en'] for page in pages],[f'Classes {a}–{b} of {count}' for a,b in example['pages']])
+            self.assertEqual([page['de'] for page in pages],[f'Klassen {a}–{b} von {count}' for a,b in example['pages']])
+            self.assertEqual({row['class'] for row in final if row['type']=='row'},visible)
+        for name in case['clear_after']:
+            function=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='_'+name)
+            stage=next(n for n in function.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Attribute) and t.attr=='stage' for t in n.targets))
+            self.assertFalse(any(isinstance(n,ast.Name) and n.id=='rows' for n in ast.walk(stage.value)))
+
+    def test_class_highlights_use_the_bound_source_snapshot_and_order(self):
+        """🎯 Resolve actual class tags from the chapter snapshot without reloading another source cohort."""
+        import numpy as np
+        from types import SimpleNamespace
+        tree=ast.parse((CLIP/'🧩️models/🐍️.py').read_text(encoding='utf-8'))
+        method=next(n for n in ast.walk(tree) if isinstance(n,ast.FunctionDef) and n.name=='_tags')
+        def forbidden(*args,**kwargs):
+            raise AssertionError('Global source reload is not the bound chapter model')
+        scope={'_model':SimpleNamespace(element=forbidden)}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[method],type_ignores=[])),'actual-class-highlight-tags','exec'),scope)
+        subject=type('BoundTags',(),{'_tags':scope['_tags']})()
+        case=CASES['class_highlights']
+        subject.model=case['source']
+        subject.info={'architecture':{'element_tags':case['order']}}
+        for kind,expected in case['expected'].items():
+            np.testing.assert_equal(subject._tags('architecture',kind),expected)
+
+    def test_model_loader_reuses_producer_and_isolates_inputs_and_returns(self):
+        """📦 Preserve canonical producer identity while every caller owns source and geometry dictionaries."""
+        import importlib
+        from copy import deepcopy
+        from unittest.mock import patch
+        from numpy.testing import assert_equal
+        tree=ast.parse((CLIP/'🧪️tests/🐍️.py').read_text(encoding='utf-8'))
+        function=next(n for n in tree.body if isinstance(n,ast.FunctionDef) and n.name=='model_api')
+        scope={'importlib':importlib,'CLIP':CLIP}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[function],type_ignores=[])),'actual-standard-model-loader','exec'),scope)
+        first,second=scope['model_api'](),scope['model_api']()
+        self.assertIs(first,second)
+        self.assertIs(first,importlib.import_module(CASES['model_loader']['module']))
+        producer=first._building_geometry_uncached
+        left,right=first.load_model(),second.load_model()
+        self.assertIsNot(left,right)
+        assert_equal(left,right)
+        left['car']['width']['value']+=1
+        assert_equal(second.load_model(),right)
+        fixture=CASES['model_loader']
+        model=deepcopy(fixture['neutral_input'])
+        with patch.object(first,'_building_geometry_uncached',lambda value:deepcopy(fixture['neutral_output'])):
+            first._geometry_models_cached.cache_clear()
+            try:
+                output=first.building_geometry(model)
+                output['parts'][0]['outline'][0][0]=999
+                assert_equal(second.building_geometry(deepcopy(model)),fixture['neutral_output'])
+                assert_equal(model,fixture['neutral_input'])
+            finally:
+                first._geometry_models_cached.cache_clear()
+        self.assertIs(scope['model_api']()._building_geometry_uncached,producer)
+
+    def test_information_grid_highlights_follow_coordinates_instead_of_support_names(self):
+        """📍 Compare actual grid-key projection with independent NumPy coordinate matching."""
+        import numpy as np
+        case = CASES["information_grid_projection"]
+        tree = ast.parse((CLIP / "📊️information" / "🐍️.py").read_text(encoding="utf-8"))
+        scene = next(node for node in tree.body if isinstance(node, ast.ClassDef))
+        method = next(node for node in scene.body if isinstance(node, ast.FunctionDef) and node.name == "_grid_keys")
+        space = {}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[method], type_ignores=[])), "actual-grid-projection", "exec"), space)
+        subject = type("Projection", (), {"_grid_keys": space["_grid_keys"]})()
+        subject._g = {"grid": case["grid"]}
+        points = {row["tag"]: row["point"] for row in case["supports"]}
+        subject._xy = lambda tag: points[tag]
+        for row in case["supports"]:
+            with self.subTest(tag=row["tag"]):
+                actual = subject._grid_keys(row["tag"])
+                oracle = ["label_" + axis + ":" + label for index, axis in enumerate(("x", "y"))
+                          for value, label in zip(case["grid"][axis], case["grid"]["labels_" + axis])
+                          if np.isclose(value, row["point"][index], rtol=0, atol=1e-6)]
+                self.assertEqual(actual, row["expected"])
+                self.assertEqual(actual, oracle)
+
     def test_native_class_matrix_and_chimney_meanings_include_every_discipline(self):
         """🧬 Execute the actual matrix prefix and bilingual class rows with newer native families."""
         from types import SimpleNamespace
@@ -33,8 +188,9 @@ class BimChapterSourceContract(unittest.TestCase):
         subject._piloti_label=lambda:('columns','Stützen')
         self.assertEqual(set(subject._schema()),set().union(*case['counts'].values()))
         for discipline in case['counts']:
-            if 'IfcChimney' in case['counts'][discipline]:
-                self.assertEqual(dict(subject._discipline_rows(discipline))['IfcChimney'],(case['chimney']['en'],case['chimney']['de']))
+            for kind, meaning in (('IfcChimney', case['chimney']), ('IfcSanitaryTerminal', case['sanitary']), ('IfcLightFixture', case['lights']), ('IfcCovering',case['coverings'])):
+                if kind in case['counts'][discipline]:
+                    self.assertEqual(dict(subject._discipline_rows(discipline))[kind], (meaning['en'], meaning['de']))
 
     def test_service_placement_oracle_checks_native_parts_without_requiring_an_axis(self):
         """🧱 Execute the real generic placement loop on a prism-only native chimney."""
@@ -331,13 +487,17 @@ class BimChapterSourceContract(unittest.TestCase):
         spec=importlib.util.spec_from_file_location("chapter_model_contract",CLIP/'🧱️model'/'🐍️.py')
         api=importlib.util.module_from_spec(spec)
         spec.loader.exec_module(api)
-        model=globals().get("CAPTURED_MODEL") or api.load_model()
+        from copy import deepcopy
+        model=deepcopy(globals().get("CAPTURED_MODEL") or api.load_model())
+        for probe in [*CASES["class_partition"]["coverings"],*CASES["class_partition"].get("native_probes",[])]:
+            model["elements"].append({"tag":probe["tag"],"guid":api.global_id(probe["tag"]),"class":probe["class"],"predefined_type":probe["predefined_type"],"metadata":{"domains":[probe["model"]]}})
+            next(item for item in model["models"] if item["id"]==probe["model"])["element_tags"].append(probe["tag"])
         info={item["id"]:api.partial_model(item["id"],model) for item in model["models"]}
         source=(CLIP/'🧩️models'/'🐍️.py').read_text(encoding='utf-8')
         scene=next(node for node in ast.parse(source).body if isinstance(node,ast.ClassDef))
         names={'_discipline_rows','_loss_groups','_piloti_label'}
         functions=[node for node in scene.body if isinstance(node,ast.FunctionDef) and node.name in names]
-        space={'STAR':'*'}
+        space={'STAR':'*','_model':api}
         exec(compile(ast.fix_missing_locations(ast.Module(body=functions,type_ignores=[])),'chapter-partition','exec'),space)
         subject=type('Partition',(),{name:space[name] for name in names})()
         subject.info,subject.model=info,model
@@ -345,6 +505,11 @@ class BimChapterSourceContract(unittest.TestCase):
         subject.number=lambda value,digits:str(value)
         registry={item['tag']:item for group in ('elements','spaces') for item in model[group]}
         source_tags=set().union(*(set(partial['element_tags']) for partial in info.values()))
+        for tag,obj in registry.items():
+            if api.is_architectural_covering(obj):
+                self.assertEqual(obj["metadata"]["domains"],["architecture"])
+                self.assertIn(tag,info["architecture"]["element_tags"])
+                self.assertNotIn(tag,info["services"]["element_tags"])
         for language in ('en','de'):
             subject.tr=lambda en,de:en if language=='en' else de
             for name,partial in info.items():
@@ -352,12 +517,24 @@ class BimChapterSourceContract(unittest.TestCase):
                 independent=Counter(registry[tag]['class'] for tag in partial['element_tags'])
                 self.assertEqual({key for key,_ in rows},set(independent))
                 self.assertTrue(all(en.strip() and de.strip() for _,(en,de) in rows))
+                for probe in CASES["class_partition"].get("native_probes",[]):
+                    if probe["model"]==name:self.assertEqual(dict(rows)[probe["class"]],(probe["meaning"]["en"],probe["meaning"]["de"]))
                 self.assertEqual(sum(independent.values()),len(partial['element_guids']))
             groups=subject._loss_groups()
             omitted=[tag for _,tags,_,_,_ in groups for tag in tags]
             self.assertEqual(set(omitted),source_tags-set(CASES['class_partition']['kept']))
             self.assertEqual(len(omitted),len(set(omitted)))
             self.assertEqual(omitted.count(CASES['class_partition']['shared']),1)
+            for family in ('sanitary', 'lights'):
+                entry = CASES['class_partition'][family]
+                tags = {tag for tag in source_tags if registry[tag]['class'] == entry['class']}
+                self.assertTrue(tags)
+                service_tags = next(set(row[1]) for row in groups if row[0].startswith(entry[language]))
+                self.assertTrue(tags <= service_tags)
+
+            for probe in [*CASES["class_partition"]["coverings"],*CASES["class_partition"].get("native_probes",[])]:
+                tags=next(set(row[1]) for row in groups if row[0].startswith(probe["row"][language]))
+                self.assertIn(probe["tag"],tags)
 
 
     def test_elevation_labels_preserve_source_millimetres_and_negative_signs(self):
@@ -375,5 +552,22 @@ class BimChapterSourceContract(unittest.TestCase):
 
 
 
+    def test_finish_allowance_ownership_stays_source_bound_bilingual_and_readable(self):
+        """⚖️ Preserve the assumed allowance, no double mass and incomplete-inventory distinction in both languages."""
+        import importlib
+        case=CASES['finish_ownership'];api=importlib.import_module('🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️')
+        self.assertIn(case['source_assumption'],{row['id'] for row in api.load_model()['translation']['assumptions']})
+        source=(CLIP/case['chapter']/'🐍️.py').read_text();scene=next(n for n in ast.parse(source).body if isinstance(n,ast.ClassDef))
+        narration=next(ast.literal_eval(n.value) for n in scene.body if isinstance(n,ast.Assign) and any(isinstance(a,ast.Name) and a.id=='NARRATION' for a in n.targets))
+        row=next((r for r in narration if r[0]==case['clause']),None);self.assertIsNotNone(row)
+        for language,index in (('en',1),('de',2)):
+            self.assertEqual(row[index],case[language]);self.assertIn(row[index],(CLIP/('🗣️transcript.'+language+'.md')).read_text())
+            self.assertLessEqual(len(row[index].split())/case['seconds'],3.)
+            self.assertIn(case['note_'+language],{n.value for n in ast.walk(scene) if isinstance(n,ast.Constant) and isinstance(n.value,str)})
+        method=next(n for n in scene.body if isinstance(n,ast.FunctionDef) and n.name=='_beat_assumptions')
+        call=next(n for n in ast.walk(method) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=='step' and n.args and isinstance(n.args[0],ast.Constant) and n.args[0].value==case['clause'])
+        self.assertEqual(next(ast.literal_eval(k.value) for k in call.keywords if k.arg=='seconds'),case['seconds'])
+
 if __name__ == "__main__":
     unittest.main()
+                       

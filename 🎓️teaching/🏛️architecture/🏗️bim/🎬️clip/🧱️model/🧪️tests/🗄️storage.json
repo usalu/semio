@@ -1,0 +1,76 @@
+{
+  "source": "CMN2021 fixed furnishing programme; existing registered envelopes retained; cabinet internals and hardware inferred; originalSAB2024book25/46 guestcabinetY-run replacesincorrecttransversebar, registered±.15m; original46 full-depth pantry cupboard runs replace the old hall-blocking envelope",
+  "floor": 3.17,
+  "cabinets": [
+    {
+      "tag": "FIX-GUEST-WARDROBE",
+      "bounds": [
+        2.012,
+        10.219,
+        2.45,
+        11.5,
+        0,
+        1.75
+      ],
+      "cavities": [
+        [
+          2.23,
+          10.9,
+          0.3
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-SON-STORAGE",
+      "bounds": [
+        0.5,
+        16.65,
+        2.3,
+        17.1,
+        0,
+        0.6
+      ],
+      "cavities": [
+        [
+          1.4,
+          16.875,
+          0.2
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-PANTRY-STORAGE",
+      "bounds": [
+        3.04,
+        1.5573529411764706,
+        3.7441176470588236,
+        5.931,
+        0,
+        1.9
+      ],
+      "cavities": [
+        [
+          3.3,
+          2.8,
+          0.3
+        ],
+        [
+          3.4,
+          5.15,
+          0.25
+        ]
+      ]
+    }
+  ],
+  "roles": [
+    "cabinet_carcass",
+    "cabinet_shelf",
+    "cabinet_front",
+    "cabinet_pull"
+  ],
+  "materials": [
+    "MAT-WOOD",
+    "MAT-METAL"
+  ],
+  "tolerance": 1e-7
+}

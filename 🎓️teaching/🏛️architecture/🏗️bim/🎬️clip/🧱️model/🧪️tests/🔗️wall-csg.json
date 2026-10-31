@@ -1,0 +1,6 @@
+{
+  "bounds": [1.75, -0.5, 2.25, 0.5],
+  "stock": {"kind":"prism","outline":[[1.5,-0.5],[2.5,-0.5],[2.5,0.5],[1.5,0.5]],"holes":[],"z0":0,"z1":1},
+  "bore": {"kind":"profile_extrusion","axis":[2,0],"rotation":0,"profile":{"shape":"circle","radius":0.2,"voids":[]},"z0":0,"z1":1},
+  "expected_removed_rectangle_volume": 0.5
+}

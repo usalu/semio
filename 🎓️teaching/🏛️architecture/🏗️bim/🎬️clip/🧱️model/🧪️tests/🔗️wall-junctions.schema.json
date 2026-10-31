@@ -1,0 +1,257 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Declared Layered Wall Junction Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "height",
+    "layers",
+    "priorities",
+    "cases",
+    "positive_overlap_width",
+    "languages",
+    "coating_material"
+  ],
+  "properties": {
+    "coating_material":{"type":"string","minLength":1},
+    "height": {
+      "const": 3
+    },
+    "languages": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "positive_overlap_width": {
+      "const": 2e-09
+    },
+    "layers": {
+      "type": "object",
+      "required": [
+        "A",
+        "B"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "A": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "material",
+              "thickness"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "material": {
+                "type": "string"
+              },
+              "thickness": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        },
+        "B": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "material",
+              "thickness"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "material": {
+                "type": "string"
+              },
+              "thickness": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "priorities": {
+      "type": "object",
+      "required": [
+        "A",
+        "B"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "A": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        },
+        "B": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 100
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "paths",
+          "sides",
+          "connection_types",
+          "bounds",
+          "expected_volume",
+          "expected_union",
+          "expected_raw_overlap"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "paths": {
+            "type": "object",
+            "required": [
+              "A",
+              "B"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "A": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 3,
+                "items": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "B": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              }
+            }
+          },
+          "sides": {
+            "type": "object",
+            "required": [
+              "A",
+              "B"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "A": {
+                "enum": [
+                  -1,
+                  1
+                ]
+              },
+              "B": {
+                "enum": [
+                  -1,
+                  1
+                ]
+              }
+            }
+          },
+          "connection_types": {
+            "type": "object",
+            "required": [
+              "A",
+              "B"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "A": {
+                "enum": [
+                  "ATSTART",
+                  "ATEND",
+                  "ATPATH"
+                ]
+              },
+              "B": {
+                "enum": [
+                  "ATSTART",
+                  "ATEND",
+                  "ATPATH"
+                ]
+              }
+            }
+          },
+          "bounds": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          },
+          "expected_volume": {
+            "type": "object",
+            "required": [
+              "A",
+              "B"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "A": {
+                "type": "number"
+              },
+              "B": {
+                "type": "number"
+              }
+            }
+          },
+          "expected_union": {
+            "type": "number"
+          },
+          "expected_raw_overlap": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

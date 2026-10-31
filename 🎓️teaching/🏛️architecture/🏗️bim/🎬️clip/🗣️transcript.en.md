@@ -45,9 +45,9 @@ A thicker circular support or a wider car shifts the threshold; the full route s
 
 The assumed arrival is a teaching scenario. Historical descriptions state capacity for three cars; fitting three full-size cars remains unverified.
 
-The swept rectangle is checked against actual height-overlapping building parts, including services and the hoist jib; the smallest clearance governs.
+At car height, the swept envelope checks all actual parts, including services and hoist jib; the smallest gap governs.
 
-The translucent entrance surround and opaque timber door leaves follow the source-informed plan. The assumed arrival is a separate teaching route.
+The source-informed entrance has translucent surrounds and opaque timber leaves. The assumed arrival is a separate teaching route.
 
 A piloti carries more properties: its material, whether it bears load, and whether it is external.
 
@@ -151,9 +151,9 @@ Rooms are objects too: the modelled spaces, each with its area, belong to their 
 
 The facade build-up distinguishes render, two brick leaves, an air cavity and plaster.
 
-The structure model holds pilotis, slabs, ramp, stairs and auxiliary lintels, hollow U supports and shelves; several members are shared with architecture.
+Pilotis, slabs, ramp, stairs, auxiliary lintels, hollow U supports and shelves form the structure; architecture shares several members.
 
-Original services include drains inside supports 2 and 4, heating and water risers, soil stack and flue. Detailed envelopes and incomplete routes retain their uncertainties.
+Original drains in supports 2 and 4, heating and water risers, soil stack and flue retain uncertain envelopes and incomplete routes.
 
 Three models share one schema. Counts refer to IFC products; a stair assembly can contain many physical parts.
 
@@ -203,6 +203,8 @@ The native slab retains ramp, stair and service apertures. Cellar hatches have s
 
 The analysis needs assumptions: self-weight from the thickness, finishes, imposed load, and the support conditions.
 
+Teaching allowance includes floor coverings; their mass is not added twice. It is not a full inventory of nonstructural mass.
+
 The load is a stack: the slab's own weight, the finishes and the imposed load add up to one area load.
 
 Each selected support receives the slab region up to the midlines to its neighbours, clipped to the slab and its openings.
@@ -229,7 +231,7 @@ The slab record holds class, properties, author and revision; none of these is t
 
 Reports say water came through the flat roof each autumn; our teaching scenario starts from this leak.
 
-The source distinguishes the original reconstructed state from later damage evidence. The illustrated water path is schematic, without an invented membrane layer.
+The reconstructed original state differs from later damage evidence. This water path is schematic; no membrane layer is invented.
 
 In an explicit repair scenario, a design event increases the reference paving reserve from 0.09 to 0.14 m; the slab keeps its GlobalId.
 

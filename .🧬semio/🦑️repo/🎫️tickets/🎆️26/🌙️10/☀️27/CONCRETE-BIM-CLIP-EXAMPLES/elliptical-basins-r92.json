@@ -1,0 +1,122 @@
+{
+  "title": "Original Hall and Parents Ellipse Orientation and Size R92",
+  "sources": {
+    "hall_author": "book45 ground plan, u385..404/v458..486 approximate outerline",
+    "hall_original": "FLC19441 book24, principal outerline approximatelyu330..346/v461..489; local gridpitch≈164pxX/159pxY per4.75m",
+    "parents_author": "book46 firstplan, longYoval withpaired lowXtapmarks, crop495/460/38/45",
+    "parents_original": "FLC19442 book25, approximateu213..230/v297..325; localgridpitch≈160px per4.75m",
+    "text": "book240: hall and Mme elliptical freestanding pedestal basins, original son basin samefamily"
+  },
+  "measurement_grade": "Raster-scaled outlines, not dimensionleaders or measured manufacturer dimensions. Bounds include lineblur; source states differ and hall basin disappearedby1965 perbook240.",
+  "fixtures": [
+    {
+      "tag": "FIX-HALL-BASIN",
+      "fixed_axis": [
+        8.128,
+        13.15
+      ],
+      "long_axis": "Y",
+      "taps_side": "lowX",
+      "author_trace": {
+        "pixels": [
+          385,
+          458,
+          404,
+          486
+        ],
+        "scaled_size_xy": [
+          0.5308823529411765,
+          0.7823529411764706
+        ]
+      },
+      "original_trace": {
+        "pixels": [
+          330,
+          461,
+          346,
+          489
+        ],
+        "pitch_xy": [
+          164,
+          159
+        ],
+        "scaled_size_xy": [
+          0.4634146341463415,
+          0.8364779874213837
+        ]
+      },
+      "construction_candidate": {
+        "size_xy": [
+          0.46,
+          0.8
+        ],
+        "height": 0.88,
+        "tap_offsets_y": [
+          -0.12,
+          0.12
+        ],
+        "tap_stem_x": 7.9190000000000005,
+        "spout_target_x": 8.068
+      },
+      "uncertainty": {
+        "size_x_m": 0.06,
+        "size_y_m": 0.09,
+        "position_m": 0.12
+      },
+      "warning": "Candidate.46m Xdepth is supported as inference within original rasterbounds, not a recovered historical dimension. .42m is not independently secured. Do not shift axis/post19 toforce hallroute."
+    },
+    {
+      "tag": "BASIN-PARENTS",
+      "fixed_axis": [
+        4.945588235294117,
+        13.46029411764706
+      ],
+      "long_axis": "Y",
+      "taps_side": "lowX",
+      "original_trace": {
+        "pixels": [
+          213,
+          297,
+          230,
+          325
+        ],
+        "pitch_xy": [
+          160,
+          160
+        ],
+        "scaled_size_xy": [
+          0.5046875,
+          0.83125
+        ]
+      },
+      "construction_candidate": {
+        "size_xy": [
+          0.46,
+          0.8
+        ],
+        "height": 0.88,
+        "tap_offsets_y": [
+          -0.12,
+          0.12
+        ],
+        "tap_stem_x": 4.736588235294118,
+        "spout_target_x": 4.885588235294118,
+        "absolute_rim_z": 4.05,
+        "height_status": "Retains actual current.88local rim; previous.91candidate withdrawn. No original heightmeasurement."
+      },
+      "uncertainty": {
+        "size_x_m": 0.06,
+        "size_y_m": 0.09,
+        "position_m": 0.15
+      },
+      "warning": "Current144part body has no taps; paired lowX tapmarks are visible in author46. New paired assembly required; full core/finish and height dimensions inferred."
+    }
+  ],
+  "acceptance": [
+    "Keep fixed centres and structuralposts unchanged",
+    "Long axisY and paired lowXtap placement follow both plans",
+    "Probe real ceramic rim/deck contact after resizing/rotation; no floatingstem assumedfromboundingbox",
+    "Open bores and dischargepoints inside actual cavity; no concealedpipe routeclaim",
+    "Independent actual hall0.8m passage test; do notlabel rastercandidate as measurement"
+  ]
+}

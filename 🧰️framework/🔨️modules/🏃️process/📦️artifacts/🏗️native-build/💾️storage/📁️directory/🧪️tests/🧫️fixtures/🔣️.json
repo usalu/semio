@@ -803,5 +803,27 @@
         "none"
       ]
     }
+  ],
+  "foldSafeRefusals": [
+    {
+      "key": "caseBuild",
+      "accepted": true
+    },
+    {
+      "key": "caseFeature",
+      "accepted": true
+    },
+    {
+      "key": "caseAccess",
+      "accepted": true
+    },
+    {
+      "key": "caseNotEmpty",
+      "accepted": false
+    },
+    {
+      "key": "caseUnverified",
+      "accepted": false
+    }
   ]
 }

@@ -1,0 +1,314 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "numeric_policy",
+    "cases",
+    "control",
+    "invalid_inputs",
+    "conditioned_plane",
+    "lineage",
+    "ray_boundary"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "numeric_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ulp_multiplier",
+        "source_planes_only"
+      ],
+      "properties": {
+        "ulp_multiplier": {
+          "const": 64
+        },
+        "source_planes_only": {
+          "const": true
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "towards",
+          "faces",
+          "probes",
+          "minimum_fragments"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "towards": {
+            "$ref": "#/$defs/vector"
+          },
+          "faces": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/face"
+            }
+          },
+          "probes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "point",
+                "nearest"
+              ],
+              "properties": {
+                "point": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "nearest": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          },
+          "minimum_fragments": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cancel_before",
+        "cancel_during_partition",
+        "progress_complete",
+        "deep_stack_count",
+        "orthographic_rotations",
+        "validation_cancel_after_checks",
+        "validation_expected_turns"
+      ],
+      "properties": {
+        "cancel_before": {
+          "const": true
+        },
+        "cancel_during_partition": {
+          "const": true
+        },
+        "progress_complete": {
+          "const": true
+        },
+        "deep_stack_count": {
+          "const": 1050
+        },
+        "orthographic_rotations": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "$ref": "#/$defs/vector"
+            }
+          }
+        },
+        "validation_cancel_after_checks": {
+          "const": 2
+        },
+        "validation_expected_turns": {
+          "const": 0
+        }
+      }
+    },
+    "invalid_inputs": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "vertices",
+          "normal"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "vertices": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "$ref": "#/$defs/vector"
+            }
+          },
+          "normal": {
+            "$ref": "#/$defs/vector"
+          }
+        }
+      }
+    },
+    "conditioned_plane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "polygon",
+        "vertices",
+        "normal"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "source": {
+          "type": "integer"
+        },
+        "polygon": {
+          "type": "integer"
+        },
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/vector"
+          }
+        },
+        "normal": {
+          "$ref": "#/$defs/vector"
+        }
+      }
+    },
+    "lineage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "towards",
+        "faces",
+        "expected_input_faces",
+        "source_planes_per_input",
+        "preserve_original_origin"
+      ],
+      "properties": {
+        "towards": {
+          "$ref": "#/$defs/vector"
+        },
+        "faces": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/face"
+          }
+        },
+        "expected_input_faces": {
+          "const": 4
+        },
+        "source_planes_per_input": {
+          "const": true
+        },
+        "preserve_original_origin": {
+          "const": true
+        }
+      }
+    },
+    "ray_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "polygon",
+        "point",
+        "inside",
+        "minimum_distance"
+      ],
+      "properties": {
+        "polygon": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "point": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "inside": {
+          "const": false
+        },
+        "minimum_distance": {
+          "const": 0.05
+        }
+      }
+    }
+  },
+  "$defs": {
+    "vector": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "face": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "polygon",
+        "vertices",
+        "normal"
+      ],
+      "properties": {
+        "source": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "polygon": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "vertices": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/vector"
+          }
+        },
+        "normal": {
+          "$ref": "#/$defs/vector"
+        }
+      }
+    }
+  }
+}

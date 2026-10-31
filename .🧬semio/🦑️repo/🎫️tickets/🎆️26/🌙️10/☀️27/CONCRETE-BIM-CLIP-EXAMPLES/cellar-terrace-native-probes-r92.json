@@ -1,0 +1,117 @@
+{
+  "basis": "Native occupancy points from three largest authored cellar net-wearing triangles; distinct positive layer interiors and empty sides, not a claim of full route/support coverage.",
+  "probes": {
+    "FIN-CELLAR-CEMENT": [
+      {
+        "name": "wearing interior 0",
+        "xyz": [
+          6.741217,
+          14.120385666666667,
+          -2.41
+        ],
+        "occupied": true
+      },
+      {
+        "name": "above wearing 0",
+        "xyz": [
+          6.741217,
+          14.120385666666667,
+          -2.39
+        ],
+        "occupied": false
+      },
+      {
+        "name": "below wearing 0",
+        "xyz": [
+          6.741217,
+          14.120385666666667,
+          -2.43
+        ],
+        "occupied": false
+      },
+      {
+        "name": "wearing interior 1",
+        "xyz": [
+          9.143487333333331,
+          12.994671333333333,
+          -2.41
+        ],
+        "occupied": true
+      },
+      {
+        "name": "above wearing 1",
+        "xyz": [
+          9.143487333333331,
+          12.994671333333333,
+          -2.39
+        ],
+        "occupied": false
+      },
+      {
+        "name": "below wearing 1",
+        "xyz": [
+          9.143487333333331,
+          12.994671333333333,
+          -2.43
+        ],
+        "occupied": false
+      },
+      {
+        "name": "wearing interior 2",
+        "xyz": [
+          5.733224333333333,
+          12.152676000000001,
+          -2.41
+        ],
+        "occupied": true
+      },
+      {
+        "name": "above wearing 2",
+        "xyz": [
+          5.733224333333333,
+          12.152676000000001,
+          -2.39
+        ],
+        "occupied": false
+      },
+      {
+        "name": "below wearing 2",
+        "xyz": [
+          5.733224333333333,
+          12.152676000000001,
+          -2.43
+        ],
+        "occupied": false
+      }
+    ],
+    "SL-CELLAR": [
+      {
+        "name": "plain lime slab interior 0",
+        "xyz": [
+          6.741217,
+          14.120385666666667,
+          -2.46
+        ],
+        "occupied": true
+      },
+      {
+        "name": "plain lime slab interior 1",
+        "xyz": [
+          9.143487333333331,
+          12.994671333333333,
+          -2.46
+        ],
+        "occupied": true
+      },
+      {
+        "name": "plain lime slab interior 2",
+        "xyz": [
+          5.733224333333333,
+          12.152676000000001,
+          -2.46
+        ],
+        "occupied": true
+      }
+    ]
+  }
+}

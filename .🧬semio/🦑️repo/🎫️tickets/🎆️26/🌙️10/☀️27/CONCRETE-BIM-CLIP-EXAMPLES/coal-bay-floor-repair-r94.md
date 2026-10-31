@@ -1,0 +1,19 @@
+# Continuous Indoor Coal-Bay Floor Repair
+
+Native's new board validator exposed a pre-existing source defect: all four FIX-SERVANT-BASIN-CABINET-1 feet and the front strip at finished ±0.00 had zero floor bearing. R-SL-GROUND-COAL-CEM-1 spans beneath this indoor niche but retains its separate lower −0.13m service plate top. The earlier ground author only placed wearing above the usual −0.04m cap and excluded cupboard footprints, leaving this indoor bay unfinished.
+
+The bounded candidate preserves the entire original 7cm lower plate, the exterior coal hatch cover at −0.13m, source walls/columns/openings, cupboard and room identities. It adds continuous explicitly inferred 90mm mineral levelling to −0.04m across the actual indoor bay, normal source-qualified oak or ochre wearing assemblies to ±0.00, and continuous mineral underlay beneath existing walls. Wearing continuation under the fixed cupboard and exact levelling composition are inference, not archival measurement. Four existing flooring products receive additions; there is no new product or foot shim. Exterior ground remains outside the indoor west-wall outer face.
+
+Permanent source-first fixture: model/tests/🪵️coal-bay.json/.schema.json/.py, registered in the main BIM loader. Original source RED reproduced zero support at the first real foot. Existing ground floor fixture now recognizes the two explicit levelling/underlay roles while retaining original material/depth, exact wearing coverage, occupied ramp exclusion, layer-volume, exposed cement and exterior service-cover assertions.
+
+Author input: coal-bay-wall-context-r94.json (15 actual native local wall parts on source8dfcfb1b), coal-bay-floor-author-r94.py. Candidate SHA cf10f0ff3660fddccc6d0a0e7e5015b25f0e9179dc687e6672e8800cb7136fd6. It adds68 positive native cells over1.219098385307m². Native volume0.15221511933742654m³ agrees with conditioned SciPy and GEOS stratum union. All4feet and front strip fullbearing PASS; actual native slab/wall/beam/floor collision scan has zero positive overlaps. Lower plate and exterior cover datums unchanged. Physical gate1.695s, normal locked3.12/2GB.
+
+Native independently audited the unpublished candidate:8ENDE fragments/550 physical native items, all closed/positive/no collapsed edges,9attrs/GUID/bilingual identities/predefined type/material ownership/volume/XYZ plus8positive controls GREEN1.687s. Source/candidate/author/producer-bound capture5.516s; artifacts coal-bay-floor-samples-r94.json and coal-bay-floor-native-r94.json in generated/native-r92.
+
+Publication pending the existing whole ground-floor coverage cohort. Only four floor identities will be changed in a fresh checked source transaction.
+
+Existing whole ground-floor grammar/quantity/coverage cohort now GREEN (runner coal-bay-floor-cohort-r94.py, native session9369 exit0). New underlay is actual wall-bearing material and is removed only from walking expectation; all new wearing remains subject to the same net coverage assertion. No source publication yet; Native recommends one combined floor+approach transaction after the approach strict SDK gate to avoid redundant cold full-model runs.
+
+Publication complete in the combined five-product transaction: source476a206c83c23f7286442b522481aff6b8a7d73d2534e5a819c617bed0eb7c88. Fresh exporter conditioning floor8ENDE/550nativecells repeats GREEN1.782s. Whole combined model schema583/0errors GREEN26.668s. No new product, identity or relation. Native is unblocked for fresh full board construction/bearing validation.
+
+Actual published source acceptance (no candidate injection):6 permanent contracts GREEN108.980s; sourcebefore=after476a206c. Includes actual4foot/frontbearing, full ground netcoverage/material grammar/quantities, and all gravel controls. Global source material relation graph independently GREEN.

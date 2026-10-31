@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "source_basis": {
+    "book_pages": [
+      133,
+      134,
+      136,
+      138,
+      139
+    ],
+    "original_first_stringer": "FLC H1(13)306, Plan2183 suite, upper drawing and Coupecc",
+    "retained_image": "🗑️generated/book-figures-134-r92.jpg",
+    "crosssection_crop": "🗑️generated/ramp-stringer-306-crosssection-r92.png",
+    "crop_pixels": {
+      "left": 570,
+      "top": 48,
+      "width": 174,
+      "height": 125
+    },
+    "original_plan": "🗑️generated/book-figures-133-r92.jpg",
+    "plan_retrieval": "Exact publicly listed orig URL from retained page133 JSONP,755×485; no new measured clear width recovered"
+  },
+  "attested_first_stringer": {
+    "count": 1,
+    "flight": "RF-1A, first ascending ground-to-first flight",
+    "side": "Garage-side outer edge",
+    "supports": [
+      "13",
+      "18",
+      "25"
+    ],
+    "section_width_m": 0.12,
+    "section_depth_m": 0.26,
+    "downstand": true,
+    "source_grade": "BookSAB134 text and original306 inclined beam/cross-section; section sizes/sourcecount attested, registration/alignment qualified"
+  },
+  "neutral_profile_candidate": {
+    "centreline_X": 10.898,
+    "from_Y": 8.23,
+    "to_Y": 16.889,
+    "placement_basis": "Current registered axes13/18/25, not newly measured original XY",
+    "top": "Follow actual first-flight RC upper plane; alignment is a construction inference to verify against original joint",
+    "bottom": "Top minus0.26m using explicit inferred vertical-depth convention; normal-vs-vertical section direction not newly read",
+    "width": 0.12,
+    "ownership": "Keep real columns and slab; partition monolithic shared concrete once. Do not shift existing horizontal floor beams or replace them by this inclined beam",
+    "structural_body_form": "Closed inclined section sweep or true planar-faced mesh, no midpoint stairs"
+  },
+  "not_four": {
+    "first_return": "SAB134 executed second lower flight uses its own6cm concrete parapet as lateral support; planned12×28 upstand was changed in execution, so do not instantiate it as an extra actual beam",
+    "upper_flights": "SAB136 separately describes12×28 central limon2/limon1 and16×28 outer limon3; applicability must be registered separately, not mirrored from this first12×26 member"
+  },
+  "current_canonical_support_inventory": {
+    "capture": "🗑️generated/whole-owned-capture-r92.json",
+    "source": "d575c427b7e090bfe1d73c9da9e25e4b7a26e841a429364b7e427a7df3992d62",
+    "existing_horizontal_beams": [
+      {
+        "tag": "BEAM-PRIMARY-F-13-25",
+        "z": [
+          2.71,
+          3.14
+        ]
+      },
+      {
+        "tag": "BEAM-PRIMARY-F-14-19",
+        "z": [
+          2.91,
+          3.14
+        ]
+      },
+      {
+        "tag": "BEAM-PRIMARY-F-19-26",
+        "z": [
+          2.91,
+          3.14
+        ]
+      },
+      {
+        "tag": "BEAM-PRIMARY-R-14-26",
+        "z": [
+          6.06,
+          6.51
+        ]
+      }
+    ],
+    "conclusion": "These level beam bodies may support local/arrival regions but do not bridge the complete sloping strip. Guard support must be checked locally, not labelled globally floating"
+  },
+  "relational_width_proposals": {
+    "right_clear": {
+      "inner_faces_X": [
+        9.53,
+        10.868
+      ],
+      "width_m": 1.338,
+      "centre_X": 10.199
+    },
+    "left_clear": {
+      "inner_faces_X": [
+        8.158,
+        9.47
+      ],
+      "width_m": 1.312,
+      "centre_X": 8.814
+    },
+    "basis": "Inferred from existing registered6cm guard axes8.128/9.5/10.898; existing1.2m nominal not independently source-secured",
+    "unknown": [
+      "Original measured clear width",
+      "Exact slab extension under parapets/stringer",
+      "Finish-versus-RC clear-width joint detail"
+    ],
+    "acceptance": "Keep walking clear width distinct from RC support envelope; actual positive face bearing, no omitted6–7cm strip and no double-owned material"
+  },
+  "soffit_register": "ramp-guards-finishes-source-r92.json#/exterior_soffit",
+  "known_clear_width_not_measured": true
+}

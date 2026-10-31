@@ -1,0 +1,184 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "historical_state",
+    "source",
+    "body_diameter",
+    "body_height",
+    "fixtures",
+    "space_tags",
+    "removed_spaces",
+    "partitions",
+    "garage_outline",
+    "uncertainty_m",
+    "clearance_controls"
+  ],
+  "properties": {
+    "historical_state": {
+      "const": "original-completed-1930-1931"
+    },
+    "source": {
+      "type": "string",
+      "minLength": 1
+    },
+    "body_diameter": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "body_height": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "predefined_type",
+          "center",
+          "space"
+        ],
+        "properties": {
+          "tag": {
+            "type": "string"
+          },
+          "predefined_type": {
+            "enum": [
+              "TOILETPAN",
+              "BIDET",
+              "BATH",
+              "WASHHANDBASIN"
+            ]
+          },
+          "center": {
+            "$ref": "#/$defs/point"
+          },
+          "space": {
+            "type": "string"
+          },
+          "opening": {
+            "type": "string"
+          },
+          "route": {
+            "type": "array",
+            "minItems": 2,
+            "items": {
+              "$ref": "#/$defs/point"
+            }
+          },
+          "outer_bounds": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          },
+          "feet": {
+            "const": 4
+          }
+        }
+      }
+    },
+    "space_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "removed_spaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "partitions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "servants_divider",
+        "laundry_front_y",
+        "laundry_max_x"
+      ],
+      "properties": {
+        "laundry_front_y": {
+          "type": "number"
+        },
+        "laundry_max_x": {
+          "type": "number"
+        },
+        "servants_divider": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "items": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    },
+    "garage_outline": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "$ref": "#/$defs/point"
+      }
+    },
+    "uncertainty_m": {
+      "type": "number",
+      "minimum": 0
+    },
+    "clearance_controls": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "fixture",
+          "column",
+          "point",
+          "fixture_occupied",
+          "column_occupied"
+        ],
+        "properties": {
+          "fixture": {
+            "type": "string"
+          },
+          "column": {
+            "type": "string"
+          },
+          "point": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "fixture_occupied": {
+            "const": false
+          },
+          "column_occupied": {
+            "const": true
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    }
+  }
+}

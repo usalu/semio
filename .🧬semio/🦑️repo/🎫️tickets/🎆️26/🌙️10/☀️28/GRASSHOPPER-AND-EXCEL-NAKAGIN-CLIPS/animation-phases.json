@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "scene": "🎓️teaching/🏛️architecture/🦗️grasshopper/🎬️clip/🫗️casting/🐍️.py",
+  "method": "then",
+  "first_argument": "sequence",
+  "subsequent_phases_start": 3,
+  "phase_shape": [
+    "sequence",
+    "duration"
+  ]
+}

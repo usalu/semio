@@ -11,7 +11,10 @@ api=importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬
 
 class SectionExtrusionContract(unittest.TestCase):
     def test_sections_volumes_vertices_and_every_projection(self):
-        cases=json.loads(Path(__file__).with_suffix(".json").read_text(encoding="utf-8"))["cases"]
+        fixture=json.loads(Path(__file__).with_suffix(".json").read_text(encoding="utf-8"))
+        import jsonschema
+        jsonschema.Draft202012Validator(json.loads(Path(__file__).with_suffix(".schema.json").read_text(encoding="utf-8"))).validate(fixture)
+        cases=fixture["cases"]
         for case in cases:
             model=api.load_model()
             obj=next(e for e in model["elements"] if e["tag"]=="FIX-HALL-BASIN")
@@ -25,6 +28,32 @@ class SectionExtrusionContract(unittest.TestCase):
             self.assertLess(Polygon(api.part_section(part,sum(case["part"]["section"]["sweep"])/2,1 if case["part"]["section"]["plane"]=="XZ" else 0)).symmetric_difference(Polygon(case["section"])).area,1e-10)
             for kind in ("axis","footprint","plan","section","elevation","3d","body"):
                 self.assertTrue(api.represent(obj["tag"],kind,model)["primitives"])
+            import numpy as np
+            bounds=np.asarray(api.part_vertices(part))
+            lower,upper=bounds.min(axis=0),bounds.max(axis=0)
+            for axis_case in fixture["representation_axes"]:
+                declared=axis_case["declared"]
+                if declared is None:
+                    obj["geometry"].pop("axis",None)
+                else:
+                    obj["geometry"]["axis"]=declared
+                center=(lower[:2]+upper[:2])/2 if declared is None else declared
+                axis=api.represent(obj["tag"],"axis",model)["primitives"][0]["points"]
+                np.testing.assert_allclose(axis,[[*center,lower[2]],[*center,upper[2]]],atol=1e-12)
+            obj["geometry"].pop("axis",None)
+            original_class=obj["class"]
+            original_predefined=obj.get("predefined_type")
+            obj.update(fixture["covering_discriminator"])
+            for kind in ("axis","footprint","plan","section","elevation","3d","body"):
+                floor=api.represent(obj["tag"],kind,model)
+                self.assertTrue(floor["primitives"])
+                self.assertNotIn("historical_state",floor["derived"])
+                self.assertAlmostEqual(floor["derived"]["volume"],expected)
+            obj["class"]=original_class
+            if original_predefined is None:
+                obj.pop("predefined_type")
+            else:
+                obj["predefined_type"]=original_predefined
             body=api.represent(obj["tag"],"body",model)["primitives"][0]
             self.assertEqual(body["kind"],"extrusion")
             self.assertEqual(body["profile_plane"],case["part"]["section"]["plane"])

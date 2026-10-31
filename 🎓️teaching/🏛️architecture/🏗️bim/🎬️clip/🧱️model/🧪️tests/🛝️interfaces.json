@@ -1,0 +1,123 @@
+{
+  "version": 1,
+  "pairs": [
+    [
+      "FIN-HALL",
+      "RF-1A"
+    ],
+    [
+      "FIN-RAMP-INTERIOR",
+      "W-G-CHAUFFEUR-RETURN"
+    ],
+    [
+      "FIN-HALL",
+      "FIN-RAMP-INTERIOR"
+    ]
+  ],
+  "tolerance": 1e-10,
+  "positive_control": {
+    "stock": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        1
+      ]
+    ],
+    "cutter": [
+      [
+        0.999999998,
+        0,
+        0
+      ],
+      [
+        2,
+        1,
+        1
+      ]
+    ],
+    "expected": 2e-9,
+    "tolerance": 1e-15
+  },
+  "structural_owners": {
+    "RF-1A": [
+      "13",
+      "18",
+      "25",
+      "PA"
+    ],
+    "RF-1B": [
+      "BEAM-PRIMARY-F-14-19",
+      "14-FIRST",
+      "19",
+      "26",
+      "35",
+      "PA",
+      "PB"
+    ],
+    "RF-2A": [
+      "BEAM-PRIMARY-F-13-25",
+      "18-FIRST",
+      "25-FIRST",
+      "36",
+      "PA",
+      "PB"
+    ],
+    "RF-2B": [
+      "BEAM-PRIMARY-R-14-26",
+      "19-FIRST",
+      "26-FIRST",
+      "PB",
+      "PA"
+    ],
+    "RM-1": [
+      "25",
+      "26",
+      "28"
+    ],
+    "RM-2": [
+      "25-FIRST",
+      "26-FIRST",
+      "28-FIRST",
+      "PB"
+    ]
+  },
+  "bearing_owners": {
+    "RF-1A": "13",
+    "RF-1B": "BEAM-PRIMARY-F-14-19",
+    "RF-2A": "BEAM-PRIMARY-F-13-25",
+    "RF-2B": "BEAM-PRIMARY-R-14-26"
+  },
+  "wearing_owners": {
+    "FIN-RAMP-INTERIOR": [
+      "13",
+      "18",
+      "25",
+      "PA",
+      "BEAM-PRIMARY-F-14-19",
+      "14-FIRST",
+      "19",
+      "26",
+      "35",
+      "PB",
+      "28"
+    ],
+    "FIN-RAMP-EXTERIOR": [
+      "BEAM-PRIMARY-F-13-25",
+      "18-FIRST",
+      "25-FIRST",
+      "36",
+      "PA",
+      "PB",
+      "BEAM-PRIMARY-R-14-26",
+      "19-FIRST",
+      "26-FIRST",
+      "28-FIRST",
+      "35"
+    ]
+  }
+}

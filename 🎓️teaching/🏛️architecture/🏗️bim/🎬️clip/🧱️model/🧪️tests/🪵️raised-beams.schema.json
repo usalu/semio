@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "floor_tags",
+    "beam_tags",
+    "finished",
+    "tolerance"
+  ],
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "floor_tags": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "string"
+      }
+    },
+    "beam_tags": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "string"
+      }
+    },
+    "finished": {
+      "type": "number"
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  }
+}

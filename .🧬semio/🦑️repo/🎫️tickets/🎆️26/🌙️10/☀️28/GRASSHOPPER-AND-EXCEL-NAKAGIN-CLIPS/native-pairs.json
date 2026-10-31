@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "series": {
+    "grasshopper": {
+      "scenes": [
+        "Beat1_Anatomy",
+        "Beat2_Capsule",
+        "Beat3_Tower",
+        "Beat4_Casting",
+        "Beat5_DataTrees"
+      ],
+      "contracts": 12
+    },
+    "excel": {
+      "scenes": [
+        "Beat1_Anatomy",
+        "Beat2_References",
+        "Beat3_Program",
+        "Beat4_Energy"
+      ],
+      "contracts": 19
+    }
+  }
+}

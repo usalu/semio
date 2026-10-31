@@ -1,0 +1,6589 @@
+{
+  "version": 1,
+  "source": "d575c427b7e090bfe1d73c9da9e25e4b7a26e841a429364b7e427a7df3992d62",
+  "loaded_api": "57ba53f6fa939360ff97fb0f2d8bd9e4fe78b72a5bcd82498c674946e9201dcf",
+  "provenance": "Exact exclusive native body .parts, actual prism intersections×height, no hull/globalunion; sourcepart indices frozen before ownership repair",
+  "grade": "ACTUAL_OCCUPIED_PRISM_INTERSECTION",
+  "cases": [
+    {
+      "source": {
+        "tag": "RW-E",
+        "index": 0,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "1-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.003679999999999926,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        19.05,
+        1.32,
+        4.635
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            19.09,
+            1.3
+          ],
+          [
+            19.09,
+            1.34
+          ],
+          [
+            19.01,
+            1.34
+          ],
+          [
+            19.01,
+            1.3
+          ]
+        ],
+        "z0": 4.06,
+        "z1": 5.21
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            18.89,
+            1.14
+          ],
+          [
+            19.11,
+            1.14
+          ],
+          [
+            19.11,
+            1.36
+          ],
+          [
+            18.89,
+            1.36
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-E",
+        "index": 1,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "6-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.003679999999999926,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        19.05,
+        5.911,
+        4.635
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            19.09,
+            5.891
+          ],
+          [
+            19.09,
+            5.931
+          ],
+          [
+            19.01,
+            5.931
+          ],
+          [
+            19.01,
+            5.891
+          ]
+        ],
+        "z0": 4.06,
+        "z1": 5.21
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            18.89,
+            5.89
+          ],
+          [
+            19.11,
+            5.89
+          ],
+          [
+            19.11,
+            6.11
+          ],
+          [
+            18.89,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-E",
+        "index": 2,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "1-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00006399999999999875,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        19.05,
+        1.35,
+        5.1899999999999995
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            19.09,
+            1.34
+          ],
+          [
+            19.09,
+            5.891
+          ],
+          [
+            19.01,
+            5.891
+          ],
+          [
+            19.01,
+            1.34
+          ]
+        ],
+        "z0": 5.17,
+        "z1": 5.21
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            18.89,
+            1.14
+          ],
+          [
+            19.11,
+            1.14
+          ],
+          [
+            19.11,
+            1.36
+          ],
+          [
+            18.89,
+            1.36
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-E",
+        "index": 2,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "6-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.000003200000000001003,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        19.05,
+        5.890499999999999,
+        5.1899999999999995
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            19.09,
+            1.34
+          ],
+          [
+            19.09,
+            5.891
+          ],
+          [
+            19.01,
+            5.891
+          ],
+          [
+            19.01,
+            1.34
+          ]
+        ],
+        "z0": 5.17,
+        "z1": 5.21
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            18.89,
+            5.89
+          ],
+          [
+            19.11,
+            5.89
+          ],
+          [
+            19.11,
+            6.11
+          ],
+          [
+            18.89,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-E",
+        "index": 3,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "1-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00006399999999999875,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        19.05,
+        1.35,
+        4.08
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            19.09,
+            1.34
+          ],
+          [
+            19.09,
+            5.891
+          ],
+          [
+            19.01,
+            5.891
+          ],
+          [
+            19.01,
+            1.34
+          ]
+        ],
+        "z0": 4.06,
+        "z1": 4.1
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            18.89,
+            1.14
+          ],
+          [
+            19.11,
+            1.14
+          ],
+          [
+            19.11,
+            1.36
+          ],
+          [
+            18.89,
+            1.36
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-E",
+        "index": 3,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "6-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.000003200000000001003,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        19.05,
+        5.890499999999999,
+        4.08
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            19.09,
+            1.34
+          ],
+          [
+            19.09,
+            5.891
+          ],
+          [
+            19.01,
+            5.891
+          ],
+          [
+            19.01,
+            1.34
+          ]
+        ],
+        "z0": 4.06,
+        "z1": 4.1
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            18.89,
+            5.89
+          ],
+          [
+            19.11,
+            5.89
+          ],
+          [
+            19.11,
+            6.11
+          ],
+          [
+            18.89,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-E",
+        "index": 8,
+        "material": "MAT-WOOD",
+        "role": "sash",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "1-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.000642000000000025,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        19.05,
+        1.35,
+        4.635
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            19.065,
+            1.34
+          ],
+          [
+            19.065,
+            1.3900000000000001
+          ],
+          [
+            19.035,
+            1.3900000000000001
+          ],
+          [
+            19.035,
+            1.34
+          ]
+        ],
+        "z0": 4.1,
+        "z1": 5.17
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            18.89,
+            1.14
+          ],
+          [
+            19.11,
+            1.14
+          ],
+          [
+            19.11,
+            1.36
+          ],
+          [
+            18.89,
+            1.36
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-E",
+        "index": 29,
+        "material": "MAT-WOOD",
+        "role": "sash",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "6-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00003210000000001194,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        19.05,
+        5.890499999999999,
+        4.635
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            19.065,
+            5.841
+          ],
+          [
+            19.065,
+            5.891
+          ],
+          [
+            19.035,
+            5.891
+          ],
+          [
+            19.035,
+            5.841
+          ]
+        ],
+        "z0": 4.1,
+        "z1": 5.17
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            18.89,
+            5.89
+          ],
+          [
+            19.11,
+            5.89
+          ],
+          [
+            19.11,
+            6.11
+          ],
+          [
+            18.89,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 0,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "5-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.003648000000000002,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.049999999999999996,
+        1.3199999999999998,
+        4.640000000000001
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.009999999999999995,
+            1.2999999999999998
+          ],
+          [
+            -0.009999999999999995,
+            1.3399999999999999
+          ],
+          [
+            -0.09,
+            1.3399999999999999
+          ],
+          [
+            -0.09,
+            1.2999999999999998
+          ]
+        ],
+        "z0": 4.07,
+        "z1": 5.21
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            1.14
+          ],
+          [
+            0.11,
+            1.14
+          ],
+          [
+            0.11,
+            1.36
+          ],
+          [
+            -0.11,
+            1.36
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 1,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "11-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.003648000000000002,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.049999999999999996,
+        6.08,
+        4.640000000000001
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.009999999999999995,
+            6.06
+          ],
+          [
+            -0.009999999999999995,
+            6.1
+          ],
+          [
+            -0.09,
+            6.1
+          ],
+          [
+            -0.09,
+            6.06
+          ]
+        ],
+        "z0": 4.07,
+        "z1": 5.21
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            5.89
+          ],
+          [
+            0.11,
+            5.89
+          ],
+          [
+            0.11,
+            6.11
+          ],
+          [
+            -0.11,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 2,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "5-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00006400000000000082,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.049999999999999996,
+        1.35,
+        5.1899999999999995
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.009999999999999995,
+            1.3399999999999999
+          ],
+          [
+            -0.009999999999999995,
+            6.06
+          ],
+          [
+            -0.09,
+            6.06
+          ],
+          [
+            -0.09,
+            1.3399999999999999
+          ]
+        ],
+        "z0": 5.17,
+        "z1": 5.21
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            1.14
+          ],
+          [
+            0.11,
+            1.14
+          ],
+          [
+            0.11,
+            1.36
+          ],
+          [
+            -0.11,
+            1.36
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 2,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "11-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.0005440000000000002,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.049999999999999996,
+        5.975,
+        5.1899999999999995
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.009999999999999995,
+            1.3399999999999999
+          ],
+          [
+            -0.009999999999999995,
+            6.06
+          ],
+          [
+            -0.09,
+            6.06
+          ],
+          [
+            -0.09,
+            1.3399999999999999
+          ]
+        ],
+        "z0": 5.17,
+        "z1": 5.21
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            5.89
+          ],
+          [
+            0.11,
+            5.89
+          ],
+          [
+            0.11,
+            6.11
+          ],
+          [
+            -0.11,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 3,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "5-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00006400000000000082,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.049999999999999996,
+        1.35,
+        4.09
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.009999999999999995,
+            1.3399999999999999
+          ],
+          [
+            -0.009999999999999995,
+            6.06
+          ],
+          [
+            -0.09,
+            6.06
+          ],
+          [
+            -0.09,
+            1.3399999999999999
+          ]
+        ],
+        "z0": 4.07,
+        "z1": 4.11
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            1.14
+          ],
+          [
+            0.11,
+            1.14
+          ],
+          [
+            0.11,
+            1.36
+          ],
+          [
+            -0.11,
+            1.36
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 3,
+        "material": "MAT-WOOD",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "11-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.0005440000000000002,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.049999999999999996,
+        5.975,
+        4.09
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.009999999999999995,
+            1.3399999999999999
+          ],
+          [
+            -0.009999999999999995,
+            6.06
+          ],
+          [
+            -0.09,
+            6.06
+          ],
+          [
+            -0.09,
+            1.3399999999999999
+          ]
+        ],
+        "z0": 4.07,
+        "z1": 4.11
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            5.89
+          ],
+          [
+            0.11,
+            5.89
+          ],
+          [
+            0.11,
+            6.11
+          ],
+          [
+            -0.11,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 7,
+        "material": "MAT-WOOD",
+        "role": "sash",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "5-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.0006360000000000075,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.05,
+        1.35,
+        4.640000000000001
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.034999999999999996,
+            1.3399999999999999
+          ],
+          [
+            -0.034999999999999996,
+            1.39
+          ],
+          [
+            -0.065,
+            1.39
+          ],
+          [
+            -0.065,
+            1.3399999999999999
+          ]
+        ],
+        "z0": 4.11,
+        "z1": 5.17
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            1.14
+          ],
+          [
+            0.11,
+            1.14
+          ],
+          [
+            0.11,
+            1.36
+          ],
+          [
+            -0.11,
+            1.36
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 23,
+        "material": "MAT-WOOD",
+        "role": "sash",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "11-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.0015899999999999942,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.05,
+        6.035,
+        4.640000000000001
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.034999999999999996,
+            6.01
+          ],
+          [
+            -0.034999999999999996,
+            6.06
+          ],
+          [
+            -0.065,
+            6.06
+          ],
+          [
+            -0.065,
+            6.01
+          ]
+        ],
+        "z0": 4.11,
+        "z1": 5.17
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            5.89
+          ],
+          [
+            0.11,
+            5.89
+          ],
+          [
+            0.11,
+            6.11
+          ],
+          [
+            -0.11,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 24,
+        "material": "MAT-WOOD",
+        "role": "sash",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "11-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00017999999999999955,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.05,
+        5.949999999999999,
+        4.135
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.034999999999999996,
+            4.7863425856
+          ],
+          [
+            -0.034999999999999996,
+            6.01
+          ],
+          [
+            -0.065,
+            6.01
+          ],
+          [
+            -0.065,
+            4.7863425856
+          ]
+        ],
+        "z0": 4.11,
+        "z1": 4.16
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            5.89
+          ],
+          [
+            0.11,
+            5.89
+          ],
+          [
+            0.11,
+            6.11
+          ],
+          [
+            -0.11,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 25,
+        "material": "MAT-WOOD",
+        "role": "sash",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "11-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00017999999999999955,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.05,
+        5.949999999999999,
+        5.145
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.034999999999999996,
+            4.7863425856
+          ],
+          [
+            -0.034999999999999996,
+            6.01
+          ],
+          [
+            -0.065,
+            6.01
+          ],
+          [
+            -0.065,
+            4.7863425856
+          ]
+        ],
+        "z0": 5.12,
+        "z1": 5.17
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            5.89
+          ],
+          [
+            0.11,
+            5.89
+          ],
+          [
+            0.11,
+            6.11
+          ],
+          [
+            -0.11,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "RW-W",
+        "index": 26,
+        "material": "MAT-GLASS",
+        "role": "glass",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "11-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.0006912000000000012,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        -0.049999999999999996,
+        5.949999999999999,
+        4.640000000000001
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            -0.04699999999999999,
+            4.7863425856
+          ],
+          [
+            -0.04699999999999999,
+            6.01
+          ],
+          [
+            -0.053,
+            6.01
+          ],
+          [
+            -0.053,
+            4.7863425856
+          ]
+        ],
+        "z0": 4.16,
+        "z1": 5.12
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            -0.11,
+            5.89
+          ],
+          [
+            0.11,
+            5.89
+          ],
+          [
+            0.11,
+            6.11
+          ],
+          [
+            -0.11,
+            6.11
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 16,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00024999999999999935,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.5,
+        4.609999999999999,
+        2.6624999999999996
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.745000000000001,
+            4.59
+          ],
+          [
+            10.395,
+            4.59
+          ],
+          [
+            10.395,
+            4.63
+          ],
+          [
+            8.745000000000001,
+            4.63
+          ]
+        ],
+        "z0": 2.65,
+        "z1": 2.675
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 17,
+        "material": "MAT-PLYWOOD",
+        "role": "panel",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00003899999999999926,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.4725,
+        4.594999999999999,
+        2.63
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.745000000000001,
+            4.592499999999999
+          ],
+          [
+            9.57,
+            4.592499999999999
+          ],
+          [
+            9.57,
+            4.597499999999999
+          ],
+          [
+            8.745000000000001,
+            4.597499999999999
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.65
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 19,
+        "material": "MAT-WOOD",
+        "role": "batten",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00003999999999999975,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.55,
+        4.609999999999999,
+        2.63
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.530000000000001,
+            4.597499999999999
+          ],
+          [
+            9.57,
+            4.597499999999999
+          ],
+          [
+            9.57,
+            4.6225
+          ],
+          [
+            9.530000000000001,
+            4.6225
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.65
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 21,
+        "material": "MAT-WOOD",
+        "role": "batten",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.0001550000000000035,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.4525,
+        4.609999999999999,
+        2.63
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.785,
+            4.597499999999999
+          ],
+          [
+            9.530000000000001,
+            4.597499999999999
+          ],
+          [
+            9.530000000000001,
+            4.6225
+          ],
+          [
+            8.785,
+            4.6225
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.65
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 22,
+        "material": "MAT-PLYWOOD",
+        "role": "panel",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00003899999999999926,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.4725,
+        4.625,
+        2.63
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            8.745000000000001,
+            4.6225
+          ],
+          [
+            9.57,
+            4.6225
+          ],
+          [
+            9.57,
+            4.6274999999999995
+          ],
+          [
+            8.745000000000001,
+            4.6274999999999995
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.65
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 23,
+        "material": "MAT-PLYWOOD",
+        "role": "panel",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.000010999999999999718,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.5975,
+        4.594999999999999,
+        2.63
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.57,
+            4.592499999999999
+          ],
+          [
+            10.395,
+            4.592499999999999
+          ],
+          [
+            10.395,
+            4.597499999999999
+          ],
+          [
+            9.57,
+            4.597499999999999
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.65
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 24,
+        "material": "MAT-WOOD",
+        "role": "batten",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00003999999999999975,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.59,
+        4.609999999999999,
+        2.63
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.57,
+            4.597499999999999
+          ],
+          [
+            9.61,
+            4.597499999999999
+          ],
+          [
+            9.61,
+            4.6225
+          ],
+          [
+            9.57,
+            4.6225
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.65
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 27,
+        "material": "MAT-WOOD",
+        "role": "batten",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.000015000000000000795,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.6175,
+        4.609999999999999,
+        2.63
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.61,
+            4.597499999999999
+          ],
+          [
+            10.355,
+            4.597499999999999
+          ],
+          [
+            10.355,
+            4.6225
+          ],
+          [
+            9.61,
+            4.6225
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.65
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "D-ENTRY",
+        "index": 28,
+        "material": "MAT-PLYWOOD",
+        "role": "panel",
+        "class": "IfcDoor",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.000010999999999999718,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.5975,
+        4.625,
+        2.63
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.57,
+            4.6225
+          ],
+          [
+            10.395,
+            4.6225
+          ],
+          [
+            10.395,
+            4.6274999999999995
+          ],
+          [
+            9.57,
+            4.6274999999999995
+          ]
+        ],
+        "z0": 0,
+        "z1": 2.65
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "GL-RAMP-GARDEN",
+        "index": 2,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "18-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00022000000000000708,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.883,
+        12.572,
+        5.8575
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.903,
+            8.924999999999999
+          ],
+          [
+            10.903,
+            14.975
+          ],
+          [
+            10.863,
+            14.975
+          ],
+          [
+            10.863,
+            8.924999999999999
+          ]
+        ],
+        "z0": 5.845,
+        "z1": 5.87
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.788,
+            12.462
+          ],
+          [
+            11.008,
+            12.462
+          ],
+          [
+            11.008,
+            12.681999999999999
+          ],
+          [
+            10.788,
+            12.681999999999999
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "GL-RAMP-GARDEN",
+        "index": 3,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "18-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00022000000000000318,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.883,
+        12.572,
+        3.1825
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.903,
+            8.924999999999999
+          ],
+          [
+            10.903,
+            14.975
+          ],
+          [
+            10.863,
+            14.975
+          ],
+          [
+            10.863,
+            8.924999999999999
+          ]
+        ],
+        "z0": 3.17,
+        "z1": 3.195
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.788,
+            12.462
+          ],
+          [
+            11.008,
+            12.462
+          ],
+          [
+            11.008,
+            12.681999999999999
+          ],
+          [
+            10.788,
+            12.681999999999999
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "GL-RAMP-GARDEN",
+        "index": 6,
+        "material": "MAT-METAL",
+        "role": "sash",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "18-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00004752000000000101,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.883,
+        12.572,
+        3.2039999999999997
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.889,
+            8.942999999999998
+          ],
+          [
+            10.889,
+            14.957
+          ],
+          [
+            10.876999999999999,
+            14.957
+          ],
+          [
+            10.876999999999999,
+            8.942999999999998
+          ]
+        ],
+        "z0": 3.195,
+        "z1": 3.2129999999999996
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.788,
+            12.462
+          ],
+          [
+            11.008,
+            12.462
+          ],
+          [
+            11.008,
+            12.681999999999999
+          ],
+          [
+            10.788,
+            12.681999999999999
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "GL-RAMP-GARDEN",
+        "index": 7,
+        "material": "MAT-METAL",
+        "role": "sash",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "18-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.00004752000000000101,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.883,
+        12.572,
+        5.836
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.889,
+            8.942999999999998
+          ],
+          [
+            10.889,
+            14.957
+          ],
+          [
+            10.876999999999999,
+            14.957
+          ],
+          [
+            10.876999999999999,
+            8.942999999999998
+          ]
+        ],
+        "z0": 5.827,
+        "z1": 5.845
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.788,
+            12.462
+          ],
+          [
+            11.008,
+            12.462
+          ],
+          [
+            11.008,
+            12.681999999999999
+          ],
+          [
+            10.788,
+            12.681999999999999
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "GL-RAMP-GARDEN",
+        "index": 8,
+        "material": "MAT-GLASS",
+        "role": "glass",
+        "class": "IfcWindow",
+        "storey": "first"
+      },
+      "target": {
+        "tag": "18-FIRST",
+        "index": 0,
+        "material": null,
+        "role": "",
+        "class": "IfcColumn",
+        "storey": "first"
+      },
+      "volume": 0.0023003199999997353,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        10.883,
+        12.572,
+        4.52
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            10.885,
+            8.942999999999998
+          ],
+          [
+            10.885,
+            14.957
+          ],
+          [
+            10.881,
+            14.957
+          ],
+          [
+            10.881,
+            8.942999999999998
+          ]
+        ],
+        "z0": 3.2129999999999996,
+        "z1": 5.827
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            10.788,
+            12.462
+          ],
+          [
+            11.008,
+            12.462
+          ],
+          [
+            11.008,
+            12.681999999999999
+          ],
+          [
+            10.788,
+            12.681999999999999
+          ]
+        ],
+        "profile": {
+          "depth": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          },
+          "shape": "rectangle",
+          "width": {
+            "basis": "sourced",
+            "source": "CSIC2022-register-r9",
+            "unit": "m",
+            "value": 0.22
+          }
+        },
+        "holes": [],
+        "z0": 3.14,
+        "z1": 6.34
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 428,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.000035000000000004056,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.5,
+        4.5845,
+        2.8925
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            3.1326050974083146,
+            10.758084963753404
+          ],
+          [
+            3.252774554177089,
+            9.666546357784553
+          ],
+          [
+            3.3312412899945327,
+            9.399759456005247
+          ],
+          [
+            3.412368815607469,
+            9.134410505498588
+          ],
+          [
+            3.5267740754374644,
+            8.881514667979653
+          ],
+          [
+            3.640716234387523,
+            8.62964252714268
+          ],
+          [
+            3.7550593934903516,
+            8.376883964915375
+          ],
+          [
+            3.8965586313647895,
+            8.138559570363684
+          ],
+          [
+            4.046921360734642,
+            7.9061808067920945
+          ],
+          [
+            4.197159395362712,
+            7.673994753275984
+          ],
+          [
+            4.35076406114242,
+            7.442823140551332
+          ],
+          [
+            4.535402301860426,
+            7.235421281114669
+          ],
+          [
+            4.719219932211155,
+            7.028941203186452
+          ],
+          [
+            4.90313708055084,
+            6.822349337928176
+          ],
+          [
+            5.091172012306002,
+            6.618269945576211
+          ],
+          [
+            5.282894970507435,
+            6.461593119519126
+          ],
+          [
+            5.483610114167807,
+            6.297567840828929
+          ],
+          [
+            5.680623969358908,
+            6.136567270995342
+          ],
+          [
+            5.87425085655161,
+            5.978334545977648
+          ],
+          [
+            6.061359393250777,
+            5.834956665267075
+          ],
+          [
+            6.251259726327984,
+            5.709067680418141
+          ],
+          [
+            6.417682327703087,
+            5.5987425851245325
+          ],
+          [
+            6.584105762566453,
+            5.488416937293763
+          ],
+          [
+            6.750957334061523,
+            5.37780746854984
+          ],
+          [
+            6.980546211261378,
+            5.244333048763039
+          ],
+          [
+            7.231490397649792,
+            5.130747785450389
+          ],
+          [
+            7.454343727372949,
+            5.029877330944117
+          ],
+          [
+            7.6807027441557905,
+            4.9274200917687265
+          ],
+          [
+            7.888938636260379,
+            4.838198007828327
+          ],
+          [
+            8.122694059435213,
+            4.7583069138318645
+          ],
+          [
+            8.327593518647321,
+            4.688277984734055
+          ],
+          [
+            8.53294529036868,
+            4.618094467816629
+          ],
+          [
+            8.637091590851846,
+            4.582500162588206
+          ],
+          [
+            8.760965497579168,
+            4.5825
+          ],
+          [
+            9.011674509063804,
+            4.5825
+          ],
+          [
+            9.223656509063805,
+            4.5825
+          ],
+          [
+            9.404254509063804,
+            4.5825
+          ],
+          [
+            9.590547509063805,
+            4.5825
+          ],
+          [
+            9.750255509063804,
+            4.5825
+          ],
+          [
+            10.502808721248575,
+            4.5825
+          ],
+          [
+            10.742107837935423,
+            4.6613597725709255
+          ],
+          [
+            10.837473897421285,
+            4.6927872239924024
+          ],
+          [
+            10.924124031405976,
+            4.7213423817828115
+          ],
+          [
+            11.003160912940688,
+            4.747388626834024
+          ],
+          [
+            11.07561597817321,
+            4.771265864240196
+          ],
+          [
+            11.142272209467125,
+            4.793232122280236
+          ],
+          [
+            11.403398993785837,
+            4.881487678560516
+          ],
+          [
+            11.65393063487891,
+            4.996527717837949
+          ],
+          [
+            11.903629346334908,
+            5.1111852894248875
+          ],
+          [
+            12.153510606009624,
+            5.22592668417348
+          ],
+          [
+            12.401398835159702,
+            5.346682859865022
+          ],
+          [
+            12.630630337196393,
+            5.500343537054452
+          ],
+          [
+            12.858862051257201,
+            5.653334026699609
+          ],
+          [
+            13.08685760377599,
+            5.806166210256159
+          ],
+          [
+            13.317717658076415,
+            5.950238986405595
+          ],
+          [
+            13.57138627075545,
+            6.05170643147721
+          ],
+          [
+            13.826499336836196,
+            6.153751657909508
+          ],
+          [
+            13.825013774130781,
+            6.157465564673049
+          ],
+          [
+            13.569900708050035,
+            6.055420338240751
+          ],
+          [
+            13.315901760795287,
+            5.953820759338852
+          ],
+          [
+            13.084684553945058,
+            5.8095250950872925
+          ],
+          [
+            12.856634831783904,
+            5.656656600012234
+          ],
+          [
+            12.628403117723096,
+            5.503666110367076
+          ],
+          [
+            12.399399948790988,
+            5.350158491632367
+          ],
+          [
+            12.151799915541872,
+            5.229542707580112
+          ],
+          [
+            11.901960173455,
+            5.114820377030019
+          ],
+          [
+            11.652261461999002,
+            5.00016280544308
+          ],
+          [
+            11.401919997103684,
+            4.885210091970738
+          ],
+          [
+            11.1410058417966,
+            4.797026399983322
+          ],
+          [
+            11.074364025708542,
+            4.775064892408848
+          ],
+          [
+            11.001908960476019,
+            4.751187655002675
+          ],
+          [
+            10.922872078941307,
+            4.725141409951463
+          ],
+          [
+            10.836221944956616,
+            4.696586252161054
+          ],
+          [
+            10.740855886642239,
+            4.665158801125634
+          ],
+          [
+            10.502166615606342,
+            4.5865
+          ],
+          [
+            9.750255509063804,
+            4.5865
+          ],
+          [
+            9.590547509063805,
+            4.5865
+          ],
+          [
+            9.404254509063804,
+            4.5865
+          ],
+          [
+            9.223656509063805,
+            4.5865
+          ],
+          [
+            9.011674509063804,
+            4.5865
+          ],
+          [
+            8.760965500204229,
+            4.5865
+          ],
+          [
+            8.637756263902048,
+            4.586500161715805
+          ],
+          [
+            8.534238912290167,
+            4.621879509735056
+          ],
+          [
+            8.328887140568808,
+            4.692063026652482
+          ],
+          [
+            8.1239876813567,
+            4.762091955750291
+          ],
+          [
+            7.890375167625099,
+            4.841934207278813
+          ],
+          [
+            7.682315299530868,
+            4.93108087084442
+          ],
+          [
+            7.455993156967645,
+            5.033521419583563
+          ],
+          [
+            7.2331398272444885,
+            5.134391874089834
+          ],
+          [
+            6.982380851847664,
+            5.247893305058923
+          ],
+          [
+            6.753069432399534,
+            5.381206421245661
+          ],
+          [
+            6.586315911217599,
+            5.4917508903437975
+          ],
+          [
+            6.419892476354233,
+            5.602076538174567
+          ],
+          [
+            6.25346987497913,
+            5.7124016334681755
+          ],
+          [
+            6.063683666197467,
+            5.838214962885233
+          ],
+          [
+            5.876733511576969,
+            5.981471478279275
+          ],
+          [
+            5.683155106477408,
+            6.139664583521928
+          ],
+          [
+            5.486141251286308,
+            6.300665153355515
+          ],
+          [
+            5.285426107625936,
+            6.464690432045712
+          ],
+          [
+            5.093922105089124,
+            6.621188326591923
+          ],
+          [
+            4.906101959823903,
+            6.825034605362582
+          ],
+          [
+            4.722207558453121,
+            7.0316009192311295
+          ],
+          [
+            4.538389928102392,
+            7.238080997159346
+          ],
+          [
+            4.353939407452109,
+            7.445271992958293
+          ],
+          [
+            4.200504453468961,
+            7.676188193195898
+          ],
+          [
+            4.05027964136325,
+            7.908353811904724
+          ],
+          [
+            3.8999587603427437,
+            8.140667900754597
+          ],
+          [
+            3.758612262213728,
+            8.378735038745061
+          ],
+          [
+            3.6443606660788763,
+            8.631291198622101
+          ],
+          [
+            3.5304185071288177,
+            8.883163339459074
+          ],
+          [
+            3.4161190047187233,
+            9.135825397418229
+          ],
+          [
+            3.3350727349454132,
+            9.40090857928959
+          ],
+          [
+            3.256711824091461,
+            9.667335676193025
+          ],
+          [
+            3.1365810751435568,
+            10.758522686324055
+          ]
+        ],
+        "z0": 2.875,
+        "z1": 2.91
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 429,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.000030999999999999724,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.5,
+        4.602,
+        2.9080000000000004
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            3.1365810751435568,
+            10.758522686324055
+          ],
+          [
+            3.256711824091461,
+            9.667335676193025
+          ],
+          [
+            3.3350727349454132,
+            9.40090857928959
+          ],
+          [
+            3.4161190047187233,
+            9.135825397418229
+          ],
+          [
+            3.5304185071288177,
+            8.883163339459074
+          ],
+          [
+            3.6443606660788763,
+            8.631291198622101
+          ],
+          [
+            3.758612262213728,
+            8.378735038745061
+          ],
+          [
+            3.8999587603427437,
+            8.140667900754597
+          ],
+          [
+            4.05027964136325,
+            7.908353811904724
+          ],
+          [
+            4.200504453468961,
+            7.676188193195898
+          ],
+          [
+            4.353939407452109,
+            7.445271992958293
+          ],
+          [
+            4.538389928102392,
+            7.238080997159346
+          ],
+          [
+            4.722207558453121,
+            7.0316009192311295
+          ],
+          [
+            4.906101959823903,
+            6.825034605362582
+          ],
+          [
+            5.093922105089124,
+            6.621188326591923
+          ],
+          [
+            5.285426107625936,
+            6.464690432045712
+          ],
+          [
+            5.486141251286308,
+            6.300665153355515
+          ],
+          [
+            5.683155106477408,
+            6.139664583521928
+          ],
+          [
+            5.876733511576969,
+            5.981471478279275
+          ],
+          [
+            6.063683666197467,
+            5.838214962885233
+          ],
+          [
+            6.25346987497913,
+            5.7124016334681755
+          ],
+          [
+            6.419892476354233,
+            5.602076538174567
+          ],
+          [
+            6.586315911217599,
+            5.4917508903437975
+          ],
+          [
+            6.753069432399534,
+            5.381206421245661
+          ],
+          [
+            6.982380851847664,
+            5.247893305058923
+          ],
+          [
+            7.2331398272444885,
+            5.134391874089834
+          ],
+          [
+            7.455993156967645,
+            5.033521419583563
+          ],
+          [
+            7.682315299530868,
+            4.93108087084442
+          ],
+          [
+            7.890375167625099,
+            4.841934207278813
+          ],
+          [
+            8.1239876813567,
+            4.762091955750291
+          ],
+          [
+            8.328887140568808,
+            4.692063026652482
+          ],
+          [
+            8.534238912290167,
+            4.621879509735056
+          ],
+          [
+            8.637756263902048,
+            4.586500161715805
+          ],
+          [
+            8.760965500204229,
+            4.5865
+          ],
+          [
+            9.011674509063804,
+            4.5865
+          ],
+          [
+            9.223656509063805,
+            4.5865
+          ],
+          [
+            9.404254509063804,
+            4.5865
+          ],
+          [
+            9.590547509063805,
+            4.5865
+          ],
+          [
+            9.750255509063804,
+            4.5865
+          ],
+          [
+            10.502166615606342,
+            4.5865
+          ],
+          [
+            10.740855886642239,
+            4.665158801125634
+          ],
+          [
+            10.836221944956616,
+            4.696586252161054
+          ],
+          [
+            10.922872078941307,
+            4.725141409951463
+          ],
+          [
+            11.001908960476019,
+            4.751187655002675
+          ],
+          [
+            11.074364025708542,
+            4.775064892408848
+          ],
+          [
+            11.1410058417966,
+            4.797026399983322
+          ],
+          [
+            11.401919997103684,
+            4.885210091970738
+          ],
+          [
+            11.652261461999002,
+            5.00016280544308
+          ],
+          [
+            11.901960173455,
+            5.114820377030019
+          ],
+          [
+            12.151799915541872,
+            5.229542707580112
+          ],
+          [
+            12.399399948790988,
+            5.350158491632367
+          ],
+          [
+            12.628403117723096,
+            5.503666110367076
+          ],
+          [
+            12.856634831783904,
+            5.656656600012234
+          ],
+          [
+            13.084684553945058,
+            5.8095250950872925
+          ],
+          [
+            13.315901760795287,
+            5.953820759338852
+          ],
+          [
+            13.569900708050035,
+            6.055420338240751
+          ],
+          [
+            13.825013774130781,
+            6.157465564673049
+          ],
+          [
+            13.813500663163804,
+            6.186248342090492
+          ],
+          [
+            13.558387597083058,
+            6.084203115658194
+          ],
+          [
+            13.301828556866539,
+            5.981579499571587
+          ],
+          [
+            13.067843417755334,
+            5.835556452528574
+          ],
+          [
+            12.839373880865846,
+            5.682406543185072
+          ],
+          [
+            12.611142166805038,
+            5.529416053539915
+          ],
+          [
+            12.383908579433454,
+            5.377094637829292
+          ],
+          [
+            12.138542064416805,
+            5.257566888981513
+          ],
+          [
+            11.88902408363572,
+            5.142992305969789
+          ],
+          [
+            11.639325372179721,
+            5.02833473438285
+          ],
+          [
+            11.390457772816996,
+            4.914058795899965
+          ],
+          [
+            11.131191492350032,
+            4.826432052182235
+          ],
+          [
+            11.064661394107354,
+            4.804507360715898
+          ],
+          [
+            10.99220632887483,
+            4.7806301233097255
+          ],
+          [
+            10.913169447340119,
+            4.754583878258513
+          ],
+          [
+            10.826519313355428,
+            4.726028720468104
+          ],
+          [
+            10.731153264120051,
+            4.694601272424627
+          ],
+          [
+            10.497190296879035,
+            4.6175
+          ],
+          [
+            9.750255509063804,
+            4.6175
+          ],
+          [
+            9.590547509063805,
+            4.6175
+          ],
+          [
+            9.404254509063804,
+            4.6175
+          ],
+          [
+            9.223656509063805,
+            4.6175
+          ],
+          [
+            9.011674509063804,
+            4.6175
+          ],
+          [
+            8.760965520548442,
+            4.6175
+          ],
+          [
+            8.642907480041114,
+            4.617500154954707
+          ],
+          [
+            8.544264482181696,
+            4.651213584602862
+          ],
+          [
+            8.338912710460336,
+            4.721397101520289
+          ],
+          [
+            8.134013251248229,
+            4.791426030618098
+          ],
+          [
+            7.901508285701679,
+            4.870889753020084
+          ],
+          [
+            7.69481260368772,
+            4.959451908681053
+          ],
+          [
+            7.468776236326544,
+            5.061763106539269
+          ],
+          [
+            7.245922906603387,
+            5.16263356104554
+          ],
+          [
+            6.996599316391383,
+            5.275485291352027
+          ],
+          [
+            6.76943819451912,
+            5.407548304638274
+          ],
+          [
+            6.603444563263985,
+            5.5175890264815655
+          ],
+          [
+            6.43702112840062,
+            5.627914674312335
+          ],
+          [
+            6.270598527025516,
+            5.7382397696059435
+          ],
+          [
+            6.0816967815343155,
+            5.863466769425953
+          ],
+          [
+            5.8959740880234985,
+            6.005782703616885
+          ],
+          [
+            5.702771419145788,
+            6.163668755602973
+          ],
+          [
+            5.505757563954687,
+            6.32466932543656
+          ],
+          [
+            5.305042420294315,
+            6.488694604126756
+          ],
+          [
+            5.1152353241583235,
+            6.643805779463696
+          ],
+          [
+            4.929079774190136,
+            6.845845427979222
+          ],
+          [
+            4.74536166182836,
+            7.052213718577379
+          ],
+          [
+            4.561544031477631,
+            7.258693796505596
+          ],
+          [
+            4.378548341352199,
+            7.464250599112245
+          ],
+          [
+            4.226428653792384,
+            7.693187352575228
+          ],
+          [
+            4.076306316234967,
+            7.9251946015276
+          ],
+          [
+            3.926309759921889,
+            8.157007461284175
+          ],
+          [
+            3.7861469948198945,
+            8.393080860925135
+          ],
+          [
+            3.6726050116868656,
+            8.644068402587619
+          ],
+          [
+            3.558662852736807,
+            8.895940543424592
+          ],
+          [
+            3.445182970330945,
+            9.146790809795446
+          ],
+          [
+            3.3647664333147365,
+            9.40981428474324
+          ],
+          [
+            3.2872256659278434,
+            9.673452893858675
+          ],
+          [
+            3.167394902591685,
+            10.761915036246595
+          ]
+        ],
+        "z0": 2.906,
+        "z1": 2.91
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 573,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00002800000000000327,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.404254509063804,
+        4.5845,
+        2.775
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.386754509063804,
+            4.5825
+          ],
+          [
+            9.421754509063804,
+            4.5825
+          ],
+          [
+            9.421754509063804,
+            4.5865
+          ],
+          [
+            9.386754509063804,
+            4.5865
+          ]
+        ],
+        "z0": 2.675,
+        "z1": 2.875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 574,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.000024800000000008057,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.404254509063804,
+        4.602,
+        2.775
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.402254509063804,
+            4.5865
+          ],
+          [
+            9.406254509063805,
+            4.5865
+          ],
+          [
+            9.406254509063805,
+            4.6175
+          ],
+          [
+            9.402254509063804,
+            4.6175
+          ]
+        ],
+        "z0": 2.675,
+        "z1": 2.875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 575,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00002800000000000327,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.590547509063805,
+        4.5845,
+        2.775
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.573047509063805,
+            4.5825
+          ],
+          [
+            9.608047509063805,
+            4.5825
+          ],
+          [
+            9.608047509063805,
+            4.5865
+          ],
+          [
+            9.573047509063805,
+            4.5865
+          ]
+        ],
+        "z0": 2.675,
+        "z1": 2.875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 576,
+        "material": "MAT-METAL",
+        "role": "frame",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.000024800000000008057,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.590547509063805,
+        4.602,
+        2.775
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.588547509063805,
+            4.5865
+          ],
+          [
+            9.592547509063806,
+            4.5865
+          ],
+          [
+            9.592547509063806,
+            4.6175
+          ],
+          [
+            9.588547509063805,
+            4.6175
+          ]
+        ],
+        "z0": 2.675,
+        "z1": 2.875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 724,
+        "material": "MAT-TEXTURED-GLASS",
+        "role": "glass",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.000009403607251042383,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.380877254531903,
+        4.6,
+        2.775
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.241156509063805,
+            4.598
+          ],
+          [
+            9.386754509063804,
+            4.598
+          ],
+          [
+            9.386754509063804,
+            4.601999999999999
+          ],
+          [
+            9.241156509063805,
+            4.601999999999999
+          ]
+        ],
+        "z0": 2.675,
+        "z1": 2.875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 725,
+        "material": "MAT-TEXTURED-GLASS",
+        "role": "glass",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00012103439999998742,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.497401009063804,
+        4.6,
+        2.775
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.421754509063804,
+            4.598
+          ],
+          [
+            9.573047509063805,
+            4.598
+          ],
+          [
+            9.573047509063805,
+            4.601999999999999
+          ],
+          [
+            9.421754509063804,
+            4.601999999999999
+          ]
+        ],
+        "z0": 2.675,
+        "z1": 2.875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    },
+    {
+      "source": {
+        "tag": "CW-1",
+        "index": 726,
+        "material": "MAT-TEXTURED-GLASS",
+        "role": "glass",
+        "class": "IfcCurtainWall",
+        "storey": "ground"
+      },
+      "target": {
+        "tag": "BEAM-PRIMARY-F-3-34",
+        "index": 0,
+        "material": "MAT-RC",
+        "role": "",
+        "class": "IfcBeam",
+        "storey": "ground"
+      },
+      "volume": 0.00001356199274895425,
+      "error": 0,
+      "method": "GEOS_prism_exact_height",
+      "witness": [
+        9.616523754531903,
+        4.6,
+        2.775
+      ],
+      "source_geometry": {
+        "outline": [
+          [
+            9.608047509063805,
+            4.598
+          ],
+          [
+            9.732755509063804,
+            4.598
+          ],
+          [
+            9.732755509063804,
+            4.601999999999999
+          ],
+          [
+            9.608047509063805,
+            4.601999999999999
+          ]
+        ],
+        "z0": 2.675,
+        "z1": 2.875
+      },
+      "target_geometry": {
+        "outline": [
+          [
+            9.625,
+            6.006
+          ],
+          [
+            9.375,
+            6.006
+          ],
+          [
+            9.375,
+            1.312972188571
+          ],
+          [
+            9.378756443469,
+            1.319999999998
+          ],
+          [
+            9.383594254281,
+            1.327779832627
+          ],
+          [
+            9.388930532359,
+            1.335226600062
+          ],
+          [
+            9.394742426952,
+            1.342308414113
+          ],
+          [
+            9.401005050633,
+            1.348994949365
+          ],
+          [
+            9.407691585887,
+            1.355257573048
+          ],
+          [
+            9.414773399939,
+            1.361069467641
+          ],
+          [
+            9.422220167378,
+            1.366405745723
+          ],
+          [
+            9.430000000005,
+            1.371243556533
+          ],
+          [
+            9.438079583375,
+            1.375562183818
+          ],
+          [
+            9.446424319473,
+            1.379343134554
+          ],
+          [
+            9.454998474853,
+            1.382570218128
+          ],
+          [
+            9.463765333692,
+            1.385229615682
+          ],
+          [
+            9.472687354914,
+            1.387309939256
+          ],
+          [
+            9.481726333083,
+            1.388802280591
+          ],
+          [
+            9.490843561908,
+            1.389700249253
+          ],
+          [
+            9.499999999998,
+            1.39
+          ],
+          [
+            9.5091564381,
+            1.389700249253
+          ],
+          [
+            9.518273666909,
+            1.388802280593
+          ],
+          [
+            9.527312645084,
+            1.387309939256
+          ],
+          [
+            9.536234666317,
+            1.38522961568
+          ],
+          [
+            9.545001525141,
+            1.38257021813
+          ],
+          [
+            9.553575680535,
+            1.37934313455
+          ],
+          [
+            9.561920416626,
+            1.375562183817
+          ],
+          [
+            9.569999999999,
+            1.37124355653
+          ],
+          [
+            9.57777983262,
+            1.366405745724
+          ],
+          [
+            9.585226600062,
+            1.36106946764
+          ],
+          [
+            9.592308414113,
+            1.355257573048
+          ],
+          [
+            9.598994949365,
+            1.348994949367
+          ],
+          [
+            9.605257573045,
+            1.342308414116
+          ],
+          [
+            9.611069467644,
+            1.335226600057
+          ],
+          [
+            9.616405745724,
+            1.327779832621
+          ],
+          [
+            9.62124355653,
+            1.32
+          ],
+          [
+            9.625,
+            1.312972188571
+          ]
+        ],
+        "z0": 2.61,
+        "z1": 2.91
+      }
+    }
+  ]
+}

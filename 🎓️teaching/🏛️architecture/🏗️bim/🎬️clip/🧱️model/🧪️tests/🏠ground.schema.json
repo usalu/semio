@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema",
+    "source",
+    "walls",
+    "removed_walls",
+    "openings",
+    "basin",
+    "curve_cases",
+    "expected_spaces",
+    "chauffeur_envelope",
+    "northern_circulation",
+    "plate"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "source": {
+      "type": "string"
+    },
+    "walls": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/outline"
+      }
+    },
+    "removed_walls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "openings": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/point"
+      }
+    },
+    "basin": {
+      "type": "object",
+      "required": [
+        "tag",
+        "centre",
+        "source",
+        "uncertainty_m"
+      ],
+      "properties": {
+        "tag": {
+          "type": "string"
+        },
+        "centre": {
+          "$ref": "#/$defs/point"
+        },
+        "source": {
+          "type": "string"
+        },
+        "uncertainty_m": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "curve_cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "outline",
+          "midpoint"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "outline": {
+            "$ref": "#/$defs/outline"
+          },
+          "midpoint": {
+            "$ref": "#/$defs/point"
+          }
+        }
+      }
+    },
+    "expected_spaces": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "chauffeur_envelope": {
+      "$ref": "#/$defs/outline"
+    },
+    "northern_circulation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fixture",
+        "critical_clearance",
+        "partition_reconstruction"
+      ],
+      "properties": {
+        "fixture": {
+          "const": "🚶️hall.json"
+        },
+        "critical_clearance": {
+          "type": "object",
+          "required": [
+            "wall_tag",
+            "actual_east_finish_face_x",
+            "basin_tag",
+            "actual_west_edge_x",
+            "nominal_gap",
+            "axis_y",
+            "skirting_tag",
+            "actual_east_skirting_face_x",
+            "board_nominal_gap"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "wall_tag": {
+              "type": "string"
+            },
+            "actual_east_finish_face_x": {
+              "type": "number"
+            },
+            "basin_tag": {
+              "type": "string"
+            },
+            "actual_west_edge_x": {
+              "type": "number"
+            },
+            "nominal_gap": {
+              "type": "number"
+            },
+            "axis_y": {
+              "type": "number"
+            },
+            "skirting_tag": {
+              "type": "string"
+            },
+            "actual_east_skirting_face_x": {
+              "type": "number"
+            },
+            "board_nominal_gap": {
+              "type": "number"
+            }
+          }
+        },
+        "partition_reconstruction": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "measurement_grade",
+            "material",
+            "type",
+            "thickness",
+            "axis_x",
+            "retained_cabinet_face_x"
+          ],
+          "properties": {
+            "source": {
+              "type": "string",
+              "minLength": 1
+            },
+            "measurement_grade": {
+              "const": "inferred"
+            },
+            "material": {
+              "const": "LS-PARTITION-08"
+            },
+            "type": {
+              "const": "TY-PARTITION-08"
+            },
+            "thickness": {
+              "const": 0.08
+            },
+            "axis_x": {
+              "const": 7.015
+            },
+            "retained_cabinet_face_x": {
+              "const": 6.975
+            }
+          }
+        }
+      }
+    },
+    "plate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag",
+        "cellar_owner",
+        "thickness",
+        "material",
+        "status",
+        "preserve_openings",
+        "density",
+        "reinforced",
+        "outline"
+      ],
+      "properties": {
+        "tag": {
+          "type": "string"
+        },
+        "cellar_owner": {
+          "type": "string"
+        },
+        "thickness": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "material": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "minLength": 1
+        },
+        "preserve_openings": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "density": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "reinforced": {
+          "type": "boolean"
+        },
+        "outline": {
+          "$ref": "#/$defs/outline"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "outline": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/point"
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "bezier"
+            ],
+            "properties": {
+              "bezier": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "$ref": "#/$defs/point"
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

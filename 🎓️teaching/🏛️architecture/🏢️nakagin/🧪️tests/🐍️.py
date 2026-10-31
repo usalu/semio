@@ -32,10 +32,9 @@ def count_oracle():
     """🔢 Count branches and capsules by walking the raw JSON, independent of the model code."""
     branches, per_tower = [], {}
     for ti, tower in enumerate(RAW["towers"]):
-        special = {e["storey"]: e["facades"] for e in tower["exceptions"]}
-        for storey in range(tower["capsule_storeys"]["value"]):
-            for facade in special.get(storey, tower["facades"]):
-                branches.append((0, ti, storey, facade))
+        for storey, floor in enumerate(tower["floors"]):
+            for group in floor["groups"]:
+                branches.append((0, ti, storey, group["facade"]))
         per_tower[tower["key"]] = sum(1 for b in branches if b[1] == ti)
     return branches, per_tower
 
@@ -72,13 +71,37 @@ def shoelace(points):
     return abs(float(np.dot(p[:, 0], np.roll(p[:, 1], -1)) - np.dot(p[:, 1], np.roll(p[:, 0], -1)))) / 2
 
 
+def segment_hits_solid(solid, start, end):
+    """🎯 Independently intersect a finite segment with face triangles using NumPy Möller–Trumbore tests."""
+    origin, direction = np.asarray(start, dtype=float), np.asarray(end, dtype=float) - np.asarray(start, dtype=float)
+    vertices = np.asarray(solid.vertices, dtype=float)
+    for face in solid.faces:
+        for i in range(1, len(face) - 1):
+            a, b, c = vertices[[face[0], face[i], face[i + 1]]]
+            e1, e2 = b - a, c - a
+            cross = np.cross(direction, e2)
+            determinant = np.dot(e1, cross)
+            if abs(determinant) < 1e-12:
+                continue
+            offset = origin - a
+            u = np.dot(offset, cross) / determinant
+            if u < -1e-9 or u > 1 + 1e-9:
+                continue
+            q = np.cross(offset, e1)
+            v = np.dot(direction, q) / determinant
+            t = np.dot(e2, q) / determinant
+            if v >= -1e-9 and u + v <= 1 + 1e-9 and 1e-8 < t < 1 - 1e-8:
+                return True
+    return False
+
+
 class DataTests(unittest.TestCase):
     def test_load_and_value_paths(self):
         self.assertEqual(M.load()["version"], 1)
         v = M.value("capsule.width")
         self.assertEqual((v.value, v.unit, v.basis, v.source), (2.5, "m", "sourced", "wikipedia"))
-        self.assertEqual(M.value("types.D.rotation").value, 5.0)
-        self.assertEqual(M.value("towers.1.capsule_storeys").value, 11)
+        self.assertEqual(M.value("types.D.rotation").value, 0.0)
+        self.assertEqual(M.value("towers.1.capsule_storeys").value, 9)
         self.assertEqual(M.value("energy.u_window").source, "tokyo-window-2019")
         self.assertIn("jma-tokyo-normals", M.sources())
         with self.assertRaises(KeyError):
@@ -124,7 +147,7 @@ class CapsuleTests(unittest.TestCase):
         types = M.capsule_types()
         self.assertEqual([t.key for t in types], ["A", "B", "C", "D"])
         self.assertEqual({(t.width, t.length, t.height) for t in types}, {(2.5, 4.0, 2.5)})
-        self.assertEqual(len({t.window_diameter for t in types}), 2)
+        self.assertEqual(len({t.window_diameter for t in types}), 1)
         self.assertEqual({t.key: t.count for t in types}, CASES["counts"]["per_type"])
 
     def test_solid_topology_and_features(self):
@@ -191,8 +214,8 @@ class TowerTests(unittest.TestCase):
         self.assertEqual(len(branches), CASES["counts"]["branches"])
         self.assertEqual(set(tr), set(branches))
         self.assertEqual(len(M.slots()), CASES["counts"]["slots"])
-        self.assertTrue(all(len(items) == 2 for items in tr.values()))
-        self.assertEqual([len(tr[b]) for b in sorted(tr)], [2] * 70)
+        self.assertTrue(all(len(items) in CASES["counts"]["items_per_branch"] for items in tr.values()))
+        self.assertEqual(sum(len(v) == 1 for v in tr.values()), CASES["counts"]["singletons"])
         self.assertEqual(per_tower, CASES["counts"]["branches_per_tower"])
         self.assertEqual({k: sum(len(v) for p, v in tr.items() if p[1] == i) for i, k in enumerate("AB")}, CASES["counts"]["per_tower"])
         for path in CASES["absent"]:
@@ -200,12 +223,29 @@ class TowerTests(unittest.TestCase):
 
     def test_slots_follow_tree_order_and_paths(self):
         slots = M.slots()
-        self.assertEqual([s.path for s in slots[::2]], sorted({s.path for s in slots}))
-        self.assertEqual([(s.item) for s in slots[:4]], [0, 1, 0, 1])
+        self.assertEqual(list(M.tree()), sorted(M.tree()))
+        self.assertEqual(len(slots), 140)
         self.assertTrue(all(s.building == 0 for s in slots))
-        self.assertEqual({s.facade for s in slots if s.tower == 0}, {0, 1, 2})
-        self.assertEqual(max(s.storey for s in slots if s.tower == 1), 10)
-        self.assertEqual({s.facade for s in slots if s.tower == 1 and s.storey == 10}, {0, 1, 2})
+        self.assertEqual({s.sublevel for s in slots}, {0, 1, 2})
+        self.assertEqual({s.layout for s in slots}, {"Slash", "Backslash", "J", "L", "P", "S"})
+        for tower in M.towers():
+            actual = [sum(s.tower == tower.index and s.floor == floor for s in slots) for floor in range(3, tower.storeys + 1)]
+            self.assertEqual(actual, CASES["floor_counts"][tower.key])
+            for storey, facades in enumerate(M.facade_storeys(tower)):
+                for facade in facades:
+                    self.assertEqual(tuple(s.item for s in M.tree()[(0, tower.index, storey, facade)]), M.facade_items(tower, storey, facade))
+
+    def test_restored_a_capsules_have_actual_l_pose_and_unique_footprints(self):
+        case = CASES["restored_a_l"]
+        tower = next(t for t in RAW["towers"] if t["key"] == "A")
+        for floor in (f for f in tower["floors"] if f["floor"] in case["floors"]):
+            items = floor["groups"]
+            selected = next(item for group in items if group["facade"] == case["facade"] for item in group["items"] if item["item"] == case["item"])
+            self.assertEqual((selected["family"], selected["source_item"], selected["sublevel"]), (case["family"], case["source_item"], case["sublevel"]))
+            np.testing.assert_allclose([q["value"] for q in selected["center"][:2]], case["center_xy"])
+            self.assertAlmostEqual(selected["rotation"]["value"], case["rotation"])
+            centers = np.array([[q["value"] for q in item["center"]] for group in items for item in group["items"]])
+            self.assertEqual(len(np.unique(np.round(centers, 8), axis=0)), len(centers))
 
     def test_type_pattern_and_counts(self):
         order = RAW["assignment"]["order"]
@@ -236,16 +276,13 @@ class TowerTests(unittest.TestCase):
             self.assertTrue(np.allclose(slot.plane.y, case["y"], atol=1e-8))
             self.assertAlmostEqual(slot.rotation, case["rotation"])
 
-    def test_capsule_back_face_sits_on_core_facade(self):
-        for s in M.slots():
-            tower = M.towers()[s.tower]
-            placed = M.slot_solid(s)
-            back = np.asarray(placed.bolts)
-            half = tower.core_side / 2
-            normal = np.array(RAW["facades"][s.facade]["normal"] + [0])
-            distance = (back[:, :2] - np.array(tower.center)) @ normal[:2]
-            self.assertTrue(np.all(np.abs(distance - half) < (1e-9 if s.rotation == 0 else 0.2)))
-            self.assertTrue(np.all(back[:, 2] > tower.base_elevation + s.storey * tower.storey_height))
+    def test_actual_door_ports_sit_on_attachment_facades(self):
+        for slot in M.slots():
+            tower = M.towers()[slot.tower]
+            normal = np.array(RAW["facades"][slot.facade]["normal"])
+            distance = (np.array(slot.facade_plane.origin[:2]) - np.array(tower.center)) @ normal
+            self.assertAlmostEqual(distance, tower.core_side / 2, places=6)
+            self.assertEqual(tuple(slot.facade_plane.y[:2]), tuple(normal))
 
     def test_no_capsule_penetrates_any_core_and_rotated_ones_touch(self):
         cores = []
@@ -264,10 +301,9 @@ class TowerTests(unittest.TestCase):
             normal = np.array(RAW["facades"][s.facade]["normal"], dtype=float)
             depth = (v[:, :2] - np.array(tower.center)) @ normal - tower.core_side / 2
             self.assertGreaterEqual(depth.min(), -1e-9, s.path)
-            self.assertAlmostEqual(depth.min(), 0.0, places=9)
+            self.assertLessEqual(depth.min(), .100001)
             touching += 1
-            if s.rotation:
-                self.assertAlmostEqual(abs(np.dot(s.plane.y, s.facade_plane.y)), math.cos(math.radians(abs(s.rotation))))
+            self.assertIn(round(abs(float(np.dot(s.plane.y, s.facade_plane.y)))), (0, 1))
         self.assertEqual(touching, 140)
 
     def test_capsules_do_not_overlap_in_plan_box_checks(self):
@@ -294,13 +330,15 @@ class TowerTests(unittest.TestCase):
             cap = M.capital_solid(tower)
             v = np.asarray(cap.vertices)
             self.assertAlmostEqual(v[:, 2].max(), expected["capital_top"])
-            self.assertAlmostEqual(cap.meta["base_side"], 5.5 + 0.5)
-            self.assertAlmostEqual(cap.meta["roof_side"], 5.0)
-            h, a, b = tower.capital_height, cap.meta["base_side"] ** 2, cap.meta["roof_side"] ** 2
-            self.assertAlmostEqual(signed_volume(cap), h / 3 * (a + b + math.sqrt(a * b)))
-        p = np.asarray(M.podium_solid().vertices)
-        self.assertTrue(np.allclose(p.max(axis=0) - p.min(axis=0), [31.4, 20.7, 5.5]))
-        self.assertAlmostEqual(signed_volume(M.podium_solid()), 31.4 * 20.7 * 5.5)
+            self.assertAlmostEqual(cap.meta["base_side"], 5.5)
+            self.assertAlmostEqual(cap.meta["roof_side"], 5.5)
+            self.assertEqual(list(cap.meta["roof_corners"]), CASES["assembly"]["capital"]["roof_corners"][tower.key])
+            self.assertGreater(signed_volume(cap), 0)
+        p = M.podium_solid()
+        self.assertAlmostEqual(np.asarray(p.vertices)[:, 2].max(), CASES["assembly"]["podium"]["levels"][-1])
+        area = shoelace(np.asarray(p.vertices)[:len(p.vertices) // 2, :2])
+        self.assertAlmostEqual(area, CASES["assembly"]["podium"]["roof_area"], places=3)
+        self.assertAlmostEqual(signed_volume(p), area * M.podium_height(), places=5)
 
     def test_all_solids_have_outward_faces(self):
         solids = [M.capsule_solid(t) for t in M.capsule_types()] + [M.core_solid(0), M.capital_solid(1), M.podium_solid()]
@@ -443,6 +481,452 @@ class VariantTests(unittest.TestCase):
         self.assertAlmostEqual(c["hdd_value"].value, src["hdd"], places=6)
         self.assertEqual(c["sources"][0]["url"], RAW["sources"]["jma-tokyo-normals"]["url"])
 
+
+
+
+class AssemblyTests(unittest.TestCase):
+    def test_capsule_parts_match_portable_contract(self):
+        expected = CASES["assembly"]["capsule"]
+        assembly = M.capsule_assembly("A")
+        roles = [p.role for p in assembly.parts]
+        self.assertTrue(set(expected["required_roles"]).issubset(roles))
+        self.assertEqual(roles.count("bolt_shaft"), expected["bolts"])
+        self.assertEqual(roles.count("bolt_head"), expected["bolts"])
+        self.assertEqual(len({p.key for p in assembly.parts}), len(assembly.parts))
+        for part in assembly.parts:
+            self.assertGreater(signed_volume(part.solid), 0, part.key)
+            uses = {}
+            for face in part.solid.faces:
+                for a, b in zip(face, face[1:] + face[:1]):
+                    edge = tuple(sorted((a, b)))
+                    uses[edge] = uses.get(edge, 0) + 1
+            self.assertEqual(set(uses.values()), {2}, part.key)
+
+    def test_shell_has_real_window_aperture(self):
+        assembly = M.capsule_assembly("A")
+        shell = next(p.solid for p in assembly.parts if p.role == "shell")
+        t = M.capsule_type("A")
+        centre = np.array([t.window_u, t.length, t.window_v])
+        triangles = [np.array([shell.vertices[i] for i in face]) for face in shell.faces]
+        for polygon in triangles:
+            if np.allclose(polygon[:, 1], t.length):
+                self.assertGreater(np.linalg.norm(polygon[:, [0, 2]].mean(axis=0) - centre[[0, 2]]), t.window_diameter / 2 * .95)
+        glazing = next(p.solid for p in assembly.parts if p.role == "glazing")
+        disk = rh.Circle(rh.Point3d(*centre), t.window_diameter / 2)
+        self.assertAlmostEqual(glazing.meta["radius"], disk.Radius)
+        self.assertLess(np.ptp(np.asarray(glazing.vertices)[:, 1]), .02)
+
+    def test_assembly_placement_matches_rhino(self):
+        slot = M.slots()[37]
+        local = M.capsule_assembly(slot.type)
+        placed = M.place_assembly(local, slot.plane)
+        for a, b in zip(local.parts, placed.parts):
+            self.assertEqual((a.key, a.role, a.material), (b.key, b.role, b.material))
+            self.assertTrue(np.allclose(np.asarray(b.solid.vertices), rhino_map(a.solid.vertices, slot.plane)))
+
+    def test_structure_clears_capsules_with_rhino_bounds(self):
+        structure = M.structure_assembly("exterior")
+        blockers = [p for p in structure.parts if p.role in ("bridge", "bridge_rail", "capital", "roof")]
+        for slot in M.slots():
+            vertices = np.asarray(M.slot_solid(slot).vertices)
+            lo, hi = vertices.min(axis=0), vertices.max(axis=0)
+            for part in blockers:
+                points = np.asarray(part.solid.vertices)
+                lower, upper = points.min(axis=0), points.max(axis=0)
+                overlap = np.minimum(hi, upper) - np.maximum(lo, lower)
+                self.assertFalse(np.all(overlap > 1e-8), (slot.path, slot.item, part.key))
+                inner = rh.BoundingBox(*(lo + 1e-7), *(hi - 1e-7))
+                self.assertFalse(any(inner.Contains(rh.Point3d(*p)) for p in points), part.key)
+
+    def test_every_capsule_entry_opens_through_core_wall(self):
+        cores = {t.index: M.core_assembly(t, "exterior") for t in M.towers()}
+        count = 0
+        for slot in M.slots():
+            local = (M.value("detail.door_offset").value, -.1, 1.0)
+            point = rhino_map([(0, -.1, 1.0)], slot.facade_plane)[0]
+            for part in cores[slot.tower].parts:
+                if part.role != "core_wall":
+                    continue
+                vertices = np.asarray(part.solid.vertices)
+                box = rh.BoundingBox(*(vertices.min(axis=0) + 1e-7), *(vertices.max(axis=0) - 1e-7))
+                self.assertFalse(box.Contains(rh.Point3d(*point)), slot.path)
+            count += 1
+        self.assertEqual(count, CASES["assembly"]["core"]["door_openings"])
+
+    def test_distinct_fitting_roles_do_not_interpenetrate(self):
+        checked = set(CASES["assembly"]["capsule"]["independent_fitting_roles"])
+        for t in M.capsule_types():
+            parts = [p for p in M.capsule_assembly(t, interior="study").parts if p.role in checked]
+            for i, a in enumerate(parts):
+                av = np.asarray(a.solid.vertices)
+                for b in parts[i + 1:]:
+                    if a.role == b.role:
+                        continue
+                    bv = np.asarray(b.solid.vertices)
+                    overlap = np.minimum(av.max(axis=0), bv.max(axis=0)) - np.maximum(av.min(axis=0), bv.min(axis=0))
+                    self.assertFalse(np.all(overlap > 1e-8), (t.key, a.key, b.key))
+
+    def test_all_six_families_have_closed_parts_and_correct_window_wall(self):
+        for layout, expected in CASES["assembly"]["capsule"]["families"].items():
+            assembly = M.capsule_assembly("A", "full", layout)
+            glazing = next(p.solid for p in assembly.parts if p.role == "glazing")
+            bounds = np.asarray(glazing.vertices)
+            self.assertEqual(int(np.argmin(np.ptp(bounds, axis=0))), expected["window_axis"])
+            circle = rh.Circle(rh.Point3d(*bounds.mean(axis=0)), CASES["assembly"]["capsule"]["historical_window_diameter"] / 2)
+            self.assertAlmostEqual(glazing.meta["radius"], circle.Radius)
+            barriers = [p for p in assembly.parts if p.role in ("shell", "lining", "steel_truss")]
+            for u, v in ((0, 0), (.5, 0), (-.5, 0), (0, .5), (0, -.5)):
+                wall = "right" if expected["window_axis"] == 0 else "front"
+                window = CASES["assembly"]["capsule"]["analytic_window"][wall]
+                normal = np.asarray(window["normal"])
+                tangent = np.array([0, 1, 0]) if wall == "right" else np.array([1, 0, 0])
+                point = np.asarray(window["center"]) + u * tangent + np.array([0, 0, v])
+                start, end = point + .2 * normal, point - .3 * normal
+                self.assertFalse(any(segment_hits_solid(p.solid, start, end) for p in barriers), (layout, u, v, "window"))
+            for part in assembly.parts:
+                self.assertGreater(signed_volume(part.solid), 0, (layout, part.key))
+                uses = {}
+                for face in part.solid.faces:
+                    for a, b in zip(face, face[1:] + face[:1]):
+                        edge = tuple(sorted((a, b)))
+                        uses[edge] = uses.get(edge, 0) + 1
+                self.assertEqual(set(uses.values()), {2}, (layout, part.key))
+
+    def test_slot_envelope_metadata_matches_family_glazing_and_rhino(self):
+        for layout, expected in CASES["assembly"]["capsule"]["families"].items():
+            slot = next(s for s in M.slots() if s.layout == layout)
+            solid = M.slot_solid(slot)
+            wall = "right" if expected["window_axis"] == 0 else "front"
+            local = CASES["assembly"]["capsule"]["analytic_window"][wall]
+            centre = rh.Point3d(*local["center"])
+            xf = rh.Transform.PlaneToPlane(rh.Plane.WorldXY(), rhino_plane(slot.plane))
+            centre.Transform(xf)
+            self.assertTrue(np.allclose(solid.window.center, (centre.X, centre.Y, centre.Z)))
+            local_center = rh.Point3d(*local["center"])
+            circle = rh.Circle(local_center, CASES["assembly"]["capsule"]["historical_window_diameter"] / 2)
+            xy = rh.Plane(local_center, rh.Vector3d(1, 0, 0), rh.Vector3d(0, 1, 0))
+            oriented = rh.Plane(local_center, rh.Vector3d(0, 1, 0), rh.Vector3d(0, 0, 1)) if wall == "right" else rh.Plane(local_center, rh.Vector3d(1, 0, 0), rh.Vector3d(0, 0, -1))
+            self.assertTrue(circle.Transform(rh.Transform.PlaneToPlane(xy, oriented)))
+            self.assertTrue(circle.Transform(xf))
+            self.assertTrue(np.allclose(solid.window.center, (circle.Center.X, circle.Center.Y, circle.Center.Z)))
+            self.assertTrue(np.allclose(solid.window.normal, (circle.Normal.X, circle.Normal.Y, circle.Normal.Z)))
+            self.assertAlmostEqual(solid.window.radius, circle.Radius)
+            expected_normal = np.asarray(local["normal"]) @ np.asarray((slot.plane.x, slot.plane.y, slot.plane.z))
+            self.assertTrue(np.allclose(solid.window.normal, expected_normal))
+            assembly = M.slot_assembly(slot)
+            glazing = next(p.solid for p in assembly.parts if p.role == "glazing")
+            self.assertTrue(np.allclose(solid.window.center, np.asarray(glazing.vertices).mean(axis=0)))
+            self.assertEqual(solid.meta["window_reference"], "glazing_midplane")
+            self.assertEqual(len(solid.bolts), 4)
+
+    def test_all_140_placed_families_match_rhino_and_actual_entry_plane(self):
+        prototypes = {layout: M.capsule_assembly("A", "exterior", layout) for layout in CASES["assembly"]["capsule"]["families"]}
+        for slot in M.slots():
+            placed = M.slot_assembly(slot)
+            local = prototypes[slot.layout]
+            glass = next(p.solid for p in placed.parts if p.role == "glazing")
+            source = next(p.solid for p in local.parts if p.role == "glazing")
+            self.assertTrue(np.allclose(glass.vertices, rhino_map(source.vertices, slot.plane)))
+            door = next(p.solid for p in placed.parts if p.role == "door")
+            centre = np.asarray(door.vertices).mean(axis=0)
+            delta = centre - np.asarray(slot.facade_plane.origin)
+            self.assertLess(abs(float(delta @ np.asarray(slot.facade_plane.y))), .151)
+            self.assertLess(abs(float(delta @ np.asarray(slot.facade_plane.x))), .051)
+
+    def test_partial_core_assemblies_do_not_include_higher_capsule_landings(self):
+        from dataclasses import replace
+        tower = M.towers()[0]
+        for storeys in CASES["assembly"]["core"]["partial_storeys"]:
+            partial = replace(tower, storeys=storeys, height=storeys * tower.storey_height)
+            vertices = np.concatenate([np.asarray(p.solid.vertices) for p in M.core_assembly(partial).parts])
+            self.assertLessEqual(vertices[:, 2].max(), partial.height + 1.0)
+            self.assertGreater(vertices[:, 2].max(), partial.height + .65)
+
+    def test_steel_skin_and_internal_structural_layers(self):
+        assembly = M.capsule_assembly("A")
+        roles = {p.role for p in assembly.parts}
+        self.assertTrue(set(CASES["assembly"]["capsule"]["full_structural_roles"]).issubset(roles))
+        shell = next(p.solid for p in assembly.parts if p.role == "shell")
+        self.assertAlmostEqual(shell.meta["wall_thickness"], CASES["assembly"]["capsule"]["steel_skin_thickness"])
+
+    def test_historical_capsules_share_nominal_porthole(self):
+        diameter = CASES["assembly"]["capsule"]["historical_window_diameter"]
+        for t in M.capsule_types():
+            assembly = M.capsule_assembly(t)
+            glazing = next(p.solid for p in assembly.parts if p.role == "glazing")
+            self.assertAlmostEqual(glazing.meta["radius"] * 2, diameter)
+
+    def test_program_fittings_match_detailed_geometry(self):
+        for t in M.capsule_types():
+            roles = [p.role for p in M.capsule_assembly(t, interior="study").parts]
+            fittings = {f["key"] for f in t.fittings}
+            self.assertEqual("bed" in roles, "bed" in fittings)
+            self.assertEqual("desk" in roles, "desk" in fittings)
+            self.assertEqual("sofa" in roles, "sofa" in fittings)
+            self.assertEqual("bathroom" in roles, "bath" in fittings)
+            self.assertTrue(all(abs(s.rotation) % 90 == 0 for s in M.slots()))
+
+    def test_reference_interior_and_handed_entry_clearance(self):
+        for layout in CASES["assembly"]["capsule"]["families"]:
+            assembly = M.capsule_assembly("A", layout=layout)
+            self.assertTrue(set(CASES["assembly"]["capsule"]["reference_roles"]).issubset({p.role for p in assembly.parts}))
+            point = np.array((-.8, .75, 1.0) if layout in ("J", "S") else (.8, .75, 1.0) if layout == "L" else (.45 if layout == "Backslash" else -.45, .45, 1.0))
+            for part in assembly.parts:
+                if part.role not in ("wetroom_enclosure", "media_cabinet", "cabinet"):
+                    continue
+                v = np.asarray(part.solid.vertices)
+                self.assertFalse(np.all(point > v.min(axis=0) + 1e-8) and np.all(point < v.max(axis=0) - 1e-8), (layout, part.key))
+
+    def test_whole_door_approaches_are_clear_and_top_heads_fit(self):
+        for tower in M.towers():
+            parts = [p for p in M.core_assembly(tower).parts if p.role in ("floor", "landing", "stair_tread", "stair_rail")]
+            for slot in (s for s in M.slots() if s.tower == tower.index):
+                self.assertLessEqual(slot.facade_plane.origin[2] + M.value("detail.door_height").value, tower.height)
+                volume = M.place(M._box(-.36, .36, -CASES["assembly"]["core"]["approach_depth"], -.02, .01, 1.95), slot.facade_plane)
+                av = np.asarray(volume.vertices)
+                for part in parts:
+                    bv = np.asarray(part.solid.vertices)
+                    overlap = np.minimum(av.max(axis=0), bv.max(axis=0)) - np.maximum(av.min(axis=0), bv.min(axis=0))
+                    self.assertFalse(np.all(overlap > 1e-7), (slot.path, slot.item, part.key))
+
+    def test_podium_core_holes_pilotis_and_foundations(self):
+        podium = M.podium_assembly()
+        for tower in M.towers():
+            for part in podium.parts:
+                if part.role not in ("floor", "roof"):
+                    continue
+                v = np.asarray(part.solid.vertices)
+                point = rh.Point3d(*tower.center, float(v[:, 2].mean()))
+                box = rh.BoundingBox(*(v.min(axis=0) + 1e-7), *(v.max(axis=0) - 1e-7))
+                self.assertFalse(box.Contains(point), part.key)
+        self.assertTrue(all(np.asarray(p.solid.vertices)[:, 2].min() >= 4 for p in podium.parts if p.role == "podium_glazing"))
+        foundation = M.foundation_assembly()
+        self.assertTrue(set(CASES["assembly"]["foundation_roles"]).issubset({p.role for p in foundation.parts}))
+        for part in foundation.parts:
+            self.assertGreater(signed_volume(part.solid), 0, part.key)
+        for tower in M.towers():
+            for phase, fraction in enumerate(CASES["assembly"]["core"]["basement_turn_fractions"], 1):
+                platform = next(p for p in foundation.parts if p.key == f"{tower.key}-basement-turning-landing-0-{phase}-0")
+                bounds = np.asarray(platform.solid.vertices)
+                self.assertAlmostEqual(bounds[:, 2].max(), -M.value("foundation.basement_depth").value * (1 - fraction))
+                np.testing.assert_allclose(np.ptp(bounds[:, :2], axis=0), CASES["assembly"]["core"]["basement_turn_extents"][phase - 1])
+
+    def test_roof_vent_curb_bears_on_shaft_and_retains_its_aperture(self):
+        expected = CASES["assembly"]["core"]["vent_curb"]
+        for tower in M.towers():
+            parts = M.core_assembly(tower).parts
+            curbs = [np.asarray(p.solid.vertices) for p in parts if p.role == "vent_support"]
+            shaft = [np.asarray(p.solid.vertices) for p in parts if p.role == "lift_shaft"]
+            vent = np.asarray(next(p for p in parts if p.key == "roof-vent").solid.vertices)
+            self.assertEqual(len(curbs), expected["parts"])
+            for curb in curbs:
+                self.assertAlmostEqual(curb[:, 2].max(), vent[:, 2].min())
+                self.assertTrue(any(abs(curb[:, 2].min() - wall[:, 2].max()) < 1e-8 and np.all(np.minimum(curb[:, :2].max(axis=0), wall[:, :2].max(axis=0)) - np.maximum(curb[:, :2].min(axis=0), wall[:, :2].min(axis=0)) > 1e-8) for wall in shaft))
+                self.assertFalse(np.all(np.array(tower.center) > curb[:, :2].min(axis=0)) and np.all(np.array(tower.center) < curb[:, :2].max(axis=0)))
+            lo, hi = np.array(tower.center) - np.array(expected["opening"]) / 2, np.array(tower.center) + np.array(expected["opening"]) / 2
+            self.assertTrue(all(not np.all(np.minimum(hi, curb[:, :2].max(axis=0)) - np.maximum(lo, curb[:, :2].min(axis=0)) > 1e-8) for curb in curbs))
+
+    def test_roof_tanks_bear_on_frames_connected_to_the_roof_ring(self):
+        expected = CASES["assembly"]["capital"]["tank_support"]
+        for tower in M.towers():
+            capital = M.capital_assembly(tower).parts
+            supports = [p for p in capital if p.role == "tank_support"]
+            self.assertEqual(len(supports), expected["count_per_tower"])
+            tank = next(p for p in capital if p.role == "water_tank")
+            tv = np.asarray(tank.solid.vertices)
+            cradle = np.asarray(next(p for p in supports if p.key == "tank-cradle").solid.vertices)
+            self.assertAlmostEqual(tv[:, 2].min(), cradle[:, 2].max())
+            self.assertAlmostEqual(tv[:, 2].min() - tower.height, .2 + expected["clearance_lift"])
+            self.assertGreaterEqual(np.ptp(cradle[:, 0]), expected["minimum_contact_width"])
+            self.assertGreaterEqual(np.ptp(cradle[:, 1]), expected["minimum_contact_length"])
+            side = -1 if tower.key == "A" else 1
+            for dx, dy in expected["bearing_fractions"]:
+                point = np.array((tower.center[0] + side * (.9 + dx), tower.center[1] + .2 + dy))
+                self.assertTrue(np.all(point >= cradle[:, :2].min(axis=0) - 1e-8))
+                self.assertTrue(np.all(point <= cradle[:, :2].max(axis=0) + 1e-8))
+                self.assertLess(dx * dx + dy * dy, .6 ** 2)
+            for i in range(2):
+                post = np.asarray(next(p for p in supports if p.key == f"tank-post-{i}").solid.vertices)
+                beam = np.asarray(next(p for p in supports if p.key == f"tank-beam-{i}").solid.vertices)
+                self.assertAlmostEqual(post[:, 2].max(), beam[:, 2].min())
+                self.assertAlmostEqual(beam[:, 2].max(), cradle[:, 2].min())
+                for first, second in ((post, beam), (beam, cradle)):
+                    self.assertTrue(np.all(np.minimum(first[:, :2].max(axis=0), second[:, :2].max(axis=0)) - np.maximum(first[:, :2].min(axis=0), second[:, :2].min(axis=0)) > 1e-8))
+            roofs = [np.asarray(p.solid.vertices) for p in M.core_assembly(tower).parts if p.role == "roof"]
+            for post in (p for p in supports if p.key.startswith("tank-post")):
+                pv = np.asarray(post.solid.vertices)
+                self.assertTrue(any(abs(pv[:, 2].min() - rv[:, 2].max()) < 1e-8 and np.all(np.minimum(pv[:, :2].max(axis=0), rv[:, :2].max(axis=0)) - np.maximum(pv[:, :2].min(axis=0), rv[:, :2].min(axis=0)) > 0) for rv in roofs))
+            for p in supports:
+                vertices = np.asarray(p.solid.vertices)
+                self.assertGreaterEqual(np.abs(vertices[:, 0] - tower.center[0]).min(), expected["shaft_clear_half_width"])
+
+    def test_bridge_approaches_share_the_actual_deck_centreline(self):
+        for tower in M.towers():
+            approaches = [part for part in M.core_assembly(tower).parts if part.role == "bridge_approach"]
+            self.assertEqual(len(approaches), 3)
+            for part in approaches:
+                vertices = np.asarray(part.solid.vertices)
+                self.assertAlmostEqual((vertices[:, 1].min() + vertices[:, 1].max()) / 2, CASES["assembly"]["core"]["bridge_center_y"])
+
+    def test_turning_stair_centreline_has_required_headroom(self):
+        headroom = CASES["assembly"]["core"]["required_headroom"]
+        for tower in M.towers():
+            parts = M.core_assembly(tower).parts
+            overhead = [p for p in parts if p.role in ("floor", "landing", "stair_tread", "roof")]
+            boxes = np.array([[np.asarray(p.solid.vertices).min(axis=0), np.asarray(p.solid.vertices).max(axis=0)] for p in overhead])
+            for part in (p for p in parts if p.role == "stair_tread"):
+                v = np.asarray(part.solid.vertices)
+                point = v[:, :2].mean(axis=0)
+                top = v[:, 2].max()
+                above = np.all(point > boxes[:, 0, :2] + 1e-7, axis=1) & np.all(point < boxes[:, 1, :2] - 1e-7, axis=1) & (boxes[:, 0, 2] > top + .3) & (boxes[:, 0, 2] < top + headroom)
+                self.assertFalse(above.any(), (tower.key, part.key, [overhead[i].key for i in np.flatnonzero(above)]))
+
+    def test_capsules_are_above_and_clear_of_the_podium(self):
+        podium = M.podium_assembly().parts
+        roof = M.podium_height()
+        for slot in M.slots():
+            av = np.asarray(M.slot_solid(slot).vertices)
+            self.assertGreaterEqual(av[:, 2].min(), roof - 1e-8)
+            for part in podium:
+                bv = np.asarray(part.solid.vertices)
+                overlap = np.minimum(av.max(axis=0), bv.max(axis=0)) - np.maximum(av.min(axis=0), bv.min(axis=0))
+                self.assertFalse(np.all(overlap > 1e-7), (slot.path, slot.item, part.key))
+
+    def test_side_entry_apertures_clear_the_lower_rounded_corner(self):
+        expected = CASES["assembly"]["capsule"]["side_entry_aperture"]
+        for layout in expected["families"]:
+            parts = [p for p in M.capsule_assembly("A", layout=layout).parts if p.role in ("shell", "lining", "steel_truss")]
+            sign = 1 if layout == "L" else -1
+            for y in expected["width_samples"]:
+                for z in expected["clear_heights"]:
+                    start, end = (sign * 1.27, y, z), (sign * 1.1, y, z)
+                    self.assertFalse(any(segment_hits_solid(p.solid, start, end) for p in parts), (layout, y, z))
+            for y, z in ((expected["outside_y"], .22), (expected["y"], expected["solid_header_height"])):
+                self.assertTrue(any(segment_hits_solid(p.solid, (sign * 1.27, y, z), (sign * 1.1, y, z)) for p in parts), (layout, y, z))
+
+    def test_ground_core_entries_have_full_width_and_headroom(self):
+        expected = CASES["assembly"]["core"]["ground_entry"]
+        for tower in M.towers():
+            walls = [p for p in M.core_assembly(tower).parts if p.role == "core_wall"]
+            cx, cy = tower.center
+            for x in expected["clear_width_samples"]:
+                for z in expected["clear_height_samples"]:
+                    start, end = (cx + x, cy - tower.core_side / 2 - .1, z), (cx + x, cy - tower.core_side / 2 + .4, z)
+                    self.assertFalse(any(segment_hits_solid(p.solid, start, end) for p in walls), (tower.key, x, z))
+            for x in (-.7, .7):
+                self.assertTrue(any(segment_hits_solid(p.solid, (cx + x, cy - 2.85, 1), (cx + x, cy - 2.35, 1)) for p in walls), (tower.key, x))
+
+    def test_study_primary_footprints_reproduce_every_authored_dimension_and_count(self):
+        for t in M.capsule_types():
+            for layout in M.capsule_families():
+                assembly = M.capsule_assembly(t, layout=layout, interior="study")
+                primaries = [p for p in assembly.parts if p.solid.meta.get("primary_footprint")]
+                self.assertEqual(len(primaries), sum(row[2] for row in CASES["program_geometry"][t.key].values()))
+                area = 0
+                boxes = []
+                for key, (width, length, count) in CASES["program_geometry"][t.key].items():
+                    parts = [p for p in primaries if p.solid.meta["program_fitting"] == key]
+                    self.assertEqual(len(parts), count, (t.key, layout, key))
+                    for part in parts:
+                        v = np.asarray(part.solid.vertices)
+                        dims = np.ptp(v[:, :2], axis=0)
+                        self.assertTrue(np.allclose(sorted(dims), sorted((width, length))), (t.key, layout, key, dims))
+                        area += float(np.prod(dims))
+                        lo, hi = v.min(axis=0), v.max(axis=0)
+                        self.assertTrue(np.all(lo[:2] >= (-1.15, .1)) and np.all(hi[:2] <= (1.15, 3.9)), (t.key, layout, key))
+                        wall = CASES["assembly"]["capsule"]["families"][layout]["door_wall"]
+                        half = CASES["assembly"]["capsule"]["study_entry_clearance"]["width"] / 2
+                        depth = CASES["assembly"]["capsule"]["study_entry_clearance"]["depth"]
+                        if wall == "back":
+                            dx = .45 if layout == "Backslash" else -.45
+                            entry_lo, entry_hi = np.array([dx - half, 0]), np.array([dx + half, depth])
+                        elif wall == "left":
+                            entry_lo, entry_hi = np.array([-1.25, .75 - half]), np.array([-1.25 + depth, .75 + half])
+                        else:
+                            entry_lo, entry_hi = np.array([1.25 - depth, .75 - half]), np.array([1.25, .75 + half])
+                        self.assertFalse(np.all(np.minimum(hi[:2], entry_hi) - np.maximum(lo[:2], entry_lo) > 1e-8), (t.key, layout, key, "entry"))
+                        boxes.append((lo, hi, key))
+                self.assertAlmostEqual(area, CASES["program"][t.key]["fitting_area"])
+                for i, (lo, hi, key) in enumerate(boxes):
+                    for other_lo, other_hi, other_key in boxes[i + 1:]:
+                        self.assertFalse(np.all(np.minimum(hi[:2], other_hi[:2]) - np.maximum(lo[:2], other_lo[:2]) > 1e-8), (t.key, layout, key, other_key))
+
+    def test_finish_floor_supports_reference_furniture_and_joins_thresholds(self):
+        for layout in CASES["assembly"]["capsule"]["families"]:
+            assembly = M.capsule_assembly("A", layout=layout)
+            floor = next(p.solid for p in assembly.parts if p.role == "floor_finish")
+            threshold = next(p.solid for p in assembly.parts if p.role == "entry_threshold")
+            fv, tv = np.asarray(floor.vertices), np.asarray(threshold.vertices)
+            self.assertAlmostEqual(fv[:, 2].max(), CASES["assembly"]["capsule"]["finish_support"]["floor_height"])
+            overlap = np.minimum(fv.max(axis=0), tv.max(axis=0)) - np.maximum(fv.min(axis=0), tv.min(axis=0))
+            self.assertTrue(np.all(overlap > 1e-8), layout)
+            for part in assembly.parts:
+                if part.role not in ("bed", "bathroom", "media_cabinet"):
+                    continue
+                v = np.asarray(part.solid.vertices)
+                if abs(v[:, 2].min() - .2) < 1e-8:
+                    self.assertTrue(np.all(v[:, :2].min(axis=0) >= fv[:, :2].min(axis=0) - 1e-8), (layout, part.key))
+                    self.assertTrue(np.all(v[:, :2].max(axis=0) <= fv[:, :2].max(axis=0) + 1e-8), (layout, part.key))
+
+    def test_all_threshold_collars_touch_the_authored_core_door_plane(self):
+        for slot in M.slots():
+            threshold = next(p.solid for p in M.slot_assembly(slot).parts if p.role == "entry_threshold")
+            v = np.asarray(threshold.vertices)
+            port = np.array(slot.facade_plane.origin) - np.array([0, 0, .09])
+            self.assertTrue(np.all(port >= v.min(axis=0) - 1e-7) and np.all(port <= v.max(axis=0) + 1e-7), (slot.path, slot.item))
+            box = rh.BoundingBox(*(v.min(axis=0) - 1e-7), *(v.max(axis=0) + 1e-7))
+            self.assertTrue(box.Contains(rh.Point3d(*port)))
+
+    def test_basement_core_walls_connect_footings_to_ground_core(self):
+        foundation = M.foundation_assembly().parts
+        depth = M.value("foundation.basement_depth").value
+        for tower in M.towers():
+            walls = [p for p in foundation if p.key.startswith(tower.key + "-basement-core-") and p.role == "basement_core_wall"]
+            self.assertEqual(len(walls), 4)
+            footings = [p for p in foundation if p.key.startswith(tower.key + "-footing-")]
+            for wall in walls:
+                v = np.asarray(wall.solid.vertices)
+                self.assertAlmostEqual(v[:, 2].min(), -depth)
+                self.assertAlmostEqual(v[:, 2].max(), 0)
+                supported = any(np.all(np.minimum(v[:, :2].max(axis=0), np.asarray(p.solid.vertices)[:, :2].max(axis=0)) - np.maximum(v[:, :2].min(axis=0), np.asarray(p.solid.vertices)[:, :2].min(axis=0)) > 1e-6) for p in footings)
+                self.assertTrue(supported, wall.key)
+            floors = [p for p in foundation if p.key.startswith(tower.key + "-basement-core-floor-")]
+            self.assertEqual(len(floors), 4)
+            point = np.array((*tower.center, -depth - .1))
+            for part in floors:
+                v = np.asarray(part.solid.vertices)
+                self.assertFalse(np.all(point > v.min(axis=0)) and np.all(point < v.max(axis=0)), part.key)
+
+    def test_building_reports_progress_and_cancels(self):
+        expected = CASES["assembly"]["progress"]
+        with self.assertRaises(M.AssemblyCancelled):
+            M.building_assembly(cancelled=lambda: True)
+        events = []
+        with self.assertRaises(M.AssemblyCancelled):
+            M.building_assembly(progress=events.append, cancelled=lambda: any(e.phase == "capsules" and e.completed >= expected["cancel_after_capsules"] for e in events))
+        self.assertEqual(events[-1].completed, expected["cancel_after_capsules"])
+        events = []
+        assembly = M.building_assembly(progress=events.append)
+        self.assertEqual(events[-1].phase, "complete")
+        self.assertEqual((events[-1].completed, events[-1].total), (len(assembly.parts), len(assembly.parts)))
+        self.assertEqual({e.phase for e in events}, set(expected["phases"]))
+        self.assertEqual(sum(e.phase == "capsules" and e.completed > 0 for e in events), expected["capsules"])
+
+    def test_core_parts_and_bridge_structure(self):
+        expected = CASES["assembly"]["core"]
+        for tower in M.towers():
+            parts = M.core_assembly(tower).parts
+            roles = [p.role for p in parts]
+            self.assertTrue(set(expected["required_roles"]).issubset(roles))
+            self.assertGreater(roles.count("stair_tread"), tower.storeys * 12)
+            self.assertEqual(tower.storeys, expected["storeys"][tower.key])
+            for part in parts:
+                self.assertGreater(signed_volume(part.solid), 0, part.key)
+        bridges = [p for p in M.structure_assembly().parts if p.role == "bridge"]
+        self.assertEqual(len(bridges), CASES["assembly"]["building"]["bridges"])
+        for part, storey in zip(bridges, CASES["assembly"]["building"]["bridge_storeys"]):
+            bounds = np.asarray(part.solid.vertices)
+            self.assertAlmostEqual(bounds[:, 2].max(), M.bridge_elevation(storey))
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

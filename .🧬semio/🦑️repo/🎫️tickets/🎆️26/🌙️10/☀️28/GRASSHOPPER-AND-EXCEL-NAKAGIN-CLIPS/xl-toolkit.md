@@ -28,6 +28,7 @@ Contract: `T/api.md` section 6 (Status: ready). Stills: `T/🗑️generated/xl-t
 
 ## Notes for scene authors
 
+- `window.recalculate(wb)` retypes changed cells in place (fade out, fade in, brief green flash) and never moves glyphs between cells; a Glide with `.retexts`. Test `test_recalculate_retypes_cells_in_place` checks every glyph stays in its own cell box at alpha .25/.5/.75/1.
 - Z-order is fixed (fill, tint, gridlines, text, frames, border) and kept by `select` / `recalculate` (`Glide` animates in place); the range tint can no longer grey the values. Test `test_selection_tint_stays_under_text` plays both animations and checks the order.
 - Narrow windows: the title-bar search pill shrinks, then becomes a magnifier icon, then disappears, so the file name never sits under it (test `test_title_bar_keeps_the_file_name_readable`).
 - Long formulas: the formula bar shrinks to 16.2, then wraps (operators, separators, never inside a reference) into an expanded panel over the grid with a chevron; colours stay per reference; in-cell edit text is dropped when it cannot fit. Test: `test_long_formula_wraps_inside_the_window` (120+ character German formula); still `long-{en,de}.png`.

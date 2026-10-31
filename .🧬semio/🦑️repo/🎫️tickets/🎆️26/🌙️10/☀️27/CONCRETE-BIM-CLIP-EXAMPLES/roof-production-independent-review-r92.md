@@ -1,0 +1,9 @@
+# Independent Production Roof Subtraction Review
+
+The current API replay passes both retained actual ordered-operand cases: 172 cutters produce 273 valid rings and 114 cutters produce 314. Independent exact-rational segment predicates and GEOS agree that every ring is simple; area differences are +2.6645e-15 and −6.1506e-14 m². Each case took the narrow exact replay once. Total runtime was 13.365 seconds. API SHA256 57ba53f6fa939360ff97fb0f2d8bd9e4fe78b72a5bcd82498c674946e9201dcf and analysis 8ed972b5126f24a17bb631e5343dfa4f741044d00334f714f45080029be702d0 were unchanged.
+
+The repair retains original binary inputs as Fraction values, replays the entire ordered cutter sequence for the affected Z slice, then publishes floats once and checks validity. It avoids convex hulls, repaired polygons, snapping, or silently removing features. Adaptive orientation handles near-cancelled determinants; the simple-ring predicate rejects repeated vertices, adjacent backtracking and nonadjacent crossings. The two independent 2 nm controls remain valid. These controls test ring validity; existing residual area filters are separate and this is not a promise that every arbitrarily small positive residual survives.
+
+The production simple-ring scan remains quadratic with edge bounding-box rejection. No measured performance issue here justifies replacing it; a sorted-X active-edge candidate sweep could preserve the exact predicate if large rings become demonstrably expensive. Raw nine-decimal rounding also yielded valid rings in these cases, but that diagnostic is not an independent SDK export certificate.
+
+Inputs: [roof-exact-review-cases-r92.json](roof-exact-review-cases-r92.json). Executable: [roof-production-independent-r92.py](roof-production-independent-r92.py). Generated evidence: 🗑️generated/roof-production-independent-r92.json.

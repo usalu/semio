@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "fixtures",
+    "absolute_distance_tolerance"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "absolute_distance_tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "fixtures": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "tag",
+          "post",
+          "axis",
+          "radius",
+          "witness",
+          "nominal_rotation_degrees"
+        ],
+        "properties": {
+          "tag": {
+            "enum": [
+              "LIGHT-EXTERIOR-11",
+              "LIGHT-EXTERIOR-6"
+            ]
+          },
+          "post": {
+            "enum": [
+              "6",
+              "11"
+            ]
+          },
+          "axis": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "radius": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "witness": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "nominal_rotation_degrees": {
+            "enum": [
+              45,
+              -45
+            ]
+          }
+        }
+      }
+    }
+  }
+}

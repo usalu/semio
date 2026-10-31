@@ -3,46 +3,726 @@
   "title": "Nakagin Capsule Tower Teaching Model",
   "type": "object",
   "additionalProperties": false,
-  "required": ["version", "languages", "revision", "notes", "sources", "capsule", "types", "assignment", "facades", "items", "core", "towers", "capital", "podium", "energy", "climate", "variants"],
+  "required": [
+    "version",
+    "languages",
+    "revision",
+    "notes",
+    "sources",
+    "capsule",
+    "types",
+    "assignment",
+    "facades",
+    "items",
+    "core",
+    "towers",
+    "capital",
+    "podium",
+    "energy",
+    "climate",
+    "variants",
+    "detail",
+    "foundation",
+    "families"
+  ],
   "properties": {
-    "version": {"const": 1},
-    "languages": {"const": ["en", "de"]},
-    "revision": {"type": "integer", "minimum": 1},
+    "version": {
+      "const": 1
+    },
+    "languages": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
     "notes": {
       "type": "array",
       "minItems": 1,
-      "items": {"type": "object", "additionalProperties": false, "required": ["id", "text"], "properties": {"id": {"$ref": "#/$defs/id"}, "text": {"$ref": "#/$defs/localized"}}}
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "text"
+        ],
+        "properties": {
+          "id": {
+            "$ref": "#/$defs/id"
+          },
+          "text": {
+            "$ref": "#/$defs/localized"
+          }
+        }
+      }
     },
     "sources": {
       "type": "object",
       "minProperties": 1,
-      "propertyNames": {"$ref": "#/$defs/id"},
+      "propertyNames": {
+        "$ref": "#/$defs/id"
+      },
       "additionalProperties": {
         "type": "object",
         "oneOf": [
-          {"type": "object", "additionalProperties": false, "required": ["title", "url"], "properties": {"title": {"type": "string", "minLength": 1}, "url": {"type": "string", "pattern": "^https://"}}},
-          {"type": "object", "additionalProperties": false, "required": ["title", "path"], "properties": {"title": {"type": "string", "minLength": 1}, "path": {"type": "string", "minLength": 1}}}
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "url"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "url": {
+                "type": "string",
+                "pattern": "^https://"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title",
+              "path"
+            ],
+            "properties": {
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
         ]
       }
     },
     "capsule": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["width", "length", "height", "corner_radius", "corner_segments", "window_diameter", "window_center_v", "bolt_u", "bolt_v_low", "bolt_v_high", "bolt_radius", "bolt_count", "interior"],
+      "required": [
+        "width",
+        "length",
+        "height",
+        "corner_radius",
+        "corner_segments",
+        "window_diameter",
+        "window_center_v",
+        "bolt_u",
+        "bolt_v_low",
+        "bolt_v_high",
+        "bolt_radius",
+        "bolt_count",
+        "detail",
+        "interior",
+        "casing",
+        "window_unit",
+        "luminaire"
+      ],
       "properties": {
-        "width": {"$ref": "#/$defs/length"},
-        "length": {"$ref": "#/$defs/length"},
-        "height": {"$ref": "#/$defs/length"},
-        "corner_radius": {"$ref": "#/$defs/length"},
-        "corner_segments": {"$ref": "#/$defs/count"},
-        "window_diameter": {"$ref": "#/$defs/length"},
-        "window_center_v": {"$ref": "#/$defs/length"},
-        "bolt_u": {"$ref": "#/$defs/length"},
-        "bolt_v_low": {"$ref": "#/$defs/length"},
-        "bolt_v_high": {"$ref": "#/$defs/length"},
-        "bolt_radius": {"$ref": "#/$defs/length"},
-        "bolt_count": {"$ref": "#/$defs/count"},
-        "interior": {"type": "object", "additionalProperties": false, "required": ["width", "length", "height"], "properties": {"width": {"$ref": "#/$defs/length"}, "length": {"$ref": "#/$defs/length"}, "height": {"$ref": "#/$defs/length"}}}
+        "width": {
+          "$ref": "#/$defs/length"
+        },
+        "length": {
+          "$ref": "#/$defs/length"
+        },
+        "height": {
+          "$ref": "#/$defs/length"
+        },
+        "corner_radius": {
+          "$ref": "#/$defs/length"
+        },
+        "corner_segments": {
+          "$ref": "#/$defs/count"
+        },
+        "window_diameter": {
+          "$ref": "#/$defs/length"
+        },
+        "window_center_v": {
+          "$ref": "#/$defs/length"
+        },
+        "bolt_u": {
+          "$ref": "#/$defs/length"
+        },
+        "bolt_v_low": {
+          "$ref": "#/$defs/length"
+        },
+        "bolt_v_high": {
+          "$ref": "#/$defs/length"
+        },
+        "bolt_radius": {
+          "$ref": "#/$defs/length"
+        },
+        "bolt_count": {
+          "$ref": "#/$defs/count"
+        },
+        "detail": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "segments",
+            "tub_wall",
+            "basin_wall",
+            "toilet_wall",
+            "pipe_radius",
+            "shower_radius",
+            "grille_pitch",
+            "seam_width",
+            "door_hinge_radius"
+          ],
+          "properties": {
+            "segments": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/count"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "integer",
+                      "minimum": 16,
+                      "maximum": 96
+                    }
+                  }
+                }
+              ]
+            },
+            "tub_wall": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 0.08
+                    }
+                  }
+                }
+              ]
+            },
+            "basin_wall": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.005,
+                      "maximum": 0.04
+                    }
+                  }
+                }
+              ]
+            },
+            "toilet_wall": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 0.05
+                    }
+                  }
+                }
+              ]
+            },
+            "pipe_radius": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.003,
+                      "maximum": 0.02
+                    }
+                  }
+                }
+              ]
+            },
+            "shower_radius": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.02,
+                      "maximum": 0.1
+                    }
+                  }
+                }
+              ]
+            },
+            "grille_pitch": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.01,
+                      "maximum": 0.02
+                    }
+                  }
+                }
+              ]
+            },
+            "seam_width": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.001,
+                      "maximum": 0.008
+                    }
+                  }
+                }
+              ]
+            },
+            "door_hinge_radius": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.005,
+                      "maximum": 0.015
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        },
+        "interior": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width",
+            "length",
+            "height",
+            "corner_radius"
+          ],
+          "properties": {
+            "width": {
+              "$ref": "#/$defs/length"
+            },
+            "length": {
+              "$ref": "#/$defs/length"
+            },
+            "height": {
+              "$ref": "#/$defs/length"
+            },
+            "corner_radius": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "exclusiveMinimum": 0,
+                      "minimum": 0.001,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            }
+          }
+        },
+        "casing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width",
+            "length",
+            "height",
+            "glazing_recess_front",
+            "glazing_recess_side",
+            "reveal_depth"
+          ],
+          "properties": {
+            "width": {
+              "$ref": "#/$defs/length"
+            },
+            "length": {
+              "$ref": "#/$defs/length"
+            },
+            "height": {
+              "$ref": "#/$defs/length"
+            },
+            "glazing_recess_front": {
+              "$ref": "#/$defs/length"
+            },
+            "glazing_recess_side": {
+              "$ref": "#/$defs/length"
+            },
+            "reveal_depth": {
+              "$ref": "#/$defs/length"
+            }
+          }
+        },
+        "window_unit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "mechanism",
+            "hinge_side",
+            "hinge_basis",
+            "base_diameter",
+            "cover_diameter",
+            "cover_thickness",
+            "sleeve_diameter",
+            "divider_thickness",
+            "carrier_sheet",
+            "angle_side",
+            "angle_thickness",
+            "base_thickness",
+            "inner_glass_thickness",
+            "sash_radial_width",
+            "sash_clearance",
+            "sash_wall",
+            "sash_depth",
+            "sash_rebate",
+            "paper_thickness",
+            "paper_margin",
+            "fold_count",
+            "exterior_fold_count",
+            "stowed_span",
+            "guide_radius",
+            "guide_inset",
+            "clip_span",
+            "inner_guide_radius",
+            "inner_guide_width",
+            "inner_guide_depth",
+            "carrier_leg",
+            "hub_clearance",
+            "hinge_pin_radius",
+            "hinge_clearance",
+            "hinge_radius",
+            "hinge_span",
+            "hinge_spacing",
+            "lock_length",
+            "lock_radius",
+            "closure_sheet",
+            "angle_length",
+            "sash_limit",
+            "default_sash_angle",
+            "default_blind_fraction",
+            "default_blind_rotation",
+            "blind_detent_angle",
+            "inner_glass_inset",
+            "sash_gasket_thickness",
+            "guide_fixing_side",
+            "guide_clip_thickness",
+            "sleeve_wall",
+            "hub_fastener_radius"
+          ],
+          "properties": {
+            "mechanism": {
+              "const": "radial-folding-fan"
+            },
+            "hinge_side": {
+              "const": "right"
+            },
+            "hinge_basis": {
+              "const": "visual-inference"
+            },
+            "base_diameter": {
+              "$ref": "#/$defs/length"
+            },
+            "cover_diameter": {
+              "$ref": "#/$defs/length"
+            },
+            "cover_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "sleeve_diameter": {
+              "$ref": "#/$defs/length"
+            },
+            "divider_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "carrier_sheet": {
+              "$ref": "#/$defs/length"
+            },
+            "angle_side": {
+              "$ref": "#/$defs/length"
+            },
+            "angle_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "base_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "inner_glass_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "sash_radial_width": {
+              "$ref": "#/$defs/length"
+            },
+            "sash_clearance": {
+              "$ref": "#/$defs/length"
+            },
+            "sash_wall": {
+              "$ref": "#/$defs/length"
+            },
+            "sash_depth": {
+              "$ref": "#/$defs/length"
+            },
+            "sash_rebate": {
+              "$ref": "#/$defs/length"
+            },
+            "paper_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "paper_margin": {
+              "$ref": "#/$defs/length"
+            },
+            "fold_count": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/count"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "minimum": 4,
+                      "maximum": 256,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            },
+            "exterior_fold_count": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/count"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "minimum": 4,
+                      "maximum": 256,
+                      "type": "integer"
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            },
+            "stowed_span": {
+              "$ref": "#/$defs/angle"
+            },
+            "guide_radius": {
+              "$ref": "#/$defs/length"
+            },
+            "guide_inset": {
+              "$ref": "#/$defs/length"
+            },
+            "clip_span": {
+              "$ref": "#/$defs/angle"
+            },
+            "inner_guide_radius": {
+              "$ref": "#/$defs/length"
+            },
+            "inner_guide_width": {
+              "$ref": "#/$defs/length"
+            },
+            "inner_guide_depth": {
+              "$ref": "#/$defs/length"
+            },
+            "carrier_leg": {
+              "$ref": "#/$defs/length"
+            },
+            "hub_clearance": {
+              "$ref": "#/$defs/length"
+            },
+            "hinge_pin_radius": {
+              "$ref": "#/$defs/length"
+            },
+            "hinge_clearance": {
+              "$ref": "#/$defs/length"
+            },
+            "hinge_radius": {
+              "$ref": "#/$defs/length"
+            },
+            "hinge_span": {
+              "$ref": "#/$defs/length"
+            },
+            "hinge_spacing": {
+              "$ref": "#/$defs/length"
+            },
+            "lock_length": {
+              "$ref": "#/$defs/length"
+            },
+            "lock_radius": {
+              "$ref": "#/$defs/length"
+            },
+            "closure_sheet": {
+              "$ref": "#/$defs/length"
+            },
+            "angle_length": {
+              "$ref": "#/$defs/length"
+            },
+            "sash_limit": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/angle"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "minimum": 0,
+                      "maximum": 90,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            },
+            "default_sash_angle": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/angle"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "minimum": 0,
+                      "maximum": 90,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            },
+            "default_blind_fraction": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/nonnegative"
+                },
+                {
+                  "properties": {
+                    "value": {
+                      "maximum": 1,
+                      "type": "number"
+                    }
+                  },
+                  "type": "object"
+                }
+              ]
+            },
+            "default_blind_rotation": {
+              "$ref": "#/$defs/angle"
+            },
+            "blind_detent_angle": {
+              "$ref": "#/$defs/angle"
+            },
+            "inner_glass_inset": {
+              "$ref": "#/$defs/length"
+            },
+            "sash_gasket_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "guide_fixing_side": {
+              "$ref": "#/$defs/length"
+            },
+            "guide_clip_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "sleeve_wall": {
+              "$ref": "#/$defs/length"
+            },
+            "hub_fastener_radius": {
+              "$ref": "#/$defs/length"
+            }
+          }
+        },
+        "luminaire": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference_length",
+            "depth",
+            "height",
+            "mount_height",
+            "housing_thickness",
+            "diffuser_thickness",
+            "tube_radius"
+          ],
+          "properties": {
+            "reference_length": {
+              "$ref": "#/$defs/length"
+            },
+            "depth": {
+              "$ref": "#/$defs/length"
+            },
+            "height": {
+              "$ref": "#/$defs/length"
+            },
+            "mount_height": {
+              "$ref": "#/$defs/length"
+            },
+            "housing_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "diffuser_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "tube_radius": {
+              "$ref": "#/$defs/length"
+            }
+          }
+        }
       }
     },
     "types": {
@@ -52,24 +732,73 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["key", "name", "use", "window_diameter", "window_u", "window_v", "rotation", "occupants", "fittings"],
+        "required": [
+          "key",
+          "name",
+          "use",
+          "window_diameter",
+          "window_u",
+          "window_v",
+          "rotation",
+          "occupants",
+          "fittings"
+        ],
         "properties": {
-          "key": {"type": "string", "pattern": "^[A-Z]$"},
-          "name": {"$ref": "#/$defs/localized"},
-          "use": {"$ref": "#/$defs/localized"},
-          "window_diameter": {"$ref": "#/$defs/length"},
-          "window_u": {"$ref": "#/$defs/signed"},
-          "window_v": {"$ref": "#/$defs/length"},
-          "rotation": {"$ref": "#/$defs/angle"},
-          "occupants": {"$ref": "#/$defs/count"},
+          "key": {
+            "type": "string",
+            "pattern": "^[A-Z]$"
+          },
+          "name": {
+            "$ref": "#/$defs/localized"
+          },
+          "use": {
+            "$ref": "#/$defs/localized"
+          },
+          "window_diameter": {
+            "$ref": "#/$defs/length"
+          },
+          "window_u": {
+            "$ref": "#/$defs/signed"
+          },
+          "window_v": {
+            "$ref": "#/$defs/length"
+          },
+          "rotation": {
+            "$ref": "#/$defs/angle"
+          },
+          "occupants": {
+            "$ref": "#/$defs/count"
+          },
           "fittings": {
             "type": "array",
             "minItems": 1,
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["key", "name", "width", "length", "count"],
-              "properties": {"key": {"$ref": "#/$defs/id"}, "name": {"$ref": "#/$defs/localized"}, "width": {"$ref": "#/$defs/length"}, "length": {"$ref": "#/$defs/length"}, "count": {"$ref": "#/$defs/count"}}
+              "required": [
+                "key",
+                "name",
+                "width",
+                "length",
+                "count"
+              ],
+              "properties": {
+                "key": {
+                  "$ref": "#/$defs/id"
+                },
+                "name": {
+                  "$ref": "#/$defs/localized"
+                },
+                "width": {
+                  "$ref": "#/$defs/length"
+                },
+                "length": {
+                  "$ref": "#/$defs/length"
+                },
+                "count": {
+                  "$ref": "#/$defs/count"
+                }
+              }
             }
           }
         }
@@ -78,14 +807,40 @@
     "assignment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["order", "tower_weight", "storey_weight", "facade_weight", "item_weight", "offset"],
+      "required": [
+        "order",
+        "tower_weight",
+        "storey_weight",
+        "facade_weight",
+        "item_weight",
+        "offset"
+      ],
       "properties": {
-        "order": {"type": "array", "minItems": 4, "maxItems": 4, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z]$"}},
-        "tower_weight": {"$ref": "#/$defs/count"},
-        "storey_weight": {"$ref": "#/$defs/count"},
-        "facade_weight": {"$ref": "#/$defs/count"},
-        "item_weight": {"$ref": "#/$defs/count"},
-        "offset": {"$ref": "#/$defs/count"}
+        "order": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]$"
+          }
+        },
+        "tower_weight": {
+          "$ref": "#/$defs/count"
+        },
+        "storey_weight": {
+          "$ref": "#/$defs/count"
+        },
+        "facade_weight": {
+          "$ref": "#/$defs/count"
+        },
+        "item_weight": {
+          "$ref": "#/$defs/count"
+        },
+        "offset": {
+          "$ref": "#/$defs/count"
+        }
       }
     },
     "facades": {
@@ -95,26 +850,226 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["index", "key", "name", "normal"],
+        "required": [
+          "index",
+          "key",
+          "name",
+          "normal"
+        ],
         "properties": {
-          "index": {"type": "integer", "minimum": 0, "maximum": 3},
-          "key": {"enum": ["N", "E", "S", "W"]},
-          "name": {"$ref": "#/$defs/localized"},
-          "normal": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"enum": [-1, 0, 1]}}
+          "index": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 3
+          },
+          "key": {
+            "enum": [
+              "N",
+              "E",
+              "S",
+              "W"
+            ]
+          },
+          "name": {
+            "$ref": "#/$defs/localized"
+          },
+          "normal": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "enum": [
+                -1,
+                0,
+                1
+              ]
+            }
+          }
         }
       }
     },
     "items": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["per_facade", "pitch", "stagger"],
-      "properties": {"per_facade": {"$ref": "#/$defs/count"}, "pitch": {"$ref": "#/$defs/length"}, "stagger": {"$ref": "#/$defs/length"}}
+      "required": [
+        "stagger"
+      ],
+      "properties": {
+        "stagger": {
+          "$ref": "#/$defs/length"
+        }
+      }
     },
     "core": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["side", "shaft_side", "storey_height", "podium_storeys"],
-      "properties": {"side": {"$ref": "#/$defs/length"}, "shaft_side": {"$ref": "#/$defs/length"}, "storey_height": {"$ref": "#/$defs/length"}, "podium_storeys": {"$ref": "#/$defs/count"}}
+      "required": [
+        "side",
+        "shaft_side",
+        "storey_height",
+        "podium_storeys",
+        "ground_entry",
+        "circulation",
+        "profile",
+        "lift_cabin"
+      ],
+      "properties": {
+        "side": {
+          "$ref": "#/$defs/length"
+        },
+        "shaft_side": {
+          "$ref": "#/$defs/length"
+        },
+        "storey_height": {
+          "$ref": "#/$defs/length"
+        },
+        "podium_storeys": {
+          "$ref": "#/$defs/count"
+        },
+        "ground_entry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "facade",
+            "lateral",
+            "width",
+            "height"
+          ],
+          "properties": {
+            "facade": {
+              "const": 2
+            },
+            "lateral": {
+              "$ref": "#/$defs/signed"
+            },
+            "width": {
+              "$ref": "#/$defs/length"
+            },
+            "height": {
+              "$ref": "#/$defs/length"
+            }
+          }
+        },
+        "circulation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "topology",
+            "lift_stop_policy",
+            "corner_side",
+            "walkway_width",
+            "inner_corner",
+            "flight_inner",
+            "flight_start",
+            "flight_width",
+            "roof_access",
+            "handing"
+          ],
+          "properties": {
+            "topology": {
+              "const": "phase0_u_phase1_nw_phase2_sw"
+            },
+            "lift_stop_policy": {
+              "const": "normal_floor_phase0_and_basement"
+            },
+            "corner_side": {
+              "$ref": "#/$defs/length"
+            },
+            "walkway_width": {
+              "$ref": "#/$defs/length"
+            },
+            "inner_corner": {
+              "$ref": "#/$defs/length"
+            },
+            "flight_inner": {
+              "$ref": "#/$defs/length"
+            },
+            "flight_start": {
+              "$ref": "#/$defs/length"
+            },
+            "flight_width": {
+              "$ref": "#/$defs/length"
+            },
+            "roof_access": {
+              "const": "inferred_east_return_after_last_capsule_phase"
+            },
+            "handing": {
+              "const": {
+                "A": "identity",
+                "B": "mirror_x"
+              }
+            }
+          }
+        },
+        "profile": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "compound_width",
+            "compound_depth",
+            "chamfer",
+            "pier_leg",
+            "wall",
+            "partition_x"
+          ],
+          "properties": {
+            "compound_width": {
+              "$ref": "#/$defs/length"
+            },
+            "compound_depth": {
+              "$ref": "#/$defs/length"
+            },
+            "chamfer": {
+              "$ref": "#/$defs/length"
+            },
+            "pier_leg": {
+              "$ref": "#/$defs/length"
+            },
+            "wall": {
+              "$ref": "#/$defs/length"
+            },
+            "partition_x": {
+              "$ref": "#/$defs/signed"
+            }
+          }
+        },
+        "lift_cabin": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "width",
+            "depth",
+            "height",
+            "center_x",
+            "center_y",
+            "wall",
+            "parked_level"
+          ],
+          "properties": {
+            "width": {
+              "$ref": "#/$defs/length"
+            },
+            "depth": {
+              "$ref": "#/$defs/length"
+            },
+            "height": {
+              "$ref": "#/$defs/length"
+            },
+            "center_x": {
+              "$ref": "#/$defs/signed"
+            },
+            "center_y": {
+              "$ref": "#/$defs/signed"
+            },
+            "wall": {
+              "$ref": "#/$defs/length"
+            },
+            "parked_level": {
+              "$ref": "#/$defs/count"
+            }
+          }
+        }
+      }
     },
     "towers": {
       "type": "array",
@@ -123,21 +1078,173 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["key", "name", "center", "capsule_storeys", "facades", "exceptions"],
+        "required": [
+          "key",
+          "name",
+          "center",
+          "capsule_storeys",
+          "storeys_total",
+          "capsule_count",
+          "floors",
+          "roof_elevation",
+          "capital_height",
+          "roof_clearance"
+        ],
         "properties": {
-          "key": {"type": "string", "pattern": "^[A-Z]$"},
-          "name": {"$ref": "#/$defs/localized"},
-          "center": {"type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": {"x": {"$ref": "#/$defs/signed"}, "y": {"$ref": "#/$defs/signed"}}},
-          "capsule_storeys": {"$ref": "#/$defs/count"},
-          "facades": {"type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": {"type": "integer", "minimum": 0, "maximum": 3}},
-          "exceptions": {
+          "key": {
+            "type": "string",
+            "pattern": "^[A-Z]$"
+          },
+          "name": {
+            "$ref": "#/$defs/localized"
+          },
+          "center": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y"
+            ],
+            "properties": {
+              "x": {
+                "$ref": "#/$defs/signed"
+              },
+              "y": {
+                "$ref": "#/$defs/signed"
+              }
+            }
+          },
+          "capsule_storeys": {
+            "$ref": "#/$defs/count"
+          },
+          "storeys_total": {
+            "$ref": "#/$defs/count"
+          },
+          "capsule_count": {
+            "$ref": "#/$defs/count"
+          },
+          "floors": {
             "type": "array",
+            "minItems": 1,
             "items": {
               "type": "object",
               "additionalProperties": false,
-              "required": ["storey", "facades"],
-              "properties": {"storey": {"type": "integer", "minimum": 0}, "facades": {"type": "array", "minItems": 1, "maxItems": 4, "uniqueItems": true, "items": {"type": "integer", "minimum": 0, "maximum": 3}}}
+              "required": [
+                "floor",
+                "count",
+                "placement_basis",
+                "groups"
+              ],
+              "properties": {
+                "floor": {
+                  "type": "integer",
+                  "minimum": 3,
+                  "maximum": 13
+                },
+                "count": {
+                  "$ref": "#/$defs/count"
+                },
+                "placement_basis": {
+                  "enum": [
+                    "sourced",
+                    "derived",
+                    "assumed"
+                  ]
+                },
+                "groups": {
+                  "type": "array",
+                  "minItems": 1,
+                  "maxItems": 4,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "facade",
+                      "items"
+                    ],
+                    "properties": {
+                      "facade": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 3
+                      },
+                      "items": {
+                        "type": "array",
+                        "minItems": 1,
+                        "maxItems": 4,
+                        "items": {
+                          "type": "object",
+                          "additionalProperties": false,
+                          "required": [
+                            "item",
+                            "sublevel",
+                            "source_item",
+                            "family",
+                            "center",
+                            "rotation",
+                            "door"
+                          ],
+                          "properties": {
+                            "item": {
+                              "type": "integer",
+                              "minimum": 0
+                            },
+                            "sublevel": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 2
+                            },
+                            "source_item": {
+                              "type": "integer",
+                              "minimum": 0,
+                              "maximum": 3
+                            },
+                            "family": {
+                              "enum": [
+                                "Slash",
+                                "Backslash",
+                                "J",
+                                "L",
+                                "P",
+                                "S"
+                              ]
+                            },
+                            "center": {
+                              "type": "array",
+                              "minItems": 3,
+                              "maxItems": 3,
+                              "items": {
+                                "$ref": "#/$defs/signed"
+                              }
+                            },
+                            "rotation": {
+                              "$ref": "#/$defs/angle"
+                            },
+                            "door": {
+                              "type": "array",
+                              "minItems": 3,
+                              "maxItems": 3,
+                              "items": {
+                                "$ref": "#/$defs/signed"
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
             }
+          },
+          "roof_elevation": {
+            "$ref": "#/$defs/length"
+          },
+          "capital_height": {
+            "$ref": "#/$defs/length"
+          },
+          "roof_clearance": {
+            "$ref": "#/$defs/length"
           }
         }
       }
@@ -145,35 +1252,499 @@
     "capital": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["height", "overhang", "taper"],
-      "properties": {"height": {"$ref": "#/$defs/length"}, "overhang": {"$ref": "#/$defs/length"}, "taper": {"$ref": "#/$defs/length"}}
+      "required": [
+        "overhang",
+        "roof_corners",
+        "tank_support",
+        "signage",
+        "cladding",
+        "framing"
+      ],
+      "properties": {
+        "overhang": {
+          "$ref": "#/$defs/nonnegative"
+        },
+        "roof_corners": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "$ref": "#/$defs/length"
+          }
+        },
+        "tank_support": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "post_offset",
+            "post_width",
+            "beam_width",
+            "beam_depth",
+            "cradle_width",
+            "cradle_length",
+            "cradle_thickness",
+            "clearance_lift"
+          ],
+          "properties": {
+            "post_offset": {
+              "$ref": "#/$defs/length"
+            },
+            "post_width": {
+              "$ref": "#/$defs/length"
+            },
+            "beam_width": {
+              "$ref": "#/$defs/length"
+            },
+            "beam_depth": {
+              "$ref": "#/$defs/length"
+            },
+            "cradle_width": {
+              "$ref": "#/$defs/length"
+            },
+            "cradle_length": {
+              "$ref": "#/$defs/length"
+            },
+            "cradle_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "clearance_lift": {
+              "$ref": "#/$defs/nonnegative"
+            }
+          }
+        },
+        "signage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "text",
+            "tower",
+            "faces",
+            "layout_basis",
+            "glyph_size",
+            "stroke_width",
+            "stroke_depth",
+            "top_offset",
+            "vertical_pitch",
+            "corner_offset",
+            "mount_width",
+            "mount_height",
+            "glyphs",
+            "reference_base_side"
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/id"
+            },
+            "text": {
+              "const": "中銀"
+            },
+            "tower": {
+              "const": "A"
+            },
+            "faces": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "enum": [
+                  "north",
+                  "west"
+                ]
+              }
+            },
+            "layout_basis": {
+              "type": "string"
+            },
+            "glyph_size": {
+              "$ref": "#/$defs/length"
+            },
+            "stroke_width": {
+              "$ref": "#/$defs/length"
+            },
+            "stroke_depth": {
+              "$ref": "#/$defs/length"
+            },
+            "top_offset": {
+              "$ref": "#/$defs/length"
+            },
+            "vertical_pitch": {
+              "$ref": "#/$defs/length"
+            },
+            "corner_offset": {
+              "$ref": "#/$defs/length"
+            },
+            "mount_width": {
+              "$ref": "#/$defs/length"
+            },
+            "mount_height": {
+              "$ref": "#/$defs/length"
+            },
+            "glyphs": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "中",
+                "銀"
+              ],
+              "properties": {
+                "中": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    }
+                  }
+                },
+                "銀": {
+                  "type": "array",
+                  "minItems": 2,
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "items": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 2,
+                      "items": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "reference_base_side": {
+              "$ref": "#/$defs/length"
+            }
+          }
+        },
+        "cladding": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "layout_basis",
+            "panel_pitch",
+            "sheet_thickness",
+            "horizontal_pitch",
+            "seam_width",
+            "seam_projection",
+            "flashing_width",
+            "flashing_projection",
+            "louvre_width",
+            "louvre_bottom",
+            "louvre_height"
+          ],
+          "properties": {
+            "source": {
+              "$ref": "#/$defs/id"
+            },
+            "layout_basis": {
+              "type": "string"
+            },
+            "panel_pitch": {
+              "$ref": "#/$defs/length"
+            },
+            "sheet_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "horizontal_pitch": {
+              "$ref": "#/$defs/length"
+            },
+            "seam_width": {
+              "$ref": "#/$defs/length"
+            },
+            "seam_projection": {
+              "$ref": "#/$defs/length"
+            },
+            "flashing_width": {
+              "$ref": "#/$defs/length"
+            },
+            "flashing_projection": {
+              "$ref": "#/$defs/length"
+            },
+            "louvre_width": {
+              "$ref": "#/$defs/length"
+            },
+            "louvre_bottom": {
+              "$ref": "#/$defs/length"
+            },
+            "louvre_height": {
+              "$ref": "#/$defs/length"
+            }
+          }
+        },
+        "framing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "post_side",
+            "brace_side",
+            "sheet_clearance"
+          ],
+          "properties": {
+            "post_side": {
+              "$ref": "#/$defs/length"
+            },
+            "brace_side": {
+              "$ref": "#/$defs/length"
+            },
+            "sheet_clearance": {
+              "$ref": "#/$defs/nonnegative"
+            }
+          }
+        }
+      }
     },
     "podium": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["center", "length", "width", "storeys"],
+      "required": [
+        "center",
+        "length",
+        "width",
+        "storeys",
+        "levels",
+        "footprint",
+        "architecture"
+      ],
       "properties": {
-        "center": {"type": "object", "additionalProperties": false, "required": ["x", "y"], "properties": {"x": {"$ref": "#/$defs/signed"}, "y": {"$ref": "#/$defs/signed"}}},
-        "length": {"$ref": "#/$defs/length"},
-        "width": {"$ref": "#/$defs/length"},
-        "storeys": {"$ref": "#/$defs/count"}
+        "center": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "$ref": "#/$defs/signed"
+            },
+            "y": {
+              "$ref": "#/$defs/signed"
+            }
+          }
+        },
+        "length": {
+          "$ref": "#/$defs/length"
+        },
+        "width": {
+          "$ref": "#/$defs/length"
+        },
+        "storeys": {
+          "$ref": "#/$defs/count"
+        },
+        "levels": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/$defs/nonnegative"
+          }
+        },
+        "footprint": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "$ref": "#/$defs/signed"
+            }
+          }
+        },
+        "architecture": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profile_source",
+            "layout_basis",
+            "window_band",
+            "fascia_radius",
+            "cladding_thickness",
+            "window_recess",
+            "panel_pitch",
+            "joint_width",
+            "room_height",
+            "door_width",
+            "door_height",
+            "office_floor_colour",
+            "office_floor_source",
+            "rooms",
+            "fascia_anchor_width",
+            "roof_edge_height"
+          ],
+          "properties": {
+            "profile_source": {
+              "$ref": "#/$defs/id"
+            },
+            "layout_basis": {
+              "type": "string"
+            },
+            "window_band": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "allOf": [
+                  {
+                    "$ref": "#/$defs/quantity"
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 1
+                      }
+                    }
+                  }
+                ]
+              }
+            },
+            "fascia_radius": {
+              "$ref": "#/$defs/length"
+            },
+            "cladding_thickness": {
+              "$ref": "#/$defs/length"
+            },
+            "window_recess": {
+              "$ref": "#/$defs/length"
+            },
+            "panel_pitch": {
+              "$ref": "#/$defs/length"
+            },
+            "joint_width": {
+              "$ref": "#/$defs/length"
+            },
+            "room_height": {
+              "$ref": "#/$defs/length"
+            },
+            "door_width": {
+              "$ref": "#/$defs/length"
+            },
+            "door_height": {
+              "$ref": "#/$defs/length"
+            },
+            "office_floor_colour": {
+              "$ref": "#/$defs/localized"
+            },
+            "office_floor_source": {
+              "$ref": "#/$defs/id"
+            },
+            "rooms": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "key",
+                  "program",
+                  "level",
+                  "bounds",
+                  "layout_basis"
+                ],
+                "properties": {
+                  "key": {
+                    "$ref": "#/$defs/id"
+                  },
+                  "program": {
+                    "enum": [
+                      "hall",
+                      "cafe",
+                      "office"
+                    ]
+                  },
+                  "level": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 1
+                  },
+                  "bounds": {
+                    "type": "array",
+                    "minItems": 4,
+                    "maxItems": 4,
+                    "items": {
+                      "$ref": "#/$defs/quantity"
+                    }
+                  },
+                  "layout_basis": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "fascia_anchor_width": {
+              "$ref": "#/$defs/length"
+            },
+            "roof_edge_height": {
+              "$ref": "#/$defs/nonnegative"
+            }
+          }
+        }
       }
     },
     "energy": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["u_roof", "u_floor", "u_wall", "u_window", "attached_factor", "air_change", "air_heat_capacity", "indoor_temperature", "design_temperature", "heating_base"],
+      "required": [
+        "u_roof",
+        "u_floor",
+        "u_wall",
+        "u_window",
+        "attached_factor",
+        "air_change",
+        "air_heat_capacity",
+        "indoor_temperature",
+        "design_temperature",
+        "heating_base"
+      ],
       "properties": {
-        "u_roof": {"$ref": "#/$defs/positive"},
-        "u_floor": {"$ref": "#/$defs/positive"},
-        "u_wall": {"$ref": "#/$defs/positive"},
-        "u_window": {"$ref": "#/$defs/positive"},
-        "attached_factor": {"$ref": "#/$defs/positive"},
-        "air_change": {"$ref": "#/$defs/positive"},
-        "air_heat_capacity": {"$ref": "#/$defs/positive"},
-        "indoor_temperature": {"$ref": "#/$defs/signed"},
-        "design_temperature": {"$ref": "#/$defs/signed"},
-        "heating_base": {"$ref": "#/$defs/signed"}
+        "u_roof": {
+          "$ref": "#/$defs/positive"
+        },
+        "u_floor": {
+          "$ref": "#/$defs/positive"
+        },
+        "u_wall": {
+          "$ref": "#/$defs/positive"
+        },
+        "u_window": {
+          "$ref": "#/$defs/positive"
+        },
+        "attached_factor": {
+          "$ref": "#/$defs/positive"
+        },
+        "air_change": {
+          "$ref": "#/$defs/positive"
+        },
+        "air_heat_capacity": {
+          "$ref": "#/$defs/positive"
+        },
+        "indoor_temperature": {
+          "$ref": "#/$defs/signed"
+        },
+        "design_temperature": {
+          "$ref": "#/$defs/signed"
+        },
+        "heating_base": {
+          "$ref": "#/$defs/signed"
+        }
       }
     },
     "variants": {
@@ -182,22 +1753,46 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["key", "name", "description", "overrides"],
+        "required": [
+          "key",
+          "name",
+          "description",
+          "overrides"
+        ],
         "properties": {
-          "key": {"type": "string", "pattern": "^[a-z]+(_[a-z]+)*$"},
-          "name": {"$ref": "#/$defs/localized"},
-          "description": {"$ref": "#/$defs/localized"},
+          "key": {
+            "type": "string",
+            "pattern": "^[a-z]+(_[a-z]+)*$"
+          },
+          "name": {
+            "$ref": "#/$defs/localized"
+          },
+          "description": {
+            "$ref": "#/$defs/localized"
+          },
           "overrides": {
             "type": "object",
             "minProperties": 1,
             "additionalProperties": false,
             "properties": {
-              "u_roof": {"$ref": "#/$defs/nonnegative"},
-              "u_floor": {"$ref": "#/$defs/nonnegative"},
-              "u_wall": {"$ref": "#/$defs/nonnegative"},
-              "u_window": {"$ref": "#/$defs/nonnegative"},
-              "attached_factor": {"$ref": "#/$defs/nonnegative"},
-              "air_change": {"$ref": "#/$defs/nonnegative"}
+              "u_roof": {
+                "$ref": "#/$defs/nonnegative"
+              },
+              "u_floor": {
+                "$ref": "#/$defs/nonnegative"
+              },
+              "u_wall": {
+                "$ref": "#/$defs/nonnegative"
+              },
+              "u_window": {
+                "$ref": "#/$defs/nonnegative"
+              },
+              "attached_factor": {
+                "$ref": "#/$defs/nonnegative"
+              },
+              "air_change": {
+                "$ref": "#/$defs/nonnegative"
+              }
             }
           }
         }
@@ -206,13 +1801,30 @@
     "climate": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["station", "source", "period", "method", "heating_degree_days", "months"],
+      "required": [
+        "station",
+        "source",
+        "period",
+        "method",
+        "heating_degree_days",
+        "months"
+      ],
       "properties": {
-        "station": {"$ref": "#/$defs/localized"},
-        "source": {"$ref": "#/$defs/id"},
-        "period": {"$ref": "#/$defs/localized"},
-        "method": {"$ref": "#/$defs/localized"},
-        "heating_degree_days": {"$ref": "#/$defs/positive"},
+        "station": {
+          "$ref": "#/$defs/localized"
+        },
+        "source": {
+          "$ref": "#/$defs/id"
+        },
+        "period": {
+          "$ref": "#/$defs/localized"
+        },
+        "method": {
+          "$ref": "#/$defs/localized"
+        },
+        "heating_degree_days": {
+          "$ref": "#/$defs/positive"
+        },
         "months": {
           "type": "array",
           "minItems": 12,
@@ -220,35 +1832,705 @@
           "items": {
             "type": "object",
             "additionalProperties": false,
-            "required": ["key", "name", "mean", "days"],
-            "properties": {"key": {"type": "string", "pattern": "^(0[1-9]|1[0-2])$"}, "name": {"$ref": "#/$defs/localized"}, "mean": {"$ref": "#/$defs/signed"}, "days": {"$ref": "#/$defs/count"}}
+            "required": [
+              "key",
+              "name",
+              "mean",
+              "days"
+            ],
+            "properties": {
+              "key": {
+                "type": "string",
+                "pattern": "^(0[1-9]|1[0-2])$"
+              },
+              "name": {
+                "$ref": "#/$defs/localized"
+              },
+              "mean": {
+                "$ref": "#/$defs/signed"
+              },
+              "days": {
+                "$ref": "#/$defs/count"
+              }
+            }
+          }
+        }
+      }
+    },
+    "detail": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shell_thickness",
+        "frame_width",
+        "frame_depth",
+        "glazing_thickness",
+        "segments",
+        "door_width",
+        "door_height",
+        "door_offset",
+        "bolt_length",
+        "bolt_head_radius",
+        "service_radius",
+        "floor_thickness",
+        "wall_thickness",
+        "stair_width",
+        "stair_steps",
+        "lift_width",
+        "bridge_width",
+        "bridge_geometry",
+        "bridge_storeys",
+        "measured_a806",
+        "steel_skin_thickness",
+        "lining_thickness",
+        "truss_member_side",
+        "floor_finish_height",
+        "capsule_landing_depth",
+        "lift_door_width",
+        "lift_door_height",
+        "core_service_radius",
+        "roof_vent_aperture_width",
+        "roof_vent_aperture_length"
+      ],
+      "properties": {
+        "shell_thickness": {
+          "$ref": "#/$defs/length"
+        },
+        "frame_width": {
+          "$ref": "#/$defs/length"
+        },
+        "frame_depth": {
+          "$ref": "#/$defs/length"
+        },
+        "glazing_thickness": {
+          "$ref": "#/$defs/length"
+        },
+        "segments": {
+          "$ref": "#/$defs/count"
+        },
+        "door_width": {
+          "$ref": "#/$defs/length"
+        },
+        "door_height": {
+          "$ref": "#/$defs/length"
+        },
+        "door_offset": {
+          "$ref": "#/$defs/length"
+        },
+        "bolt_length": {
+          "$ref": "#/$defs/length"
+        },
+        "bolt_head_radius": {
+          "$ref": "#/$defs/length"
+        },
+        "service_radius": {
+          "$ref": "#/$defs/length"
+        },
+        "floor_thickness": {
+          "$ref": "#/$defs/length"
+        },
+        "wall_thickness": {
+          "$ref": "#/$defs/length"
+        },
+        "stair_width": {
+          "$ref": "#/$defs/length"
+        },
+        "stair_steps": {
+          "$ref": "#/$defs/count"
+        },
+        "lift_width": {
+          "$ref": "#/$defs/length"
+        },
+        "bridge_width": {
+          "$ref": "#/$defs/length"
+        },
+        "bridge_geometry": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "lateral_offset",
+            "native_span",
+            "native_width",
+            "native_return_length",
+            "native_return_width",
+            "base_thickness",
+            "wearing_plate_thickness",
+            "expansion_gap",
+            "brace_height",
+            "brace_radius",
+            "rail_height",
+            "midrail_height",
+            "rail_radius",
+            "post_radius",
+            "midrail_radius",
+            "end_inset",
+            "return_enabled",
+            "return_side",
+            "passage_width",
+            "portal_clearance",
+            "portal_transition_length"
+          ],
+          "properties": {
+            "lateral_offset": {
+              "$ref": "#/$defs/signed"
+            },
+            "native_span": {
+              "$ref": "#/$defs/length"
+            },
+            "native_width": {
+              "$ref": "#/$defs/length"
+            },
+            "native_return_length": {
+              "$ref": "#/$defs/length"
+            },
+            "native_return_width": {
+              "$ref": "#/$defs/length"
+            },
+            "base_thickness": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.12,
+                      "maximum": 0.3
+                    }
+                  }
+                }
+              ]
+            },
+            "wearing_plate_thickness": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.005,
+                      "maximum": 0.03
+                    }
+                  }
+                }
+              ]
+            },
+            "expansion_gap": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.02,
+                      "maximum": 0.5
+                    }
+                  }
+                }
+              ]
+            },
+            "brace_height": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 2.2,
+                      "maximum": 3
+                    }
+                  }
+                }
+              ]
+            },
+            "brace_radius": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.025,
+                      "maximum": 0.075
+                    }
+                  }
+                }
+              ]
+            },
+            "rail_height": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 1.1,
+                      "maximum": 1.4
+                    }
+                  }
+                }
+              ]
+            },
+            "midrail_height": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.6,
+                      "maximum": 0.95
+                    }
+                  }
+                }
+              ]
+            },
+            "rail_radius": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.02,
+                      "maximum": 0.06
+                    }
+                  }
+                }
+              ]
+            },
+            "post_radius": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.015,
+                      "maximum": 0.05
+                    }
+                  }
+                }
+              ]
+            },
+            "midrail_radius": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.015,
+                      "maximum": 0.05
+                    }
+                  }
+                }
+              ]
+            },
+            "end_inset": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/length"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "minimum": 0.025,
+                      "maximum": 0.15
+                    }
+                  }
+                }
+              ]
+            },
+            "return_enabled": {
+              "type": "boolean"
+            },
+            "return_side": {
+              "const": "tower-a-south"
+            },
+            "passage_width": {
+              "$ref": "#/$defs/length"
+            },
+            "portal_clearance": {
+              "$ref": "#/$defs/length"
+            },
+            "portal_transition_length": {
+              "$ref": "#/$defs/length"
+            }
+          }
+        },
+        "bridge_storeys": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "measured_a806": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "overall_dimensions",
+            "order"
+          ],
+          "properties": {
+            "overall_dimensions": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "$ref": "#/$defs/length"
+              }
+            },
+            "order": {
+              "const": "as_published_axes_unspecified"
+            }
+          }
+        },
+        "steel_skin_thickness": {
+          "$ref": "#/$defs/length"
+        },
+        "lining_thickness": {
+          "$ref": "#/$defs/length"
+        },
+        "truss_member_side": {
+          "$ref": "#/$defs/length"
+        },
+        "floor_finish_height": {
+          "$ref": "#/$defs/length"
+        },
+        "capsule_landing_depth": {
+          "$ref": "#/$defs/length"
+        },
+        "lift_door_width": {
+          "$ref": "#/$defs/length"
+        },
+        "lift_door_height": {
+          "$ref": "#/$defs/length"
+        },
+        "core_service_radius": {
+          "$ref": "#/$defs/length"
+        },
+        "roof_vent_aperture_width": {
+          "$ref": "#/$defs/length"
+        },
+        "roof_vent_aperture_length": {
+          "$ref": "#/$defs/length"
+        }
+      }
+    },
+    "foundation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "basement_depth",
+        "footing_side",
+        "footing_depth",
+        "lift_pit_depth",
+        "section_divisions"
+      ],
+      "properties": {
+        "basement_depth": {
+          "$ref": "#/$defs/length"
+        },
+        "footing_side": {
+          "$ref": "#/$defs/length"
+        },
+        "footing_depth": {
+          "$ref": "#/$defs/length"
+        },
+        "lift_pit_depth": {
+          "$ref": "#/$defs/length"
+        },
+        "section_divisions": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "key",
+              "bounds"
+            ],
+            "properties": {
+              "key": {
+                "$ref": "#/$defs/id"
+              },
+              "bounds": {
+                "type": "array",
+                "minItems": 4,
+                "maxItems": 4,
+                "items": {
+                  "$ref": "#/$defs/signed"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "families": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "key",
+          "window_wall",
+          "entry_wall",
+          "entry_coordinate",
+          "window_longitudinal_offset",
+          "hand"
+        ],
+        "properties": {
+          "key": {
+            "enum": [
+              "Slash",
+              "Backslash",
+              "J",
+              "L",
+              "P",
+              "S"
+            ]
+          },
+          "window_wall": {
+            "enum": [
+              "front",
+              "right"
+            ]
+          },
+          "entry_wall": {
+            "enum": [
+              "back",
+              "left",
+              "right"
+            ]
+          },
+          "entry_coordinate": {
+            "$ref": "#/$defs/signed"
+          },
+          "window_longitudinal_offset": {
+            "$ref": "#/$defs/nonnegative"
+          },
+          "hand": {
+            "enum": [
+              "left",
+              "right"
+            ]
+          },
+          "native_window_longitudinal_offset": {
+            "$ref": "#/$defs/length"
           }
         }
       }
     }
   },
   "$defs": {
-    "id": {"type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"},
-    "localized": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}},
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "localized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "quantity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["value", "unit", "basis"],
+      "required": [
+        "value",
+        "unit",
+        "basis"
+      ],
       "properties": {
-        "value": {"type": "number"},
-        "unit": {"type": "string", "minLength": 1},
-        "basis": {"enum": ["sourced", "assumed", "derived"]},
-        "source": {"$ref": "#/$defs/id"},
-        "note": {"type": "string", "minLength": 1}
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "basis": {
+          "enum": [
+            "sourced",
+            "assumed",
+            "derived"
+          ]
+        },
+        "source": {
+          "$ref": "#/$defs/id"
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        }
       },
-      "if": {"type": "object", "properties": {"basis": {"type": "string", "const": "sourced"}}},
-      "then": {"type": "object", "required": ["source"], "properties": {"source": {"$ref": "#/$defs/id"}}}
+      "if": {
+        "type": "object",
+        "properties": {
+          "basis": {
+            "type": "string",
+            "const": "sourced"
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "required": [
+          "source"
+        ],
+        "properties": {
+          "source": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
     },
-    "length": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "number", "exclusiveMinimum": 0}, "unit": {"type": "string", "const": "m"}}}]},
-    "signed": {"allOf": [{"$ref": "#/$defs/quantity"}]},
-    "positive": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "number", "exclusiveMinimum": 0}}}]},
-    "nonnegative": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "number", "minimum": 0}}}]},
-    "angle": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "number", "minimum": -90, "maximum": 90}, "unit": {"type": "string", "const": "deg"}}}]},
-    "count": {"allOf": [{"$ref": "#/$defs/quantity"}, {"type": "object", "properties": {"value": {"type": "integer", "minimum": 0}}}]}
+    "length": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/quantity"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "unit": {
+              "type": "string",
+              "const": "m"
+            }
+          }
+        }
+      ]
+    },
+    "signed": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/quantity"
+        }
+      ]
+    },
+    "positive": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/quantity"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "nonnegative": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/quantity"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    },
+    "angle": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/quantity"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            },
+            "unit": {
+              "type": "string",
+              "const": "deg"
+            }
+          }
+        }
+      ]
+    },
+    "count": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/quantity"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      ]
+    }
   }
 }

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema",
+    "material",
+    "levels",
+    "class",
+    "predefined_type",
+    "display_rgb",
+    "forbidden_host",
+    "source",
+    "section"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "material": {
+      "type": "string"
+    },
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "uniqueItems": true
+    },
+    "class": {
+      "const": "IfcCovering"
+    },
+    "predefined_type": {
+      "const": "SKIRTINGBOARD"
+    },
+    "display_rgb": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "forbidden_host": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "section": {
+      "type": "object",
+      "required": [
+        "thickness",
+        "height"
+      ],
+      "properties": {
+        "thickness": {
+          "const": 0.015
+        },
+        "height": {
+          "const": 0.09
+        }
+      }
+    }
+  }
+}

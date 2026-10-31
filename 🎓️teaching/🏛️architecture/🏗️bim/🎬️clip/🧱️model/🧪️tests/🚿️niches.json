@@ -1,0 +1,154 @@
+{
+  "source": "SAB2024-p24; SAB2024-p45; SAB2024-p240; SAB2024-p45 qualified service-partition shared node R95, fixed cupboard/basin axes retained",
+  "uncertainty_m": 0.15,
+  "wall": "W-G-ROOM-13",
+  "path": [
+    [
+      7.015,
+      16.08
+    ],
+    [
+      4.75,
+      16.08
+    ],
+    [
+      4.75,
+      15.64
+    ],
+    [
+      3.95,
+      15.64
+    ],
+    [
+      3.95,
+      16.06
+    ],
+    [
+      3.15,
+      16.06
+    ]
+  ],
+  "basins": [
+    {
+      "tag": "FIX-SERVANT-BASIN-1",
+      "tap": "TAP-SERVANT-1",
+      "space": "SP-SERVANTS-1",
+      "axis": [
+        3.576470588235294,
+        15.54
+      ],
+      "size": [
+        0.55,
+        0.46
+      ],
+      "back": [
+        0,
+        1
+      ],
+      "mounts": [
+        [
+          3.476470588235294,
+          15.72
+        ],
+        [
+          3.676470588235294,
+          15.72
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-2",
+      "tap": "TAP-SERVANT-2",
+      "space": "SP-SERVANTS-2",
+      "axis": [
+        4.275,
+        15.95
+      ],
+      "size": [
+        0.55,
+        0.4
+      ],
+      "back": [
+        0,
+        -1
+      ],
+      "mounts": [
+        [
+          4.175,
+          15.795
+        ],
+        [
+          4.375,
+          15.795
+        ]
+      ]
+    },
+    {
+      "tag": "FIX-CHAUFFEUR-BASIN",
+      "tap": "TAP-CHAUFFEUR",
+      "space": "SP-CHAUFFEUR-BATH",
+      "axis": [
+        15.65,
+        18.852941176470587
+      ],
+      "size": [
+        0.55,
+        0.45
+      ],
+      "back": [
+        1,
+        0
+      ],
+      "mounts": [
+        [
+          15.868,
+          18.77294117647059
+        ],
+        [
+          15.868,
+          18.932941176470585
+        ]
+      ]
+    }
+  ],
+  "cabinets": [
+    {
+      "tag": "FIX-SERVANT-STORAGE-1-LONG",
+      "space": "SP-SERVANTS-1",
+      "bounds": [
+        4.79,
+        15.388235294117647,
+        6.975,
+        16.04
+      ],
+      "height": 1.75,
+      "void": [
+        5.4,
+        15.7,
+        0.4
+      ]
+    },
+    {
+      "tag": "FIX-SERVANT-BASIN-CABINET-1",
+      "space": "SP-SERVANTS-1",
+      "bounds": [
+        3.225,
+        15.723529411764705,
+        3.91,
+        16.01
+      ],
+      "height": 0.67,
+      "void": [
+        3.55,
+        15.86,
+        0.25
+      ]
+    }
+  ],
+  "rim": 0.88,
+  "joint": 1.1,
+  "diameter": 0.025,
+  "wall_thickness": 0.002,
+  "segments": 32,
+  "tolerance": 1e-08
+}

@@ -17,18 +17,12 @@ _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️ener
 _drafting = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _workbook = importlib.import_module("🎓️teaching.🏛️architecture.📊️excel.🎬️clip.🎨️visuals.📗️workbook.🐍️")
 _engine = importlib.import_module("manim")
+building_fit = importlib.import_module("🎓️teaching.🏛️architecture.🧲️fit.🐍️").building_fit
 
 _NAKAGIN = "🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🐍️"
 
 
-def _nakagin_drawing() -> type:
-    """🏢 The Nakagin drawing mixin; an empty mixin until ``🏢️nakagin/🎨️visuals`` exists."""
-    try:
-        return importlib.import_module(_NAKAGIN).NakaginDrawing
-    except ModuleNotFoundError as error:
-        if error.name is None or not _NAKAGIN.startswith(error.name):
-            raise
-        return type("NakaginDrawing", (), {})
+_nakagin = importlib.import_module(_NAKAGIN)
 
 
 INK, MUTED, ARCH, STRUCT, SERV = _drafting.INK, _drafting.MUTED, _drafting.ARCH, _drafting.STRUCT, _drafting.SERV
@@ -43,11 +37,12 @@ def source_files() -> tuple[Path, ...]:
     nakagin = clip.parents[1] / "🏢️nakagin"
     widgets = sorted(Path(__file__).parent.rglob("🐍️.py"))
     own = (Path(__file__), *widgets, *Path(__file__).parent.rglob("🔣️.json"), clip / "🧱️model/🐍️.py", clip / "🧱️model/🔣️.json", clip / "🧱️model/🧬️schema/🔣️.schema.json",
-           nakagin / "🐍️.py", nakagin / "🔣️.json", nakagin / "🧬️schema/🔣️.schema.json", nakagin / "🎨️visuals/🐍️.py")
-    return tuple(dict.fromkeys(path for path in (*own, *_theme.source_files()) if path.is_file()))
+           nakagin / "🐍️.py", nakagin / "🔣️.json", nakagin / "🧬️schema/🔣️.schema.json", nakagin / "🎨️visuals/🐍️.py",
+           clip.parents[1] / "🔀️morph/🐍️.py", clip.parents[1] / "🧲️fit/🐍️.py")
+    return tuple(dict.fromkeys(path for path in (*own, *_nakagin.source_files(), *_theme.source_files()) if path.is_file()))
 
 
-class ClipScene(_drafting.Drafting, _nakagin_drawing(), _workbook.Workbook, _engine.Scene):
+class ClipScene(_drafting.Drafting, _nakagin.NakaginDrawing, _workbook.Workbook, _engine.Scene):
     """🎬 Present localized Excel concepts: localization, timing and every drawing widget behind one scene base."""
 
     def language(self) -> str:

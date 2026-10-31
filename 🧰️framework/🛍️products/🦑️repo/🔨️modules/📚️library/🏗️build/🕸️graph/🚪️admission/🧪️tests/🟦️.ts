@@ -53,3 +53,9 @@ test("run-many with literal projects and targets admits their owner closure and 
  expect<unknown>(buildInvocationGraphSelectionV1(["run-many","--targets=typecheck","--projects=app","--","--all"]).kind).toBe("owners");
  expect<unknown>(readBuildGraphSelectionV1(owners)).toEqual(owners);expect(()=>readBuildGraphSelectionV1({...owners,targets:["a*"]})).toThrow();
 });
+
+
+test("the authored workspace registry has one identity per physical owner",async()=>{
+ const registry=JSON.parse(await Bun.file(new URL("../../../../../../../../../📋️build-owners.json",import.meta.url)).text()),db=new Database(":memory:");
+ try{db.exec("CREATE TABLE owner(name TEXT PRIMARY KEY,root TEXT UNIQUE,manifest TEXT UNIQUE)");for(const owner of registry.owners)db.query("INSERT INTO owner VALUES(?,?,?)").run(owner.name,owner.root,owner.manifest);expect(readBuildOwnerRegistryV1(registry).owners.length).toBe((db.query("SELECT COUNT(*) AS count FROM owner").get() as {count:number}).count);}finally{db.close();}
+});

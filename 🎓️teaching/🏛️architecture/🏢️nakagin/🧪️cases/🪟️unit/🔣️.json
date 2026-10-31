@@ -1,0 +1,271 @@
+{
+  "inventory": [
+    {
+      "prefix": "window-glazing",
+      "role": "glazing",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-base-plate",
+      "role": "window_base_plate",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-centre-cover",
+      "role": "window_cover",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-threaded-sleeve",
+      "role": "window_sleeve",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-divider",
+      "role": "window_divider",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-inner-guide-",
+      "role": "window_inner_guide",
+      "minimum": 2
+    },
+    {
+      "prefix": "window-outer-guide",
+      "role": "window_outer_guide",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-guide-clip-",
+      "role": "window_guide_clip",
+      "minimum": 2
+    },
+    {
+      "prefix": "window-guide-fixing-",
+      "role": "window_guide_fixing",
+      "minimum": 4
+    },
+    {
+      "prefix": "window-carrier-",
+      "role": "window_carrier",
+      "minimum": 2
+    },
+    {
+      "prefix": "window-paper-fan",
+      "role": "window_blind",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-sash-frame",
+      "role": "window_sash_frame",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-sash-glazing",
+      "role": "window_sash_glazing",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-hinge-",
+      "role": "window_hinge",
+      "minimum": 2
+    },
+    {
+      "prefix": "window-lock-upper",
+      "role": "window_lock",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-lock-lower",
+      "role": "window_lock",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-sash-stop",
+      "role": "window_stop",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-gasket",
+      "role": "window_gasket",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-reveal-closure",
+      "role": "window_closure",
+      "minimum": 1
+    },
+    {
+      "prefix": "window-angle-",
+      "role": "window_angle_support",
+      "minimum": 4
+    }
+  ],
+  "states": [
+    {
+      "sash_angle": 0,
+      "blind_fraction": 0,
+      "blind_rotation": 0
+    },
+    {
+      "sash_angle": 0,
+      "blind_fraction": 0.25,
+      "blind_rotation": 0
+    },
+    {
+      "sash_angle": 0,
+      "blind_fraction": 0.5,
+      "blind_rotation": 90
+    },
+    {
+      "sash_angle": 0,
+      "blind_fraction": 0.75,
+      "blind_rotation": 180
+    },
+    {
+      "sash_angle": 0,
+      "blind_fraction": 1,
+      "blind_rotation": 0
+    },
+    {
+      "sash_angle": 45,
+      "blind_fraction": 0,
+      "blind_rotation": 0
+    },
+    {
+      "sash_angle": 90,
+      "blind_fraction": 0,
+      "blind_rotation": 0
+    }
+  ],
+  "families": [
+    "Slash",
+    "Backslash",
+    "J",
+    "L",
+    "P",
+    "S"
+  ],
+  "source_dimensions": {
+    "fixed_glass_thickness": 0.006,
+    "base_diameter": 0.14,
+    "cover_diameter": 0.12,
+    "cover_thickness": 0.005,
+    "sleeve_diameter": 0.02,
+    "divider_thickness": 0.0012,
+    "carrier_sheet": 0.002,
+    "angle_side": 0.04,
+    "angle_thickness": 0.004
+  },
+  "long_lamp": {
+    "prefix": "long-wall-luminaire",
+    "minimum_aspect": 5
+  },
+  "tolerance": 1e-8,
+  "hinge_contacts": [
+    [
+      "window-hinge-0-leaf",
+      "window-sash-frame"
+    ],
+    [
+      "window-hinge-1-leaf",
+      "window-sash-frame"
+    ]
+  ],
+  "contact_links": [
+    [
+      "window-base-plate",
+      "window-glazing"
+    ],
+    [
+      "window-threaded-sleeve",
+      "window-base-plate"
+    ],
+    [
+      "window-threaded-sleeve",
+      "window-divider"
+    ],
+    [
+      "window-centre-cover",
+      "window-divider"
+    ],
+    [
+      "window-inner-guide-0",
+      "window-divider"
+    ],
+    [
+      "window-inner-guide-1",
+      "window-divider"
+    ],
+    [
+      "window-guide-clip-0",
+      "window-outer-guide"
+    ],
+    [
+      "window-guide-clip-1",
+      "window-outer-guide"
+    ],
+    [
+      "window-carrier-0",
+      "window-paper-fan"
+    ],
+    [
+      "window-carrier-1",
+      "window-paper-fan"
+    ],
+    [
+      "window-sash-glazing",
+      "window-sash-seal-0"
+    ],
+    [
+      "window-sash-glazing",
+      "window-sash-seal-1"
+    ],
+    [
+      "window-sash-seal-0",
+      "window-sash-seat-0"
+    ],
+    [
+      "window-sash-seal-1",
+      "window-sash-seat-1"
+    ],
+    [
+      "window-guide-fixing-0",
+      "window-outer-guide"
+    ],
+    [
+      "window-angle-0",
+      "window-reveal-flange"
+    ],
+    [
+      "window-guide-fixing-1",
+      "window-outer-guide"
+    ],
+    [
+      "window-angle-1",
+      "window-reveal-flange"
+    ],
+    [
+      "window-guide-fixing-2",
+      "window-outer-guide"
+    ],
+    [
+      "window-angle-2",
+      "window-reveal-flange"
+    ],
+    [
+      "window-guide-fixing-3",
+      "window-outer-guide"
+    ],
+    [
+      "window-angle-3",
+      "window-reveal-flange"
+    ]
+  ],
+  "contact_states": [
+    0,
+    1,
+    4,
+    6
+  ]
+}

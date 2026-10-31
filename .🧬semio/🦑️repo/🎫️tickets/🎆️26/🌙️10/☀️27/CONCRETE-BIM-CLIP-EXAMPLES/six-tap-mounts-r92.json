@@ -1,0 +1,369 @@
+{
+  "title": "Six Existing Tap Assemblies Mount and Discharge Audit R92",
+  "source_current": "d08d6aa888c8d87347e7424adafb3596cfc3bebd9815bb42205680229be25035",
+  "current_stable": true,
+  "current_results": [
+    {
+      "tag": "TAP-HALL",
+      "host": "FIX-HALL-BASIN",
+      "stem_base": [
+        8.128,
+        13.002500000000001,
+        0.88
+      ],
+      "foot_area": 0.0024999999999999823,
+      "actual_mount_contact_area": 0,
+      "host_top_z": 0.88,
+      "old_solid_spout_tip": [
+        8.128,
+        12.8525,
+        1.0750000000000002
+      ],
+      "old_tip_inside_overall_host_envelope": false,
+      "old_tip_over_empty_cavity_plane": false,
+      "cavity_plane_z": 0.8,
+      "old_tip_direction": [
+        0,
+        -1
+      ],
+      "source_host_geometry": [
+        8.128,
+        13.15
+      ]
+    },
+    {
+      "tag": "TAP-LAUNDRY-1",
+      "host": "FIX-LAUNDRY",
+      "stem_base": [
+        4.150000000000001,
+        21.23,
+        0.95
+      ],
+      "foot_area": 0.002499999999999849,
+      "actual_mount_contact_area": 0.0017499999999998233,
+      "host_top_z": 0.95,
+      "old_solid_spout_tip": [
+        4.15,
+        21.080000000000002,
+        1.145
+      ],
+      "old_tip_inside_overall_host_envelope": true,
+      "old_tip_over_empty_cavity_plane": true,
+      "cavity_plane_z": 0.8,
+      "old_tip_direction": [
+        -1.4210854715202004e-14,
+        -1
+      ],
+      "source_host_geometry": null
+    },
+    {
+      "tag": "TAP-LAUNDRY-2",
+      "host": "FIX-LAUNDRY",
+      "stem_base": [
+        5.55,
+        21.230000000000004,
+        0.95
+      ],
+      "foot_area": 0.0024999999999998934,
+      "actual_mount_contact_area": 0.0017499999999998543,
+      "host_top_z": 0.95,
+      "old_solid_spout_tip": [
+        5.55,
+        21.080000000000002,
+        1.145
+      ],
+      "old_tip_inside_overall_host_envelope": true,
+      "old_tip_over_empty_cavity_plane": true,
+      "cavity_plane_z": 0.8,
+      "old_tip_direction": [
+        0,
+        -1
+      ],
+      "source_host_geometry": null
+    },
+    {
+      "tag": "TAP-SERVANT-1",
+      "host": "FIX-SERVANT-BASIN-1",
+      "stem_base": [
+        3.576470588235294,
+        15.4875,
+        0.88
+      ],
+      "foot_area": 0.0025000000000000265,
+      "actual_mount_contact_area": 0,
+      "host_top_z": 0.88,
+      "old_solid_spout_tip": [
+        3.576470588235294,
+        15.337499999999999,
+        1.0750000000000002
+      ],
+      "old_tip_inside_overall_host_envelope": true,
+      "old_tip_over_empty_cavity_plane": true,
+      "cavity_plane_z": 0.8,
+      "old_tip_direction": [
+        7.1054273576008e-15,
+        -1
+      ],
+      "source_host_geometry": [
+        3.576470588235294,
+        15.22
+      ]
+    },
+    {
+      "tag": "TAP-SERVANT-2",
+      "host": "FIX-SERVANT-BASIN-2",
+      "stem_base": [
+        4.2749999999999995,
+        15.852499999999997,
+        0.88
+      ],
+      "foot_area": 0.002500000000000071,
+      "actual_mount_contact_area": 0,
+      "host_top_z": 0.88,
+      "old_solid_spout_tip": [
+        4.275,
+        15.702499999999999,
+        1.0750000000000002
+      ],
+      "old_tip_inside_overall_host_envelope": false,
+      "old_tip_over_empty_cavity_plane": false,
+      "cavity_plane_z": 0.8,
+      "old_tip_direction": [
+        1.4210854715202408e-14,
+        -1
+      ],
+      "source_host_geometry": [
+        4.275,
+        15.95
+      ]
+    },
+    {
+      "tag": "TAP-CHAUFFEUR",
+      "host": "FIX-CHAUFFEUR-BASIN",
+      "stem_base": [
+        15.875,
+        18.912941176470586,
+        0.88
+      ],
+      "foot_area": 0.002500000000000071,
+      "actual_mount_contact_area": 0.0004470879824425096,
+      "host_top_z": 0.88,
+      "old_solid_spout_tip": [
+        15.875,
+        18.767941176470586,
+        1.0750000000000002
+      ],
+      "old_tip_inside_overall_host_envelope": true,
+      "old_tip_over_empty_cavity_plane": true,
+      "cavity_plane_z": 0.8,
+      "old_tip_direction": [
+        0,
+        -1
+      ],
+      "source_host_geometry": [
+        15.65,
+        18.852941176470587
+      ]
+    }
+  ],
+  "construction_candidates": [
+    {
+      "tag": "TAP-HALL",
+      "host": "FIX-HALL-BASIN",
+      "requires": "Original ellipse rotate/resize tolongY .46X×.80Y atfixedaxis; paired taps onlowX",
+      "mounts": [
+        [
+          7.922,
+          13.03,
+          0.88
+        ],
+        [
+          7.922,
+          13.27,
+          0.88
+        ]
+      ],
+      "discharges": [
+        [
+          8.068,
+          13.03,
+          1.07
+        ],
+        [
+          8.068,
+          13.27,
+          1.07
+        ]
+      ],
+      "source": "Author45 pairedlowXmarks; original24/profileuncertainty in elliptical-basins-r92.json"
+    },
+    {
+      "tag": "TAP-LAUNDRY-1",
+      "host": "FIX-LAUNDRY",
+      "requires": "Current troughpose only; original plan45 lowX/Y-run discrepancy remains toresolve before claiming originalstation",
+      "mounts": [
+        [
+          4.15,
+          21.25,
+          0.95
+        ]
+      ],
+      "discharges": [
+        [
+          4.15,
+          21.05,
+          1.145
+        ]
+      ],
+      "source": "CMN2concretebacs presence; exactcurrentplacementnotrecoveredmeasurement"
+    },
+    {
+      "tag": "TAP-LAUNDRY-2",
+      "host": "FIX-LAUNDRY",
+      "requires": "Current troughpose only; samequalified laundrylayout issue",
+      "mounts": [
+        [
+          5.55,
+          21.25,
+          0.95
+        ]
+      ],
+      "discharges": [
+        [
+          5.55,
+          21.05,
+          1.145
+        ]
+      ],
+      "source": "CMN2concretebacs presence; exactcurrentplacementnotrecoveredmeasurement"
+    },
+    {
+      "tag": "TAP-SERVANT-1",
+      "host": "FIX-SERVANT-BASIN-1",
+      "requires": "Rebuild originalstepped niche thenmovecentreY15.541912; candidate keepsactualtopellipse.55X×.46Y",
+      "mounts": [
+        [
+          3.476470588,
+          15.7404,
+          0.88
+        ],
+        [
+          3.676470588,
+          15.7404,
+          0.88
+        ]
+      ],
+      "discharges": [
+        [
+          3.476470588,
+          15.541912,
+          1.07
+        ],
+        [
+          3.676470588,
+          15.541912,
+          1.07
+        ]
+      ],
+      "source": "Author45 basin1tapmarks +Yback; original24 steppedniche"
+    },
+    {
+      "tag": "TAP-SERVANT-2",
+      "host": "FIX-SERVANT-BASIN-2",
+      "requires": "Source northernbackside, currentcentre4.275/15.95 canremaininside±.15m; topellipse.55X×.40Y",
+      "mounts": [
+        [
+          4.175,
+          15.77925,
+          0.88
+        ],
+        [
+          4.375,
+          15.77925,
+          0.88
+        ]
+      ],
+      "discharges": [
+        [
+          4.175,
+          15.95,
+          1.07
+        ],
+        [
+          4.375,
+          15.95,
+          1.07
+        ]
+      ],
+      "source": "Author45 pairedtapmarks on−Yback; original24 niche"
+    },
+    {
+      "tag": "TAP-CHAUFFEUR",
+      "host": "FIX-CHAUFFEUR-BASIN",
+      "requires": "Source wallbasinbackhighX, pairedtaps; currenttopellipse.55X×.45Y",
+      "mounts": [
+        [
+          15.89025,
+          18.772941176,
+          0.88
+        ],
+        [
+          15.89025,
+          18.932941176,
+          0.88
+        ]
+      ],
+      "discharges": [
+        [
+          15.65,
+          18.772941176,
+          1.07
+        ],
+        [
+          15.65,
+          18.932941176,
+          1.07
+        ]
+      ],
+      "source": "Author45 chauffeurfixture haspairedtapmarks againsthighXwall"
+    }
+  ],
+  "additional_source_backed_assembly": {
+    "tag_candidate": "TAP-PARENTS",
+    "host": "BASIN-PARENTS",
+    "mounts": [
+      [
+        4.739588234999999,
+        13.340294118,
+        4.05
+      ],
+      [
+        4.739588234999999,
+        13.580294118,
+        4.05
+      ]
+    ],
+    "discharges": [
+      [
+        4.885588235,
+        13.340294118,
+        4.24
+      ],
+      [
+        4.885588235,
+        13.580294118,
+        4.24
+      ]
+    ],
+    "requires": "Rotate/resize basin atfixedaxis; localrim.88 +first3.17; pairedlowXmarks sourceattested, componentabsent currently"
+  },
+  "uncertainty": "Alltube diameters,heights,elbows,exacttapstations and mechanisms inferred. Candidate mounts requirepositiveactualceramic/RCcontact after sourcefixturecorrection. No concealed supply/drain branch routes are claimed.",
+  "acceptance": [
+    "Use real hollowmitered tubes with openbore continuity,closedwallcomponents and positivepipewallvolume",
+    "Native stem-base annulus mustcontactactualrim/deck; no bbox/point-touch-only supportclaim",
+    "Outletverticalfallline insideactualhollowbowl; not simplyinsideouterrectangle",
+    "All sourcepartitions and operateddoors retained; servant1requiresoriginalnichefirst",
+    "NativeENDE class/GUID/material/containment/XYZ/volume/bore checks"
+  ],
+  "deferred": "TAP-KITCHEN is owned by MEP owner and depends on corrected full-depth kitchen/pantry programme."
+}

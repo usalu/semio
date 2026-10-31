@@ -3,7 +3,8 @@ import importlib,json,math,unittest
 from copy import deepcopy
 from pathlib import Path
 from scipy.spatial import ConvexHull
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon,Point
+from shapely.ops import unary_union
 prefix='🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.'
 api=importlib.import_module(prefix+'🧱️model.🐍️');oracle=importlib.import_module(prefix+'🧪️tests.🐍️')
 class NativeFurnishingContract(unittest.TestCase):
@@ -45,6 +46,21 @@ class NativeFurnishingContract(unittest.TestCase):
         obj.pop('material')
         self._fragment(case['tag'],model,'en')
     def test_source_hollow_furnishings_keep_real_native_parts_and_volume(self):
+        cavity=json.loads((Path(api.__file__).parent/self.case['cavity_fixture']).read_text(encoding='utf8'))
+        witnesses={c['tag']:c for c in cavity['cabinets']}
         for case in self.case['source_cases']:
-            parts=api.solid_geometry(case['tag'],self.model)['parts'];self.assertEqual(len(parts),case['parts']);self.assertAlmostEqual(sum(Polygon(p['outline']).area*(p['z1']-p['z0']) for p in parts),case['volume'],places=9)
-            for language in ('en','de'):self._fragment(case['tag'],self.model,language)
+            tag=case['tag'];obj=api.element(tag,self.model)
+            self.assertEqual(obj['class'],self.case['entity'])
+            parts=api.solid_geometry(tag,self.model)['parts']
+            self.assertEqual({p['material'] for p in parts},set(cavity['materials']))
+            self.assertTrue(set(cavity['roles']).issubset({p['role'] for p in parts}))
+            levels=sorted({p[k] for p in parts for k in ('z0','z1')})
+            volume=sum(unary_union([Polygon(p['outline'],p.get('holes',[])) for p in parts if p['z0']<(a+b)/2<p['z1']]).area*(b-a) for a,b in zip(levels,levels[1:]))
+            self.assertGreater(volume,0)
+            self.assertAlmostEqual(api.quantities(tag,self.model)['volume'],volume,places=9)
+            floor=next(row['elevation']['value'] for row in self.model['storeys'] if row['id']==obj['geometry']['base_level'])
+            for x,y,z in witnesses[tag]['cavities']:
+                self.assertFalse(any(p['z0']<floor+z<p['z1'] and Polygon(p['outline'],p.get('holes',[])).covers(Point(x,y)) for p in parts))
+            for language in ('en','de'):
+                fragment,parsed=self._fragment(tag,self.model,language)
+                self.assertEqual(sum(entity=='IFCEXTRUDEDAREASOLID' for entity,_ in parsed.values()),len(parts))

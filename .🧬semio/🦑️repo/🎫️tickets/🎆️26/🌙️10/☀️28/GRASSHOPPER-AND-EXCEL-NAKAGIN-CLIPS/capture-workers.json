@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "workers": [
+    {
+      "name": "sections",
+      "script": "visual-audit-gallery.py",
+      "arguments": [
+        "--sections-only"
+      ],
+      "outputs": [
+        "nakagin-representative-sections.png"
+      ]
+    },
+    {
+      "name": "families",
+      "script": "capture-capsule-families.py",
+      "arguments": [],
+      "outputs": [
+        "nakagin-six-families-closed.png",
+        "nakagin-six-families-cutaway.png"
+      ]
+    },
+    {
+      "name": "windows",
+      "script": "capture-window-states.py",
+      "arguments": [],
+      "outputs": [
+        "nakagin-window-mechanism-states.png"
+      ]
+    },
+    {
+      "name": "roofs",
+      "script": "capture-roof-frame.py",
+      "arguments": [],
+      "outputs": [
+        "roof-frame-occlusion.png"
+      ]
+    },
+    {
+      "name": "details",
+      "script": "visual-smoke.py",
+      "arguments": [],
+      "outputs": [
+        "nakagin-detail-gallery.png",
+        "nakagin-orthographic-gallery.png"
+      ]
+    },
+    {
+      "name": "direction0",
+      "script": "visual-audit-gallery.py",
+      "arguments": [
+        "--direction-index",
+        "0"
+      ],
+      "outputs": [
+        "exterior-direction-0.png"
+      ]
+    },
+    {
+      "name": "direction1",
+      "script": "visual-audit-gallery.py",
+      "arguments": [
+        "--direction-index",
+        "1"
+      ],
+      "outputs": [
+        "exterior-direction-1.png"
+      ]
+    },
+    {
+      "name": "direction2",
+      "script": "visual-audit-gallery.py",
+      "arguments": [
+        "--direction-index",
+        "2"
+      ],
+      "outputs": [
+        "exterior-direction-2.png"
+      ]
+    },
+    {
+      "name": "direction3",
+      "script": "visual-audit-gallery.py",
+      "arguments": [
+        "--direction-index",
+        "3"
+      ],
+      "outputs": [
+        "exterior-direction-3.png"
+      ]
+    }
+  ],
+  "gallery": {
+    "output": "nakagin-four-exterior-directions.png",
+    "panels": [
+      "exterior-direction-0.png",
+      "exterior-direction-1.png",
+      "exterior-direction-2.png",
+      "exterior-direction-3.png"
+    ],
+    "boundaries": [
+      0,
+      495,
+      960,
+      1425,
+      1920
+    ]
+  }
+}

@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases",
+    "invalid",
+    "affine",
+    "embedded",
+    "selective"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/input"
+      }
+    },
+    "invalid": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/input"
+      }
+    },
+    "affine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "flight",
+        "column",
+        "shared_x",
+        "shared_y",
+        "origin",
+        "offset",
+        "thickness"
+      ],
+      "properties": {
+        "flight": {
+          "type": "string"
+        },
+        "column": {
+          "type": "string"
+        },
+        "shared_x": {
+          "type": "string"
+        },
+        "shared_y": {
+          "type": "string"
+        },
+        "origin": {
+          "type": "string"
+        },
+        "offset": {
+          "type": "string"
+        },
+        "thickness": {
+          "type": "string"
+        }
+      }
+    },
+    "embedded": {
+      "type": "object",
+      "required": [
+        "outline",
+        "hole",
+        "top",
+        "depth",
+        "volume"
+      ],
+      "properties": {
+        "outline": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 4
+        },
+        "hole": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "minItems": 4
+        },
+        "top": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        },
+        "volume": {
+          "type": "number"
+        }
+      }
+    },
+    "selective": {
+      "type": "object",
+      "required": [
+        "flight",
+        "allowed_owners",
+        "volume"
+      ],
+      "properties": {
+        "flight": {
+          "type": "string"
+        },
+        "allowed_owners": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "volume": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "radius",
+        "maximum_outward",
+        "safety",
+        "minimum_sides"
+      ],
+      "properties": {
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "maximum_outward": {
+          "type": "number",
+          "minimum": 0
+        },
+        "safety": {
+          "type": "number",
+          "minimum": 0
+        },
+        "minimum_sides": {
+          "type": "integer",
+          "minimum": 3
+        }
+      }
+    }
+  }
+}

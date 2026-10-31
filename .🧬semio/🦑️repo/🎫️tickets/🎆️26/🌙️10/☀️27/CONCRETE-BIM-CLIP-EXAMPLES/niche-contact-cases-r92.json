@@ -1,0 +1,89 @@
+{
+  "frozen_source": "ae2d3087665c7f981d744149caead0900a6939b118baac863f344902505847c2",
+  "source_stable": true,
+  "max_positive_overlap_volume": 1e-10,
+  "observed": [
+    {
+      "left": "FIX-CHAUFFEUR-BASIN",
+      "right": "W-G-E",
+      "brackets_only": true,
+      "positive_overlap_volume": 0,
+      "vertical_contact_area": 0.008000000800001315,
+      "horizontal_contact_area": 0,
+      "nearest_distance": 0
+    },
+    {
+      "left": "FIX-SERVANT-STORAGE-1-LONG",
+      "right": "W-G-SERVICE",
+      "brackets_only": false,
+      "positive_overlap_volume": 9.667351886326107e-16,
+      "vertical_contact_area": 1.088447062162946,
+      "horizontal_contact_area": 0,
+      "nearest_distance": 0
+    },
+    {
+      "left": "FIX-SERVANT-STORAGE-1-LONG",
+      "right": "W-G-ROOM-13",
+      "brackets_only": false,
+      "positive_overlap_volume": 0,
+      "vertical_contact_area": 4.383750017067771,
+      "horizontal_contact_area": 0,
+      "nearest_distance": 8.881784197001252e-16
+    },
+    {
+      "left": "FIX-SERVANT-BASIN-CABINET-1",
+      "right": "W-G-W",
+      "brackets_only": false,
+      "positive_overlap_volume": 7.505891333299307e-17,
+      "vertical_contact_area": 0.16901764823865156,
+      "horizontal_contact_area": 0,
+      "nearest_distance": 0
+    },
+    {
+      "left": "FIX-SERVANT-BASIN-CABINET-1",
+      "right": "W-G-ROOM-13",
+      "brackets_only": false,
+      "positive_overlap_volume": 0,
+      "vertical_contact_area": 0.16901764823865054,
+      "horizontal_contact_area": 0,
+      "nearest_distance": 4.440892098500626e-16
+    },
+    {
+      "left": "FIX-SERVANT-BASIN-1",
+      "right": "FIX-SERVANT-BASIN-CABINET-1",
+      "brackets_only": true,
+      "positive_overlap_volume": 0,
+      "vertical_contact_area": 0,
+      "horizontal_contact_area": 0.011458823529399819,
+      "nearest_distance": 0
+    },
+    {
+      "left": "FIX-CHAUFFEUR-BASIN",
+      "right": "W-G-E",
+      "brackets_only": true,
+      "positive_overlap_volume": 0,
+      "vertical_contact_area": 0.008000000800001315,
+      "horizontal_contact_area": 0,
+      "nearest_distance": 0
+    },
+    {
+      "left": "FIX-SERVANT-BASIN-2",
+      "right": "TILE-SERVANT-BASIN-2",
+      "brackets_only": true,
+      "positive_overlap_volume": 0,
+      "vertical_contact_area": 0.008000000799999895,
+      "horizontal_contact_area": 0,
+      "nearest_distance": 0
+    },
+    {
+      "left": "TILE-SERVANT-BASIN-2",
+      "right": "W-G-ROOM-13",
+      "brackets_only": false,
+      "positive_overlap_volume": 0,
+      "vertical_contact_area": 0.6215000022599999,
+      "horizontal_contact_area": 0,
+      "nearest_distance": 0
+    }
+  ],
+  "limits": "Prismatic source parts only; exact XY/z occupied overlap;1nm boundary search for floating-point coincident contact, no source geometry alteration. Native part closure/volumes separately audited."
+}

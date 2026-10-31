@@ -1,0 +1,7 @@
+# Hall Radiator Source and Physical Fit
+
+SABp233 distinguishes the original dark hall radiator behind the stair from later white paint and describes its relocation to the opposite wall when the stair partition was lowered to a parapet. Exact coordinates are not established by that text or the reviewed figure. The current first-floor/ramp geometry cannot be used to justify keeping its old inferredY9.10 station.
+
+A retained old component overlaps RF1A0.00000142992297145m³; independent SciPy halfspace integration and native exact material difference agree. The full assembly had material above and through the low flight instead of fitting below it. Its source-prescribed opposite-wall orientation is retained. The nearest50mm station yielding a declared inferred50mm soffit clearance isY13.25m at unchangedX10.63m, inside the ground hall. All98material meshes and twofeet translate rigidly; volume remains0.009611999999999983m³. Minimum clearance against original actual source-affine RF1A controls is53.301535974mm. No ramp, wall, finished datum or radiator section changes.
+
+Neutral JSON/schema and independent volume/source-fitting/floor-cap contracts were added before correction. RED confirmed invalid clearance; native/independent original-overlap fixture and actual foot support already passed. New physical source publication is a targeted radiator-only merge; finalGREEN and bilingualnativeSDK proof remain pending. Metric station, section count, size, gauge and plumbing are explicitly inferred; no original survey/manufacturer or concealed branch is asserted.

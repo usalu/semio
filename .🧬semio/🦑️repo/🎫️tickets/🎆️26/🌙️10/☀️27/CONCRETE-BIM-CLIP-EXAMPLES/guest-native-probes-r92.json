@@ -1,0 +1,149 @@
+{
+  "title": "Guest native fixture occupancy probes R92",
+  "source": "39eb95cb6647c77e8c321cc74c9b06eee9ff6f4665e37a164fb7e543adfbee70",
+  "probes": {
+    "FIX-GUEST-BASIN": [
+      {
+        "name": "drain perforation through actual bowl floor",
+        "xyz": [
+          3.251,
+          10.570382352941175,
+          3.86
+        ],
+        "occupied": false
+      },
+      {
+        "name": "ceramic floor beside drain",
+        "xyz": [
+          3.31,
+          10.568382352941176,
+          3.86
+        ],
+        "occupied": true
+      }
+    ],
+    "FIX-GUEST-WARDROBE": [
+      {
+        "name": "hollow wardrobe bay",
+        "xyz": [
+          2.2,
+          10.65,
+          3.9
+        ],
+        "occupied": false
+      }
+    ],
+    "TAP-GUEST": [
+      {
+        "name": "tap_stem open bore 0",
+        "xyz": [
+          3.3899999999999966,
+          10.468382352941196,
+          4.162499999999998
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap_stem positive wall 0",
+        "xyz": [
+          3.401389515362319,
+          10.469504122292768,
+          4.168194757681159
+        ],
+        "occupied": true
+      },
+      {
+        "name": "tap_stem open bore 1",
+        "xyz": [
+          3.3899999999999966,
+          10.668382352941158,
+          4.162499999999998
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap_stem positive wall 1",
+        "xyz": [
+          3.401389515362319,
+          10.669504122292768,
+          4.168194757681159
+        ],
+        "occupied": true
+      },
+      {
+        "name": "tap_spout open bore 0",
+        "xyz": [
+          3.3000000000000056,
+          10.468382352941187,
+          4.239999999999998
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap_spout positive wall 0",
+        "xyz": [
+          3.300560884675797,
+          10.479771868303494,
+          4.241121769351593
+        ],
+        "occupied": true
+      },
+      {
+        "name": "tap_spout open bore 1",
+        "xyz": [
+          3.3000000000000056,
+          10.668382352941167,
+          4.239999999999998
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap_spout positive wall 1",
+        "xyz": [
+          3.300560884675797,
+          10.679771868303494,
+          4.241121769351593
+        ],
+        "occupied": true
+      }
+    ],
+    "BIDET-GUEST": [
+      {
+        "name": "tap_stem open bore 0",
+        "xyz": [
+          3.359411764705906,
+          11.224999999999996,
+          3.634999999999999
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap_stem positive wall 0",
+        "xyz": [
+          3.3582899953545,
+          11.236389515362252,
+          3.6344391153242035
+        ],
+        "occupied": true
+      },
+      {
+        "name": "tap_spout open bore 0",
+        "xyz": [
+          3.2544117647059454,
+          11.224999999999996,
+          3.7199999999999998
+        ],
+        "occupied": false
+      },
+      {
+        "name": "tap_spout positive wall 0",
+        "xyz": [
+          3.2549726493817492,
+          11.236389515362252,
+          3.721121769351593
+        ],
+        "occupied": true
+      }
+    ]
+  }
+}

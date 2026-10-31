@@ -13,18 +13,104 @@
 \tl_new:N \l_semio_assignment_institution_tl
 \tl_new:N \l_semio_assignment_duration_tl
 \tl_new:N \l_semio_assignment_submission_tl
+\tl_new:N \l_semio_assignment_number_tl
+\tl_new:N \l_semio_assignment_faculty_tl
+\tl_new:N \l_semio_assignment_logo_tl
+\tl_new:N \l_semio_assignment_cover_image_tl
+\tl_new:N \l_semio_assignment_cover_title_tl
+\tl_new:N \l_semio_assignment_institution_label_tl
+\tl_new:N \l_semio_assignment_faculty_label_tl
 \keys_define:nn { semio / assignment } {
+  institution-label .tl_set:N = \l_semio_assignment_institution_label_tl,
+  faculty-label .tl_set:N = \l_semio_assignment_faculty_label_tl,
   course .tl_set:N = \l_semio_assignment_course_tl,
   institution .tl_set:N = \l_semio_assignment_institution_tl,
   duration .tl_set:N = \l_semio_assignment_duration_tl,
   submission .tl_set:N = \l_semio_assignment_submission_tl,
+  number .tl_set:N = \l_semio_assignment_number_tl,
+  faculty .tl_set:N = \l_semio_assignment_faculty_tl,
+  logo .tl_set:N = \l_semio_assignment_logo_tl,
+  cover-image .tl_set:N = \l_semio_assignment_cover_image_tl,
+  cover-title .tl_set:N = \l_semio_assignment_cover_title_tl,
 }
 \NewDocumentCommand \SemioAssignmentSetup { m } { \keys_set:nn { semio / assignment } {#1} }
 \cs_new:Npn \semio_assignment_label:n #1 {
   \str_case:Vn \l_semio_language_tl {
-    { en } { \str_case:nn {#1} { { assignment } { Assignment } { duration } { Duration } { submission } { Submission } } }
-    { de } { \str_case:nn {#1} { { assignment } { Aufgabenblatt } { duration } { Bearbeitungszeit } { submission } { Abgabe } } }
+    { en } { \str_case:nn {#1} { { assignment } { Assignment } { duration } { Duration } { submission } { Submission } { course } { Course } { title } { Title } { faculty } { Faculty } } }
+    { de } { \str_case:nn {#1} { { assignment } { Aufgabenblatt } { duration } { Bearbeitungszeit } { submission } { Abgabe } { course } { Lehrveranstaltung } { title } { Titel } { faculty } { Fakultät } } }
   }
+}
+
+\seq_new:N \g_semio_assignment_cover_facts_seq
+\seq_new:N \g_semio_assignment_cover_partners_seq
+\NewDocumentCommand \SemioAssignmentCoverFact { m m } {
+  \seq_gput_right:Nn \g_semio_assignment_cover_facts_seq {
+    \WindowItem { \begin{Window}[title={#1}, anchor=center, text-size=fit] \SemioSans #2 \end{Window} }
+  }
+}
+\NewDocumentCommand \SemioAssignmentCoverPartner { m +m } {
+  \seq_gput_right:Nn \g_semio_assignment_cover_partners_seq {
+    \WindowItem { \begin{Window}[title={#1}, anchor=nw, text-size=fit] \semio_cover_address:n {#2} \end{Window} }
+  }
+}
+\cs_new_protected:Npn \semio_assignment_cover_text:nN #1#2 {
+  \tl_if_empty:NF #2 {
+    \WindowItem { \begin{Window}[title={#1}, anchor=center, text-size=fit] \SemioSans \tl_use:N #2 \end{Window} }
+  }
+}
+\cs_new_protected:Npn \semio_assignment_cover_logo:n #1 { \SemioLogoFit { \linewidth } { 1.1cm } {#1} }
+\NewDocumentCommand \makeassignmentcover { } {
+  \clearpage
+  \newgeometry { left=1.5cm, right=1.5cm, top=1.5cm, bottom=1.5cm }
+  \thispagestyle { empty }
+  \bool_gset_true:N \g_semio_cover_geometry_bool
+  \group_begin:
+  \semio_theme_apply:
+  \setlength { \parskip } { 0pt }
+  \noindent
+  \begin{WindowArrangement}[height=\textheight]
+    \begin{WindowColumn}
+      \WindowItem[0.9] {
+        \begin{WindowRow}
+          \semio_assignment_cover_text:nN { \semio_assignment_label:n { course } } \l_semio_assignment_course_tl
+          \semio_assignment_cover_text:nN { \semio_assignment_label:n { assignment } } \l_semio_assignment_number_tl
+        \end{WindowRow}
+      }
+      \WindowItem[1.1] {
+        \begin{Window}[title={\semio_assignment_label:n { title }}, anchor=center, text-size=fit]
+          \SemioSans \@title
+          \tl_if_empty:NF \l_semio_subtitle_tl { \par \tl_use:N \l_semio_subtitle_tl }
+        \end{Window}
+      }
+      \tl_if_empty:NF \l_semio_assignment_cover_image_tl {
+        \WindowItem[11.4] {
+          \begin{Window}[title={\tl_use:N \l_semio_assignment_cover_title_tl}, image-fit=cover, anchor=center]
+            \exp_args:NV \SemioImage \l_semio_assignment_cover_image_tl
+          \end{Window}
+        }
+      }
+      \seq_if_empty:NF \g_semio_assignment_cover_facts_seq {
+        \WindowItem[1.05] { \begin{WindowRow} \seq_use:Nn \g_semio_assignment_cover_facts_seq { } \end{WindowRow} }
+      }
+      \seq_if_empty:NF \g_semio_assignment_cover_partners_seq {
+        \WindowItem[4.2] { \begin{WindowRow} \seq_use:Nn \g_semio_assignment_cover_partners_seq { } \end{WindowRow} }
+      }
+      \WindowItem[1.5] {
+        \begin{WindowRow}
+          \tl_if_empty:NF \l_semio_assignment_logo_tl {
+            \WindowItem {
+              \begin{Window}[title={\tl_if_empty:NTF \l_semio_assignment_institution_label_tl { \tl_use:N \l_semio_assignment_institution_tl } { \tl_use:N \l_semio_assignment_institution_label_tl }}, anchor=center]
+                \exp_args:NV \semio_assignment_cover_logo:n \l_semio_assignment_logo_tl
+              \end{Window}
+            }
+          }
+          \semio_assignment_cover_text:nN { \tl_if_empty:NTF \l_semio_assignment_faculty_label_tl { \semio_assignment_label:n { faculty } } { \tl_use:N \l_semio_assignment_faculty_label_tl } } \l_semio_assignment_faculty_tl
+        \end{WindowRow}
+      }
+    \end{WindowColumn}
+  \end{WindowArrangement}
+  \group_end:
+  \semio_cover_geometry_restore:
 }
 \cs_new_protected:Npn \semio_assignment_metadata:nN #1#2 {
   \tl_if_empty:NF #2 { \par \noindent \textbf { \semio_assignment_label:n {#1}: } ~ \tl_use:N #2 }

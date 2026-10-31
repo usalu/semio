@@ -1,0 +1,430 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Analytic Stock Difference",
+  "description": "One authoritative semantic solid; primitive coordinates are source world metres, rotation is degrees about world Z. Cutters are sequential regularized set differences. Nested operands are permitted. Bore offsets rotate with the original profile. Material and explicitly reserved void-air operands remain distinct. Geometry equality/containment, never an owner GUID alone, establishes an exclusion. Display tessellation is a separate non-authoritative product.",
+  "$defs": {
+    "bore": {
+      "type": "object",
+      "required": [
+        "offset",
+        "radius"
+      ],
+      "properties": {
+        "offset": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "prism": {
+      "type": "object",
+      "required": [
+        "kind",
+        "outline",
+        "holes",
+        "z0",
+        "z1"
+      ],
+      "properties": {
+        "kind": {
+          "const": "prism"
+        },
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "holes": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "z0": {
+          "type": "number"
+        },
+        "z1": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "profile_extrusion": {
+      "type": "object",
+      "required": [
+        "kind",
+        "axis",
+        "rotation",
+        "profile",
+        "z0",
+        "z1"
+      ],
+      "properties": {
+        "kind": {
+          "const": "profile_extrusion"
+        },
+        "axis": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "profile": {
+          "oneOf": [
+            {
+              "type": "object",
+              "required": [
+                "shape",
+                "radius",
+                "voids"
+              ],
+              "properties": {
+                "shape": {
+                  "const": "circle"
+                },
+                "radius": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "voids": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/bore"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "shape",
+                "radii",
+                "voids"
+              ],
+              "properties": {
+                "shape": {
+                  "const": "ellipse"
+                },
+                "radii": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "voids": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/bore"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "shape",
+                "width",
+                "depth",
+                "voids"
+              ],
+              "properties": {
+                "shape": {
+                  "const": "rectangle"
+                },
+                "width": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "depth": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "voids": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/bore"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "shape",
+                "outline",
+                "voids"
+              ],
+              "properties": {
+                "shape": {
+                  "const": "polygon"
+                },
+                "outline": {
+                  "type": "array",
+                  "minItems": 3,
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                },
+                "voids": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/bore"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          ]
+        },
+        "z0": {
+          "type": "number"
+        },
+        "z1": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cutter": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "operand",
+            "owner",
+            "owner_guid",
+            "role"
+          ],
+          "properties": {
+            "operand": {
+              "$ref": "#/$defs/operand"
+            },
+            "owner": {
+              "type": "string",
+              "minLength": 1
+            },
+            "owner_guid": {
+              "type": "string",
+              "minLength": 1
+            },
+            "role": {
+              "enum": [
+                "material",
+                "void_air"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "operand",
+            "role"
+          ],
+          "properties": {
+            "operand": {
+              "$ref": "#/$defs/operand"
+            },
+            "role": {
+              "const": "construction_boundary"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "difference": {
+      "type": "object",
+      "required": [
+        "operator",
+        "stock",
+        "cutters"
+      ],
+      "properties": {
+        "operator": {
+          "const": "difference"
+        },
+        "stock": {
+          "$ref": "#/$defs/operand"
+        },
+        "cutters": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/cutter"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "operand": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/prism"
+        },
+        {
+          "$ref": "#/$defs/profile_extrusion"
+        },
+        {
+          "$ref": "#/$defs/polyhedron"
+        },
+        {
+          "$ref": "#/$defs/difference"
+        }
+      ]
+    },
+    "polyhedron": {
+      "type": "object",
+      "required": [
+        "kind",
+        "vertices",
+        "faces"
+      ],
+      "properties": {
+        "kind": {
+          "const": "polyhedron"
+        },
+        "vertices": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "faces": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "required": [
+    "material",
+    "role",
+    "csg"
+  ],
+  "properties": {
+    "material": {
+      "type": "string",
+      "minLength": 1
+    },
+    "role": {
+      "type": "string",
+      "minLength": 1
+    },
+    "csg": {
+      "$ref": "#/$defs/difference"
+    }
+  },
+  "not": {
+    "anyOf": [
+      {
+        "required": [
+          "outline"
+        ]
+      },
+      {
+        "required": [
+          "mesh"
+        ]
+      },
+      {
+        "required": [
+          "section"
+        ]
+      },
+      {
+        "required": [
+          "top_outline"
+        ]
+      },
+      {
+        "required": [
+          "holes"
+        ]
+      },
+      {
+        "required": [
+          "z0"
+        ]
+      },
+      {
+        "required": [
+          "z1"
+        ]
+      },
+      {
+        "required": [
+          "radius"
+        ]
+      },
+      {
+        "required": [
+          "profile"
+        ]
+      },
+      {
+        "required": [
+          "display_mesh"
+        ]
+      }
+    ]
+  }
+}

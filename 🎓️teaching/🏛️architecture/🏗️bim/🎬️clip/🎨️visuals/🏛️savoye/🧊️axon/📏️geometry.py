@@ -17,7 +17,7 @@ class AxonPhysicalGeometryContract(unittest.TestCase):
 
     def test_rectangular_column_is_never_replaced_by_circle(self):
         case = self.cases["column"]
-        pieces = self.production._column_prims(case, None, 3.17, 6.6)
+        pieces = self.production._column_prims(case, None, 3.17, 6.6,self.cases["terrain_elevation"])
         self.assertEqual(len(pieces), 1)
         face = next(face for face in pieces[0].faces if face[2][2] > .9)
         polygon = Polygon(np.asarray(face[1][0])[:, :2])
@@ -34,7 +34,7 @@ class AxonPhysicalGeometryContract(unittest.TestCase):
         np.testing.assert_allclose(ranges, [[2.91, 3.14], [2.91, 3.08]])
 
     def test_buried_columns_split_at_the_terrain_occlusion_plane(self):
-        pieces = self.production._column_prims(self.cases["buried_column"],None,3.17,6.6)
+        pieces = self.production._column_prims(self.cases["buried_column"],None,3.17,6.6,self.cases["terrain_elevation"])
         self.assertEqual(len(pieces),2)
         bands = [[min(v[2] for face in p.faces for ring in face[1] for v in ring), max(v[2] for face in p.faces for ring in face[1] for v in ring)] for p in pieces]
         np.testing.assert_allclose(bands,self.cases["expected_column_bands"])

@@ -1,5 +1,6 @@
 import "../../../📐️parametric/📝️assignment/🧪️quality/🟦️.ts";
 import { verifyParametrizationAssignmentContentV1 } from "../../../📐️parametric/📝️assignment/🧪️tests/🟦️.ts";
+import { verifyTypologyAssignmentContentV1 } from "../../../🏙️typology/📝️assignment/🧪️tests/🟦️.ts";
 import { courseAssignmentPdfDocumentsV1 } from "../../🏗️builder/🌐️vite/📃️documents/🟦️.ts";
 import Ajv from "ajv";
 import fixture from "./🧫️cases.json";
@@ -29,8 +30,9 @@ test("both language PDFs are fetched through the authenticated owned runtime cha
     const address = server.address();
     if (!address || typeof address === "string") throw Error("Test listener required");
     const documents = await readCourseAssignmentPdfsV1({ SEMIO_VITE_RUNTIME_CHANNELS_V1: JSON.stringify([{ name: "course-assignment-pdfs", endpoint: "http://127.0.0.1:" + address.port + "/pdfs", secret }]) });
-    expect(requests).toEqual(["/pdfs/architecture-parametric-parametrization-en.pdf", "/pdfs/architecture-parametric-parametrization-de.pdf"]);
-    expect([...documents.keys()]).toEqual(["architecture-parametric-parametrization-en.pdf", "architecture-parametric-parametrization-de.pdf"]);
+    const files = ["parametrization-en", "parametrization-de", "typology-en", "typology-de"].map(name => "architecture-parametric-" + name + ".pdf");
+    expect(requests).toEqual(files.map(file => "/pdfs/" + file));
+    expect([...documents.keys()]).toEqual(files);
     for (const document of documents.values()) expect(document).toEqual(bytes);
   } finally { await new Promise<void>(accept => { server.close(() => accept()); server.closeAllConnections(); }); }
 });
@@ -77,3 +79,4 @@ for (const row of fixture.publications) test(row.name, () => {
 });
 
 test("course assignment semantics agree with independent schema, D3 and arithmetic oracles", () => verifyParametrizationAssignmentContentV1());
+test("typology assignment semantics agree with independent schema, D3 and arithmetic oracles", () => verifyTypologyAssignmentContentV1());

@@ -1,6 +1,7 @@
 """🎬 Heating demand of the Nakagin capsules in Excel: surfaces, U-values, H_T and H_V, load, annual demand, building total and a live what-if."""
 
 import importlib
+import math
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -18,6 +19,7 @@ _nakagin = importlib.import_module("🎓️teaching.🏛️architecture.🏢️n
 _drawing = importlib.import_module("🎓️teaching.🏛️architecture.🏢️nakagin.🎨️visuals.🐍️")
 _fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+_morph = importlib.import_module("🎓️teaching.🏛️architecture.🔀️morph.🐍️")
 _engine = importlib.import_module("manim")
 
 INK, MUTED, STRUCT, SERV, DATA, GOOD, WARN, GLASS, CONCRETE, ARCH = (
@@ -31,9 +33,32 @@ BLUE = "#6aa8ff"
 ARROW_PER_UA, ARROW_WIDTH = 0.14, 1.3
 ROWS = {3: "top", 4: "bottom", 5: "left", 6: "right", 7: "front", 8: "window", 9: "back"}
 ROW_COLOR = {3: STRUCT, 4: WARN, 5: ARCH, 6: GOOD, 7: DATA, 8: BLUE, 9: MUTED}
-POINT = {"top": (0.0, 2.0, 2.5), "bottom": (0.0, 2.0, 0.0), "left": (-1.25, 2.0, 1.25), "right": (1.25, 2.0, 1.25), "front": (0.9, 4.0, 0.3), "air": (0.75, 4.0, 2.1),
-         "window": (0.0, 4.0, 1.25), "back": (0.0, 0.0, 1.25)}
-NORMAL = {"top": (0, 0, 1), "bottom": (0, 0, -1), "left": (-1, 0, 0), "right": (1, 0, 0), "front": (0, 1, 0), "air": (-0.3, 0.7, 0.6), "window": (0, 1, 0), "back": (0, -1, 0)}
+def _physical_anchors(cap, layout="Slash"):
+    """📍 Reference drawing leaders follow physical casing faces and the actual recessed glazing circle."""
+    casing=_nakagin.capsule_casing(cap)
+    window=_nakagin.capsule_window(cap,layout)
+    x,y,z=(casing.left+casing.right)/2,(casing.back+casing.front)/2,(casing.bottom+casing.top)/2
+    right_y=casing.back+.2*casing.length if abs(window.normal[0])>.5 else y
+    return {
+        "top":((x,y,casing.top),(0,0,1)),
+        "bottom":((x,y,casing.bottom),(0,0,-1)),
+        "left":((casing.left,y,z),(-1,0,0)),
+        "right":((casing.right,right_y,z),(1,0,0)),
+        "front":((x+.35*casing.width,casing.front,casing.bottom+.12*casing.height),(0,1,0)),
+        "air":((x+.3*casing.width,casing.front,casing.bottom+.84*casing.height),(-.3,.7,.6)),
+        "window":(window.center,window.normal),
+        "back":((casing.left+.15*casing.width,casing.back,z),(0,-1,0))}
+
+
+def _usable_volume_faces(cap):
+    """🧊 Three faces of the authoritative usable-interior bounding box for the study overlay."""
+    interior=_nakagin.capsule_interior(cap)
+    x0,x1,y0,y1,z0,z1=interior.left,interior.right,interior.back,interior.front,interior.bottom,interior.top
+    return (((x1,y0,z0),(x1,y1,z0),(x1,y1,z1),(x1,y0,z1)),
+            ((x0,y1,z0),(x1,y1,z0),(x1,y1,z1),(x0,y1,z1)),
+            ((x0,y0,z1),(x1,y0,z1),(x1,y1,z1),(x0,y1,z1)))
+
+
 HIDDEN = {"bottom": 0.55, "left": 0.7, "back": 0.7}
 BASIS = {"sourced": (GOOD, "sourced", "belegt"), "assumed": (WARN, "assumed", "angenommen"), "derived": (MUTED, "derived", "abgeleitet")}
 
@@ -45,12 +70,12 @@ class Beat4_Energy(_visuals.ClipScene):
     NARRATION = [
         ["hook", "How much heat does one Nakagin capsule need in a Tokyo winter? We calculate it in Excel, sheet by sheet.",
          "Wie viel Wärme braucht eine Nakagin-Kapsel im Tokioter Winter? Wir rechnen es in Excel, Blatt für Blatt."],
-        ["sheet", "Every capsule type has its own worksheet. Type A holds the dimensions, surfaces and results of this simplified teaching model.",
-         "Jeder Kapseltyp hat ein eigenes Arbeitsblatt. Typ A enthält Maße, Flächen und Ergebnisse dieses vereinfachten Lehrmodells."],
-        ["dims", "Three constants describe the shell: width, length and height. On the capsule they are the three dimension lines.",
-         "Drei Konstanten beschreiben die Hülle: Breite, Länge und Höhe. An der Kapsel sind es die drei Maßlinien."],
-        ["areas", "Each surface area is a formula from these dimensions. The front wall is width times height minus the round window.",
-         "Jede Fläche ist eine Formel aus diesen Maßen. Die Frontwand ist Breite mal Höhe abzüglich des runden Fensters."],
+        ["sheet", "Each proposed A–D program has a worksheet. Its dimensions and thermal boundaries are nominal teaching-study inputs.",
+         "Jedes vorgeschlagene A–D-Programm hat ein Arbeitsblatt. Maße und thermische Randbedingungen sind nominale Eingaben der Lehrstudie."],
+        ["dims", "The nominal energy study is 2.5 by 4 metres; reference dimension lines measure the physical 2.6 by 4.2 metre casing.",
+         "Die nominale Energiestudie misst 2,5 mal 4 Meter; Referenzmaßlinien messen das physische Gehäuse mit 2,6 mal 4,2 Meter."],
+        ["areas", "Study areas use nominal sizes: front wall is width times height minus the window; the drawing shows the physical parts.",
+         "Studienflächen nutzen nominale Maße: Frontwand ist Breite mal Höhe abzüglich Fenster; die Zeichnung zeigt die Bauteile."],
         ["exposed", "The back wall is bolted to the core, so only part of its heat escapes: its U·A is multiplied by the attached factor b.",
          "Die Rückwand ist am Kern verschraubt, deshalb entweicht nur ein Teil ihrer Wärme: Ihr U·A wird mit dem Anbindungsfaktor b multipliziert."],
         ["uvalues", "The U-value tells how many watts pass one square metre for each kelvin of temperature difference. Glass leaks most.",
@@ -77,8 +102,8 @@ class Beat4_Energy(_visuals.ClipScene):
          "Jahresbedarf: Verlust je Kelvin mal Gradtage mal 24 Stunden, geteilt durch 1000, in kWh. Geteilt durch die Fläche: kWh je m²."],
         ["energy", "The Energy sheet multiplies each type's demand by its capsule count from the Program sheet and adds up the whole building.",
          "Das Blatt Energie multipliziert den Bedarf jedes Typs mit seiner Kapselzahl aus dem Blatt Programm und summiert das ganze Gebäude."],
-        ["compare", "A, B and D share one shell, and fittings do not change the heat loss. Only C, with its larger window, needs more.",
-         "A, B und D teilen eine Hülle, Einbauten ändern den Verlust nicht. Nur C mit dem größeren Fenster braucht mehr."],
+        ["compare", "The four program studies use the same nominal shell and porthole. With the same envelope and ventilation inputs, their heat loss is equal.",
+         "Die vier Programmstudien haben dieselbe Hülle und dasselbe Rundfenster, ihr Wärmeverlust ist gleich."],
         ["shape", "Why so much for so little floor? Five faces and a window wrap a small room. Heated neighbours above and below would cut the demand.",
          "Warum so viel für so wenig Boden? Fünf Außenflächen umhüllen einen kleinen Raum. Beheizte Nachbarn würden den Bedarf deutlich senken."],
         ["trace", "Which cells depend on the window U-value? Trace the dependents: they run through the type sheets to the building total.",
@@ -172,6 +197,63 @@ class Beat4_Energy(_visuals.ClipScene):
         """⏱️ A short wait so live drawings refresh after a state change."""
         return _engine.Wait(0.05)
 
+    def step(self, key, *animations, seconds=1.2, then=(), later=None, between=None, after=()):
+        """⏱️ A clause in two phases: `animations` first, then (after `between()`) `then`; swarms keep their own timing when seconds or later is None."""
+        if not then and not after and seconds is not None:
+            return super().step(key, *animations, seconds=seconds)
+        art = _visuals._art
+        row = next(row for row in self.NARRATION if row[0] == key)
+        caption = row[1] if self.language() == "en" else row[2]
+        if self._caption is None:
+            self._caption = art.caption_bar(caption)
+            self.play(_engine.FadeIn(self._caption), run_time=0.3)
+            self._vo_caption_t0 = self.renderer.time
+        else:
+            self._caption = art.swap_caption(self, self._caption, caption)
+        if animations:
+            self.play(*animations) if seconds is None else self.play(*animations, run_time=seconds)
+        if between is not None:
+            between()
+        if then:
+            self.play(*then) if later is None else self.play(*then, run_time=later)
+        if after:
+            self.play(*after)
+        art.hold_for(self, [(code, en, en if self.language() == "en" else de) for code, en, de in self.NARRATION], key)
+
+    def _tok(self, label, kind, color, at, size=0.85):
+        """🪙 A morph token centred on a point."""
+        return _morph.token(label, kind=kind, color=color, size=size).move_to(np.array([at[0], at[1], 0.0]))
+
+    def _cell_pt(self, a1, window=None):
+        """📍 Centre of a cell of the current (or given) window."""
+        left, top, right, bottom = (window or self.win).rect(a1)
+        return np.array([(left + right) / 2, (top + bottom) / 2, 0.0])
+
+    def _static(self, state, dims=(), highlight=()):
+        """🧊 A still copy of the live capsule at the same place, whose parts can fly off as morph sources."""
+        return self.capsule_axon(self.cap, at=tuple(state.at), scale=state.scale, view=state.view, bolts=state.bolts, dims=dims, hatch=state.hatch, highlight=highlight)
+
+    def _arrows(self, state, rows, grow=1.0):
+        """➡️ Still heat-flow arrow shafts of the live capsule, one per row; labels and leads arrive with the live drawing."""
+        drawing = self._static(state)
+        return [next(m for m in self._arrow(drawing, row, grow, state) if isinstance(m, _engine.Arrow)) for row in rows]
+
+    def _face_flyers(self, still, rows):
+        """🧱 The faces of a still capsule as morph sources, row by row; faces hidden in this view start as tinted squares on their face."""
+        anchors = _physical_anchors(self.cap)
+        hidden = lambda r: _engine.Square(0.22, stroke_color=ROW_COLOR[r], stroke_width=2, fill_color=ROW_COLOR[r], fill_opacity=0.5).move_to(still.at(*anchors[ROWS[r]][0]))
+        return [still.window if ROWS[r] == "window" else still.faces.get(ROWS[r]) or hidden(r) for r in rows]
+
+    def _clear(self):
+        """🧹 Fade out the tokens a morph left standing and forget them."""
+        gone, self.temp = [_engine.FadeOut(m) for m in self.temp], []
+        return gone
+
+    @staticmethod
+    def _ghosts(swarm):
+        """👻 The faint source copies a morph swarm left behind."""
+        return [a.ghost_mobject for a in swarm.animations if getattr(a, "ghost_mobject", None) is not None]
+
     def _heat(self, value):
         """🌡️ Surface colour of a U-value from green (tight) to red (leaky)."""
         peak = max(self.vs.a[(self.T, f"E{row}")] for row in ROWS)
@@ -235,7 +317,7 @@ class Beat4_Energy(_visuals.ClipScene):
         value = ua if state.mode == "ua" else ua * (self._num(self.CL, "B2") - self._num(self.CL, "B3"))
         unit = "W/K" if state.mode == "ua" else "W"
         color = BLUE if air else SERV
-        point, normal = np.array(POINT[face], dtype=float), np.array(NORMAL[face], dtype=float)
+        point, normal = (np.asarray(value,dtype=float) for value in _physical_anchors(self.cap)[face])
         start0 = drawing.at(*point)
         step = drawing.at(*(point + normal)) - start0
         direction = step / max(np.linalg.norm(step), 1e-6)
@@ -258,9 +340,7 @@ class Beat4_Energy(_visuals.ClipScene):
 
     def _volume_box(self, drawing, amount):
         """🧊 The interior air volume as a translucent box inside the capsule: right wall, front wall and ceiling."""
-        t = self.cap
-        x, y0, y1, z0, z1 = t.interior_width / 2, (t.length - t.interior_length) / 2, (t.length + t.interior_length) / 2, (t.height - t.interior_height) / 2, (t.height + t.interior_height) / 2
-        faces = [[(x, y0, z0), (x, y1, z0), (x, y1, z1), (x, y0, z1)], [(-x, y1, z0), (x, y1, z0), (x, y1, z1), (-x, y1, z1)], [(-x, y0, z1), (x, y0, z1), (x, y1, z1), (-x, y1, z1)]]
+        faces = _usable_volume_faces(self.cap)
         return _engine.VGroup(*[_draft.polygon([drawing.at(*p) for p in face], BLUE, 0.22 * amount, BLUE, _draft.W_THIN, 0.9 * amount) for face in faces])
 
     def _side(self, direction):
@@ -325,7 +405,7 @@ class Beat4_Energy(_visuals.ClipScene):
         self.books["frozen"] = (frozen, _xl.evaluate(frozen))
         self.vals_better = self.books["window_upgrade"][1]
         self.vals_stacked = self.books["shared_roof_floor"][1]
-        self.win, self.frames = None, []
+        self.win, self.frames, self.temp, self.short = None, [], [], []
 
     def _title(self):
         """📑 Subtitle chip: the example building and the sheet in the title."""
@@ -347,7 +427,7 @@ class Beat4_Energy(_visuals.ClipScene):
         kinds = self._slot_types()
         ramp = lambda tracker, start, stop, seconds=2.5: _engine.UpdateFromAlphaFunc(tracker, lambda mob, a: mob.set_value(start + (stop - start) * a), run_time=seconds)
 
-        tower = self.tower_axon(at=(0.0, 0.1, 0.0), scale=0.1, lit=lambda key: kinds.get(key) == "A")
+        tower = self.tower_axon(**_visuals.building_fit(4.4, 4.8, centre=(0.0, 0.1, 0.0)), lit=lambda key: kinds.get(key) == "A")
         mark = self.badge("?", (1.7, 1.4), color=DATA, size=26)
         outside = _engine.VGroup(self._say("θe = " + self.xl_display(self.vals_base[(CL, "B3")], '0 "°C"'), (3.4, 0.6), size=LABEL, color=BLUE),
                                  self._say("θi = " + self.xl_display(self.vals_base[(CL, "B2")], '0 "°C"'), (3.4, 0.15), size=LABEL, color=SERV))
@@ -358,17 +438,35 @@ class Beat4_Energy(_visuals.ClipScene):
         cs = self.cs = self._cap_state()
         capsule = self._capsule((self.dx, 0.1, 0.0), 0.6, cs)
         title = self._title()
-        self.step("sheet", _engine.FadeOut(tower), _engine.FadeOut(mark), _engine.FadeOut(outside), _engine.FadeIn(self.win), _engine.FadeIn(capsule), _engine.FadeIn(title), seconds=2.5)
+        first = next(key for key in sorted(kinds) if kinds[key] == "A")
+        flyer, flyer_tab = tower.parts["capsules"][first].copy(), tower.parts["capsules"][first].copy()
+        big = self.capsule_axon(self.cap, at=(self.dx, 0.1, 0.0), scale=0.6)
+        tab = self._tok(self.tr("Type A", "Typ A"), "cell", _drawing.type_color("A"), self.win.tabs[T].get_center())
+        self.add(flyer, flyer_tab)
+        self.step("sheet", _engine.FadeOut(tower), _engine.FadeOut(mark), _engine.FadeOut(outside), _engine.FadeIn(self.win), _engine.FadeIn(title), _morph.morph(flyer, big, run_time=1.6),
+                  _morph.morph(flyer_tab, tab, pairs=_morph.capsule_pairs(flyer_tab, tab), dip=0.15, run_time=1.6), seconds=None)
+        self.remove(big)
+        self.add(capsule)
+        self.frames.append(tab)
 
-        cs.dims = ("width", "length", "height")
-        self.step("dims", self.win.select("B2:B4"), _engine.FadeIn(self._frame("B2:B4", DATA)), self._nudge(), seconds=2.5)
+        dims = ("width", "length", "height")
+        fly = [self._static(cs, dims).dims[name] for name in dims]
+        cells = [self._tok(self._show(T, f"B{2 + i}"), "cell", DATA, self._cell_pt(f"B{2 + i}")) for i in range(3)]
+        swarm = _morph.scatter(fly, cells, ghost=0.35, path_arc=0.5, run_time=1.4)
+        self.step("dims", *[_engine.FadeIn(f) for f in fly], self.win.select("B2:B4"), seconds=1.0, then=(swarm, _engine.FadeIn(self._frame("B2:B4", DATA))))
+        self.frames.extend([*cells, *self._ghosts(swarm)])
 
-        cs.dims, cs.tint = (), "face"
+        cs.tint = "face"
         new = self._window(T, (2, 11), "D3:D9", "C:F")
         cs.at, cs.scale = (self.dx - 0.5, 0.1, 0.0), 0.46
+        still = self._static(cs)
+        fly = self._face_flyers(still, ROWS)
+        cells = [self._tok(self._show(T, f"D{r}"), "cell", ROW_COLOR[r], self._cell_pt(f"D{r}", new)) for r in ROWS]
+        self.add(*fly)
         swap = self._swap(new)
         frames = [self._frame(f"D{r}", ROW_COLOR[r]) for r in ROWS]
-        self.step("areas", *swap, _engine.LaggedStart(*[_engine.FadeIn(f) for f in frames], lag_ratio=0.2), ramp(cs.tint_a, 0, 1), seconds=3.0)
+        self.step("areas", *swap, seconds=1.2, then=(_morph.unfold(fly, cells, run_time=1.4), _engine.LaggedStart(*[_engine.FadeIn(f) for f in frames], lag_ratio=0.2)), after=(ramp(cs.tint_a, 0, 1, 1.2),))
+        self.frames.extend(cells)
 
         cs.view, cs.bolts, cs.hatch, cs.tint = "axon_back", True, ("attached",), "exposed"
         b_readout = self._readout(lambda: "b = " + self.xl_display(self._num(CL, "B6"), "0.00"), (self.dx - 0.6, 2.2), color=MUTED)
@@ -385,18 +483,30 @@ class Beat4_Energy(_visuals.ClipScene):
         self.step("uvalues", self.win.select("E3:E9"), _engine.FadeIn(self._frame("E3:E9", DATA)), ramp(cs.tint_a, 0, 1), _engine.FadeOut(b_readout), _engine.FadeOut(b_chip), _engine.FadeIn(chips),
                   seconds=2.5)
 
-        self.step("ua", self.win.select("F3:F9"), _engine.FadeIn(self._frame("F3:F9", SERV)), ramp(cs.tint_a, 1, 0, 2.0), ramp(cs.grow, 0, 1, 3.0), _engine.FadeOut(chips), seconds=3.0)
+        cells = [self._tok(self._show(T, f"F{r}"), "cell", SERV, self._cell_pt(f"F{r}")) for r in ROWS]
+        arrows = self._arrows(cs, ROWS)
+        swarm = _morph.scatter(cells, arrows, path_arc=0.4, run_time=1.2)
+        self.step("ua", self.win.select("F3:F9"), _engine.FadeIn(self._frame("F3:F9", SERV)), *[_engine.FadeIn(c) for c in cells], seconds=1.0,
+                  then=(swarm, ramp(cs.tint_a, 1, 0, 2.0), _engine.FadeOut(chips)))
+        self.remove(*arrows)
+        cs.grow.set_value(1.0)
 
         cs.tint = "none"
         card = self._sumproduct()
-        self.step("ht", self.win.select("F3:F9"), _engine.FadeIn(card), self._nudge(), seconds=3.0)
+        pile = self._arrows(cs, ROWS)
+        total = self._tok("H_T = " + self.xl_display(self.vals_base[(T, "B11")], '0.00 "W/K"'), "number", SERV, (self.dx + 1.4, -2.15))
+        self.step("ht", self.win.select("F3:F9"), _engine.FadeIn(card), self._nudge(), seconds=1.2, between=lambda: self.add(*pile), then=(_morph.gather(pile, total), ramp(cs.grow, 1, 0, 0.5)))
+        self.h_token = total
 
         new = self._window(CL, (1, 9), "B6", "A:B+")
         names = self._names((self.dx, 0.2))
-        self.step("climate", *self._swap(new), _engine.FadeOut(card), _engine.FadeOut(capsule), _engine.FadeIn(names), seconds=3.0)
+        self.step("climate", *self._swap(new), _engine.FadeOut(card), _engine.FadeOut(capsule), _engine.FadeIn(names), *self._clear(), self.h_token.animate.scale(0.8).move_to(np.array([5.6, -1.9, 0.0])), seconds=3.0)
 
         hdd = self._hdd_chart((self.dx, 0.2))
-        self.step("degreedays", self.win.select("B5"), _engine.FadeOut(names), _engine.FadeIn(hdd), seconds=3.0)
+        sigma = self._tok("Σ = " + self._show(CL, "B5"), "number", SERV, self.sigma_at)
+        self.step("degreedays", self.win.select("B5"), _engine.FadeOut(names), _engine.FadeIn(hdd), *[_engine.FadeIn(m) for m in self.short], seconds=1.4,
+                  then=(_morph.gather(self.short, sigma),))
+        self.sigma = sigma
 
         cs.at, cs.scale = (self.dx - 0.3, 0.1, 0.0), 0.46
         delta = self._readout(lambda: "ΔH_T = " + self.xl_display(self._num(T, "B11") - self.vals_base[(T, "B11")], '+0.00 "W/K";-0.00 "W/K"'), (self.dx + 1.0, 2.2), color=SERV)
@@ -404,41 +514,79 @@ class Beat4_Energy(_visuals.ClipScene):
                                       self.xl_formula_text("=D9*E9*attached_factor", at=(self.dx - 2.3, 2.82, 0), size=SMALL, ink=INK),
                                       self._readout(lambda: "= " + self._show(T, "F9"), (self.dx + 0.8, 2.82), size=SMALL, color=SERV, anchor="l"))
         moving = self._begin(self.books["back_wall_exposed"][1])
-        self.step("mistake", moving, self.win.select("B6"), *self._recalc(*self.books["back_wall_exposed"]), _engine.FadeIn(self._frame("B6", SERV)), _engine.FadeOut(hdd), _engine.FadeIn(capsule), _engine.FadeIn(delta),
-                  _engine.FadeIn(formula_card), seconds=3.0)
-        self._end(self.books["back_wall_exposed"][1])
+        exposed_vals = self.books["back_wall_exposed"][1]
+        b_cell = self._tok("b = " + self.xl_display(self.vals_base[(CL, "B6")], "0.00"), "cell", MUTED, self._cell_pt("B6"))
+        b_item = self._tok("b = " + self.xl_display(exposed_vals[(CL, "B6")], "0.00"), "item", SERV, self._static(cs).at(*_physical_anchors(self.cap)["back"][0]) + np.array([-0.9, 0.55, 0.0]))
+        self.add(b_cell)
+        self.step("mistake", _engine.FadeOut(hdd), *self._clear(), self.sigma.animate.scale(0.8).move_to(np.array([5.6, -2.3, 0.0])), seconds=1.0,
+                  then=(moving, self.win.select("B6"), *self._recalc(*self.books["back_wall_exposed"]), _engine.FadeIn(self._frame("B6", SERV)), _engine.FadeIn(capsule), _engine.FadeIn(delta),
+                        _engine.FadeIn(formula_card), ramp(cs.grow, 0, 1, 2.0), _morph.morph(b_cell, b_item, path_arc=0.6, run_time=2.0)))
+        self._end(exposed_vals)
 
         moving = self._begin(self.vals_base)
-        self.step("fix", moving, self.win.select("B6"), *self._recalc(self.book, self.vals_base), _engine.FadeOut(formula_card), seconds=3.0)
+        b_back = self._tok("b = " + self.xl_display(self.vals_base[(CL, "B6")], "0.00"), "cell", MUTED, self._cell_pt("B6"))
+        self.step("fix", moving, self.win.select("B6"), *self._recalc(self.book, self.vals_base), _engine.FadeOut(formula_card), _morph.morph(b_item, b_back, path_arc=0.6, run_time=2.0), seconds=3.0)
         self._end(self.vals_base)
+        self.frames.append(b_back)
 
         new = self._window(T, (8, 16), "B12", "A:B")
         cs.at, cs.scale = (self.dx, 0.1, 0.0), 0.6
         new.edit("=air_heat_capacity*air_change*B10")
         vol_label = self._readout(lambda: "V = " + self._show(T, "B10") + " · n = " + self._show(CL, "B7"), (self.dx, 2.5), size=LABEL, color=BLUE)
-        self.step("volume", *self._swap(new), _engine.FadeOut(delta), ramp(cs.vent, 0, 1), ramp(cs.vol, 0, 1), _engine.FadeIn(vol_label), seconds=3.0)
+        box = list(self._volume_box(self._static(cs), 1.0))
+        v_cell = self._tok("V = " + self._show(T, "B10"), "cell", BLUE, self._cell_pt("B10", new))
+        self.step("volume", *self._swap(new), _engine.FadeOut(delta), ramp(cs.vol, 0, 1, 1.4), _engine.FadeIn(vol_label), seconds=1.6, between=lambda: self.add(*box),
+                  then=(_morph.gather(box, v_cell), ramp(cs.vol, 1, 0, 0.3), ramp(cs.vent, 0, 1, 1.6)))
+        self.frames.append(v_cell)
 
         self.win.edit(None)
         bar = self._stack((self.dx, -1.6))
-        self.step("total", self.win.select("B11:B12"), _engine.FadeIn(self._frame("B11", SERV)), _engine.FadeIn(self._frame("B12", BLUE)), _engine.FadeIn(bar), ramp(cs.grow, 1, 0, 1.5),
-                  ramp(cs.vent, 1, 0, 1.5), ramp(cs.vol, 1, 0, 1.5), _engine.FadeOut(vol_label), seconds=2.5)
+        seg = self._stack_shape((self.dx, -1.6))
+        h_t = self._tok("H_T = " + self.xl_display(self.vals_base[(T, "B11")], '0.00 "W/K"'), "cell", SERV, self._cell_pt("B11"))
+        h_v = self._tok("H_V = " + self.xl_display(self.vals_base[(T, "B12")], '0.00 "W/K"'), "cell", BLUE, self._cell_pt("B12"))
+        self.add(h_t, h_v)
+        self.step("total", self.win.select("B11:B12"), _engine.FadeIn(self._frame("B11", SERV)), _engine.FadeIn(self._frame("B12", BLUE)), _engine.FadeOut(vol_label), seconds=1.2,
+                  then=(_morph.morph(h_t, _engine.VGroup(seg[0], seg[2]), run_time=1.3), _morph.morph(h_v, _engine.VGroup(seg[1], seg[3]), run_time=1.3), ramp(cs.grow, 1, 0, 1.5), ramp(cs.vent, 1, 0, 1.5)))
+        self.remove(*seg)
+        self.add(bar)
 
         new = self._window(T, (8, 16), "B13", "A:B")
         cs.at, cs.scale, cs.mode, cs.rows = (self.dx, 0.1, 0.0), 0.6, "phi", tuple(ROWS)
         new.edit("=(B11+B12)*(theta_i-theta_e)")
         temps = _engine.VGroup(self._readout(lambda: "θi = " + self._show(CL, "B2"), (self.dx - 1.7, 2.2), color=SERV), self._readout(lambda: "θe = " + self._show(CL, "B3"), (self.dx + 1.7, 2.2), color=BLUE))
-        self.step("load", *self._swap(new), _engine.FadeOut(bar), _engine.FadeIn(temps), ramp(cs.grow, 0, 1, 2.0), ramp(cs.vent, 0, 1, 2.0), seconds=3.0)
+        arrows_w = self._arrows(cs, [*ROWS, 99])
+        pieces = [_engine.Rectangle(width=4.2 / 9, height=0.36, stroke_width=0, fill_color=BLUE if i == 7 else SERV, fill_opacity=0.9).move_to(np.array([self.dx - 2.1 + 4.2 / 18 + i * 4.2 / 9, -1.6, 0.0])) for i in range(9)]
+        phi = self._tok(self.xl_display(self.vals_base[(T, "B13")], '0 "W"'), "cell", SERV, self._cell_pt("B13", new))
+        self.add(*pieces)
+        self.step("load", *self._swap(new), _engine.FadeOut(bar), _engine.FadeIn(temps), seconds=1.2, then=(_morph.scatter(pieces, [*arrows_w, phi], lag=0.08, path_arc=0.3, run_time=1.2),))
+        self.frames.append(phi)
+        self.remove(*arrows_w)
+        cs.grow.set_value(1.0)
+        cs.vent.set_value(1.0)
 
         new = self._window(T, (8, 16), "B14:B15", "A:B")
         new.edit("=(B11+B12)*heating_degree_days*24/1000")
         units = self._annual_tiles((self.dx, 0.5))
         plan = self._plan((self.dx + 2.2, 2.0))
-        self.step("annual", *self._swap(new), ramp(cs.grow, 1, 0, 2.0), ramp(cs.vent, 1, 0, 2.0), _engine.FadeOut(temps), _engine.FadeOut(capsule), _engine.FadeIn(units), _engine.FadeIn(plan), seconds=3.0)
+        floor_tile = units[8]
+        units.remove(floor_tile)
+        days_tile = units[1]
+        units.remove(days_tile)
+        h_tile = units[0]
+        units.remove(h_tile)
+        self.step("annual", *self._swap(new), ramp(cs.grow, 1, 0, 1.4), ramp(cs.vent, 1, 0, 1.4), _engine.FadeOut(temps), _engine.FadeOut(capsule), _engine.FadeIn(units), _engine.FadeIn(plan), *self._clear(), seconds=1.5,
+                  then=(_morph.morph(plan[0], floor_tile, run_time=1.6), _morph.morph(self.sigma, days_tile, path_arc=0.5, run_time=1.6), _morph.morph(self.h_token, h_tile, path_arc=0.5, run_time=1.6), _engine.FadeOut(plan[1])))
 
         new = self._window(EN, (3, 12), "B4:D7", "A:D")
-        tower = self.tower_axon(at=(self.dx, -0.35, 0.0), scale=0.08, tint=lambda key: _drawing.type_color(kinds[key]), lit=None)
+        tower = self.tower_axon(**_visuals.building_fit(4.0, 4.6, centre=(self.dx, -0.12, 0.0)), tint=lambda key: _drawing.type_color(kinds[key]), lit=None)
         counts = self._counts((self.dx, 2.6))
-        self.step("energy", *self._swap(new), _engine.FadeOut(units), _engine.FadeOut(plan), _engine.FadeIn(tower), _engine.FadeIn(counts), seconds=3.0)
+        chips = [_engine.VGroup(counts[2 * i], counts[2 * i + 1]) for i in range(4)]
+        proxies = {key: [_engine.Dot(tower.parts["capsules"][k].get_center(), radius=0.045, color=_drawing.type_color(key)) for k in sorted(kinds) if kinds[k] == key] for key in "ABCD"}
+        pits = {key: [_engine.Dot(chips[i].get_left() + np.array([-0.2, 0.0, 0.0]), radius=0.045, color=_drawing.type_color(key)) for _ in proxies[key]] for i, key in enumerate("ABCD")}
+        swarms = [_morph.scatter(proxies[key], pits[key], lag=0.03, path_arc=0.5, run_time=1.0, limit=2.6) for key in "ABCD"]
+        self.step("energy", *self._swap(new), _engine.FadeOut(units), _engine.FadeOut(floor_tile), _engine.FadeOut(days_tile), _engine.FadeOut(h_tile), _engine.FadeIn(tower), seconds=1.4, between=lambda: self.add(*[m for group in proxies.values() for m in group]),
+                  then=(*swarms, _engine.LaggedStart(*[_engine.FadeIn(chip) for chip in chips], lag_ratio=0.5, run_time=2.4)))
+        self.remove(*[m for group in pits.values() for m in group])
 
         new = self._window(EN, (3, 12), "F4:F7", "D:F", left=-5.6)
         badges = _engine.VGroup(*[self.badge(key, (-6.35, (new.rect(f"F{4 + i}")[1] + new.rect(f"F{4 + i}")[3]) / 2), color=_drawing.type_color(key), size=SMALL) for i, key in enumerate("ABCD")])
@@ -446,10 +594,35 @@ class Beat4_Energy(_visuals.ClipScene):
         rows = [(key, (lambda i=i: self._num(EN, f"F{4 + i}")), _drawing.type_color(key)) for i, key in enumerate("ABCD")]
         types_row = self._types_row((self.dx, 2.1))
         chart = self.xl_bar_chart(rows, at=(self.dx, -0.6, 0.0), width=3.7, height=2.9, unit="", title=self.tr("Demand, kWh/(m²·a)", "Bedarf, kWh/(m²·a)"), decimals=0)
-        self.step("compare", *self._swap(new), _engine.FadeIn(badges), _engine.FadeOut(tower), _engine.FadeOut(counts), _engine.FadeIn(chart), _engine.FadeIn(types_row), seconds=3.0)
+        copies = [types_row[3 * i].copy() for i in range(4)]
+        values = [self.vals_base[(EN, f"F{4 + i}")] for i in range(4)]
+        magnitude = 10 ** math.floor(math.log10(max(values) / 4))
+        step = next(m * magnitude for m in (1, 2, 2.5, 5, 10) if m * magnitude >= max(values) / 4)
+        peak = math.ceil(max(values) / step - 1e-9) * step
+        plot_l, plot_t, plot_b = self.dx - 1.85 + 0.95, -0.6 + 1.45 - 0.95, -0.6 + 1.45 - 2.9 + 0.55
+        slot = (3.7 - 1.2) / 4
+        marks = [self._tok(self.xl_display(values[i], "0"), "item", _drawing.type_color(key), (plot_l + slot * (i + 0.5), plot_b + (plot_t - plot_b) * values[i] / peak)) for i, key in enumerate("ABCD")]
+        self.step("compare", *self._swap(new), _engine.FadeIn(badges), _engine.FadeOut(tower), _engine.FadeOut(counts), _engine.FadeOut(*chips), _engine.FadeIn(types_row), _engine.FadeIn(chart), seconds=1.4, between=lambda: self.add(*copies),
+                  then=(_morph.scatter(copies, marks, lag=0.15, path_arc=0.3, run_time=1.3, pairs_fn=_morph.capsule_pairs, dip=0.15),))
+        self.temp.extend(marks)
 
         shape = self._shape((self.dx, 0.0))
-        self.step("shape", _engine.FadeOut(chart), _engine.FadeOut(types_row), _engine.FadeIn(shape), self._nudge(), seconds=3.5)
+        nets = []
+        for x, rows, hatch, y in ((self.dx - 0.95, (3, 4, 5, 6, 7, 8), (), 3.1), (self.dx + 0.95, (5, 6, 7, 8), ("top", "bottom"), 2.65)):
+            state = self._cap_state(hatch=hatch)
+            state.at, state.scale = (x, 0.9, 0.0), 0.32
+            fly = self._face_flyers(self._static(state), rows)
+            total = sum(self.vals_base[(T, f"D{r}")] for r in rows) * 0.1
+            left = self.dx - total / 2
+            spots = []
+            for r in rows:
+                width = self.vals_base[(T, f"D{r}")] * 0.1
+                spots.append(_engine.Rectangle(width=width, height=0.34, stroke_color=ROW_COLOR[r], stroke_width=2, fill_color=ROW_COLOR[r], fill_opacity=0.6).move_to(np.array([left + width / 2, y, 0.0])))
+                left += width
+            nets.append((fly, spots))
+        self.step("shape", _engine.FadeOut(chart), _engine.FadeOut(types_row), _engine.FadeOut(*[m for m in self.temp]), _engine.FadeIn(shape), seconds=1.2, between=lambda: self.add(*[f for fly, _ in nets for f in fly]),
+                  then=tuple(_morph.unfold(fly, spots, lag=0.1, run_time=1.2) for fly, spots in nets))
+        self.temp = [m for _, spots in nets for m in spots]
 
         new = self._window(EN, (3, 14), "B14", "A:D")
         small = self._tower_counter((self.dx, 1.8), kinds)
@@ -461,20 +634,28 @@ class Beat4_Energy(_visuals.ClipScene):
         low = new.rect("D8")
         link = _engine.CurvedArrow(np.array([right + 0.02, (top + bottom) / 2, 0.0]), np.array([right + 0.02, (low[1] + low[3]) / 2, 0.0]), angle=-1.2, color="#2F6FDE", stroke_width=3.0)
         arrows = _engine.VGroup(*[self.xl_ref_frame(new, a1, color="#2F6FDE") for a1 in ("C4", "D4", "D8")], link)
-        self.step("trace", *self._swap(new), _engine.FadeOut(shape), _engine.FadeIn(small), _engine.FadeIn(chain), _engine.FadeIn(counted), _engine.FadeIn(arrows), seconds=3.5)
+        self.step("trace", *self._swap(new), *self._clear(), _engine.FadeOut(shape), _engine.FadeIn(small), _engine.FadeIn(chain), _engine.FadeIn(counted), _engine.FadeIn(arrows), seconds=3.5)
         self.frames.append(arrows)
 
         better_book, better_vals = self.books["window_upgrade"]
         moving = self._begin(better_vals)
-        self.step("whatif", moving, self.win.select("B14"), *self._recalc(better_book, better_vals), seconds=4.0)
+        u_cell = self._tok(self._show(EN, "B14"), "cell", BLUE, self._cell_pt("B14"))
+        windows = [small[0].parts["capsules"][k].get_center() for k in sorted(kinds)]
+        dots = [_engine.Dot(point, radius=0.03, color=SERV) for point in windows]
+        seeds = [_engine.Dot(self._cell_pt("B14"), radius=0.03, color=BLUE) for _ in dots]
+        self.add(u_cell)
+        self.step("whatif", self.win.select("B14"), seconds=0.8, between=lambda: self.add(*seeds),
+                  then=(_morph.scatter(seeds, dots, lag=0.012, path_arc=0.3, run_time=1.0, limit=2.4), moving, *self._recalc(better_book, better_vals), *[dot.animate.set_color(GOOD).set_run_time(2.0) for dot in dots]))
         self._end(better_vals)
+        self.dots = dots
+        self.temp.append(u_cell)
 
         frozen_book, frozen_vals = self.books["frozen"]
         rows_sum = self._readout(lambda: self.tr("rows add up to ", "Zeilen ergeben ") + self.xl_display(sum(better_vals[(EN, f"D{r}")] for r in range(4, 8)), '#,##0 "kWh/a"'),
                                  (self.dx, 0.38), size=SMALL, color=SERV)
         stale = self._frame("D8", SERV, dashed=True)
         moving = self._begin(frozen_vals)
-        self.step("frozen", moving, self.win.select("D8"), *self._recalc(frozen_book, frozen_vals), _engine.FadeIn(stale), _engine.FadeIn(rows_sum), seconds=3.0)
+        self.step("frozen", *self._clear(), moving, self.win.select("D8"), *self._recalc(frozen_book, frozen_vals), _engine.FadeIn(stale), _engine.FadeIn(rows_sum), seconds=3.0)
         self._end(frozen_vals)
 
         moving = self._begin(better_vals)
@@ -494,17 +675,17 @@ class Beat4_Energy(_visuals.ClipScene):
         py = lambda t: y0 + h * t / ymax
         bar = w / len(months) * 0.62
         group = _engine.VGroup(_draft.segments([((x0, y0, 0), (x0 + w, y0, 0))], MUTED, _draft.W_EDGE))
+        self.short, self.sigma_at = [], (at[0], y0 + h + 0.4)
         for i, month in enumerate(months):
             mean = float(month["mean"])
             name = month["name"][lang]
             group.add(_draft.polygon([(px(i) - bar / 2, y0), (px(i) + bar / 2, y0), (px(i) + bar / 2, py(mean)), (px(i) - bar / 2, py(mean))], BLUE, 0.75))
             if mean < limit:
                 ring = [(px(i) - bar / 2, py(mean)), (px(i) + bar / 2, py(mean)), (px(i) + bar / 2, py(limit)), (px(i) - bar / 2, py(limit))]
-                group.add(_draft.polygon(ring, SERV, 0.18), _draft.hatch([ring], SERV, 0.07, 45, _draft.W_HAIR, 0.95))
+                self.short.append(_engine.VGroup(_draft.polygon(ring, SERV, 0.18), _draft.hatch([ring], SERV, 0.07, 45, _draft.W_HAIR, 0.95)))
             group.add(self._say(name[0], (px(i), y0 - 0.2), size=SMALL, color=MUTED))
         group.add(_draft.polyline([(x0 - 0.1, py(limit)), (x0 + w + 0.1, py(limit))], DATA, _draft.W_EDGE, 1.0, dash=0.1),
                   self._say(self.quantity(limit, "°C", 0), (x0 - 0.15, py(limit)), size=SMALL, color=DATA, anchor="r"),
-                  self._readout(lambda: "Σ = " + self._show(self.CL, "B5"), (at[0], y0 + h + 0.4), color=SERV),
                   self._say(self.tr("monthly mean, Tokyo", "Monatsmittel, Tokio"), (at[0], y0 - 0.6), size=SMALL, color=MUTED))
         return group
 
@@ -528,22 +709,22 @@ class Beat4_Energy(_visuals.ClipScene):
         return group
 
     def _types_row(self, at):
-        """🧩 The four capsule types side by side: A, B and D share one shell and window, C has the larger window."""
+        """🧩 The four program studies share the documented nominal shell and porthole."""
         group = _engine.VGroup()
         for i, t in enumerate(_nakagin.capsule_types()):
             x = at[0] - 1.9 + i * 1.25
             group.add(self.capsule_axon(t, at=(x, at[1], 0.0), scale=0.14, window=True),
                       self.badge(t.key, (x - 0.3, at[1] - 0.52), color=_drawing.type_color(t.key), size=SMALL),
-                      self._say("Ø " + self.quantity(t.window_diameter, "m", 1), (x + 0.3, at[1] - 0.52), size=SMALL, color=WARN if t.window_diameter > 1.4 else INK, width=0.75))
+                      self._say("Ø " + self.quantity(t.window_diameter, "m", 1), (x + 0.3, at[1] - 0.52), size=SMALL, color=INK, width=0.75))
         group.add(self._say(self.tr("window Ø", "Fenster Ø"), (at[0], at[1] + 0.55), size=SMALL, color=MUTED),
-                  self._say(self.tr("same shell, same demand · only C has the larger window", "gleiche Hülle, gleicher Bedarf · nur C hat das größere Fenster"), (at[0], at[1] - 0.95), size=SMALL, color=MUTED, width=3.7))
+                  self._say(self.tr("same nominal shell and porthole · same demand", "gleiche nominale Hülle und Rundfenster · gleicher Bedarf"), (at[0], at[1] - 0.95), size=SMALL, color=MUTED, width=3.7))
         return group
 
     def _tower_counter(self, at, kinds):
         """🏙️ The building as a small tinted tower with the live building total and its change against the start."""
         EN = self.EN
         base = self.vals_base[(EN, "D8")]
-        group = _engine.VGroup(self.tower_axon(at=(at[0] - 1.1, at[1], 0.0), scale=0.045, tint=lambda key: _drawing.type_color(kinds[key]), lit=None))
+        group = _engine.VGroup(self.tower_axon(**_visuals.building_fit(1.8, 2.4, centre=(at[0] - 1.1, at[1], 0.0)), tint=lambda key: _drawing.type_color(kinds[key]), lit=None))
         group.add(self._readout(lambda: self._show(EN, "D8"), (at[0] + 0.9, at[1] + 0.3), color=DATA),
                   self._readout(lambda: self.xl_display(self._num(EN, "D8") / base - 1.0, '+0.0%;-0.0%;0.0%'), (at[0] + 0.9, at[1] - 0.1), size=SMALL, color=GOOD))
         return group
@@ -566,20 +747,21 @@ class Beat4_Energy(_visuals.ClipScene):
 
     def _stack(self, at):
         """📊 H as a stacked bar of H_T and H_V, widths from the live cells."""
-        T = self.T
+        return self.live(lambda: self._stack_shape(at), lambda: round(self.vs.t.get_value(), 3))
 
-        def build():
-            a, b = self._num(T, "B11"), self._num(T, "B12")
-            total = a + b
-            width = 4.2
-            x0 = at[0] - width / 2
-            wa = width * a / total
-            bar = _engine.VGroup(_draft.polygon([(x0, at[1] - 0.18), (x0 + wa, at[1] - 0.18), (x0 + wa, at[1] + 0.18), (x0, at[1] + 0.18)], SERV, 0.9),
-                                 _draft.polygon([(x0 + wa, at[1] - 0.18), (x0 + width, at[1] - 0.18), (x0 + width, at[1] + 0.18), (x0 + wa, at[1] + 0.18)], BLUE, 0.9))
-            bar.add(self._say("H_T " + self.xl_display(a, '0.00 "W/K"'), (x0, at[1] + 0.45), size=SMALL, color=SERV, anchor="r" if False else "l"),
-                    self._say("H_V " + self.xl_display(b, '0.00 "W/K"'), (x0 + width, at[1] - 0.5), size=SMALL, color=BLUE, anchor="r"))
-            return bar
-        return self.live(build, lambda: round(self.vs.t.get_value(), 3))
+    def _stack_shape(self, at):
+        """📊 One still frame of the stacked bar: two segments and their two labels."""
+        T = self.T
+        a, b = self._num(T, "B11"), self._num(T, "B12")
+        total = a + b
+        width = 4.2
+        x0 = at[0] - width / 2
+        wa = width * a / total
+        bar = _engine.VGroup(_draft.polygon([(x0, at[1] - 0.18), (x0 + wa, at[1] - 0.18), (x0 + wa, at[1] + 0.18), (x0, at[1] + 0.18)], SERV, 0.9),
+                             _draft.polygon([(x0 + wa, at[1] - 0.18), (x0 + width, at[1] - 0.18), (x0 + width, at[1] + 0.18), (x0 + wa, at[1] + 0.18)], BLUE, 0.9))
+        bar.add(self._say("H_T " + self.xl_display(a, '0.00 "W/K"'), (x0, at[1] + 0.45), size=SMALL, color=SERV, anchor="r" if False else "l"),
+                self._say("H_V " + self.xl_display(b, '0.00 "W/K"'), (x0 + width, at[1] - 0.5), size=SMALL, color=BLUE, anchor="r"))
+        return bar
 
     def _names(self, at):
         """🏷️ The defined names of the Climate sheet with their live values, and the climate source and period."""
@@ -642,7 +824,8 @@ class Beat4_Energy(_visuals.ClipScene):
             legend.add(self._say(symbol, (-6.6, y), size=LABEL, color=DATA, anchor="l"), self._say(name, (-3.9, y), size=LABEL, color=INK, anchor="l", width=3.5),
                        self._say(unit, (-0.2, y), size=LABEL, color=MUTED, anchor="l"))
         kinds = self._slot_types()
-        legend.add(self.tower_axon(at=(4.9, -0.45, 0.0), scale=0.085, tint=lambda key: _drawing.type_color(kinds[key]), lit=None))
+        big_tower = self.tower_axon(**_visuals.building_fit(4.6, 4.6, centre=(4.9, -0.15, 0.0)), tint=lambda key: _drawing.type_color(kinds[key]), lit=None)
+        goals = [_engine.Dot(big_tower.parts["capsules"][k].get_center(), radius=0.03, color=_drawing.type_color(kinds[k])) for k in sorted(kinds)]
         EN, T = self.EN, self.T
         a, b = self.vals_base, self.vals_better
         lines = [(self.tr("Type A: ", "Typ A: ") + self.xl_display(a[(T, "B14")], '#,##0') + " → " + self.xl_display(b[(T, "B14")], '#,##0 "kWh/a"')),
@@ -650,5 +833,12 @@ class Beat4_Energy(_visuals.ClipScene):
                  (self.tr("Building: ", "Gebäude: ") + self.xl_display(a[(EN, "D8")], '#,##0') + " → " + self.xl_display(b[(EN, "D8")], '#,##0 "kWh/a"'))]
         for i, line in enumerate(lines):
             legend.add(self._say(line, (4.9, 2.75 - i * 0.36), size=SMALL, color=DATA, width=4.4))
-        self.step("recap", _engine.FadeOut(window), *[_engine.FadeOut(m) for m in self.frames], _engine.FadeOut(chain), _engine.FadeOut(counted), _engine.FadeOut(small), _engine.FadeIn(legend), seconds=3.0)
-
+        rows = [chain.get_center() + np.array([-1.2, 0.84 - 0.56 * i, 0.0]) for i in range(4)]
+        origin = {"U": rows[0], "H_T": rows[1], "H_V": rows[1], "Q": rows[2], "Q/A": rows[2]}
+        symbols = [legend[3 * i] for i in range(len(terms))]
+        starts = [symbol.copy().move_to(origin.get(terms[i][0], small[0].get_center())) for i, symbol in enumerate(symbols)]
+        legend.remove(*symbols)
+        self.add(*starts)
+        self.step("recap", _engine.FadeOut(window), *[_engine.FadeOut(m) for m in self.frames], _engine.FadeOut(chain), _engine.FadeOut(counted), _engine.FadeOut(small), _engine.FadeIn(legend), seconds=1.4,
+                  then=(_morph.scatter(starts, symbols, lag=0.06, path_arc=0.3, run_time=1.1, limit=2.0), _morph.scatter(self.dots, goals, lag=0.012, path_arc=0.3, run_time=1.0, limit=2.4), _engine.FadeIn(big_tower, run_time=2.0)))
+        self.remove(*goals)

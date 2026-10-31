@@ -1,0 +1,23 @@
+{
+  "source": "24e6fd48355bb2bcd2fab4ba65b8a89047b8b517fcde6fa7f62ca1b26ae502c2",
+  "scope": "Direct authored part bounds crossing another storey cut; native class dispatch and actual cut shape need confirmation before classification",
+  "candidates": [
+    {
+      "tag": "TUBE-STAIR-CENTRAL",
+      "class": "IfcRailing",
+      "storey": "ground",
+      "kind": "central_stair_tube",
+      "z": [
+        -2.4,
+        6.339999999999999
+      ],
+      "crossing_other_plan_cuts": [
+        "cellar",
+        "first"
+      ],
+      "domains": [
+        "architecture"
+      ]
+    }
+  ]
+}

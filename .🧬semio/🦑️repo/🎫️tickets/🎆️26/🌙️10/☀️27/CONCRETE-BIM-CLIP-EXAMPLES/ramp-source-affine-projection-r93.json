@@ -1,0 +1,89 @@
+{
+  "id": "source-affine-t-junction",
+  "scale": [
+    5,
+    15
+  ],
+  "polygons": [
+    [
+      [
+        0,
+        0
+      ],
+      [
+        1,
+        0
+      ],
+      [
+        1,
+        {
+          "numerator": 1,
+          "denominator": 3
+        }
+      ]
+    ],
+    [
+      [
+        0,
+        0
+      ],
+      [
+        {
+          "numerator": 3,
+          "denominator": 5
+        },
+        {
+          "numerator": 1,
+          "denominator": 5
+        }
+      ],
+      [
+        {
+          "numerator": 3,
+          "denominator": 5
+        },
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    [
+      [
+        {
+          "numerator": 3,
+          "denominator": 5
+        },
+        {
+          "numerator": 1,
+          "denominator": 5
+        }
+      ],
+      [
+        1,
+        {
+          "numerator": 1,
+          "denominator": 3
+        }
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        {
+          "numerator": 3,
+          "denominator": 5
+        },
+        1
+      ]
+    ]
+  ],
+  "expected": {
+    "area": 1,
+    "length": 4,
+    "components": 1,
+    "holes": 0
+  }
+}

@@ -49,6 +49,11 @@ def calls(path: Path):
     return steps, topics, imports, dynamic
 
 
+def native_probe(base, step):
+    """🎚️ Observe narration while preserving every scene-owned animation dispatcher."""
+    return type("NativeProbe", (base,), {"step": step})
+
+
 class GrasshopperPresentationContract(unittest.TestCase):
     """🦗 Require every localized Grasshopper scene to implement its declared presentation."""
 
@@ -118,6 +123,26 @@ class GrasshopperPresentationContract(unittest.TestCase):
                 self.assertEqual(scene.tr("Slider", "Schieberegler"), "Slider" if language == "en" else "Schieberegler")
                 self.assertEqual(scene.number(-2.5, 1), ("−2.5" if language == "en" else "−2,5"))
 
+    def test_native_play_preserves_scene_sequence(self):
+        """🎼 Native timing reaches the Manim leaf after the capsule's own ordered callbacks and animations."""
+        from manim import Dot, FadeIn, Scene
+
+        module = importlib.import_module(PACKAGE + ".💊️capsule.🐍️")
+        case, events, forwarded = CASES["sequence_dispatch"], [], []
+        probe = native_probe(module.Beat2_Capsule, lambda *args, **kwargs: None)
+        scene = probe.__new__(probe)
+        animation = FadeIn(Dot())
+
+        def leaf(scene, *animations, **kwargs):
+            events.extend(type(item).__name__ for item in animations)
+            forwarded.append((animations, kwargs["run_time"]))
+
+        sequence = module._Seq(lambda: events.append(case["before"]), ((animation,), case["seconds"]), lambda: events.append(case["after"]))
+        with patch.object(Scene, "play", leaf):
+            scene.play(sequence)
+        self.assertEqual(events, case["expected"])
+        self.assertEqual(forwarded, [((animation,), case["seconds"])])
+
     def test_native_lifecycle(self):
         """🎞️ Run each discovered scene and the toolkit probe through real animation setup, interpolation, cleanup and Cairo in both languages."""
         output = Path(os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT") or tempfile.mkdtemp(prefix="gh-presentation-"))
@@ -131,7 +156,7 @@ class GrasshopperPresentationContract(unittest.TestCase):
     def lifecycle(self, name, base, language, output):
         """🔬 One scene in one language with patched timing; asserts finite geometry, visible pixels and the exact stepped keys."""
         import numpy as np
-        from manim import tempconfig
+        from manim import Scene, tempconfig
 
         seen, played = [], set()
 
@@ -171,9 +196,9 @@ class GrasshopperPresentationContract(unittest.TestCase):
         env = {"SEMIO_TEACHING_LANGUAGE": language, "SEMIO_TEACHING_AUDIENCE": "spectator"}
         settings = {"media_dir": str(output / "media"), "text_dir": str(output / "text"), "pixel_width": 480, "pixel_height": 270, "frame_rate": 4,
                     "renderer": "cairo", "dry_run": True, "disable_caching": True}
-        with patch.dict(os.environ, env), tempconfig(settings):
+        with patch.dict(os.environ, env), tempconfig(settings), patch.object(Scene, "play", play), patch.object(Scene, "wait", wait):
             print(f"[DEBUG] GH lifecycle {name} {language}", flush=True)
-            probe = type("NativeProbe", (base,), {"play": play, "wait": wait, "step": step})
+            probe = native_probe(base, step)
             scene = probe()
             scene.construct()
             self.assertEqual(seen, [row[0] for row in base.NARRATION])

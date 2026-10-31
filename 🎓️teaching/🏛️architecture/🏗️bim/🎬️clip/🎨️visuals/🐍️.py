@@ -18,6 +18,7 @@ _theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️ener
 _drafting = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.📐️drafting.🐍️")
 _panels = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🧾️panels.🐍️")
 _engine = importlib.import_module("manim")
+_camera = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎥️camera.🐍️")
 
 INK, MUTED, ARCH, STRUCT, SERV = _drafting.INK, _drafting.MUTED, _drafting.ARCH, _drafting.STRUCT, _drafting.SERV
 DATA, GOOD, WARN, GLASS = _drafting.DATA, _drafting.GOOD, _drafting.WARN, _drafting.GLASS
@@ -42,6 +43,11 @@ def source_files() -> tuple[Path, ...]:
 
 class ClipScene(_drafting.Drafting, _Savoye, _Axon, _panels.Panels, _Analysis, _engine.Scene):
     """🎬 Present localized BIM concepts: localization, timing and every drawing widget behind one scene base."""
+
+    def __init__(self, **settings):
+        """📷 Select the private exact path cache through the native two-dimensional camera interface."""
+        settings.setdefault("camera_class", _camera._CairoPathCamera)
+        super().__init__(**settings)
 
     def language(self) -> str:
         """🌐 Require an explicit language; never infer a default from the host."""

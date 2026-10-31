@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "helpers": [
+    "_surface_difference",
+    "_surface_separated",
+    "_surface_support_edges",
+    "_analysis._orientation"
+  ],
+  "scopes": [
+    "slab",
+    "wall_cutters"
+  ],
+  "triangle": [
+    [
+      0,
+      0
+    ],
+    [
+      1,
+      0
+    ],
+    [
+      0,
+      1
+    ]
+  ],
+  "expected": {
+    "initial_calls": 1,
+    "warm_calls": 1,
+    "replaced_calls": 1
+  },
+  "other_triangle": [
+    [
+      2,
+      0
+    ],
+    [
+      3,
+      0
+    ],
+    [
+      2,
+      1
+    ]
+  ],
+  "reference_outputs": {
+    "_surface_difference": [
+      [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ]
+      ]
+    ],
+    "_surface_separated": true,
+    "_surface_support_edges": [
+      [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        1
+      ],
+      [
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          1
+        ],
+        1
+      ],
+      [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0
+        ],
+        1
+      ]
+    ],
+    "_analysis._orientation": 1
+  }
+}

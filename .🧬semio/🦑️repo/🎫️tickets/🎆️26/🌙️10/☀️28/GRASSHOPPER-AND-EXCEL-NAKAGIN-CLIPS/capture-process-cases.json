@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "defaults": {
+    "interval_seconds": 5,
+    "cleanup_timeout_seconds": 30
+  },
+  "cases": [
+    {
+      "id": "success",
+      "mode": "success",
+      "minimum_checkpoints": 3
+    },
+    {
+      "id": "keyboard",
+      "mode": "tree",
+      "exception": "KeyboardInterrupt",
+      "minimum_checkpoints": 20
+    },
+    {
+      "id": "source-drift",
+      "mode": "tree",
+      "exception": "SourceDrift",
+      "minimum_checkpoints": 20
+    }
+  ],
+  "required": {
+    "silent_checkpoints": true,
+    "child_and_grandchild_gone": true,
+    "foreign_parent_refused": true,
+    "worker_inside_ticket": true,
+    "output_inside_generated": true,
+    "exited_root_held_pipe_unverified": true
+  }
+}

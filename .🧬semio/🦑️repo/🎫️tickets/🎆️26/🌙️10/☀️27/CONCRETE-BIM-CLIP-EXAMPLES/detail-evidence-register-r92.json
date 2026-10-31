@@ -1,0 +1,671 @@
+{
+  "title": "Current Detail and Evidence Register R92",
+  "observed_at": "2026-10-29T12:41:56.504Z",
+  "source_path": "C:/git/semio/🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔣️.json",
+  "source_sha256": "528b3ffeab26e4c038b9eb603e7ae1e9bc52c66a1f068b3e799de8fcd66ccc8f",
+  "evidence_policy": "Primary author book reproduced through public preview; transfer provenance retained. No auth/bypass. Official UVa requests timed out. Numeric textual evidence separated from sprite visual morphology; no unreadable dimension inferred.",
+  "artifacts": [
+    {
+      "printed_page": 210,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/210-f0cc308101.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/210-f0cc308101.jpg",
+      "file": "🗑️generated/book-figures-210-r92.jpg",
+      "bytes": 33521,
+      "sha256": "440d4bb52b160cf4cba7b92845f0d90340a5f31e70de0a0fcf078e1b63fbaf6e",
+      "visually_inspected": false
+    },
+    {
+      "printed_page": 211,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/211-d201ee4eec.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/211-d201ee4eec.jpg",
+      "file": "🗑️generated/book-figures-211-r92.jpg",
+      "bytes": 109271,
+      "sha256": "1ae6bfabf44637ae26f9ef647a9fcc1e6792d221ee9af770d87ad9aff31f0e1a",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 213,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/213-9a9e21e277.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/213-9a9e21e277.jpg",
+      "file": "🗑️generated/book-figures-213-r92.jpg",
+      "bytes": 188500,
+      "sha256": "9dbc3e462b7e7e740c4466d1612bf5791993ac8ed52685aa27e83b239e5f8da9",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 215,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/215-6ffe2a7283.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/215-6ffe2a7283.jpg",
+      "file": "🗑️generated/book-figures-215-r92.jpg",
+      "bytes": 173374,
+      "sha256": "d15c03e5249adc32820d34323aa0a227cd960fb8c5307c5875cfd3fae7224ede",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 217,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/217-94a62b0807.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/217-94a62b0807.jpg",
+      "file": "🗑️generated/book-figures-217-r92.jpg",
+      "bytes": 146340,
+      "sha256": "d384c2770cc66c55b2735f5504c7c9649d277817d1b3fd4f71a9978a7b1dade8",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 218,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/218-4ffedfe568.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/218-4ffedfe568.jpg",
+      "file": "🗑️generated/book-figures-218-r92.jpg",
+      "bytes": 156623,
+      "sha256": "bbd910bbc7d6fc016ca4ead88783c16308fe78817f0a014b1f11bd6ee7d4c7b1",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 219,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/219-bd4b684b12.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/219-bd4b684b12.png",
+      "file": "🗑️generated/book-figures-219-r92.png",
+      "bytes": 146680,
+      "sha256": "1654e11e4406d5eb05ec689d4f0d02dc454d13ebfa0dbc600f10207d36d18389",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 220,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/220-8ec686e1eb.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/220-8ec686e1eb.jpg",
+      "file": "🗑️generated/book-figures-220-r92.jpg",
+      "bytes": 72031,
+      "sha256": "4892e94c8162dab205ec748e9d7ec55bafc89a075ab839bc1f39b114b776c48d",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 221,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/221-0cca42d7ed.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/221-0cca42d7ed.jpg",
+      "file": "🗑️generated/book-figures-221-r92.jpg",
+      "bytes": 187131,
+      "sha256": "f673cd7745d3539e231a76b08910b453d29d998c7555bf4fc11db2727a7d535b",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 230,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/230-fb59f5d3d3.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/230-fb59f5d3d3.jpg",
+      "file": "🗑️generated/book-figures-230-r92.jpg",
+      "bytes": 185298,
+      "sha256": "b1b6ba75b3245a5a126fd431e7db219870a40fa637081d7e5374fdf56c75397b",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 231,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/231-523ee84512.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/231-523ee84512.jpg",
+      "file": "🗑️generated/book-figures-231-r92.jpg",
+      "bytes": 158800,
+      "sha256": "c2e4851157057b43e42046521c3885defc0ad53e82a6140c6062bb4b1d66181a",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 235,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/235-e9050c5463.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/235-e9050c5463.jpg",
+      "file": "🗑️generated/book-figures-235-r92.jpg",
+      "bytes": 31055,
+      "sha256": "2f4aa4e96924fad7372704b1ee4ef59d0b616d6e5334b953c7c05b0e3b8eb34c",
+      "visually_inspected": false
+    },
+    {
+      "printed_page": 33,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/33-2bf0adfb9f.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/33-2bf0adfb9f.jpg",
+      "file": "🗑️generated/book-figures-33-r92.jpg",
+      "bytes": 101485,
+      "sha256": "dd0b437078931f573a76ed9cdeb7d64d41f46e5841f5ab15f995bf445db65c5a",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 34,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/34-b02b26d659.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/34-b02b26d659.jpg",
+      "file": "🗑️generated/book-figures-34-r92.jpg",
+      "bytes": 235702,
+      "sha256": "367d501b2b67a2e2e053430474124df744e98340e513dde7c0a02a29c3c03ba3",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 40,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/40-97fa65698d.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/40-97fa65698d.jpg",
+      "file": "🗑️generated/book-figures-40-r92.jpg",
+      "bytes": 128932,
+      "sha256": "46dc3ced7b882b54b01197fe919decb8ccfad2323a20547c5ad3949d1bf542e4",
+      "visually_inspected": false
+    },
+    {
+      "printed_page": 41,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/41-9cebdfe31b.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/41-9cebdfe31b.jpg",
+      "file": "🗑️generated/book-figures-41-r92.jpg",
+      "bytes": 41746,
+      "sha256": "bb1661e925b524b76cae95f8fd47d92557138c1bc7d3fd06af228242fb099e3f",
+      "visually_inspected": false
+    },
+    {
+      "printed_page": 42,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/42-57429e76b7.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/42-57429e76b7.jpg",
+      "file": "🗑️generated/book-figures-42-r92.jpg",
+      "bytes": 15448,
+      "sha256": "91f86b354abf80dc7bc38db9f38e2cf4119b9e1203f15068d8ab19ebe341d14e",
+      "visually_inspected": false
+    },
+    {
+      "printed_page": 43,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/43-296854acfb.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/43-296854acfb.jpg",
+      "file": "🗑️generated/book-figures-43-r92.jpg",
+      "bytes": 11376,
+      "sha256": "8ff0d10e69d7ffa3e5158cbf900c0f8112a8f8dc10d92f6beac68e05717a2721",
+      "visually_inspected": false
+    },
+    {
+      "printed_page": 44,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/44-4789b6a1f9.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/44-4789b6a1f9.jpg",
+      "file": "🗑️generated/book-figures-44-r92.jpg",
+      "bytes": 101102,
+      "sha256": "7ecf86be87b9d1dbecffdc6b9cc0b49b7f4e7edb74424a8bb6536ecde354b4fb",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 45,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/45-7a1e3af28e.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/45-7a1e3af28e.jpg",
+      "file": "🗑️generated/book-figures-45-r92.jpg",
+      "bytes": 168226,
+      "sha256": "04075b36ad25e324faed8e53c1d78522107cb13a59000453d3c867f5a81299e7",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 46,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/46-c4bc96b9ba.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/46-c4bc96b9ba.jpg",
+      "file": "🗑️generated/book-figures-46-r92.jpg",
+      "bytes": 314563,
+      "sha256": "ca1d2bc13c3e50ef9df2747f2269338c2ee600349abe94a2b8e607151e95db1e",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 47,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/47-489cd3b3e6.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/47-489cd3b3e6.jpg",
+      "file": "🗑️generated/book-figures-47-r92.jpg",
+      "bytes": 169089,
+      "sha256": "3c5acd31cde87267227a7f1b13fc57293fff696c002e57248630a03c23f529dd",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 48,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/48-d7ee9cb542.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/48-d7ee9cb542.jpg",
+      "file": "🗑️generated/book-figures-48-r92.jpg",
+      "bytes": 149059,
+      "sha256": "102ffa37fb54804688f8cd979c0278f03a082d0fba03f6c9db3c89547328cfa9",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 49,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/49-446cd1f327.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/49-446cd1f327.jpg",
+      "file": "🗑️generated/book-figures-49-r92.jpg",
+      "bytes": 175885,
+      "sha256": "f78c974fa9fd2e2386ffc0ad251e62e0f71a8a56b81bb4e139da37d9ba0651ec",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 50,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/50-2607738fef.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/50-2607738fef.png",
+      "file": "🗑️generated/book-figures-50-r92.png",
+      "bytes": 60748,
+      "sha256": "eab4c43000a9a3b7bdb033e7e4a35ed84c9e52cdc588ab8fb1fa673f2f48561a",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 51,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/51-48d11df38c.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/51-48d11df38c.jpg",
+      "file": "🗑️generated/book-figures-51-r92.jpg",
+      "bytes": 149477,
+      "sha256": "3ff0cea29d8788b79c0f7bfa1b721b08e95c529e5c30a02f1a54dd0d07fe5e54",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 52,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/52-866c2d6bee.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/52-866c2d6bee.png",
+      "file": "🗑️generated/book-figures-52-r92.png",
+      "bytes": 73821,
+      "sha256": "4769deea2ef6fee8a9156de636ebe6ff04eb498eaeea189ecde5fda903504841",
+      "visually_inspected": true
+    },
+    {
+      "printed_page": 53,
+      "public_page": "https://html.scribdassets.com/7dllg042tci600ml/pages/53-1aa413c104.jsonp",
+      "observed_image": "https://html.scribd.com/7dllg042tci600ml/images/53-1aa413c104.png",
+      "file": "🗑️generated/book-figures-53-r92.png",
+      "bytes": 96049,
+      "sha256": "589bddeb991cc35ca5327e9e368c630a035bc2bb5074940d383e7b2a6a0941dc",
+      "visually_inspected": true
+    }
+  ],
+  "groups": [
+    {
+      "group": "ribbon-and-salon-joinery",
+      "ids": [
+        "TY-RIBBON",
+        "TY-METAL-WINDOW",
+        "TY-TERRACE-GLAZING",
+        "CW-1"
+      ],
+      "source_pages": [
+        210,
+        211,
+        212,
+        213,
+        214,
+        215,
+        216,
+        217,
+        218,
+        219,
+        220,
+        221
+      ],
+      "known": {
+        "ribbon_fixed_frame_mm": [
+          80,
+          40
+        ],
+        "ribbon_sliding_frame_mm": [
+          30,
+          50
+        ],
+        "ribbon_glass_mm": 6,
+        "metal_T_mm": [
+          35,
+          35,
+          4
+        ],
+        "metal_perimeter_L_mm": [
+          35,
+          4
+        ],
+        "metal_stiffener_mm": [
+          15,
+          35
+        ],
+        "curve_intermediate_rail_m": 0.9,
+        "salon_overall_cm": [
+          925,
+          320
+        ],
+        "salon_primary_panels": 2,
+        "salon_roles": [
+          "fixed beside entrance",
+          "chain-driven sliding"
+        ],
+        "salon_each_panel_vertical_subdivision": true,
+        "salon_chain_in_rectangular_handrail": true,
+        "salon_crank_at_end": true,
+        "proposed_exterior_blind_executed": false,
+        "salon_executed_canopy_cm": {
+          "thickness": 7,
+          "projection": 25
+        },
+        "profile_axis_interpretation": {
+          "fixed": {
+            "visible_width_mm": 40,
+            "normal_depth_mm": 80,
+            "basis": "visual orientation of p211 vertical section, corroborated dimensions p212"
+          },
+          "sliding": {
+            "visible_width_mm": 50,
+            "normal_depth_mm": 30,
+            "basis": "inferred axis assignment from p213 section proportions plus p212 dimensions; second review required"
+          }
+        },
+        "metal_T_applicability": [
+          "large ground glazing",
+          "curved vestibule",
+          "interior ramp triangles"
+        ],
+        "salon_metal_family": "minimal U profiles, not ground T35"
+      },
+      "unknown": [
+        "Exact original ribbon station schedule; retrieve FLC U1(14)042/043 elevations and original photos",
+        "Detailed seal/rebate/roller dimensions not legible at sprite resolution",
+        "Exact two-assembly meeting station and each internal subdivision from registered full elevation; p219 modern author elevation suggests equal subdivision but is not independently measured here"
+      ],
+      "current_representation": "Singleton ribbon/salon filling.panel_stations0/1; inferred sashes; two track lanes; CW visible/inferred station schedule plus1m intermediate rail",
+      "acceptance": [
+        "Schema-first distinguish physical primary sash assemblies from glazing subdivisions",
+        "Source supported profile/rail numeric corrections; own independent material-volume and nonintersection oracle",
+        "Register salon overall opening/current host before changing9.25×3.20m; no local stretch without whole-model coherence",
+        "Native front/plan/section views show two assembly roles, internal divisions and crank/handrail mechanism",
+        "Exclude unexecuted roller-blind drum; preserve executed canopy source lineage"
+      ],
+      "author_reconstruction_elevation": {
+        "page": 219,
+        "rectangle_px": {
+          "x0": 300,
+          "x1": 795,
+          "y0": 494,
+          "y1": 660
+        },
+        "primary_meeting_x": 548,
+        "secondary_x": [
+          428,
+          668
+        ],
+        "normalized_glass_stations": [
+          0,
+          0.2586,
+          0.501,
+          0.7434,
+          1
+        ],
+        "basis": "approximate pixel-derived morphology of modern author reconstruction; not original measured station schedule",
+        "uncertainty_px": 3
+      },
+      "ribbon_elevation_register": [
+        {
+          "page": 50,
+          "facade": "rear/service facade inferred from ground window topology",
+          "image_size": [
+            776,
+            811
+          ],
+          "band_region_px": [
+            50,
+            523,
+            729,
+            570
+          ],
+          "axis_u": [
+            47,
+            217.75,
+            388.5,
+            559.25,
+            730
+          ],
+          "world_axis_pitch_m": 4.75,
+          "orientation_status": "X decrease right hypothesis; verify unique ground service topology before metric stations"
+        },
+        {
+          "page": 52,
+          "facade": "front entrance facade identified from curved vestibule",
+          "image_size": [
+            776,
+            897
+          ],
+          "band_region_px": [
+            50,
+            608,
+            730,
+            655
+          ],
+          "axis_u": [
+            47,
+            217.75,
+            388.5,
+            559.25,
+            730
+          ],
+          "world_axis_pitch_m": 4.75,
+          "orientation_status": "X decrease right hypothesis; confirm original/CMN coordinate registration"
+        }
+      ]
+    },
+    {
+      "group": "services",
+      "ids": [
+        "BL-1",
+        "DR-1",
+        "DR-2",
+        "HEAT-RISER-6-CASING",
+        "HEAT-RISER-6-INSULATION",
+        "HEAT-RISER-6-PIPE",
+        "HEAT-RISER-11-CASING",
+        "HEAT-RISER-11-INSULATION",
+        "HEAT-RISER-11-PIPE",
+        "WATER-RISER-11",
+        "SOIL-STAIR"
+      ],
+      "source_pages": [
+        230,
+        231,
+        234,
+        235
+      ],
+      "known": {
+        "heating_reference_sheets": [
+          "FLC U1(14)063 basement/ground",
+          "FLC U1(14)064 first/roof",
+          "FLC U1(14)065 stacked axon"
+        ],
+        "water_reference_sheets": [
+          "FLC U1(14)049–052"
+        ],
+        "grey_water_sheets": [
+          "FLC U1(14)055–056"
+        ],
+        "soil_water_sheets": [
+          "FLC U1(14)057–059"
+        ],
+        "rain_water_sheets": [
+          "FLC U1(14)054",
+          "FLC U1(14)060–062"
+        ],
+        "historical_report_1932": {
+          "boiler_count": 2,
+          "maker": "Ideal",
+          "capacities_calories": [
+            44800,
+            16800
+          ],
+          "boilers_combined": false,
+          "smoke_flue_sheet_metal_elbows": 4,
+          "cement_chimney_diameter_cm": 20,
+          "chimney_total_height_m": 12
+        }
+      },
+      "unknown": [
+        "Network endpoints/junctions/diameters not reliably legible in755px overview",
+        "1965 TRACE D ORIGINE source has documented kitchen and Mme radiator discrepancies; not all routes can be copied as1930",
+        "1932 condition report must be date-qualified;12m is system height, not absolute roof-top Z"
+      ],
+      "current_representation": "Single assumed boiler plus visible ground riser/trunk segments; no complete plant or branches",
+      "acceptance": [
+        "Register readable original traced service sheets through structural axes",
+        "Add graph continuity and independently checked physical path sections",
+        "Date-qualified boiler family/system data before source physical changes"
+      ]
+    },
+    {
+      "group": "structural-support-births",
+      "ids": [
+        "34",
+        "35",
+        "36",
+        "PB",
+        "FT-BLINDING-1",
+        "FT-PAD-1",
+        "FT-BLINDING-2",
+        "FT-PAD-2",
+        "FT-BLINDING-3",
+        "FT-PAD-3",
+        "FT-BLINDING-4",
+        "FT-PAD-4",
+        "FT-BLINDING-5",
+        "FT-PAD-5",
+        "FT-BLINDING-6",
+        "FT-PAD-6",
+        "FT-BLINDING-7-12",
+        "FT-PAD-7-12",
+        "FT-BLINDING-11",
+        "FT-PAD-11",
+        "FT-BLINDING-16",
+        "FT-PAD-16",
+        "FT-BLINDING-17",
+        "FT-PAD-17",
+        "FT-BLINDING-21",
+        "FT-PAD-21",
+        "FT-BLINDING-22",
+        "FT-PAD-22",
+        "FT-BLINDING-23",
+        "FT-PAD-23",
+        "FT-BLINDING-24",
+        "FT-PAD-24",
+        "FT-BLINDING-27",
+        "FT-PAD-27",
+        "FT-BLINDING-28",
+        "FT-PAD-28",
+        "FT-BLINDING-29",
+        "FT-PAD-29",
+        "FT-BLINDING-30",
+        "FT-PAD-30",
+        "FT-BLINDING-31",
+        "FT-PAD-31",
+        "FT-BLINDING-32",
+        "FT-PAD-32",
+        "FT-BLINDING-33",
+        "FT-PAD-33"
+      ],
+      "source_pages": [],
+      "retained_sources": [
+        "structural-register-r9.md/.json",
+        "🗑️generated/author-r8.pdf PDF18–24",
+        "🗑️generated/register-r9-section22.png",
+        "🗑️generated/register-r9-section23.png"
+      ],
+      "known": "Existing registered datums/support axes remain established by earlier inspected author annexes; this continuation adds no new birth measurement",
+      "unknown": [
+        "34/35/36 lower transfer birth",
+        "PB exact beamF joint",
+        "Bearing−1.65m versus−1.50m reference conflict"
+      ],
+      "current_representation": "Proven upper segments and explicit inferred/unknown births",
+      "acceptance": [
+        "Recover section dimension leaders for actual transfer nodes; avoid extrapolated continuous posts",
+        "Resolve datum reference origin before choosing bearing level",
+        "Native source-neutral joint ownership/volume conservation"
+      ]
+    },
+    {
+      "group": "chimneys",
+      "ids": [
+        "CHIMNEY-SALON-ROOF",
+        "CHIMNEY-KITCHEN-ROOF",
+        "BOILER-FLUE-VISIBLE",
+        "OP-FLUE-FLOOR",
+        "OP-FLUE-ROOF",
+        "CHIMNEY-SALON-ROOF",
+        "OP-SALON-FLUE-ROOF",
+        "CHIMNEY-KITCHEN-ROOF",
+        "OP-KITCHEN-FLUE-ROOF"
+      ],
+      "source_pages": [
+        231,
+        234,
+        235,
+        34,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53
+      ],
+      "known": {
+        "tall_original_functions": [
+          "heating cylinder by stair",
+          "salon square",
+          "kitchen square"
+        ],
+        "low_original_functions": [
+          "boudoir stove",
+          "lingerie"
+        ],
+        "low_original_shape": "square",
+        "kitchen_measured_reference": "FLC U1(14)048",
+        "original_presence_photos": [
+          "FLC L2(17)006 kitchen",
+          "FLC L2(17)048 boudoir",
+          "FLC L2(17)205 lingerie"
+        ],
+        "heating_cap_timing": "Seen September1929; absent November1930",
+        "new_elevation_sheet_scope": "Modern author elevations recovered; several omit/simplify original prismatic terminals, so do not assign terminal heights from unlabeled9.35screen/stair leaders"
+      },
+      "unknown": [
+        "Two low-terminal XY and heights from registered plan",
+        "Salon/kitchen original calibrated roof-top heights",
+        "Per-terminal cap form and selected completion-date condition; no decorative cap from generic analogy"
+      ],
+      "current_representation": "Three represented bodies; salon/kitchen roof-only uncalibrated tops9.25/9.60±.40m",
+      "acceptance": [
+        "Retrieve readable FLC U1(14)048 and matching original photographs",
+        "Register all tall/low identities against same control grid",
+        "Calibrate height with same-depth geometry or original elevation;12m total flue is not roof datum"
+      ]
+    },
+    {
+      "group": "rooflight-ramp-and-small-construction-details",
+      "ids": [
+        "ROOFLIGHT-1",
+        "TUBE-ST-GF",
+        "TUBE-ST-FR",
+        "RM-1",
+        "RM-2",
+        "FACADE-U-S",
+        "FACADE-U-N",
+        "FACADE-U-W",
+        "FACADE-U-W-UPPER",
+        "FACADE-U-E",
+        "FACADE-U-KITCHEN-COURT",
+        "FACADE-U-KIOSK-E"
+      ],
+      "retained_sources": [
+        "primary-register-r26.md",
+        "ramp-evidence-r31.md",
+        "structural-register-r9.md"
+      ],
+      "known": "Existing source-backed assembly topology/nominal dimensions retained; no newly recovered small-detail measurement in this continuation",
+      "unknown": [
+        "Rooflight exact vent operation/material",
+        "Tube wall thickness/fixing stations",
+        "Facade strap schedule",
+        "Ramp6cm thickness convention"
+      ],
+      "current_representation": "Explicit inferred components/nominal envelopes",
+      "acceptance": [
+        "Original readable details required for dimensions; no arbitrary added fasteners",
+        "Keep observed construction distinct from optional teaching approximations"
+      ]
+    }
+  ],
+  "physical_atlas_review": {
+    "files": [
+      "🗑️generated/physical-elevations-r92.png",
+      "🗑️generated/physical-sections-r92.png",
+      "🗑️generated/physical-axons-r92.png"
+    ],
+    "visually_inspected": true,
+    "findings": [
+      "Missing ribbon/salon divisions visible; source evidence now recovered",
+      "Apparent triangular stair cap is rendering triangulation/internal-edge artifact, not supported pitched source geometry",
+      "SL-STAIR-CANOPY roof6.60+2.66 constanttop9.26; weather constanttop9.35; p51 author sectionhorizontal",
+      "No new proved missing volume or collision from painter-depth visualization"
+    ]
+  }
+}

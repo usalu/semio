@@ -1,0 +1,48 @@
+{
+  "footing": "FT-CELLAR",
+  "owner": "CELLAR-COAL-CHUTE",
+  "expected_removed": 0.0013349550296483253,
+  "tolerance": 1e-10,
+  "controls": [
+    {
+      "name": "former occupied joint",
+      "point": [
+        4.488717447916667,
+        15.9459185,
+        -2.46
+      ],
+      "footing": false,
+      "chute": true
+    },
+    {
+      "name": "real chute air core",
+      "point": [
+        4.488717447916667,
+        15.9459185,
+        -2.35
+      ],
+      "footing": false,
+      "chute": false
+    },
+    {
+      "name": "adjacent footing",
+      "point": [
+        4.7,
+        15.9459185,
+        -2.46
+      ],
+      "footing": true,
+      "chute": false
+    },
+    {
+      "name": "deep remaining foundation",
+      "point": [
+        4.488717447916667,
+        15.9459185,
+        -2.65
+      ],
+      "footing": true,
+      "chute": false
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+# Reviewed Membership and Analytical Snapshot Publication
+
+One guarded fresh-source transaction published `ec165de1f2f17d7fa919c44ac01b72be945d7f17c32e71bc264b05fb14443421` from `029dca650a9e32e24b06ff5d339f6af6dc970c3a1c9658a3e3c63f16b1e13039`. All685products retain byte-equivalent parsed geometry, GUIDs, materials, placements, historical evidence and relations. An explicit unrelated-field fingerprint and exact producer hashes were checked before write and on readback. Seven architectural and nine service memberships were restored; obsolete service membership on parents storage was removed. Four product domain labels were reconciled as independently reviewed in discipline-membership-audit-r95.md.
+
+All three LK snapshots were recomputed from the exact current native/analysis producers in252.032s, stable source/producers throughout. Stored snapshots now use those current values and retain source revision4. No old diagnostic values were copied; physical finishes are not double-added to analytical finish assumptions. Receipt `🗑️generated/source-membership-links-r95.json` retains exact previous/new fields and producer hashes.
+
+New language-neutral domain20case fixture/schema and NumPy matrix regression were authored before publication. An initial harness mistake rejected valid space-membership records; that assertion was corrected before the actual source RED, which then failed on FIX-LAUNDRY. Post-publication source/metadata/full consistency acceptance remains to execute.

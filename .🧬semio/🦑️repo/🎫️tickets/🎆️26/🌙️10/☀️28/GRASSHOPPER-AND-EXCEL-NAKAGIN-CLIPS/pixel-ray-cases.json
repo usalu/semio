@@ -1,0 +1,2760 @@
+{
+  "towards": [
+    0,
+    0,
+    1
+  ],
+  "grid": 5,
+  "depth_tolerance": 1e-8,
+  "projection_tolerance": 1e-7,
+  "cases": [
+    {
+      "name": "opaque-hidden-removal",
+      "items": [
+        {
+          "index": 0,
+          "key": "part-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 0,
+          "new_rank": 0
+        },
+        {
+          "index": 1,
+          "key": "part-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": true,
+          "full_rank": 1,
+          "new_rank": null
+        }
+      ],
+      "point": [
+        1.5,
+        1.5
+      ],
+      "before": [
+        0
+      ],
+      "after": [
+        0
+      ]
+    },
+    {
+      "name": "visible-foreground-removal",
+      "items": [
+        {
+          "index": 0,
+          "key": "part-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 0,
+          "new_rank": 0
+        },
+        {
+          "index": 1,
+          "key": "part-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": true,
+          "full_rank": 1,
+          "new_rank": null
+        }
+      ],
+      "point": [
+        1.5,
+        1.5
+      ],
+      "before": [
+        1
+      ],
+      "after": [
+        0
+      ]
+    },
+    {
+      "name": "concave-opening",
+      "items": [
+        {
+          "index": 0,
+          "key": "part-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 0,
+          "new_rank": 0
+        },
+        {
+          "index": 1,
+          "key": "part-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ],
+            [
+              2,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": true,
+          "full_rank": 1,
+          "new_rank": null
+        }
+      ],
+      "point": [
+        1.5,
+        1.5
+      ],
+      "before": [
+        0
+      ],
+      "after": [
+        0
+      ]
+    },
+    {
+      "name": "transparent-foreground",
+      "items": [
+        {
+          "index": 0,
+          "key": "part-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 0.25,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              2
+            ],
+            [
+              3,
+              0,
+              2
+            ],
+            [
+              3,
+              3,
+              2
+            ],
+            [
+              0,
+              3,
+              2
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 0,
+          "new_rank": 0
+        },
+        {
+          "index": 1,
+          "key": "part-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": true,
+          "full_rank": 1,
+          "new_rank": null
+        },
+        {
+          "index": 2,
+          "key": "part-2",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 2,
+          "new_rank": 2
+        }
+      ],
+      "point": [
+        1.5,
+        1.5
+      ],
+      "before": [
+        0,
+        1
+      ],
+      "after": [
+        0,
+        2
+      ]
+    },
+    {
+      "name": "disconnected-gap",
+      "items": [
+        {
+          "index": 0,
+          "key": "part-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 0,
+          "new_rank": 0
+        },
+        {
+          "index": 1,
+          "key": "part-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ],
+            [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ]
+          ],
+          "removed": true,
+          "full_rank": 1,
+          "new_rank": null
+        }
+      ],
+      "point": [
+        1.5,
+        1.5
+      ],
+      "before": [
+        0
+      ],
+      "after": [
+        0
+      ]
+    },
+    {
+      "name": "depth-crossing-near",
+      "items": [
+        {
+          "index": 0,
+          "key": "part-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            -0.7071067811865476,
+            0,
+            0.7071067811865476
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 0,
+          "new_rank": 0
+        },
+        {
+          "index": 1,
+          "key": "part-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 1,
+          "new_rank": 1
+        }
+      ],
+      "point": [
+        2.5,
+        1.5
+      ],
+      "before": [
+        0
+      ],
+      "after": [
+        0
+      ]
+    },
+    {
+      "name": "depth-crossing-far",
+      "items": [
+        {
+          "index": 0,
+          "key": "part-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            -0.7071067811865476,
+            0,
+            0.7071067811865476
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 0,
+          "new_rank": 0
+        },
+        {
+          "index": 1,
+          "key": "part-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false,
+          "full_rank": 1,
+          "new_rank": 1
+        }
+      ],
+      "point": [
+        0.5,
+        1.5
+      ],
+      "before": [
+        1
+      ],
+      "after": [
+        1
+      ]
+    }
+  ],
+  "fragment_cases": [
+    {
+      "name": "one-source-two-paint-ranks-crossing",
+      "items": [
+        {
+          "index": 0,
+          "key": "fragment-source-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            -0.7071067811865476,
+            0,
+            0.7071067811865476
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        },
+        {
+          "index": 1,
+          "key": "fragment-source-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        }
+      ],
+      "fragments": [
+        {
+          "stage": "culled",
+          "rank": 0,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 0,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "normal": [
+            -0.7071067811865475,
+            0,
+            0.7071067811865475
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 2,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "point": [
+            0.5,
+            1.5
+          ],
+          "physical": [
+            1
+          ],
+          "painted": [
+            1
+          ]
+        },
+        {
+          "point": [
+            2.5,
+            1.5
+          ],
+          "physical": [
+            0
+          ],
+          "painted": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "concave-material-actual-fragments",
+      "items": [
+        {
+          "index": 0,
+          "key": "fragment-source-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        },
+        {
+          "index": 1,
+          "key": "fragment-source-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ],
+            [
+              2,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                2,
+                3
+              ],
+              [
+                2,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        }
+      ],
+      "fragments": [
+        {
+          "stage": "culled",
+          "rank": 0,
+          "piece": 0,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 1,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              2,
+              1,
+              1
+            ],
+            [
+              1,
+              1,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 2,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "point": [
+            0.5,
+            1.5
+          ],
+          "physical": [
+            1
+          ],
+          "painted": [
+            1
+          ]
+        },
+        {
+          "point": [
+            1.5,
+            1.5
+          ],
+          "physical": [
+            0
+          ],
+          "painted": [
+            0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "disconnected-original-polygons",
+      "items": [
+        {
+          "index": 0,
+          "key": "fragment-source-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        },
+        {
+          "index": 1,
+          "key": "fragment-source-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ],
+            [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        }
+      ],
+      "fragments": [
+        {
+          "stage": "culled",
+          "rank": 0,
+          "piece": 0,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 1,
+          "source": 1,
+          "polygon": 1,
+          "world_vertices": [
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "point": [
+            1.5,
+            1.5
+          ],
+          "physical": [
+            0
+          ],
+          "painted": [
+            0
+          ]
+        },
+        {
+          "point": [
+            2.5,
+            1.5
+          ],
+          "physical": [
+            1
+          ],
+          "painted": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "compound-transparent-pieces-unioned-once",
+      "items": [
+        {
+          "index": 0,
+          "key": "fragment-source-0",
+          "role": "fixture",
+          "material": "glass",
+          "opacity": 0.25,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              2
+            ],
+            [
+              3,
+              0,
+              2
+            ],
+            [
+              3,
+              3,
+              2
+            ],
+            [
+              0,
+              3,
+              2
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        },
+        {
+          "index": 1,
+          "key": "fragment-source-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        }
+      ],
+      "fragments": [
+        {
+          "stage": "culled",
+          "rank": 0,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 0,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              2
+            ],
+            [
+              1.5,
+              0,
+              2
+            ],
+            [
+              1.5,
+              3,
+              2
+            ],
+            [
+              0,
+              3,
+              2
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 1,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              1.5,
+              0,
+              2
+            ],
+            [
+              3,
+              0,
+              2
+            ],
+            [
+              3,
+              3,
+              2
+            ],
+            [
+              1.5,
+              3,
+              2
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "point": [
+            1.5,
+            1.5
+          ],
+          "physical": [
+            0,
+            1
+          ],
+          "painted": [
+            0,
+            1
+          ],
+          "paint_layers": 2,
+          "front_opacity": 0.25
+        }
+      ]
+    },
+    {
+      "name": "invented-gap-paint-is-detected",
+      "items": [
+        {
+          "index": 0,
+          "key": "fragment-source-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        },
+        {
+          "index": 1,
+          "key": "fragment-source-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ],
+            [
+              2,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              2,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ],
+            [
+              [
+                2,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                2,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        }
+      ],
+      "fragments": [
+        {
+          "stage": "culled",
+          "rank": 0,
+          "piece": 0,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              0
+            ],
+            [
+              3,
+              3,
+              0
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "point": [
+            1.5,
+            1.5
+          ],
+          "physical": [
+            0
+          ],
+          "painted": [
+            1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "explicit-stage-orders-never-use-original-rank",
+      "items": [
+        {
+          "index": 0,
+          "key": "fragment-source-0",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            -0.7071067811865476,
+            0,
+            0.7071067811865476
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        },
+        {
+          "index": 1,
+          "key": "fragment-source-1",
+          "role": "fixture",
+          "material": "steel",
+          "opacity": 1,
+          "normal": [
+            0,
+            0,
+            1
+          ],
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "pixel_polygons": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                3,
+                0
+              ],
+              [
+                3,
+                3
+              ],
+              [
+                0,
+                3
+              ]
+            ]
+          ],
+          "removed": false
+        }
+      ],
+      "fragments": [
+        {
+          "stage": "full",
+          "rank": 0,
+          "piece": 0,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "normal": [
+            -0.7071067811865475,
+            0,
+            0.7071067811865475
+          ]
+        },
+        {
+          "stage": "full",
+          "rank": 1,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "stable",
+          "rank": 0,
+          "piece": 0,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "normal": [
+            -0.7071067811865475,
+            0,
+            0.7071067811865475
+          ]
+        },
+        {
+          "stage": "stable",
+          "rank": 1,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 0,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              3,
+              0,
+              1
+            ],
+            [
+              3,
+              3,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 1,
+          "piece": 0,
+          "source": 0,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              3,
+              0,
+              3
+            ],
+            [
+              3,
+              3,
+              3
+            ],
+            [
+              0,
+              3,
+              0
+            ]
+          ],
+          "normal": [
+            -0.7071067811865475,
+            0,
+            0.7071067811865475
+          ]
+        },
+        {
+          "stage": "culled",
+          "rank": 2,
+          "piece": 0,
+          "source": 1,
+          "polygon": 0,
+          "world_vertices": [
+            [
+              0,
+              0,
+              1
+            ],
+            [
+              1,
+              0,
+              1
+            ],
+            [
+              1,
+              3,
+              1
+            ],
+            [
+              0,
+              3,
+              1
+            ]
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "probes": [
+        {
+          "point": [
+            0.5,
+            1.5
+          ],
+          "physical": [
+            1
+          ],
+          "painted": [
+            1
+          ]
+        },
+        {
+          "point": [
+            2.5,
+            1.5
+          ],
+          "physical": [
+            0
+          ],
+          "painted": [
+            0
+          ],
+          "stages": {
+            "full": [
+              1
+            ],
+            "stable": [
+              1
+            ],
+            "culled": [
+              0
+            ]
+          }
+        }
+      ],
+      "expected_unique_triangles": 8
+    }
+  ]
+}

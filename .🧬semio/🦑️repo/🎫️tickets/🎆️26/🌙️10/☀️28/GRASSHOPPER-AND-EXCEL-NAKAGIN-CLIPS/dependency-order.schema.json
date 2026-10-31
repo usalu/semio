@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "array",
+  "minItems": 9,
+  "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "id",
+      "edges",
+      "depths",
+      "expected"
+    ],
+    "properties": {
+      "id": {
+        "type": "string",
+        "minLength": 1
+      },
+      "edges": {
+        "type": "array",
+        "items": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      },
+      "depths": {
+        "type": "array",
+        "items": {
+          "type": "number"
+        }
+      },
+      "expected": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  }
+}

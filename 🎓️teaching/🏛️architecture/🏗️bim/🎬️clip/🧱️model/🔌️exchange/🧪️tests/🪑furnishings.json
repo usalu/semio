@@ -24,14 +24,13 @@
   },
   "source_cases": [
     {
-      "tag": "FIX-LAUNDRY",
-      "parts": 14,
-      "volume": 0.470136
+      "tag": "FIX-GUEST-WARDROBE"
     },
     {
-      "tag": "FIX-GUEST-BASIN",
-      "parts": 5,
-      "volume": 0.045536
+      "tag": "FIX-SON-STORAGE"
+    },
+    {
+      "tag": "FIX-PANTRY-STORAGE"
     }
   ],
   "synthetic": {
@@ -121,5 +120,6 @@
       "MAT-RC": 0.5
     }
   },
-  "source": "buildingSMART IFC4.3 IfcFurnishingElement EXPRESS has no added explicit attributes; dimensions below are synthetic or inferred source fixtures"
+  "source": "buildingSMART IFC4.3 IfcFurnishingElement EXPRESS has no added explicit attributes; dimensions below are synthetic or inferred source fixtures",
+  "cavity_fixture": "🧪️tests/🗄️storage.json"
 }

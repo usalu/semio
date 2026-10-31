@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "pairs",
+    "tolerance",
+    "positive_control",
+    "structural_owners",
+    "bearing_owners",
+    "wearing_owners"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "pairs": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 2,
+        "maxItems": 2,
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "positive_control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stock",
+        "cutter",
+        "expected",
+        "tolerance"
+      ],
+      "properties": {
+        "stock": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "cutter": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "expected": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "tolerance": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "structural_owners": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "uniqueItems": true,
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      }
+    },
+    "bearing_owners": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      },
+      "minProperties": 4,
+      "maxProperties": 4
+    },
+    "wearing_owners": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "uniqueItems": true,
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

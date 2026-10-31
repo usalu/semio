@@ -1,0 +1,259 @@
+{
+  "tag": "GL-TERRACE",
+  "panel_stations": [
+    0,
+    0.501,
+    1
+  ],
+  "panel_operations": [
+    "fixed",
+    "sliding"
+  ],
+  "panel_glazing_stations": [
+    [
+      0,
+      0.5161676646706587,
+      1
+    ],
+    [
+      0,
+      0.48577154308617226,
+      1
+    ]
+  ],
+  "glazing_bar_width": 0.018,
+  "expected": {
+    "primary_panels": 2,
+    "glass_parts": 4,
+    "sash_parts": 8,
+    "glazing_bar_parts": 2,
+    "mullion_parts": 0
+  },
+  "invalid": [
+    {
+      "panel_operations": [
+        "fixed"
+      ]
+    },
+    {
+      "panel_stations": [
+        0,
+        0.7,
+        0.5,
+        1
+      ]
+    },
+    {
+      "panel_glazing_stations": [
+        [
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "panel_glazing_stations": [
+        [
+          0,
+          1
+        ],
+        [
+          0,
+          0.8,
+          0.7,
+          1
+        ]
+      ]
+    }
+  ],
+  "basis": "inferred",
+  "source": "SAB2024-p219 modern author reconstruction; primary ratio0.501 and secondary0.2586/0.7434 with3px uncertainty, not original shop dimensions",
+  "ribbon_occurrences": [
+    {
+      "tag": "RW-S",
+      "opening": "OP-S",
+      "host": "W-S",
+      "start": 1.2,
+      "end": 17.8,
+      "stations": [
+        0,
+        0.04133199,
+        0.11328648,
+        0.1835676,
+        0.22456493,
+        0.30237617,
+        0.3768407,
+        0.45130522,
+        0.52493307,
+        0.59939759,
+        0.67302544,
+        0.74832664,
+        0.82195448,
+        0.89725569,
+        0.97172021,
+        1
+      ],
+      "source_page": 52,
+      "basis": "inferred",
+      "removed_jamb_traces": []
+    },
+    {
+      "tag": "RW-N",
+      "opening": "OP-N",
+      "host": "W-N",
+      "start": 1.2,
+      "end": 14.23333333333333,
+      "stations": [
+        0,
+        0.1016624077749361,
+        0.19437339928388755,
+        0.2806905420460359,
+        0.2924126214322252,
+        0.3861892565217392,
+        0.4799659043478262,
+        0.5737425394373403,
+        0.6675191872634273,
+        0.7623614659335041,
+        0.8572037573401536,
+        0.9499147488491052,
+        1
+      ],
+      "source_page": 50,
+      "basis": "inferred",
+      "removed_jamb_traces": [
+        0.0068201163682864475
+      ]
+    },
+    {
+      "tag": "RW-N-2",
+      "opening": "OP-N-2",
+      "host": "W-N",
+      "start": 14.538888888888888,
+      "end": 17.8,
+      "stations": [
+        0,
+        0.11073251379897814,
+        0.49829642405451474,
+        0.8730834528790461,
+        1
+      ],
+      "source_page": 50,
+      "basis": "inferred",
+      "removed_jamb_traces": []
+    },
+    {
+      "tag": "RW-W",
+      "opening": "OP-W",
+      "host": "W-W",
+      "start": 1,
+      "end": 5.8,
+      "stations": [
+        0,
+        0.18344907,
+        0.45543981,
+        0.71585648,
+        1
+      ],
+      "source_page": 48,
+      "basis": "inferred",
+      "removed_jamb_traces": []
+    },
+    {
+      "tag": "RW-W-UPPER",
+      "opening": "OP-W-UPPER",
+      "host": "W-W",
+      "start": 8.7,
+      "end": 10.338888888888889,
+      "stations": [
+        0,
+        1
+      ],
+      "source_page": 48,
+      "basis": "inferred",
+      "removed_jamb_traces": []
+    },
+    {
+      "tag": "RW-W-UPPER-2",
+      "opening": "OP-W-UPPER-2",
+      "host": "W-W",
+      "start": 10.644444444444444,
+      "end": 15.033333333333331,
+      "stations": [
+        0,
+        0.1582278387848102,
+        0.4303797428860761,
+        0.7025316469873419,
+        0.8607594913417725,
+        1
+      ],
+      "source_page": 48,
+      "basis": "inferred",
+      "removed_jamb_traces": []
+    },
+    {
+      "tag": "RW-W-UPPER-3",
+      "opening": "OP-W-UPPER-3",
+      "host": "W-W",
+      "start": 15.366666666666667,
+      "end": 19.5,
+      "stations": [
+        0,
+        0.30241935129032255,
+        0.6081989238709676,
+        0.9106182767741935,
+        1
+      ],
+      "source_page": 48,
+      "basis": "inferred",
+      "removed_jamb_traces": []
+    },
+    {
+      "tag": "RW-E",
+      "opening": "OP-E",
+      "host": "W-E",
+      "start": 1,
+      "end": 5.631,
+      "stations": [
+        0,
+        0.10017035,
+        0.36409223,
+        0.62201588,
+        0.89193599,
+        1
+      ],
+      "source_page": 53,
+      "basis": "inferred",
+      "removed_jamb_traces": []
+    }
+  ],
+  "open_kiosk": {
+    "removed_filling": "RW-KIOSK-E",
+    "retained_opening": "OP-KIOSK-E"
+  },
+  "opaque_piers": [
+    {
+      "host": "W-N",
+      "world_axis": "x",
+      "interval": [
+        14.083333333333332,
+        14.38888888888889
+      ]
+    },
+    {
+      "host": "W-W",
+      "world_axis": "y",
+      "interval": [
+        15.333333333333332,
+        15.666666666666668
+      ]
+    },
+    {
+      "host": "W-W",
+      "world_axis": "y",
+      "interval": [
+        10.63888888888889,
+        10.944444444444445
+      ]
+    }
+  ]
+}

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "payloads",
+    "producer_names",
+    "analysis_producer",
+    "backend_producer",
+    "maximum_models"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "payloads": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "counter"
+        ],
+        "properties": {
+          "counter": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "producer_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "analysis_producer": {
+      "type": "string"
+    },
+    "backend_producer": {
+      "type": "string"
+    },
+    "maximum_models": {
+      "const": 2
+    }
+  }
+}

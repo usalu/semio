@@ -1,0 +1,93 @@
+{
+  "title": "Original Parents Suite Acceptance",
+  "type": "object",
+  "required": [
+    "name",
+    "uncertainty_m",
+    "cabinet",
+    "mosaic_zone",
+    "passage_x",
+    "tile_module_m",
+    "open_edge_y",
+    "public_clear_width",
+    "body_diameter",
+    "body_height",
+    "doors",
+    "fixtures",
+    "required_bodies",
+    "fixed_supports",
+    "public_route",
+    "private_route",
+    "son_route",
+    "bath_approach",
+    "chaise_approach",
+    "fixed_axes",
+    "drain_xy"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "uncertainty_m": {
+      "type": "number"
+    },
+    "cabinet": {
+      "type": "array"
+    },
+    "mosaic_zone": {
+      "type": "array"
+    },
+    "passage_x": {
+      "type": "array"
+    },
+    "tile_module_m": {
+      "type": "number"
+    },
+    "open_edge_y": {
+      "type": "number"
+    },
+    "public_clear_width": {
+      "type": "number"
+    },
+    "body_diameter": {
+      "type": "number"
+    },
+    "body_height": {
+      "type": "number"
+    },
+    "doors": {
+      "type": "array"
+    },
+    "fixtures": {
+      "type": "array"
+    },
+    "required_bodies": {
+      "type": "array"
+    },
+    "fixed_supports": {
+      "type": "array"
+    },
+    "public_route": {
+      "type": "array"
+    },
+    "private_route": {
+      "type": "array"
+    },
+    "son_route": {
+      "type": "array"
+    },
+    "bath_approach": {
+      "type": "array"
+    },
+    "chaise_approach": {
+      "type": "array"
+    },
+    "fixed_axes": {
+      "type": "object"
+    },
+    "drain_xy": {
+      "type": "array"
+    }
+  },
+  "additionalProperties": false
+}

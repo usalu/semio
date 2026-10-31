@@ -1,0 +1,11 @@
+# Material and Type Graph Cleanup R92
+
+The old global filling test equated every material association to a scalar nominal field. This incorrectly rejected true counter composites, typed glazing/frames and mosaic/metal bodies. A strict new schema-backed portable contract follows actual part materials, authored assemblies, nonvoid layers and inherited typed construction; arbitrary labels/evidence strings do not grant material ownership. An unused forged scalar on a fully explicit composite is independently rejected (RED before the tightening).
+
+Global source RED identified exactly2real material stales: W-G-ROOM-13/16 still related to15cm layer set despite their actual8cm construction. Corrected toLS-PARTITION-08. Adjacent exact type-graph RED then found the same2occurrences incorrectly related toTY-PARTITION-15; now each has its actual uniqueTY-PARTITION-08 owner. No physical wall, proper constituent association or native material set was suppressed.
+
+All3 source/schema/negative/wholegraph contracts GREEN1.281s stablee0b38c0a; earlier2material contracts GREEN2.656s. The original filling material consumer now delegates to the same strict ownership rule; its focused execution is next. Both materials and full-hall modules were explicitly added to the standard registry using a stable anchor after discovering earlier end-of-tuple replacement had missed registration while peers expanded the list. Final fresh native discovery must prove their method IDs present.
+
+Post-guard complete graph gate found eight pantry front wall occurrences with authored TY-PARTITION-08 but no IfcRelDefinesByType membership. Their geometry/material/type values were already correct. Added exactly those8members to existing canonical REL-TYPE-PARTITION-08; no extra relation or new identity. Existing global type-inheritance contract supplied the failing regression before this source correction.
+
+Current source-note audit removed the obsolete blanket15mm finish slices and assumed1.2m paving claims. The bilingual finish note now describes actual separate qualified wearing/bedding products and preserves the explicit analytical1.5kN/m² allowance without double-counting physical covering mass. The cellar note now distinguishes finished−2.40m from lime-slab top−2.42m and footing bottom−2.72m, matching current source elevations and geometry. No geometry changed.

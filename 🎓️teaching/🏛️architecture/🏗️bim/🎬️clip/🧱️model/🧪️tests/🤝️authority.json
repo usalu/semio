@@ -1,0 +1,211 @@
+{
+  "window_cases": [
+    {"id":"duplicate_same_owner","primary":["a","a"],"windows":[[0,1],[0,1]],"bodies":{"a":[0,1]},"expected_volume":1},
+    {"id":"partial_same_owner","primary":["a","a"],"windows":[[0,0.75],[0.25,1]],"bodies":{"a":[0,1]},"expected_volume":1},
+    {"id":"overlap_outside_actual_host","primary":["a","b"],"windows":[[0,0.6],[0.4,1]],"bodies":{"a":[0,0.4],"b":[0.6,1]},"host_intervals":[[0,0.4],[0.6,1]],"expected_volume":0.8},
+    {"id":"declared_masonry_displaces_finish","primary":["a","b"],"windows":[[0,1],[0.4,0.6]],"bodies":{"a":[0,1],"b":[0.4,0.6]},"classes":{"b":"IfcChimney"},"declarations":{"a":["b"]},"expected_volume":1},
+    {"id":"true_two_nm_cross_owner_overlap","primary":["a","b"],"windows":[[0,0.500000002],[0.5,1]],"bodies":{"a":[0,0.500000002],"b":[0.5,1]},"error":"overlap"},
+    {"id":"true_two_nm_unoccupied_gap","primary":["a","b"],"windows":[[0,0.5],[0.5,1]],"bodies":{"a":[0,0.499999998],"b":[0.5,1]},"error":"gap"}
+  ],
+  "cases": [
+    {
+      "id": "host_declared_structural_guard",
+      "owner_class": "IfcRailing",
+      "declared": true,
+      "inherit": true,
+      "owner_x": [100.5, 101.5],
+      "expected_removed": 0.5
+    },
+    {
+      "id": "declared_structural_guard",
+      "owner_class": "IfcRailing",
+      "declared": true,
+      "owner_x": [
+        100.5,
+        101.5
+      ],
+      "expected_removed": 0.5
+    },
+    {
+      "id": "undeclared_guard_has_no_authority",
+      "owner_class": "IfcRailing",
+      "declared": false,
+      "owner_x": [
+        100.5,
+        101.5
+      ],
+      "expected_removed": 0
+    },
+    {
+      "id": "declared_guard_exact_two_nm",
+      "owner_class": "IfcRailing",
+      "declared": true,
+      "owner_x": [
+        100.999999998,
+        101.5
+      ],
+      "expected_removed": 2e-09
+    },
+    {
+      "id": "nonstructural_declared_owner_rejected",
+      "owner_class": "IfcFurnishingElement",
+      "declared": true,
+      "owner_x": [
+        100.5,
+        101.5
+      ],
+      "error": true
+    }
+  ],
+  "source": {
+    "walls": {
+      "W-PARENTS-BOUDOIR": [
+        "GUARD-RM-2"
+      ],
+      "W-G-CHAUFFEUR-RETURN": [
+        "GUARD-RM-1",
+        "RM-1"
+      ],
+      "W-G-GARAGE": [
+        "GUARD-RM-1",
+        "RF-1A",
+        "BEAM-RAMP-FIRST-STRINGER"
+      ]
+    },
+    "fillings": {
+      "GL-RAMP-GARDEN": [
+        "GUARD-RM-2"
+      ]
+    },
+    "coverings": {
+      "FIN-FIRST-THRESHOLDS": [
+        "GUARD-RM-1"
+      ],
+      "FIN-HALL": [
+        "BEAM-RAMP-FIRST-STRINGER"
+      ],
+      "FIN-ROOF-GRAVEL": [
+        "GUARD-RM-2"
+      ],
+      "FIN-SOFFIT-RF-2A": [
+        "GUARD-RM-2"
+      ],
+      "FIN-SOFFIT-RF-2B": [
+        "GUARD-RM-2"
+      ]
+    }
+  },
+  "reserve_cases": [
+    {
+      "id": "native_3d_partition",
+      "mode": "partition",
+      "offset": 0,
+      "depth": 0.03,
+      "progress_phases": ["finish-reservations", "finish-owner"],
+      "cancelled_before_work": true
+    },
+    {
+      "id": "two_nm_gap_below_old_volume_epsilon",
+      "mode": "gap",
+      "offset": 2e-09,
+      "depth": 0.03
+    },
+    {
+      "id": "two_nm_cross_owner_overlap",
+      "mode": "overlap",
+      "offset": 2e-09,
+      "depth": 0.03
+    },
+    {
+      "id": "inclined_native_guard_partition",
+      "mode": "inclined",
+      "offset": 0,
+      "depth": 0.03
+    }
+  ],
+  "slab_boundary_cases": [
+    {
+      "id": "authored_binary64_flue_boundary",
+      "outline": [
+        [
+          0,
+          5
+        ],
+        [
+          2,
+          5
+        ],
+        [
+          2,
+          6
+        ],
+        [
+          0,
+          6
+        ]
+      ],
+      "holes": [
+        [
+          [
+            0.8150000000000001,
+            5.245
+          ],
+          [
+            0.965,
+            5.245
+          ],
+          [
+            0.965,
+            5.3950000000000005
+          ],
+          [
+            0.8150000000000001,
+            5.3950000000000005
+          ]
+        ]
+      ]
+    },
+    {
+      "id": "two_nm_retained_material",
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          1,
+          1
+        ],
+        [
+          0,
+          1
+        ]
+      ],
+      "holes": [
+        [
+          [
+            0,
+            0
+          ],
+          [
+            0.999999998,
+            0
+          ],
+          [
+            0.999999998,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      ],
+      "retained_width": 2e-09
+    }
+  ]
+}

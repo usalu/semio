@@ -69,7 +69,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
          "Verschiedene Fachrichtungen ordnen die benötigte Information zum rekonstruierten ursprünglichen Haus von 1930–1931."],
         ["architecture",
          "The architecture model retains rooms, entrance construction, the roof stair enclosure, its canopy and the open metal ramp guard.",
-         "Das Architekturmodell enthält Räume, Eingangskonstruktion, Dachtreppenhaus, dessen Vordach und das offene Metallgeländer an der Rampe."],
+         "Das Architekturmodell zeigt Räume, Eingang, Dachtreppenhaus und Vordach sowie das offene Metallgeländer der Rampe."],
         ["rooms",
          "Rooms are objects too: the modelled spaces, each with its area, belong to their storey.",
          "Auch Räume sind Objekte: die modellierten Räume mit ihrer Fläche gehören zu ihrem Geschoss."],
@@ -77,11 +77,11 @@ class Beat4_PartialModels(_visuals.ClipScene):
          "The facade build-up distinguishes render, two brick leaves, an air cavity and plaster.",
          "Der Fassadenaufbau unterscheidet Außenputz, zwei Ziegelschalen, einen Lufthohlraum und Innenputz."],
         ["structure",
-         "The structure model holds pilotis, slabs, ramp, stairs and auxiliary lintels, hollow U supports and shelves; several members are shared with architecture.",
-         "Das Tragwerksmodell enthält Pilotis, Decken, Rampe, Treppen sowie Zusatzstürze, hohle U-Träger und Konsolen; mehrere Glieder teilt es mit der Architektur."],
+         "Pilotis, slabs, ramp, stairs, auxiliary lintels, hollow U supports and shelves form the structure; architecture shares several members.",
+         "Pilotis, Decken, Rampe, Treppen, Zusatzstürze, hohle U-Träger und Konsolen bilden das Tragwerk; manche teilt es mit der Architektur."],
         ["services",
-         "Original services include drains inside supports 2 and 4, heating and water risers, soil stack and flue. Detailed envelopes and incomplete routes retain their uncertainties.",
-         "Ursprüngliche Haustechnik umfasst Fallrohre in Stützen 2 und 4, Heizungs- und Wasserstränge, Abwasserstrang und Rauchzug. Detailhüllen und unvollständige Leitungswege behalten ihre Unsicherheiten."],
+         "Original drains in supports 2 and 4, heating and water risers, soil stack and flue retain uncertain envelopes and incomplete routes.",
+         "Originale Stützenfallrohre 2/4, Heiz- und Wasserstränge, Abwasser und Rauchzug behalten unsichere Hüllen und lückenhafte Wege."],
         ["schema",
          "Three models share one schema. Counts refer to IFC products; a stair assembly can contain many physical parts.",
          "Drei Modelle teilen ein Schema. Die Zahlen zählen IFC-Objekte; eine Treppenbaugruppe kann viele physische Teile enthalten."],
@@ -282,8 +282,10 @@ class Beat4_PartialModels(_visuals.ClipScene):
         return drawing
 
     def _tags(self, name, ifc_class):
-        """🏷️ Tags of one class inside a discipline model."""
-        return [tag for tag in self.info[name]["element_tags"] if _model.element(tag)["class"] == ifc_class]
+        """🎯 Preserve discipline order while reading native classes from this chapter source snapshot."""
+        classes={item["tag"]:item["class"] for group in ("elements","spaces") for item in self.model[group]}
+        return [tag for tag in self.info[name]["element_tags"] if classes[tag]==ifc_class]
+
 
     def _keys(self, drawing, tag):
         """🔑 Drawn parts that stand for a model tag; a window is drawn through its opening."""
@@ -305,7 +307,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
     def _class_row(self, tracker, ifc_class, text, y, color, x=0.95):
         """📊 Count, IFC class and meaning of one kind of object."""
         return VGroup(self._counter(tracker, (x, y, 0), size=19.0),
-                      self.text(ifc_class, (x + 0.15, y, 0), size=17.0, color=color, anchor="l"),
+                      self.text(ifc_class, (x + 0.15, y, 0), size=17.0, color=color, anchor="l", width=2.05),
                       self.label(text[0], text[1], (x + 2.32, y, 0), size=16.2, color=INK, width=3.4, anchor="l"))
 
     def _discipline_rows(self, name):
@@ -319,30 +321,46 @@ class Beat4_PartialModels(_visuals.ClipScene):
             "IfcOpeningElement":("native host openings","native Wirtsöffnungen"),
             "IfcWindow":("frames and actual glass","Rahmen und tatsächliches Glas"),"IfcDoor":("door assemblies","Türbaugruppen"),
             "IfcCurtainWall":("entrance surround","Eingangsumfassung"),"IfcStair":("stair assemblies","Treppenbaugruppen"),
-            "IfcBuildingElementProxy":("native assemblies and roof details","Baugruppen und Dachdetails"),
+            "IfcBuildingElementProxy":("assemblies and unknown apparatus","Baugruppen und unbek. Apparate"),
             "IfcFurnishingElement":("fitted/movable furnishings","feste/bewegliche Ausstattung"),"IfcRailing":("guardrail assemblies","Geländerbaugruppen"),
             "IfcSpace":("rooms and outdoor regions","Räume und Außenbereiche"),
+            "IfcSanitaryTerminal":("sanitary fixtures","Sanitärobjekte"),
+            "IfcLightFixture":("light fixtures","Leuchten"),
             "IfcBoiler":("inferred cellar boiler envelope","abgeleitete Kellerkesselhülle"),"IfcSpaceHeater":("radiator under the salon window","Heizkörper unter dem Salonfenster"),
             "IfcWasteTerminal":("roof rainwater receivers","Regenwasserabläufe am Dach"),"IfcPipeSegment":("rainwater/heating/water/soil","Regen-, Heiz-, Wasser-/Abwasser"),
-            "IfcCovering":("separate casing and insulation","getrennte Ummantelung und Dämmung"),"IfcChimney":("chimney assemblies","Schornsteinbaugruppen")}
+            "IfcCovering":("finishes, cladding and insulation","Beläge, Bekleidungen und Dämmung"),"IfcChimney":("chimney assemblies","Schornsteinbaugruppen")}
         counts=self.info[name]["counts_by_class"]
         unknown=set(counts)-set(labels)
         if unknown:
             raise ValueError(f"Missing bilingual class meanings: {sorted(unknown)}")
         return [(kind,text) for kind,text in labels.items() if kind in counts]
 
-    def _rows(self, name, rows, y0, drawing, pitch=0.31, seconds=0.55):
-        """🧮 Class rows of one model with their counting animation; every class of the model is listed so the rows add up to its total."""
+    def _rows(self, name, rows, y0, drawing, pitch=0.31, seconds=0.55, page_size=6):
+        """📑 Show every native class in readable bounded pages while preserving per-class count steps."""
         counts = self.info[name]["counts_by_class"]
         if set(counts) != {ifc_class for ifc_class, _ in rows}:
             raise ValueError(f"Rows must list every class of the {name} model")
+        if page_size<1:
+            raise ValueError("A class-table page needs positive capacity")
         group, steps = VGroup(), []
         for index, (ifc_class, text) in enumerate(rows):
+            animations=[]
+            if index%page_size==0:
+                if index:
+                    animations.append(FadeOut(group,run_time=.15))
+                group=VGroup()
+                if len(rows)>page_size:
+                    first,last,total=[self.number(value,0) for value in (index+1,min(index+page_size,len(rows)),len(rows))]
+                    marker=self.label(f"Classes {first}–{last} of {total}",f"Klassen {first}–{last} von {total}",(0.95,y0-page_size*pitch-.08,0),size=14.0,color=MUTED,anchor="l",width=5.7)
+                    group.add(marker)
+                    animations.append(FadeIn(marker,run_time=.15))
             tracker = ValueTracker(0)
-            row = self._class_row(tracker, ifc_class, text, y0 - index * pitch, COLORS[name])
+            row = self._class_row(tracker, ifc_class, text, y0-index%page_size*pitch, COLORS[name])
             group.add(row)
-            steps.append((seconds, [FadeIn(row, run_time=0.15), tracker.animate(rate_func=LINEAR).set_value(counts[ifc_class]), self._lit(drawing, self._tags(name, ifc_class))]))
+            animations.extend([FadeIn(row,run_time=.15),tracker.animate(rate_func=LINEAR).set_value(counts[ifc_class]),self._lit(drawing,self._tags(name,ifc_class))])
+            steps.append((seconds,animations))
         return group, steps
+
 
     def _sum_line(self, name, classes, y, x=0.95):
         """➕ The class counts added up to the object total of the model."""
@@ -511,7 +529,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
                    (0.7, [FadeIn(total)]),
                    (0.9, [FadeOut(rows), FadeOut(total), FadeIn(piloti_note), FadeIn(chip), FadeIn(ring), FadeIn(leader), Indicate(struct.parts[_model.role("column_example")], color=DATA, scale_factor=1.6)]),
                    (1.0, [FadeIn(omitted), self._flash(ghost_parts, WARN)]))
-        self.stage = VGroup(struct, self.ghost, card, rows, total, piloti_note, chip, ring, leader, omitted)
+        self.stage = VGroup(struct, self.ghost, card, piloti_note, chip, ring, leader, omitted)
 
     def _services(self):
         """🔧 Beat 5: the services model over the architecture ghost: boiler, radiator, drains, downpipes and the hanging garden they drain."""
@@ -544,14 +562,20 @@ class Beat4_PartialModels(_visuals.ClipScene):
 
         water = self.live(drops, key=lambda: round(flow.get_value(), 2))
         self.add(water)
-        self._show("services", (0.8, [self._leave(self.ghost), FadeIn(services), FadeIn(card)]), *steps, (0.5, [FadeIn(total)]),
+        self._show("services", (0.8, [self._leave(self.ghost), FadeIn(services), FadeIn(card)]), *steps, (0.5, [FadeOut(rows), FadeIn(total)]),
                    (1.1, [FadeIn(hatched), FadeIn(row), FadeIn(names), area.animate(rate_func=LINEAR).set_value(garden["area"]), flow.animate(rate_func=LINEAR).set_value(1.0)]),
                    (0.5, [FadeIn(scenario)]))
         self.remove(water)
-        self.stage = VGroup(services, self.ghost, card, rows, total, hatched, row, names, scenario)
+        self.stage = VGroup(services, self.ghost, card, total, hatched, row, names, scenario)
+
+    def _matrix_pages(self, classes, page_size=12):
+        """📊 Keep fixed readable matrix cell spacing as the native class catalogue grows."""
+        if page_size<1:
+            raise ValueError("A class matrix page needs positive capacity")
+        return [{"classes":classes[start:start+page_size],"first":start+1,"last":min(start+page_size,len(classes)),"total":len(classes),"top":.6,"pitch":.232} for start in range(0,len(classes),page_size)]
 
     def _schema(self):
-        """🧬 Beat 6: one matrix of IFC classes against the three models, every class in every column, zero where a model has none."""
+        """🧬 Compare every native class across all three models in readable matrix pages."""
         language = self.language()
         counts = {name: self.info[name]["counts_by_class"] for name in DISCIPLINES}
         classes = sorted(set().union(*counts.values()))
@@ -559,35 +583,43 @@ class Beat4_PartialModels(_visuals.ClipScene):
         bar = VGroup(frame_box(13.0, 0.4, GOOD).move_to((0, 2.82, 0)),
                      self.text(f"{schema} · " + self.tr("one schema: every class exists for every model, every object has a GlobalId (IfcRoot)",
                                                        "ein Schema: jede Klasse gibt es für jedes Modell, jedes Objekt hat eine GlobalId (IfcRoot)"), (0, 2.82, 0), size=17.0, color=GOOD, width=12.6))
-        top, pitch, xs = 0.6, min(0.232,3.2/max(1,len(classes)-1)), (-2.7, 1.1, 4.8)
-        labels = VGroup(*[self.text(name, (-6.6, top - index * pitch, 0), size=15.5, color=GOOD if sum(name in counts[m] for m in DISCIPLINES) > 1 else INK, anchor="l")
-                          for index, name in enumerate(classes)])
-        parts, columns = VGroup(), []
-        for x, name in zip(xs, DISCIPLINES):
-            tone, info, drive = COLORS[name], self.info[name], ValueTracker(0)
-            drawing = self._arch((x - 0.9, 1.7, 0), 0.055) if name == "architecture" else VGroup(self._arch((x - 0.9, 1.7, 0), 0.055).set_opacity(0.14),
-                                                                                                  self.villa_axon((x - 0.9, 1.7, 0), 0.055, disciplines=(name,), ground=False))
-            head = VGroup(self.text(info["name"][language], (x + 0.2, 1.95, 0), size=17.0, color=tone, anchor="l", width=(1.65, 1.55, 1.7)[DISCIPLINES.index(name)]),
-                          self.text(self._revision(info["revision"]), (x + 0.2, 1.62, 0), size=16.2, color=INK, anchor="l"))
-            cells = VGroup()
-            for index, ifc_class in enumerate(classes):
-                value, peak = counts[name].get(ifc_class, 0), max(counts[m].get(ifc_class, 0) for m in DISCIPLINES)
-                y = top - index * pitch
-                if value:
-                    cells.add(Rectangle(width=1.5, height=0.2, stroke_width=0, fill_color=tone, fill_opacity=0.14 + 0.5 * value / peak).move_to((x, y, 0)),
-                              self.live_label(lambda drive=drive, value=value, star=(ifc_class == "IfcColumn"): self.number(round(drive.get_value() * value), 0) + (STAR if star else ""), (x, y, 0), size=15.5, color=INK))
-                else:
-                    cells.add(self.text("·", (x, y, 0), size=15.5, color=MUTED))
-            total = len(info["element_guids"])
-            foot = VGroup(segments([((x - 0.75, top - len(classes) * pitch + 0.1, 0), (x + 0.75, top - len(classes) * pitch + 0.1, 0))], tone, 1.2),
-                          self.live_label(lambda drive=drive, total=total: "= " + self.number(round(drive.get_value() * total), 0) + " " + self.tr("objects", "Objekte"),
-                                          (x, top - len(classes) * pitch - 0.05, 0), size=16.2, color=tone))
-            parts.add(drawing, head, cells, foot)
-            columns.append((0.4, [FadeIn(VGroup(drawing, head, cells, foot))]))
-            columns.append((0.9, [drive.animate(rate_func=LINEAR).set_value(1.0), Indicate(drawing, color=DATA, scale_factor=1.0)]))
-        key_note = self._legend((-6.6, 2.15, 0), piloti=True, width=2.0)
-        self._show("schema", (0.7, [self._leave(), FadeIn(bar), FadeIn(labels), FadeIn(key_note)]), *columns)
-        self.stage = VGroup(bar, labels, parts, key_note)
+        xs,headers,drawings = (-2.7,1.1,4.8),VGroup(),[]
+        for x,name in zip(xs,DISCIPLINES):
+            info,tone = self.info[name],COLORS[name]
+            drawing = self._arch((x-.9,1.7,0),.055) if name=="architecture" else VGroup(self._arch((x-.9,1.7,0),.055).set_opacity(.14),self.villa_axon((x-.9,1.7,0),.055,disciplines=(name,),ground=False))
+            head = VGroup(self.text(info["name"][language],(x+.2,1.95,0),size=17.,color=tone,anchor="l",width=(1.65,1.55,1.7)[DISCIPLINES.index(name)]),self.text(self._revision(info["revision"]),(x+.2,1.62,0),size=16.2,color=INK,anchor="l"))
+            headers.add(drawing,head)
+            drawings.append((drawing,head))
+        steps,active = [],VGroup()
+        for page_index,page in enumerate(self._matrix_pages(classes)):
+            top,pitch,subset = page["top"],page["pitch"],page["classes"]
+            labels = VGroup(*[self.text(kind,(-6.6,top-index*pitch,0),size=15.5,color=GOOD if sum(kind in counts[m] for m in DISCIPLINES)>1 else INK,anchor="l") for index,kind in enumerate(subset)])
+            first,last,total=[self.number(page[key],0) for key in ("first","last","total")]
+            marker=self.label(f"Classes {first}–{last} of {total}",f"Klassen {first}–{last} von {total}",(-6.6,-2.72,0),size=14.,color=MUTED,anchor="l",width=12.6)
+            transition=([FadeOut(active,run_time=.2)] if page_index else [])+[FadeIn(labels),FadeIn(marker)]
+            active=VGroup(labels,marker)
+            steps.append((.3,transition))
+            for column,(x,name) in enumerate(zip(xs,DISCIPLINES)):
+                tone,drive=COLORS[name],ValueTracker(0)
+                cells=VGroup()
+                for index,kind in enumerate(subset):
+                    value,peak=counts[name].get(kind,0),max(counts[m].get(kind,0) for m in DISCIPLINES)
+                    y=top-index*pitch
+                    if value:
+                        cells.add(Rectangle(width=1.5,height=.2,stroke_width=0,fill_color=tone,fill_opacity=.14+.5*value/peak).move_to((x,y,0)),self.live_label(lambda drive=drive,value=value,star=(kind=="IfcColumn"):self.number(round(drive.get_value()*value),0)+(STAR if star else ""),(x,y,0),size=15.5,color=INK))
+                    else:
+                        cells.add(self.text("·",(x,y,0),size=15.5,color=MUTED))
+                subtotal=sum(counts[name].get(kind,0) for kind in subset)
+                total=len(self.info[name]["element_guids"])
+                foot=VGroup(segments([((x-.75,top-len(subset)*pitch+.1,0),(x+.75,top-len(subset)*pitch+.1,0))],tone,1.2),self.live_label(lambda drive=drive,subtotal=subtotal,total=total:self.number(round(drive.get_value()*subtotal),0)+" / "+self.number(total,0),(x,top-len(subset)*pitch-.05,0),size=16.2,color=tone),self.label("on page / model total","auf Seite / Modellsumme",(x,top-len(subset)*pitch-.28,0),size=12.5,color=MUTED,width=3.0))
+                active.add(cells,foot)
+                drawing,head=drawings[column]
+                incoming=VGroup(drawing,head,cells,foot) if page_index==0 else VGroup(cells,foot)
+                steps.extend([(.4,[FadeIn(incoming)]),(.9,[drive.animate(rate_func=LINEAR).set_value(1.),Indicate(drawing,color=DATA,scale_factor=1.)])])
+        key_note=self._legend((-6.6,2.15,0),piloti=True,width=2.)
+        self._show("schema",(.7,[self._leave(),FadeIn(bar),FadeIn(key_note)]),*steps)
+        self.stage=VGroup(bar,headers,active,key_note)
+
 
     def _federation(self):
         """🧱 Beat 7: explode 1 → 0 lowers the three layers onto one origin and grid; the leaders to the shared slab GlobalId meet in one point."""
@@ -991,6 +1023,7 @@ class Beat4_PartialModels(_visuals.ClipScene):
         source=set().union(*(set(info["element_tags"]) for info in self.info.values()))
         kept={member["source_tag"] for member in self.analysis["members"]}
         omitted=source-kept
+        finishes={tag for tag in omitted if _model.is_architectural_covering(registry[tag])}
         categories=[
             (("other column bodies","weitere Stützenkörper"),{"IfcColumn"},("outside this first-floor member selection","außerhalb dieser Geschossauswahl")),
             (("other slabs and covers","weitere Platten und Deckel"),{"IfcSlab"},("not this analysis surface","nicht diese Analysefläche")),
@@ -1002,11 +1035,11 @@ class Beat4_PartialModels(_visuals.ClipScene):
             (("space objects","Raumobjekte"),{"IfcSpace"},("room semantics omitted","Raumsemantik entfällt")),
             (("furnishings","Ausstattung"),{"IfcFurnishingElement"},("fitted and movable objects omitted","feste und bewegliche Objekte entfallen")),
             (("foundations","Gründungen"),{"IfcFooting"},("replaced by declared support assumptions","durch erklärte Lagerannahmen ersetzt")),
-            (("cellar and other assemblies","Keller- und weitere Baugruppen"),{"IfcBuildingElementProxy"},("includes the shared mechanical jib once","gemeinsamer Hebeausleger genau einmal")),
-            (("service products","Haustechnikprodukte"),{"IfcBoiler","IfcSpaceHeater","IfcWasteTerminal","IfcPipeSegment","IfcCovering","IfcChimney"},("equipment, hollow pipes, casing and flue omitted","Geräte, hohle Rohre, Hüllen und Rauchzug entfallen"))]
-        rows=[]
+            (("assemblies and unknown apparatus","Baugruppen und unbekannte Apparate"),{"IfcBuildingElementProxy"},("shared jib and unidentified apparatus counted once","gemeinsamer Ausleger und unbekannte Apparate genau einmal")),
+            (("service products","Haustechnikprodukte"),{"IfcBoiler","IfcSpaceHeater","IfcWasteTerminal","IfcPipeSegment","IfcCovering","IfcChimney","IfcSanitaryTerminal","IfcLightFixture"},("equipment, sanitary fixtures, lights, hollow pipes, casing and flue omitted","Geräte, Sanitärobjekte, Leuchten, hohle Rohre, Hüllen und Rauchzug entfallen"))]
+        rows=[(self.tr("architectural finishes","architektonische Bekleidungen")+f" ×{self.number(len(finishes),0)}",sorted(finishes),self.tr("finish bodies omitted; loads remain explicit","Belagskörper entfallen; Lasten bleiben explizit"),True,False)] if finishes else []
         for title,classes,note in categories:
-            tags=sorted(tag for tag in omitted if registry[tag]["class"] in classes)
+            tags=sorted(tag for tag in omitted-finishes if registry[tag]["class"] in classes)
             if tags:
                 rows.append((self.tr(*title)+f" ×{self.number(len(tags),0)}",tags,self.tr(*note),True,False))
         actual=[tag for _,tags,_,_,_ in rows for tag in tags]
@@ -1169,4 +1202,4 @@ class Beat4_PartialModels(_visuals.ClipScene):
                    (1.2, [FadeIn(footer), records.animate(rate_func=LINEAR).set_value(len(analysis["losses"])), kinds.animate(rate_func=LINEAR).set_value(len(analysis["loss_groups"])),
                           FadeIn(squares), fill.animate(rate_func=LINEAR).set_value(1.0)]))
         self.stage = VGroup(struct, result, heads, c2, one_way, chips, footer, squares)
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          

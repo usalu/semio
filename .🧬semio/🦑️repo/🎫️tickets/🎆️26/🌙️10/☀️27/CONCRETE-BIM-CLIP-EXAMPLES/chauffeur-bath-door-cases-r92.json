@@ -1,0 +1,761 @@
+{
+  "source": "73c2387edf57219d97df4d1010a32e2b08034e90c9a96a20b5b4fecf9d419dde",
+  "producer": "d89d1e3050e11459cde51ab645a63e0d64e236c8b588713d8c5306dfe4b70026",
+  "source_stable": true,
+  "producer_stable": true,
+  "bath": {
+    "tag": "BATH-CHAUFFEUR",
+    "column": "30",
+    "original_registered_axis": [
+      14.58529411764706,
+      19.383823529411764
+    ],
+    "current_axis": [
+      14.58529411764706,
+      19.453676470588235
+    ],
+    "collision_volume_m3": 0.00021762299050879686,
+    "colliding_parts": [
+      {
+        "index": 42,
+        "role": "bath_shell",
+        "z": [
+          0.14,
+          0.6
+        ],
+        "volume_m3": 0.000006663464754036083,
+        "quadrature_error": 8.819313404372295e-13
+      },
+      {
+        "index": 43,
+        "role": "bath_shell",
+        "z": [
+          0.14,
+          0.6
+        ],
+        "volume_m3": 0.00011936451965257201,
+        "quadrature_error": 8.05176425166361e-13
+      },
+      {
+        "index": 44,
+        "role": "bath_shell",
+        "z": [
+          0.14,
+          0.6
+        ],
+        "volume_m3": 0.0000872892181033053,
+        "quadrature_error": 6.096926192356941e-13
+      },
+      {
+        "index": 45,
+        "role": "bath_shell",
+        "z": [
+          0.14,
+          0.6
+        ],
+        "volume_m3": 0.0000043057879988834725,
+        "quadrature_error": 1.7830455975616715e-13
+      }
+    ],
+    "native_proof": {
+      "status": "PASS",
+      "meaning": "The SAME strict interior point is occupied by both independent actual native decoded solids; collision is not an oracleConvexHullartifact.",
+      "source": "73c2387edf57219d97df4d1010a32e2b08034e90c9a96a20b5b4fecf9d419dde",
+      "witness": [
+        14.334651696849836,
+        20.197938098493385,
+        0.55
+      ],
+      "rows": [
+        {
+          "tag": "BATH-CHAUFFEUR",
+          "native_attributes": 9,
+          "native_parts": 55,
+          "occupied_overlap_witness": true
+        },
+        {
+          "tag": "30",
+          "native_attributes": 9,
+          "native_parts": 2,
+          "occupied_overlap_witness": true
+        }
+      ],
+      "engine": {
+        "version": "0.0.78",
+        "integrity": "sha512-LGKMNYFVNyz9vVERN0iz+zvPQJqT7MEGBxslzcuuhwDDOA116LmJLKkg8sZ5SEvQJSc5NRVMWgpRNkDmuoQoJg=="
+      }
+    },
+    "candidate": {
+      "direction": "southeast",
+      "zero_overlap_threshold_m": 0.07256144173443317,
+      "candidate_shift": [
+        0.05201579428427681,
+        -0.05201579428427681
+      ],
+      "candidate_axis": [
+        14.637309911931336,
+        19.40166067630396
+      ],
+      "candidate_overlap_m3": 0,
+      "basis": "Inferred geometry-clearance candidate; radial uncertainty must be checked against original registeredcentre, not current already-shiftedaxis.",
+      "radial_offset_from_original_m": 0.05498915042331437,
+      "neighbors": [
+        {
+          "tag": "BIDET-CHAUFFEUR",
+          "distance_m": 0.10298420571572287,
+          "projection_overlap_area_m2": 0
+        },
+        {
+          "tag": "FIX-CHAUFFEUR-BASIN",
+          "distance_m": 0.3516680795916961,
+          "projection_overlap_area_m2": 0
+        },
+        {
+          "tag": "W-CHAUFFEUR-BATH",
+          "distance_m": 0.0711334413431004,
+          "projection_overlap_area_m2": 0
+        },
+        {
+          "tag": "W-G-E",
+          "distance_m": 0.8965136174804299,
+          "projection_overlap_area_m2": 0
+        },
+        {
+          "tag": "W-G-N",
+          "distance_m": 1.0711334413431004,
+          "projection_overlap_area_m2": 0
+        },
+        {
+          "tag": "D-CHAUFFEUR-BATH-.60-body",
+          "distance_m": 0.0588590454419911,
+          "projection_overlap_area_m2": 0
+        }
+      ]
+    },
+    "acceptance": "Source-qualified inferred station candidate only, not a recovered historical displacement. Preserve actual column, bath construction, neighbor separation and explicit operated-door/fullbody approach tests. Material gaps are not body-route widths."
+  },
+  "doors": [
+    {
+      "tag": "D-SERVANT-1",
+      "rough_width": 0.9299999999999997,
+      "rough_height": 2.14,
+      "clear_width": 0.8499999999999996,
+      "clear_height": 2.1,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.1,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-SERVANT-1",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-SERVANT-2",
+      "rough_width": 0.9299999999999997,
+      "rough_height": 2.14,
+      "clear_width": 0.8499999999999996,
+      "clear_height": 2.1,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.1,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-SERVANT-2",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-LAUNDRY",
+      "rough_width": 0.9299999999999997,
+      "rough_height": 2.14,
+      "clear_width": 0.8499999999999996,
+      "clear_height": 2.1,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.1,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-LAUNDRY",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-CHAUFFEUR",
+      "rough_width": 0.930000000000002,
+      "rough_height": 2.14,
+      "clear_width": 0.850000000000002,
+      "clear_height": 2.1,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.1,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-CHAUFFEUR",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-ENTRY",
+      "rough_width": 1.8599999999999994,
+      "rough_height": 2.675,
+      "clear_width": 1.6499999999999995,
+      "clear_height": 2.65,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.65,
+      "operation": "swing",
+      "frame_width": 0.025,
+      "frame_depth": 0.04,
+      "type": "TY-ENTRY-TIMBER",
+      "opening": "OP-D-ENTRY",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-KITCHEN",
+      "rough_width": 0.8999999999999999,
+      "rough_height": 2.1400000000000006,
+      "clear_width": 0.8199999999999998,
+      "clear_height": 2.1000000000000005,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.2700000000000005,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-KITCHEN",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-PANTRY",
+      "rough_width": 0.8800000000000001,
+      "rough_height": 2.1400000000000006,
+      "clear_width": 0.8,
+      "clear_height": 2.1000000000000005,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.2700000000000005,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-PANTRY",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-SALON",
+      "rough_width": 1.38,
+      "rough_height": 2.54,
+      "clear_width": 1.33,
+      "clear_height": 2.5149999999999997,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.685,
+      "operation": "swing",
+      "frame_width": 0.025,
+      "frame_depth": 0.04,
+      "type": "TY-SALON-GLAZED",
+      "opening": "OP-D-SALON",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-GUEST",
+      "rough_width": 0.9299999999999997,
+      "rough_height": 2.1400000000000006,
+      "clear_width": 0.8499999999999996,
+      "clear_height": 2.1000000000000005,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.2700000000000005,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-GUEST",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-SON",
+      "rough_width": 0.9399999999999977,
+      "rough_height": 2.1400000000000006,
+      "clear_width": 0.8599999999999977,
+      "clear_height": 2.1000000000000005,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.2700000000000005,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-SON",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-PARENTS",
+      "rough_width": 0.9399999999999977,
+      "rough_height": 2.1400000000000006,
+      "clear_width": 0.8599999999999977,
+      "clear_height": 2.1000000000000005,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.2700000000000005,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-PARENTS",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-BOUDOIR",
+      "rough_width": 0.9299999999999997,
+      "rough_height": 2.34,
+      "clear_width": 0.8499999999999996,
+      "clear_height": 2.3,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.47,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-BOUDOIR",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-CHAUFFEUR-BEDROOM",
+      "rough_width": 0.9299999999999997,
+      "rough_height": 2.14,
+      "clear_width": 0.8499999999999996,
+      "clear_height": 2.1,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.1,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-CHAUFFEUR-BEDROOM",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-CHAUFFEUR-BATH",
+      "rough_width": 0.9299999999999997,
+      "rough_height": 2.14,
+      "clear_width": 0.8499999999999996,
+      "clear_height": 2.1,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.1,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-CHAUFFEUR-BATH",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-SERVICE",
+      "rough_width": 0.9500000000000006,
+      "rough_height": 2.055,
+      "clear_width": 0.9000000000000006,
+      "clear_height": 2.0300000000000002,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.0300000000000002,
+      "operation": "swing",
+      "frame_width": 0.025,
+      "frame_depth": 0.04,
+      "type": "TY-SERVICE-TIMBER",
+      "opening": "OP-D-SERVICE",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": true
+    },
+    {
+      "tag": "D-KITCHEN-PATIO",
+      "rough_width": 0.88,
+      "rough_height": 2.4000000000000004,
+      "clear_width": 0.7999999999999999,
+      "clear_height": 2.3600000000000003,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.53,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.08,
+      "type": "TY-KITCHEN-PATIO-GLAZED",
+      "opening": "OP-D-KITCHEN-PATIO",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-SHARED-BATH-GUEST",
+      "rough_width": 0.8799999999999997,
+      "rough_height": 2.1799999999999997,
+      "clear_width": 0.7999999999999996,
+      "clear_height": 2.1399999999999997,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.31,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-SHARED-BATH-GUEST",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-SHARED-BATH-SON",
+      "rough_width": 0.8799999999999999,
+      "rough_height": 2.1799999999999997,
+      "clear_width": 0.7999999999999998,
+      "clear_height": 2.1399999999999997,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.31,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-SHARED-BATH-SON",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "GARAGE-SLIDING",
+      "rough_width": 3.950000000000001,
+      "rough_height": 2.91,
+      "clear_width": 3.950000000000001,
+      "clear_height": 2.91,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.91,
+      "operation": "sliding",
+      "frame_width": 0,
+      "frame_depth": 0.065,
+      "type": "TY-GARAGE-DOOR",
+      "opening": "OP-GARAGE",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-STAIR-ROOF",
+      "rough_width": 1.172239499262112,
+      "rough_height": 2.4299999999999997,
+      "clear_width": 0.6483436995572673,
+      "clear_height": 2.103900000000001,
+      "clear_sill_z": 6.6,
+      "clear_head_z": 8.7039,
+      "operation": "mixed",
+      "frame_width": 0.025,
+      "frame_depth": 0.04,
+      "type": "TY-STAIR-ROOF-DOOR",
+      "opening": "OP-STAIR-ROOF",
+      "fails_generic_width_070": true,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-WC-FIRST-WEST",
+      "rough_width": 0.7200000000000006,
+      "rough_height": 2.1799999999999997,
+      "clear_width": 0.6400000000000006,
+      "clear_height": 2.1399999999999997,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.31,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-WC-FIRST-WEST",
+      "fails_generic_width_070": true,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-WC-FIRST-EAST",
+      "rough_width": 0.7799999999999994,
+      "rough_height": 2.1799999999999997,
+      "clear_width": 0.6999999999999993,
+      "clear_height": 2.1399999999999997,
+      "clear_sill_z": 3.17,
+      "clear_head_z": 5.31,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-WC-FIRST-EAST",
+      "fails_generic_width_070": false,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-WC-GROUND-SERVICE",
+      "rough_width": 0.7399999999999993,
+      "rough_height": 2.14,
+      "clear_width": 0.6599999999999993,
+      "clear_height": 2.1,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.1,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-WC-GROUND-SERVICE",
+      "fails_generic_width_070": true,
+      "fails_generic_height_210": false
+    },
+    {
+      "tag": "D-WC-CHAUFFEUR",
+      "rough_width": 0.7599999999999998,
+      "rough_height": 2.14,
+      "clear_width": 0.6799999999999997,
+      "clear_height": 2.1,
+      "clear_sill_z": 0,
+      "clear_head_z": 2.1,
+      "operation": "swing",
+      "frame_width": 0.04,
+      "frame_depth": 0.065,
+      "type": "TY-WOOD-DOOR",
+      "opening": "OP-D-WC-CHAUFFEUR",
+      "fails_generic_width_070": true,
+      "fails_generic_height_210": false
+    }
+  ],
+  "door_policy": {
+    "service": {
+      "width": 0.7,
+      "height": 1.8
+    },
+    "narrow_portals": {
+      "tags": [
+        "D-STAIR-ROOF",
+        "D-WC-FIRST-WEST",
+        "D-WC-GROUND-SERVICE",
+        "D-WC-CHAUFFEUR"
+      ],
+      "width": 0.6,
+      "height": 2.1
+    },
+    "interface_tolerance_m": 1e-9,
+    "scope": "Nominal teaching bodies within retained authored historical portal; no enlargement and no legal/accessibility compliance claim."
+  },
+  "red_control": {
+    "source": "73c2387edf57219d97df4d1010a32e2b08034e90c9a96a20b5b4fecf9d419dde",
+    "scope": "Actual four colliding source shell components plus clipped constant shaft; not a copy of the full tracked model",
+    "bath_parts": [
+      {
+        "source_part_index": 42,
+        "part": {
+          "material": "MAT-ENAMELLED-METAL",
+          "outline": [
+            [
+              14.419705882352941,
+              20.18151311901802
+            ],
+            [
+              14.383686656157701,
+              20.15744584151998
+            ],
+            [
+              14.38855674758977,
+              20.151099014797648
+            ],
+            [
+              14.423705882352943,
+              20.174584915787747
+            ]
+          ],
+          "role": "bath_shell",
+          "top_outline": [
+            [
+              14.389705882352942,
+              20.253474643245088
+            ],
+            [
+              14.347160970417178,
+              20.225047041937454
+            ],
+            [
+              14.352031061849248,
+              20.218700215215122
+            ],
+            [
+              14.393705882352942,
+              20.246546440014814
+            ]
+          ],
+          "z0": 0.14,
+          "z1": 0.6
+        }
+      },
+      {
+        "source_part_index": 43,
+        "part": {
+          "material": "MAT-ENAMELLED-METAL",
+          "outline": [
+            [
+              14.383686656157701,
+              20.15744584151998
+            ],
+            [
+              14.35111698952469,
+              20.12888301047531
+            ],
+            [
+              14.356773843774183,
+              20.123226156225815
+            ],
+            [
+              14.38855674758977,
+              20.151099014797648
+            ]
+          ],
+          "role": "bath_shell",
+          "top_outline": [
+            [
+              14.347160970417178,
+              20.225047041937454
+            ],
+            [
+              14.3086905826535,
+              20.191309417346503
+            ],
+            [
+              14.314347436902992,
+              20.18565256309701
+            ],
+            [
+              14.352031061849248,
+              20.218700215215122
+            ]
+          ],
+          "z0": 0.14,
+          "z1": 0.6
+        }
+      },
+      {
+        "source_part_index": 44,
+        "part": {
+          "material": "MAT-ENAMELLED-METAL",
+          "outline": [
+            [
+              14.35111698952469,
+              20.12888301047531
+            ],
+            [
+              14.322554158480022,
+              20.0963133438423
+            ],
+            [
+              14.32890098520235,
+              20.09144325241023
+            ],
+            [
+              14.356773843774183,
+              20.123226156225815
+            ]
+          ],
+          "role": "bath_shell",
+          "top_outline": [
+            [
+              14.3086905826535,
+              20.191309417346503
+            ],
+            [
+              14.274952958062547,
+              20.15283902958282
+            ],
+            [
+              14.281299784784878,
+              20.147968938150754
+            ],
+            [
+              14.314347436902992,
+              20.18565256309701
+            ]
+          ],
+          "z0": 0.14,
+          "z1": 0.6
+        }
+      },
+      {
+        "source_part_index": 45,
+        "part": {
+          "material": "MAT-ENAMELLED-METAL",
+          "outline": [
+            [
+              14.322554158480022,
+              20.0963133438423
+            ],
+            [
+              14.298486880981978,
+              20.060294117647057
+            ],
+            [
+              14.305415084212253,
+              20.05629411764706
+            ],
+            [
+              14.32890098520235,
+              20.09144325241023
+            ]
+          ],
+          "role": "bath_shell",
+          "top_outline": [
+            [
+              14.274952958062547,
+              20.15283902958282
+            ],
+            [
+              14.246525356754912,
+              20.110294117647058
+            ],
+            [
+              14.253453559985187,
+              20.106294117647057
+            ],
+            [
+              14.281299784784878,
+              20.147968938150754
+            ]
+          ],
+          "z0": 0.14,
+          "z1": 0.6
+        }
+      }
+    ],
+    "column_part": {
+      "outline": [
+        [
+          14.14,
+          20.14
+        ],
+        [
+          14.36,
+          20.14
+        ],
+        [
+          14.36,
+          20.36
+        ],
+        [
+          14.14,
+          20.36
+        ]
+      ],
+      "z0": 0.14,
+      "z1": 0.6,
+      "material": "MAT-RC"
+    },
+    "expected_intersection_volume_m3": 0.00021762299050879686,
+    "strict_native_shared_point": [
+      14.334651696849836,
+      20.197938098493385,
+      0.55
+    ],
+    "repaired_translation": [
+      0.05201579428427681,
+      -0.05201579428427681
+    ],
+    "repaired_expectation": "No occupied volume; oldpointemptybath/stilloccupiedcolumn;55nativecomponentsretained"
+  }
+}

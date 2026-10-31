@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Modular Typology Assignment Cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "languages", "grid", "group", "moduleTypes", "facadeSides", "variants", "parts", "gradingCriteria", "scheme", "example", "submission", "content", "tableRows", "footerLogos", "cover", "ownership"],
+  "properties": {
+    "version": { "const": 1 },
+    "languages": { "const": ["en", "de"] },
+    "grid": {
+      "type": "object", "additionalProperties": false, "required": ["widthMm", "depthMm"],
+      "properties": { "widthMm": { "type": "integer", "minimum": 1 }, "depthMm": { "type": "integer", "minimum": 1 } }
+    },
+    "group": {
+      "type": "object", "additionalProperties": false, "required": ["members", "perMember"],
+      "properties": {
+        "members": { "type": "integer", "minimum": 1 },
+        "perMember": { "$ref": "#/$defs/positions" }
+      }
+    },
+    "moduleTypes": { "$ref": "#/$defs/positions" },
+    "facadeSides": { "$ref": "#/$defs/positions" },
+    "variants": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "integer", "minimum": 0 } },
+    "parts": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "subject", "format"],
+        "properties": { "id": { "type": "string", "pattern": "^[A-Z]$" }, "subject": { "enum": ["dMA", "NGS"] }, "format": { "enum": ["group", "individual"] } }
+      }
+    },
+    "gradingCriteria": { "type": "integer", "minimum": 1 },
+    "scheme": {
+      "type": "object", "additionalProperties": false, "required": ["position", "kind", "format"],
+      "properties": { "position": { "$ref": "#/$defs/codes" }, "kind": { "$ref": "#/$defs/codes" }, "format": { "$ref": "#/$defs/codes" } }
+    },
+    "example": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["name", "position", "kind", "windows", "formats", "image"],
+        "properties": {
+          "name": { "type": "string", "pattern": "^[A-Z]-[A-Z]-[1-9][0-9]*-[A-Z]+$" },
+          "position": { "enum": ["middle", "corner"] },
+          "kind": { "enum": ["wall", "balcony"] },
+          "windows": { "type": "integer", "minimum": 1 },
+          "formats": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["portrait", "landscape"] } },
+          "image": { "type": "string", "pattern": "^schema-[a-z0-9-]+\\.png$" }
+        }
+      }
+    },
+    "submission": {
+      "type": "object", "additionalProperties": false, "required": ["date", "time", "group", "archive", "imageModels", "rows", "example"],
+      "properties": {
+        "date": { "type": "string", "pattern":"^\\d{4}-\\d{2}-\\d{2}$" },
+        "time": { "type": "string", "pattern": "^\\d{2}:\\d{2}$" },
+        "group": { "type": "string", "pattern": "^GruppeXX_[A-Za-z]+\\.pdf$" },
+        "archive": { "type": "string", "pattern": "^Nachname_[A-Za-z]+\\.zip$" },
+        "imageModels": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "type": "string", "pattern": "^(_[A-Z][a-z]+)?$" } },
+        "rows": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["format", "count", "files"],
+            "properties": {
+              "format": { "enum": ["PNG", "GH", "GLB", "CSV"] },
+              "count": { "type": "integer", "minimum": 1 },
+              "files": { "type": "array", "minItems": 1, "maxItems": 2, "items": { "type": "string", "pattern": "^Nachname_[A-Za-z0-9_]+\\.(png|gh|glb|csv)$" } }
+            }
+          }
+        },
+        "example": { "type": "string" }
+      }
+    },
+    "content": {
+      "type": "object", "additionalProperties": false, "required": ["en", "de"],
+      "properties": { "en": { "$ref": "#/$defs/content" }, "de": { "$ref": "#/$defs/content" } }
+    },
+    "tableRows": { "type": "array", "minItems": 1, "items": { "type": "integer", "minimum": 2 } },
+    "footerLogos": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+    "cover": {
+      "type": "object", "additionalProperties": false, "required": ["image", "logo", "facts", "partners"],
+      "properties": {
+        "image": { "type": "string", "pattern": "^[a-z0-9-]+\\.(jpg|png)$" },
+        "logo": { "type": "string", "pattern": "^[a-z0-9-]+\\.png$" },
+        "facts": { "type": "integer", "minimum": 1 },
+        "partners": { "type": "array", "minItems": 1, "uniqueItems": true, "items": { "enum": ["dMA", "NGS"] } }
+      }
+    },
+    "ownership": {
+      "type": "object", "additionalProperties": false, "required": ["sourceRoot", "files", "assignment", "topic", "documents"],
+      "properties": {
+        "sourceRoot": { "const": "🎓️teaching/🏛️architecture/🏙️typology/📝️assignment" },
+        "files": { "type": "array", "uniqueItems": true, "items": { "type": "string" } },
+        "assignment": { "const": "typology" },
+        "topic": { "const": "parametric" },
+        "documents": {
+          "type": "object", "additionalProperties": false, "required": ["en", "de"],
+          "properties": { "en": { "$ref": "#/$defs/document" }, "de": { "$ref": "#/$defs/document" } }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positions": {
+      "type": "object", "additionalProperties": false, "required": ["corner", "middle"],
+      "properties": { "corner": { "type": "integer", "minimum": 1 }, "middle": { "type": "integer", "minimum": 1 } }
+    },
+    "codes": { "type": "object", "minProperties": 2, "propertyNames": { "pattern": "^[A-Z]$" }, "additionalProperties": { "type": "string" } },
+    "content": {
+      "type": "object", "additionalProperties": false, "required": ["title", "date", "headings", "tables"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "date": { "type": "string", "minLength": 1 },
+        "headings": { "type": "array", "minItems": 1, "items": { "type": "string" } },
+        "tables": { "type": "array", "minItems": 1, "items": { "type": "string" } }
+      }
+    },
+    "document": {
+      "type": "object", "additionalProperties": false, "required": ["namespace", "id", "producer", "file"],
+      "properties": {
+        "namespace": { "const": "course" },
+        "id": { "type": "string", "pattern": "^architecture-parametric-typology-(en|de)$" },
+        "producer": { "type": "string", "pattern": "^@teaching/architecture-course:build-typology-(en|de)$" },
+        "file": { "type": "string", "pattern": "^architecture-parametric-typology-(en|de)\\.pdf$" }
+      }
+    }
+  }
+}

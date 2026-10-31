@@ -1,0 +1,33 @@
+{
+  "owned_attributes": [
+    "api",
+    "model",
+    "snapshot",
+    "items",
+    "geometry",
+    "analysis",
+    "results",
+    "_sample_cache",
+    "_cell_cache"
+  ],
+  "scenarios": [
+    {
+      "id": "normal",
+      "mutate": false,
+      "setup_error": false,
+      "expected_errors": 0
+    },
+    {
+      "id": "mutated",
+      "mutate": true,
+      "setup_error": false,
+      "expected_errors": 1
+    },
+    {
+      "id": "partial-setup",
+      "mutate": false,
+      "setup_error": true,
+      "expected_errors": 1
+    }
+  ]
+}

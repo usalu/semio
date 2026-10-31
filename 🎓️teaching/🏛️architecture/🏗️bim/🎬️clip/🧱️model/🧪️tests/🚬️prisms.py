@@ -82,3 +82,52 @@ def test_production_roof_profile_and_above_cut_wire_keep_material_scope():
             assert math.isclose(actual.area,area,abs_tol=1e-10),(case['tag'],level,actual.area)
         for mode in ['axis','footprint','plan','section','elevation','3d','body']:
             assert api.represent(case['tag'],mode,m)['primitives']
+
+def test_original_low_square_terminals_have_empty_round_bores_and_real_roof_bearing():
+    """🪔 Compare source-registered low chimneys, circular bores and roof ownership with GEOS and SciPy."""
+    m=api.load_model();case=json.loads(Path(__file__).with_name('🚬️low.json').read_text())
+    assert {c['tag'] for c in case['terminals']} <= {e['tag'] for e in m['elements']}
+    slab=api._slab_geometry(m,api.element('SL-R',m))
+    bearing=unary_union([Polygon(p['outline']) for p in slab['parts'] if math.isclose(p['z1'],case['structural_top'],abs_tol=1e-10)])
+    for witness in case['terminals']:
+        obj=api.element(witness['tag'],m);g=api.service_geometry(witness['tag'],m);x,y=witness['axis'];half=case['outside']/2
+        bore=Point(x,y).buffer(case['bore']/2,quad_segs=case['segments']//4)
+        expected=box(x-half,y-half,x+half,y+half).difference(bore)
+        occupied=unary_union([Polygon(p['outline']) for p in g['parts']])
+        assert occupied.symmetric_difference(expected).area<case['tolerance']
+        assert occupied.intersection(bore).area<case['tolerance']
+        assert obj['class']=='IfcChimney' and obj['storey']=='roof'
+        assert obj['historical_evidence']['state']==case['historical_state']
+        assert obj['historical_evidence']['status']=='inferred_reconstruction'
+        assert np.allclose(obj['geometry']['axis'],witness['axis'],rtol=0,atol=1e-10)
+        assert math.isclose(min(p['z0'] for p in g['parts']),case['structural_top'],abs_tol=1e-10)
+        assert math.isclose(max(p['z1'] for p in g['parts']),case['top'],abs_tol=1e-10)
+        independent=sum(ConvexHull(np.asarray(api.part_vertices(p))).volume for p in g['parts'])
+        assert math.isclose(independent,expected.area*(case['top']-case['structural_top']),abs_tol=case['tolerance'])
+        assert math.isclose(api.quantities(obj['tag'],m)['volume'],independent,abs_tol=case['tolerance'])
+        assert expected.difference(bearing).area<case['tolerance']
+        assert sum(expected.intersection(Polygon(p['outline'])).area for p in slab['finish_parts'])<case['tolerance']
+        opening=api.element(witness['opening'],m)
+        assert opening['geometry']['slab']=='SL-R'
+        assert Polygon(opening['geometry']['outline']).symmetric_difference(bore).area<case['tolerance']
+        space=next(s for s in m['spaces'] if s['tag']==witness['space'])
+        assert Polygon(api._expand(m,space['outline'])).covers(Point(x,y))
+        shared=[p for p in slab['shared_finish_parts'] if p.get('owner')==obj['tag']]
+        displaced=sum(Polygon(p['outline']).area*(p['z1']-p['z0']) for p in shared)
+        assert math.isclose(displaced,expected.area*(6.6-case['structural_top']),abs_tol=case['tolerance'])
+        for kind in ('axis','footprint','plan','section','elevation','3d','body'):
+            assert api.represent(obj['tag'],kind,m)['primitives']
+
+def test_all_native_chimneys_export_exact_nine_attribute_schema():
+    """🧾 Compare every chimney product record with the official native nine-attribute entity contract."""
+    import csv
+    m=api.load_model();case=json.loads(Path(__file__).with_name('🚬️low.json').read_text())
+    for obj in (e for e in m['elements'] if e['class']=='IfcChimney'):
+        assert m['classes']['IfcChimney']['adds']==['PredefinedType']
+        for language in ('en','de'):
+            exported=api.step_excerpt(obj['tag'],m,language=language)
+            line=exported['lines'][exported['entities']['element']]
+            attrs=next(csv.reader([line.split('(',1)[1].rsplit(')',1)[0]],quotechar="'",doublequote=True))
+            assert len(attrs)==case['native_attributes'],(obj['tag'],language,len(attrs),line)
+            assert attrs[-1]=='.'+obj['predefined_type']+'.'
+

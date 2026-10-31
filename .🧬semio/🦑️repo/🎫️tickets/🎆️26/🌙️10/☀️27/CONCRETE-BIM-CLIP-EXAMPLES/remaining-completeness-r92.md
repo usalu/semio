@@ -1,0 +1,11 @@
+# Remaining Source Completeness: R92 Follow-up
+
+Two actual source-attested construction proxies remain in the inspected whole model: FIX-SERVANT-RADIATOR-1 and FIX-SERVANT-RADIATOR-2. Each is one solid rectangle atZ.15.. .70, with no authored sections, feet or brackets. CMN2021§6 explicitly attests one radiator in each service bedroom. The four new detailed radiator products cover other rooms, not these two. Their presence is secured; exact original section count, mounting detail and dimensions are not. The existing sectioned-radiator family can supply a clearly inferred physical construction, preserving actual source placement and testing real support/circulation. Exact outlines and acceptance are in remaining-completeness-r92.json. A native box export passing does not close this construction gap.
+
+Basement plant still requires qualified incompleteness: two Idéal units are attested by31May1932, but their separate positions/functions and installation within1930–31 are not secured by the inspected accessible original/TRACE1965 material. See two-boilers-evidence-r92.md. Current BL-1 is a generic equipment envelope, not a recovered Idéal model. Direct primary FLC H1(12)102/147 facsimiles have not been recovered; focused public exact-capacity/date searches again returned the scholarly reproduction only. This does not prove archives universally inaccessible. No invented second placement or hidden pipe branches is warranted.
+
+The few other one/two-part products are planar shelf, canopy, glass or table elements; low part count alone is not proof of incompleteness. Original historical certainty is distinct from native closure, geometry detail, source uncertainty and physical contact. New original-floor construction remains in the floor owner’s active batch and must receive fresh native audit after publication.
+
+## Radiator gap resolved
+
+Both original radiator identities now have98-part constructions. Independent native SDK audit passes four EN/DE fragments,392 closed components and eight real air-gap/positive-metal probes on stablecb02a8ba. See servant-radiators-native-review-r92.md. The earlier single-box descriptions record the discovery snapshot and no longer describe current construction. Section count/support remain explicitly inferred.

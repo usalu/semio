@@ -45,7 +45,7 @@ def test_chimney_material_matches_independent_annulus_and_hulls():
     assert len(g['parts'])==CASE['segments']
 
 def test_chimney_and_real_hall_route_have_no_occupied_native_clash():
-    """🚶 Check all occupied material and the existing800mm hall route against the actual flue."""
+    """🚶 Check all occupied material and the independently accepted nominal hall route against the actual flue."""
     m=api.load_model();g=api.building_geometry(m);pipe=api.service_geometry(CASE['tag'],m)
     shape=unary_union([Polygon(p['outline']) for p in pipe['parts']]);bounds=shape.bounds
     for category in ['walls','screens','slabs','pilotis','beams','foundations','stairs','railings','furnishings','details','fillings','services']:
@@ -58,8 +58,9 @@ def test_chimney_and_real_hall_route_have_no_occupied_native_clash():
                 xs,ys=zip(*ring)
                 if max(xs)<bounds[0] or min(xs)>bounds[2] or max(ys)<bounds[1] or min(ys)>bounds[3]:continue
                 assert shape.intersection(Polygon(ring)).area<1e-8,(category,item['tag'])
-    route=json.loads(Path(__file__).with_name('🏠ground.json').read_text())['northern_circulation']
-    body=LineString(route['path']).buffer(route['body_width']/2,cap_style=2)
+    reference=json.loads(Path(__file__).with_name('🏠ground.json').read_text())['northern_circulation']['fixture']
+    route=json.loads(Path(__file__).with_name(reference).read_text())['cases'][0]
+    body=LineString(route['points']).buffer(route['diameter']/2,cap_style=2)
     assert body.intersection(shape).area<1e-10
     for column in g['pilotis']:
         for p in column['parts']:

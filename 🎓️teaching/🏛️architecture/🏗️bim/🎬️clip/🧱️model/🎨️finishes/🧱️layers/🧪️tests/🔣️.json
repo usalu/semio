@@ -1,0 +1,175 @@
+{
+  "window_union": {
+    "slab": "SL-B",
+    "finish": "F-GRAVEL",
+    "ring": [[3.25,0],[3.75,0],[3.75,1],[3.25,1]],
+    "expected_owned_volume": 0.09
+  },
+  "host_hole": {
+    "slab": "SL-B",
+    "finish": "F-GRAVEL",
+    "ring": [[3.25, 0.25], [3.75, 0.25], [3.75, 0.75], [3.25, 0.75]],
+    "expected_owned_volume": 0.0675
+  },
+  "baseline_authority": {
+    "owner": "B-JOINT",
+    "finish": "F-PAVING",
+    "expected_owned_volume": 0.12,
+    "materials": {"M-SUPPORT": 0.076, "M-PAVING": 0.032, "M-CONSTRAINED": 0.012}
+  },
+  "layer_values": [
+    0.14,
+    0.18,
+    0.090000002
+  ],
+  "baseline": 0.09,
+  "base": -0.09,
+  "wearing": {
+    "paving": 0.04,
+    "constrained": 0.015,
+    "gravel": 0.02,
+    "stair": 0.015
+  },
+  "domains": {
+    "paving": [
+      [
+        0,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        0,
+        1
+      ]
+    ],
+    "stair": [
+      [
+        2,
+        0
+      ],
+      [
+        3,
+        0
+      ],
+      [
+        3,
+        1
+      ],
+      [
+        2,
+        1
+      ]
+    ],
+    "gravel": [
+      [
+        3,
+        0
+      ],
+      [
+        4,
+        0
+      ],
+      [
+        4,
+        1
+      ],
+      [
+        3,
+        1
+      ]
+    ],
+    "beam": [
+      [
+        0.8,
+        0
+      ],
+      [
+        1.2,
+        0
+      ],
+      [
+        1.2,
+        1
+      ],
+      [
+        0.8,
+        1
+      ]
+    ],
+    "constrained": [
+      [
+        1.2,
+        0
+      ],
+      [
+        2,
+        0
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        1.2,
+        1
+      ]
+    ]
+  },
+  "beam_z": [
+    -0.03,
+    0
+  ],
+  "affected_tags": [
+    "F-GRAVEL",
+    "F-PAVING",
+    "F-STAIR",
+    "SL-A",
+    "SL-B"
+  ],
+  "invalid_values": [
+    0,
+    -0.1
+  ],
+  "comparison": {
+    "volume": 1e-10,
+    "coordinate": 1e-12
+  },
+  "representations": [
+    "axis",
+    "footprint",
+    "plan",
+    "section",
+    "elevation",
+    "3d",
+    "body"
+  ],
+  "binding_units": [
+    {
+      "field": "maximum_reference_capacity",
+      "unit": "m\u00b2",
+      "valid": false
+    },
+    {
+      "field": "depth",
+      "unit": "m\u00b3",
+      "valid": false
+    },
+    {
+      "field": "maximum_reference_capacity",
+      "unit": "m",
+      "valid": true
+    },
+    {
+      "field": "depth",
+      "unit": "m",
+      "valid": true
+    }
+  ]
+}
